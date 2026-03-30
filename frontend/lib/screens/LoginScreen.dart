@@ -663,10 +663,11 @@ class _LoginScreenState extends State<LoginScreen>
         ),
         const SizedBox(height: 36),
 
-        // Pinput
-        Pinput(
+        // Pinput (OTP always LTR — wrap; pinput 5.x has no textDirection param)
+        Directionality(
+          textDirection: TextDirection.ltr,
+          child: Pinput(
           length:           6,
-          textDirection:    TextDirection.ltr,
           defaultPinTheme:  defaultPinTheme,
           focusedPinTheme:  focusedPinTheme,
           submittedPinTheme:submittedPinTheme,
@@ -677,6 +678,7 @@ class _LoginScreenState extends State<LoginScreen>
             _verifyOTP();
           },
           onChanged: (pin) => setState(() => _otpValue = pin),
+        ),
         ),
         const SizedBox(height: 32),
 

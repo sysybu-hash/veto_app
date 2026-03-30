@@ -32,10 +32,16 @@
 5. **Flutter**:
 
    ```bash
-   flutter run --dart-define=VETO_API_BASE=https://veto-app.onrender.com
+   cd frontend
+   flutter run -d chrome --dart-define=VETO_API_BASE=https://veto-app.onrender.com
    ```
 
    אל תכלול `/api` ב־`VETO_API_BASE` — רק מקור (scheme + host).
+
+   **Windows + נתיב עם רווח** (למשל `...\VETO App\`): בניית Web נכשלת בגלל hook של `objective_c`. פתרונות:
+   - הרץ: `powershell -ExecutionPolicy Bypass -File "...\VETO App\scripts\flutter-web.ps1"` (ממפה `V:` ב־`subst` ומריץ מ־`V:\frontend`), או
+   - העבר את הפרויקט לתיקייה **בלי רווח** (למשל `C:\dev\veto-app`), או
+   - `subst V: "C:\מלא\נתיב\VETO App"` ואז `cd V:\frontend` ו־`flutter run ...`.
 
 ## התנהגות מקומית (ללא שינוי)
 
