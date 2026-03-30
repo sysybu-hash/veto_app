@@ -6,12 +6,22 @@
 // localtunnel מציג דף אימות בדפדפן בלי כותרת; האפליקציה עוקפת ע"י kTunnelBypassHeaders בבקשות API.
 // —————————————————————————————————————————————————————————————
 //
-// —— Production (לינק קבוע, למשל Render) ——————————————————————
-//   flutter run --dart-define=VETO_API_BASE=https://veto-api.onrender.com
+// —— Production (Render) ——————————————————————————————————————
+// ברירת מחדל ב-release: [kDefaultRenderOrigin] (אין צורך ב-define).
+// לדריסה או ל-debug מול שרת אחר:
+//   flutter run --dart-define=VETO_API_BASE=https://veto-app.onrender.com
 // (ללא סיומת /api — רק origin). כשמוגדר, מתעלמים מ-VETO_HOST ל-REST/WebSocket.
 // —————————————————————————————————————————————————————————————
 
+import 'package:flutter/foundation.dart';
+
 class AppConfig {
+  /// Host קבוע ב-Render (לתיעוד / שימוש חיצוני; ה-origin המלא ב-[kDefaultRenderOrigin]).
+  static const String kDefaultRenderHost = 'veto-app.onrender.com';
+
+  /// Origin של ה-API בפרודקשן (Render). משמש כברירת מחדל ב-`kReleaseMode` כשאין `VETO_API_BASE`.
+  static const String kDefaultRenderOrigin = 'https://veto-app.onrender.com';
+
   /// Host שמתאים ל-`npm run tunnel` (שורת ה-subdomain ב-backend/package.json)
   static const String kDefaultTunnelHost = 'sweet-turkey-60.loca.lt';
   static const int kLocalPort = 5001;
@@ -39,28 +49,30 @@ class AppConfig {
     return out;
   }
 
-  /// רק tunnel דורש את כותרת ה-bypass (לא Render / LAN).
-  static bool get _needsTunnelBypass {
-    if (_apiBaseFromEnv.isNotEmpty) return false;
-    return _host.contains('loca.lt');
-  }
-
-  static String get baseUrl {
-    final base = _apiBaseFromEnv;
-    if (base.isNotEmpty) return '${_stripTrailingSlashes(base)}/api';
-    if (_host.contains('loca.lt')) return 'https://$_host/api';
-    return 'http://$_host:$kLocalPort/api';
-  }
-
-  static String get socketOrigin {
-    final base = _apiBaseFromEnv;
-    if (base.isNotEmpty) return _stripTrailingSlashes(base);
+  /// מקור ל-HTTP (בלי `/api`). סדר עדיפות: `VETO_API_BASE` → ב-release Render → tunnel / LAN.
+  static String get _socketOrigin {
+    final fromEnv = _apiBaseFromEnv;
+    if (fromEnv.isNotEmpty) return _stripTrailingSlashes(fromEnv);
+    if (kReleaseMode) return _stripTrailingSlashes(kDefaultRenderOrigin);
     if (_host.contains('loca.lt')) return 'https://$_host';
     return 'http://$_host:$kLocalPort';
   }
 
+  /// רק tunnel דורש את כותרת ה-bypass (לא Render / LAN).
+  static bool get _needsTunnelBypass {
+    if (_apiBaseFromEnv.isNotEmpty) return false;
+    if (kReleaseMode) return false;
+    return _host.contains('loca.lt');
+  }
+
+  /// בסיס לנתיבי REST תחת `/api/...` (השרת מגדיר ראוטים כמו `/api/auth/...`).
+  static String get baseUrl => '$_socketOrigin/api';
+
+  /// מקור ל-Socket.io (ללא `/api`).
+  static String get socketOrigin => _socketOrigin;
+
   /// `GET /health` — לא תחת `/api`; משמש להשכמת אינסטנסים רדומים (למשל Render free).
-  static String get healthCheckUrl => '${socketOrigin}/health';
+  static String get healthCheckUrl => '$socketOrigin/health';
 
   /// כותרות ל-GET קל (בלי JSON).
   static Map<String, String> get httpGetHeaders {

@@ -32,21 +32,25 @@
 
 5. **Flutter**:
 
+   - **בניית release / פרודקשן** (`flutter build web` וכו'): ברירת המחדל היא כבר `https://veto-app.onrender.com` — אין חובה ב־`--dart-define`.
+   - **בדיקה מ־debug מול Render:**
+
    ```bash
    cd frontend
    flutter run -d chrome --dart-define=VETO_API_BASE=https://veto-app.onrender.com
    ```
 
-   אל תכלול `/api` ב־`VETO_API_BASE` — רק מקור (scheme + host).
+   אל תכלול `/api` ב־`VETO_API_BASE` — רק מקור (scheme + host); הנתיב `/api` נוסף אוטומטית ל־REST.
 
    **Windows + נתיב עם רווח** (למשל `...\VETO App\`): בניית Web נכשלת בגלל hook של `objective_c`. פתרונות:
    - הרץ: `powershell -ExecutionPolicy Bypass -File "...\VETO App\scripts\flutter-web.ps1"` (ממפה `V:` ב־`subst` ומריץ מ־`V:\frontend`), או
    - העבר את הפרויקט לתיקייה **בלי רווח** (למשל `C:\dev\veto-app`), או
    - `subst V: "C:\מלא\נתיב\VETO App"` ואז `cd V:\frontend` ו־`flutter run ...`.
 
-## התנהגות מקומית (ללא שינוי)
+## התנהגות לפי מצב
 
-- בלי `--dart-define=VETO_API_BASE` נשאר הלוגיקה הקיימת: `VETO_HOST`, tunnel, פורט 5001.
+- **Debug / profile** בלי `VETO_API_BASE`: `VETO_HOST`, tunnel (`loca.lt`), או `localhost:5001` לפי ההגדרות ב־`app_config.dart`.
+- **Release**: אם לא הוגדר `VETO_API_BASE`, משתמשים ב־`https://veto-app.onrender.com` (קבוע `kDefaultRenderOrigin`).
 
 ## אם עדיין נכשל
 
