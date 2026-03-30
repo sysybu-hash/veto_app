@@ -59,6 +59,15 @@ class AppConfig {
     return 'http://$_host:$kLocalPort';
   }
 
+  /// `GET /health` — לא תחת `/api`; משמש להשכמת אינסטנסים רדומים (למשל Render free).
+  static String get healthCheckUrl => '${socketOrigin}/health';
+
+  /// כותרות ל-GET קל (בלי JSON).
+  static Map<String, String> get httpGetHeaders {
+    if (_needsTunnelBypass) return Map<String, String>.from(kTunnelBypassHeaders);
+    return <String, String>{};
+  }
+
   static Map<String, String> httpHeaders(Map<String, String> additional) {
     final h = <String, String>{
       'Content-Type': 'application/json',

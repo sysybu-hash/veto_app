@@ -67,7 +67,7 @@ const _strings = {
     'sending':        'Sending...',
     'verifying':      'Verifying...',
     'timeoutHint':
-        'Server took too long (Render free tier may need ~1 min to wake). Try again.',
+        'Server took too long (Render free cold start can take 2–3 min). Open /health in a tab, wait, then try again.',
     'notFoundHint':
         'No account for this phone. Register first or check Render logs.',
   },
@@ -88,7 +88,7 @@ const _strings = {
     'sending':        'שולח...',
     'verifying':      'מאמת...',
     'timeoutHint':
-        'פג הזמן — בשרת חינמי (Render) ההתעוררות עלולה לקחת עד דקה. נסה שוב.',
+        'פג הזמן — ב-Render חינמי לפעמים 2–3 דקות עד שהשרת ער. פתח בטאב את …/health, המתן, ואז לחץ שוב המשך.',
     'notFoundHint':
         'אין חשבון למספר הזה, או שהשרת לא ענה. בדוק הרשמה / לוגים ב-Render.',
   },
@@ -109,7 +109,7 @@ const _strings = {
     'sending':        'جارٍ الإرسال...',
     'verifying':      'جارٍ التحقق...',
     'timeoutHint':
-        'انتهت المهلة — الخادوم المجاني قد يحتاج حتى دقيقة. أعد المحاولة.',
+        'انتهت المهلة — الخادوم المجاني قد يحتاج 2–3 دقائق. افتح …/health في تاب، انتظر، ثم أعد المحاولة.',
     'notFoundHint':
         'لا يوجد حساب لهذا الرقم أو لم يستجب الخادوم.',
   },
