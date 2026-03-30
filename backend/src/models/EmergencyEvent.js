@@ -1,0 +1,218 @@
+// ============================================================
+//  EmergencyEvent.js — Mongoose Schema
+//  VETO Legal Emergency App
+// ============================================================
+
+const mongoose = require('mongoose');
+
+// ── Sub-schema: Evidence Item ──────────────────────────────
+const EvidenceItemSchema = new mongoose.Schema(
+  {
+    type: {
+      type: String,
+      enum: ['photo', 'video', 'audio'],
+      required: true,
+    },
+
+    cloud_url: {
+      type: String,
+      required: true, // S3 / Cloudinary / Firebase Storage URL
+    },
+
+    timestamp: {
+      type: Date,
+      default: Date.now,
+    },
+
+    gps_location: {
+      type: {
+        type: String,
+        enum: ['Point'],
+        default: 'Point',
+      },
+      coordinates: {
+        type: [Number], // [longitude, latitude]
+        default: [0, 0],
+      },
+    },
+
+    duration_seconds: {
+      type: Number,
+      default: null, // for video/audio only
+    },
+
+    file_size_bytes: {
+      type: Number,
+      default: null,
+    },
+  },
+  { _id: false }
+);
+
+// ── Sub-schema: Dispatch Attempt ───────────────────────────
+// Tracks which lawyers were notified and their responses
+const DispatchAttemptSchema = new mongoose.Schema(
+  {
+    lawyer_id: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Lawyer',
+      required: true,
+    },
+
+    notified_at: {
+      type: Date,
+      default: Date.now,
+    },
+
+    response: {
+      type: String,
+      enum: ['pending', 'accepted', 'rejected', 'no_response'],
+      default: 'pending',
+    },
+
+    responded_at: {
+      type: Date,
+      default: null,
+    },
+  },
+  { _id: false }
+);
+
+// ── Main EmergencyEvent Schema ─────────────────────────────
+const EmergencyEventSchema = new mongoose.Schema(
+  {
+    // ── Parties ───────────────────────────────────────────────
+    user_id: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: [true, 'User ID is required'],
+      index: true,
+    },
+
+    assigned_lawyer_id: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Lawyer',
+      default: null, // null until a lawyer accepts
+    },
+
+    // ── Status ────────────────────────────────────────────────
+    status: {
+      type: String,
+      enum: [
+        'dispatching',  // VETO pressed, searching for lawyer
+        'accepted',     // A lawyer has accepted
+        'in_progress',  // Call / consultation ongoing
+        'completed',    // Event resolved
+        'cancelled',    // User cancelled before lawyer accepted
+        'failed',       // No lawyer responded in time
+      ],
+      default: 'dispatching',
+      index: true,
+    },
+
+    // ── Timestamps ────────────────────────────────────────────
+    triggered_at: {
+      type: Date,
+      default: Date.now, // when user pressed VETO
+    },
+
+    accepted_at: {
+      type: Date,
+      default: null,
+    },
+
+    completed_at: {
+      type: Date,
+      default: null,
+    },
+
+    // ── Location (where the event occurred) ───────────────────
+    event_location: {
+      type: {
+        type: String,
+        enum: ['Point'],
+        default: 'Point',
+      },
+      coordinates: {
+        type: [Number], // [longitude, latitude]
+        default: [0, 0],
+      },
+    },
+
+    location_address: {
+      type: String,
+      default: null, // reverse-geocoded human-readable address
+    },
+
+    // ── Language ──────────────────────────────────────────────
+    language: {
+      type: String,
+      enum: ['en', 'he', 'ar'],
+      default: 'en', // user's preferred_language at event time
+    },
+
+    // ── Call Info ─────────────────────────────────────────────
+    call_type: {
+      type: String,
+      enum: ['whatsapp', 'telegram', 'system_call', 'in_app'],
+      default: 'whatsapp',
+    },
+
+    call_link: {
+      type: String,
+      default: null, // deep link generated when lawyer accepts
+    },
+
+    // ── Smart Dispatch Log ────────────────────────────────────
+    dispatch_attempts: {
+      type: [DispatchAttemptSchema],
+      default: [],
+    },
+
+    lawyers_notified_count: {
+      type: Number,
+      default: 0, // total lawyers alerted
+    },
+
+    time_to_accept_seconds: {
+      type: Number,
+      default: null, // seconds from dispatch to first acceptance
+    },
+
+    // ── Evidence ──────────────────────────────────────────────
+    evidence: {
+      type: [EvidenceItemSchema],
+      default: [],
+    },
+
+    // ── Notes ─────────────────────────────────────────────────
+    user_notes: {
+      type: String,
+      maxlength: 1000,
+      default: '',
+    },
+
+    lawyer_notes: {
+      type: String,
+      maxlength: 1000,
+      default: '',
+    },
+
+    // ── Rating (post-event) ───────────────────────────────────
+    user_rating: {
+      score: { type: Number, min: 1, max: 5, default: null },
+      comment: { type: String, maxlength: 300, default: '' },
+    },
+  },
+  {
+    timestamps: true,
+    versionKey: false,
+  }
+);
+
+// ── Indexes ────────────────────────────────────────────────
+EmergencyEventSchema.index({ event_location: '2dsphere' });
+EmergencyEventSchema.index({ user_id: 1, status: 1 });
+EmergencyEventSchema.index({ assigned_lawyer_id: 1, status: 1 });
+
+module.exports = mongoose.model('EmergencyEvent', EmergencyEventSchema);

@@ -1,0 +1,24 @@
+# Dependencies
+node_modules/
+
+# Backend secrets (never commit)
+backend/.env
+.env
+.env.local
+
+# Logs & OS
+npm-debug.log*
+.DS_Store
+Thumbs.db
+
+# Flutter
+frontend/.dart_tool/
+frontend/build/
+frontend/.flutter-plugins-dependencies
+
+# IDE
+.idea/
+*.iml
+
+# Local Flutter SDK checkout (do not commit)
+flutter/

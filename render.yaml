@@ -1,0 +1,25 @@
+# Render Blueprint — API יציב ב-https://<שם-השירות>.onrender.com
+# חיבור: Render Dashboard → New → Blueprint → בחר repo מ-GitHub.
+# אחרי Deploy: העתק את ה-URL הציבורי והרץ Flutter עם:
+#   flutter run --dart-define=VETO_API_BASE=https://veto-api.onrender.com
+# (החלף לכתובת המדויקת שמופיעה ב-Render.)
+
+services:
+  - type: web
+    name: veto-api
+    runtime: node
+    region: frankfurt
+    plan: free
+    rootDir: backend
+    buildCommand: npm ci
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGO_URI
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: JWT_EXPIRES_IN
+        value: 30d

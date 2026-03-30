@@ -1,0 +1,56 @@
+---
+description: VETO App — backend port 5001, localtunnel, bypass headers, auth storage
+alwaysApply: true
+---
+
+# VETO — architecture (post VS Code / Cursor)
+
+## Backend
+
+- **API port:** `5001` (from `backend/.env` `PORT` and `server.js`: `Number(process.env.PORT) || 5001`). Do not move back to 5000 without an explicit request.
+- **OTP (dev):** Logged in the backend terminal as: `********** OTP FOR ${phone}: ${otp} **********` (see `auth.controller.js`).
+
+## Stable dev URL (same Wi‑Fi, no tunnel)
+
+- Run `npm run dev:urls` from `backend` (or `npm run dev:urls` from repo root). Use the printed `flutter run --dart-define=VETO_HOST=<PC_LAN_IP>` — stable until the router assigns a new IP (use a DHCP reservation on the router for best results).
+- Android debug builds may need `usesCleartextTraffic` if calling `http://` (not `https://`); release/production should use HTTPS.
+
+## Production API (stable HTTPS URL)
+
+- Deploy `backend/` to **Render** via root `render.yaml` (not Vercel for this API — long-lived Node + Socket.io).
+- After deploy, use **`flutter run --dart-define=VETO_API_BASE=https://<service>.onrender.com`** (origin only, no `/api` suffix). See `DEPLOY.md`.
+- When `VETO_API_BASE` is set, tunnel bypass headers are **not** sent (not needed off `*.loca.lt`).
+
+## Localtunnel (mobile testing)
+
+- **Default tunnel host in Flutter:** `sweet-turkey-60.loca.lt` (`AppConfig.kDefaultTunnelHost`). **`npm run tunnel`** runs `backend/scripts/tunnel-run.js`: it prints the **real** public hostname (localtunnel often ignores `--subdomain` if taken). If the banner says the host differs from `sweet-turkey-60.loca.lt`, copy the printed `flutter run --dart-define=VETO_HOST=...` line.
+- **`npm run tunnel:any`** → random `*.loca.lt` via CLI; same rule: **must** set `VETO_HOST` to match the active tunnel.
+- **Override:** `flutter run --dart-define=VETO_HOST=other.loca.lt`
+- **Order:** Start Node on **5001** first, then tunnel. Help: `npm run tunnel:help` from repo root or `backend`.
+- **Browser:** Opening `*.loca.lt` in a normal mobile/desktop browser may show localtunnel’s landing page; the **Flutter app** bypasses via header. Do not try to “remove” that page from VETO server code — use the app, an extension, or ngrok/cloudflared if you need browser-only access without the page.
+
+## HTTP clients (Flutter)
+
+- **Every** request through localtunnel must send: `bypass-tunnel-reminder: true`.
+- Use `AppConfig.httpHeaders(...)` for JSON (`Content-Type: application/json` + bypass).
+- Use `AppConfig.httpHeadersBinary(...)` for multipart / non-JSON (bypass only, no forced JSON `Content-Type`).
+- Socket.io to `loca.lt`: set extra headers with `httpHeadersBinary` where `socket_service` already does.
+
+## Backend CORS
+
+- `allowedHeaders` must include `bypass-tunnel-reminder` (see `server.js`) so mobile preflight succeeds.
+
+## Flutter auth & storage
+
+- After verify-OTP: persist **`jwt`** and **`veto_role`** in `FlutterSecureStorage` (`auth_service.dart`).
+- `getToken()` prefers `jwt`, with legacy fallback to `veto_token` until migration is complete.
+- Auth endpoints: `POST ${AppConfig.baseUrl}/auth/request-otp` and `.../verify-otp`.
+
+## Admin (data)
+
+- Phone **+972525640021** is a verified **admin** in MongoDB (maintain via `npm run init-admins` in `backend` when seeding admins).
+
+## Do not
+
+- Add new HTTP calls to `loca.lt` without the bypass header.
+- Assume port 5000 for this project’s API.
