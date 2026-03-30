@@ -2,6 +2,9 @@
   "name": "veto-app",
   "private": true,
   "description": "VETO Legal Emergency — root helpers (backend + tunnel)",
+  "workspaces": [
+    "backend"
+  ],
   "scripts": {
     "check:git-secrets": "node scripts/verify-no-secrets-in-git.js",
     "render-build": "npm ci --prefix backend",
