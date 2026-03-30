@@ -3,6 +3,8 @@
   "private": true,
   "description": "VETO Legal Emergency — root helpers (backend + tunnel)",
   "scripts": {
+    "render-build": "npm ci --prefix backend",
+    "render-start": "npm start --prefix backend",
     "install:backend": "npm install --prefix backend",
     "dev": "npm run dev --prefix backend",
     "dev:clean": "npm run dev:clean --prefix backend",

@@ -8,20 +8,31 @@
 1. **GitHub**  
    דחוף (push) את ה-repo (ללא `backend/.env` — כבר ב-`.gitignore`).
 
-2. **Render**  
+2. **Render** (מומלץ: Blueprint)  
    - [Dashboard](https://dashboard.render.com) → **New** → **Blueprint**.  
-   - בחר את ה-repo; Render יזהה את `render.yaml`.  
-   - הגדר ב-**Environment** ערכים לסינכרון ידני (`sync: false`):
-     - `MONGO_URI` — אותה מחרוזת Atlas כמו ב־`.env` מקומי.
-     - `JWT_SECRET` — מחרוזת אקראית ארוכה (לא לשתף).
+   - בחר את ה-repo; Render קורא את `render.yaml` (שירות **`veto-app`**, `rootDir: backend`).  
+   - ב-**Environment** חובה:
+     - `MONGO_URI` — כמו ב־`backend/.env` (Atlas).
+     - `JWT_SECRET` — מחרוזת סודית ארוכה.
 
-3. אחרי שה-Deploy ירוק, העתק את כתובת השירות, למשל:  
-   `https://veto-api.onrender.com`
+3. **אם כבר יש Web Service ו־Failed deploy** (למשל יצרת מ-GitHub בלי Blueprint):  
+   **Settings** של השירות:
+   - **Root Directory:** `backend`  
+   - **Build Command:** `npm ci`  
+   - **Start Command:** `npm start`  
+   או השאר **Root Directory ריק** ואז:
+   - **Build Command:** `npm run render-build`  
+   - **Start Command:** `npm run render-start`  
+   ואז **Save** → **Manual Deploy** → **Clear build cache & deploy**.
 
-4. **Flutter** (מחשב או CI):
+4. אחרי Deploy ירוק, הכתובת לרוב:  
+   `https://veto-app.onrender.com`  
+   בדיקה: `https://veto-app.onrender.com/health`
+
+5. **Flutter**:
 
    ```bash
-   flutter run --dart-define=VETO_API_BASE=https://veto-api.onrender.com
+   flutter run --dart-define=VETO_API_BASE=https://veto-app.onrender.com
    ```
 
    אל תכלול `/api` ב־`VETO_API_BASE` — רק מקור (scheme + host).
@@ -29,6 +40,10 @@
 ## התנהגות מקומית (ללא שינוי)
 
 - בלי `--dart-define=VETO_API_BASE` נשאר הלוגיקה הקיימת: `VETO_HOST`, tunnel, פורט 5001.
+
+## אם עדיין נכשל
+
+- **Logs** ב-Render: חפש `MONGO_URI is missing` או `Cannot find module` — הראשון = חסר env; השני = build לא רץ מתוך `backend` או לא השתמשת ב־`render-build`.
 
 ## הערות
 
