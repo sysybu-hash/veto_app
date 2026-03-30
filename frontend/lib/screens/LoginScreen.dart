@@ -66,6 +66,10 @@ const _strings = {
     'back':           'Back',
     'sending':        'Sending...',
     'verifying':      'Verifying...',
+    'timeoutHint':
+        'Server took too long (Render free tier may need ~1 min to wake). Try again.',
+    'notFoundHint':
+        'No account for this phone. Register first or check Render logs.',
   },
   VLang.he: {
     'tagline':        'מגן החירום המשפטי שלך',
@@ -83,6 +87,10 @@ const _strings = {
     'back':           'חזרה',
     'sending':        'שולח...',
     'verifying':      'מאמת...',
+    'timeoutHint':
+        'פג הזמן — בשרת חינמי (Render) ההתעוררות עלולה לקחת עד דקה. נסה שוב.',
+    'notFoundHint':
+        'אין חשבון למספר הזה, או שהשרת לא ענה. בדוק הרשמה / לוגים ב-Render.',
   },
   VLang.ar: {
     'tagline':        'درعك القانوني في الطوارئ',
@@ -100,6 +108,10 @@ const _strings = {
     'back':           'رجوع',
     'sending':        'جارٍ الإرسال...',
     'verifying':      'جارٍ التحقق...',
+    'timeoutHint':
+        'انتهت المهلة — الخادوم المجاني قد يحتاج حتى دقيقة. أعد المحاولة.',
+    'notFoundHint':
+        'لا يوجد حساب لهذا الرقم أو لم يستجب الخادوم.',
   },
 };
 
@@ -209,11 +221,11 @@ class _LoginScreenState extends State<LoginScreen>
 
     setState(() { _loading = true; _errorMsg = ''; });
 
-    final ok = await _auth.requestOTP(phone, _role);
+    final outcome = await _auth.requestOTPDetailed(phone, _role);
 
     if (!mounted) return;
 
-    if (ok) {
+    if (outcome == OtpRequestOutcome.success) {
       setState(() {
         _loading = false;
         _step = 1;
@@ -221,10 +233,15 @@ class _LoginScreenState extends State<LoginScreen>
       });
       _slideCtrl.forward(from: 0);
       _startCountdown();
+    } else if (outcome == OtpRequestOutcome.timeout) {
+      setState(() {
+        _loading = false;
+        _errorMsg = _t('timeoutHint');
+      });
     } else {
       setState(() {
         _loading = false;
-        _errorMsg = 'Could not send OTP.';
+        _errorMsg = _t('notFoundHint');
       });
     }
   }

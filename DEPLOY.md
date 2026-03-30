@@ -14,6 +14,7 @@
    - ב-**Environment** חובה:
      - `MONGO_URI` — כמו ב־`backend/.env` (Atlas).
      - `JWT_SECRET` — מחרוזת סודית ארוכה.
+   - **בדיקת התחברות Web בלי SMS:** הוסף `RETURN_OTP_IN_JSON` = `1` — אז תשובת `request-otp` תכלול את ה-OTP (להסיר כשמחברים SMS).
 
 3. **אם כבר יש Web Service ו־Failed deploy** (למשל יצרת מ-GitHub בלי Blueprint):  
    **Settings** של השירות:

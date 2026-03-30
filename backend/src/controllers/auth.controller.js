@@ -133,11 +133,16 @@ const requestOTP = async (req, res, next) => {
     console.log(`********** OTP FOR ${phone}: ${otp} **********`);
     console.log('');
 
+    // OTP in JSON: dev only, or when RETURN_OTP_IN_JSON=1 (testing web / no SMS).
+    const exposeOtp =
+      process.env.NODE_ENV !== 'production' ||
+      process.env.RETURN_OTP_IN_JSON === '1' ||
+      process.env.RETURN_OTP_IN_JSON === 'true';
+
     return res.status(200).json({
       message: 'OTP sent.',
       role,
-      // ⚠ Remove `otp` from response in production!
-      ...(process.env.NODE_ENV !== 'production' && { otp }),
+      ...(exposeOtp && { otp }),
     });
   } catch (err) {
     next(err);

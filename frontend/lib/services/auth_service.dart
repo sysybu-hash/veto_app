@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
@@ -6,30 +7,53 @@ import 'package:http/http.dart' as http;
 
 import '../config/app_config.dart';
 
+/// Outcome for request-otp (timeout = common on Render free cold start).
+enum OtpRequestOutcome { success, failed, timeout }
+
 class AuthService {
   final _storage = const FlutterSecureStorage();
 
+  /// Render free tier can take 60s+ to wake; keep below browser limits.
+  static const Duration _httpTimeout = Duration(seconds: 90);
+
   Future<bool> requestOtp(String phone, {String role = 'admin'}) async {
+    final r = await requestOtpDetailed(phone, role: role);
+    return r == OtpRequestOutcome.success;
+  }
+
+  Future<OtpRequestOutcome> requestOtpDetailed(String phone,
+      {String role = 'admin'}) async {
+    final uri = Uri.parse('${AppConfig.baseUrl}/auth/request-otp');
     try {
-      final response = await http.post(
-        Uri.parse('${AppConfig.baseUrl}/auth/request-otp'),
-        headers: AppConfig.httpHeaders({}),
-        body: jsonEncode({'phone': phone, 'role': role}),
-      );
-      return response.statusCode == 200;
+      final response = await http
+          .post(
+            uri,
+            headers: AppConfig.httpHeaders({}),
+            body: jsonEncode({'phone': phone, 'role': role}),
+          )
+          .timeout(_httpTimeout);
+      if (response.statusCode == 200) return OtpRequestOutcome.success;
+      debugPrint(
+          '⚠️ request-otp ${response.statusCode} ${response.body.length > 200 ? response.body.substring(0, 200) : response.body}');
+      return OtpRequestOutcome.failed;
+    } on TimeoutException {
+      debugPrint('⚠️ request-otp timeout → $uri');
+      return OtpRequestOutcome.timeout;
     } catch (e) {
-      debugPrint('⚠️ Error: $e');
-      return false;
+      debugPrint('⚠️ request-otp error: $e');
+      return OtpRequestOutcome.failed;
     }
   }
 
   Future<Map<String, dynamic>?> verifyOtp(String phone, String code) async {
     try {
-      final response = await http.post(
-        Uri.parse('${AppConfig.baseUrl}/auth/verify-otp'),
-        headers: AppConfig.httpHeaders({}),
-        body: jsonEncode({'phone': phone, 'otp': code}),
-      );
+      final response = await http
+          .post(
+            Uri.parse('${AppConfig.baseUrl}/auth/verify-otp'),
+            headers: AppConfig.httpHeaders({}),
+            body: jsonEncode({'phone': phone, 'otp': code}),
+          )
+          .timeout(_httpTimeout);
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -48,10 +72,17 @@ class AuthService {
         return data;
       }
       return null;
+    } on TimeoutException {
+      debugPrint('⚠️ verify-otp timeout');
+      return null;
     } catch (e) {
+      debugPrint('⚠️ verify-otp error: $e');
       return null;
     }
   }
+
+  Future<OtpRequestOutcome> requestOTPDetailed(String phone, String role) =>
+      requestOtpDetailed(phone, role: role);
 
   Future<bool> requestOTP(String phone, String role) =>
       requestOtp(phone, role: role);
