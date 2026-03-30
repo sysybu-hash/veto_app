@@ -13,8 +13,11 @@ enum OtpRequestOutcome { success, failed, timeout }
 class AuthService {
   final _storage = const FlutterSecureStorage();
 
-  /// Render free: cold start לעיתים 90–180s; ניסיון שני אחרי השכמה.
-  static const Duration _coldStartTimeout = Duration(seconds: 180);
+  /// POST ל-API — אחרי cold start בדרך כלל מהיר.
+  static const Duration _postTimeout = Duration(seconds: 120);
+
+  /// GET /health רק כדי לעורר אינסטנס; לא לחסום דקות שלמות לפני ה-POST.
+  static const Duration _healthPingTimeout = Duration(seconds: 45);
 
   Future<bool> requestOtp(String phone, {String role = 'admin'}) async {
     final r = await requestOtpDetailed(phone, role: role);
@@ -55,13 +58,13 @@ class AuthService {
   Future<OtpRequestOutcome> requestOtpDetailed(String phone,
       {String role = 'admin'}) async {
     final uri = Uri.parse('${AppConfig.baseUrl}/auth/request-otp');
-    await _pingHealth(_coldStartTimeout);
+    await _pingHealth(_healthPingTimeout);
     try {
-      return await _postRequestOtp(phone, role, _coldStartTimeout);
+      return await _postRequestOtp(phone, role, _postTimeout);
     } on TimeoutException {
       debugPrint('⚠️ request-otp timeout, retry (server may be warm now) → $uri');
       try {
-        return await _postRequestOtp(phone, role, _coldStartTimeout);
+        return await _postRequestOtp(phone, role, _postTimeout);
       } on TimeoutException {
         debugPrint('⚠️ request-otp timeout after retry → $uri');
         return OtpRequestOutcome.timeout;
@@ -80,7 +83,7 @@ class AuthService {
             headers: AppConfig.httpHeaders({}),
             body: jsonEncode({'phone': phone, 'otp': code}),
           )
-          .timeout(_coldStartTimeout);
+          .timeout(_postTimeout);
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);

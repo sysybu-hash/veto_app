@@ -221,28 +221,36 @@ class _LoginScreenState extends State<LoginScreen>
 
     setState(() { _loading = true; _errorMsg = ''; });
 
-    final outcome = await _auth.requestOTPDetailed(phone, _role);
+    try {
+      final outcome = await _auth.requestOTPDetailed(phone, _role);
+      if (!mounted) return;
 
-    if (!mounted) return;
-
-    if (outcome == OtpRequestOutcome.success) {
-      setState(() {
-        _loading = false;
-        _step = 1;
-        _countdown = 60;
-      });
-      _slideCtrl.forward(from: 0);
-      _startCountdown();
-    } else if (outcome == OtpRequestOutcome.timeout) {
-      setState(() {
-        _loading = false;
-        _errorMsg = _t('timeoutHint');
-      });
-    } else {
-      setState(() {
-        _loading = false;
-        _errorMsg = _t('notFoundHint');
-      });
+      if (outcome == OtpRequestOutcome.success) {
+        setState(() {
+          _loading = false;
+          _step = 1;
+          _countdown = 60;
+        });
+        _slideCtrl.forward(from: 0);
+        _startCountdown();
+      } else if (outcome == OtpRequestOutcome.timeout) {
+        setState(() {
+          _loading = false;
+          _errorMsg = _t('timeoutHint');
+        });
+      } else {
+        setState(() {
+          _loading = false;
+          _errorMsg = _t('notFoundHint');
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _loading = false;
+          _errorMsg = _t('notFoundHint');
+        });
+      }
     }
   }
 
@@ -252,25 +260,34 @@ class _LoginScreenState extends State<LoginScreen>
 
     setState(() { _loading = true; _errorMsg = ''; });
 
-    final data = await _auth.verifyOTP(
-      _phoneCtrl.text.trim(),
-      _otpValue,
-    );
+    try {
+      final data = await _auth.verifyOTP(
+        _phoneCtrl.text.trim(),
+        _otpValue,
+      );
 
-    if (!mounted) return;
+      if (!mounted) return;
 
-    if (data != null) {
-      HapticFeedback.heavyImpact();
-      final user = data['user'];
-      final role = user is Map<String, dynamic>
-          ? (user['role']?.toString() ?? _role)
-          : _role;
-      _navigateToDashboard(role);
-    } else {
-      setState(() {
-        _loading = false;
-        _errorMsg = 'Invalid OTP.';
-      });
+      if (data != null) {
+        HapticFeedback.heavyImpact();
+        final user = data['user'];
+        final role = user is Map<String, dynamic>
+            ? (user['role']?.toString() ?? _role)
+            : _role;
+        _navigateToDashboard(role);
+      } else {
+        setState(() {
+          _loading = false;
+          _errorMsg = 'Invalid OTP.';
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _loading = false;
+          _errorMsg = 'Invalid OTP.';
+        });
+      }
     }
   }
 
