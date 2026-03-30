@@ -9,9 +9,10 @@ const mongoose = require('mongoose');
 const connectDB = async () => {
   const uri = process.env.MONGO_URI;
   if (!uri || typeof uri !== 'string' || !uri.trim()) {
-    console.error('❌ MONGO_URI is missing or empty.');
-    console.error('   Create backend/.env with MONGO_URI=... (UTF-8) and run from backend/: npm run dev');
-    process.exit(1);
+    const msg =
+      'MONGO_URI is missing or empty. Set it in backend/.env locally or in Render Environment.';
+    console.error(`❌ ${msg}`);
+    throw new Error(msg);
   }
 
   // Windows: DNS מקומי לפעמים נכשל על SRV של Atlas — ניסיון עם DNS ציבורי
@@ -37,7 +38,7 @@ const connectDB = async () => {
       console.error('   נסה: הגדרת DNS בווינדוס ל־8.8.8.8, או ב-Atlas קח מחרוזת');
       console.error('   "Standard connection" (mongodb://...) במקום srv, ועדכן MONGO_URI.');
     }
-    process.exit(1);
+    throw error;
   }
 };
 

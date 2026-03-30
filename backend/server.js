@@ -38,6 +38,9 @@ const http = require('http');
 const { Server } = require('socket.io');
 const connectDB = require('./src/config/db');
 
+/** ל-Render health check: השרת חי לפני ש-Mongo מחובר */
+let mongoState = 'pending';
+
 const app = express();
 const server = http.createServer(app);
 
@@ -95,11 +98,12 @@ app.get('/', (_, res) =>
 );
 
 app.get('/health', (_, res) =>
-  res.json({
+  res.status(200).json({
     status: 'ok',
     app: 'VETO',
     message: 'VETO Server is Alive!',
     env: process.env.NODE_ENV || 'development',
+    mongo: mongoState,
   }),
 );
 
@@ -108,9 +112,7 @@ require('./src/socket/dispatch.socket')(io);
 
 const PORT = Number(process.env.PORT) || 5001;
 
-async function start() {
-  await connectDB();
-
+function start() {
   server.on('error', (err) => {
     if (err.code === 'EADDRINUSE') {
       console.error(`❌ Port ${PORT} כבר בשימוש (שרת אחר / nodemon ישן).`);
@@ -122,11 +124,13 @@ async function start() {
     throw err;
   });
 
-  server.listen(PORT, () => {
-    console.log(`🚀 VETO Server running on port ${PORT}`);
+  // Render / cloud: חייבים להאזין מיד על 0.0.0.0 — אחרת "Application loading" נתקע אם Mongo איטי או נכשל
+  server.listen(PORT, '0.0.0.0', () => {
+    console.log(`🚀 VETO Server listening on 0.0.0.0:${PORT}`);
     console.log(`   REST  → http://localhost:${PORT}/api`);
     console.log(`   Auth  → POST http://localhost:${PORT}/api/auth/register`);
     console.log(`   WS    → ws://localhost:${PORT}`);
+    console.log(`   Health → GET /health (mongo: pending → connected | error)`);
     console.log(
       '   Dev OTP → terminal shows: ********** OTP FOR <phone>: <code> **********',
     );
@@ -141,10 +145,17 @@ async function start() {
         PORT +
         ' | Flutter host ≠ active tunnel | tunnel terminal closed.',
     );
+
+    connectDB()
+      .then(() => {
+        mongoState = 'connected';
+      })
+      .catch((err) => {
+        mongoState = 'error';
+        console.error('❌ MongoDB not connected — fix MONGO_URI / Atlas Network Access.');
+        console.error('   ', err.message);
+      });
   });
 }
 
-start().catch((err) => {
-  console.error(err);
-  process.exit(1);
-});
+start();
