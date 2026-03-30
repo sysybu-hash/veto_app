@@ -3,8 +3,13 @@ node_modules/
 
 # Backend secrets (never commit)
 backend/.env
+backend/.env.*
+!backend/.env.example
 .env
+.env.*
+!.env.example
 .env.local
+*.pem
 
 # Logs & OS
 npm-debug.log*
