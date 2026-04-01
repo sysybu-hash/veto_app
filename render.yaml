@@ -7,7 +7,7 @@
 # או השאר Root ריק ואז: Build: npm run render-build  |  Start: npm run render-start
 
 services:
-  # 1. Backend Service (Node.js API)
+  # Backend Service (Node.js API)
   - type: web
     name: veto-app
     runtime: node
@@ -26,17 +26,3 @@ services:
         sync: false
       - key: JWT_EXPIRES_IN
         value: 30d
-
-  # 2. Frontend Service (Flutter Web Static Site)
-  - type: web
-    name: veto-frontend
-    env: static
-    region: frankfurt
-    plan: free
-    rootDir: frontend
-    buildCommand: echo "Frontend built locally"
-    staticPublishPath: build/web
-    routes:
-      - type: rewrite
-        source: /*
-        destination: /index.html
