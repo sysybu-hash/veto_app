@@ -120,6 +120,33 @@ class AuthService {
   Future<Map<String, dynamic>?> verifyOTP(String phone, String otp) =>
       verifyOtp(phone, otp);
 
+  Future<bool> register({
+    required String fullName,
+    required String phoneNumber,
+    String role = 'user',
+    String language = 'he',
+  }) async {
+    try {
+      final response = await http
+          .post(
+            Uri.parse('${AppConfig.baseUrl}/auth/register'),
+            headers: AppConfig.httpHeaders({}),
+            body: jsonEncode({
+              'full_name': fullName,
+              'phone': phoneNumber,
+              'role': role,
+              'preferred_language': language,
+            }),
+          )
+          .timeout(_postTimeout);
+
+      return response.statusCode == 201;
+    } catch (e) {
+      debugPrint('⚠️ register error: $e');
+      return false;
+    }
+  }
+
   Future<String?> getStoredRole() async =>
       await _storage.read(key: 'veto_role');
 

@@ -14,8 +14,10 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final _phoneController = TextEditingController();
   final _otpController = TextEditingController();
+  final _nameController = TextEditingController();
   bool _isLoading = false;
   bool _otpSent = false;
+  bool _isRegisterMode = false;
   String? _errorMessage;
 
   @override
@@ -23,13 +25,55 @@ class _LoginScreenState extends State<LoginScreen> {
     super.initState();
     // Set test phone number
     _phoneController.text = '+972525640021';
+    _nameController.text = 'User Test';
   }
 
   @override
   void dispose() {
     _phoneController.dispose();
     _otpController.dispose();
+    _nameController.dispose();
     super.dispose();
+  }
+
+  Future<void> _handlePrimaryAction() async {
+    if (_isRegisterMode) {
+      await _register();
+    } else {
+      await _requestOtp();
+    }
+  }
+
+  Future<void> _register() async {
+    if (_nameController.text.isEmpty) {
+      setState(() => _errorMessage = 'Please enter your full name');
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      final response = await AuthService.register(
+        fullName: _nameController.text,
+        phoneNumber: _phoneController.text,
+      );
+
+      if (response.statusCode == 201) {
+        // Success! Now request OTP automatically
+        setState(() => _isRegisterMode = false);
+        await _requestOtp();
+      } else {
+        final data = jsonDecode(response.body);
+        setState(() => _errorMessage = data['error'] ?? 'Registration failed');
+      }
+    } catch (e) {
+      setState(() => _errorMessage = 'Error: $e');
+    } finally {
+      setState(() => _isLoading = false);
+    }
   }
 
   Future<void> _requestOtp() async {
@@ -45,13 +89,15 @@ class _LoginScreenState extends State<LoginScreen> {
         // Extract OTP from response for display (for testing)
         final body = response.body;
         String? otp;
-        if (body.contains('__debug__')) {
-          try {
-            final jsonData = jsonDecode(body);
-            otp = jsonData['__debug__']?['otp'];
-          } catch (e) {
-            // Silently handle JSON parse errors
+        try {
+          final jsonData = jsonDecode(body);
+          if (jsonData.containsKey('otp')) {
+            otp = jsonData['otp']?.toString();
+          } else if (jsonData.containsKey('__debug__')) {
+            otp = jsonData['__debug__']?['otp']?.toString();
           }
+        } catch (e) {
+          // Silently handle JSON parse errors
         }
 
         setState(() {
@@ -191,10 +237,25 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
             if (_errorMessage != null) const SizedBox(height: 16),
 
+            // Name field (only in register mode)
+            if (_isRegisterMode && !_otpSent) ...[
+              TextField(
+                controller: _nameController,
+                decoration: InputDecoration(
+                  labelText: 'Full Name',
+                  hintText: 'John Doe',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
+
             // Phone number field
             TextField(
               controller: _phoneController,
-              enabled: !_otpSent,
+              enabled: !_otpSent && !_isRegisterMode,
               keyboardType: TextInputType.phone,
               decoration: InputDecoration(
                 labelText: 'Phone Number',
@@ -207,7 +268,7 @@ class _LoginScreenState extends State<LoginScreen> {
             const SizedBox(height: 16),
 
             // OTP field (shown after OTP is sent)
-            if (_otpSent)
+            if (_otpSent) ...[
               TextField(
                 controller: _otpController,
                 keyboardType: TextInputType.number,
@@ -219,22 +280,22 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
               ),
-            if (_otpSent) const SizedBox(height: 24),
+              const SizedBox(height: 24),
+            ],
 
-            // Request OTP button
+            // Action buttons
             if (!_otpSent)
               ElevatedButton(
-                onPressed: _isLoading ? null : _requestOtp,
+                onPressed: _isLoading ? null : _handlePrimaryAction,
                 child: _isLoading
                     ? const SizedBox(
                         height: 20,
                         width: 20,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
-                    : const Text('Request OTP'),
+                    : Text(_isRegisterMode ? 'Register' : 'Request OTP'),
               ),
 
-            // Verify OTP button
             if (_otpSent)
               ElevatedButton(
                 onPressed: _isLoading ? null : _verifyOtp,
@@ -245,6 +306,22 @@ class _LoginScreenState extends State<LoginScreen> {
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
                     : const Text('Verify OTP'),
+              ),
+
+            const SizedBox(height: 16),
+
+            // Toggle Register/Login
+            if (!_otpSent && !_isLoading)
+              TextButton(
+                onPressed: () {
+                  setState(() {
+                    _isRegisterMode = !_isRegisterMode;
+                    _errorMessage = null;
+                  });
+                },
+                child: Text(_isRegisterMode
+                    ? 'Already have an account? Login'
+                    : 'No account? Register now'),
               ),
 
             if (_otpSent)

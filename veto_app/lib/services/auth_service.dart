@@ -20,7 +20,7 @@ class AuthService {
           'Content-Type': 'application/json',
         },
         body: jsonEncode({
-          'phoneNumber': phoneNumber,
+          'phone': phoneNumber,
         }),
       ).timeout(
         const Duration(seconds: AppConfig.requestTimeoutSeconds),
@@ -50,8 +50,8 @@ class AuthService {
           'Content-Type': 'application/json',
         },
         body: jsonEncode({
-          'phoneNumber': phoneNumber,
-          'otpCode': otpCode,
+          'phone': phoneNumber,
+          'otp': otpCode,
         }),
       ).timeout(
         const Duration(seconds: AppConfig.requestTimeoutSeconds),
@@ -60,6 +60,42 @@ class AuthService {
       return response;
     } catch (e) {
       throw Exception('Failed to verify OTP: $e');
+    }
+  }
+
+  /// Register a new account
+  /// 
+  /// Parameters:
+  ///   - fullName: User's full name
+  ///   - phoneNumber: User's phone number
+  ///   - role: 'user' or 'lawyer'
+  static Future<http.Response> register({
+    required String fullName,
+    required String phoneNumber,
+    String role = 'user',
+    String language = 'he',
+  }) async {
+    final url = Uri.parse('${AppConfig.baseUrl}/auth/register');
+
+    try {
+      final response = await http.post(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          'full_name': fullName,
+          'phone': phoneNumber,
+          'role': role,
+          'preferred_language': language,
+        }),
+      ).timeout(
+        const Duration(seconds: AppConfig.requestTimeoutSeconds),
+      );
+
+      return response;
+    } catch (e) {
+      throw Exception('Failed to register: $e');
     }
   }
 }

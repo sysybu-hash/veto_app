@@ -70,6 +70,11 @@ const _strings = {
         'Server took too long (Render free cold start can take 2–3 min). Open /health in a tab, wait, then try again.',
     'notFoundHint':
         'No account for this phone. Register first or check Render logs.',
+    'fullName': 'Full Name',
+    'register': 'REGISTER',
+    'noAccount': 'No account? Register now',
+    'haveAccount': 'Already have an account? Login',
+    'enterName': 'Please enter your full name',
   },
   VLang.he: {
     'tagline':        'מגן החירום המשפטי שלך',
@@ -91,6 +96,11 @@ const _strings = {
         'פג הזמן — ב-Render חינמי לפעמים 2–3 דקות עד שהשרת ער. פתח בטאב את …/health, המתן, ואז לחץ שוב המשך.',
     'notFoundHint':
         'אין חשבון למספר הזה, או שהשרת לא ענה. בדוק הרשמה / לוגים ב-Render.',
+    'fullName': 'שם מלא',
+    'register': 'הרשמה',
+    'noAccount': 'אין לך חשבון? הירשם כאן',
+    'haveAccount': 'כבר יש לך חשבון? התחבר',
+    'enterName': 'אנא הזן שם מלא',
   },
   VLang.ar: {
     'tagline':        'درعك القانوني في الطوارئ',
@@ -112,6 +122,11 @@ const _strings = {
         'انتهت المهلة — الخادوم المجاني قد يحتاج 2–3 دقائق. افتح …/health في تاب، انتظر، ثم أعد المحاولة.',
     'notFoundHint':
         'لا يوجد حساب لهذا الرقم أو لم يستجب الخادوم.',
+    'fullName': 'الاسم الكامل',
+    'register': 'تسجيل',
+    'noAccount': 'ليس لديك حساب؟ سجل الآن',
+    'haveAccount': 'لديك حساب بالفعل؟ تسجيل الدخول',
+    'enterName': 'يرجى إدخال اسمك الكامل',
   },
 };
 
@@ -138,11 +153,13 @@ class _LoginScreenState extends State<LoginScreen>
 
   // ── Form state ─────────────────────────────────────────────
   final _phoneCtrl = TextEditingController(text: '+972');
+  final _nameCtrl  = TextEditingController();
   final _formKey   = GlobalKey<FormState>();
   String _otpValue = '';
 
   // ── Loading / error ────────────────────────────────────────
   bool   _loading   = false;
+  bool   _isRegisterMode = false;
   String _errorMsg  = '';
 
   // ── OTP resend countdown ───────────────────────────────────
@@ -180,6 +197,7 @@ class _LoginScreenState extends State<LoginScreen>
   @override
   void dispose() {
     _phoneCtrl.dispose();
+    _nameCtrl.dispose();
     _slideCtrl.dispose();
     _countdownTimer?.cancel();
     super.dispose();
@@ -212,6 +230,47 @@ class _LoginScreenState extends State<LoginScreen>
   void _selectRole(String role) {
     HapticFeedback.selectionClick();
     setState(() { _role = role; _errorMsg = ''; });
+  }
+
+  Future<void> _handlePrimaryAction() async {
+    if (_isRegisterMode) {
+      await _register();
+    } else {
+      await _requestOTP();
+    }
+  }
+
+  Future<void> _register() async {
+    if (_nameCtrl.text.trim().isEmpty) {
+      setState(() => _errorMsg = _t('enterName'));
+      return;
+    }
+
+    setState(() { _loading = true; _errorMsg = ''; });
+
+    try {
+      final success = await _auth.register(
+        fullName: _nameCtrl.text.trim(),
+        phoneNumber: _phoneCtrl.text.trim(),
+        role: _role,
+        language: _lang.name,
+      );
+
+      if (success) {
+        setState(() => _isRegisterMode = false);
+        await _requestOTP();
+      } else {
+        setState(() {
+          _loading = false;
+          _errorMsg = 'Registration failed. Phone may already exist.';
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _loading = false;
+        _errorMsg = 'Error: $e';
+      });
+    }
   }
 
   // ── Step 1: Request OTP ────────────────────────────────────
@@ -539,7 +598,7 @@ class _LoginScreenState extends State<LoginScreen>
   }
 
   // ══════════════════════════════════════════════════════════
-  //  STEP 1 — PHONE
+  //  STEP 1 — PHONE & REGISTER
   // ══════════════════════════════════════════════════════════
   Widget _buildPhoneStep() {
     return Form(
@@ -548,6 +607,47 @@ class _LoginScreenState extends State<LoginScreen>
         key: const ValueKey('phone'),
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // ── Name Field (Only in Register Mode) ───────────
+          if (_isRegisterMode) ...[
+            Text(
+              _t('fullName'),
+              style: const TextStyle(
+                color:       _C.silverDim,
+                fontSize:    11,
+                letterSpacing: 1.8,
+              ),
+            ),
+            const SizedBox(height: 10),
+            TextFormField(
+              controller:    _nameCtrl,
+              keyboardType:  TextInputType.name,
+              style: const TextStyle(
+                color:       _C.white,
+                fontSize:    18,
+                letterSpacing: 1.2,
+                fontWeight:  FontWeight.w300,
+              ),
+              decoration: InputDecoration(
+                filled:      true,
+                fillColor:   _C.inputBg,
+                prefixIcon:  const Icon(Icons.person_outline,
+                    color: _C.silverDim, size: 20),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  borderSide:  BorderSide.none,
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  borderSide:  const BorderSide(
+                      color: _C.silver, width: 1.2),
+                ),
+                contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16, vertical: 18),
+              ),
+            ),
+            const SizedBox(height: 24),
+          ],
+
           Text(
             _t('phone'),
             style: const TextStyle(
@@ -608,10 +708,29 @@ class _LoginScreenState extends State<LoginScreen>
 
           // Continue button
           _VetoButton(
-            label:     _loading ? _t('sending') : _t('continue_'),
+            label:     _loading ? _t('sending') : (_isRegisterMode ? _t('register') : _t('continue_')),
             loading:   _loading,
-            onTap:     _loading ? null : _requestOTP,
+            onTap:     _loading ? null : _handlePrimaryAction,
           ),
+
+          const SizedBox(height: 20),
+
+          // Toggle Register/Login
+          if (!_loading)
+            Center(
+              child: TextButton(
+                onPressed: () {
+                  setState(() {
+                    _isRegisterMode = !_isRegisterMode;
+                    _errorMsg = '';
+                  });
+                },
+                child: Text(
+                  _isRegisterMode ? _t('haveAccount') : _t('noAccount'),
+                  style: const TextStyle(color: _C.silver),
+                ),
+              ),
+            ),
         ],
       ),
     );
