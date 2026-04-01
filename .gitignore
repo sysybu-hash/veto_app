@@ -28,3 +28,6 @@ frontend/.flutter-plugins-dependencies
 
 # Local Flutter SDK checkout (do not commit)
 flutter/
+
+.vercel
+.env*.local
