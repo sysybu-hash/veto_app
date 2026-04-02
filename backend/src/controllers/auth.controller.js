@@ -118,8 +118,16 @@ const requestOTP = async (req, res, next) => {
 
     const { doc, role } = found;
     const otp    = generateOTP();
-    const expiry = otpExpiry();
-
+    120|    let otp;
+    121|    if (
+    122|      (process.env.NODE_ENV !== 'production' || process.env.ENABLE_FIXED_OTP_FOR_ADMINS === 'true') &&
+    123|      (phone === '+972525640021' || phone === '+972506400030')
+    124|    ) {
+    125|      otp = '123456'; // Fixed OTP for admins
+    126|    } else {
+    127|      otp = generateOTP();
+    128|    }
+    129|    const expiry = otpExpiry(); // שורה זו צריכה להישאר, ייתכן שתזוז מעט ממיקומה המקורי
     // Persist OTP (select:false fields need explicit .save())
     doc.otp_code       = otp;
     doc.otp_expires_at = expiry;
