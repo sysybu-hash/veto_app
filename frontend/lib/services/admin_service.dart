@@ -13,14 +13,14 @@ class AdminService {
       if (token == null) return null;
 
       final response = await http.get(
-        Uri.parse('$"{AppConfig.baseUrl}/admin/settings"),
+        Uri.parse('${AppConfig.baseUrl}/admin/settings'),
         headers: AppConfig.httpHeaders({'Authorization': 'Bearer $token'}),
       ).timeout(const Duration(seconds: 30));
 
       if (response.statusCode == 200) {
         return jsonDecode(response.body) as Map<String, dynamic>;
       } else {
-        debugPrint('Failed to get admin settings: $"{response.statusCode} $"{response.body}");
+        debugPrint('Failed to get admin settings: ${response.statusCode} ${response.body}');
         return null;
       }
     } catch (e) {
@@ -35,7 +35,7 @@ class AdminService {
       if (token == null) return false;
 
       final response = await http.put(
-        Uri.parse('$"{AppConfig.baseUrl}/admin/settings/fixed-otp"),
+        Uri.parse('${AppConfig.baseUrl}/admin/settings/fixed-otp'),
         headers: AppConfig.httpHeaders({'Authorization': 'Bearer $token'}),
         body: jsonEncode({'enable': enable}),
       ).timeout(const Duration(seconds: 30));
@@ -43,7 +43,7 @@ class AdminService {
       if (response.statusCode == 200) {
         return true;
       } else {
-        debugPrint('Failed to update fixed OTP setting: $"{response.statusCode} $"{response.body}");
+        debugPrint('Failed to update fixed OTP setting: ${response.statusCode} ${response.body}');
         return false;
       }
     } catch (e) {

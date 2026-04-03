@@ -12,9 +12,9 @@ class AdminSettingsScreen extends StatefulWidget {
 class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
   bool _maintenanceMode = false;
   bool _enableFixedOtp = true;
-  String _serverStatus = 'θεςο...';
-  String _mongoDbStatus = 'θεςο...';
-  String _appVersion = 'θεςο...';
+  String _serverStatus = 'ΧΧ•ΧΆΧ...';
+  String _mongoDbStatus = 'ΧΧ•ΧΆΧ...';
+  String _appVersion = 'ΧΧ•ΧΆΧ...';
   bool _loading = false;
 
   final AdminService _adminService = AdminService(); // NEW: AdminService instance
@@ -32,9 +32,9 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
     if (mounted && settings != null) {
       setState(() {
         _enableFixedOtp = settings['enableFixedOtpForAdmins'] ?? false;
-        _serverStatus = settings['serverStatus'] ?? 'μΰ ιγες';
-        _mongoDbStatus = settings['mongoDbStatus'] ?? 'μΰ ιγες';
-        _appVersion = settings['appVersion'] ?? 'μΰ ιγες';
+        _serverStatus = settings['serverStatus'] ?? 'ΧΧ Χ™Χ“Χ•ΧΆ';
+        _mongoDbStatus = settings['mongoDbStatus'] ?? 'ΧΧ Χ™Χ“Χ•ΧΆ';
+        _appVersion = settings['appVersion'] ?? 'ΧΧ Χ™Χ“Χ•ΧΆ';
       });
     }
     setState(() => _loading = false);
@@ -54,11 +54,11 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
           // Revert UI if update failed
           _enableFixedOtp = !_enableFixedOtp; 
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('πλωμ ςγλεο δδβγψδ.')),
+            const SnackBar(content: Text('Χ Χ›Χ©Χ ΧΆΧ“Χ›Χ•Χ Χ”Χ”Χ’Χ“Χ¨Χ”.')),
           );
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Fixed OTP ςαεψ ΰγξιπιν δεβγψ μ-$newValue')),
+            SnackBar(content: Text('Fixed OTP ΧΆΧ‘Χ•Χ¨ ΧΧ“ΧΧ™Χ Χ™Χ Χ”Χ•Χ’Χ“Χ¨ Χ-$newValue')),
           );
         }
       });
@@ -70,30 +70,30 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFF001220),
       appBar: AppBar(
-        title: const Text('τΰπμ πιδεμ', style: TextStyle(fontSize: 14, letterSpacing: 2.0)),
+        title: const Text('Χ¤ΧΧ Χ Χ Χ™Χ”Χ•Χ', style: TextStyle(fontSize: 14, letterSpacing: 2.0)),
         backgroundColor: Colors.transparent,
         elevation: 0,
       ),
-      body: _loading && _serverStatus == 'θεςο...' // Show loading indicator only on initial load
+      body: _loading && _serverStatus == 'ΧΧ•ΧΆΧ...' // Show loading indicator only on initial load
           ? const Center(child: CircularProgressIndicator(color: Colors.white70))
           : SingleChildScrollView(
               padding: const EdgeInsets.all(24),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildSectionHeader('ρχιψϊ ξςψλϊ'),
-                  _buildInfoCard('ρθθερ ωψϊ', _serverStatus, color: _serverStatus == 'Online' ? Colors.green : Colors.red),
-                  _buildInfoCard('αριρ πϊεπιν (MONGO DB)', _mongoDbStatus, color: _mongoDbStatus == 'Connected' ? Colors.green : Colors.red),
-                  _buildInfoCard('βψρδ', _appVersion, color: Colors.white24),
+                  _buildSectionHeader('Χ΅Χ§Χ™Χ¨Χª ΧΧΆΧ¨Χ›Χª'),
+                  _buildInfoCard('Χ΅ΧΧΧ•Χ΅ Χ©Χ¨Χª', _serverStatus, color: _serverStatus == 'Online' ? Colors.green : Colors.red),
+                  _buildInfoCard('Χ‘Χ΅Χ™Χ΅ Χ ΧªΧ•Χ Χ™Χ (MONGO DB)', _mongoDbStatus, color: _mongoDbStatus == 'Connected' ? Colors.green : Colors.red),
+                  _buildInfoCard('Χ’Χ¨Χ΅Χ”', _appVersion, color: Colors.white24),
                   const SizedBox(height: 32),
-                  _buildSectionHeader('τχγι ϊτςεμ'),
-                  _buildSwitchTile('ξφα ϊηζεχδ', _maintenanceMode, (val) => setState(() => _maintenanceMode = val)),
-                  _buildSwitchTile('OTP χαες μΰγξιπιν', _enableFixedOtp, _toggleFixedOtp), // NEW: Use _toggleFixedOtp
+                  _buildSectionHeader('Χ¤Χ§Χ“Χ™ ΧªΧ¤ΧΆΧ•Χ'),
+                  _buildSwitchTile('ΧΧ¦Χ‘ ΧªΧ—Χ–Χ•Χ§Χ”', _maintenanceMode, (val) => setState(() => _maintenanceMode = val)),
+                  _buildSwitchTile('OTP Χ§Χ‘Χ•ΧΆ ΧΧΧ“ΧΧ™Χ Χ™Χ', _enableFixedOtp, _toggleFixedOtp), // NEW: Use _toggleFixedOtp
                   const SizedBox(height: 32),
-                  _buildSectionHeader('πιδεμ ξωϊξωιν'),
-                  _buildActionCard('φτδ αλμ δξωϊξωιν', Icons.group_outlined, () { /* TODO: Implement navigation to user list */ }),
-                  _buildActionCard('φτδ αλμ ςεψλι δγιο', Icons.balance_outlined, () { /* TODO: Implement navigation to lawyer list */ }),
-                  _buildActionCard('ιεξπι ηιψεν', Icons.history_rounded, () { /* TODO: Implement navigation to emergency logs */ }),
+                  _buildSectionHeader('Χ Χ™Χ”Χ•Χ ΧΧ©ΧªΧΧ©Χ™Χ'),
+                  _buildActionCard('Χ¦Χ¤Χ” Χ‘Χ›Χ Χ”ΧΧ©ΧªΧΧ©Χ™Χ', Icons.group_outlined, () { /* TODO: Implement navigation to user list */ }),
+                  _buildActionCard('Χ¦Χ¤Χ” Χ‘Χ›Χ ΧΆΧ•Χ¨Χ›Χ™ Χ”Χ“Χ™Χ', Icons.balance_outlined, () { /* TODO: Implement navigation to lawyer list */ }),
+                  _buildActionCard('Χ™Χ•ΧΧ Χ™ Χ—Χ™Χ¨Χ•Χ', Icons.history_rounded, () { /* TODO: Implement navigation to emergency logs */ }),
                 ],
               ),
             ),

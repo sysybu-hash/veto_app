@@ -73,6 +73,7 @@ app.use('/api/auth', require('./src/routes/auth.routes'));
 app.use('/api/users', require('./src/routes/user.routes'));
 app.use('/api/lawyers', require('./src/routes/lawyer.routes'));
 app.use('/api/events', require('./src/routes/event.routes'));
+app.use('/api/admin', require('./src/routes/admin.routes'));
 
 app.get('/', (_, res) =>
   res.json({

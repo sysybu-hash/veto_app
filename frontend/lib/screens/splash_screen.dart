@@ -1,5 +1,5 @@
 // ============================================================
-//  splash_screen.dart — splash → token + role routing
+//  splash_screen.dart
 // ============================================================
 
 import 'package:flutter/material.dart';
@@ -29,7 +29,7 @@ class _SplashScreenState extends State<SplashScreen> {
     if (!mounted) return;
 
     if (token != null && token.isNotEmpty) {
-      if (role == 'lawyer' || role == 'admin') {
+      if (role == 'lawyer') {
         Navigator.pushReplacementNamed(context, '/lawyer_dashboard');
       } else {
         Navigator.pushReplacementNamed(context, '/veto_screen');
@@ -48,15 +48,20 @@ class _SplashScreenState extends State<SplashScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(Icons.shield, size: 120, color: Color(0xFFC0C2C9)),
-            SizedBox(height: 25),
+            SizedBox(height: 24),
             Text(
               'VETO',
               style: TextStyle(
-                color: Colors.white,
-                fontSize: 48,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 10,
+                color: Color(0xFFC0C2C9),
+                fontSize: 32,
+                letterSpacing: 8.0,
+                fontWeight: FontWeight.w200,
               ),
+            ),
+            SizedBox(height: 48),
+            CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFC0C2C9)),
+              strokeWidth: 2,
             ),
           ],
         ),

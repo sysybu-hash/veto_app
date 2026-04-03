@@ -1,177 +1,123 @@
-import 'dart:async';
-import 'dart:convert';
-
-import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
+import 'dart:convert';
 import 'package:flutter/material.dart';
-
 import '../config/app_config.dart';
 
-/// Outcome for request-otp (timeout = common on Render free cold start).
-enum OtpRequestOutcome { success, failed, timeout }
+enum OtpRequestOutcome { success, failure, timeout }
 
 class AuthService {
+  static final AuthService _instance = AuthService._internal();
+  factory AuthService() => _instance;
+  AuthService._internal();
+
   final _storage = const FlutterSecureStorage();
 
-  /// POST ל-API — אחרי cold start בדרך כלל מהיר.
-  static const Duration _postTimeout = Duration(seconds: 120);
+  Future<bool> requestOTP(String phone, String role) async => await requestOtp(phone);
 
-  /// GET /health רק כדי לעורר אינסטנס; לא לחסום דקות שלמות לפני ה-POST.
-  static const Duration _healthPingTimeout = Duration(seconds: 45);
-
-  Future<bool> requestOtp(String phone, {String role = 'admin'}) async {
-    final r = await requestOtpDetailed(phone, role: role);
-    return r == OtpRequestOutcome.success;
-  }
-
-  /// GET /health — מעורר שירות רדום; נתעלם משגיאות.
-  Future<void> _pingHealth(Duration timeout) async {
+  Future<bool> requestOtp(String phone) async {
     try {
-      await http
-          .get(
-            Uri.parse(AppConfig.healthCheckUrl),
-            headers: AppConfig.httpGetHeaders,
-          )
-          .timeout(timeout);
-    } catch (_) {}
-  }
-
-  Future<OtpRequestOutcome> _postRequestOtp(
-    String phone,
-    String role,
-    Duration timeout,
-  ) async {
-    final uri = Uri.parse('${AppConfig.baseUrl}/auth/request-otp');
-    final response = await http
-        .post(
-          uri,
-          headers: AppConfig.httpHeaders({}),
-          body: jsonEncode({'phone': phone, 'role': role}),
-        )
-        .timeout(timeout);
-    if (response.statusCode == 200) return OtpRequestOutcome.success;
-    debugPrint(
-        '⚠️ request-otp ${response.statusCode} ${response.body.length > 200 ? response.body.substring(0, 200) : response.body}');
-    return OtpRequestOutcome.failed;
-  }
-
-  Future<OtpRequestOutcome> requestOtpDetailed(String phone,
-      {String role = 'admin'}) async {
-    final uri = Uri.parse('${AppConfig.baseUrl}/auth/request-otp');
-    await _pingHealth(_healthPingTimeout);
-    try {
-      return await _postRequestOtp(phone, role, _postTimeout);
-    } on TimeoutException {
-      debugPrint('⚠️ request-otp timeout, retry (server may be warm now) → $uri');
-      try {
-        return await _postRequestOtp(phone, role, _postTimeout);
-      } on TimeoutException {
-        debugPrint('⚠️ request-otp timeout after retry → $uri');
-        return OtpRequestOutcome.timeout;
-      }
+      final response = await http.post(
+        Uri.parse('${AppConfig.baseUrl}/auth/request-otp'),
+        headers: AppConfig.httpHeaders({}),
+        body: jsonEncode({'phone': phone}),
+      ).timeout(const Duration(seconds: 30));
+      
+      if (response.statusCode == 200) return true;
     } catch (e) {
-      debugPrint('⚠️ request-otp error: $e');
-      return OtpRequestOutcome.failed;
+      debugPrint("Error requesting OTP: " + e.toString());
+    }
+    return false;
+  }
+
+  Future<OtpRequestOutcome> requestOTPDetailed(String phone, String role) async {
+    try {
+      final response = await http.post(
+        Uri.parse('${AppConfig.baseUrl}/auth/request-otp'),
+        headers: AppConfig.httpHeaders({}),
+        body: jsonEncode({'phone': phone}),
+      ).timeout(const Duration(seconds: 25));
+
+      if (response.statusCode == 200) return OtpRequestOutcome.success;
+      return OtpRequestOutcome.failure;
+    } catch (e) {
+      if (e.toString().contains('TimeoutException')) return OtpRequestOutcome.timeout;
+      return OtpRequestOutcome.failure;
     }
   }
 
-  Future<Map<String, dynamic>?> verifyOtp(String phone, String code) async {
+  Future<Map<String, dynamic>?> verifyOTP(String phone, String otp) async {
+    final res = await verifyOtp(phone, otp);
+    if (res['success'] == true) return res;
+    return null;
+  }
+
+  Future<Map<String, dynamic>> verifyOtp(String phone, String otp) async {
     try {
-      final response = await http
-          .post(
-            Uri.parse('${AppConfig.baseUrl}/auth/verify-otp'),
-            headers: AppConfig.httpHeaders({}),
-            body: jsonEncode({'phone': phone, 'otp': code}),
-          )
-          .timeout(_postTimeout);
+      final response = await http.post(
+        Uri.parse('${AppConfig.baseUrl}/auth/verify-otp'),
+        headers: AppConfig.httpHeaders({}),
+        body: jsonEncode({'phone': phone, 'otp': otp}),
+      );
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        if (data is! Map<String, dynamic>) return null;
-        final token = data['token'] as String?;
-        if (token == null || token.isEmpty) return null;
-
-        await _storage.write(key: 'jwt', value: token);
-
+        final token = data['token'];
+        final role = data['role'] ?? 'user';
         final user = data['user'];
-        final role = user is Map<String, dynamic>
-            ? (user['role']?.toString() ?? 'user')
-            : 'user';
-        await _storage.write(key: 'veto_role', value: role);
 
-        if (user is Map<String, dynamic>) {
-          final name = user['full_name']?.toString() ?? user['name']?.toString();
-          if (name != null) {
-            await _storage.write(key: 'veto_name', value: name);
+        if (token != null) {
+          await _storage.write(key: 'jwt', value: token);
+          await _storage.write(key: 'veto_role', value: role);
+          await _storage.write(key: 'veto_phone', value: phone);
+                    
+          if (user is Map<String, dynamic>) {
+            final name = user['full_name']?.toString() ?? user['name']?.toString();
+            if (name != null) await _storage.write(key: 'veto_name', value: name);
           }
         }
-
-        return data;
+        return {'success': true, 'isNewUser': data['isNewUser'] == true, 'user': data['user']};
       }
-      return null;
-    } on TimeoutException {
-      debugPrint('⚠️ verify-otp timeout');
-      return null;
+      return {'success': false, 'error': jsonDecode(response.body)['error']};
     } catch (e) {
-      debugPrint('⚠️ verify-otp error: $e');
-      return null;
+      return {'success': false, 'error': e.toString()};
     }
   }
 
-  Future<OtpRequestOutcome> requestOTPDetailed(String phone, String role) =>
-      requestOtpDetailed(phone, role: role);
+  Future<bool> register({required String fullName, required String phoneNumber, required String role, required String language}) async {
+    final success = await updateProfile(name: fullName, role: role, language: language);
+    if (success) await _storage.write(key: 'veto_phone', value: phoneNumber);
+    return success;
+  }
 
-  Future<bool> requestOTP(String phone, String role) =>
-      requestOtp(phone, role: role);
-
-  Future<Map<String, dynamic>?> verifyOTP(String phone, String otp) =>
-      verifyOtp(phone, otp);
-
-  Future<bool> register({
-    required String fullName,
-    required String phoneNumber,
-    String role = 'user',
-    String language = 'he',
-  }) async {
+  Future<bool> updateProfile({required String name, required String role, required String language}) async {
+    final token = await getToken();
+    if (token == null) return false;
     try {
-      final response = await http
-          .post(
-            Uri.parse('${AppConfig.baseUrl}/auth/register'),
-            headers: AppConfig.httpHeaders({}),
-            body: jsonEncode({
-              'full_name': fullName,
-              'phone': phoneNumber,
-              'role': role,
-              'preferred_language': language,
-            }),
-          )
-          .timeout(_postTimeout);
-
-      return response.statusCode == 201;
+      final response = await http.post(
+        Uri.parse('${AppConfig.baseUrl}/auth/update-profile'),
+        headers: AppConfig.httpHeaders({'Authorization': 'Bearer ' + token}),
+        body: jsonEncode({'full_name': name, 'role': role, 'language': language}),
+      );
+      if (response.statusCode == 200) {
+        await _storage.write(key: 'veto_role', value: role);
+        await _storage.write(key: 'veto_name', value: name);
+        return true;
+      }
+      return false;
     } catch (e) {
-      debugPrint('⚠️ register error: $e');
+      debugPrint('Error updating profile: ' + e.toString());
       return false;
     }
   }
 
-  Future<String?> getStoredRole() async =>
-      await _storage.read(key: 'veto_role');
-
-  Future<String?> getStoredName() async =>
-      await _storage.read(key: 'veto_name');
-
-  /// Prefer `jwt`; fall back to legacy `veto_token` during storage-key migration.
-  Future<String?> getToken() async {
-    final jwt = await _storage.read(key: 'jwt');
-    if (jwt != null && jwt.isNotEmpty) return jwt;
-    final legacy = await _storage.read(key: 'veto_token');
-    if (legacy != null && legacy.isNotEmpty) return legacy;
-    return null;
-  }
+  Future<String?> getToken() async => await _storage.read(key: 'jwt');
+  Future<String?> getStoredRole() async => await _storage.read(key: 'veto_role');
+  Future<String?> getStoredName() async => await _storage.read(key: 'veto_name');
+  Future<String?> getStoredPhone() async => await _storage.read(key: 'veto_phone');
 
   Future<void> logout(BuildContext context) async {
     await _storage.deleteAll();
-    Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
+    Navigator.of(context).pushReplacementNamed('/login');
   }
 }
