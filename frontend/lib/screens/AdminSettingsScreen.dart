@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
+import '../services/admin_service.dart'; // NEW: Import AdminService
 
 class AdminSettingsScreen extends StatefulWidget {
   const AdminSettingsScreen({super.key});
@@ -11,39 +12,91 @@ class AdminSettingsScreen extends StatefulWidget {
 class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
   bool _maintenanceMode = false;
   bool _enableFixedOtp = true;
-  String _serverStatus = 'Online';
+  String _serverStatus = 'טוען...';
+  String _mongoDbStatus = 'טוען...';
+  String _appVersion = 'טוען...';
   bool _loading = false;
+
+  final AdminService _adminService = AdminService(); // NEW: AdminService instance
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchAdminSettings(); // NEW: Fetch settings on init
+  }
+
+  // NEW: Fetch admin settings from backend
+  Future<void> _fetchAdminSettings() async {
+    setState(() => _loading = true);
+    final settings = await _adminService.getAdminSettings();
+    if (mounted && settings != null) {
+      setState(() {
+        _enableFixedOtp = settings['enableFixedOtpForAdmins'] ?? false;
+        _serverStatus = settings['serverStatus'] ?? 'לא ידוע';
+        _mongoDbStatus = settings['mongoDbStatus'] ?? 'לא ידוע';
+        _appVersion = settings['appVersion'] ?? 'לא ידוע';
+      });
+    }
+    setState(() => _loading = false);
+  }
+
+  // NEW: Handle toggle for Fixed OTP
+  Future<void> _toggleFixedOtp(bool newValue) async {
+    setState(() {
+      _enableFixedOtp = newValue; // Optimistically update UI
+      _loading = true;
+    });
+    final success = await _adminService.updateFixedOtpSetting(newValue);
+    if (mounted) {
+      setState(() {
+        _loading = false;
+        if (!success) {
+          // Revert UI if update failed
+          _enableFixedOtp = !_enableFixedOtp; 
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('נכשל עדכון ההגדרה.')),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Fixed OTP עבור אדמינים הוגדר ל-$newValue')),
+          );
+        }
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF001220),
       appBar: AppBar(
-        title: const Text('ADMIN CONSOLE', style: TextStyle(fontSize: 14, letterSpacing: 2.0)),
+        title: const Text('פאנל ניהול', style: TextStyle(fontSize: 14, letterSpacing: 2.0)),
         backgroundColor: Colors.transparent,
         elevation: 0,
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildSectionHeader('SYSTEM OVERVIEW'),
-            _buildInfoCard('SERVER STATUS', _serverStatus, color: Colors.green),
-            _buildInfoCard('MONGO DB', 'Connected', color: Colors.green),
-            _buildInfoCard('VERSION', 'v1.2.4', color: Colors.white24),
-            const SizedBox(height: 32),
-            _buildSectionHeader('OPERATION CONTROLS'),
-            _buildSwitchTile('MAINTENANCE MODE', _maintenanceMode, (val) => setState(() => _maintenanceMode = val)),
-            _buildSwitchTile('FIXED OTP FOR ADMINS', _enableFixedOtp, (val) => setState(() => _enableFixedOtp = val)),
-            const SizedBox(height: 32),
-            _buildSectionHeader('USER MANAGEMENT'),
-            _buildActionCard('VIEW ALL USERS', Icons.group_outlined, () {}),
-            _buildActionCard('VIEW ALL LAWYERS', Icons.balance_outlined, () {}),
-            _buildActionCard('EMERGENCY LOGS', Icons.history_rounded, () {}),
-          ],
-        ),
-      ),
+      body: _loading && _serverStatus == 'טוען...' // Show loading indicator only on initial load
+          ? const Center(child: CircularProgressIndicator(color: Colors.white70))
+          : SingleChildScrollView(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildSectionHeader('סקירת מערכת'),
+                  _buildInfoCard('סטטוס שרת', _serverStatus, color: _serverStatus == 'Online' ? Colors.green : Colors.red),
+                  _buildInfoCard('בסיס נתונים (MONGO DB)', _mongoDbStatus, color: _mongoDbStatus == 'Connected' ? Colors.green : Colors.red),
+                  _buildInfoCard('גרסה', _appVersion, color: Colors.white24),
+                  const SizedBox(height: 32),
+                  _buildSectionHeader('פקדי תפעול'),
+                  _buildSwitchTile('מצב תחזוקה', _maintenanceMode, (val) => setState(() => _maintenanceMode = val)),
+                  _buildSwitchTile('OTP קבוע לאדמינים', _enableFixedOtp, _toggleFixedOtp), // NEW: Use _toggleFixedOtp
+                  const SizedBox(height: 32),
+                  _buildSectionHeader('ניהול משתמשים'),
+                  _buildActionCard('צפה בכל המשתמשים', Icons.group_outlined, () { /* TODO: Implement navigation to user list */ }),
+                  _buildActionCard('צפה בכל עורכי הדין', Icons.balance_outlined, () { /* TODO: Implement navigation to lawyer list */ }),
+                  _buildActionCard('יומני חירום', Icons.history_rounded, () { /* TODO: Implement navigation to emergency logs */ }),
+                ],
+              ),
+            ),
     );
   }
 
