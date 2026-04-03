@@ -24,6 +24,9 @@ class SocketService {
   final _emergencyAlertController = StreamController<Map<String, dynamic>>.broadcast();
   Stream<Map<String, dynamic>> get onEmergencyAlert => _emergencyAlertController.stream;
 
+  final _emergencyCreatedController = StreamController<Map<String, dynamic>>.broadcast();
+  Stream<Map<String, dynamic>> get onEmergencyCreated => _emergencyCreatedController.stream;
+
   final _caseTakenController = StreamController<Map<String, dynamic>>.broadcast();
   Stream<Map<String, dynamic>> get onCaseTaken => _caseTakenController.stream;
 
@@ -71,11 +74,18 @@ class SocketService {
     });
 
     // ── Client events ──
-    _socket!.on('vetoStarted', (data) {
-      debugPrint('SocketService: VETO Started event received: $data');
+    _socket!.on('emergency_created', (data) {
+      debugPrint('SocketService: emergency_created event received: $data');
       if (data != null && data['eventId'] != null) {
         currentEventId = data['eventId'];
+        if (data is Map<String, dynamic>) {
+          _emergencyCreatedController.add(data);
+        }
       }
+    });
+
+    _socket!.on('veto_dispatched', (data) {
+      debugPrint('SocketService: VETO Dispatched event received: $data');
     });
 
     // ── Lawyer events ──
@@ -102,12 +112,16 @@ class SocketService {
   }
 
   // ── Client Actions ───────────────────────────────────────────
-  void emitStartVeto(Map<String, dynamic> data) {
+  void emitStartVeto({required double lat, required double lng, String? preferredLanguage}) {
     if (_socket != null && _socket!.connected) {
-      _socket!.emit('startVeto', data);
-      debugPrint('SocketService: Emitted startVeto with data: $data');
+      final data = {
+        'location': {'lat': lat, 'lng': lng},
+        'preferredLanguage': preferredLanguage ?? 'en',
+      };
+      _socket!.emit('start_veto', data);
+      debugPrint('SocketService: Emitted start_veto with data: $data');
     } else {
-      debugPrint('SocketService: Socket not connected, cannot emit startVeto.');
+      debugPrint('SocketService: Socket not connected, cannot emit start_veto.');
     }
   }
 

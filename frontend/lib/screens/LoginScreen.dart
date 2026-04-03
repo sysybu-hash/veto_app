@@ -214,7 +214,7 @@ class _LoginScreenState extends State<LoginScreen>
 
   void _navigateToDashboard(String role) {
     Navigator.of(context).pushReplacementNamed(
-      role == 'lawyer' ? '/lawyer_dashboard' : '/veto_screen',
+      (role == 'lawyer' || role == 'admin') ? '/lawyer_dashboard' : '/veto_screen',
     );
   }
 

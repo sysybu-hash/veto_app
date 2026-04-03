@@ -89,6 +89,9 @@ module.exports = function initDispatch(io) {
 
         const eventId = event._id.toString();
 
+        // 1.5. Notify the user immediately that the event was created
+        socket.emit('emergency_created', { eventId });
+
         // 2. Find all available online lawyers ───────────────
         const availableLawyers = await Lawyer.find({
           is_online:   true,

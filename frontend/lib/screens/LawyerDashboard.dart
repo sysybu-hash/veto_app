@@ -8,12 +8,14 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../services/auth_service.dart';
 import '../config/app_config.dart';
 import '../services/socket_service.dart';
 
-// ── Re-use brand colors from VetoScreen ───────────────────
+// ── Brand palette ──────────────────────────────────────────
 class _C {
-  static const bg        = Color(0xFF001F3F); // Deep Navy
+  static const bg        = Color(0xFF001220); // Darker, slightly different blue for lawyer
+  static const consoleBg = Color(0xFF001F3F); // Header navy
   static const silver    = Color(0xFFC0C2C9);
   static const silverDim = Color(0xFF8A8C93);
   static const white     = Color(0xFFFFFFFF);
@@ -23,10 +25,12 @@ class _C {
   static const cardBg    = Color(0xFF012A52); // Slightly lighter navy
 }
 
-// ── Dummy session model (replace with real auth provider) ──
+// ── Session helper (replaces hardcoded _Session) ──
 class _Session {
-  static const lawyerName = 'Adv. Sarah Cohen';
-  static const token      = 'YOUR_JWT_HERE'; // inject from auth
+  static Future<String> getLawyerName() async {
+    final name = await AuthService().getStoredName();
+    return name ?? 'Lawyer / Admin';
+  }
   static String get serverUrl => AppConfig.socketOrigin;
 }
 
@@ -46,6 +50,7 @@ class _LawyerDashboardState extends State<LawyerDashboard>
   // ── State ──────────────────────────────────────────────────
   bool _isOnline      = false;
   bool _isConnected   = false;
+  String _lawyerName  = 'Loading...';
 
   // Alert
   Map<String, dynamic>? _pendingAlert; // incoming emergency payload
@@ -68,9 +73,15 @@ class _LawyerDashboardState extends State<LawyerDashboard>
   @override
   void initState() {
     super.initState();
+    _loadName();
     _buildAnimations();
     _connectSocket();
     _listenToSocket();
+  }
+
+  Future<void> _loadName() async {
+    final name = await _Session.getLawyerName();
+    if (mounted) setState(() => _lawyerName = name);
   }
 
   void _buildAnimations() {
@@ -90,8 +101,9 @@ class _LawyerDashboardState extends State<LawyerDashboard>
   }
 
   // ── Socket setup ───────────────────────────────────────────
-  void _connectSocket() {
-    _socket.connect(serverUrl: _Session.serverUrl, token: _Session.token);
+  void _connectSocket() async {
+    final token = await AuthService().getToken();
+    _socket.connect(serverUrl: _Session.serverUrl, token: token);
   }
 
   void _listenToSocket() {
@@ -225,6 +237,7 @@ class _LawyerDashboardState extends State<LawyerDashboard>
     return Column(
       children: [
         _buildTopBar(),
+        _buildQuickStats(),
         const Spacer(),
         _buildIdleCenter(),
         const Spacer(),
@@ -234,50 +247,90 @@ class _LawyerDashboardState extends State<LawyerDashboard>
     );
   }
 
-  // ── Top Bar ────────────────────────────────────────────────
-  Widget _buildTopBar() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+  // ── Quick Stats ───────────────────────────────────────────
+  Widget _buildQuickStats() {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
+      decoration: BoxDecoration(
+        color: _C.consoleBg.withOpacity(0.5),
+        border: Border(bottom: BorderSide(color: _C.silver.withOpacity(0.05))),
+      ),
       child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          // Connection dot
-          AnimatedContainer(
-            duration: const Duration(milliseconds: 400),
-            width: 8, height: 8,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: _isConnected ? _C.accept : _C.silverDim,
-              boxShadow: _isConnected
-                  ? [BoxShadow(color: _C.accept.withOpacity(0.6), blurRadius: 8)]
-                  : [],
-            ),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              _Session.lawyerName,
-              style: const TextStyle(
-                color: _C.silver,
-                fontSize: 14,
-                letterSpacing: 0.8,
-                fontWeight: FontWeight.w400,
-              ),
-            ),
-          ),
-          // Online toggle
-          Row(
+          _StatItem(label: 'TODAY', value: '0', icon: Icons.calendar_today_rounded),
+          _StatItem(label: 'ACTIVE', value: '0', icon: Icons.bolt_rounded, color: _C.accept),
+          _StatItem(label: 'RANK', value: 'Pro', icon: Icons.star_border_rounded),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTopBar() {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(24, 64, 24, 20),
+      color: _C.consoleBg,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                _isOnline ? 'ONLINE' : 'OFFLINE',
-                style: TextStyle(
-                  color: _isOnline ? _C.accept : _C.silverDim,
-                  fontSize: 11,
-                  letterSpacing: 1.4,
-                  fontWeight: FontWeight.w600,
+                'LAWYER CONSOLE',
+                style: TextStyle(color: _C.silver.withOpacity(0.5), fontSize: 10, letterSpacing: 1.5, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 4),
+              GestureDetector(
+                onTap: () => Navigator.pushNamed(context, '/profile'),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 8, height: 8,
+                      decoration: BoxDecoration(color: _isConnected ? _C.accept : _C.alert, shape: BoxShape.circle),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(_lawyerName, style: const TextStyle(color: _C.white, fontSize: 18, fontWeight: FontWeight.w600, letterSpacing: 0.5)),
+                    const Icon(Icons.chevron_right, color: Colors.white24, size: 16),
+                  ],
                 ),
               ),
+            ],
+          ),
+          Row(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.settings_outlined, color: Colors.white70, size: 20),
+                onPressed: () => Navigator.pushNamed(context, '/admin_settings'),
+              ),
               const SizedBox(width: 8),
-              _VetoSwitch(value: _isOnline, onChanged: _toggleOnline),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    _isOnline ? 'ONLINE' : 'OFFLINE',
+                    style: TextStyle(
+                      color: _isOnline ? _C.accept : _C.silverDim,
+                      fontSize: 10,
+                      letterSpacing: 1.2,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  _VetoSwitch(value: _isOnline, onChanged: _toggleOnline),
+                ],
+              ),
+              const SizedBox(width: 16),
+              TextButton.icon(
+                onPressed: () => AuthService().logout(context),
+                icon: const Icon(Icons.logout_rounded, color: _C.white, size: 18),
+                label: const Text('LOGOUT', style: TextStyle(color: _C.white, fontSize: 10, letterSpacing: 1.2)),
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  backgroundColor: _C.white.withOpacity(0.1),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                ),
+              ),
             ],
           ),
         ],
@@ -757,6 +810,26 @@ class _LawyerDashboardState extends State<LawyerDashboard>
 // ══════════════════════════════════════════════════════════════
 //  Reusable Widgets
 // ══════════════════════════════════════════════════════════════
+
+class _StatItem extends StatelessWidget {
+  final String label;
+  final String value;
+  final IconData icon;
+  final Color? color;
+  const _StatItem({required this.label, required this.value, required this.icon, this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Icon(icon, color: color ?? _C.silverDim, size: 16),
+        const SizedBox(height: 4),
+        Text(value, style: TextStyle(color: color ?? _C.white, fontSize: 16, fontWeight: FontWeight.bold)),
+        Text(label, style: TextStyle(color: _C.silverDim, fontSize: 8, letterSpacing: 1.0)),
+      ],
+    );
+  }
+}
 
 // ── Custom luxury toggle switch ────────────────────────────
 class _VetoSwitch extends StatelessWidget {

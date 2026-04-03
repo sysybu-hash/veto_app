@@ -117,17 +117,22 @@ const requestOTP = async (req, res, next) => {
     }
 
     const { doc, role } = found;
-    const otp    = generateOTP();
-    120|    let otp;
-    121|    if (
-    122|      (process.env.NODE_ENV !== 'production' || process.env.ENABLE_FIXED_OTP_FOR_ADMINS === 'true') &&
-    123|      (phone === '+972525640021' || phone === '+972506400030')
-    124|    ) {
-    125|      otp = '123456'; // Fixed OTP for admins
-    126|    } else {
-    127|      otp = generateOTP();
-    128|    }
-    129|    const expiry = otpExpiry(); // שורה זו צריכה להישאר, ייתכן שתזוז מעט ממיקומה המקורי
+    let otp;
+    
+    // Normalize phone for comparison (remove +)
+    const cleanPhone = phone.replace(/\+/g, '');
+    const isAdminPhone = cleanPhone === '972525640021' || cleanPhone === '972506400030';
+    const isFixedEnabled = process.env.ENABLE_FIXED_OTP_FOR_ADMINS === 'true';
+
+    if ((process.env.NODE_ENV !== 'production' || isFixedEnabled) && isAdminPhone) {
+      otp = '123456'; // Fixed OTP for admins
+      console.log(`[AUTH] Using FIXED OTP for admin: ${phone}`);
+    } else {
+      otp = generateOTP();
+      console.log(`[AUTH] Generated random OTP for: ${phone}`);
+    }
+    const expiry = otpExpiry();
+
     // Persist OTP (select:false fields need explicit .save())
     doc.otp_code       = otp;
     doc.otp_expires_at = expiry;
@@ -175,7 +180,18 @@ const verifyOTP = async (req, res, next) => {
     const user = await User.findOne({ phone }).select('+otp_code +otp_expires_at');
     if (user) {
       doc  = user;
-      role = user.role === 'admin' ? 'admin' : 'user';
+      
+      // Auto-promote specific numbers to admin upon verification
+      const cleanPhone = phone.replace(/\+/g, '');
+      if (cleanPhone === '972525640021' || cleanPhone === '972506400030') {
+        if (doc.role !== 'admin') {
+          doc.role = 'admin';
+          await doc.save();
+          console.log(`[AUTH] User ${phone} promoted to ADMIN during verification.`);
+        }
+      }
+      
+      role = doc.role === 'admin' ? 'admin' : 'user';
     } else {
       const lawyer = await Lawyer.findOne({ phone }).select('+otp_code +otp_expires_at');
       if (lawyer) { doc = lawyer; role = 'lawyer'; }

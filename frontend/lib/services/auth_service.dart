@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
+import 'package:flutter/material.dart';
 
 import '../config/app_config.dart';
 
@@ -99,6 +100,13 @@ class AuthService {
             : 'user';
         await _storage.write(key: 'veto_role', value: role);
 
+        if (user is Map<String, dynamic>) {
+          final name = user['full_name']?.toString() ?? user['name']?.toString();
+          if (name != null) {
+            await _storage.write(key: 'veto_name', value: name);
+          }
+        }
+
         return data;
       }
       return null;
@@ -150,6 +158,9 @@ class AuthService {
   Future<String?> getStoredRole() async =>
       await _storage.read(key: 'veto_role');
 
+  Future<String?> getStoredName() async =>
+      await _storage.read(key: 'veto_name');
+
   /// Prefer `jwt`; fall back to legacy `veto_token` during storage-key migration.
   Future<String?> getToken() async {
     final jwt = await _storage.read(key: 'jwt');
@@ -159,7 +170,8 @@ class AuthService {
     return null;
   }
 
-  Future<void> logout() async {
+  Future<void> logout(BuildContext context) async {
     await _storage.deleteAll();
+    Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
   }
 }

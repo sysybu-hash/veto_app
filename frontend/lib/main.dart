@@ -8,6 +8,8 @@ import 'screens/LoginScreen.dart';
 import 'screens/LawyerDashboard.dart';
 import 'screens/splash_screen.dart';
 import 'screens/VetoScreen.dart';
+import 'screens/ProfileScreen.dart';
+import 'screens/AdminSettingsScreen.dart';
 
 void main() {
   runApp(const VetoApp());
@@ -33,6 +35,8 @@ class VetoApp extends StatelessWidget {
         '/login': (context) => const LoginScreen(),
         '/veto_screen': (context) => const VetoScreen(),
         '/lawyer_dashboard': (context) => const LawyerDashboard(),
+        '/profile': (context) => const ProfileScreen(),
+        '/admin_settings': (context) => const AdminSettingsScreen(),
       },
     );
   }

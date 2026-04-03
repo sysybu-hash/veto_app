@@ -24,11 +24,11 @@ class _C {
 }
 
 // ── i18n strings ──────────────────────────────────────────
-enum _Lang { en, he, ar }
+enum EvidenceLanguage { en, he, ar }
 
 class _L {
-  static const Map<_Lang, Map<String, String>> _d = {
-    _Lang.en: {
+  static const Map<EvidenceLanguage, Map<String, String>> _d = {
+    EvidenceLanguage.en: {
       'capture':    'CAPTURE',
       'uploading':  'Uploading Evidence...',
       'saved':      'Evidence Saved',
@@ -38,7 +38,7 @@ class _L {
       'camError':   'Camera unavailable',
       'empty':      'No evidence captured yet',
     },
-    _Lang.he: {
+    EvidenceLanguage.he: {
       'capture':    'צלם',
       'uploading':  'מעלה ראיות...',
       'saved':      'ראיה נשמרה',
@@ -48,7 +48,7 @@ class _L {
       'camError':   'המצלמה אינה זמינה',
       'empty':      'טרם נלכדו ראיות',
     },
-    _Lang.ar: {
+    EvidenceLanguage.ar: {
       'capture':    'التقط',
       'uploading':  'جارٍ رفع الأدلة...',
       'saved':      'تم حفظ الدليل',
@@ -60,10 +60,10 @@ class _L {
     },
   };
 
-  static String get(_Lang lang, String key) => _d[lang]?[key] ?? key;
+  static String get(EvidenceLanguage lang, String key) => _d[lang]?[key] ?? key;
 
-  static TextDirection dir(_Lang lang) =>
-      lang == _Lang.en ? TextDirection.ltr : TextDirection.rtl;
+  static TextDirection dir(EvidenceLanguage lang) =>
+      lang == EvidenceLanguage.en ? TextDirection.ltr : TextDirection.rtl;
 }
 
 // ── Evidence item model ────────────────────────────────────
@@ -88,13 +88,13 @@ class _EvidenceItem {
 class EvidenceScreen extends StatefulWidget {
   final String eventId;
   final String token;
-  final _Lang  language;
+  final EvidenceLanguage  language;
 
   const EvidenceScreen({
     super.key,
     required this.eventId,
     required this.token,
-    this.language = _Lang.en,
+    this.language = EvidenceLanguage.en,
   });
 
   @override
@@ -132,7 +132,7 @@ class _EvidenceScreenState extends State<EvidenceScreen>
   // ── Upload service ─────────────────────────────────────────
   final _uploader = UploadService();
 
-  _Lang get _lang => widget.language;
+  EvidenceLanguage get _lang => widget.language;
   String _t(String k) => _L.get(_lang, k);
   TextDirection get _dir => _L.dir(_lang);
 

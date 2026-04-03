@@ -7,6 +7,10 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../services/auth_service.dart';
+import '../services/socket_service.dart';
+import 'EvidenceScreen.dart';
+import 'package:geolocator/geolocator.dart';
 
 // ── Brand Colors ───────────────────────────────────────────
 class VetoColors {
@@ -79,6 +83,7 @@ class _VetoScreenState extends State<VetoScreen>
   // ── State ──────────────────────────────────────────────────
   VetoLanguage _lang   = VetoLanguage.en;
   bool _isSearching    = false;
+  StreamSubscription? _emergencyCreatedSub;
 
   // ── Animation Controllers ──────────────────────────────────
   late final AnimationController _pulseCtrl;   // outer ring pulse
@@ -103,6 +108,24 @@ class _VetoScreenState extends State<VetoScreen>
     super.initState();
     _buildAnimations();
     _idleCtrl.repeat(reverse: true);
+
+    _emergencyCreatedSub = SocketService().onEmergencyCreated.listen((data) async {
+      final eventId = data['eventId'];
+      if (eventId != null) {
+        debugPrint('VetoScreen: Emergency created successfully, eventId=$eventId. Navigating to EvidenceScreen.');
+        final token = await AuthService().getToken();
+        if (!mounted) return;
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => EvidenceScreen(
+              eventId: eventId,
+              token: token ?? '',
+              language: _lang == VetoLanguage.he ? EvidenceLanguage.he : (_lang == VetoLanguage.ar ? EvidenceLanguage.ar : EvidenceLanguage.en),
+            ),
+          ),
+        );
+      }
+    });
   }
 
   void _buildAnimations() {
@@ -166,11 +189,12 @@ class _VetoScreenState extends State<VetoScreen>
     _ringCtrl.dispose();
     _idleCtrl.dispose();
     _searchTimer?.cancel();
+    _emergencyCreatedSub?.cancel();
     super.dispose();
   }
 
   // ── Activate / Deactivate VETO ─────────────────────────────
-  void _activateVeto() {
+  Future<void> _activateVeto() async {
     if (_isSearching) return;
     HapticFeedback.heavyImpact();
 
@@ -184,8 +208,29 @@ class _VetoScreenState extends State<VetoScreen>
     _glowCtrl.forward();
     _statusCtrl.repeat(reverse: true);
 
-    // Demo: auto-stop after 8s (replace with real dispatch result)
-    _searchTimer = Timer(const Duration(seconds: 8), _stopVeto);
+    // Get location and emit event
+    try {
+      Position pos = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+      );
+      
+      SocketService().emitStartVeto(
+        lat: pos.latitude,
+        lng: pos.longitude,
+        preferredLanguage: _lang.name,
+      );
+    } catch (e) {
+      debugPrint('VetoScreen: Error getting location: $e');
+      // Even if location fails, we can try with 0,0 or show error
+      SocketService().emitStartVeto(
+        lat: 0,
+        lng: 0,
+        preferredLanguage: _lang.name,
+      );
+    }
+
+    // Demo: auto-stop after 30s if no response (increased from 8s)
+    _searchTimer = Timer(const Duration(seconds: 30), _stopVeto);
   }
 
   void _stopVeto() {
@@ -245,13 +290,33 @@ class _VetoScreenState extends State<VetoScreen>
     );
   }
 
-  // ── Top Bar (Language Switcher) ────────────────────────────
+  // ── Top Bar (Language & Logout) ────────────────────────────
   Widget _buildTopBar() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.end,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
+          Row(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.person_outline, color: VetoColors.white, size: 24),
+                onPressed: () => Navigator.pushNamed(context, '/profile'),
+              ),
+              const SizedBox(width: 8),
+              // Logout Button
+              TextButton.icon(
+                onPressed: () => AuthService().logout(context),
+                icon: const Icon(Icons.logout_rounded, color: VetoColors.white, size: 20),
+                label: const Text('LOGOUT', style: TextStyle(color: VetoColors.white, fontSize: 10, letterSpacing: 1.2)),
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  backgroundColor: VetoColors.white.withOpacity(0.1),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+              ),
+            ],
+          ),
           _LanguageSwitcher(
             currentLang: _lang,
             onTap: _cycleLang,
