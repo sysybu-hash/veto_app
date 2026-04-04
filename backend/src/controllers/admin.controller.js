@@ -38,11 +38,77 @@ const getAllUsers = async (req, res, next) => {
   } catch (err) { next(err); }
 };
 
+const createUser = async (req, res, next) => {
+  try {
+    const { full_name, phone, role, preferred_language } = req.body;
+    if (!full_name || !phone) return res.status(400).json({ error: 'full_name and phone are required.' });
+    const user = await User.create({ full_name, phone, role: role || 'user', preferred_language: preferred_language || 'he', is_verified: true });
+    res.status(201).json({ user });
+  } catch (err) { next(err); }
+};
+
+const updateUser = async (req, res, next) => {
+  try {
+    const allowed = ['full_name', 'phone', 'role', 'preferred_language', 'email', 'is_verified'];
+    const updates = {};
+    allowed.forEach(f => { if (req.body[f] !== undefined) updates[f] = req.body[f]; });
+    const user = await User.findByIdAndUpdate(req.params.id, updates, { new: true, runValidators: true });
+    if (!user) return res.status(404).json({ error: 'User not found.' });
+    res.json({ user });
+  } catch (err) { next(err); }
+};
+
+const deleteUser = async (req, res, next) => {
+  try {
+    const user = await User.findByIdAndDelete(req.params.id);
+    if (!user) return res.status(404).json({ error: 'User not found.' });
+    res.json({ message: 'User deleted.' });
+  } catch (err) { next(err); }
+};
+
 const getAllLawyers = async (req, res, next) => {
   try {
     const Lawyer = require('../models/Lawyer');
-    const lawyers = await Lawyer.find({}).select('full_name phone is_available is_verified created_at specializations').sort({ created_at: -1 });
+    const lawyers = await Lawyer.find({}).select('full_name phone email is_available is_verified created_at specializations license_number years_of_experience').sort({ created_at: -1 });
     res.json({ lawyers });
+  } catch (err) { next(err); }
+};
+
+const createLawyer = async (req, res, next) => {
+  try {
+    const Lawyer = require('../models/Lawyer');
+    const { full_name, phone, email, license_number, specializations, years_of_experience } = req.body;
+    if (!full_name || !phone || !email || !license_number) {
+      return res.status(400).json({ error: 'full_name, phone, email, license_number are required.' });
+    }
+    const lawyer = await Lawyer.create({
+      full_name, phone, email, license_number,
+      specializations: specializations || [],
+      years_of_experience: years_of_experience || 0,
+      is_verified: true,
+    });
+    res.status(201).json({ lawyer });
+  } catch (err) { next(err); }
+};
+
+const updateLawyer = async (req, res, next) => {
+  try {
+    const Lawyer = require('../models/Lawyer');
+    const allowed = ['full_name', 'phone', 'email', 'is_available', 'is_verified', 'specializations', 'license_number', 'years_of_experience', 'bio'];
+    const updates = {};
+    allowed.forEach(f => { if (req.body[f] !== undefined) updates[f] = req.body[f]; });
+    const lawyer = await Lawyer.findByIdAndUpdate(req.params.id, updates, { new: true, runValidators: true });
+    if (!lawyer) return res.status(404).json({ error: 'Lawyer not found.' });
+    res.json({ lawyer });
+  } catch (err) { next(err); }
+};
+
+const deleteLawyer = async (req, res, next) => {
+  try {
+    const Lawyer = require('../models/Lawyer');
+    const lawyer = await Lawyer.findByIdAndDelete(req.params.id);
+    if (!lawyer) return res.status(404).json({ error: 'Lawyer not found.' });
+    res.json({ message: 'Lawyer deleted.' });
   } catch (err) { next(err); }
 };
 
@@ -56,10 +122,30 @@ const getEmergencyLogs = async (req, res, next) => {
   } catch (err) { next(err); }
 };
 
+const updateEmergencyLog = async (req, res, next) => {
+  try {
+    const Event = require('../models/EmergencyEvent');
+    const allowed = ['status', 'assigned_lawyer_id'];
+    const updates = {};
+    allowed.forEach(f => { if (req.body[f] !== undefined) updates[f] = req.body[f]; });
+    const event = await Event.findByIdAndUpdate(req.params.id, updates, { new: true });
+    if (!event) return res.status(404).json({ error: 'Event not found.' });
+    res.json({ event });
+  } catch (err) { next(err); }
+};
+
+const deleteEmergencyLog = async (req, res, next) => {
+  try {
+    const Event = require('../models/EmergencyEvent');
+    const event = await Event.findByIdAndDelete(req.params.id);
+    if (!event) return res.status(404).json({ error: 'Event not found.' });
+    res.json({ message: 'Event deleted.' });
+  } catch (err) { next(err); }
+};
+
 module.exports = {
-  getAdminSettings,
-  updateFixedOtpSetting,
-  getAllUsers,
-  getAllLawyers,
-  getEmergencyLogs,
+  getAdminSettings, updateFixedOtpSetting,
+  getAllUsers, createUser, updateUser, deleteUser,
+  getAllLawyers, createLawyer, updateLawyer, deleteLawyer,
+  getEmergencyLogs, updateEmergencyLog, deleteEmergencyLog,
 };
