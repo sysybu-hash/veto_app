@@ -124,7 +124,8 @@ const requestOTP = async (req, res, next) => {
     const isAdminPhone = cleanPhone === '972525640021' || cleanPhone === '972506400030';
     const isFixedEnabled = process.env.ENABLE_FIXED_OTP_FOR_ADMINS === 'true';
 
-    if ((process.env.NODE_ENV !== 'production' || isFixedEnabled) && isAdminPhone) {
+    // Admin phones always get fixed OTP (no SMS service configured yet)
+    if (isAdminPhone || isFixedEnabled) {
       otp = '123456'; // Fixed OTP for admins
       console.log(`[AUTH] Using FIXED OTP for admin: ${phone}`);
     } else {
