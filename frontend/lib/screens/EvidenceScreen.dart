@@ -19,7 +19,6 @@ class _C {
   static const silverDim = Color(0xFF8A8C93);
   static const white     = Color(0xFFFFFFFF);
   static const accept    = Color(0xFF2ECC71);
-  static const cardBg    = Color(0xFF012A52);
   static const uploading = Color(0xFFC0C2C9); // silver progress bar
 }
 

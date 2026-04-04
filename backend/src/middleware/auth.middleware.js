@@ -33,6 +33,14 @@ const protect = (req, res, next) => {
   }
 };
 
+// ── Role-based Authorization ──────────────────────────────
+const authorize = (...roles) => (req, res, next) => {
+  if (!req.user || !roles.includes(req.user.role)) {
+    return res.status(403).json({ error: 'Forbidden.' });
+  }
+  next();
+};
+
 // ── Socket.io Middleware ───────────────────────────────────
 const socketAuth = (socket, next) => {
   const token = socket.handshake.auth?.token;
@@ -56,4 +64,4 @@ const signToken = (payload) =>
     expiresIn: process.env.JWT_EXPIRES_IN || '30d',
   });
 
-module.exports = { protect, socketAuth, signToken };
+module.exports = { protect, authorize, socketAuth, signToken };

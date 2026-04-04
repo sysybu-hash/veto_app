@@ -24,16 +24,10 @@ class _SplashScreenState extends State<SplashScreen> {
 
     final auth = AuthService();
     final token = await auth.getToken();
-    final role = await auth.getStoredRole();
-
     if (!mounted) return;
 
     if (token != null && token.isNotEmpty) {
-      if (role == 'lawyer') {
-        Navigator.pushReplacementNamed(context, '/lawyer_dashboard');
-      } else {
-        Navigator.pushReplacementNamed(context, '/veto_screen');
-      }
+      Navigator.pushReplacementNamed(context, '/wizard_home');
     } else {
       Navigator.pushReplacementNamed(context, '/login');
     }

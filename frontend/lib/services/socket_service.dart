@@ -9,18 +9,36 @@ class SocketService {
   factory SocketService() => _instance;
 
   IO.Socket? _socket;
-  
-  final _emergencyCreatedController = StreamController<Map<String, dynamic>>.broadcast();
-  final _emergencyAlertController = StreamController<Map<String, dynamic>>.broadcast();
-  final _caseAcceptedController = StreamController<Map<String, dynamic>>.broadcast();
-  final _vetoDispatchedController = StreamController<Map<String, dynamic>>.broadcast();
-  final _newEmergencyAlertController = StreamController<Map<String, dynamic>>.broadcast();
 
-  Stream<Map<String, dynamic>> get onEmergencyCreated => _emergencyCreatedController.stream;
-  Stream<Map<String, dynamic>> get onEmergencyAlert => _emergencyAlertController.stream;
-  Stream<Map<String, dynamic>> get onCaseAccepted => _caseAcceptedController.stream;
-  Stream<Map<String, dynamic>> get onVetoDispatched => _vetoDispatchedController.stream;
-  Stream<Map<String, dynamic>> get onNewEmergencyAlert => _newEmergencyAlertController.stream;
+  final _emergencyCreatedController =
+      StreamController<Map<String, dynamic>>.broadcast();
+  final _emergencyAlertController =
+      StreamController<Map<String, dynamic>>.broadcast();
+  final _caseAcceptedController =
+      StreamController<Map<String, dynamic>>.broadcast();
+  final _vetoDispatchedController =
+      StreamController<Map<String, dynamic>>.broadcast();
+  final _newEmergencyAlertController =
+      StreamController<Map<String, dynamic>>.broadcast();
+  final _lawyerFoundController =
+      StreamController<Map<String, dynamic>>.broadcast();
+  final _noLawyersController =
+      StreamController<Map<String, dynamic>>.broadcast();
+
+  Stream<Map<String, dynamic>> get onEmergencyCreated =>
+      _emergencyCreatedController.stream;
+  Stream<Map<String, dynamic>> get onEmergencyAlert =>
+      _emergencyAlertController.stream;
+  Stream<Map<String, dynamic>> get onCaseAccepted =>
+      _caseAcceptedController.stream;
+  Stream<Map<String, dynamic>> get onVetoDispatched =>
+      _vetoDispatchedController.stream;
+  Stream<Map<String, dynamic>> get onNewEmergencyAlert =>
+      _newEmergencyAlertController.stream;
+  Stream<Map<String, dynamic>> get onLawyerFound =>
+      _lawyerFoundController.stream;
+  Stream<Map<String, dynamic>> get onNoLawyersAvailable =>
+      _noLawyersController.stream;
 
   SocketService._internal();
 
@@ -28,7 +46,11 @@ class SocketService {
     final token = await AuthService().getToken();
     if (token == null) return;
 
-    _socket = IO.io(AppConfig.baseUrl, <String, dynamic>{
+    if (_socket?.connected ?? false) return;
+
+    _socket?.dispose();
+
+    _socket = IO.io(AppConfig.socketOrigin, <String, dynamic>{
       'transports': ['websocket'],
       'autoConnect': false,
       'auth': {'token': token},
@@ -71,6 +93,18 @@ class SocketService {
       }
     });
 
+    _socket?.on('lawyer_found', (data) {
+      if (data is Map<String, dynamic>) {
+        _lawyerFoundController.add(data);
+      }
+    });
+
+    _socket?.on('no_lawyers_available', (data) {
+      if (data is Map<String, dynamic>) {
+        _noLawyersController.add(data);
+      }
+    });
+
     _socket?.onDisconnect((_) {
       debugPrint('Socket disconnected');
     });
@@ -80,7 +114,8 @@ class SocketService {
     _socket?.emit(event, data);
   }
 
-  void emitStartVeto({required double lat, required double lng, String? preferredLanguage}) {
+  void emitStartVeto(
+      {required double lat, required double lng, String? preferredLanguage}) {
     emit('start_veto', {
       'location': {'lat': lat, 'lng': lng},
       'preferredLanguage': preferredLanguage,
@@ -90,6 +125,7 @@ class SocketService {
 
   void disconnect() {
     _socket?.disconnect();
+    _socket?.dispose();
     _socket = null;
   }
 }

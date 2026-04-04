@@ -1,80 +1,533 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:pinput/pinput.dart';
+
+import '../core/theme/future_surface.dart';
+import '../core/theme/veto_theme.dart';
 import '../services/auth_service.dart';
+
+enum AuthWizardStep { role, profile, otp }
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
+
   @override
   State<LoginScreen> createState() => _LoginScreenState();
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  int _step = 0; String _role = 'user';
-  final _phone = TextEditingController(text: '+972'), _name = TextEditingController();
-  bool _loading = false, _isReg = false; String _error = '';
+  AuthWizardStep _step = AuthWizardStep.role;
 
-  void _next(String role) {
-    bool isLawyer = (role == 'lawyer' || (_role == 'lawyer'));
-    Navigator.of(context).pushReplacementNamed(isLawyer ? '/lawyer_dashboard' : '/veto_screen');
+  String _role = 'user';
+  bool _registerMode = false;
+  bool _loading = false;
+  String _error = '';
+  String _countryCode = '+972';
+
+  final TextEditingController _nameController = TextEditingController();
+  // Local part only — user types 05X or 5X, we normalize on submit
+  final TextEditingController _phoneLocalController = TextEditingController();
+
+  /// Normalized E.164 phone: +972XXXXXXXX (leading 0 stripped automatically)
+  String get _fullPhone {
+    final local = _phoneLocalController.text.trim();
+    final stripped = local.startsWith('0') ? local.substring(1) : local;
+    return '$_countryCode$stripped';
   }
 
-  Future<void> _handle() async {
-    if (_phone.text.length < 10) { setState(() => _error = 'מספר לא תקין'); return; }
-    setState(() { _loading = true; _error = ''; });
-    if (_isReg) {
-      if (_name.text.isEmpty) { setState(() { _loading = false; _error = 'נא להזין שם'; }); return; }
-      await AuthService().register(fullName: _name.text, phoneNumber: _phone.text, role: _role, language: 'he');
+  Future<void> _continueFromProfile() async {
+    final local = _phoneLocalController.text.trim();
+    final digitsOnly = local.replaceAll(RegExp(r'\D'), '');
+    // Accept 9 digits (5XXXXXXXX) or 10 digits (05XXXXXXXX)
+    if (digitsOnly.length < 9 || digitsOnly.length > 10) {
+      setState(() => _error = 'נא להזין מספר טלפון תקין (9–10 ספרות)');
+      return;
     }
-    final res = await AuthService().requestOTPDetailed(_phone.text, _role);
-    if (res == OtpRequestOutcome.success) setState(() { _step = 1; _loading = false; });
-    else setState(() { _loading = false; _error = 'שגיאה בחיבור'; });
+
+    if (_registerMode && _nameController.text.trim().isEmpty) {
+      setState(() => _error = 'נא להזין שם מלא');
+      return;
+    }
+
+    final phone = _fullPhone;
+
+    setState(() {
+      _loading = true;
+      _error = '';
+    });
+
+    try {
+      if (_registerMode) {
+        final ok = await AuthService().register(
+          fullName: _nameController.text.trim(),
+          phoneNumber: phone,
+          role: _role,
+          language: 'he',
+        );
+        if (!ok) {
+          setState(() {
+            _loading = false;
+            _error = 'הרשמה נכשלה. נסה שוב.';
+          });
+          return;
+        }
+      }
+
+      final outcome = await AuthService().requestOTPDetailed(phone, _role);
+      if (outcome == OtpRequestOutcome.success) {
+        setState(() {
+          _loading = false;
+          _step = AuthWizardStep.otp;
+        });
+      } else {
+        setState(() {
+          _loading = false;
+          _error = 'שליחת קוד נכשלה. ודא שהחשבון קיים או בצע הרשמה.';
+        });
+      }
+    } catch (_) {
+      setState(() {
+        _loading = false;
+        _error = 'שגיאת מערכת. נסה שוב בעוד רגע.';
+      });
+    }
   }
 
-  Future<void> _verify(String code) async {
-    setState(() => _loading = true);
-    final data = await AuthService().verifyOTP(_phone.text, code);
-    if (data != null) _next(data['user']?['role'] ?? _role);
-    else setState(() { _loading = false; _error = 'קוד לא תקין'; });
+  Future<void> _verifyOtp(String otp) async {
+    setState(() {
+      _loading = true;
+      _error = '';
+    });
+
+    final data = await AuthService().verifyOTP(_fullPhone, otp);
+    if (!mounted) return;
+
+    if (data != null) {
+      Navigator.of(context).pushReplacementNamed('/wizard_home');
+      return;
+    }
+
+    setState(() {
+      _loading = false;
+      _error = 'קוד אימות לא תקין';
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    return Directionality(textDirection: TextDirection.rtl, child: Scaffold(
-      backgroundColor: const Color(0xFF001F3F),
-      body: SafeArea(child: SingleChildScrollView(padding: const EdgeInsets.all(32), child: Column(children: [
-        const SizedBox(height: 60),
-        const Text('VETO', style: TextStyle(color: Colors.white, fontSize: 48, fontWeight: FontWeight.w100, letterSpacing: 10)),
-        Text('Wizard Flow - שלב ${_step + 1} מתוך 2', style: const TextStyle(color: Colors.white24, fontSize: 12)),
-        const SizedBox(height: 60),
-        if (_step == 0) ...[
-          Row(children: [
-            _tab('אזרח', 'user', Icons.person), _tab('עורך דין', 'lawyer', Icons.balance),
-          ]),
-          const SizedBox(height: 32),
-          if (_isReg) _input(_name, 'שם מלא', Icons.person_outline, false),
-          _input(_phone, 'מספר טלפון', Icons.phone_android, true),
-          const SizedBox(height: 24),
-          _btn(_loading ? 'שולח...' : 'המשך', _handle),
-          TextButton(onPressed: () => setState(() => _isReg = !_isReg), child: Text(_isReg ? 'כבר יש לי חשבון' : 'הרשמה למשתמש חדש', style: const TextStyle(color: Colors.white54))),
-        ] else ...[
-          const Text('הזן קוד אימות', style: TextStyle(color: Colors.white, fontSize: 20)),
-          const SizedBox(height: 24),
-          Pinput(length: 6, autofocus: true, onCompleted: _verify, defaultPinTheme: PinTheme(width: 50, height: 60, textStyle: const TextStyle(color: Colors.white, fontSize: 24), decoration: BoxDecoration(color: Colors.white10, borderRadius: BorderRadius.circular(10)))),
-          const SizedBox(height: 32),
-          TextButton(onPressed: () => setState(() => _step = 0), child: const Text('חזרה', style: TextStyle(color: Colors.white54))),
-        ],
-        if (_error.isNotEmpty) Padding(padding: const EdgeInsets.only(top: 20), child: Text(_error, style: const TextStyle(color: Colors.redAccent))),
-      ]))),
-    ));
+    return Directionality(
+      textDirection: TextDirection.rtl,
+      child: Scaffold(
+        backgroundColor: VetoPalette.bg,
+        body: SafeArea(
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 480),
+              child: SingleChildScrollView(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _buildLogo(),
+                    const SizedBox(height: 28),
+                    _buildStepBar(),
+                    const SizedBox(height: 20),
+                    AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 250),
+                      switchInCurve: Curves.easeOutCubic,
+                      switchOutCurve: Curves.easeInCubic,
+                      child: _stepBody(),
+                    ),
+                    if (_error.isNotEmpty) ...[
+                      const SizedBox(height: 16),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 14, vertical: 10),
+                        decoration: BoxDecoration(
+                          color:
+                              VetoPalette.emergency.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                              color: VetoPalette.emergency
+                                  .withValues(alpha: 0.35)),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.error_outline,
+                                color: VetoPalette.emergency, size: 18),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                _error,
+                                style: const TextStyle(
+                                    color: VetoPalette.emergency,
+                                    fontSize: 13),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
-  Widget _tab(String l, String r, IconData i) => Expanded(child: GestureDetector(onTap: () => setState(() => _role = r),
-    child: Container(margin: const EdgeInsets.all(4), padding: const EdgeInsets.all(12), decoration: BoxDecoration(color: _role == r ? Colors.white10 : Colors.transparent, border: Border.all(color: _role == r ? Colors.white24 : Colors.white10), borderRadius: BorderRadius.circular(15)),
-      child: Column(children: [Icon(i, color: _role == r ? Colors.white : Colors.white24), Text(l, style: TextStyle(color: _role == r ? Colors.white : Colors.white24, fontSize: 12))]))));
+  Widget _buildLogo() {
+    return Column(
+      children: [
+        Container(
+          width: 60,
+          height: 60,
+          decoration: BoxDecoration(
+            color: VetoPalette.primary.withValues(alpha: 0.12),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+                color: VetoPalette.primary.withValues(alpha: 0.35)),
+          ),
+          child: const Icon(Icons.gavel_rounded,
+              color: VetoPalette.primary, size: 30),
+        ),
+        const SizedBox(height: 14),
+        Text(
+          'VETO',
+          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                fontWeight: FontWeight.w700,
+                letterSpacing: 4,
+              ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          'הגנה משפטית מהירה בשעת חירום',
+          style: Theme.of(context)
+              .textTheme
+              .bodySmall
+              ?.copyWith(color: VetoPalette.textMuted),
+          textAlign: TextAlign.center,
+        ),
+      ],
+    );
+  }
 
-  Widget _input(TextEditingController c, String h, IconData i, bool isLast) => Padding(padding: const EdgeInsets.only(bottom: 16),
-    child: TextField(controller: c, keyboardType: i == Icons.phone_android ? TextInputType.phone : TextInputType.text, textInputAction: isLast ? TextInputAction.done : TextInputAction.next, onSubmitted: isLast ? (_) => _handle() : null, style: const TextStyle(color: Colors.white), decoration: InputDecoration(prefixIcon: Icon(i, color: Colors.white24), hintText: h, hintStyle: const TextStyle(color: Colors.white24), filled: true, fillColor: Colors.white10, border: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: BorderSide.none))));
+  Widget _buildStepBar() {
+    const labels = ['סוג חשבון', 'פרטים', 'אימות'];
+    return Row(
+      children: List.generate(labels.length, (i) {
+        final active = i <= _step.index;
+        return Expanded(
+          child: Padding(
+            padding: EdgeInsets.only(left: i < labels.length - 1 ? 6 : 0),
+            child: Column(
+              children: [
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 220),
+                  height: 3,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(999),
+                    color: active ? VetoPalette.primary : VetoPalette.border,
+                  ),
+                ),
+                const SizedBox(height: 5),
+                Text(
+                  labels[i],
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: active
+                        ? VetoPalette.primary
+                        : VetoPalette.textSubtle,
+                    fontWeight:
+                        active ? FontWeight.w600 : FontWeight.w400,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      }),
+    );
+  }
 
-  Widget _btn(String l, VoidCallback o) => SizedBox(width: double.infinity, height: 55, child: ElevatedButton(onPressed: _loading ? null : o, style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF2ECC71), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15))), child: Text(l, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold))));
+  Widget _stepBody() {
+    switch (_step) {
+      case AuthWizardStep.role:
+        return _roleStep();
+      case AuthWizardStep.profile:
+        return _profileStep();
+      case AuthWizardStep.otp:
+        return _otpStep();
+    }
+  }
+
+  Widget _roleStep() {
+    return GlassPanel(
+      key: const ValueKey('roleStep'),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text('בחר סוג חשבון',
+              style: Theme.of(context)
+                  .textTheme
+                  .titleLarge
+                  ?.copyWith(fontWeight: FontWeight.w600)),
+          const SizedBox(height: 6),
+          Text(
+            'אזרח הזקוק לסיוע משפטי, או עורך דין המציע שירות',
+            style: Theme.of(context)
+                .textTheme
+                .bodySmall
+                ?.copyWith(color: VetoPalette.textMuted),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                  child:
+                      _roleCard('אזרח', 'user', Icons.person_outline_rounded)),
+              const SizedBox(width: 12),
+              Expanded(
+                  child: _roleCard('עורך דין', 'lawyer', Icons.gavel_rounded)),
+            ],
+          ),
+          const SizedBox(height: 16),
+          FilledButton(
+            onPressed: () => setState(() => _step = AuthWizardStep.profile),
+            child: const Text('המשך'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _roleCard(String label, String value, IconData icon) {
+    final selected = _role == value;
+
+    return InkWell(
+      borderRadius: BorderRadius.circular(20),
+      onTap: () => setState(() => _role = value),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 220),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: selected
+              ? VetoPalette.primary.withValues(alpha: 0.1)
+              : VetoPalette.surface,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: selected ? VetoPalette.primary : VetoPalette.border,
+            width: selected ? 1.5 : 1,
+          ),
+        ),
+        child: Column(
+          children: [
+            Icon(icon,
+                color: selected ? VetoPalette.primary : VetoPalette.textMuted,
+                size: 24),
+            const SizedBox(height: 10),
+            Text(label,
+                style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    color: selected
+                        ? VetoPalette.primary
+                        : VetoPalette.text)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _profileStep() {
+    return GlassPanel(
+      key: const ValueKey('profileStep'),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text('פרטי חשבון',
+              style: Theme.of(context)
+                  .textTheme
+                  .titleLarge
+                  ?.copyWith(fontWeight: FontWeight.w600)),
+          const SizedBox(height: 10),
+          SwitchListTile.adaptive(
+            value: _registerMode,
+            onChanged: (v) => setState(() => _registerMode = v),
+            contentPadding: EdgeInsets.zero,
+            title: const Text('יצירת חשבון חדש'),
+            subtitle: const Text('כבה אם כבר יש חשבון קיים במערכת'),
+          ),
+          const SizedBox(height: 8),
+          if (_registerMode) ...[
+            TextField(
+              controller: _nameController,
+              textInputAction: TextInputAction.next,
+              decoration: const InputDecoration(
+                labelText: 'שם מלא',
+                prefixIcon: Icon(Icons.badge_outlined),
+              ),
+            ),
+            const SizedBox(height: 10),
+          ],
+          // ── Phone input: prefix chip + local number ────────────
+          const Text(
+            'מספר טלפון',
+            style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+                color: VetoPalette.textMuted),
+          ),
+          const SizedBox(height: 6),
+          Row(
+            children: [
+              // Country code prefix (fixed)
+              Container(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 14, vertical: 14),
+                decoration: BoxDecoration(
+                  color: VetoPalette.surface,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: VetoPalette.border),
+                ),
+                child: Text(
+                  _countryCode,
+                  style: const TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 14,
+                      color: VetoPalette.text),
+                ),
+              ),
+              const SizedBox(width: 8),
+              // Local number — accepts 05XXXXXXXX or 5XXXXXXXX
+              Expanded(
+                child: TextField(
+                  controller: _phoneLocalController,
+                  keyboardType: TextInputType.phone,
+                  textDirection: TextDirection.ltr,
+                  maxLength: 10,
+                  decoration: const InputDecoration(
+                    hintText: '05X-XXXXXXX',
+                    counterText: '',
+                    prefixIcon: Icon(Icons.phone_iphone_rounded, size: 18),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'ניתן להזין עם 0 בהתחלה (0521234567) או בלי (521234567)',
+            style: Theme.of(context)
+                .textTheme
+                .bodySmall
+                ?.copyWith(color: VetoPalette.textSubtle),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => setState(() => _step = AuthWizardStep.role),
+                  child: const Text('חזור'),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: FilledButton(
+                  onPressed: _loading ? null : _continueFromProfile,
+                  child: _loading
+                      ? const SizedBox(
+                          height: 18,
+                          width: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Text('שלח OTP'),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _otpStep() {
+    final defaultPinTheme = PinTheme(
+      width: 50,
+      height: 58,
+      textStyle: Theme.of(context)
+          .textTheme
+          .titleLarge
+          ?.copyWith(color: VetoPalette.text, fontWeight: FontWeight.w600),
+      decoration: BoxDecoration(
+        color: VetoPalette.surface,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: VetoPalette.border),
+      ),
+    );
+
+    return GlassPanel(
+      key: const ValueKey('otpStep'),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text('אימות טלפון',
+              style: Theme.of(context)
+                  .textTheme
+                  .titleLarge
+                  ?.copyWith(fontWeight: FontWeight.w600)),
+          const SizedBox(height: 6),
+          Text(
+            'קוד נשלח ל-$_fullPhone',
+            style: const TextStyle(color: VetoPalette.textMuted, fontSize: 13),
+          ),
+          const SizedBox(height: 18),
+          Center(
+            child: Pinput(
+              length: 6,
+              defaultPinTheme: defaultPinTheme,
+              focusedPinTheme: defaultPinTheme.copyWith(
+                decoration: defaultPinTheme.decoration?.copyWith(
+                  border: Border.all(color: VetoPalette.primary, width: 1.5),
+                ),
+              ),
+              onCompleted: _verifyOtp,
+            ),
+          ),
+          const SizedBox(height: 18),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: _loading
+                      ? null
+                      : () => setState(() => _step = AuthWizardStep.profile),
+                  child: const Text('חזור'),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: FilledButton(
+                  onPressed: _loading
+                      ? null
+                      : () => setState(
+                          () => _error = 'יש להזין קוד מלא בן 6 ספרות'),
+                  child: _loading
+                      ? const SizedBox(
+                          height: 18,
+                          width: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Text('אמת והמשך'),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
 }

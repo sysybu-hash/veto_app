@@ -4,12 +4,14 @@
 
 import 'package:flutter/material.dart';
 
+import 'core/theme/veto_theme.dart';
 import 'screens/LoginScreen.dart';
 import 'screens/LawyerDashboard.dart';
 import 'screens/splash_screen.dart';
 import 'screens/VetoScreen.dart';
 import 'screens/ProfileScreen.dart';
 import 'screens/AdminSettingsScreen.dart';
+import 'screens/wizard/WizardShellScreen.dart';
 
 void main() {
   runApp(const VetoApp());
@@ -23,16 +25,12 @@ class VetoApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'VETO',
-      theme: ThemeData(
-        brightness: Brightness.dark,
-        primaryColor: const Color(0xFF001F3F),
-        scaffoldBackgroundColor: const Color(0xFF001F3F),
-        appBarTheme: const AppBarTheme(backgroundColor: Color(0xFF001F3F)),
-      ),
+      theme: VetoTheme.dark(),
       initialRoute: '/',
       routes: {
         '/': (context) => const SplashScreen(),
         '/login': (context) => const LoginScreen(),
+        '/wizard_home': (context) => const WizardShellScreen(),
         '/veto_screen': (context) => const VetoScreen(),
         '/lawyer_dashboard': (context) => const LawyerDashboard(),
         '/profile': (context) => const ProfileScreen(),

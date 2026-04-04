@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../services/auth_service.dart';
-import '../services/admin_service.dart'; // NEW: Import AdminService
+import '../core/theme/veto_theme.dart';
+import '../services/admin_service.dart';
 
 class AdminSettingsScreen extends StatefulWidget {
   const AdminSettingsScreen({super.key});
@@ -65,106 +65,188 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
     }
   }
 
+  void _comingSoon(String feature) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('$feature — בפיתוח')),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFF001220),
-      appBar: AppBar(
-        title: const Text('פאנל ניהול', style: TextStyle(fontSize: 14, letterSpacing: 2.0)),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-      ),
-      body: _loading && _serverStatus == 'טוען...' // Show loading indicator only on initial load
-          ? const Center(child: CircularProgressIndicator(color: Colors.white70))
-          : SingleChildScrollView(
-              padding: const EdgeInsets.all(24),
+    return Directionality(
+      textDirection: TextDirection.rtl,
+      child: Scaffold(
+        backgroundColor: VetoPalette.bg,
+        appBar: AppBar(
+          title: const Text('פאנל ניהול'),
+          backgroundColor: VetoPalette.surface,
+          bottom: const PreferredSize(
+            preferredSize: Size.fromHeight(1),
+            child: Divider(height: 1, color: VetoPalette.border),
+          ),
+          actions: [
+            if (_loading)
+              const Padding(
+                padding: EdgeInsets.all(14),
+                child: SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(
+                      strokeWidth: 2, color: VetoPalette.primary),
+                ),
+              ),
+          ],
+        ),
+        body: SingleChildScrollView(
+          padding: const EdgeInsets.all(20),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 600),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  _buildSectionHeader('סקירת מערכת'),
-                  _buildInfoCard('סטטוס שרת', _serverStatus, color: _serverStatus == 'Online' ? Colors.green : Colors.red),
-                  _buildInfoCard('בסיס נתונים (MONGO DB)', _mongoDbStatus, color: _mongoDbStatus == 'Connected' ? Colors.green : Colors.red),
-                  _buildInfoCard('גרסה', _appVersion, color: Colors.white24),
-                  const SizedBox(height: 32),
-                  _buildSectionHeader('פקדי תפעול'),
-                  _buildSwitchTile('מצב תחזוקה', _maintenanceMode, (val) => setState(() => _maintenanceMode = val)),
-                  _buildSwitchTile('OTP קבוע לאדמינים', _enableFixedOtp, _toggleFixedOtp), // NEW: Use _toggleFixedOtp
-                  const SizedBox(height: 32),
-                  _buildSectionHeader('ניהול משתמשים'),
-                  _buildActionCard('צפה בכל המשתמשים', Icons.group_outlined, () { /* TODO: Implement navigation to user list */ }),
-                  _buildActionCard('צפה בכל עורכי הדין', Icons.balance_outlined, () { /* TODO: Implement navigation to lawyer list */ }),
-                  _buildActionCard('יומני חירום', Icons.history_rounded, () { /* TODO: Implement navigation to emergency logs */ }),
+                  _sectionHeader('סקירת מערכת'),
+                  _infoCard('סטטוס שרת', _serverStatus,
+                      statusColor: _serverStatus == 'Online'
+                          ? VetoPalette.success
+                          : VetoPalette.emergency),
+                  _infoCard('בסיס נתונים', _mongoDbStatus,
+                      statusColor: _mongoDbStatus == 'Connected'
+                          ? VetoPalette.success
+                          : VetoPalette.emergency),
+                  _infoCard('גרסת אפליקציה', _appVersion),
+                  const SizedBox(height: 24),
+                  _sectionHeader('הגדרות תפעול'),
+                  _switchCard('מצב תחזוקה', _maintenanceMode,
+                      'השרת לא יקבל בקשות חדשות',
+                      (val) => setState(() => _maintenanceMode = val)),
+                  _switchCard('OTP קבוע לאדמינים', _enableFixedOtp,
+                      'קוד אימות קבוע לצרכי פיתוח', _toggleFixedOtp),
+                  const SizedBox(height: 24),
+                  _sectionHeader('ניהול משתמשים'),
+                  _actionCard('כל המשתמשים', Icons.group_outlined,
+                      () => _comingSoon('ניהול משתמשים')),
+                  _actionCard('כל עורכי הדין', Icons.gavel_rounded,
+                      () => _comingSoon('ניהול עורכי דין')),
+                  _actionCard('יומני חירום', Icons.history_rounded,
+                      () => _comingSoon('יומני חירום')),
                 ],
               ),
             ),
+          ),
+        ),
+      ),
     );
   }
 
-  Widget _buildSectionHeader(String title) {
+  Widget _sectionHeader(String title) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.only(bottom: 10),
       child: Text(
         title,
-        style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 10, letterSpacing: 2.0, fontWeight: FontWeight.bold),
+        style: const TextStyle(
+          color: VetoPalette.textMuted,
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+          letterSpacing: 1,
+        ),
       ),
     );
   }
 
-  Widget _buildInfoCard(String label, String value, {Color? color}) {
+  Widget _infoCard(String label, String value, {Color? statusColor}) {
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.03),
+        color: VetoPalette.surface,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white10),
+        border: Border.all(color: VetoPalette.border),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: const TextStyle(color: Colors.white70, fontSize: 12)),
-          Text(value, style: TextStyle(color: color ?? Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
+          Text(label,
+              style: const TextStyle(
+                  color: VetoPalette.textMuted, fontSize: 13)),
+          Row(
+            children: [
+              if (statusColor != null)
+                Container(
+                  width: 7,
+                  height: 7,
+                  margin: const EdgeInsets.only(left: 8),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: statusColor,
+                  ),
+                ),
+              Text(value,
+                  style: TextStyle(
+                    color: statusColor ?? VetoPalette.text,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                  )),
+            ],
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildSwitchTile(String title, bool value, ValueChanged<bool> onChanged) {
+  Widget _switchCard(
+      String title, bool value, String subtitle, ValueChanged<bool> onChange) {
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.05),
+        color: VetoPalette.surface,
         borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: VetoPalette.border),
       ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(title, style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w300)),
-          Switch(value: value, onChanged: onChanged, activeColor: const Color(0xFF2ECC71)),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title,
+                    style: const TextStyle(
+                        fontSize: 14, fontWeight: FontWeight.w500)),
+                const SizedBox(height: 2),
+                Text(subtitle,
+                    style: const TextStyle(
+                        color: VetoPalette.textMuted, fontSize: 12)),
+              ],
+            ),
+          ),
+          Switch(value: value, onChanged: onChange),
         ],
       ),
     );
   }
 
-  Widget _buildActionCard(String title, IconData icon, VoidCallback onTap) {
+  Widget _actionCard(String title, IconData icon, VoidCallback onTap) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
         margin: const EdgeInsets.only(bottom: 8),
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
-          color: const Color(0xFF012A52),
+          color: VetoPalette.surface,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.white10),
+          border: Border.all(color: VetoPalette.border),
         ),
         child: Row(
           children: [
-            Icon(icon, color: Colors.white, size: 20),
+            Icon(icon, color: VetoPalette.primary, size: 18),
             const SizedBox(width: 12),
-            Text(title, style: const TextStyle(color: Colors.white, fontSize: 13, letterSpacing: 0.5)),
-            const Spacer(),
-            Icon(Icons.arrow_forward_ios_rounded, color: Colors.white24, size: 14),
+            Expanded(
+              child: Text(title,
+                  style: const TextStyle(fontSize: 14)),
+            ),
+            const Icon(Icons.arrow_forward_ios_rounded,
+                color: VetoPalette.textSubtle, size: 14),
           ],
         ),
       ),

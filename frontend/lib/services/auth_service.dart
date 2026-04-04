@@ -13,23 +13,6 @@ class AuthService {
 
   final _storage = const FlutterSecureStorage();
 
-  Future<bool> requestOTP(String phone, String role) async => await requestOtp(phone);
-
-  Future<bool> requestOtp(String phone) async {
-    try {
-      final response = await http.post(
-        Uri.parse('${AppConfig.baseUrl}/auth/request-otp'),
-        headers: AppConfig.httpHeaders({}),
-        body: jsonEncode({'phone': phone}),
-      ).timeout(const Duration(seconds: 30));
-      
-      if (response.statusCode == 200) return true;
-    } catch (e) {
-      debugPrint("Error requesting OTP: " + e.toString());
-    }
-    return false;
-  }
-
   Future<OtpRequestOutcome> requestOTPDetailed(String phone, String role) async {
     try {
       final response = await http.post(
@@ -47,12 +30,6 @@ class AuthService {
   }
 
   Future<Map<String, dynamic>?> verifyOTP(String phone, String otp) async {
-    final res = await verifyOtp(phone, otp);
-    if (res['success'] == true) return res;
-    return null;
-  }
-
-  Future<Map<String, dynamic>> verifyOtp(String phone, String otp) async {
     try {
       final response = await http.post(
         Uri.parse('${AppConfig.baseUrl}/auth/verify-otp'),
@@ -63,50 +40,53 @@ class AuthService {
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         final token = data['token'];
-        final role = data['role'] ?? 'user';
         final user = data['user'];
+        
+        // Correct role extraction from nested user object
+        final role = user?['role']?.toString() ?? 'user';
+        final name = user?['full_name']?.toString() ?? user?['name']?.toString() ?? '';
 
         if (token != null) {
           await _storage.write(key: 'jwt', value: token);
           await _storage.write(key: 'veto_role', value: role);
           await _storage.write(key: 'veto_phone', value: phone);
-                    
-          if (user is Map<String, dynamic>) {
-            final name = user['full_name']?.toString() ?? user['name']?.toString();
-            if (name != null) await _storage.write(key: 'veto_name', value: name);
-          }
+          if (name.isNotEmpty) await _storage.write(key: 'veto_name', value: name);
         }
-        return {'success': true, 'isNewUser': data['isNewUser'] == true, 'user': data['user']};
+        return {'success': true, 'user': user};
       }
-      return {'success': false, 'error': jsonDecode(response.body)['error']};
+      return null;
     } catch (e) {
-      return {'success': false, 'error': e.toString()};
+      debugPrint('Error verifying OTP: $e');
+      return null;
     }
   }
 
-  Future<bool> register({required String fullName, required String phoneNumber, required String role, required String language}) async {
-    final success = await updateProfile(name: fullName, role: role, language: language);
-    if (success) await _storage.write(key: 'veto_phone', value: phoneNumber);
-    return success;
-  }
-
-  Future<bool> updateProfile({required String name, required String role, required String language}) async {
-    final token = await getToken();
-    if (token == null) return false;
+  Future<bool> register({
+    required String fullName, 
+    required String phoneNumber, 
+    required String role, 
+    required String language
+  }) async {
     try {
       final response = await http.post(
-        Uri.parse('${AppConfig.baseUrl}/auth/update-profile'),
-        headers: AppConfig.httpHeaders({'Authorization': 'Bearer ' + token}),
-        body: jsonEncode({'full_name': name, 'role': role, 'language': language}),
+        Uri.parse('${AppConfig.baseUrl}/auth/register'),
+        headers: AppConfig.httpHeaders({}),
+        body: jsonEncode({
+          'full_name': fullName,
+          'phone': phoneNumber,
+          'role': role,
+          'preferred_language': language,
+          'license_number': role == 'lawyer' ? '12345' : null // Simple default for demo
+        }),
       );
-      if (response.statusCode == 200) {
-        await _storage.write(key: 'veto_role', value: role);
-        await _storage.write(key: 'veto_name', value: name);
+      
+      if (response.statusCode == 201) {
+        await _storage.write(key: 'veto_phone', value: phoneNumber);
         return true;
       }
       return false;
     } catch (e) {
-      debugPrint('Error updating profile: ' + e.toString());
+      debugPrint('Error during registration: $e');
       return false;
     }
   }
@@ -115,6 +95,30 @@ class AuthService {
   Future<String?> getStoredRole() async => await _storage.read(key: 'veto_role');
   Future<String?> getStoredName() async => await _storage.read(key: 'veto_name');
   Future<String?> getStoredPhone() async => await _storage.read(key: 'veto_phone');
+
+  /// Updates full_name on the server and in local storage.
+  Future<bool> updateProfile({required String fullName}) async {
+    try {
+      final token = await getToken();
+      final role = await getStoredRole();
+      final baseUrl = AppConfig.baseUrl;
+      // lawyers use /lawyers/me, users & admins use /users/me
+      final endpoint = role == 'lawyer' ? '$baseUrl/lawyers/me' : '$baseUrl/users/me';
+      final response = await http.put(
+        Uri.parse(endpoint),
+        headers: AppConfig.httpHeaders({'Authorization': 'Bearer $token'}),
+        body: jsonEncode({'full_name': fullName}),
+      );
+      if (response.statusCode == 200) {
+        await _storage.write(key: 'veto_name', value: fullName);
+        return true;
+      }
+      return false;
+    } catch (e) {
+      debugPrint('updateProfile error: $e');
+      return false;
+    }
+  }
 
   Future<void> logout(BuildContext context) async {
     await _storage.deleteAll();
