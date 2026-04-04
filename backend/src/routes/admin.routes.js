@@ -1,6 +1,6 @@
 const express = require('express');
 const { protect, authorize } = require('../middleware/auth.middleware');
-const { getAdminSettings, updateFixedOtpSetting } = require('../controllers/admin.controller');
+const { getAdminSettings, updateFixedOtpSetting, getAllUsers, getAllLawyers, getEmergencyLogs } = require('../controllers/admin.controller');
 
 const router = express.Router();
 
@@ -11,5 +11,9 @@ router.route('/settings')
 
 router.route('/settings/fixed-otp')
   .put(updateFixedOtpSetting);
+
+router.get('/users', getAllUsers);
+router.get('/lawyers', getAllLawyers);
+router.get('/emergency-logs', getEmergencyLogs);
 
 module.exports = router;
