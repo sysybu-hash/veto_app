@@ -7,6 +7,7 @@
 const User    = require('../models/User');
 const Lawyer  = require('../models/Lawyer');
 const { signToken } = require('../middleware/auth.middleware');
+const { sendSMS }   = require('../services/sms.service');
 
 // ── Helpers ────────────────────────────────────────────────
 
@@ -140,7 +141,7 @@ const requestOTP = async (req, res, next) => {
     await doc.save();
 
     // ── Production: send via SMS ─────────────────────────
-    // await sendSMS(phone, `Your VETO code: ${otp}`);
+    await sendSMS(phone, `קוד האימות שלך ב-VETO: ${otp}`);}
 
     // ── Development: prominent terminal log ──────────────
     console.log('');
