@@ -1,20 +1,15 @@
 // ============================================================
-//  auth.controller.js — Authentication Controller
+//  auth.controller.js � Authentication Controller
 //  VETO Legal Emergency App
-//  Flow: Register → Request OTP → Verify OTP → JWT issued
+//  Flow: Register ? Request OTP ? Verify OTP ? JWT issued
 // ============================================================
 
 const User    = require('../models/User');
 const Lawyer  = require('../models/Lawyer');
 const { signToken } = require('../middleware/auth.middleware');
-const { sendSMS }   = require('../services/sms.service');
+const { sendOTP, checkOTP } = require('../services/sms.service');
 
-// ── Helpers ────────────────────────────────────────────────
-
-/** Generate a cryptographically-safe 6-digit OTP */
-function generateOTP() {
-  return String(Math.floor(100000 + Math.random() * 900000));
-}
+// ?? Helpers ????????????????????????????????????????????????
 
 /** OTP valid for 10 minutes */
 function otpExpiry() {
@@ -44,6 +39,17 @@ function modelFor(role) {
   return User;
 }
 
+/** Normalize phone: remove + for comparison */
+function cleanPhone(phone) {
+  return phone.replace(/\+/g, '');
+}
+
+/** Check if phone belongs to a hardcoded admin */
+function isAdminPhone(phone) {
+  const clean = cleanPhone(phone);
+  return clean === '972525640021' || clean === '972506400030';
+}
+
 // ============================================================
 //  POST /auth/register
 //  Body: { full_name, phone, role, preferred_language,
@@ -57,10 +63,9 @@ const register = async (req, res, next) => {
       role = 'user',
       preferred_language = 'en',
       email,
-      license_number, // required for lawyers
+      license_number,
     } = req.body;
 
-    // ── Validate required fields ─────────────────────────
     if (!full_name || !phone) {
       return res.status(400).json({ error: 'full_name and phone are required.' });
     }
@@ -71,13 +76,11 @@ const register = async (req, res, next) => {
       return res.status(400).json({ error: 'license_number is required for lawyers.' });
     }
 
-    // ── Prevent duplicate registration ───────────────────
     const existing = await findByPhone(phone);
     if (existing) {
       return res.status(409).json({ error: 'An account with this phone already exists.' });
     }
 
-    // ── Create document ──────────────────────────────────
     const Model   = modelFor(role);
     const payload = { full_name, phone, preferred_language };
     if (email)          payload.email          = email;
@@ -91,7 +94,6 @@ const register = async (req, res, next) => {
       role,
     });
   } catch (err) {
-    // Duplicate key from MongoDB (race condition)
     if (err.code === 11000) {
       return res.status(409).json({ error: 'Account already exists.' });
     }
@@ -101,9 +103,8 @@ const register = async (req, res, next) => {
 
 // ============================================================
 //  POST /auth/request-otp
-//  Body: { phone, role? }
-//  Dev mode: OTP is returned in the response body.
-//  Production: swap the console.log for a real SMS (Twilio).
+//  Admin phones ? fixed OTP 123456 stored in DB
+//  Regular users  ? Twilio Verify sends OTP (not stored in DB)
 // ============================================================
 const requestOTP = async (req, res, next) => {
   try {
@@ -118,47 +119,27 @@ const requestOTP = async (req, res, next) => {
     }
 
     const { doc, role } = found;
-    let otp;
-    
-    // Normalize phone for comparison (remove +)
-    const cleanPhone = phone.replace(/\+/g, '');
-    const isAdminPhone = cleanPhone === '972525640021' || cleanPhone === '972506400030';
-    const isFixedEnabled = process.env.ENABLE_FIXED_OTP_FOR_ADMINS === 'true';
+    const useFixed = isAdminPhone(phone) || process.env.ENABLE_FIXED_OTP_FOR_ADMINS === 'true';
 
-    // Admin phones always get fixed OTP (no SMS service configured yet)
-    if (isAdminPhone || isFixedEnabled) {
-      otp = '123456'; // Fixed OTP for admins
-      console.log(`[AUTH] Using FIXED OTP for admin: ${phone}`);
+    if (useFixed) {
+      // ?? Admin: fixed OTP saved to DB ??????????????????
+      const otp = '123456';
+      doc.otp_code       = otp;
+      doc.otp_expires_at = otpExpiry();
+      await doc.save();
+      console.log(`[AUTH] Fixed OTP for admin: ${phone}`);
     } else {
-      otp = generateOTP();
-      console.log(`[AUTH] Generated random OTP for: ${phone}`);
+      // ?? Regular user: Twilio Verify handles OTP ???????
+      await sendOTP(phone);
+      // Clear any leftover DB otp so verifyOTP uses Twilio path
+      doc.otp_code       = undefined;
+      doc.otp_expires_at = undefined;
+      await doc.save();
     }
-    const expiry = otpExpiry();
 
-    // Persist OTP (select:false fields need explicit .save())
-    doc.otp_code       = otp;
-    doc.otp_expires_at = expiry;
-    await doc.save();
+    console.log(`[AUTH] OTP requested for ${phone} (role: ${role})`);
 
-    // ── Production: send via SMS ─────────────────────────
-    await sendSMS(phone, `קוד האימות שלך ב-VETO: ${otp}`);}
-
-    // ── Development: prominent terminal log ──────────────
-    console.log('');
-    console.log(`********** OTP FOR ${phone}: ${otp} **********`);
-    console.log('');
-
-    // OTP in JSON: dev only, or when RETURN_OTP_IN_JSON=1 (testing web / no SMS).
-    const exposeOtp =
-      process.env.NODE_ENV !== 'production' ||
-      process.env.RETURN_OTP_IN_JSON === '1' ||
-      process.env.RETURN_OTP_IN_JSON === 'true';
-
-    return res.status(200).json({
-      message: 'OTP sent.',
-      role,
-      ...(exposeOtp && { otp }),
-    });
+    return res.status(200).json({ message: 'OTP sent.', role });
   } catch (err) {
     next(err);
   }
@@ -167,7 +148,7 @@ const requestOTP = async (req, res, next) => {
 // ============================================================
 //  POST /auth/verify-otp
 //  Body: { phone, otp }
-//  Returns: JWT token + user profile
+//  Admin ? check DB; Regular ? check via Twilio Verify
 // ============================================================
 const verifyOTP = async (req, res, next) => {
   try {
@@ -177,22 +158,18 @@ const verifyOTP = async (req, res, next) => {
       return res.status(400).json({ error: 'phone and otp are required.' });
     }
 
-    // ── Find account (need otp fields, which are select:false)
     let doc, role;
     const user = await User.findOne({ phone }).select('+otp_code +otp_expires_at');
     if (user) {
-      doc  = user;
-      
-      // Auto-promote specific numbers to admin upon verification
-      const cleanPhone = phone.replace(/\+/g, '');
-      if (cleanPhone === '972525640021' || cleanPhone === '972506400030') {
-        if (doc.role !== 'admin') {
-          doc.role = 'admin';
-          await doc.save();
-          console.log(`[AUTH] User ${phone} promoted to ADMIN during verification.`);
-        }
+      doc = user;
+
+      // Auto-promote admin phones
+      if (isAdminPhone(phone) && doc.role !== 'admin') {
+        doc.role = 'admin';
+        await doc.save();
+        console.log(`[AUTH] ${phone} promoted to ADMIN.`);
       }
-      
+
       role = doc.role === 'admin' ? 'admin' : 'user';
     } else {
       const lawyer = await Lawyer.findOne({ phone }).select('+otp_code +otp_expires_at');
@@ -203,22 +180,31 @@ const verifyOTP = async (req, res, next) => {
       return res.status(404).json({ error: 'Account not found.' });
     }
 
-    // ── Validate OTP ─────────────────────────────────────
-    if (!doc.otp_code || doc.otp_code !== String(otp)) {
-      return res.status(401).json({ error: 'Invalid OTP.' });
+    const useFixed = isAdminPhone(phone) || process.env.ENABLE_FIXED_OTP_FOR_ADMINS === 'true';
+
+    if (useFixed) {
+      // ?? Admin: validate against DB OTP ????????????????
+      if (!doc.otp_code || doc.otp_code !== String(otp)) {
+        return res.status(401).json({ error: 'Invalid OTP.' });
+      }
+      if (!doc.otp_expires_at || doc.otp_expires_at < new Date()) {
+        return res.status(401).json({ error: 'OTP has expired. Please request a new one.' });
+      }
+    } else {
+      // ?? Regular: validate via Twilio Verify ???????????
+      const approved = await checkOTP(phone, otp);
+      if (!approved) {
+        return res.status(401).json({ error: 'Invalid OTP.' });
+      }
     }
 
-    if (!doc.otp_expires_at || doc.otp_expires_at < new Date()) {
-      return res.status(401).json({ error: 'OTP has expired. Please request a new one.' });
-    }
-
-    // ── Mark verified + clear OTP ─────────────────────────
+    // ?? Mark verified + clear OTP ?????????????????????
     doc.is_verified    = true;
     doc.otp_code       = undefined;
     doc.otp_expires_at = undefined;
     await doc.save();
 
-    // ── Issue JWT ─────────────────────────────────────────
+    // ?? Issue JWT ??????????????????????????????????????
     const token = signToken({
       userId:             doc._id,
       role,

@@ -1,31 +1,51 @@
 // ============================================================
-//  sms.service.js â€” Twilio SMS integration
+//  sms.service.js — Twilio Verify integration
 //  Requires env vars:
-//    TWILIO_ACCOUNT_SID   â€“ from Twilio Console
-//    TWILIO_AUTH_TOKEN    â€“ from Twilio Console
-//    TWILIO_FROM_NUMBER   â€“ Twilio phone number (e.g. +12025551234)
+//    TWILIO_ACCOUNT_SID        – from Twilio Console
+//    TWILIO_AUTH_TOKEN         – from Twilio Console
+//    TWILIO_VERIFY_SERVICE_SID – from Twilio Verify Services
 // ============================================================
 
 const twilio = require('twilio');
 
-/**
- * Send an SMS using Twilio.
- * @param {string} to   â€“ destination phone in E.164 format (+972xxxxxxxxx)
- * @param {string} body â€“ message text
- */
-async function sendSMS(to, body) {
-  const accountSid = process.env.TWILIO_ACCOUNT_SID;
-  const authToken  = process.env.TWILIO_AUTH_TOKEN;
-  const from       = process.env.TWILIO_FROM_NUMBER;
-
-  if (!accountSid || !authToken || !from) {
-    console.warn('[SMS] Twilio env vars not set â€“ SMS skipped.');
-    return;
-  }
-
-  const client = twilio(accountSid, authToken);
-  const message = await client.messages.create({ body, from, to });
-  console.log(`[SMS] Sent to ${to} â€” SID: ${message.sid}`);
+function getClient() {
+  const sid   = process.env.TWILIO_ACCOUNT_SID;
+  const token = process.env.TWILIO_AUTH_TOKEN;
+  if (!sid || !token) throw new Error('Twilio credentials not configured.');
+  return twilio(sid, token);
 }
 
-module.exports = { sendSMS };
+/**
+ * Send OTP via Twilio Verify to any phone number worldwide.
+ * @param {string} to – E.164 format (+972xxxxxxxxx)
+ */
+async function sendOTP(to) {
+  const serviceSid = process.env.TWILIO_VERIFY_SERVICE_SID;
+  if (!serviceSid) {
+    console.warn('[SMS] TWILIO_VERIFY_SERVICE_SID not set – SMS skipped.');
+    return;
+  }
+  const client = getClient();
+  await client.verify.v2.services(serviceSid).verifications.create({ to, channel: 'sms' });
+  console.log(`[SMS] Verify OTP sent to ${to}`);
+}
+
+/**
+ * Check OTP via Twilio Verify.
+ * @param {string} to   – E.164 format
+ * @param {string} code – 6-digit code from user
+ * @returns {boolean} true if approved
+ */
+async function checkOTP(to, code) {
+  const serviceSid = process.env.TWILIO_VERIFY_SERVICE_SID;
+  if (!serviceSid) {
+    console.warn('[SMS] TWILIO_VERIFY_SERVICE_SID not set – check skipped.');
+    return false;
+  }
+  const client = getClient();
+  const result = await client.verify.v2.services(serviceSid)
+    .verificationChecks.create({ to, code });
+  return result.status === 'approved';
+}
+
+module.exports = { sendOTP, checkOTP };
