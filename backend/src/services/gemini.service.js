@@ -3,7 +3,7 @@
 //  VETO Legal Emergency App
 // ============================================================
 
-const { GoogleGenerativeAI } = require('@google/generative-ai');
+const { GoogleGenAI } = require('@google/genai');
 
 const SYSTEM_INSTRUCTIONS = {
   he: `אתה עוזר משפטי של VETO. תפקידך הוא לזהות את תחום המשפט הרלוונטי לבעיית המשתמש.
@@ -46,7 +46,7 @@ Always reply with JSON only, no text before or after.`,
 let _genAI;
 function getGenAI() {
   if (!_genAI) {
-    _genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+    _genAI = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
   }
   return _genAI;
 }
@@ -58,21 +58,32 @@ function getGenAI() {
  * @param {string} lang        - 'he' | 'ar' | 'en'
  */
 async function geminiChat(history, userMessage, lang = 'he') {
-  const model = getGenAI().getGenerativeModel({
-    model: 'gemini-1.5-flash',
-    systemInstruction: SYSTEM_INSTRUCTIONS[lang] || SYSTEM_INSTRUCTIONS.he,
-  });
+  const ai = getGenAI();
+
+  // Build contents array from history + new message
+  const contents = [
+    ...(history || []).map(h => ({
+      role: h.role,
+      parts: h.parts,
+    })),
+    { role: 'user', parts: [{ text: userMessage }] },
+  ];
 
   // Retry up to 3 times on rate-limit (429) errors
   for (let attempt = 0; attempt < 3; attempt++) {
     try {
-      const chat   = model.startChat({ history: history || [] });
-      const result = await chat.sendMessage(userMessage);
-      return result.response.text();
+      const response = await ai.models.generateContent({
+        model: 'gemini-1.5-flash',
+        contents,
+        config: {
+          systemInstruction: SYSTEM_INSTRUCTIONS[lang] || SYSTEM_INSTRUCTIONS.he,
+        },
+      });
+      return response.text;
     } catch (err) {
       const is429 = err.message && err.message.includes('429');
       if (is429 && attempt < 2) {
-        await new Promise(r => setTimeout(r, (attempt + 1) * 2000)); // 2s, 4s
+        await new Promise(r => setTimeout(r, (attempt + 1) * 2000));
         continue;
       }
       throw err;
