@@ -72,7 +72,17 @@ module.exports = function initDispatch(io) {
     socket.on('start_veto', async (payload) => {
       if (role !== 'user') return; // lawyers can't trigger VETO
 
-      const { location, preferredLanguage } = payload;
+      const { location, preferredLanguage, specialization } = payload;
+
+      // Specialization → English DB terms map (mirrors ai.controller.js)
+      const SPEC_MAP = {
+        'פלילי':  ['criminal', 'Criminal', 'פלילי'],
+        'משפחה':  ['family', 'Family', 'משפחה'],
+        'נדל"ן':  ['real estate', 'Real Estate', 'realestate', 'RealEstate', 'נדל"ן', 'נדלן'],
+        'עבודה':  ['labor', 'Labor', 'employment', 'Employment', 'עבודה'],
+        'מסחרי':  ['commercial', 'Commercial', 'civil', 'Civil', 'מסחרי'],
+        'תעבורה': ['traffic', 'Traffic', 'transportation', 'Transportation', 'תעבורה'],
+      };
 
       try {
         // 1. Create the EmergencyEvent in MongoDB ────────────
@@ -92,14 +102,30 @@ module.exports = function initDispatch(io) {
         // 1.5. Notify the user immediately that the event was created
         socket.emit('emergency_created', { eventId });
 
-        // 2. Find all available online lawyers ───────────────
-        const availableLawyers = await Lawyer.find({
-          is_online:   true,
+        // 2. Find available online lawyers ───────────────
+        const lawyerQuery = {
+          is_online:    true,
           is_available: true,
-          is_active:   true,
-        }).select(
+          is_active:    true,
+        };
+
+        // Filter by specialization if AI provided one
+        if (specialization && SPEC_MAP[specialization]) {
+          const terms = SPEC_MAP[specialization];
+          lawyerQuery.specializations = { $in: terms.map((t) => new RegExp(`^${t}$`, 'i')) };
+        }
+
+        let availableLawyers = await Lawyer.find(lawyerQuery).select(
           'full_name phone whatsapp_number telegram_username preferred_language socket_id'
         );
+
+        // Fallback: if specialization filter yielded no lawyers, try all available
+        if (specialization && availableLawyers.length === 0) {
+          delete lawyerQuery.specializations;
+          availableLawyers = await Lawyer.find(lawyerQuery).select(
+            'full_name phone whatsapp_number telegram_username preferred_language socket_id'
+          );
+        }
 
         if (availableLawyers.length === 0) {
           // No lawyers online — notify user immediately

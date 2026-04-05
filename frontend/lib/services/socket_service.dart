@@ -115,12 +115,14 @@ class SocketService {
   }
 
   void emitStartVeto(
-      {required double lat, required double lng, String? preferredLanguage}) {
-    emit('start_veto', {
+      {required double lat, required double lng, String? preferredLanguage, String? specialization}) {
+    final payload = {
       'location': {'lat': lat, 'lng': lng},
       'preferredLanguage': preferredLanguage,
-      'details': 'Emergency triggered via VETO button',
-    });
+      'details': 'Emergency triggered via VETO AI agent',
+    };
+    if (specialization != null) payload['specialization'] = specialization;
+    emit('start_veto', payload);
   }
 
   void disconnect() {
