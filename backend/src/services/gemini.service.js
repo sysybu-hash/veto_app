@@ -46,10 +46,7 @@ Always reply with JSON only, no text before or after.`,
 let _genAI;
 function getGenAI() {
   if (!_genAI) {
-    _genAI = new GoogleGenAI({
-      apiKey: process.env.GEMINI_API_KEY,
-      httpOptions: { apiVersion: 'v1' },
-    });
+    _genAI = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
   }
   return _genAI;
 }
@@ -76,7 +73,7 @@ async function geminiChat(history, userMessage, lang = 'he') {
   for (let attempt = 0; attempt < 3; attempt++) {
     try {
       const response = await ai.models.generateContent({
-        model: 'gemini-1.5-flash-002',
+        model: 'gemini-2.0-flash',
         contents,
         config: {
           systemInstruction: SYSTEM_INSTRUCTIONS[lang] || SYSTEM_INSTRUCTIONS.he,
