@@ -109,6 +109,24 @@ class _VetoScreenState extends State<VetoScreen> {
       final id = data['eventId'] as String?;
       if (id != null && mounted) setState(() => _activeEventId = id);
     });
+    // Check subscription after frame renders
+    WidgetsBinding.instance.addPostFrameCallback((_) => _checkSubscription());
+  }
+
+  Future<void> _checkSubscription() async {
+    final role = await AuthService().getStoredRole();
+    if (role == 'admin' || role == 'lawyer') return; // skip for non-users
+    final isSubscribed = await AuthService().getStoredIsSubscribed();
+    if (!isSubscribed && mounted) {
+      final subscribed = await showDialog<bool>(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) => const _SubscriptionGateDialog(),
+      );
+      if (subscribed != true && mounted) {
+        Navigator.of(context).pushReplacementNamed('/login');
+      }
+    }
   }
 
   @override
@@ -803,3 +821,143 @@ class _CaptureDialogState extends State<_CaptureDialog> {
   }
 }
 
+// ── Subscription Gate Dialog (paywall) ───────────────────────────────────────
+class _SubscriptionGateDialog extends StatefulWidget {
+  const _SubscriptionGateDialog();
+
+  @override
+  State<_SubscriptionGateDialog> createState() => _SubscriptionGateDialogState();
+}
+
+class _SubscriptionGateDialogState extends State<_SubscriptionGateDialog> {
+  bool _loading = false;
+  String? _error;
+  String? _orderId;
+
+  Future<void> _openPayPal() async {
+    setState(() { _loading = true; _error = null; });
+    try {
+      final orderId = await PaymentService.createAndOpenOrder(PaymentType.subscription);
+      if (!mounted) return;
+      if (orderId == null) {
+        setState(() { _loading = false; _error = 'לא ניתן לפתוח את PayPal. נסה שוב.'; });
+        return;
+      }
+      setState(() { _loading = false; _orderId = orderId; });
+    } catch (e) {
+      if (mounted) setState(() { _loading = false; _error = 'שגיאה: $e'; });
+    }
+  }
+
+  Future<void> _confirmPayment() async {
+    if (_orderId == null) return;
+    setState(() { _loading = true; _error = null; });
+    final phone = await AuthService().getStoredPhone();
+    final result = await PaymentService.captureOrder(
+      orderId: _orderId!,
+      type: PaymentType.subscription,
+      userId: phone,
+    );
+    if (!mounted) return;
+    if (result.success) {
+      await AuthService().setSubscribed(true);
+      Navigator.of(context).pop(true);
+    } else {
+      setState(() { _loading = false; _error = result.error ?? 'התשלום לא אושר.'; });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Directionality(
+      textDirection: TextDirection.rtl,
+      child: AlertDialog(
+        backgroundColor: const Color(0xFF1E293B),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(children: const [
+          Icon(Icons.lock_outline, color: Color(0xFF3B82F6)),
+          SizedBox(width: 10),
+          Text('נדרש מנוי', style: TextStyle(color: Colors.white, fontSize: 18)),
+        ]),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('כדי להשתמש ב-VETO נדרש מנוי חודשי.',
+                style: TextStyle(color: Color(0xFF94A3B8), fontSize: 14)),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: const Color(0xFF0F172A),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: const Color(0xFF3B82F6).withValues(alpha: 0.4)),
+              ),
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: const [
+                Text('מנוי חודשי', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                SizedBox(height: 4),
+                Text('₪19.90 / חודש  (\$5.50 USD)',
+                    style: TextStyle(color: Color(0xFF22C55E), fontSize: 16, fontWeight: FontWeight.bold)),
+                SizedBox(height: 8),
+                Text('✓ ייעוץ AI משפטי ללא הגבלה\n✓ הזמנת עורך דין חירום (₪50 נוסף)',
+                    style: TextStyle(color: Color(0xFF94A3B8), fontSize: 13)),
+              ]),
+            ),
+            if (_error != null) ...[
+              const SizedBox(height: 12),
+              Text(_error!, style: const TextStyle(color: Color(0xFFEF4444), fontSize: 13)),
+            ],
+            if (_orderId != null) ...[
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF59E0B).withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: const Color(0xFFF59E0B).withValues(alpha: 0.4)),
+                ),
+                child: const Text('שילמת ב-PayPal? לחץ "אישור" למטה',
+                    style: TextStyle(color: Color(0xFFF59E0B), fontSize: 13)),
+              ),
+            ],
+          ],
+        ),
+        actions: _orderId == null
+            ? [
+                TextButton(
+                  onPressed: _loading ? null : () => Navigator.of(context).pop(false),
+                  child: const Text('לאחר מכן', style: TextStyle(color: Color(0xFF64748B))),
+                ),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF009CDE),
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  ),
+                  onPressed: _loading ? null : _openPayPal,
+                  child: _loading
+                      ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                      : const Text('שלם עם PayPal'),
+                ),
+              ]
+            : [
+                TextButton(
+                  onPressed: _loading ? null : () => Navigator.of(context).pop(false),
+                  child: const Text('ביטול', style: TextStyle(color: Color(0xFF64748B))),
+                ),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF22C55E),
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  ),
+                  onPressed: _loading ? null : _confirmPayment,
+                  child: _loading
+                      ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                      : const Text('אישור תשלום ✓'),
+                ),
+              ],
+      ),
+    );
+  }
+}

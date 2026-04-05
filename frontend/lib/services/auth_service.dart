@@ -53,6 +53,8 @@ class AuthService {
           await _storage.write(key: 'veto_role', value: role);
           await _storage.write(key: 'veto_phone', value: phone);
           if (name.isNotEmpty) await _storage.write(key: 'veto_name', value: name);
+          final isSubscribed = user?['is_subscribed'] == true;
+          await _storage.write(key: 'veto_subscribed', value: isSubscribed ? 'true' : 'false');
         }
         return {'success': true, 'user': user};
       }
@@ -97,6 +99,13 @@ class AuthService {
   Future<String?> getStoredRole() async => await _storage.read(key: 'veto_role');
   Future<String?> getStoredName() async => await _storage.read(key: 'veto_name');
   Future<String?> getStoredPhone() async => await _storage.read(key: 'veto_phone');
+  Future<bool> getStoredIsSubscribed() async {
+    final val = await _storage.read(key: 'veto_subscribed');
+    return val == 'true';
+  }
+  Future<void> setSubscribed(bool value) async {
+    await _storage.write(key: 'veto_subscribed', value: value ? 'true' : 'false');
+  }
 
   /// Updates full_name on the server and in local storage.
   Future<bool> updateProfile({required String fullName}) async {

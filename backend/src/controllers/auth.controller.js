@@ -208,12 +208,14 @@ const verifyOTP = async (req, res, next) => {
       message: 'Verification successful.',
       token,
       user: {
-        id:                 doc._id,
-        full_name:          doc.full_name,
-        phone:              doc.phone,
+        id:                  doc._id,
+        full_name:           doc.full_name,
+        phone:               doc.phone,
         role,
-        preferred_language: doc.preferred_language,
-        is_verified:        true,
+        preferred_language:  doc.preferred_language,
+        is_verified:         true,
+        is_subscribed:       doc.is_subscribed    ?? false,
+        subscription_expiry: doc.subscription_expiry ?? null,
       },
     });
   } catch (err) {
