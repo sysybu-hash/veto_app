@@ -6,14 +6,29 @@
 const { geminiChat } = require('../services/gemini.service');
 const Lawyer = require('../models/Lawyer');
 
-// Hebrew specialization → English DB values mapping
+// Hebrew / Arabic / English specialization → DB terms mapping
 const SPEC_MAP = {
-  'פלילי':   ['criminal', 'Criminal', 'פלילי'],
-  'משפחה':   ['family', 'Family', 'משפחה'],
-  'נדל"ן':   ['real estate', 'Real Estate', 'realestate', 'RealEstate', 'נדל"ן', 'נדלן'],
-  'עבודה':   ['labor', 'Labor', 'employment', 'Employment', 'עבודה'],
-  'מסחרי':   ['commercial', 'Commercial', 'civil', 'Civil', 'מסחרי'],
-  'תעבורה':  ['traffic', 'Traffic', 'transportation', 'Transportation', 'תעבורה'],
+  // Hebrew
+  'פלילי':   ['criminal', 'Criminal', 'פלילי', 'جنائي'],
+  'משפחה':   ['family', 'Family', 'משפחה', 'عائلة'],
+  'נדל"ן':   ['real estate', 'Real Estate', 'realestate', 'RealEstate', 'נדל"ן', 'נדלן', 'عقارات'],
+  'עבודה':   ['labor', 'Labor', 'employment', 'Employment', 'עבודה', 'عمل'],
+  'מסחרי':   ['commercial', 'Commercial', 'civil', 'Civil', 'מסחרי', 'تجاري'],
+  'תעבורה':  ['traffic', 'Traffic', 'transportation', 'Transportation', 'תעבורה', 'مرور'],
+  // Arabic (Gemini may return these)
+  'جنائي':   ['criminal', 'Criminal', 'פלילי', 'جنائي'],
+  'عائلة':   ['family', 'Family', 'משפחה', 'عائلة'],
+  'عقارات':  ['real estate', 'Real Estate', 'realestate', 'RealEstate', 'נדל"ן', 'נדלן', 'عقارات'],
+  'عمل':     ['labor', 'Labor', 'employment', 'Employment', 'עבודה', 'عمل'],
+  'تجاري':   ['commercial', 'Commercial', 'civil', 'Civil', 'מסחרי', 'تجاري'],
+  'مرور':    ['traffic', 'Traffic', 'transportation', 'Transportation', 'תעבורה', 'مرور'],
+  // English
+  'criminal':    ['criminal', 'Criminal', 'פלילי'],
+  'family':      ['family', 'Family', 'משפחה'],
+  'real estate': ['real estate', 'Real Estate', 'realestate', 'RealEstate', 'נדל"ן'],
+  'labor':       ['labor', 'Labor', 'employment', 'Employment', 'עבודה'],
+  'commercial':  ['commercial', 'Commercial', 'civil', 'Civil', 'מסחרי'],
+  'traffic':     ['traffic', 'Traffic', 'transportation', 'Transportation', 'תעבורה'],
 };
 
 /**
@@ -22,7 +37,8 @@ const SPEC_MAP = {
  */
 exports.aiChat = async (req, res) => {
   try {
-    const { message, history } = req.body;
+    const { message, history, lang } = req.body;
+    const safeLang = ['he', 'ar', 'en'].includes(lang) ? lang : 'he';
 
     if (!message || typeof message !== 'string' || message.trim().length === 0) {
       return res.status(400).json({ error: 'message is required' });
@@ -32,7 +48,7 @@ exports.aiChat = async (req, res) => {
       return res.status(503).json({ error: 'AI service not configured' });
     }
 
-    const rawReply = await geminiChat(history || [], message.trim());
+    const rawReply = await geminiChat(history || [], message.trim(), safeLang);
 
     // Parse JSON from Gemini response
     let parsed;

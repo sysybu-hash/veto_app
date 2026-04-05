@@ -14,6 +14,7 @@ class AiService {
   Future<Map<String, dynamic>> chat({
     required String message,
     required List<Map<String, dynamic>> history,
+    String lang = 'he',
   }) async {
     try {
       final token = await AuthService().getToken();
@@ -23,7 +24,7 @@ class AiService {
             headers: AppConfig.httpHeaders({
               if (token != null) 'Authorization': 'Bearer $token',
             }),
-            body: jsonEncode({'message': message, 'history': history}),
+            body: jsonEncode({'message': message, 'history': history, 'lang': lang}),
           )
           .timeout(const Duration(seconds: 30));
 

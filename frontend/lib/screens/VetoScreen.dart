@@ -1,4 +1,6 @@
 ﻿import 'dart:async';
+// ignore: avoid_web_libraries_in_flutter
+import 'dart:js' as js;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:geolocator/geolocator.dart';
@@ -8,12 +10,68 @@ import '../services/auth_service.dart';
 import '../services/socket_service.dart';
 import '../services/ai_service.dart';
 
-// ג”€ג”€ Internal chat message model ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€
-class _ChatMessage {
+// ── Language config ────────────────────────────────────────
+class _Lang {
+  final String code;
+  final String label;
+  final String greeting;
+  final String hint;
+  final String processing;
+  final String dispatching;
+  final String protected;
+  final String broadcasting;
+
+  const _Lang({
+    required this.code,
+    required this.label,
+    required this.greeting,
+    required this.hint,
+    required this.processing,
+    required this.dispatching,
+    required this.protected,
+    required this.broadcasting,
+  });
+}
+
+const _langs = {
+  'he': _Lang(
+    code: 'he-IL',
+    label: 'עברית',
+    greeting: 'שלום! אני העוזר המשפטי של VETO.\nתאר את הבעיה המשפטית שלך ואמצא עבורך עורך דין זמין.',
+    hint: 'תאר את הבעיה...',
+    processing: 'מעבד...',
+    dispatching: 'בתהליך שיגור...',
+    protected: 'מוגן',
+    broadcasting: 'שידור פעיל',
+  ),
+  'ar': _Lang(
+    code: 'ar-SA',
+    label: 'العربية',
+    greeting: 'مرحباً! أنا المساعد القانوني لـ VETO.\nصف مشكلتك القانونية وسأجد لك محامياً متاحاً.',
+    hint: 'صف مشكلتك...',
+    processing: 'جارٍ المعالجة...',
+    dispatching: 'جارٍ الإرسال...',
+    protected: 'محمي',
+    broadcasting: 'بث نشط',
+  ),
+  'en': _Lang(
+    code: 'en-US',
+    label: 'English',
+    greeting: 'Hello! I\'m the VETO legal assistant.\nDescribe your legal issue and I\'ll find you an available lawyer.',
+    hint: 'Describe your issue...',
+    processing: 'Processing...',
+    dispatching: 'Dispatching...',
+    protected: 'Protected',
+    broadcasting: 'Live broadcast',
+  ),
+};
+
+// ── Chat message model ────────────────────────────────────
+class _Msg {
   final String text;
   final bool isUser;
   final bool isSystem;
-  _ChatMessage({required this.text, required this.isUser, this.isSystem = false});
+  _Msg({required this.text, required this.isUser, this.isSystem = false});
 }
 
 class VetoScreen extends StatefulWidget {
@@ -24,83 +82,131 @@ class VetoScreen extends StatefulWidget {
 
 class _VetoScreenState extends State<VetoScreen> {
   String _role = '', _phone = '';
+  String _langKey     = 'he';
   bool _isDispatching = false;
+  bool _isLoading     = false;
+  bool _isListening   = false;
 
-  final List<_ChatMessage> _messages = [];
+  final List<_Msg> _messages = [];
   final List<Map<String, dynamic>> _geminiHistory = [];
   final TextEditingController _inputCtrl = TextEditingController();
-  final ScrollController _scrollCtrl = ScrollController();
-  bool _isLoading = false;
+  final ScrollController _scrollCtrl    = ScrollController();
+
+  _Lang get _l => _langs[_langKey]!;
 
   @override
   void initState() {
     super.initState();
     _loadData();
-    _messages.add(_ChatMessage(
-      text: '׳©׳׳•׳! ׳׳ ׳™ ׳”׳¢׳•׳–׳¨ ׳”׳׳©׳₪׳˜׳™ ׳©׳ VETO.\n'
-          '׳×׳׳¨ ׳‘׳§׳¦׳¨׳” ׳׳× ׳”׳‘׳¢׳™׳” ׳”׳׳©׳₪׳˜׳™׳× ׳©׳׳ ׳•׳׳׳¦׳ ׳¢׳‘׳•׳¨׳ ׳¢׳•׳¨׳ ׳“׳™׳ ׳–׳׳™׳.',
-      isUser: false,
-    ));
+    js.context['vetoSTTResult'] = (String result) => _onSTTResult(result);
   }
 
   @override
   void dispose() {
+    _safeJsCall('vetoSTT', 'stop', []);
+    _safeJsCall('vetoTTS', 'stop', []);
     _inputCtrl.dispose();
     _scrollCtrl.dispose();
     super.dispose();
+  }
+
+  void _safeJsCall(String obj, String method, List args) {
+    try { js.context[obj].callMethod(method, args); } catch (_) {}
   }
 
   Future<void> _loadData() async {
     final r = await AuthService().getStoredRole();
     final p = await AuthService().getStoredPhone();
     if (mounted) {
-      setState(() {
-        _role  = r ?? '';
-        _phone = p ?? '';
-      });
+      setState(() { _role = r ?? ''; _phone = p ?? ''; });
+      _addWelcome();
     }
   }
 
-  Future<void> _sendMessage() async {
-    final text = _inputCtrl.text.trim();
-    if (text.isEmpty || _isLoading || _isDispatching) return;
+  void _addWelcome() {
+    _messages.clear();
+    _geminiHistory.clear();
+    _messages.add(_Msg(text: _l.greeting, isUser: false));
+    if (mounted) setState(() {});
+  }
 
+  void _switchLang(String key) {
+    if (_isDispatching) return;
+    setState(() { _langKey = key; _isListening = false; });
+    _addWelcome();
+  }
+
+  // ── Send ─────────────────────────────────────────────────
+  Future<void> _send(String raw) async {
+    final text = raw.trim();
+    if (text.isEmpty || _isLoading || _isDispatching) return;
     _inputCtrl.clear();
+
     setState(() {
-      _messages.add(_ChatMessage(text: text, isUser: true));
+      _messages.add(_Msg(text: text, isUser: true));
       _isLoading = true;
     });
     _scrollToBottom();
 
-    // Snapshot history BEFORE this message
-    final historySnapshot = List<Map<String, dynamic>>.from(_geminiHistory);
-
-    final result = await AiService().chat(
+    final snapshot = List<Map<String, dynamic>>.from(_geminiHistory);
+    final result   = await AiService().chat(
       message: text,
-      history: historySnapshot,
+      history: snapshot,
+      lang: _langKey,
     );
 
-    // Add this exchange to history for future calls
-    _geminiHistory.add({'role': 'user',  'parts': [{'text': text}]});
-    final reply = (result['reply'] as String?) ?? '׳׳¦׳˜׳¢׳¨, ׳׳™׳¨׳¢׳” ׳©׳’׳™׳׳”.';
-    _geminiHistory.add({'role': 'model', 'parts': [{'text': reply}]});
+    _geminiHistory
+      ..add({'role': 'user',  'parts': [{'text': text}]})
+      ..add({'role': 'model', 'parts': [{'text': result['reply'] ?? ''}]});
 
+    final reply = (result['reply'] as String?) ?? '...';
     if (!mounted) return;
-    setState(() {
-      _isLoading = false;
-      _messages.add(_ChatMessage(text: reply, isUser: false));
-    });
+    setState(() { _isLoading = false; _messages.add(_Msg(text: reply, isUser: false)); });
     _scrollToBottom();
+    _speak(reply);
 
     if (result['classified'] == true) {
-      final spec       = result['specialization'] as String?;
-      final lawyerMap  = (result['lawyer'] as Map?)?.cast<String, dynamic>();
-      final lawyerName = lawyerMap?['name'] as String?;
-      await Future.delayed(const Duration(milliseconds: 600));
-      if (mounted) _dispatch(spec, lawyerName);
+      final spec      = result['specialization'] as String?;
+      final lawyerMap = (result['lawyer'] as Map?)?.cast<String, dynamic>();
+      await Future.delayed(const Duration(milliseconds: 400));
+      if (mounted) _dispatch(spec, lawyerMap?['name'] as String?);
     }
   }
 
+  // ── STT ──────────────────────────────────────────────────
+  void _toggleMic() {
+    if (_isDispatching) return;
+    _isListening ? _stopListening() : _startListening();
+  }
+
+  void _startListening() {
+    bool supported = false;
+    try { supported = js.context['vetoSTT'].callMethod('isSupported', []) as bool; } catch (_) {}
+    if (!supported) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('הדפדפן שלך לא תומך בזיהוי קול')));
+      return;
+    }
+    setState(() => _isListening = true);
+    _safeJsCall('vetoSTT', 'start', [_l.code]);
+  }
+
+  void _stopListening() {
+    setState(() => _isListening = false);
+    _safeJsCall('vetoSTT', 'stop', []);
+  }
+
+  void _onSTTResult(String result) {
+    if (!mounted) return;
+    setState(() => _isListening = false);
+    if (result.startsWith('OK:')) _send(result.substring(3));
+  }
+
+  // ── TTS ──────────────────────────────────────────────────
+  void _speak(String text) => _safeJsCall('vetoTTS', 'speak', [text, _l.code]);
+  void _stopSpeaking()     => _safeJsCall('vetoTTS', 'stop', []);
+
+  // ── Dispatch ─────────────────────────────────────────────
   Future<void> _dispatch(String? spec, String? lawyerName) async {
     if (_isDispatching) return;
     setState(() => _isDispatching = true);
@@ -108,28 +214,25 @@ class _VetoScreenState extends State<VetoScreen> {
 
     Position? pos;
     try {
-      pos = await Geolocator.getCurrentPosition(
-          desiredAccuracy: LocationAccuracy.high);
+      pos = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
     } catch (_) {}
 
     SocketService().emitStartVeto(
-      lat: pos?.latitude ?? 32.08,
+      lat: pos?.latitude  ?? 32.08,
       lng: pos?.longitude ?? 34.78,
-      preferredLanguage: 'he',
+      preferredLanguage: _langKey,
       specialization: spec,
     );
 
-    if (!mounted) return;
-    setState(() {
-      _messages.add(_ChatMessage(
-        text: lawyerName != null
-            ? 'נ”” ׳׳—׳₪׳© ׳¢׳•׳¨׳ ׳“׳™׳ ׳‘׳×׳—׳•׳ $spec...\n$lawyerName ׳™׳™׳¦׳•׳¨ ׳׳™׳×׳ ׳§׳©׳¨ ׳‘׳§׳¨׳•׳‘.'
-            : 'נ”” ׳׳—׳₪׳© ׳¢׳•׳¨׳ ׳“׳™׳ ׳–׳׳™׳ ׳‘׳×׳—׳•׳ $spec...',
-        isUser: false,
-        isSystem: true,
-      ));
-    });
-    _scrollToBottom();
+    final msg = lawyerName != null
+        ? '🔔 ${_langKey == 'he' ? 'מחפש עורך דין בתחום $spec...\n$lawyerName ייצור איתך קשר בקרוב.' : _langKey == 'ar' ? 'جارٍ البحث عن محامٍ في $spec...\n$lawyerName سيتصل بك.' : 'Searching for $spec lawyer...\n$lawyerName will contact you.'}'
+        : '🔔 ${_langKey == 'he' ? 'מחפש עורך דין זמין בתחום $spec...' : _langKey == 'ar' ? 'جارٍ البحث عن محامٍ في $spec...' : 'Searching for a $spec lawyer...'}';
+
+    if (mounted) {
+      setState(() => _messages.add(_Msg(text: msg, isUser: false, isSystem: true)));
+      _scrollToBottom();
+      _speak(msg);
+    }
   }
 
   void _scrollToBottom() {
@@ -144,73 +247,29 @@ class _VetoScreenState extends State<VetoScreen> {
     });
   }
 
-  void _openCamera() => ScaffoldMessenger.of(context)
-      .showSnackBar(const SnackBar(content: Text('׳׳¦׳׳׳” - ׳‘׳₪׳™׳×׳•׳—')));
-
-  void _openRecording() => ScaffoldMessenger.of(context)
-      .showSnackBar(const SnackBar(content: Text('׳”׳§׳׳˜׳” - ׳‘׳₪׳™׳×׳•׳—')));
-
-  void _showLocation() async {
-    Position? pos;
-    try {
-      pos = await Geolocator.getCurrentPosition();
-    } catch (_) {}
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text(pos != null
-          ? '׳׳™׳§׳•׳: ${pos.latitude.toStringAsFixed(5)}, ${pos.longitude.toStringAsFixed(5)}'
-          : '׳׳ ׳ ׳™׳×׳ ׳׳׳¦׳•׳ ׳׳™׳§׳•׳'),
-    ));
-  }
-
+  // ── Build ─────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
     final bool isAdmin = _role.toLowerCase().contains('admin');
+    final isRtl = _langKey != 'en';
+
     return Directionality(
-      textDirection: TextDirection.rtl,
+      textDirection: isRtl ? TextDirection.rtl : TextDirection.ltr,
       child: Scaffold(
         backgroundColor: VetoPalette.bg,
-        appBar: AppBar(
-          backgroundColor: VetoPalette.surface,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18),
-            onPressed: () => Navigator.maybePop(context),
-          ),
-          title: const Text('VETO'),
-          actions: [
-            if (isAdmin)
-              IconButton(
-                icon: const Icon(Icons.admin_panel_settings_outlined),
-                onPressed: () =>
-                    Navigator.pushNamed(context, '/admin_settings'),
-                tooltip: '׳ ׳™׳”׳•׳',
-              ),
-            IconButton(
-              icon: const Icon(Icons.person_outline),
-              onPressed: () => Navigator.pushNamed(context, '/profile'),
-              tooltip: '׳₪׳¨׳•׳₪׳™׳',
-            ),
-            IconButton(
-              icon: const Icon(Icons.logout_rounded),
-              onPressed: () => AuthService().logout(context),
-              tooltip: '׳”׳×׳ ׳×׳§',
-            ),
-          ],
-          bottom: const PreferredSize(
-            preferredSize: Size.fromHeight(1),
-            child: Divider(height: 1, color: VetoPalette.border),
-          ),
-        ),
+        appBar: _appBar(isAdmin),
         body: SafeArea(
           child: Column(
             children: [
-              const SizedBox(height: 12),
+              const SizedBox(height: 8),
               _statusBadge(),
+              const SizedBox(height: 6),
+              _langBar(),
               const SizedBox(height: 4),
-              Expanded(child: _chatList()),
-              _inputRow(),
+              Expanded(child: _chatList(isRtl)),
+              _inputRow(isRtl),
               _actionRow(),
-              const SizedBox(height: 12),
+              const SizedBox(height: 10),
             ],
           ),
         ),
@@ -218,71 +277,108 @@ class _VetoScreenState extends State<VetoScreen> {
     );
   }
 
-  Widget _statusBadge() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      decoration: BoxDecoration(
-        color: _isDispatching
-            ? VetoPalette.emergency.withValues(alpha: 0.12)
-            : VetoPalette.success.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(
-          color: _isDispatching
-              ? VetoPalette.emergency.withValues(alpha: 0.3)
-              : VetoPalette.success.withValues(alpha: 0.3),
+  AppBar _appBar(bool isAdmin) => AppBar(
+    backgroundColor: VetoPalette.surface,
+    leading: IconButton(
+      icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18),
+      onPressed: () => Navigator.maybePop(context),
+    ),
+    title: const Text('VETO'),
+    actions: [
+      if (isAdmin)
+        IconButton(
+          icon: const Icon(Icons.admin_panel_settings_outlined),
+          onPressed: () => Navigator.pushNamed(context, '/admin_settings'),
         ),
+      IconButton(icon: const Icon(Icons.person_outline),
+        onPressed: () => Navigator.pushNamed(context, '/profile')),
+      IconButton(icon: const Icon(Icons.logout_rounded),
+        onPressed: () => AuthService().logout(context)),
+    ],
+    bottom: const PreferredSize(
+      preferredSize: Size.fromHeight(1),
+      child: Divider(height: 1, color: VetoPalette.border),
+    ),
+  );
+
+  Widget _statusBadge() => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 7),
+    decoration: BoxDecoration(
+      color: _isDispatching
+          ? VetoPalette.emergency.withValues(alpha: 0.12)
+          : VetoPalette.success.withValues(alpha: 0.12),
+      borderRadius: BorderRadius.circular(999),
+      border: Border.all(
+        color: _isDispatching
+            ? VetoPalette.emergency.withValues(alpha: 0.3)
+            : VetoPalette.success.withValues(alpha: 0.3),
       ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 8,
-            height: 8,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: _isDispatching
-                  ? VetoPalette.emergency
-                  : VetoPalette.success,
-            ),
+    ),
+    child: Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 8, height: 8,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: _isDispatching ? VetoPalette.emergency : VetoPalette.success,
           ),
-          const SizedBox(width: 8),
-          Text(
-            _isDispatching ? '׳©׳™׳“׳•׳¨ ׳₪׳¢׳™׳' : '׳׳•׳’׳',
-            style: TextStyle(
-              color: _isDispatching
-                  ? VetoPalette.emergency
-                  : VetoPalette.success,
-              fontWeight: FontWeight.w600,
-              fontSize: 13,
-            ),
+        ),
+        const SizedBox(width: 8),
+        Text(
+          _isDispatching ? _l.broadcasting : _l.protected,
+          style: TextStyle(
+            color: _isDispatching ? VetoPalette.emergency : VetoPalette.success,
+            fontWeight: FontWeight.w600, fontSize: 13,
           ),
-          if (_phone.isNotEmpty) ...[
-            const SizedBox(width: 10),
-            Text(
-              _phone,
-              style: const TextStyle(
-                  color: VetoPalette.textSubtle, fontSize: 11),
-              textDirection: TextDirection.ltr,
-            ),
-          ],
+        ),
+        if (_phone.isNotEmpty) ...[
+          const SizedBox(width: 10),
+          Text(_phone,
+            style: const TextStyle(color: VetoPalette.textSubtle, fontSize: 11),
+            textDirection: TextDirection.ltr),
         ],
-      ),
-    );
-  }
+      ],
+    ),
+  );
 
-  Widget _chatList() {
-    return ListView.builder(
-      controller: _scrollCtrl,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      itemCount: _messages.length + (_isLoading ? 1 : 0),
-      itemBuilder: (context, index) {
-        if (index == _messages.length) return _typingIndicator();
-        return _messageBubble(_messages[index]);
-      },
-    );
-  }
+  Widget _langBar() => Row(
+    mainAxisAlignment: MainAxisAlignment.center,
+    children: _langs.entries.map((e) {
+      final sel = e.key == _langKey;
+      return GestureDetector(
+        onTap: () => _switchLang(e.key),
+        child: Container(
+          margin: const EdgeInsets.symmetric(horizontal: 4),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
+          decoration: BoxDecoration(
+            color: sel ? VetoPalette.primary.withValues(alpha: 0.18) : Colors.transparent,
+            borderRadius: BorderRadius.circular(999),
+            border: Border.all(color: sel ? VetoPalette.primary : VetoPalette.border),
+          ),
+          child: Text(e.value.label,
+            style: TextStyle(
+              color: sel ? VetoPalette.primary : VetoPalette.textMuted,
+              fontSize: 12,
+              fontWeight: sel ? FontWeight.w700 : FontWeight.w400,
+            ),
+          ),
+        ),
+      );
+    }).toList(),
+  );
 
-  Widget _messageBubble(_ChatMessage msg) {
+  Widget _chatList(bool isRtl) => ListView.builder(
+    controller: _scrollCtrl,
+    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+    itemCount: _messages.length + (_isLoading ? 1 : 0),
+    itemBuilder: (context, i) {
+      if (i == _messages.length) return _typingIndicator();
+      return _bubble(_messages[i], isRtl);
+    },
+  );
+
+  Widget _bubble(_Msg msg, bool isRtl) {
     if (msg.isSystem) {
       return Container(
         margin: const EdgeInsets.symmetric(vertical: 8),
@@ -290,170 +386,165 @@ class _VetoScreenState extends State<VetoScreen> {
         decoration: BoxDecoration(
           color: VetoPalette.emergency.withValues(alpha: 0.10),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-              color: VetoPalette.emergency.withValues(alpha: 0.35)),
+          border: Border.all(color: VetoPalette.emergency.withValues(alpha: 0.35)),
         ),
-        child: Text(
-          msg.text,
-          style: const TextStyle(
-              color: VetoPalette.text, fontSize: 14, height: 1.5),
-          textAlign: TextAlign.center,
-        ),
+        child: Text(msg.text,
+          style: const TextStyle(color: VetoPalette.text, fontSize: 14, height: 1.5),
+          textAlign: TextAlign.center),
       );
     }
-
     final isUser = msg.isUser;
     return Align(
-      alignment:
-          isUser ? Alignment.centerRight : Alignment.centerLeft,
+      alignment: isUser
+          ? (isRtl ? Alignment.centerRight : Alignment.centerLeft)
+          : (isRtl ? Alignment.centerLeft  : Alignment.centerRight),
       child: Container(
         margin: const EdgeInsets.symmetric(vertical: 4),
-        padding:
-            const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-        constraints: BoxConstraints(
-            maxWidth: MediaQuery.of(context).size.width * 0.75),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.75),
         decoration: BoxDecoration(
-          color: isUser
-              ? VetoPalette.surface
-              : VetoPalette.success.withValues(alpha: 0.12),
+          color: isUser ? VetoPalette.surface : VetoPalette.success.withValues(alpha: 0.12),
           borderRadius: BorderRadius.only(
-            topLeft: const Radius.circular(16),
-            topRight: const Radius.circular(16),
-            bottomLeft: Radius.circular(isUser ? 16 : 4),
-            bottomRight: Radius.circular(isUser ? 4 : 16),
+            topLeft:     const Radius.circular(16),
+            topRight:    const Radius.circular(16),
+            bottomLeft:  Radius.circular(isUser ? 4  : 16),
+            bottomRight: Radius.circular(isUser ? 16 : 4),
           ),
           border: Border.all(
-            color: isUser
-                ? VetoPalette.border
-                : VetoPalette.success.withValues(alpha: 0.3),
+            color: isUser ? VetoPalette.border : VetoPalette.success.withValues(alpha: 0.3),
           ),
         ),
-        child: Text(
-          msg.text,
-          style: const TextStyle(
-              color: VetoPalette.text, fontSize: 14, height: 1.4),
-        ),
+        child: Text(msg.text,
+          style: const TextStyle(color: VetoPalette.text, fontSize: 14, height: 1.4)),
       ),
     );
   }
 
-  Widget _typingIndicator() {
-    return Align(
-      alignment: Alignment.centerLeft,
-      child: Container(
-        margin: const EdgeInsets.symmetric(vertical: 4),
-        padding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: BoxDecoration(
-          color: VetoPalette.surface,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: VetoPalette.border),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            SizedBox(
-              width: 36,
-              child: LinearProgressIndicator(
-                backgroundColor: VetoPalette.border,
-                valueColor:
-                    const AlwaysStoppedAnimation(VetoPalette.success),
-              ),
-            ),
-            const SizedBox(width: 8),
-            const Text('׳׳¢׳‘׳“...',
-                style: TextStyle(
-                    color: VetoPalette.textMuted, fontSize: 12)),
-          ],
-        ),
+  Widget _typingIndicator() => Align(
+    alignment: Alignment.centerLeft,
+    child: Container(
+      margin: const EdgeInsets.symmetric(vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: VetoPalette.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: VetoPalette.border),
       ),
-    );
-  }
-
-  Widget _inputRow() {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
       child: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Expanded(
-            child: TextField(
-              controller: _inputCtrl,
-              enabled: !_isDispatching,
-              style:
-                  const TextStyle(color: VetoPalette.text, fontSize: 14),
-              decoration: InputDecoration(
-                hintText:
-                    _isDispatching ? '׳‘׳×׳”׳׳™׳...' : '׳×׳׳¨ ׳׳× ׳”׳‘׳¢׳™׳”...',
-                hintStyle:
-                    const TextStyle(color: VetoPalette.textMuted),
-                filled: true,
-                fillColor: VetoPalette.surface,
-                contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 16, vertical: 12),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(24),
-                  borderSide:
-                      const BorderSide(color: VetoPalette.border),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(24),
-                  borderSide:
-                      const BorderSide(color: VetoPalette.border),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(24),
-                  borderSide:
-                      const BorderSide(color: VetoPalette.success),
-                ),
-              ),
-              onSubmitted: (_) => _sendMessage(),
-              textInputAction: TextInputAction.send,
+          SizedBox(
+            width: 36,
+            child: LinearProgressIndicator(
+              backgroundColor: VetoPalette.border,
+              valueColor: const AlwaysStoppedAnimation(VetoPalette.success),
             ),
           ),
           const SizedBox(width: 8),
-          GestureDetector(
-            onTap: _sendMessage,
-            child: Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                color: (_isLoading || _isDispatching)
-                    ? VetoPalette.border
-                    : VetoPalette.success,
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(Icons.send_rounded,
-                  color: Colors.white, size: 20),
+          Text(_l.processing,
+            style: const TextStyle(color: VetoPalette.textMuted, fontSize: 12)),
+        ],
+      ),
+    ),
+  );
+
+  Widget _inputRow(bool isRtl) => Padding(
+    padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
+    child: Row(
+      children: [
+        // Mic
+        GestureDetector(
+          onTap: _toggleMic,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            width: 44, height: 44,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: _isListening ? VetoPalette.emergency : VetoPalette.surface,
+              border: Border.all(
+                color: _isListening ? VetoPalette.emergency : VetoPalette.border),
+            ),
+            child: Icon(
+              _isListening ? Icons.mic : Icons.mic_none_rounded,
+              color: _isListening ? Colors.white : VetoPalette.textMuted,
+              size: 20,
             ),
           ),
-        ],
-      ),
-    );
-  }
+        ),
+        const SizedBox(width: 8),
+        // Input
+        Expanded(
+          child: TextField(
+            controller: _inputCtrl,
+            enabled: !_isDispatching,
+            textDirection: isRtl ? TextDirection.rtl : TextDirection.ltr,
+            style: const TextStyle(color: VetoPalette.text, fontSize: 14),
+            decoration: InputDecoration(
+              hintText: _isDispatching ? _l.dispatching : _l.hint,
+              hintStyle: const TextStyle(color: VetoPalette.textMuted),
+              filled: true,
+              fillColor: VetoPalette.surface,
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(24),
+                borderSide: const BorderSide(color: VetoPalette.border),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(24),
+                borderSide: const BorderSide(color: VetoPalette.border),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(24),
+                borderSide: const BorderSide(color: VetoPalette.success),
+              ),
+            ),
+            onSubmitted: _send,
+            textInputAction: TextInputAction.send,
+          ),
+        ),
+        const SizedBox(width: 8),
+        // Send
+        GestureDetector(
+          onTap: () => _send(_inputCtrl.text),
+          child: Container(
+            width: 44, height: 44,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: (_isLoading || _isDispatching) ? VetoPalette.border : VetoPalette.success,
+            ),
+            child: const Icon(Icons.send_rounded, color: Colors.white, size: 20),
+          ),
+        ),
+      ],
+    ),
+  );
 
-  Widget _actionRow() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 8),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          _actionBtn(Icons.camera_alt_outlined, '׳×׳™׳¢׳•׳“', _openCamera),
-          _actionBtn(Icons.mic_none_rounded, '׳”׳§׳׳˜׳”', _openRecording),
-          _actionBtn(
-              Icons.location_on_outlined, '׳׳™׳§׳•׳', _showLocation),
-        ],
-      ),
-    );
-  }
+  Widget _actionRow() => Padding(
+    padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 6),
+    child: Row(
+      mainAxisAlignment: MainAxisAlignment.spaceAround,
+      children: [
+        _actionBtn(Icons.camera_alt_outlined,
+          _langKey == 'ar' ? 'كاميرا' : _langKey == 'en' ? 'Camera' : 'תיעוד',
+          () => ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('מצלמה - בפיתוח')))),
+        _actionBtn(Icons.volume_off_rounded,
+          _langKey == 'ar' ? 'إيقاف صوت' : _langKey == 'en' ? 'Mute' : 'השתק',
+          _stopSpeaking),
+        _actionBtn(Icons.location_on_outlined,
+          _langKey == 'ar' ? 'موقع' : _langKey == 'en' ? 'Location' : 'מיקום',
+          _showLocation),
+      ],
+    ),
+  );
 
-  Widget _actionBtn(IconData icon, String label, VoidCallback onTap) {
-    return GestureDetector(
+  Widget _actionBtn(IconData icon, String label, VoidCallback onTap) =>
+    GestureDetector(
       onTap: onTap,
       child: Column(
         children: [
           Container(
-            width: 52,
-            height: 52,
+            width: 52, height: 52,
             decoration: BoxDecoration(
               color: VetoPalette.surface,
               shape: BoxShape.circle,
@@ -463,11 +554,20 @@ class _VetoScreenState extends State<VetoScreen> {
           ),
           const SizedBox(height: 6),
           Text(label,
-              style: const TextStyle(
-                  color: VetoPalette.textSubtle, fontSize: 11)),
+            style: const TextStyle(color: VetoPalette.textSubtle, fontSize: 11)),
         ],
       ),
     );
+
+  void _showLocation() async {
+    Position? pos;
+    try { pos = await Geolocator.getCurrentPosition(); } catch (_) {}
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(pos != null
+        ? '${pos.latitude.toStringAsFixed(5)}, ${pos.longitude.toStringAsFixed(5)}'
+        : 'לא ניתן למצוא מיקום'),
+    ));
   }
 }
 

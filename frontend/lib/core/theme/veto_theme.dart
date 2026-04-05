@@ -36,7 +36,7 @@ class VetoTheme {
   static ThemeData dark() {
     final base = ThemeData.dark(useMaterial3: true);
 
-    final tt = GoogleFonts.interTextTheme(base.textTheme).apply(
+    final tt = GoogleFonts.heeboTextTheme(base.textTheme).apply(
       bodyColor: VetoPalette.text,
       displayColor: VetoPalette.text,
     );
@@ -56,7 +56,7 @@ class VetoTheme {
         elevation: 0,
         shadowColor: Colors.transparent,
         surfaceTintColor: Colors.transparent,
-        titleTextStyle: GoogleFonts.inter(
+        titleTextStyle: GoogleFonts.heebo(
           color: VetoPalette.text,
           fontSize: 16,
           fontWeight: FontWeight.w600,
@@ -75,7 +75,7 @@ class VetoTheme {
           foregroundColor: Colors.white,
           backgroundColor: VetoPalette.primary,
           disabledBackgroundColor: const Color(0xFF2D3952),
-          textStyle: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600),
+          textStyle: GoogleFonts.heebo(fontSize: 14, fontWeight: FontWeight.w600),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
         ),
@@ -84,7 +84,7 @@ class VetoTheme {
         style: OutlinedButton.styleFrom(
           foregroundColor: VetoPalette.text,
           side: const BorderSide(color: VetoPalette.border),
-          textStyle: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w500),
+          textStyle: GoogleFonts.heebo(fontSize: 14, fontWeight: FontWeight.w500),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
         ),
