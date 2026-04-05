@@ -31,6 +31,10 @@ class AiService {
       if (resp.statusCode == 200) {
         return jsonDecode(resp.body) as Map<String, dynamic>;
       }
+      if (resp.statusCode == 429) {
+        final body = jsonDecode(resp.body) as Map<String, dynamic>;
+        return {'classified': false, 'reply': body['reply'] ?? 'השירות עמוס, נסה שוב בעוד כמה שניות.'};
+      }
       return {'classified': false, 'reply': 'שגיאה בחיבור לשירות ה-AI'};
     } catch (_) {
       return {'classified': false, 'reply': 'שגיאה בחיבור לשירות ה-AI'};

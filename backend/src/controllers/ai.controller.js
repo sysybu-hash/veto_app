@@ -85,7 +85,11 @@ exports.aiChat = async (req, res) => {
         : null,
     });
   } catch (err) {
-    console.error('AI chat error:', err);
+    console.error('AI chat error:', err.message);
+    const is429 = err.message && err.message.includes('429');
+    if (is429) {
+      return res.status(429).json({ error: 'rate_limit', reply: 'השירות עמוס כרגע, אנא נסה שוב בעוד כמה שניות.' });
+    }
     return res.status(500).json({ error: 'AI service unavailable', detail: err.message });
   }
 };

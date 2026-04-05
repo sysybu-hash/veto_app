@@ -63,9 +63,21 @@ async function geminiChat(history, userMessage, lang = 'he') {
     systemInstruction: SYSTEM_INSTRUCTIONS[lang] || SYSTEM_INSTRUCTIONS.he,
   });
 
-  const chat   = model.startChat({ history: history || [] });
-  const result = await chat.sendMessage(userMessage);
-  return result.response.text();
+  // Retry up to 3 times on rate-limit (429) errors
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      const chat   = model.startChat({ history: history || [] });
+      const result = await chat.sendMessage(userMessage);
+      return result.response.text();
+    } catch (err) {
+      const is429 = err.message && err.message.includes('429');
+      if (is429 && attempt < 2) {
+        await new Promise(r => setTimeout(r, (attempt + 1) * 2000)); // 2s, 4s
+        continue;
+      }
+      throw err;
+    }
+  }
 }
 
 module.exports = { geminiChat };
