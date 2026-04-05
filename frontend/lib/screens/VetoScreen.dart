@@ -45,15 +45,15 @@ const _langs = {
     protected: 'מוגן',
     broadcasting: 'שידור פעיל',
   ),
-  'ar': _Lang(
-    code: 'ar-SA',
-    label: 'العربية',
-    greeting: 'مرحباً! أنا المساعد القانوني لـ VETO.\nصف مشكلتك القانونية وسأجد لك محامياً متاحاً.',
-    hint: 'صف مشكلتك...',
-    processing: 'جارٍ المعالجة...',
-    dispatching: 'جارٍ الإرسال...',
-    protected: 'محمي',
-    broadcasting: 'بث نشط',
+  'ru': _Lang(
+    code: 'ru-RU',
+    label: 'Русский',
+    greeting: 'Здравствуйте! Я юридический помощник VETO.\nОпишите вашу юридическую проблему — я найду доступного адвоката.',
+    hint: 'Опишите проблему...',
+    processing: 'Обработка...',
+    dispatching: 'Отправка...',
+    protected: 'Защищён',
+    broadcasting: 'Трансляция',
   ),
   'en': _Lang(
     code: 'en-US',
@@ -180,7 +180,41 @@ class _VetoScreenState extends State<VetoScreen> {
       final spec      = result['specialization'] as String?;
       final lawyerMap = (result['lawyer'] as Map?)?.cast<String, dynamic>();
       await Future.delayed(const Duration(milliseconds: 400));
-      if (mounted) _dispatch(spec, lawyerMap?['name'] as String?);
+      if (!mounted) return;
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (_) => AlertDialog(
+          backgroundColor: const Color(0xFF1E293B),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: const Row(
+            children: [
+              Icon(Icons.credit_card_outlined, color: Color(0xFFF59E0B), size: 22),
+              SizedBox(width: 10),
+              Text('חיוב ₪50', style: TextStyle(color: Color(0xFFF1F5F9), fontWeight: FontWeight.w700)),
+            ],
+          ),
+          content: const Text(
+            'הזמנת ייעוץ עם עורך דין תחייב אותך ב-₪50 עכשיו.\n\nהייעוץ כולל שיחה של 15 דקות. לא ניתן לבטל לאחר האישור.',
+            style: TextStyle(color: Color(0xFF94A3B8), height: 1.6, fontSize: 14),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(_, false),
+              child: const Text('ביטול', style: TextStyle(color: Color(0xFF64748B))),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFF59E0B),
+                foregroundColor: Colors.black,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              ),
+              onPressed: () => Navigator.pop(_, true),
+              child: const Text('אישור וחיוב ₪50', style: TextStyle(fontWeight: FontWeight.w700)),
+            ),
+          ],
+        ),
+      );
+      if (confirmed == true && mounted) _dispatch(spec, lawyerMap?['name'] as String?);
     }
   }
 
@@ -236,8 +270,8 @@ class _VetoScreenState extends State<VetoScreen> {
     );
 
     final msg = lawyerName != null
-        ? '🔔 ${_langKey == 'he' ? 'מחפש עורך דין בתחום $spec...\n$lawyerName ייצור איתך קשר בקרוב.' : _langKey == 'ar' ? 'جارٍ البحث عن محامٍ في $spec...\n$lawyerName سيتصل بك.' : 'Searching for $spec lawyer...\n$lawyerName will contact you.'}'
-        : '🔔 ${_langKey == 'he' ? 'מחפש עורך דין זמין בתחום $spec...' : _langKey == 'ar' ? 'جارٍ البحث عن محامٍ في $spec...' : 'Searching for a $spec lawyer...'}';
+        ? '🔔 ${_langKey == 'he' ? 'מחפש עורך דין בתחום $spec...\n$lawyerName ייצור איתך קשר בקרוב.' : _langKey == 'ru' ? 'Ищу адвоката по $spec...\n$lawyerName скоро свяжется.' : 'Searching for $spec lawyer...\n$lawyerName will contact you.'}'
+        : '🔔 ${_langKey == 'he' ? 'מחפש עורך דין זמין בתחום $spec...' : _langKey == 'ru' ? 'Ищу доступного адвоката по $spec...' : 'Searching for a $spec lawyer...'}';
 
     if (mounted) {
       setState(() => _messages.add(_Msg(text: msg, isUser: false, isSystem: true)));
@@ -262,7 +296,7 @@ class _VetoScreenState extends State<VetoScreen> {
   @override
   Widget build(BuildContext context) {
     final bool isAdmin = _role.toLowerCase().contains('admin');
-    final isRtl = _langKey != 'en';
+    final isRtl = _langKey == 'he';
 
     return Directionality(
       textDirection: isRtl ? TextDirection.rtl : TextDirection.ltr,
@@ -536,13 +570,13 @@ class _VetoScreenState extends State<VetoScreen> {
       mainAxisAlignment: MainAxisAlignment.spaceAround,
       children: [
         _actionBtn(Icons.camera_alt_outlined,
-          _langKey == 'ar' ? 'كاميرا' : _langKey == 'en' ? 'Camera' : 'תיעוד',
+          _langKey == 'ru' ? 'Камера' : _langKey == 'en' ? 'Camera' : 'תיעוד',
           _openCamera),
         _actionBtn(Icons.volume_off_rounded,
-          _langKey == 'ar' ? 'إيقاف صوت' : _langKey == 'en' ? 'Mute' : 'השתק',
+          _langKey == 'ru' ? 'Звук' : _langKey == 'en' ? 'Mute' : 'השתק',
           _stopSpeaking),
         _actionBtn(Icons.location_on_outlined,
-          _langKey == 'ar' ? 'موقع' : _langKey == 'en' ? 'Location' : 'מיקום',
+          _langKey == 'ru' ? 'Местополож.' : _langKey == 'en' ? 'Location' : 'מיקום',
           _showLocation),
       ],
     ),
