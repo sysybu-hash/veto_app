@@ -78,6 +78,7 @@ app.use('/api/lawyers', require('./src/routes/lawyer.routes'));
 app.use('/api/events', require('./src/routes/event.routes'));
 app.use('/api/admin', require('./src/routes/admin.routes'));
 app.use('/api/ai', require('./src/routes/ai.routes'));
+app.use('/api/payments', require('./src/routes/payment.routes'));
 
 app.get('/', (_, res) =>
   res.json({

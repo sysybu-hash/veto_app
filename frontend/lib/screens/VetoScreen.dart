@@ -9,6 +9,7 @@ import '../core/theme/veto_theme.dart';
 import '../services/auth_service.dart';
 import '../services/socket_service.dart';
 import '../services/ai_service.dart';
+import '../services/payment_service.dart';
 import 'EvidenceScreen.dart';
 
 // ── Language config ────────────────────────────────────────
@@ -181,41 +182,30 @@ class _VetoScreenState extends State<VetoScreen> {
       final lawyerMap = (result['lawyer'] as Map?)?.cast<String, dynamic>();
       await Future.delayed(const Duration(milliseconds: 400));
       if (!mounted) return;
-      final confirmed = await showDialog<bool>(
-        context: context,
-        builder: (_) => AlertDialog(
-          backgroundColor: const Color(0xFF1E293B),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          title: const Row(
-            children: [
-              Icon(Icons.credit_card_outlined, color: Color(0xFFF59E0B), size: 22),
-              SizedBox(width: 10),
-              Text('חיוב ₪50', style: TextStyle(color: Color(0xFFF1F5F9), fontWeight: FontWeight.w700)),
-            ],
-          ),
-          content: const Text(
-            'הזמנת ייעוץ עם עורך דין תחייב אותך ב-₪50 עכשיו.\n\nהייעוץ כולל שיחה של 15 דקות. לא ניתן לבטל לאחר האישור.',
-            style: TextStyle(color: Color(0xFF94A3B8), height: 1.6, fontSize: 14),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(_, false),
-              child: const Text('ביטול', style: TextStyle(color: Color(0xFF64748B))),
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFF59E0B),
-                foregroundColor: Colors.black,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-              ),
-              onPressed: () => Navigator.pop(_, true),
-              child: const Text('אישור וחיוב ₪50', style: TextStyle(fontWeight: FontWeight.w700)),
-            ),
-          ],
-        ),
-      );
-      if (confirmed == true && mounted) _dispatch(spec, lawyerMap?['name'] as String?);
+      await _payAndDispatch(spec, lawyerMap?['name'] as String?);
     }
+  }
+
+  // ── PayPal consultation payment + dispatch ─────────────────
+  Future<void> _payAndDispatch(String? spec, String? lawyerName) async {
+    // Step 1: confirm intent + open PayPal
+    final orderId = await showDialog<String?>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => _PaymentDialog(spec: spec),
+    );
+    if (orderId == null || !mounted) return; // user cancelled
+
+    // Step 2: wait for user to confirm payment in PayPal tab
+    final captured = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => _CaptureDialog(orderId: orderId),
+    );
+    if (captured != true || !mounted) return;
+
+    // Step 3: dispatch
+    _dispatch(spec, lawyerName);
   }
 
   // ── STT ──────────────────────────────────────────────────
@@ -639,6 +629,177 @@ class _VetoScreenState extends State<VetoScreen> {
         ? '${pos.latitude.toStringAsFixed(5)}, ${pos.longitude.toStringAsFixed(5)}'
         : 'לא ניתן למצוא מיקום'),
     ));
+  }
+}
+
+// ══════════════════════════════════════════════════════════════
+//  _PaymentDialog — Step 1: confirm charge + open PayPal tab
+//  Returns the orderId string, or null if cancelled.
+// ══════════════════════════════════════════════════════════════
+class _PaymentDialog extends StatefulWidget {
+  final String? spec;
+  const _PaymentDialog({this.spec});
+  @override
+  State<_PaymentDialog> createState() => _PaymentDialogState();
+}
+
+class _PaymentDialogState extends State<_PaymentDialog> {
+  bool _loading = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      backgroundColor: const Color(0xFF1E293B),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      title: const Row(children: [
+        Icon(Icons.paypal_rounded, color: Color(0xFF009CDE), size: 24),
+        SizedBox(width: 10),
+        Text('תשלום עם PayPal',
+            style: TextStyle(color: Color(0xFFF1F5F9), fontWeight: FontWeight.w700, fontSize: 16)),
+      ]),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'ייעוץ עורך דין 15 דקות',
+            style: TextStyle(color: Color(0xFFF1F5F9), fontWeight: FontWeight.w600, fontSize: 14),
+          ),
+          const SizedBox(height: 4),
+          const Text(
+            '₪50 (≈ \$13.90 USD) — חיוב חד-פעמי',
+            style: TextStyle(color: Color(0xFF94A3B8), fontSize: 13),
+          ),
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: const Color(0xFFEF4444).withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: const Color(0xFFEF4444).withValues(alpha: 0.2)),
+            ),
+            child: const Text(
+              'לא ניתן לבטל לאחר תשלום.',
+              style: TextStyle(color: Color(0xFFEF4444), fontSize: 12),
+            ),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: _loading ? null : () => Navigator.pop(context, null),
+          child: const Text('ביטול', style: TextStyle(color: Color(0xFF64748B))),
+        ),
+        ElevatedButton.icon(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF009CDE),
+            foregroundColor: Colors.white,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          ),
+          onPressed: _loading ? null : _openPayPal,
+          icon: _loading
+              ? const SizedBox(width: 16, height: 16,
+                  child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+              : const Icon(Icons.open_in_new, size: 16),
+          label: Text(_loading ? 'פותח...' : 'שלם עם PayPal'),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _openPayPal() async {
+    setState(() => _loading = true);
+    final orderId = await PaymentService.createAndOpenOrder(PaymentType.consultation);
+    if (!mounted) return;
+    if (orderId == null) {
+      setState(() => _loading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('שגיאה ביצירת הזמנת PayPal. נסה שוב.')));
+      return;
+    }
+    // Return orderId to caller — next dialog will handle capture
+    Navigator.pop(context, orderId);
+  }
+}
+
+// ══════════════════════════════════════════════════════════════
+//  _CaptureDialog — Step 2: wait for user to finish PayPal tab
+//  Returns true if capture succeeded, false/null otherwise.
+// ══════════════════════════════════════════════════════════════
+class _CaptureDialog extends StatefulWidget {
+  final String orderId;
+  const _CaptureDialog({required this.orderId});
+  @override
+  State<_CaptureDialog> createState() => _CaptureDialogState();
+}
+
+class _CaptureDialogState extends State<_CaptureDialog> {
+  bool _capturing = false;
+  String? _error;
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      backgroundColor: const Color(0xFF1E293B),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      title: const Row(children: [
+        Icon(Icons.hourglass_top_rounded, color: Color(0xFFF59E0B), size: 22),
+        SizedBox(width: 10),
+        Text('אשר את התשלום',
+            style: TextStyle(color: Color(0xFFF1F5F9), fontWeight: FontWeight.w700, fontSize: 16)),
+      ]),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Text(
+            'PayPal נפתח בטאב חדש.\nלאחר אישור התשלום שם — חזור לכאן ולחץ "שילמתי".',
+            style: TextStyle(color: Color(0xFF94A3B8), height: 1.6, fontSize: 13),
+            textAlign: TextAlign.center,
+          ),
+          if (_error != null) ...[
+            const SizedBox(height: 10),
+            Text(_error!, style: const TextStyle(color: Color(0xFFEF4444), fontSize: 12)),
+          ],
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: _capturing ? null : () => Navigator.pop(context, false),
+          child: const Text('ביטול', style: TextStyle(color: Color(0xFF64748B))),
+        ),
+        ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF22C55E),
+            foregroundColor: Colors.white,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          ),
+          onPressed: _capturing ? null : _capture,
+          child: _capturing
+              ? const SizedBox(width: 16, height: 16,
+                  child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+              : const Text('שילמתי ✓', style: TextStyle(fontWeight: FontWeight.w700)),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _capture() async {
+    setState(() { _capturing = true; _error = null; });
+    final result = await PaymentService.captureOrder(
+      orderId: widget.orderId,
+      type: PaymentType.consultation,
+    );
+    if (!mounted) return;
+    if (result.success) {
+      Navigator.pop(context, true);
+    } else {
+      setState(() {
+        _capturing = false;
+        _error = result.error != null
+            ? 'שגיאה: ${result.error}'
+            : 'התשלום לא הושלם. נסה שוב לאחר אישור ב-PayPal.';
+      });
+    }
   }
 }
 

@@ -92,6 +92,17 @@ const UserSchema = new mongoose.Schema(
       type: String,
       default: null,
     },
+
+    // ── Subscription (PayPal) ─────────────────────────────────
+    is_subscribed: {
+      type: Boolean,
+      default: false,
+    },
+
+    subscription_expiry: {
+      type: Date,
+      default: null,
+    },
   },
   {
     timestamps: true, // createdAt, updatedAt
