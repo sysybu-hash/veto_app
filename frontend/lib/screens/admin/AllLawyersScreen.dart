@@ -80,8 +80,11 @@ class _AllLawyersScreenState extends State<AllLawyersScreen> {
                   'specializations': specs,
                   'is_available': available,
                 };
-                if (id == null) await _svc.createLawyer(body);
-                else await _svc.updateLawyer(id, body);
+                if (id == null) {
+                  await _svc.createLawyer(body);
+                } else {
+                  await _svc.updateLawyer(id, body);
+                }
                 _load();
               },
               child: Text(id == null ? 'הוסף' : 'שמור'),
@@ -181,6 +184,17 @@ class _AllLawyersScreenState extends State<AllLawyersScreen> {
                             child: Text(available ? 'זמין' : 'לא זמין',
                                 style: TextStyle(color: available ? VetoPalette.success : VetoPalette.textMuted, fontSize: 10)),
                           ),
+                          if (l['is_approved'] != true)
+                            Container(
+                              margin: const EdgeInsets.only(left: 4),
+                              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: VetoPalette.warning.withValues(alpha: 0.15),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: const Text('ממתין',
+                                  style: TextStyle(color: VetoPalette.warning, fontSize: 10)),
+                            ),
                           IconButton(
                             icon: const Icon(Icons.edit_outlined, size: 20, color: VetoPalette.primary),
                             onPressed: () => _showForm(lawyer: Map<String, dynamic>.from(l as Map)),

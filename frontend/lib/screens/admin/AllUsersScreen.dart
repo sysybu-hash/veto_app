@@ -25,9 +25,10 @@ class _AllUsersScreenState extends State<AllUsersScreen> {
   Future<void> _showForm({Map<String, dynamic>? user}) async {
     final nameCtrl  = TextEditingController(text: user?['full_name'] ?? '');
     final phoneCtrl = TextEditingController(text: user?['phone'] ?? '');
-    String role     = user?['role'] ?? 'user';
-    String lang     = user?['preferred_language'] ?? 'he';
-    final id        = user?['_id']?.toString();
+    String role           = user?['role'] ?? 'user';
+    String lang           = user?['preferred_language'] ?? 'he';
+    bool   manuallyAdded  = user?['manually_added'] == true;
+    final id              = user?['_id']?.toString();
 
     await showDialog(
       context: context,
@@ -46,7 +47,7 @@ class _AllUsersScreenState extends State<AllUsersScreen> {
               const SizedBox(height: 10),
               StatefulBuilder(builder: (_, ss) => Column(children: [
                 DropdownButtonFormField<String>(
-                  value: role,
+                  initialValue: role,
                   dropdownColor: VetoPalette.bg,
                   style: const TextStyle(color: VetoPalette.text),
                   decoration: _dec('תפקיד', Icons.shield_outlined),
@@ -58,7 +59,7 @@ class _AllUsersScreenState extends State<AllUsersScreen> {
                 ),
                 const SizedBox(height: 10),
                 DropdownButtonFormField<String>(
-                  value: lang,
+                  initialValue: lang,
                   dropdownColor: VetoPalette.bg,
                   style: const TextStyle(color: VetoPalette.text),
                   decoration: _dec('שפה', Icons.language),
@@ -68,6 +69,17 @@ class _AllUsersScreenState extends State<AllUsersScreen> {
                     DropdownMenuItem(value: 'ar', child: Text('العربية')),
                   ],
                   onChanged: (v) => ss(() => lang = v!),
+                ),
+                const SizedBox(height: 10),
+                SwitchListTile.adaptive(
+                  value: manuallyAdded,
+                  onChanged: (v) => ss(() => manuallyAdded = v),
+                  contentPadding: EdgeInsets.zero,
+                  activeColor: VetoPalette.success,
+                  title: const Text('פטור מתשלום (הוסף ידנית)',
+                      style: TextStyle(color: VetoPalette.text, fontSize: 14)),
+                  subtitle: const Text('המשתמש לא יצטרך מנוי',
+                      style: TextStyle(color: VetoPalette.textMuted, fontSize: 12)),
                 ),
               ])),
             ]),
@@ -82,9 +94,13 @@ class _AllUsersScreenState extends State<AllUsersScreen> {
                   'phone': phoneCtrl.text.trim(),
                   'role': role,
                   'preferred_language': lang,
+                  'manually_added': manuallyAdded,
                 };
-                if (id == null) await _svc.createUser(body);
-                else await _svc.updateUser(id, body);
+                if (id == null) {
+                  await _svc.createUser(body);
+                } else {
+                  await _svc.updateUser(id, body);
+                }
                 _load();
               },
               child: Text(id == null ? 'הוסף' : 'שמור'),
@@ -188,6 +204,17 @@ class _AllUsersScreenState extends State<AllUsersScreen> {
                             child: Text(verified ? 'מאומת' : 'לא מאומת',
                                 style: TextStyle(color: verified ? VetoPalette.success : VetoPalette.warning, fontSize: 10)),
                           ),
+                          if (u['manually_added'] == true)
+                            Container(
+                              margin: const EdgeInsets.only(left: 4),
+                              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: VetoPalette.success.withValues(alpha: 0.15),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: const Text('פטור',
+                                  style: TextStyle(color: VetoPalette.success, fontSize: 10)),
+                            ),
                           IconButton(
                             icon: const Icon(Icons.edit_outlined, size: 20, color: VetoPalette.primary),
                             onPressed: () => _showForm(user: Map<String, dynamic>.from(u as Map)),
