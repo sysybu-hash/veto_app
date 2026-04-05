@@ -60,6 +60,9 @@ app.use(
 
 app.use(express.json());
 
+// ── Static uploads folder (evidence files) ─────────────────
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
 const io = new Server(server, {
   cors: {
     origin: true,
