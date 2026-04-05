@@ -86,6 +86,6 @@ exports.aiChat = async (req, res) => {
     });
   } catch (err) {
     console.error('AI chat error:', err);
-    return res.status(500).json({ error: 'AI service unavailable' });
+    return res.status(500).json({ error: 'AI service unavailable', detail: err.message });
   }
 };
