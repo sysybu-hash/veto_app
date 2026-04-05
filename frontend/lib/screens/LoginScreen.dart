@@ -143,8 +143,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
       if (role == 'lawyer') {
         Navigator.of(context).pushReplacementNamed('/lawyer_dashboard');
-      } else if (role == 'admin') {
-        Navigator.of(context).pushReplacementNamed('/wizard_home');
       } else {
         Navigator.of(context).pushReplacementNamed('/veto_screen');
       }
