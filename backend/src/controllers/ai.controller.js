@@ -88,7 +88,14 @@ exports.aiChat = async (req, res) => {
     console.error('AI chat error:', err.message);
     const is429 = err.message && err.message.includes('429');
     if (is429) {
-      return res.status(429).json({ error: 'rate_limit', reply: 'השירות עמוס כרגע, אנא נסה שוב בעוד כמה שניות.' });
+      // Return a fallback intake question so the user can keep chatting
+      const fallbacks = {
+        he: 'תאר לי את הבעיה המשפטית שלך — במה אני יכול לעזור?',
+        ar: 'صف لي مشكلتك القانونية — كيف يمكنني مساعدتك؟',
+        en: 'Describe your legal issue — how can I help you?',
+      };
+      const lang = req.body?.lang && ['he','ar','en'].includes(req.body.lang) ? req.body.lang : 'he';
+      return res.json({ classified: false, reply: fallbacks[lang] });
     }
     return res.status(500).json({ error: 'AI service unavailable', detail: err.message });
   }
