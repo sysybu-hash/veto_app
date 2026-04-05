@@ -9,6 +9,7 @@ import '../core/theme/veto_theme.dart';
 import '../services/auth_service.dart';
 import '../services/socket_service.dart';
 import '../services/ai_service.dart';
+import 'EvidenceScreen.dart';
 
 // ── Language config ────────────────────────────────────────
 class _Lang {
@@ -87,6 +88,10 @@ class _VetoScreenState extends State<VetoScreen> {
   bool _isLoading     = false;
   bool _isListening   = false;
 
+  String? _activeEventId;
+  String? _token;
+  StreamSubscription<Map<String, dynamic>>? _emergencyCreatedSub;
+
   final List<_Msg> _messages = [];
   final List<Map<String, dynamic>> _geminiHistory = [];
   final TextEditingController _inputCtrl = TextEditingController();
@@ -99,6 +104,10 @@ class _VetoScreenState extends State<VetoScreen> {
     super.initState();
     _loadData();
     js.context['vetoSTTResult'] = (String result) => _onSTTResult(result);
+    _emergencyCreatedSub = SocketService().onEmergencyCreated.listen((data) {
+      final id = data['eventId'] as String?;
+      if (id != null && mounted) setState(() => _activeEventId = id);
+    });
   }
 
   @override
@@ -107,6 +116,7 @@ class _VetoScreenState extends State<VetoScreen> {
     _safeJsCall('vetoTTS', 'stop', []);
     _inputCtrl.dispose();
     _scrollCtrl.dispose();
+    _emergencyCreatedSub?.cancel();
     super.dispose();
   }
 
@@ -117,8 +127,9 @@ class _VetoScreenState extends State<VetoScreen> {
   Future<void> _loadData() async {
     final r = await AuthService().getStoredRole();
     final p = await AuthService().getStoredPhone();
+    final t = await AuthService().getToken();
     if (mounted) {
-      setState(() { _role = r ?? ''; _phone = p ?? ''; });
+      setState(() { _role = r ?? ''; _phone = p ?? ''; _token = t; });
       _addWelcome();
     }
   }
@@ -526,8 +537,7 @@ class _VetoScreenState extends State<VetoScreen> {
       children: [
         _actionBtn(Icons.camera_alt_outlined,
           _langKey == 'ar' ? 'كاميرا' : _langKey == 'en' ? 'Camera' : 'תיעוד',
-          () => ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('מצלמה - בפיתוח')))),
+          _openCamera),
         _actionBtn(Icons.volume_off_rounded,
           _langKey == 'ar' ? 'إيقاف صوت' : _langKey == 'en' ? 'Mute' : 'השתק',
           _stopSpeaking),
@@ -558,6 +568,33 @@ class _VetoScreenState extends State<VetoScreen> {
         ],
       ),
     );
+
+  void _openCamera() {
+    final eventId = _activeEventId;
+    final token   = _token;
+    if (eventId == null || token == null) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(_langKey == 'ar'
+            ? 'ابدأ طلب VETO أولاً لتفعيل الكاميرا'
+            : _langKey == 'en'
+                ? 'Start a VETO request first to enable the camera'
+                : 'יש להתחיל בקשת VETO כדי לאפשר תיעוד'),
+      ));
+      return;
+    }
+    final lang = _langKey == 'he'
+        ? EvidenceLanguage.he
+        : _langKey == 'ar'
+            ? EvidenceLanguage.ar
+            : EvidenceLanguage.en;
+    Navigator.of(context).push(MaterialPageRoute(
+      builder: (_) => EvidenceScreen(
+        eventId:  eventId,
+        token:    token,
+        language: lang,
+      ),
+    ));
+  }
 
   void _showLocation() async {
     Position? pos;

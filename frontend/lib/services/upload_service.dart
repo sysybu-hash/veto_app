@@ -54,9 +54,9 @@ class UploadService {
         ..headers.addAll(
           AppConfig.httpHeadersBinary({'Authorization': 'Bearer $token'}),
         )
-        ..fields['type']            = type
-        ..fields['latitude']        = lat.toString()
-        ..fields['longitude']       = lng.toString()
+        ..fields['type']             = type
+        ..fields['lat']              = lat.toString()
+        ..fields['lng']              = lng.toString()
         ..fields['client_timestamp'] = DateTime.now().toUtc().toIso8601String()
         ..files.add(await http.MultipartFile.fromPath(
           'file',
