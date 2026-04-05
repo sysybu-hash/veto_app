@@ -31,6 +31,8 @@ class _SplashScreenState extends State<SplashScreen> {
       if (!mounted) return;
       if (role == 'lawyer') {
         Navigator.pushReplacementNamed(context, '/lawyer_dashboard');
+      } else if (role == 'admin') {
+        Navigator.pushReplacementNamed(context, '/admin_settings');
       } else {
         Navigator.pushReplacementNamed(context, '/veto_screen');
       }

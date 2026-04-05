@@ -24,10 +24,12 @@ const LawyerSchema = new mongoose.Schema(
 
     email: {
       type: String,
-      required: [true, 'Email is required'],
+      required: false,
       unique: true,
+      sparse: true,    // allows multiple null values
       lowercase: true,
       trim: true,
+      default: null,
     },
 
     // ── Auth ──────────────────────────────────────────────────
@@ -49,9 +51,9 @@ const LawyerSchema = new mongoose.Schema(
     // ── Professional Details ───────────────────────────────────
     license_number: {
       type: String,
-      required: [true, 'Bar license number is required'],
-      unique: true,
+      required: false,
       trim: true,
+      default: null,
     },
 
     bar_association: {

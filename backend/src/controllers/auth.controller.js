@@ -76,9 +76,6 @@ const register = async (req, res, next) => {
     if (!['user', 'lawyer'].includes(role)) {
       return res.status(400).json({ error: 'role must be "user" or "lawyer".' });
     }
-    if (role === 'lawyer' && !license_number) {
-      return res.status(400).json({ error: 'license_number is required for lawyers.' });
-    }
 
     const existing = await findByPhone(phone);
     if (existing) {
