@@ -46,7 +46,10 @@ Always reply with JSON only, no text before or after.`,
 let _genAI;
 function getGenAI() {
   if (!_genAI) {
-    _genAI = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+    _genAI = new GoogleGenAI({
+      apiKey: process.env.GEMINI_API_KEY,
+      httpOptions: { apiVersion: 'v1' },
+    });
   }
   return _genAI;
 }
