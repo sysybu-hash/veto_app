@@ -59,7 +59,7 @@ function getGenAI() {
  */
 async function geminiChat(history, userMessage, lang = 'he') {
   const model = getGenAI().getGenerativeModel({
-    model: 'gemini-2.0-flash',
+    model: 'gemini-2.5-flash-preview-04-17',
     systemInstruction: SYSTEM_INSTRUCTIONS[lang] || SYSTEM_INSTRUCTIONS.he,
   });
 
