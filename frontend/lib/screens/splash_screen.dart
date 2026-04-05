@@ -27,7 +27,15 @@ class _SplashScreenState extends State<SplashScreen> {
     if (!mounted) return;
 
     if (token != null && token.isNotEmpty) {
-      Navigator.pushReplacementNamed(context, '/wizard_home');
+      final role = await auth.getStoredRole() ?? 'user';
+      if (!mounted) return;
+      if (role == 'lawyer') {
+        Navigator.pushReplacementNamed(context, '/lawyer_dashboard');
+      } else if (role == 'admin') {
+        Navigator.pushReplacementNamed(context, '/wizard_home');
+      } else {
+        Navigator.pushReplacementNamed(context, '/veto_screen');
+      }
     } else {
       Navigator.pushReplacementNamed(context, '/login');
     }

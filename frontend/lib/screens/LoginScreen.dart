@@ -136,7 +136,18 @@ class _LoginScreenState extends State<LoginScreen> {
     if (!mounted) return;
 
     if (data != null) {
-      Navigator.of(context).pushReplacementNamed('/wizard_home');
+      // Role comes from server response (stored in secure storage by verifyOTP)
+      final role = data['user']?['role']?.toString()
+          ?? await AuthService().getStoredRole()
+          ?? 'user';
+
+      if (role == 'lawyer') {
+        Navigator.of(context).pushReplacementNamed('/lawyer_dashboard');
+      } else if (role == 'admin') {
+        Navigator.of(context).pushReplacementNamed('/wizard_home');
+      } else {
+        Navigator.of(context).pushReplacementNamed('/veto_screen');
+      }
       return;
     }
 
