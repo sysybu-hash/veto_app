@@ -33,7 +33,7 @@ const updateFixedOtpSetting = async (req, res, next) => {
 
 const getAllUsers = async (req, res, next) => {
   try {
-    const users = await User.find({}).select('full_name phone role is_verified created_at preferred_language').sort({ created_at: -1 });
+    const users = await User.find({}).select('full_name phone role is_verified is_subscribed subscription_expiry manually_added is_active preferred_language createdAt').sort({ createdAt: -1 });
     res.json({ users });
   } catch (err) { next(err); }
 };
@@ -42,14 +42,20 @@ const createUser = async (req, res, next) => {
   try {
     const { full_name, phone, role, preferred_language } = req.body;
     if (!full_name || !phone) return res.status(400).json({ error: 'full_name and phone are required.' });
-    const user = await User.create({ full_name, phone, role: role || 'user', preferred_language: preferred_language || 'he', is_verified: true });
+    const user = await User.create({
+      full_name, phone,
+      role: role || 'user',
+      preferred_language: preferred_language || 'he',
+      is_verified: true,
+      manually_added: true,   // admin-created users are payment-exempt
+    });
     res.status(201).json({ user });
   } catch (err) { next(err); }
 };
 
 const updateUser = async (req, res, next) => {
   try {
-    const allowed = ['full_name', 'phone', 'role', 'preferred_language', 'email', 'is_verified'];
+    const allowed = ['full_name', 'phone', 'role', 'preferred_language', 'email', 'is_verified', 'manually_added', 'is_subscribed', 'is_active'];
     const updates = {};
     allowed.forEach(f => { if (req.body[f] !== undefined) updates[f] = req.body[f]; });
     const user = await User.findByIdAndUpdate(req.params.id, updates, { new: true, runValidators: true });
@@ -69,8 +75,38 @@ const deleteUser = async (req, res, next) => {
 const getAllLawyers = async (req, res, next) => {
   try {
     const Lawyer = require('../models/Lawyer');
-    const lawyers = await Lawyer.find({}).select('full_name phone email is_available is_verified created_at specializations license_number years_of_experience').sort({ created_at: -1 });
+    const lawyers = await Lawyer.find({}).select('full_name phone email is_available is_verified is_approved is_active createdAt specializations license_number years_of_experience').sort({ createdAt: -1 });
     res.json({ lawyers });
+  } catch (err) { next(err); }
+};
+
+const getPendingLawyers = async (req, res, next) => {
+  try {
+    const Lawyer = require('../models/Lawyer');
+    const lawyers = await Lawyer.find({ is_approved: false }).select('full_name phone email specializations license_number years_of_experience createdAt').sort({ createdAt: -1 });
+    res.json({ lawyers });
+  } catch (err) { next(err); }
+};
+
+const approveLawyer = async (req, res, next) => {
+  try {
+    const Lawyer = require('../models/Lawyer');
+    const lawyer = await Lawyer.findByIdAndUpdate(
+      req.params.id,
+      { is_approved: true },
+      { new: true }
+    );
+    if (!lawyer) return res.status(404).json({ error: 'Lawyer not found.' });
+    res.json({ lawyer, message: '\u05e2\u05d5\u05e8\u05da \u05d4\u05d3\u05d9\u05df \u05d0\u05d5\u05e9\u05e8 \u05d1\u05d4\u05e6\u05dc\u05d7\u05d4.' });
+  } catch (err) { next(err); }
+};
+
+const rejectLawyer = async (req, res, next) => {
+  try {
+    const Lawyer = require('../models/Lawyer');
+    const lawyer = await Lawyer.findByIdAndDelete(req.params.id);
+    if (!lawyer) return res.status(404).json({ error: 'Lawyer not found.' });
+    res.json({ message: '\u05e2\u05d5\u05e8\u05da \u05d4\u05d3\u05d9\u05df \u05e0\u05d3\u05d7\u05d4.' });
   } catch (err) { next(err); }
 };
 
@@ -78,14 +114,16 @@ const createLawyer = async (req, res, next) => {
   try {
     const Lawyer = require('../models/Lawyer');
     const { full_name, phone, email, license_number, specializations, years_of_experience } = req.body;
-    if (!full_name || !phone || !email || !license_number) {
-      return res.status(400).json({ error: 'full_name, phone, email, license_number are required.' });
+    if (!full_name || !phone) {
+      return res.status(400).json({ error: 'full_name and phone are required.' });
     }
     const lawyer = await Lawyer.create({
-      full_name, phone, email, license_number,
+      full_name, phone, email: email || null,
+      license_number: license_number || null,
       specializations: specializations || [],
       years_of_experience: years_of_experience || 0,
       is_verified: true,
+      is_approved: true,  // admin-created lawyers are pre-approved
     });
     res.status(201).json({ lawyer });
   } catch (err) { next(err); }
@@ -147,5 +185,6 @@ module.exports = {
   getAdminSettings, updateFixedOtpSetting,
   getAllUsers, createUser, updateUser, deleteUser,
   getAllLawyers, createLawyer, updateLawyer, deleteLawyer,
+  getPendingLawyers, approveLawyer, rejectLawyer,
   getEmergencyLogs, updateEmergencyLog, deleteEmergencyLog,
 };
