@@ -202,9 +202,10 @@ class _LoginScreenState extends State<LoginScreen> {
   };
 
   String get _fullPhone {
-    final local = _phoneLocalController.text.trim();
-    final stripped = local.startsWith('0') ? local.substring(1) : local;
-    return '$_countryCode$stripped';
+    // Strip non-digits first, then remove leading 0 to produce +972XXXXXXXXX
+    final digits = _phoneLocalController.text.trim().replaceAll(RegExp(r'\D'), '');
+    final normalized = digits.startsWith('0') ? digits.substring(1) : digits;
+    return '$_countryCode$normalized';
   }
 
   String _t(String code, String key) {
@@ -605,6 +606,7 @@ class _LoginScreenState extends State<LoginScreen> {
           TextField(
             controller: _nameController,
             textInputAction: TextInputAction.next,
+            onSubmitted: (_) => FocusScope.of(context).nextFocus(),
             decoration: InputDecoration(
               labelText: _t(code, 'fullName'),
               prefixIcon: const Icon(Icons.badge_outlined),
@@ -644,8 +646,12 @@ class _LoginScreenState extends State<LoginScreen> {
               child: TextField(
                 controller: _phoneLocalController,
                 keyboardType: TextInputType.phone,
+                textInputAction: TextInputAction.go,
                 textDirection: TextDirection.ltr,
                 maxLength: 10,
+                onSubmitted: (_) {
+                  if (!_loading) _continueFromProfile();
+                },
                 decoration: const InputDecoration(
                   hintText: '05X-XXXXXXX',
                   counterText: '',

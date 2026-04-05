@@ -280,7 +280,9 @@ class LandingScreen extends StatelessWidget {
       textDirection: direction,
       child: Scaffold(
         backgroundColor: VetoPalette.bg,
-        body: SingleChildScrollView(
+        body: SafeArea(
+          bottom: false,
+          child: SingleChildScrollView(
           child: Column(
             children: [
               _LandingNav(
@@ -437,6 +439,7 @@ class LandingScreen extends StatelessWidget {
           ),
         ),
       ),
+    ),
     );
   }
 }

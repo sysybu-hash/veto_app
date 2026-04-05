@@ -4,8 +4,10 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 
+import 'config/app_config.dart';
 import 'core/i18n/app_language.dart';
 import 'core/theme/veto_theme.dart';
 import 'screens/LoginScreen.dart';
@@ -20,13 +22,27 @@ import 'screens/wizard/WizardShellScreen.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final languageController = AppLanguageController();
-  await languageController.load();
+  // Load language and warm up the backend concurrently.
+  await Future.wait([
+    languageController.load(),
+    _warmUpBackend(),
+  ]);
   runApp(
     ChangeNotifierProvider.value(
       value: languageController,
       child: const VetoApp(),
     ),
   );
+}
+
+/// Fire a lightweight /health GET to wake Render's free-tier instance
+/// before the user tries to log in. Failures are silently ignored.
+Future<void> _warmUpBackend() async {
+  try {
+    await http
+        .get(Uri.parse(AppConfig.healthCheckUrl))
+        .timeout(const Duration(seconds: 10));
+  } catch (_) {}
 }
 
 class VetoApp extends StatelessWidget {

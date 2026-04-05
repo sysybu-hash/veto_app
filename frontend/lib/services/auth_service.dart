@@ -11,7 +11,17 @@ class AuthService {
   factory AuthService() => _instance;
   AuthService._internal();
 
-  final _storage = const FlutterSecureStorage();
+  // Web uses localStorage via flutter_secure_storage_web.
+  // We pass WebOptions so the key prefix is consistent across browsers.
+  // Note: incognito mode in some browsers restricts localStorage — handled
+  // gracefully because every read/write is inside try/catch in this class.
+  static const _kWebOptions = WebOptions(
+    dbName: 'veto_secure',
+    publicKey: 'veto',
+  );
+  final _storage = const FlutterSecureStorage(
+    webOptions: _kWebOptions,
+  );
 
   Future<String?> requestOTPDetailed(String phone, String role) async {
     try {

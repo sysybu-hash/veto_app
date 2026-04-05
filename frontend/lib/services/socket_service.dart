@@ -51,10 +51,15 @@ class SocketService {
     _socket?.dispose();
 
     _socket = IO.io(AppConfig.socketOrigin, <String, dynamic>{
-      'transports': ['websocket'],
+      'transports': ['websocket', 'polling'],
       'autoConnect': false,
       'auth': {'token': token},
       'query': {'role': role},
+      'reconnection': true,
+      'reconnectionAttempts': 10,
+      'reconnectionDelay': 2000,
+      'reconnectionDelayMax': 10000,
+      'timeout': 20000,
     });
 
     _socket?.connect();
