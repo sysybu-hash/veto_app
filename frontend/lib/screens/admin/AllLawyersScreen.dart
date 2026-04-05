@@ -77,7 +77,6 @@ class _AllLawyersScreenState extends State<AllLawyersScreen> {
             TextButton(onPressed: () => Navigator.pop(ctx), child: Text(_t(code, 'cancel'))),
             FilledButton(
               onPressed: () async {
-                Navigator.pop(ctx);
                 final specs = specsCtrl.text.trim().isEmpty ? <String>[]
                     : specsCtrl.text.split(',').map((s) => s.trim()).where((s) => s.isNotEmpty).toList();
                 final body = {
@@ -89,12 +88,19 @@ class _AllLawyersScreenState extends State<AllLawyersScreen> {
                   'specializations': specs,
                   'is_available': available,
                 };
-                if (id == null) {
-                  await _svc.createLawyer(body);
-                } else {
-                  await _svc.updateLawyer(id, body);
+                final bool ok = id == null
+                    ? (await _svc.createLawyer(body)) != null
+                    : await _svc.updateLawyer(id, body);
+                if (!ctx.mounted) return;
+                Navigator.pop(ctx);
+                if (ok) {
+                  _load();
+                } else if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                    content: Text(_t(code, 'saveLawyerFailed')),
+                    backgroundColor: VetoPalette.emergency,
+                  ));
                 }
-                _load();
               },
               child: Text(id == null ? _t(code, 'add') : _t(code, 'save')),
             ),

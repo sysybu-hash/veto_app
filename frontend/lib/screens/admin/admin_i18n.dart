@@ -85,6 +85,8 @@ class AdminStrings {
       'lawyerPrefix': 'עו"ד',
       'online': 'Online',
       'connected': 'Connected',
+      'saveUserFailed': 'שמירת המשתמש נכשלה. בדוק את פורמט הטלפון (+972...).',
+      'saveLawyerFailed': 'שמירת עורך הדין נכשלה. בדוק את פורמט הטלפון (+972...).',
     },
     'en': {
       'loading': 'Loading...',
@@ -169,6 +171,8 @@ class AdminStrings {
       'lawyerPrefix': 'Lawyer',
       'online': 'Online',
       'connected': 'Connected',
+      'saveUserFailed': 'Failed to save user. Check phone format (+972...).',
+      'saveLawyerFailed': 'Failed to save lawyer. Check phone format (+972...).',
     },
     'ru': {
       'loading': 'Загрузка...',
@@ -253,6 +257,8 @@ class AdminStrings {
       'lawyerPrefix': 'Адвокат',
       'online': 'Online',
       'connected': 'Connected',
+      'saveUserFailed': 'Не удалось сохранить пользователя. Проверьте формат телефона (+972...).',
+      'saveLawyerFailed': 'Не удалось сохранить адвоката. Проверьте формат телефона (+972...).',
     },
   };
 

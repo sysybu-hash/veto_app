@@ -2,6 +2,20 @@ const User    = require('../models/User');
 const Lawyer  = require('../models/Lawyer');
 const Event   = require('../models/EmergencyEvent');
 
+/**
+ * Normalise a raw phone string to E.164 (+972XXXXXXXXX).
+ * Handles: 0501234567 → +972501234567, 972501234567 → +972501234567, already E.164 → unchanged.
+ */
+function normalizePhone(raw) {
+  if (!raw) return raw;
+  const trimmed = raw.trim();
+  if (trimmed.startsWith('+')) return trimmed;
+  const digits = trimmed.replace(/\D/g, '');
+  if (digits.startsWith('972')) return '+' + digits;
+  if (digits.startsWith('0'))   return '+972' + digits.slice(1);
+  return '+972' + digits;
+}
+
 const getAdminSettings = async (req, res, next) => {
   try {
     const enableFixedOtpForAdmins = process.env.ENABLE_FIXED_OTP_FOR_ADMINS === 'true';
@@ -40,7 +54,8 @@ const getAllUsers = async (req, res, next) => {
 
 const createUser = async (req, res, next) => {
   try {
-    const { full_name, phone, role, preferred_language } = req.body;
+    const { full_name, role, preferred_language } = req.body;
+    const phone = normalizePhone(req.body.phone);
     if (!full_name || !phone) return res.status(400).json({ error: 'full_name and phone are required.' });
     const user = await User.create({
       full_name, phone,
@@ -58,6 +73,7 @@ const updateUser = async (req, res, next) => {
     const allowed = ['full_name', 'phone', 'role', 'preferred_language', 'email', 'is_verified', 'manually_added', 'is_subscribed', 'is_active'];
     const updates = {};
     allowed.forEach(f => { if (req.body[f] !== undefined) updates[f] = req.body[f]; });
+    if (updates.phone) updates.phone = normalizePhone(updates.phone);
     const user = await User.findByIdAndUpdate(req.params.id, updates, { new: true, runValidators: true });
     if (!user) return res.status(404).json({ error: 'User not found.' });
     res.json({ user });

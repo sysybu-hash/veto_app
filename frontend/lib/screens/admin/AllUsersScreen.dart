@@ -97,7 +97,6 @@ class _AllUsersScreenState extends State<AllUsersScreen> {
             TextButton(onPressed: () => Navigator.pop(ctx), child: Text(_t(code, 'cancel'))),
             FilledButton(
               onPressed: () async {
-                Navigator.pop(ctx);
                 final body = {
                   'full_name': nameCtrl.text.trim(),
                   'phone': phoneCtrl.text.trim(),
@@ -105,12 +104,19 @@ class _AllUsersScreenState extends State<AllUsersScreen> {
                   'preferred_language': lang,
                   'manually_added': manuallyAdded,
                 };
-                if (id == null) {
-                  await _svc.createUser(body);
-                } else {
-                  await _svc.updateUser(id, body);
+                final bool ok = id == null
+                    ? (await _svc.createUser(body)) != null
+                    : await _svc.updateUser(id, body);
+                if (!ctx.mounted) return;
+                Navigator.pop(ctx);
+                if (ok) {
+                  _load();
+                } else if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                    content: Text(_t(code, 'saveUserFailed')),
+                    backgroundColor: VetoPalette.emergency,
+                  ));
                 }
-                _load();
               },
               child: Text(id == null ? _t(code, 'add') : _t(code, 'save')),
             ),
