@@ -292,7 +292,8 @@ class LandingScreen extends StatelessWidget {
               ),
               Padding(
                 padding: const EdgeInsets.fromLTRB(24, 18, 24, 24),
-                child: ConstrainedBox(
+                child: Center(
+                  child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 1180),
                   child: compact
                       ? Column(
@@ -381,6 +382,7 @@ class LandingScreen extends StatelessWidget {
                           ],
                         ),
                 ),
+                ),
               ),
               _LandingSection(
                 eyebrow: _t(code, 'sectionSignals'),
@@ -414,7 +416,8 @@ class LandingScreen extends StatelessWidget {
               ),
               Padding(
                 padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
-                child: ConstrainedBox(
+                child: Center(
+                  child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 1180),
                   child: _BottomCallout(
                     title: _t(code, 'ctaTitle'),
@@ -422,16 +425,19 @@ class LandingScreen extends StatelessWidget {
                     buttonLabel: _t(code, 'ctaButton'),
                     onTap: () => _goNext(context),
                   ),
+                  ),
                 ),
               ),
               Padding(
                 padding: const EdgeInsets.fromLTRB(24, 0, 24, 32),
-                child: Text(
-                  _t(code, 'footer'),
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    color: VetoPalette.textSubtle,
-                    fontSize: 12,
+                child: Center(
+                  child: Text(
+                    _t(code, 'footer'),
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      color: VetoPalette.textSubtle,
+                      fontSize: 12,
+                    ),
                   ),
                 ),
               ),
@@ -459,7 +465,8 @@ class _LandingNav extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
-      child: ConstrainedBox(
+      child: Center(
+        child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 1180),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -498,6 +505,7 @@ class _LandingNav extends StatelessWidget {
               FilledButton(onPressed: onTap, child: Text(ctaLabel)),
             ],
           ),
+        ),
         ),
       ),
     );
@@ -694,7 +702,8 @@ class _LandingSection extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
-      child: ConstrainedBox(
+      child: Center(
+        child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 1180),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -731,6 +740,7 @@ class _LandingSection extends StatelessWidget {
             const SizedBox(height: 16),
             child,
           ],
+        ),
         ),
       ),
     );

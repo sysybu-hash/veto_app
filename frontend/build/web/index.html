@@ -36,7 +36,22 @@
   <link rel="manifest" href="manifest.json">
 
   <style>
-    body { margin: 0; background: #0F172A; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      width: 100%;
+      overflow: hidden;
+      background: #0F172A;
+      /* Prevent pull-to-refresh on mobile Chrome/Safari */
+      overscroll-behavior: none;
+    }
+    /* Prevent text size auto-adjustment on iOS Safari */
+    * { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+    /* Prevent blue tap highlight on mobile */
+    * { -webkit-tap-highlight-color: transparent; }
+    /* Smooth scrolling on iOS */
+    flt-glass-pane { touch-action: pan-y; }
   </style>
 
   <script>
