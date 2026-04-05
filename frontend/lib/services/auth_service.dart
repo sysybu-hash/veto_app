@@ -13,7 +13,7 @@ class AuthService {
 
   final _storage = const FlutterSecureStorage();
 
-  Future<OtpRequestOutcome> requestOTPDetailed(String phone, String role) async {
+  Future<String?> requestOTPDetailed(String phone, String role) async {
     try {
       final response = await http.post(
         Uri.parse('${AppConfig.baseUrl}/auth/request-otp'),
@@ -21,11 +21,13 @@ class AuthService {
         body: jsonEncode({'phone': phone}),
       ).timeout(const Duration(seconds: 25));
 
-      if (response.statusCode == 200) return OtpRequestOutcome.success;
-      return OtpRequestOutcome.failure;
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return data['otp']?.toString(); // null if not exposed
+      }
+      return 'error';
     } catch (e) {
-      if (e.toString().contains('TimeoutException')) return OtpRequestOutcome.timeout;
-      return OtpRequestOutcome.failure;
+      return 'error';
     }
   }
 

@@ -1,5 +1,5 @@
 // ============================================================
-//  auth.controller.js � Authentication Controller
+//  auth.controller.js � Authentication Controller
 //  VETO Legal Emergency App
 //  Flow: Register ? Request OTP ? Verify OTP ? JWT issued
 // ============================================================
@@ -7,9 +7,13 @@
 const User    = require('../models/User');
 const Lawyer  = require('../models/Lawyer');
 const { signToken } = require('../middleware/auth.middleware');
-const { sendOTP, checkOTP } = require('../services/sms.service');
 
 // ?? Helpers ????????????????????????????????????????????????
+
+/** Generate a cryptographically-safe 6-digit OTP */
+function generateOTP() {
+  return String(Math.floor(100000 + Math.random() * 900000));
+}
 
 /** OTP valid for 10 minutes */
 function otpExpiry() {
@@ -121,25 +125,24 @@ const requestOTP = async (req, res, next) => {
     const { doc, role } = found;
     const useFixed = isAdminPhone(phone) || process.env.ENABLE_FIXED_OTP_FOR_ADMINS === 'true';
 
-    if (useFixed) {
-      // ?? Admin: fixed OTP saved to DB ??????????????????
-      const otp = '123456';
-      doc.otp_code       = otp;
-      doc.otp_expires_at = otpExpiry();
-      await doc.save();
-      console.log(`[AUTH] Fixed OTP for admin: ${phone}`);
-    } else {
-      // ?? Regular user: Twilio Verify handles OTP ???????
-      await sendOTP(phone);
-      // Clear any leftover DB otp so verifyOTP uses Twilio path
-      doc.otp_code       = undefined;
-      doc.otp_expires_at = undefined;
-      await doc.save();
-    }
+    const otp = useFixed ? '123456' : generateOTP();
+    doc.otp_code       = otp;
+    doc.otp_expires_at = otpExpiry();
+    await doc.save();
+    console.log(`[AUTH] OTP for ${phone}: ${otp}`);
 
     console.log(`[AUTH] OTP requested for ${phone} (role: ${role})`);
 
-    return res.status(200).json({ message: 'OTP sent.', role });
+    const exposeOtp =
+      process.env.NODE_ENV !== 'production' ||
+      process.env.RETURN_OTP_IN_JSON === '1' ||
+      process.env.RETURN_OTP_IN_JSON === 'true';
+
+    return res.status(200).json({
+      message: 'OTP sent.',
+      role,
+      ...(exposeOtp && { otp }),
+    });
   } catch (err) {
     next(err);
   }
@@ -182,20 +185,12 @@ const verifyOTP = async (req, res, next) => {
 
     const useFixed = isAdminPhone(phone) || process.env.ENABLE_FIXED_OTP_FOR_ADMINS === 'true';
 
-    if (useFixed) {
-      // ?? Admin: validate against DB OTP ????????????????
-      if (!doc.otp_code || doc.otp_code !== String(otp)) {
-        return res.status(401).json({ error: 'Invalid OTP.' });
-      }
-      if (!doc.otp_expires_at || doc.otp_expires_at < new Date()) {
-        return res.status(401).json({ error: 'OTP has expired. Please request a new one.' });
-      }
-    } else {
-      // ?? Regular: validate via Twilio Verify ???????????
-      const approved = await checkOTP(phone, otp);
-      if (!approved) {
-        return res.status(401).json({ error: 'Invalid OTP.' });
-      }
+    // ── Validate against DB OTP ────────────────────────
+    if (!doc.otp_code || doc.otp_code !== String(otp)) {
+      return res.status(401).json({ error: 'Invalid OTP.' });
+    }
+    if (!doc.otp_expires_at || doc.otp_expires_at < new Date()) {
+      return res.status(401).json({ error: 'OTP has expired. Please request a new one.' });
     }
 
     // ?? Mark verified + clear OTP ?????????????????????

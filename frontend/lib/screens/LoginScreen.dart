@@ -72,17 +72,51 @@ class _LoginScreenState extends State<LoginScreen> {
         }
       }
 
-      final outcome = await AuthService().requestOTPDetailed(phone, _role);
-      if (outcome == OtpRequestOutcome.success) {
-        setState(() {
-          _loading = false;
-          _step = AuthWizardStep.otp;
-        });
-      } else {
+      final otp = await AuthService().requestOTPDetailed(phone, _role);
+      if (otp == 'error') {
         setState(() {
           _loading = false;
           _error = 'שליחת קוד נכשלה. ודא שהחשבון קיים או בצע הרשמה.';
         });
+        return;
+      }
+      setState(() {
+        _loading = false;
+        _step = AuthWizardStep.otp;
+      });
+      // If OTP returned in response (dev/testing mode) — show it to user
+      if (otp != null && mounted) {
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (_) => Directionality(
+            textDirection: TextDirection.rtl,
+            child: AlertDialog(
+              title: const Text('קוד האימות שלך'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text('SMS לא זמין כרגע. הקוד שלך:'),
+                  const SizedBox(height: 16),
+                  Text(
+                    otp,
+                    style: const TextStyle(
+                      fontSize: 36,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 8,
+                    ),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('הבנתי'),
+                ),
+              ],
+            ),
+          ),
+        );
       }
     } catch (_) {
       setState(() {
@@ -304,6 +338,33 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
+  Widget _modeTab(String label, bool isRegister) {
+    final selected = _registerMode == isRegister;
+    return Expanded(
+      child: GestureDetector(
+        onTap: () => setState(() => _registerMode = isRegister),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          margin: const EdgeInsets.all(4),
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          decoration: BoxDecoration(
+            color: selected ? VetoPalette.primary : Colors.transparent,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Text(
+            label,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: selected ? Colors.white : VetoPalette.textMuted,
+              fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
+              fontSize: 14,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _roleCard(String label, String value, IconData icon) {
     final selected = _role == value;
 
@@ -347,20 +408,20 @@ class _LoginScreenState extends State<LoginScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text('פרטי חשבון',
-              style: Theme.of(context)
-                  .textTheme
-                  .titleLarge
-                  ?.copyWith(fontWeight: FontWeight.w600)),
-          const SizedBox(height: 10),
-          SwitchListTile.adaptive(
-            value: _registerMode,
-            onChanged: (v) => setState(() => _registerMode = v),
-            contentPadding: EdgeInsets.zero,
-            title: const Text('יצירת חשבון חדש'),
-            subtitle: const Text('כבה אם כבר יש חשבון קיים במערכת'),
+          // ── Login / Register toggle tabs ───────────────────────
+          Container(
+            decoration: BoxDecoration(
+              color: VetoPalette.bg,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Row(
+              children: [
+                _modeTab('כניסה', false),
+                _modeTab('הרשמה', true),
+              ],
+            ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 16),
           if (_registerMode) ...[
             TextField(
               controller: _nameController,
@@ -394,6 +455,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 child: Text(
                   _countryCode,
+                  textDirection: TextDirection.ltr,
                   style: const TextStyle(
                       fontWeight: FontWeight.w600,
                       fontSize: 14,
@@ -480,21 +542,38 @@ class _LoginScreenState extends State<LoginScreen> {
                   .titleLarge
                   ?.copyWith(fontWeight: FontWeight.w600)),
           const SizedBox(height: 6),
-          Text(
-            'קוד נשלח ל-$_fullPhone',
-            style: const TextStyle(color: VetoPalette.textMuted, fontSize: 13),
+          Directionality(
+            textDirection: TextDirection.rtl,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Text(
+                  'קוד נשלח ל-',
+                  style: TextStyle(color: VetoPalette.textMuted, fontSize: 13),
+                ),
+                Text(
+                  _fullPhone,
+                  textDirection: TextDirection.ltr,
+                  style: const TextStyle(
+                      color: VetoPalette.textMuted, fontSize: 13),
+                ),
+              ],
+            ),
           ),
           const SizedBox(height: 18),
           Center(
-            child: Pinput(
-              length: 6,
-              defaultPinTheme: defaultPinTheme,
-              focusedPinTheme: defaultPinTheme.copyWith(
-                decoration: defaultPinTheme.decoration?.copyWith(
-                  border: Border.all(color: VetoPalette.primary, width: 1.5),
+            child: Directionality(
+              textDirection: TextDirection.ltr,
+              child: Pinput(
+                length: 6,
+                defaultPinTheme: defaultPinTheme,
+                focusedPinTheme: defaultPinTheme.copyWith(
+                  decoration: defaultPinTheme.decoration?.copyWith(
+                    border: Border.all(color: VetoPalette.primary, width: 1.5),
+                  ),
                 ),
+                onCompleted: _verifyOtp,
               ),
-              onCompleted: _verifyOtp,
             ),
           ),
           const SizedBox(height: 18),
