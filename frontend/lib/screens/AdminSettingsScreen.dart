@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../core/theme/veto_theme.dart';
 import '../services/admin_service.dart';
+import '../services/auth_service.dart';
 import 'admin/AllUsersScreen.dart';
 import 'admin/AllLawyersScreen.dart';
 import 'admin/EmergencyLogsScreen.dart';
@@ -98,6 +99,11 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                       strokeWidth: 2, color: VetoPalette.primary),
                 ),
               ),
+            IconButton(
+              icon: const Icon(Icons.logout),
+              tooltip: 'יציאה',
+              onPressed: () => AuthService().logout(context),
+            ),
           ],
         ),
         body: SingleChildScrollView(
