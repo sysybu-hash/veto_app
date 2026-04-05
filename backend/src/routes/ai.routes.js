@@ -6,9 +6,8 @@
 // ============================================================
 
 const router    = require('express').Router();
-const { protect } = require('../middleware/auth.middleware');
 const { aiChat }  = require('../controllers/ai.controller');
 
-router.post('/chat', protect, aiChat);
+router.post('/chat', aiChat);
 
 module.exports = router;
