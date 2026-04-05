@@ -2,7 +2,9 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:provider/provider.dart';
 
+import '../../core/i18n/app_language.dart';
 import '../../core/theme/future_surface.dart';
 import '../../core/theme/veto_theme.dart';
 import '../../services/auth_service.dart';
@@ -21,6 +23,7 @@ class _WizardShellScreenState extends State<WizardShellScreen> {
   String _role = 'user';
   String _name = '';
   String _phone = '';
+  String _langCode = 'he';
   bool _isBusy = false;
   bool _isAvailable = true;
 
@@ -43,13 +46,22 @@ class _WizardShellScreenState extends State<WizardShellScreen> {
     final role = await auth.getStoredRole() ?? 'user';
     final name = await auth.getStoredName() ?? '';
     final phone = await auth.getStoredPhone() ?? '';
+    final lang = AppLanguage.normalize(
+      await auth.getStoredPreferredLanguage(),
+    );
 
     if (!mounted) return;
+
+    final controller = context.read<AppLanguageController>();
+    if (controller.code != lang) {
+      await controller.setLanguage(lang, persist: false);
+    }
 
     setState(() {
       _role = role;
       _name = name;
       _phone = phone;
+      _langCode = lang;
     });
 
     await _socket.connect(role: role);
@@ -74,9 +86,20 @@ class _WizardShellScreenState extends State<WizardShellScreen> {
         _isBusy = false;
         _wizardIndex = 2;
       });
-      final foundName = data['lawyerName']?.toString() ?? 'Lawyer';
+      final foundName = data['lawyerName']?.toString() ??
+          (_langCode == 'ru'
+              ? 'Адвокат'
+              : _langCode == 'en'
+                  ? 'Lawyer'
+                  : 'עורך דין');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Lawyer connected: $foundName')),
+        SnackBar(
+          content: Text(_langCode == 'ru'
+              ? 'Адвокат подключен: $foundName'
+              : _langCode == 'en'
+                  ? 'Lawyer connected: $foundName'
+                  : 'עורך דין התחבר: $foundName'),
+        ),
       );
     });
 
@@ -87,8 +110,13 @@ class _WizardShellScreenState extends State<WizardShellScreen> {
         _wizardIndex = 0;
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text('אין כרגע עורכי דין זמינים. נסה שוב בעוד רגע.')),
+        SnackBar(
+          content: Text(_langCode == 'ru'
+              ? 'Сейчас нет доступных адвокатов. Попробуйте снова чуть позже.'
+              : _langCode == 'en'
+                  ? 'No lawyers are available right now. Please try again shortly.'
+                  : 'אין כרגע עורכי דין זמינים. נסה שוב בעוד רגע.'),
+        ),
       );
     });
   }
@@ -120,7 +148,7 @@ class _WizardShellScreenState extends State<WizardShellScreen> {
     _socket.emitStartVeto(
       lat: pos?.latitude ?? 32.08088,
       lng: pos?.longitude ?? 34.78057,
-      preferredLanguage: 'he',
+      preferredLanguage: _langCode,
     );
   }
 
@@ -148,7 +176,7 @@ class _WizardShellScreenState extends State<WizardShellScreen> {
   @override
   Widget build(BuildContext context) {
     return Directionality(
-      textDirection: TextDirection.rtl,
+      textDirection: AppLanguage.directionOf(_langCode),
       child: Scaffold(
         backgroundColor: VetoPalette.bg,
         body: SafeArea(
@@ -183,7 +211,19 @@ class _WizardShellScreenState extends State<WizardShellScreen> {
 
   Widget _topBar(bool compact) {
     final displayName =
-        _name.isNotEmpty ? _name : (_role == 'lawyer' ? 'Lawyer' : 'User');
+      _name.isNotEmpty
+        ? _name
+        : (_role == 'lawyer'
+          ? (_langCode == 'ru'
+            ? 'Адвокат'
+            : _langCode == 'en'
+              ? 'Lawyer'
+              : 'עורך דין')
+          : (_langCode == 'ru'
+            ? 'Пользователь'
+            : _langCode == 'en'
+              ? 'User'
+              : 'משתמש'));
 
     return GlassPanel(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),

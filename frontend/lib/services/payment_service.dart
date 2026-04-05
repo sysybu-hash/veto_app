@@ -11,10 +11,9 @@
 // ============================================================
 
 import 'dart:convert';
-// ignore: avoid_web_libraries_in_flutter
-import 'dart:html' as html;
 import 'package:http/http.dart' as http;
 import '../config/app_config.dart';
+import '../platform/browser_bridge.dart' as browser_bridge;
 
 enum PaymentType { subscription, consultation }
 
@@ -46,7 +45,7 @@ class PaymentService {
 
       if (approveUrl != null) {
         // Open PayPal in a new tab — user pays there, then comes back
-        html.window.open(approveUrl, '_blank');
+        browser_bridge.openInNewTab(approveUrl);
       }
 
       return orderId;

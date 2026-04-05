@@ -5,13 +5,14 @@
 // ============================================================
 
 import 'dart:async';
-// ignore: avoid_web_libraries_in_flutter
-import 'dart:js' as js;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../core/i18n/app_language.dart';
+import '../platform/browser_bridge.dart' as browser_bridge;
 import '../core/theme/veto_theme.dart';
 import '../services/auth_service.dart';
 import '../services/socket_service.dart';
@@ -254,7 +255,7 @@ class _VetoScreenState extends State<VetoScreen> {
   void initState() {
     super.initState();
     _loadData();
-    js.context['vetoSTTResult'] = (String r) => _onSTTResult(r);
+    browser_bridge.registerSttResultHandler(_onSTTResult);
     _emergencyCreatedSub = SocketService().onEmergencyCreated.listen((data) {
       final id = data['eventId'] as String?;
       if (id != null && mounted) setState(() => _activeEventId = id);
@@ -289,15 +290,32 @@ class _VetoScreenState extends State<VetoScreen> {
   }
 
   void _safeJs(String obj, String m, List a) {
-    try { js.context[obj].callMethod(m, a); } catch (_) {}
+    try { browser_bridge.callBrowserMethod(obj, m, a); } catch (_) {}
   }
 
   Future<void> _loadData() async {
     final r = await AuthService().getStoredRole();
     final p = await AuthService().getStoredPhone();
     final t = await AuthService().getToken();
+    final language = AppLanguage.normalize(
+      await AuthService().getStoredPreferredLanguage(),
+    );
+    if (!mounted) return;
+    if (r == 'lawyer') {
+      Navigator.of(context).pushReplacementNamed('/lawyer_dashboard');
+      return;
+    }
+    final languageController = context.read<AppLanguageController>();
+    if (languageController.code != language) {
+      await languageController.setLanguage(language, persist: false);
+    }
     if (mounted) {
-      setState(() { _role = r ?? ''; _phone = p ?? ''; _token = t; });
+      setState(() {
+        _role = r ?? '';
+        _phone = p ?? '';
+        _token = t;
+        _langKey = language;
+      });
       _messages.add(_Msg(text: _l.greeting, isUser: false));
       if (_role == 'admin') _loadAdminFiles();
     }
@@ -385,16 +403,16 @@ class _VetoScreenState extends State<VetoScreen> {
     );
     final specLabel = spec ?? '';
     final msg = lawyerName != null
-        ? ('🔔 ' + (_langKey == 'he'
+        ? ('🔔 ${_langKey == 'he'
             ? 'מחפש עורך דין בתחום $specLabel...\n$lawyerName ייצור איתך קשר.'
             : _langKey == 'ru'
             ? 'Ищу адвоката по $specLabel...\n$lawyerName свяжется с вами.'
-            : 'Searching $specLabel lawyer...\n$lawyerName will contact you.'))
-        : ('🔔 ' + (_langKey == 'he'
+            : 'Searching $specLabel lawyer...\n$lawyerName will contact you.'}')
+        : ('🔔 ${_langKey == 'he'
             ? 'מחפש עורך דין זמין...'
             : _langKey == 'ru'
             ? 'Ищу доступного адвоката...'
-            : 'Searching for an available lawyer...'));
+            : 'Searching for an available lawyer...'}');
     if (mounted) {
       setState(() => _messages.add(_Msg(text: msg, isUser: false, isSystem: true)));
       _scrollToBottom();
@@ -408,8 +426,7 @@ class _VetoScreenState extends State<VetoScreen> {
     _isListening ? _stopListening() : _startListening();
   }
   void _startListening() {
-    bool ok = false;
-    try { ok = js.context['vetoSTT'].callMethod('isSupported', []) as bool; } catch (_) {}
+    final ok = browser_bridge.supportsBrowserMethod('vetoSTT', 'isSupported', const []);
     if (!ok) {
       ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('הדפדפן שלך לא תומך בזיהוי קול')));
@@ -464,8 +481,8 @@ class _VetoScreenState extends State<VetoScreen> {
         token: _token!,
         language: _langKey == 'he'
             ? EvidenceLanguage.he
-            : _langKey == 'ar'
-            ? EvidenceLanguage.ar
+            : _langKey == 'ru'
+            ? EvidenceLanguage.ru
             : EvidenceLanguage.en,
       ),
     ));
@@ -477,7 +494,7 @@ class _VetoScreenState extends State<VetoScreen> {
     if (!mounted) return;
     final lat = pos?.latitude ?? 32.08;
     final lng = pos?.longitude ?? 34.78;
-    await Clipboard.setData(ClipboardData(text: 'https://maps.google.com/?q=${lat},${lng}'));
+    await Clipboard.setData(ClipboardData(text: 'https://maps.google.com/?q=$lat,$lng'));
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       content: Text(_langKey == 'he'
@@ -552,12 +569,16 @@ class _VetoScreenState extends State<VetoScreen> {
     actions: [
       for (final k in ['he', 'ru', 'en'])
         GestureDetector(
-          onTap: () => setState(() {
-            _langKey = k;
-            _messages.clear();
-            _geminiHistory.clear();
-            _messages.add(_Msg(text: _langs[k]!.greeting, isUser: false));
-          }),
+          onTap: () async {
+            await context.read<AppLanguageController>().setLanguage(k);
+            if (!mounted) return;
+            setState(() {
+              _langKey = k;
+              _messages.clear();
+              _geminiHistory.clear();
+              _messages.add(_Msg(text: _langs[k]!.greeting, isUser: false));
+            });
+          },
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 150),
             margin: const EdgeInsets.symmetric(horizontal: 2, vertical: 10),
@@ -1278,10 +1299,12 @@ class _ContactSheetState extends State<_ContactSheet> {
   void dispose() { _ctrl.dispose(); super.dispose(); }
 
   String _buildMsg() {
-    if (widget.langKey == 'he')
+    if (widget.langKey == 'he') {
       return 'שלום, אני זקוק לסיוע משפטי דחוף — ${widget.scenarioLabel}. אנא פנה אליי בהקדם.';
-    if (widget.langKey == 'ru')
+    }
+    if (widget.langKey == 'ru') {
       return 'Здравствуйте, мне нужна срочная юридическая помощь — ${widget.scenarioLabel}.';
+    }
     return 'Hello, I need urgent legal assistance regarding: ${widget.scenarioLabel}. Please contact me immediately.';
   }
 
@@ -1306,9 +1329,10 @@ class _ContactSheetState extends State<_ContactSheet> {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
       if (mounted) Navigator.pop(context);
     } catch (_) {
-      if (mounted)
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('לא ניתן לפתוח את הקישור')));
+      }
     }
     if (mounted) setState(() => _busy = false);
   }
@@ -1636,21 +1660,21 @@ class _SubscriptionGateDialogState extends State<_SubscriptionGateDialog> {
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(color: const Color(0xFF3B82F6).withValues(alpha: 0.4)),
               ),
-              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                const Text('מנוי חודשי',
+              child: const Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text('מנוי חודשי',
                     style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
-                const SizedBox(height: 6),
-                const Row(children: [
+                SizedBox(height: 6),
+                Row(children: [
                   Text('₪19.90',
                       style: TextStyle(color: Color(0xFF22C55E), fontWeight: FontWeight.w800, fontSize: 22)),
                   SizedBox(width: 6),
                   Text('/ חודש  (USD \$5.50)',
                       style: TextStyle(color: Color(0xFF94A3B8), fontSize: 13)),
                 ]),
-                const SizedBox(height: 8),
-                const Text('✓ ייעוץ AI משפטי ללא הגבלה',
+                SizedBox(height: 8),
+                Text('✓ ייעוץ AI משפטי ללא הגבלה',
                     style: TextStyle(color: Color(0xFF94A3B8), fontSize: 12)),
-                const Text('✓ הזמנת עורך דין חרום (₪50 נוסף)',
+                Text('✓ הזמנת עורך דין חרום (₪50 נוסף)',
                     style: TextStyle(color: Color(0xFF94A3B8), fontSize: 12)),
               ]),
             ),

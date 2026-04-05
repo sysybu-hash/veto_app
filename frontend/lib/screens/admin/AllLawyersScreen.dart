@@ -1,6 +1,12 @@
 ﻿import 'package:flutter/material.dart';
+
+import 'package:provider/provider.dart';
+
+import '../../core/i18n/app_language.dart';
 import '../../core/theme/veto_theme.dart';
 import '../../services/admin_service.dart';
+import '../../widgets/app_language_menu.dart';
+import 'admin_i18n.dart';
 
 class AllLawyersScreen extends StatefulWidget {
   const AllLawyersScreen({super.key});
@@ -13,6 +19,8 @@ class _AllLawyersScreenState extends State<AllLawyersScreen> {
   bool _loading = true;
   final _svc = AdminService();
 
+  String _t(String code, String key) => AdminStrings.t(code, key);
+
   @override
   void initState() { super.initState(); _load(); }
 
@@ -23,6 +31,7 @@ class _AllLawyersScreenState extends State<AllLawyersScreen> {
   }
 
   Future<void> _showForm({Map<String, dynamic>? lawyer}) async {
+    final code = context.read<AppLanguageController>().code;
     final nameCtrl    = TextEditingController(text: lawyer?['full_name'] ?? '');
     final phoneCtrl   = TextEditingController(text: lawyer?['phone'] ?? '');
     final emailCtrl   = TextEditingController(text: lawyer?['email'] ?? '');
@@ -36,36 +45,36 @@ class _AllLawyersScreenState extends State<AllLawyersScreen> {
     await showDialog(
       context: context,
       builder: (ctx) => Directionality(
-        textDirection: TextDirection.rtl,
+        textDirection: AppLanguage.directionOf(code),
         child: AlertDialog(
           backgroundColor: VetoPalette.surface,
-          title: Text(id == null ? 'הוסף עורך דין' : 'ערוך עורך דין',
+          title: Text(id == null ? _t(code, 'addLawyer') : _t(code, 'editLawyer'),
               style: const TextStyle(color: VetoPalette.text)),
           content: SingleChildScrollView(
             child: Column(mainAxisSize: MainAxisSize.min, children: [
-              _field(nameCtrl,  'שם מלא',          Icons.badge_outlined),
+              _field(nameCtrl,  _t(code, 'fullName'),          Icons.badge_outlined),
               const SizedBox(height: 10),
-              _field(phoneCtrl, 'טלפון (+972...)',  Icons.phone_iphone_rounded, dir: TextDirection.ltr),
+              _field(phoneCtrl, _t(code, 'phone'),  Icons.phone_iphone_rounded, dir: TextDirection.ltr),
               const SizedBox(height: 10),
-              _field(emailCtrl, 'אימייל',           Icons.email_outlined, dir: TextDirection.ltr),
+              _field(emailCtrl, _t(code, 'email'),           Icons.email_outlined, dir: TextDirection.ltr),
               const SizedBox(height: 10),
-              _field(licCtrl,   'מספר רישיון',      Icons.numbers),
+              _field(licCtrl,   _t(code, 'license'),      Icons.numbers),
               const SizedBox(height: 10),
-              _field(expCtrl,   'שנות ניסיון',      Icons.work_outline,
+              _field(expCtrl,   _t(code, 'experience'),      Icons.work_outline,
                   type: TextInputType.number),
               const SizedBox(height: 10),
-              _field(specsCtrl, 'התמחויות (פסיק)',  Icons.category_outlined),
+              _field(specsCtrl, _t(code, 'specializations'),  Icons.category_outlined),
               const SizedBox(height: 10),
               StatefulBuilder(builder: (_, ss) => SwitchListTile.adaptive(
                 value: available,
                 onChanged: (v) => ss(() => available = v),
                 contentPadding: EdgeInsets.zero,
-                title: const Text('זמין לקריאות', style: TextStyle(color: VetoPalette.text)),
+                title: Text(_t(code, 'availableForCalls'), style: const TextStyle(color: VetoPalette.text)),
               )),
             ]),
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('ביטול')),
+            TextButton(onPressed: () => Navigator.pop(ctx), child: Text(_t(code, 'cancel'))),
             FilledButton(
               onPressed: () async {
                 Navigator.pop(ctx);
@@ -87,7 +96,7 @@ class _AllLawyersScreenState extends State<AllLawyersScreen> {
                 }
                 _load();
               },
-              child: Text(id == null ? 'הוסף' : 'שמור'),
+              child: Text(id == null ? _t(code, 'add') : _t(code, 'save')),
             ),
           ],
         ),
@@ -96,20 +105,21 @@ class _AllLawyersScreenState extends State<AllLawyersScreen> {
   }
 
   Future<void> _confirmDelete(String id, String name) async {
+    final code = context.read<AppLanguageController>().code;
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => Directionality(
-        textDirection: TextDirection.rtl,
+        textDirection: AppLanguage.directionOf(code),
         child: AlertDialog(
           backgroundColor: VetoPalette.surface,
-          title: const Text('מחיקת עורך דין', style: TextStyle(color: VetoPalette.text)),
-          content: Text('מחק את "$name"?', style: const TextStyle(color: VetoPalette.textMuted)),
+          title: Text(_t(code, 'deleteLawyer'), style: const TextStyle(color: VetoPalette.text)),
+          content: Text('${_t(code, 'deleteLawyerConfirm')}\n$name', style: const TextStyle(color: VetoPalette.textMuted)),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('ביטול')),
+            TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(_t(code, 'cancel'))),
             FilledButton(
               style: FilledButton.styleFrom(backgroundColor: VetoPalette.emergency),
               onPressed: () => Navigator.pop(ctx, true),
-              child: const Text('מחק'),
+              child: Text(_t(code, 'delete')),
             ),
           ],
         ),
@@ -120,29 +130,35 @@ class _AllLawyersScreenState extends State<AllLawyersScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final code = context.watch<AppLanguageController>().code;
+
     return Directionality(
-      textDirection: TextDirection.rtl,
+      textDirection: AppLanguage.directionOf(code),
       child: Scaffold(
         backgroundColor: VetoPalette.bg,
         appBar: AppBar(
           backgroundColor: VetoPalette.surface,
-          title: Text('עורכי דין (${_loading ? "..." : _lawyers.length})',
+          title: Text('${_t(code, 'lawyers')} (${_loading ? _t(code, 'loading') : _lawyers.length})',
               style: const TextStyle(color: VetoPalette.text)),
           iconTheme: const IconThemeData(color: VetoPalette.text),
           actions: [
-            IconButton(icon: const Icon(Icons.refresh), onPressed: _load),
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 8),
+              child: Center(child: AppLanguageMenu(compact: true)),
+            ),
+            IconButton(icon: const Icon(Icons.refresh), onPressed: _load, tooltip: _t(code, 'refresh')),
           ],
         ),
         floatingActionButton: FloatingActionButton.extended(
           onPressed: () => _showForm(),
           backgroundColor: VetoPalette.primary,
           icon: const Icon(Icons.person_add_rounded),
-          label: const Text('הוסף עורך דין'),
+          label: Text(_t(code, 'addLawyer')),
         ),
         body: _loading
             ? const Center(child: CircularProgressIndicator())
             : _lawyers.isEmpty
-                ? const Center(child: Text('אין עורכי דין', style: TextStyle(color: VetoPalette.textMuted)))
+                ? Center(child: Text(_t(code, 'noLawyers'), style: const TextStyle(color: VetoPalette.textMuted)))
                 : ListView.separated(
                     padding: const EdgeInsets.fromLTRB(16, 16, 16, 80),
                     itemCount: _lawyers.length,
@@ -167,7 +183,7 @@ class _AllLawyersScreenState extends State<AllLawyersScreen> {
                           ),
                           const SizedBox(width: 12),
                           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                            Text(l['full_name'] ?? 'ללא שם',
+                            Text(l['full_name'] ?? _t(code, 'noName'),
                                 style: const TextStyle(color: VetoPalette.text, fontWeight: FontWeight.w600)),
                             Text(l['phone'] ?? '', textDirection: TextDirection.ltr,
                                 style: const TextStyle(color: VetoPalette.textMuted, fontSize: 12)),
@@ -181,7 +197,7 @@ class _AllLawyersScreenState extends State<AllLawyersScreen> {
                               color: (available ? VetoPalette.success : VetoPalette.textMuted).withValues(alpha: 0.15),
                               borderRadius: BorderRadius.circular(8),
                             ),
-                            child: Text(available ? 'זמין' : 'לא זמין',
+                            child: Text(available ? _t(code, 'available') : _t(code, 'unavailable'),
                                 style: TextStyle(color: available ? VetoPalette.success : VetoPalette.textMuted, fontSize: 10)),
                           ),
                           if (l['is_approved'] != true)
@@ -192,16 +208,18 @@ class _AllLawyersScreenState extends State<AllLawyersScreen> {
                                 color: VetoPalette.warning.withValues(alpha: 0.15),
                                 borderRadius: BorderRadius.circular(8),
                               ),
-                              child: const Text('ממתין',
-                                  style: TextStyle(color: VetoPalette.warning, fontSize: 10)),
+                              child: Text(_t(code, 'pendingSingle'),
+                                  style: const TextStyle(color: VetoPalette.warning, fontSize: 10)),
                             ),
                           IconButton(
                             icon: const Icon(Icons.edit_outlined, size: 20, color: VetoPalette.primary),
                             onPressed: () => _showForm(lawyer: Map<String, dynamic>.from(l as Map)),
+                            tooltip: _t(code, 'edit'),
                           ),
                           IconButton(
                             icon: const Icon(Icons.delete_outline, size: 20, color: VetoPalette.emergency),
                             onPressed: () => _confirmDelete(lid, l['full_name']?.toString() ?? ''),
+                            tooltip: _t(code, 'delete'),
                           ),
                         ]),
                       );

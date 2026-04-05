@@ -1,6 +1,12 @@
 ﻿import 'package:flutter/material.dart';
+
+import 'package:provider/provider.dart';
+
+import '../../core/i18n/app_language.dart';
 import '../../core/theme/veto_theme.dart';
 import '../../services/admin_service.dart';
+import '../../widgets/app_language_menu.dart';
+import 'admin_i18n.dart';
 
 class PendingLawyersScreen extends StatefulWidget {
   const PendingLawyersScreen({super.key});
@@ -13,6 +19,8 @@ class _PendingLawyersScreenState extends State<PendingLawyersScreen> {
   List<dynamic> _lawyers = [];
   bool _loading = true;
   final _svc = AdminService();
+
+  String _t(String code, String key) => AdminStrings.t(code, key);
 
   @override
   void initState() {
@@ -27,33 +35,35 @@ class _PendingLawyersScreenState extends State<PendingLawyersScreen> {
   }
 
   Future<void> _approve(String id, String name) async {
+    final code = context.read<AppLanguageController>().code;
     final ok = await _svc.approveLawyer(id);
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text(ok ? '\u05d0\u05d5\u05e9\u05e8: $name' : '\u05e9\u05d2\u05d9\u05d0\u05d4 \u05d1\u05d0\u05d9\u05e9\u05d5\u05e8'),
+      content: Text(ok ? '${_t(code, 'approveSuccess')}: $name' : _t(code, 'approveError')),
       backgroundColor: ok ? VetoPalette.success : VetoPalette.emergency,
     ));
     if (ok) _load();
   }
 
   Future<void> _reject(String id, String name) async {
+    final code = context.read<AppLanguageController>().code;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (_) => Directionality(
-        textDirection: TextDirection.rtl,
+        textDirection: AppLanguage.directionOf(code),
         child: AlertDialog(
           backgroundColor: VetoPalette.surface,
-          title: const Text('\u05d3\u05d7\u05d9\u05d9\u05ea \u05d1\u05e7\u05e9\u05d4', style: TextStyle(color: VetoPalette.text)),
-          content: Text('\u05d4\u05d0\u05dd \u05dc\u05d3\u05d7\u05d5\u05ea \u05d0\u05ea \u05d1\u05e7\u05e9\u05ea $name?',
+          title: Text(_t(code, 'rejectRequest'), style: const TextStyle(color: VetoPalette.text)),
+          content: Text('${_t(code, 'rejectRequestConfirm')}\n$name',
               style: const TextStyle(color: VetoPalette.textMuted)),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context, false),
-              child: const Text('\u05d1\u05d9\u05d8\u05d5\u05dc', style: TextStyle(color: VetoPalette.textMuted)),
+              child: Text(_t(code, 'cancel'), style: const TextStyle(color: VetoPalette.textMuted)),
             ),
             TextButton(
               onPressed: () => Navigator.pop(context, true),
-              child: const Text('\u05d3\u05d7\u05d4', style: TextStyle(color: VetoPalette.emergency)),
+              child: Text(_t(code, 'reject'), style: const TextStyle(color: VetoPalette.emergency)),
             ),
           ],
         ),
@@ -63,7 +73,7 @@ class _PendingLawyersScreenState extends State<PendingLawyersScreen> {
     final ok = await _svc.rejectLawyer(id);
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text(ok ? '\u05e0\u05d3\u05d7\u05d4: $name' : '\u05e9\u05d2\u05d9\u05d0\u05d4 \u05d1\u05d3\u05d7\u05d9\u05d9\u05d4'),
+      content: Text(ok ? '${_t(code, 'rejectSuccess')}: $name' : _t(code, 'rejectError')),
       backgroundColor: ok ? VetoPalette.success : VetoPalette.emergency,
     ));
     if (ok) _load();
@@ -71,38 +81,44 @@ class _PendingLawyersScreenState extends State<PendingLawyersScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final code = context.watch<AppLanguageController>().code;
+
     return Directionality(
-      textDirection: TextDirection.rtl,
+      textDirection: AppLanguage.directionOf(code),
       child: Scaffold(
         backgroundColor: VetoPalette.bg,
         appBar: AppBar(
           backgroundColor: VetoPalette.surface,
-          title: const Text(
-            '\u05e2\u05d5\u05e8\u05db\u05d9 \u05d3\u05d9\u05df \u05de\u05de\u05ea\u05d9\u05e0\u05d9\u05dd \u05dc\u05d0\u05d9\u05e9\u05d5\u05e8',
-            style: TextStyle(color: VetoPalette.text, fontSize: 18),
+          title: Text(
+            _t(code, 'pendingLawyersTitle'),
+            style: const TextStyle(color: VetoPalette.text, fontSize: 18),
           ),
           iconTheme: const IconThemeData(color: VetoPalette.text),
           actions: [
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 8),
+              child: Center(child: AppLanguageMenu(compact: true)),
+            ),
             IconButton(
               icon: const Icon(Icons.refresh_rounded),
               onPressed: _load,
-              tooltip: '\u05e8\u05e2\u05e0\u05df',
+              tooltip: _t(code, 'refresh'),
             ),
           ],
         ),
         body: _loading
             ? const Center(child: CircularProgressIndicator(color: VetoPalette.primary))
             : _lawyers.isEmpty
-                ? const Center(
+                ? Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.check_circle_outline_rounded,
+                        const Icon(Icons.check_circle_outline_rounded,
                             size: 64, color: VetoPalette.success),
-                        SizedBox(height: 16),
+                        const SizedBox(height: 16),
                         Text(
-                          '\u05d0\u05d9\u05df \u05d1\u05e7\u05e9\u05d5\u05ea \u05de\u05de\u05ea\u05d9\u05e0\u05d5\u05ea',
-                          style: TextStyle(color: VetoPalette.textMuted, fontSize: 16),
+                          _t(code, 'noPendingLawyers'),
+                          style: const TextStyle(color: VetoPalette.textMuted, fontSize: 16),
                         ),
                       ],
                     ),
@@ -117,10 +133,10 @@ class _PendingLawyersScreenState extends State<PendingLawyersScreen> {
                       final name = l['full_name'] ?? '\u2014';
                       final phone = l['phone'] ?? '\u2014';
                       final email = l['email'] ?? '';
-                      final license = l['license_number'] ?? '\u2014';
+                        final license = l['license_number'] ?? '—';
                       final exp = l['years_of_experience']?.toString() ?? '0';
                       final specs =
-                          (l['specializations'] as List?)?.join(', ') ?? '\u2014';
+                          (l['specializations'] as List?)?.join(', ') ?? '—';
 
                       return Container(
                         decoration: BoxDecoration(
@@ -150,18 +166,18 @@ class _PendingLawyersScreenState extends State<PendingLawyersScreen> {
                             const SizedBox(height: 8),
                             _info(Icons.phone_iphone_rounded, phone),
                             if (email.isNotEmpty) _info(Icons.email_outlined, email),
-                            _info(Icons.numbers_rounded, '\u05e8\u05d9\u05e9\u05d9\u05d5\u05df: $license'),
+                            _info(Icons.numbers_rounded, '${_t(code, 'license')}: $license'),
                             _info(Icons.work_outline_rounded,
-                                '\u05e0\u05d9\u05e1\u05d9\u05d5\u05df: $exp \u05e9\u05e0\u05d9\u05dd'),
+                                '${_t(code, 'experienceYears')}: $exp'),
                             _info(Icons.category_outlined,
-                                '\u05d4\u05ea\u05de\u05d7\u05d5\u05d9\u05d5\u05ea: $specs'),
+                                '${_t(code, 'specializationsLabel')}: $specs'),
                             const SizedBox(height: 12),
                             Row(children: [
                               Expanded(
                                 child: OutlinedButton.icon(
                                   onPressed: () => _reject(id, name),
                                   icon: const Icon(Icons.close_rounded, size: 16),
-                                  label: const Text('\u05d3\u05d7\u05d4'),
+                                  label: Text(_t(code, 'reject')),
                                   style: OutlinedButton.styleFrom(
                                     foregroundColor: VetoPalette.emergency,
                                     side: const BorderSide(color: VetoPalette.emergency),
@@ -173,7 +189,7 @@ class _PendingLawyersScreenState extends State<PendingLawyersScreen> {
                                 child: ElevatedButton.icon(
                                   onPressed: () => _approve(id, name),
                                   icon: const Icon(Icons.check_rounded, size: 16),
-                                  label: const Text('\u05d0\u05e9\u05e8'),
+                                  label: Text(_t(code, 'approve')),
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: VetoPalette.success,
                                     foregroundColor: Colors.white,

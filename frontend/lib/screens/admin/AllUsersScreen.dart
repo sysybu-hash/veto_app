@@ -1,6 +1,12 @@
 ﻿import 'package:flutter/material.dart';
+
+import 'package:provider/provider.dart';
+
+import '../../core/i18n/app_language.dart';
 import '../../core/theme/veto_theme.dart';
 import '../../services/admin_service.dart';
+import '../../widgets/app_language_menu.dart';
+import 'admin_i18n.dart';
 
 class AllUsersScreen extends StatefulWidget {
   const AllUsersScreen({super.key});
@@ -13,6 +19,8 @@ class _AllUsersScreenState extends State<AllUsersScreen> {
   bool _loading = true;
   final _svc = AdminService();
 
+  String _t(String code, String key) => AdminStrings.t(code, key);
+
   @override
   void initState() { super.initState(); _load(); }
 
@@ -23,6 +31,7 @@ class _AllUsersScreenState extends State<AllUsersScreen> {
   }
 
   Future<void> _showForm({Map<String, dynamic>? user}) async {
+    final code = context.read<AppLanguageController>().code;
     final nameCtrl  = TextEditingController(text: user?['full_name'] ?? '');
     final phoneCtrl = TextEditingController(text: user?['phone'] ?? '');
     String role           = user?['role'] ?? 'user';
@@ -33,16 +42,16 @@ class _AllUsersScreenState extends State<AllUsersScreen> {
     await showDialog(
       context: context,
       builder: (ctx) => Directionality(
-        textDirection: TextDirection.rtl,
+        textDirection: AppLanguage.directionOf(code),
         child: AlertDialog(
           backgroundColor: VetoPalette.surface,
-          title: Text(id == null ? 'הוסף משתמש' : 'ערוך משתמש',
+          title: Text(id == null ? _t(code, 'addUser') : _t(code, 'editUser'),
               style: const TextStyle(color: VetoPalette.text)),
           content: SingleChildScrollView(
             child: Column(mainAxisSize: MainAxisSize.min, children: [
-              _field(nameCtrl,  'שם מלא',    Icons.badge_outlined),
+              _field(nameCtrl,  _t(code, 'fullName'),    Icons.badge_outlined),
               const SizedBox(height: 10),
-              _field(phoneCtrl, 'טלפון (+972...)', Icons.phone_iphone_rounded,
+              _field(phoneCtrl, _t(code, 'phone'), Icons.phone_iphone_rounded,
                   dir: TextDirection.ltr),
               const SizedBox(height: 10),
               StatefulBuilder(builder: (_, ss) => Column(children: [
@@ -50,10 +59,10 @@ class _AllUsersScreenState extends State<AllUsersScreen> {
                   initialValue: role,
                   dropdownColor: VetoPalette.bg,
                   style: const TextStyle(color: VetoPalette.text),
-                  decoration: _dec('תפקיד', Icons.shield_outlined),
-                  items: const [
-                    DropdownMenuItem(value: 'user',  child: Text('אזרח')),
-                    DropdownMenuItem(value: 'admin', child: Text('אדמין')),
+                  decoration: _dec(_t(code, 'role'), Icons.shield_outlined),
+                  items: [
+                    DropdownMenuItem(value: 'user',  child: Text(_t(code, 'citizen'))),
+                    DropdownMenuItem(value: 'admin', child: Text(_t(code, 'admin'))),
                   ],
                   onChanged: (v) => ss(() => role = v!),
                 ),
@@ -62,11 +71,11 @@ class _AllUsersScreenState extends State<AllUsersScreen> {
                   initialValue: lang,
                   dropdownColor: VetoPalette.bg,
                   style: const TextStyle(color: VetoPalette.text),
-                  decoration: _dec('שפה', Icons.language),
+                  decoration: _dec(_t(code, 'language'), Icons.language),
                   items: const [
                     DropdownMenuItem(value: 'he', child: Text('עברית')),
                     DropdownMenuItem(value: 'en', child: Text('English')),
-                    DropdownMenuItem(value: 'ar', child: Text('العربية')),
+                    DropdownMenuItem(value: 'ru', child: Text('Русский')),
                   ],
                   onChanged: (v) => ss(() => lang = v!),
                 ),
@@ -76,16 +85,16 @@ class _AllUsersScreenState extends State<AllUsersScreen> {
                   onChanged: (v) => ss(() => manuallyAdded = v),
                   contentPadding: EdgeInsets.zero,
                   activeColor: VetoPalette.success,
-                  title: const Text('פטור מתשלום (הוסף ידנית)',
-                      style: TextStyle(color: VetoPalette.text, fontSize: 14)),
-                  subtitle: const Text('המשתמש לא יצטרך מנוי',
-                      style: TextStyle(color: VetoPalette.textMuted, fontSize: 12)),
+                  title: Text(_t(code, 'manualExempt'),
+                      style: const TextStyle(color: VetoPalette.text, fontSize: 14)),
+                  subtitle: Text(_t(code, 'manualExemptHint'),
+                      style: const TextStyle(color: VetoPalette.textMuted, fontSize: 12)),
                 ),
               ])),
             ]),
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('ביטול')),
+            TextButton(onPressed: () => Navigator.pop(ctx), child: Text(_t(code, 'cancel'))),
             FilledButton(
               onPressed: () async {
                 Navigator.pop(ctx);
@@ -103,7 +112,7 @@ class _AllUsersScreenState extends State<AllUsersScreen> {
                 }
                 _load();
               },
-              child: Text(id == null ? 'הוסף' : 'שמור'),
+              child: Text(id == null ? _t(code, 'add') : _t(code, 'save')),
             ),
           ],
         ),
@@ -112,21 +121,22 @@ class _AllUsersScreenState extends State<AllUsersScreen> {
   }
 
   Future<void> _confirmDelete(String id, String name) async {
+    final code = context.read<AppLanguageController>().code;
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => Directionality(
-        textDirection: TextDirection.rtl,
+        textDirection: AppLanguage.directionOf(code),
         child: AlertDialog(
           backgroundColor: VetoPalette.surface,
-          title: const Text('מחיקת משתמש', style: TextStyle(color: VetoPalette.text)),
-          content: Text('מחק את "$name"? לא ניתן לבטל.',
+          title: Text(_t(code, 'deleteUser'), style: const TextStyle(color: VetoPalette.text)),
+          content: Text('${_t(code, 'deleteUserConfirm')}\n$name',
               style: const TextStyle(color: VetoPalette.textMuted)),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('ביטול')),
+            TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(_t(code, 'cancel'))),
             FilledButton(
               style: FilledButton.styleFrom(backgroundColor: VetoPalette.emergency),
               onPressed: () => Navigator.pop(ctx, true),
-              child: const Text('מחק'),
+              child: Text(_t(code, 'delete')),
             ),
           ],
         ),
@@ -137,29 +147,35 @@ class _AllUsersScreenState extends State<AllUsersScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final code = context.watch<AppLanguageController>().code;
+
     return Directionality(
-      textDirection: TextDirection.rtl,
+      textDirection: AppLanguage.directionOf(code),
       child: Scaffold(
         backgroundColor: VetoPalette.bg,
         appBar: AppBar(
           backgroundColor: VetoPalette.surface,
-          title: Text('משתמשים (${_loading ? "..." : _users.length})',
+          title: Text('${_t(code, 'users')} (${_loading ? _t(code, 'loading') : _users.length})',
               style: const TextStyle(color: VetoPalette.text)),
           iconTheme: const IconThemeData(color: VetoPalette.text),
           actions: [
-            IconButton(icon: const Icon(Icons.refresh), onPressed: _load, tooltip: 'רענן'),
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 8),
+              child: Center(child: AppLanguageMenu(compact: true)),
+            ),
+            IconButton(icon: const Icon(Icons.refresh), onPressed: _load, tooltip: _t(code, 'refresh')),
           ],
         ),
         floatingActionButton: FloatingActionButton.extended(
           onPressed: () => _showForm(),
           backgroundColor: VetoPalette.primary,
           icon: const Icon(Icons.person_add_rounded),
-          label: const Text('הוסף משתמש'),
+          label: Text(_t(code, 'addUser')),
         ),
         body: _loading
             ? const Center(child: CircularProgressIndicator())
             : _users.isEmpty
-                ? const Center(child: Text('אין משתמשים', style: TextStyle(color: VetoPalette.textMuted)))
+                ? Center(child: Text(_t(code, 'noUsers'), style: const TextStyle(color: VetoPalette.textMuted)))
                 : ListView.separated(
                     padding: const EdgeInsets.fromLTRB(16, 16, 16, 80),
                     itemCount: _users.length,
@@ -187,12 +203,14 @@ class _AllUsersScreenState extends State<AllUsersScreen> {
                           ),
                           const SizedBox(width: 12),
                           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                            Text(u['full_name'] ?? 'ללא שם',
+                            Text(u['full_name'] ?? _t(code, 'noName'),
                                 style: const TextStyle(color: VetoPalette.text, fontWeight: FontWeight.w600)),
                             Text(u['phone'] ?? '', textDirection: TextDirection.ltr,
                                 style: const TextStyle(color: VetoPalette.textMuted, fontSize: 12)),
-                            Text(u['role'] == 'admin' ? 'אדמין' : 'אזרח',
+                            Text(AdminStrings.roleLabel(code, u['role']?.toString()),
                                 style: const TextStyle(color: VetoPalette.textSubtle, fontSize: 11)),
+                            Text(AdminStrings.languageLabel(code, u['preferred_language']?.toString()),
+                              style: const TextStyle(color: VetoPalette.info, fontSize: 11)),
                           ])),
                           Container(
                             margin: const EdgeInsets.only(left: 4),
@@ -201,7 +219,7 @@ class _AllUsersScreenState extends State<AllUsersScreen> {
                               color: (verified ? VetoPalette.success : VetoPalette.warning).withValues(alpha: 0.15),
                               borderRadius: BorderRadius.circular(8),
                             ),
-                            child: Text(verified ? 'מאומת' : 'לא מאומת',
+                            child: Text(verified ? _t(code, 'verified') : _t(code, 'unverified'),
                                 style: TextStyle(color: verified ? VetoPalette.success : VetoPalette.warning, fontSize: 10)),
                           ),
                           if (u['manually_added'] == true)
@@ -212,18 +230,18 @@ class _AllUsersScreenState extends State<AllUsersScreen> {
                                 color: VetoPalette.success.withValues(alpha: 0.15),
                                 borderRadius: BorderRadius.circular(8),
                               ),
-                              child: const Text('פטור',
-                                  style: TextStyle(color: VetoPalette.success, fontSize: 10)),
+                              child: Text(_t(code, 'exempt'),
+                                  style: const TextStyle(color: VetoPalette.success, fontSize: 10)),
                             ),
                           IconButton(
                             icon: const Icon(Icons.edit_outlined, size: 20, color: VetoPalette.primary),
                             onPressed: () => _showForm(user: Map<String, dynamic>.from(u as Map)),
-                            tooltip: 'ערוך',
+                            tooltip: _t(code, 'edit'),
                           ),
                           IconButton(
                             icon: const Icon(Icons.delete_outline, size: 20, color: VetoPalette.emergency),
                             onPressed: () => _confirmDelete(uid, u['full_name']?.toString() ?? ''),
-                            tooltip: 'מחק',
+                            tooltip: _t(code, 'delete'),
                           ),
                         ]),
                       );

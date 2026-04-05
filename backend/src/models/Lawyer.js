@@ -87,13 +87,13 @@ const LawyerSchema = new mongoose.Schema(
     // ── Preferences ───────────────────────────────────────────
     preferred_language: {
       type: String,
-      enum: ['en', 'he', 'ar'],
+      enum: ['en', 'he', 'ru', 'ar'],
       default: 'he',
     },
 
     languages_spoken: {
       type: [String],
-      enum: ['en', 'he', 'ar'],
+      enum: ['en', 'he', 'ru', 'ar'],
       default: ['he'],
     },
 

@@ -4,7 +4,9 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:provider/provider.dart';
 
+import 'core/i18n/app_language.dart';
 import 'core/theme/veto_theme.dart';
 import 'screens/LoginScreen.dart';
 import 'screens/LandingScreen.dart';
@@ -15,8 +17,16 @@ import 'screens/ProfileScreen.dart';
 import 'screens/AdminSettingsScreen.dart';
 import 'screens/wizard/WizardShellScreen.dart';
 
-void main() {
-  runApp(const VetoApp());
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  final languageController = AppLanguageController();
+  await languageController.load();
+  runApp(
+    ChangeNotifierProvider.value(
+      value: languageController,
+      child: const VetoApp(),
+    ),
+  );
 }
 
 class VetoApp extends StatelessWidget {
@@ -24,12 +34,14 @@ class VetoApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final language = context.watch<AppLanguageController>();
+
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'VETO',
       theme: VetoTheme.dark(),
-      locale: const Locale('he'),
-      supportedLocales: const [Locale('he'), Locale('en')],
+      locale: language.locale,
+      supportedLocales: const [Locale('he'), Locale('en'), Locale('ru')],
       localizationsDelegates: const [
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,

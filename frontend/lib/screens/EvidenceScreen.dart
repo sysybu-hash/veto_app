@@ -10,20 +10,22 @@ import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:geolocator/geolocator.dart';
+
+import '../core/theme/veto_theme.dart';
 import '../services/upload_service.dart';
 
 // ── Brand palette (shared across the app) ─────────────────
 class _C {
-  static const bg        = Color(0xFF001F3F);
-  static const silver    = Color(0xFFC0C2C9);
-  static const silverDim = Color(0xFF8A8C93);
-  static const white     = Color(0xFFFFFFFF);
-  static const accept    = Color(0xFF2ECC71);
-  static const uploading = Color(0xFFC0C2C9); // silver progress bar
+  static const bg        = VetoPalette.bg;
+  static const silver    = VetoPalette.textMuted;
+  static const silverDim = VetoPalette.textSubtle;
+  static const white     = VetoPalette.text;
+  static const accept    = VetoPalette.success;
+  static const uploading = VetoPalette.info;
 }
 
 // ── i18n strings ──────────────────────────────────────────
-enum EvidenceLanguage { en, he, ar }
+enum EvidenceLanguage { en, he, ru }
 
 class _L {
   static const Map<EvidenceLanguage, Map<String, String>> _d = {
@@ -47,22 +49,22 @@ class _L {
       'camError':   'המצלמה אינה זמינה',
       'empty':      'טרם נלכדו ראיות',
     },
-    EvidenceLanguage.ar: {
-      'capture':    'التقط',
-      'uploading':  'جارٍ رفع الأدلة...',
-      'saved':      'تم حفظ الدليل',
-      'error':      'فشل الرفع',
-      'evidence':   'الأدلة',
-      'noGps':      'جارٍ تحديد الموقع...',
-      'camError':   'الكاميرا غير متاحة',
-      'empty':      'لا توجد أدلة حتى الآن',
+    EvidenceLanguage.ru: {
+      'capture':    'Снять',
+      'uploading':  'Загрузка доказательств...',
+      'saved':      'Материал сохранен',
+      'error':      'Ошибка загрузки',
+      'evidence':   'Доказательства',
+      'noGps':      'Определяем GPS...',
+      'camError':   'Камера недоступна',
+      'empty':      'Доказательства еще не записаны',
     },
   };
 
   static String get(EvidenceLanguage lang, String key) => _d[lang]?[key] ?? key;
 
   static TextDirection dir(EvidenceLanguage lang) =>
-      lang == EvidenceLanguage.en ? TextDirection.ltr : TextDirection.rtl;
+      lang == EvidenceLanguage.he ? TextDirection.rtl : TextDirection.ltr;
 }
 
 // ── Evidence item model ────────────────────────────────────

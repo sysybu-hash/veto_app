@@ -47,12 +47,14 @@ class AuthService {
         // Correct role extraction from nested user object
         final role = user?['role']?.toString() ?? 'user';
         final name = user?['full_name']?.toString() ?? user?['name']?.toString() ?? '';
+        final preferredLanguage = user?['preferred_language']?.toString() ?? 'he';
 
         if (token != null) {
           await _storage.write(key: 'jwt', value: token);
           await _storage.write(key: 'veto_role', value: role);
           await _storage.write(key: 'veto_phone', value: phone);
           if (name.isNotEmpty) await _storage.write(key: 'veto_name', value: name);
+          await _storage.write(key: 'veto_language', value: preferredLanguage);
           final isSubscribed = user?['is_subscribed'] == true;
           await _storage.write(key: 'veto_subscribed', value: isSubscribed ? 'true' : 'false');
           // Payment exempt: admin, lawyer, or manually-added users
@@ -108,6 +110,11 @@ class AuthService {
   Future<String?> getStoredRole() async => await _storage.read(key: 'veto_role');
   Future<String?> getStoredName() async => await _storage.read(key: 'veto_name');
   Future<String?> getStoredPhone() async => await _storage.read(key: 'veto_phone');
+  Future<String?> getStoredPreferredLanguage() async =>
+      await _storage.read(key: 'veto_language');
+  Future<void> setStoredPreferredLanguage(String value) async {
+    await _storage.write(key: 'veto_language', value: value);
+  }
   Future<bool> getStoredIsSubscribed() async {
     final val = await _storage.read(key: 'veto_subscribed');
     return val == 'true';
@@ -123,20 +130,31 @@ class AuthService {
   }
 
   /// Updates full_name on the server and in local storage.
-  Future<bool> updateProfile({required String fullName}) async {
+  Future<bool> updateProfile({String? fullName, String? preferredLanguage}) async {
     try {
       final token = await getToken();
       final role = await getStoredRole();
       final baseUrl = AppConfig.baseUrl;
+      if (fullName == null && preferredLanguage == null) return false;
       // lawyers use /lawyers/me, users & admins use /users/me
       final endpoint = role == 'lawyer' ? '$baseUrl/lawyers/me' : '$baseUrl/users/me';
+      final payload = <String, dynamic>{};
+      if (fullName != null) payload['full_name'] = fullName;
+      if (preferredLanguage != null) {
+        payload['preferred_language'] = preferredLanguage;
+      }
       final response = await http.put(
         Uri.parse(endpoint),
         headers: AppConfig.httpHeaders({'Authorization': 'Bearer $token'}),
-        body: jsonEncode({'full_name': fullName}),
+        body: jsonEncode(payload),
       );
       if (response.statusCode == 200) {
-        await _storage.write(key: 'veto_name', value: fullName);
+        if (fullName != null) {
+          await _storage.write(key: 'veto_name', value: fullName);
+        }
+        if (preferredLanguage != null) {
+          await _storage.write(key: 'veto_language', value: preferredLanguage);
+        }
         return true;
       }
       return false;
@@ -147,7 +165,11 @@ class AuthService {
   }
 
   Future<void> logout(BuildContext context) async {
+    final language = await getStoredPreferredLanguage();
     await _storage.deleteAll();
+    if (language != null && language.isNotEmpty) {
+      await _storage.write(key: 'veto_language', value: language);
+    }
     Navigator.of(context).pushReplacementNamed('/login');
   }
 }

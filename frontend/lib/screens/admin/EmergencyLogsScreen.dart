@@ -1,6 +1,12 @@
 ﻿import 'package:flutter/material.dart';
+
+import 'package:provider/provider.dart';
+
+import '../../core/i18n/app_language.dart';
 import '../../core/theme/veto_theme.dart';
 import '../../services/admin_service.dart';
+import '../../widgets/app_language_menu.dart';
+import 'admin_i18n.dart';
 
 class EmergencyLogsScreen extends StatefulWidget {
   const EmergencyLogsScreen({super.key});
@@ -12,6 +18,8 @@ class _EmergencyLogsScreenState extends State<EmergencyLogsScreen> {
   List<dynamic> _events = [];
   bool _loading = true;
   final _svc = AdminService();
+
+  String _t(String code, String key) => AdminStrings.t(code, key);
 
   @override
   void initState() { super.initState(); _load(); }
@@ -32,12 +40,8 @@ class _EmergencyLogsScreenState extends State<EmergencyLogsScreen> {
   }
 
   String _sl(String? s) {
-    switch (s) {
-      case 'active':   return 'פעיל';
-      case 'resolved': return 'סגור';
-      case 'pending':  return 'ממתין';
-      default:         return s ?? 'לא ידוע';
-    }
+    final code = context.read<AppLanguageController>().code;
+    return AdminStrings.eventStatus(code, s);
   }
 
   String _fmt(String? iso) {
@@ -49,14 +53,15 @@ class _EmergencyLogsScreenState extends State<EmergencyLogsScreen> {
   }
 
   Future<void> _changeStatus(String id, String current) async {
+    final code = context.read<AppLanguageController>().code;
     String selected = current;
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => Directionality(
-        textDirection: TextDirection.rtl,
+        textDirection: AppLanguage.directionOf(code),
         child: AlertDialog(
           backgroundColor: VetoPalette.surface,
-          title: const Text('שנה סטטוס', style: TextStyle(color: VetoPalette.text)),
+          title: Text(_t(code, 'changeStatus'), style: const TextStyle(color: VetoPalette.text)),
           content: StatefulBuilder(builder: (_, ss) => Column(
             mainAxisSize: MainAxisSize.min,
             children: ['active', 'pending', 'resolved'].map((s) => RadioListTile<String>(
@@ -67,8 +72,8 @@ class _EmergencyLogsScreenState extends State<EmergencyLogsScreen> {
             )).toList(),
           )),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('ביטול')),
-            FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('שמור')),
+            TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(_t(code, 'cancel'))),
+            FilledButton(onPressed: () => Navigator.pop(ctx, true), child: Text(_t(code, 'save'))),
           ],
         ),
       ),
@@ -80,21 +85,22 @@ class _EmergencyLogsScreenState extends State<EmergencyLogsScreen> {
   }
 
   Future<void> _confirmDelete(String id) async {
+    final code = context.read<AppLanguageController>().code;
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => Directionality(
-        textDirection: TextDirection.rtl,
+        textDirection: AppLanguage.directionOf(code),
         child: AlertDialog(
           backgroundColor: VetoPalette.surface,
-          title: const Text('מחק אירוע', style: TextStyle(color: VetoPalette.text)),
-          content: const Text('האם למחוק את רשומת האירוע לצמיתות?',
-              style: TextStyle(color: VetoPalette.textMuted)),
+          title: Text(_t(code, 'deleteEvent'), style: const TextStyle(color: VetoPalette.text)),
+          content: Text(_t(code, 'deleteEventConfirm'),
+              style: const TextStyle(color: VetoPalette.textMuted)),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('ביטול')),
+            TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(_t(code, 'cancel'))),
             FilledButton(
               style: FilledButton.styleFrom(backgroundColor: VetoPalette.emergency),
               onPressed: () => Navigator.pop(ctx, true),
-              child: const Text('מחק'),
+              child: Text(_t(code, 'delete')),
             ),
           ],
         ),
@@ -105,26 +111,32 @@ class _EmergencyLogsScreenState extends State<EmergencyLogsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final code = context.watch<AppLanguageController>().code;
+
     return Directionality(
-      textDirection: TextDirection.rtl,
+      textDirection: AppLanguage.directionOf(code),
       child: Scaffold(
         backgroundColor: VetoPalette.bg,
         appBar: AppBar(
           backgroundColor: VetoPalette.surface,
-          title: Text('יומני חירום (${_loading ? "..." : _events.length})',
+          title: Text('${_t(code, 'emergencyLogs')} (${_loading ? _t(code, 'loading') : _events.length})',
               style: const TextStyle(color: VetoPalette.text)),
           iconTheme: const IconThemeData(color: VetoPalette.text),
           actions: [
-            IconButton(icon: const Icon(Icons.refresh), onPressed: _load),
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 8),
+              child: Center(child: AppLanguageMenu(compact: true)),
+            ),
+            IconButton(icon: const Icon(Icons.refresh), onPressed: _load, tooltip: _t(code, 'refresh')),
           ],
         ),
         body: _loading
             ? const Center(child: CircularProgressIndicator())
             : _events.isEmpty
-                ? const Center(child: Column(mainAxisSize: MainAxisSize.min, children: [
-                    Icon(Icons.check_circle_outline, color: VetoPalette.success, size: 48),
-                    SizedBox(height: 12),
-                    Text('אין אירועי חירום', style: TextStyle(color: VetoPalette.textMuted)),
+                ? Center(child: Column(mainAxisSize: MainAxisSize.min, children: [
+                    const Icon(Icons.check_circle_outline, color: VetoPalette.success, size: 48),
+                    const SizedBox(height: 12),
+                    Text(_t(code, 'noEmergencyEvents'), style: const TextStyle(color: VetoPalette.textMuted)),
                   ]))
                 : ListView.separated(
                     padding: const EdgeInsets.all(16),
@@ -149,8 +161,8 @@ class _EmergencyLogsScreenState extends State<EmergencyLogsScreen> {
                             const SizedBox(width: 8),
                             Expanded(child: Text(
                               user != null
-                                  ? (user['full_name'] ?? user['phone'] ?? 'לא ידוע')
-                                  : 'לא ידוע',
+                                  ? (user['full_name'] ?? user['phone'] ?? _t(code, 'unknown'))
+                                  : _t(code, 'unknown'),
                               style: const TextStyle(color: VetoPalette.text, fontWeight: FontWeight.w600),
                             )),
                             // Status badge — tap to change
@@ -183,7 +195,7 @@ class _EmergencyLogsScreenState extends State<EmergencyLogsScreen> {
                             Row(children: [
                               const Icon(Icons.gavel_rounded, color: VetoPalette.primary, size: 14),
                               const SizedBox(width: 4),
-                              Text('עו"ד: ${lawyer['full_name'] ?? lawyer['phone'] ?? ""}',
+                              Text('${_t(code, 'lawyerPrefix')}: ${lawyer['full_name'] ?? lawyer['phone'] ?? ""}',
                                   style: const TextStyle(color: VetoPalette.primary, fontSize: 12)),
                             ]),
                           ],

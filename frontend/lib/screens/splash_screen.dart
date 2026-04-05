@@ -1,4 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+
+import 'package:provider/provider.dart';
+
+import '../core/i18n/app_language.dart';
 import '../services/auth_service.dart';
 import '../core/theme/veto_theme.dart';
 
@@ -13,6 +19,7 @@ class _SplashScreenState extends State<SplashScreen>
   late AnimationController _ac;
   late Animation<double> _fade;
   late Animation<double> _scale;
+  Timer? _navigationTimer;
 
   @override
   void initState() {
@@ -23,11 +30,10 @@ class _SplashScreenState extends State<SplashScreen>
     _scale = Tween<double>(begin: 0.7, end: 1).animate(
         CurvedAnimation(parent: _ac, curve: const Interval(0, 0.7, curve: Curves.elasticOut)));
     _ac.forward();
-    _navigate();
+    _navigationTimer = Timer(const Duration(milliseconds: 1800), _navigate);
   }
 
   Future<void> _navigate() async {
-    await Future.delayed(const Duration(milliseconds: 1800));
     final auth   = AuthService();
     final token  = await auth.getToken();
     if (!mounted) return;
@@ -36,6 +42,8 @@ class _SplashScreenState extends State<SplashScreen>
       if (!mounted) return;
       if (role == 'lawyer') {
         Navigator.pushReplacementNamed(context, '/lawyer_dashboard');
+      } else if (role == 'admin') {
+        Navigator.pushReplacementNamed(context, '/admin_settings');
       } else {
         Navigator.pushReplacementNamed(context, '/veto_screen');
       }
@@ -45,10 +53,21 @@ class _SplashScreenState extends State<SplashScreen>
   }
 
   @override
-  void dispose() { _ac.dispose(); super.dispose(); }
+  void dispose() {
+    _navigationTimer?.cancel();
+    _ac.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
+    final code = context.watch<AppLanguageController>().code;
+    final tagline = switch (AppLanguage.normalize(code)) {
+      'en' => 'Your legal response layer',
+      'ru' => 'Ваш слой юридической защиты',
+      _ => 'מערכת הגנת הזכויות שלך',
+    };
+
     return Scaffold(
       backgroundColor: VetoPalette.bg,
       body: Center(
@@ -81,8 +100,8 @@ class _SplashScreenState extends State<SplashScreen>
                         fontWeight: FontWeight.w800,
                         letterSpacing: 10)),
                 const SizedBox(height: 6),
-                const Text('\u05DE\u05E2\u05E8\u05DB\u05EA \u05D4\u05D2\u05E0\u05EA \u05D4\u05D6\u05DB\u05D5\u05D9\u05D5\u05EA \u05E9\u05DC\u05DA',
-                    style: TextStyle(
+                Text(tagline,
+                  style: const TextStyle(
                         color: VetoPalette.textMuted,
                         fontSize: 13,
                         letterSpacing: 1)),

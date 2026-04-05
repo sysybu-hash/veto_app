@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
+
+import 'package:provider/provider.dart';
+
+import '../core/i18n/app_language.dart';
 import '../core/theme/veto_theme.dart';
 import '../services/auth_service.dart';
+import '../widgets/app_language_menu.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -16,6 +21,48 @@ class _ProfileScreenState extends State<ProfileScreen> {
   String? _role;
   String? _phone;
 
+  static const Map<String, Map<String, String>> _copy = {
+    'he': {
+      'title': 'פרופיל',
+      'nameEmpty': 'שם אינו יכול להיות ריק.',
+      'saved': 'הפרופיל עודכן בהצלחה.',
+      'saveError': 'לא הצלחנו לשמור את השינויים.',
+      'name': 'שם מלא',
+      'nameHint': 'הזן שם מלא',
+      'phone': 'טלפון',
+      'role': 'תפקיד',
+      'save': 'שמור שינויים',
+      'logout': 'התנתק',
+      'language': 'שפת ממשק',
+    },
+    'en': {
+      'title': 'Profile',
+      'nameEmpty': 'Name cannot be empty.',
+      'saved': 'Your profile was updated successfully.',
+      'saveError': 'We could not save your changes.',
+      'name': 'Full name',
+      'nameHint': 'Enter your full name',
+      'phone': 'Phone',
+      'role': 'Role',
+      'save': 'Save changes',
+      'logout': 'Log out',
+      'language': 'Interface language',
+    },
+    'ru': {
+      'title': 'Профиль',
+      'nameEmpty': 'Имя не может быть пустым.',
+      'saved': 'Профиль успешно обновлен.',
+      'saveError': 'Не удалось сохранить изменения.',
+      'name': 'Полное имя',
+      'nameHint': 'Введите полное имя',
+      'phone': 'Телефон',
+      'role': 'Роль',
+      'save': 'Сохранить изменения',
+      'logout': 'Выйти',
+      'language': 'Язык интерфейса',
+    },
+  };
+
   @override
   void initState() {
     super.initState();
@@ -23,18 +70,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _saveProfile() async {
+    final code = context.read<AppLanguageController>().code;
     final name = _nameCtrl.text.trim();
     if (name.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('שם אינו יכול להיות ריק')));
+          SnackBar(content: Text(_t(code, 'nameEmpty'))));
       return;
     }
     setState(() => _saving = true);
-    final ok = await AuthService().updateProfile(fullName: name);
+    final ok = await AuthService().updateProfile(
+      fullName: name,
+      preferredLanguage: code,
+    );
     if (!mounted) return;
     setState(() => _saving = false);
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text(ok ? 'הפרופיל עודכן בהצלחה' : 'שגיאה בשמירה, נסה שוב'),
+      content: Text(ok ? _t(code, 'saved') : _t(code, 'saveError')),
       backgroundColor: ok ? VetoPalette.success : VetoPalette.emergency,
     ));
   }
@@ -51,19 +102,33 @@ class _ProfileScreenState extends State<ProfileScreen> {
     });
   }
 
+  String _t(String code, String key) {
+    return _copy[AppLanguage.normalize(code)]?[key] ??
+        _copy[AppLanguage.hebrew]![key] ??
+        key;
+  }
+
   @override
   Widget build(BuildContext context) {
+    final code = context.watch<AppLanguageController>().code;
+
     return Directionality(
-      textDirection: TextDirection.rtl,
+      textDirection: AppLanguage.directionOf(code),
       child: Scaffold(
         backgroundColor: VetoPalette.bg,
         appBar: AppBar(
-          title: const Text('פרופיל'),
+          title: Text(_t(code, 'title')),
           backgroundColor: VetoPalette.surface,
           bottom: const PreferredSize(
             preferredSize: Size.fromHeight(1),
             child: Divider(height: 1, color: VetoPalette.border),
           ),
+          actions: const [
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 12),
+              child: Center(child: AppLanguageMenu(compact: true)),
+            ),
+          ],
         ),
         body: _loading
             ? const Center(
@@ -106,17 +171,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         const SizedBox(height: 24),
                         _buildCard(
                           children: [
-                            _sectionLabel('שם מלא'),
+                            _sectionLabel(_t(code, 'name')),
                             TextField(
                               controller: _nameCtrl,
-                              decoration: const InputDecoration(
-                                hintText: 'הזן שם מלא',
+                              decoration: InputDecoration(
+                                hintText: _t(code, 'nameHint'),
                                 prefixIcon:
-                                    Icon(Icons.person_outline, size: 18),
+                                    const Icon(Icons.person_outline, size: 18),
                               ),
                             ),
                             const SizedBox(height: 16),
-                            _sectionLabel('טלפון'),
+                            _sectionLabel(_t(code, 'phone')),
                             Container(
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 16, vertical: 14),
@@ -133,7 +198,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               ),
                             ),
                             const SizedBox(height: 16),
-                            _sectionLabel('תפקיד'),
+                            _sectionLabel(_t(code, 'role')),
                             Container(
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 16, vertical: 14),
@@ -156,11 +221,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   ),
                                   const SizedBox(width: 8),
                                   Text(
-                                    _roleLabel(_role),
+                                    _roleLabel(code, _role),
                                     style: const TextStyle(
                                         color: VetoPalette.textMuted),
                                   ),
                                 ],
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            _sectionLabel(_t(code, 'language')),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 16, vertical: 14),
+                              decoration: BoxDecoration(
+                                color: VetoPalette.surface,
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(color: VetoPalette.border),
+                              ),
+                              child: const Align(
+                                alignment: Alignment.centerLeft,
+                                child: AppLanguageMenu(compact: true),
                               ),
                             ),
                           ],
@@ -175,13 +255,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   child: CircularProgressIndicator(
                                       strokeWidth: 2,
                                       color: Colors.white))
-                              : const Text('שמור שינויים'),
+                              : Text(_t(code, 'save')),
                         ),
                         const SizedBox(height: 8),
                         OutlinedButton.icon(
                           onPressed: () => AuthService().logout(context),
                           icon: const Icon(Icons.logout_rounded, size: 18),
-                          label: const Text('התנתק'),
+                          label: Text(_t(code, 'logout')),
                           style: OutlinedButton.styleFrom(
                             foregroundColor: VetoPalette.emergency,
                             side: BorderSide(
@@ -198,14 +278,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  String _roleLabel(String? role) {
+  String _roleLabel(String code, String? role) {
     switch (role) {
       case 'lawyer':
-        return 'עורך דין';
+        return switch (AppLanguage.normalize(code)) {
+          'en' => 'Lawyer',
+          'ru' => 'Адвокат',
+          _ => 'עורך דין',
+        };
       case 'admin':
-        return 'מנהל מערכת';
+        return switch (AppLanguage.normalize(code)) {
+          'en' => 'Admin',
+          'ru' => 'Администратор',
+          _ => 'מנהל מערכת',
+        };
       default:
-        return 'משתמש';
+        return switch (AppLanguage.normalize(code)) {
+          'en' => 'User',
+          'ru' => 'Пользователь',
+          _ => 'משתמש',
+        };
     }
   }
 

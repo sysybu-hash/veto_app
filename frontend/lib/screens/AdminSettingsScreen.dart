@@ -4,13 +4,19 @@
 // ============================================================
 
 import 'package:flutter/material.dart';
+
+import 'package:provider/provider.dart';
+
+import '../core/i18n/app_language.dart';
 import '../core/theme/veto_theme.dart';
 import '../services/admin_service.dart';
 import '../services/auth_service.dart';
+import '../widgets/app_language_menu.dart';
 import 'admin/AllUsersScreen.dart';
 import 'admin/AllLawyersScreen.dart';
 import 'admin/EmergencyLogsScreen.dart';
 import 'admin/PendingLawyersScreen.dart';
+import 'admin/admin_i18n.dart';
 
 class AdminSettingsScreen extends StatefulWidget {
   const AdminSettingsScreen({super.key});
@@ -21,9 +27,9 @@ class AdminSettingsScreen extends StatefulWidget {
 
 class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
   bool _enableFixedOtp = false;
-  String _serverStatus = 'טוען...';
-  String _mongoDbStatus = 'טוען...';
-  String _appVersion = 'טוען...';
+  String _serverStatus = '';
+  String _mongoDbStatus = '';
+  String _appVersion = '';
   bool _loading = false;
   int _pendingLawyersCount = 0;
   int _totalUsers = 0;
@@ -37,6 +43,8 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
     _loadAll();
   }
 
+  String _t(String code, String key) => AdminStrings.t(code, key);
+
   Future<void> _loadAll() async {
     setState(() => _loading = true);
     await Future.wait([_fetchSettings(), _fetchCounts()]);
@@ -48,9 +56,9 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
     if (mounted && settings != null) {
       setState(() {
         _enableFixedOtp = settings['enableFixedOtpForAdmins'] ?? false;
-        _serverStatus = settings['serverStatus'] ?? 'לא ידוע';
-        _mongoDbStatus = settings['mongoDbStatus'] ?? 'לא ידוע';
-        _appVersion = settings['appVersion'] ?? 'לא ידוע';
+        _serverStatus = settings['serverStatus']?.toString() ?? '';
+        _mongoDbStatus = settings['mongoDbStatus']?.toString() ?? '';
+        _appVersion = settings['appVersion']?.toString() ?? '';
       });
     }
   }
@@ -74,12 +82,13 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
     setState(() { _enableFixedOtp = value; _loading = true; });
     final ok = await _adminService.updateFixedOtpSetting(value);
     if (mounted) {
+      final code = context.read<AppLanguageController>().code;
       setState(() => _loading = false);
       if (!ok) {
         setState(() => _enableFixedOtp = !value);
-        _snack('שגיאה בעדכון ההגדרה', error: true);
+        _snack(_t(code, 'settingUpdateError'), error: true);
       } else {
-        _snack('ההגדרה עודכנה בהצלחה');
+        _snack(_t(code, 'settingUpdated'));
       }
     }
   }
@@ -94,18 +103,24 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final code = context.watch<AppLanguageController>().code;
+
     return Directionality(
-      textDirection: TextDirection.rtl,
+      textDirection: AppLanguage.directionOf(code),
       child: Scaffold(
         backgroundColor: VetoPalette.bg,
         appBar: AppBar(
-          title: const Text('פאנל ניהול'),
+          title: Text(_t(code, 'adminPanel')),
           backgroundColor: VetoPalette.surface,
           bottom: const PreferredSize(
             preferredSize: Size.fromHeight(1),
             child: Divider(height: 1, color: VetoPalette.border),
           ),
           actions: [
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 8),
+              child: Center(child: AppLanguageMenu(compact: true)),
+            ),
             if (_loading)
               const Padding(
                 padding: EdgeInsets.all(14),
@@ -117,18 +132,18 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
               ),
             IconButton(
               icon: const Icon(Icons.apps_rounded),
-              tooltip: 'כניסה לאפליקציה',
+              tooltip: _t(code, 'openApp'),
               onPressed: () =>
                   Navigator.of(context).pushReplacementNamed('/veto_screen'),
             ),
             IconButton(
               icon: const Icon(Icons.refresh_rounded),
-              tooltip: 'רענן',
+              tooltip: _t(code, 'refresh'),
               onPressed: _loadAll,
             ),
             IconButton(
               icon: const Icon(Icons.logout),
-              tooltip: 'יציאה',
+              tooltip: _t(code, 'logout'),
               onPressed: () => AuthService().logout(context),
             ),
           ],
@@ -145,21 +160,21 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    _sectionHeader('סטטיסטיקה מהירה'),
+                    _sectionHeader(_t(code, 'quickStats')),
                     Row(children: [
                       Expanded(
-                        child: _statCard('משתמשים', '$_totalUsers',
+                        child: _statCard(_t(code, 'users'), '$_totalUsers',
                             Icons.group_outlined, VetoPalette.primary),
                       ),
                       const SizedBox(width: 10),
                       Expanded(
-                        child: _statCard('עו".ד', '$_totalLawyers',
+                        child: _statCard(_t(code, 'lawyers'), '$_totalLawyers',
                             Icons.gavel_rounded, VetoPalette.success),
                       ),
                       const SizedBox(width: 10),
                       Expanded(
                         child: _statCard(
-                          'ממתינים',
+                          _t(code, 'pending'),
                           '$_pendingLawyersCount',
                           Icons.pending_actions_rounded,
                           _pendingLawyersCount > 0
@@ -170,10 +185,9 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                     ]),
                     const SizedBox(height: 24),
                     if (_pendingLawyersCount > 0) ...[
-                      _sectionHeader(
-                          '⚠️  עורכי דין ממתינים לאישור'),
+                      _sectionHeader(_t(code, 'pendingApprovals')),
                       _actionCard(
-                        'אישור עורכי דין ($_pendingLawyersCount ממתינים)',
+                        '${_t(code, 'pendingApprovalsAction')} ($_pendingLawyersCount ${_t(code, 'pending')})',
                         Icons.how_to_reg_rounded,
                         color: VetoPalette.emergency,
                         badge: _pendingLawyersCount,
@@ -188,20 +202,27 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                       ),
                       const SizedBox(height: 24),
                     ],
-                    _sectionHeader('סקירת מערכת'),
-                    _infoCard('סטטוס שרת', _serverStatus,
+                    _sectionHeader(_t(code, 'systemOverview')),
+                    _infoCard(
+                        _t(code, 'serverStatus'),
+                        _serverStatus.isEmpty ? _t(code, 'loading') : _serverStatus,
                         statusColor: _serverStatus == 'Online'
                             ? VetoPalette.success
                             : VetoPalette.emergency),
-                    _infoCard('בסיס נתונים', _mongoDbStatus,
+                    _infoCard(
+                        _t(code, 'database'),
+                        _mongoDbStatus.isEmpty ? _t(code, 'loading') : _mongoDbStatus,
                         statusColor: _mongoDbStatus == 'Connected'
                             ? VetoPalette.success
                             : VetoPalette.emergency),
-                    _infoCard('גרסת אפליקציה', _appVersion),
+                    _infoCard(
+                      _t(code, 'appVersion'),
+                      _appVersion.isEmpty ? _t(code, 'unknown') : _appVersion,
+                    ),
                     const SizedBox(height: 24),
-                    _sectionHeader('ניהול משתמשים'),
+                    _sectionHeader(_t(code, 'userManagement')),
                     _actionCard(
-                      'כל המשתמשים ($_totalUsers)',
+                      '${_t(code, 'allUsers')} ($_totalUsers)',
                       Icons.group_outlined,
                       onTap: () async {
                         await Navigator.push(
@@ -213,7 +234,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                       },
                     ),
                     _actionCard(
-                      'כל עורכי הדין ($_totalLawyers)',
+                      '${_t(code, 'allLawyers')} ($_totalLawyers)',
                       Icons.gavel_rounded,
                       onTap: () async {
                         await Navigator.push(
@@ -225,7 +246,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                       },
                     ),
                     _actionCard(
-                      'יומני חירום',
+                      _t(code, 'emergencyLogs'),
                       Icons.history_rounded,
                       onTap: () => Navigator.push(
                         context,
@@ -234,11 +255,11 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                       ),
                     ),
                     const SizedBox(height: 24),
-                    _sectionHeader('הגדרות מערכת'),
+                    _sectionHeader(_t(code, 'systemSettings')),
                     _switchCard(
-                      'OTP קבוע לאדמינים',
+                      _t(code, 'fixedOtp'),
                       _enableFixedOtp,
-                      'קוד 123456 לצרכי פיתוח ובדיקות',
+                      _t(code, 'fixedOtpHint'),
                       _toggleFixedOtp,
                     ),
                     const SizedBox(height: 40),
