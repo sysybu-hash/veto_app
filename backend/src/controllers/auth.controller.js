@@ -180,6 +180,14 @@ const verifyOTP = async (req, res, next) => {
       return res.status(404).json({ error: 'Account not found.' });
     }
 
+    // Lawyers must be approved by admin before they can log in
+    if (role === 'lawyer' && !doc.is_approved) {
+      return res.status(403).json({
+        error: 'חשבון עורך הדין שלך ממתין לאישור מנהל. תקבל הודעה בקרוב.',
+        pending_approval: true,
+      });
+    }
+
     const useFixed = isAdminPhone(phone) || process.env.ENABLE_FIXED_OTP_FOR_ADMINS === 'true';
 
     // ── Validate against DB OTP ────────────────────────
@@ -204,6 +212,9 @@ const verifyOTP = async (req, res, next) => {
       preferred_language: doc.preferred_language,
     });
 
+    // Compute payment exemption: admin, lawyer, or manually_added user
+    const isPaymentExempt = role === 'admin' || role === 'lawyer' || doc.manually_added === true;
+
     return res.status(200).json({
       message: 'Verification successful.',
       token,
@@ -216,6 +227,8 @@ const verifyOTP = async (req, res, next) => {
         is_verified:         true,
         is_subscribed:       doc.is_subscribed    ?? false,
         subscription_expiry: doc.subscription_expiry ?? null,
+        manually_added:      doc.manually_added   ?? false,
+        is_payment_exempt:   isPaymentExempt,
       },
     });
   } catch (err) {

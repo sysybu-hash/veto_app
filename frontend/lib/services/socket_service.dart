@@ -60,7 +60,7 @@ class SocketService {
     _socket?.connect();
 
     _socket?.onConnect((_) {
-      debugPrint('Socket connected (Role: ' + role + ')');
+      debugPrint('Socket connected (Role: $role)');
     });
 
     _socket?.on('emergency_created', (data) {

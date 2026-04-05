@@ -1,5 +1,6 @@
-// ============================================================
-//  AdminSettingsScreen.dart — Full Admin Dashboard
+const fs = require('fs');
+const content = `// ============================================================
+//  AdminSettingsScreen.dart \u2014 Full Admin Dashboard
 //  VETO Legal Emergency App
 // ============================================================
 
@@ -21,9 +22,9 @@ class AdminSettingsScreen extends StatefulWidget {
 
 class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
   bool _enableFixedOtp = false;
-  String _serverStatus = 'טוען...';
-  String _mongoDbStatus = 'טוען...';
-  String _appVersion = 'טוען...';
+  String _serverStatus = '\u05d8\u05d5\u05e2\u05df...';
+  String _mongoDbStatus = '\u05d8\u05d5\u05e2\u05df...';
+  String _appVersion = '\u05d8\u05d5\u05e2\u05df...';
   bool _loading = false;
   int _pendingLawyersCount = 0;
   int _totalUsers = 0;
@@ -48,9 +49,9 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
     if (mounted && settings != null) {
       setState(() {
         _enableFixedOtp = settings['enableFixedOtpForAdmins'] ?? false;
-        _serverStatus = settings['serverStatus'] ?? 'לא ידוע';
-        _mongoDbStatus = settings['mongoDbStatus'] ?? 'לא ידוע';
-        _appVersion = settings['appVersion'] ?? 'לא ידוע';
+        _serverStatus = settings['serverStatus'] ?? '\u05dc\u05d0 \u05d9\u05d3\u05d5\u05e2';
+        _mongoDbStatus = settings['mongoDbStatus'] ?? '\u05dc\u05d0 \u05d9\u05d3\u05d5\u05e2';
+        _appVersion = settings['appVersion'] ?? '\u05dc\u05d0 \u05d9\u05d3\u05d5\u05e2';
       });
     }
   }
@@ -77,9 +78,9 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
       setState(() => _loading = false);
       if (!ok) {
         setState(() => _enableFixedOtp = !value);
-        _snack('שגיאה בעדכון ההגדרה', error: true);
+        _snack('\u05e9\u05d2\u05d9\u05d0\u05d4 \u05d1\u05e2\u05d3\u05db\u05d5\u05df \u05d4\u05d4\u05d2\u05d3\u05e8\u05d4', error: true);
       } else {
-        _snack('ההגדרה עודכנה בהצלחה');
+        _snack('\u05d4\u05d4\u05d2\u05d3\u05e8\u05d4 \u05e2\u05d5\u05d3\u05db\u05e0\u05d4 \u05d1\u05d4\u05e6\u05dc\u05d7\u05d4');
       }
     }
   }
@@ -99,7 +100,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
       child: Scaffold(
         backgroundColor: VetoPalette.bg,
         appBar: AppBar(
-          title: const Text('פאנל ניהול'),
+          title: const Text('\u05e4\u05d0\u05e0\u05dc \u05e0\u05d9\u05d4\u05d5\u05dc'),
           backgroundColor: VetoPalette.surface,
           bottom: const PreferredSize(
             preferredSize: Size.fromHeight(1),
@@ -117,18 +118,18 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
               ),
             IconButton(
               icon: const Icon(Icons.apps_rounded),
-              tooltip: 'כניסה לאפליקציה',
+              tooltip: '\u05db\u05e0\u05d9\u05e1\u05d4 \u05dc\u05d0\u05e4\u05dc\u05d9\u05e7\u05e6\u05d9\u05d4',
               onPressed: () =>
                   Navigator.of(context).pushReplacementNamed('/veto_screen'),
             ),
             IconButton(
               icon: const Icon(Icons.refresh_rounded),
-              tooltip: 'רענן',
+              tooltip: '\u05e8\u05e2\u05e0\u05df',
               onPressed: _loadAll,
             ),
             IconButton(
               icon: const Icon(Icons.logout),
-              tooltip: 'יציאה',
+              tooltip: '\u05d9\u05e6\u05d9\u05d0\u05d4',
               onPressed: () => AuthService().logout(context),
             ),
           ],
@@ -145,22 +146,22 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    _sectionHeader('סטטיסטיקה מהירה'),
+                    _sectionHeader('\u05e1\u05d8\u05d8\u05d9\u05e1\u05d8\u05d9\u05e7\u05d4 \u05de\u05d4\u05d9\u05e8\u05d4'),
                     Row(children: [
                       Expanded(
-                        child: _statCard('משתמשים', '$_totalUsers',
+                        child: _statCard('\u05de\u05e9\u05ea\u05de\u05e9\u05d9\u05dd', '\$_totalUsers',
                             Icons.group_outlined, VetoPalette.primary),
                       ),
                       const SizedBox(width: 10),
                       Expanded(
-                        child: _statCard('עו".ד', '$_totalLawyers',
+                        child: _statCard('\u05e2\u05d5".\u05d3', '\$_totalLawyers',
                             Icons.gavel_rounded, VetoPalette.success),
                       ),
                       const SizedBox(width: 10),
                       Expanded(
                         child: _statCard(
-                          'ממתינים',
-                          '$_pendingLawyersCount',
+                          '\u05de\u05de\u05ea\u05d9\u05e0\u05d9\u05dd',
+                          '\$_pendingLawyersCount',
                           Icons.pending_actions_rounded,
                           _pendingLawyersCount > 0
                               ? VetoPalette.emergency
@@ -171,9 +172,9 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                     const SizedBox(height: 24),
                     if (_pendingLawyersCount > 0) ...[
                       _sectionHeader(
-                          '⚠️  עורכי דין ממתינים לאישור'),
+                          '\u26a0\ufe0f  \u05e2\u05d5\u05e8\u05db\u05d9 \u05d3\u05d9\u05df \u05de\u05de\u05ea\u05d9\u05e0\u05d9\u05dd \u05dc\u05d0\u05d9\u05e9\u05d5\u05e8'),
                       _actionCard(
-                        'אישור עורכי דין ($_pendingLawyersCount ממתינים)',
+                        '\u05d0\u05d9\u05e9\u05d5\u05e8 \u05e2\u05d5\u05e8\u05db\u05d9 \u05d3\u05d9\u05df (\$_pendingLawyersCount \u05de\u05de\u05ea\u05d9\u05e0\u05d9\u05dd)',
                         Icons.how_to_reg_rounded,
                         color: VetoPalette.emergency,
                         badge: _pendingLawyersCount,
@@ -188,20 +189,20 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                       ),
                       const SizedBox(height: 24),
                     ],
-                    _sectionHeader('סקירת מערכת'),
-                    _infoCard('סטטוס שרת', _serverStatus,
+                    _sectionHeader('\u05e1\u05e7\u05d9\u05e8\u05ea \u05de\u05e2\u05e8\u05db\u05ea'),
+                    _infoCard('\u05e1\u05d8\u05d8\u05d5\u05e1 \u05e9\u05e8\u05ea', _serverStatus,
                         statusColor: _serverStatus == 'Online'
                             ? VetoPalette.success
                             : VetoPalette.emergency),
-                    _infoCard('בסיס נתונים', _mongoDbStatus,
+                    _infoCard('\u05d1\u05e1\u05d9\u05e1 \u05e0\u05ea\u05d5\u05e0\u05d9\u05dd', _mongoDbStatus,
                         statusColor: _mongoDbStatus == 'Connected'
                             ? VetoPalette.success
                             : VetoPalette.emergency),
-                    _infoCard('גרסת אפליקציה', _appVersion),
+                    _infoCard('\u05d2\u05e8\u05e1\u05ea \u05d0\u05e4\u05dc\u05d9\u05e7\u05e6\u05d9\u05d4', _appVersion),
                     const SizedBox(height: 24),
-                    _sectionHeader('ניהול משתמשים'),
+                    _sectionHeader('\u05e0\u05d9\u05d4\u05d5\u05dc \u05de\u05e9\u05ea\u05de\u05e9\u05d9\u05dd'),
                     _actionCard(
-                      'כל המשתמשים ($_totalUsers)',
+                      '\u05db\u05dc \u05d4\u05de\u05e9\u05ea\u05de\u05e9\u05d9\u05dd (\$_totalUsers)',
                       Icons.group_outlined,
                       onTap: () async {
                         await Navigator.push(
@@ -213,7 +214,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                       },
                     ),
                     _actionCard(
-                      'כל עורכי הדין ($_totalLawyers)',
+                      '\u05db\u05dc \u05e2\u05d5\u05e8\u05db\u05d9 \u05d4\u05d3\u05d9\u05df (\$_totalLawyers)',
                       Icons.gavel_rounded,
                       onTap: () async {
                         await Navigator.push(
@@ -225,7 +226,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                       },
                     ),
                     _actionCard(
-                      'יומני חירום',
+                      '\u05d9\u05d5\u05de\u05e0\u05d9 \u05d7\u05d9\u05e8\u05d5\u05dd',
                       Icons.history_rounded,
                       onTap: () => Navigator.push(
                         context,
@@ -234,11 +235,11 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                       ),
                     ),
                     const SizedBox(height: 24),
-                    _sectionHeader('הגדרות מערכת'),
+                    _sectionHeader('\u05d4\u05d2\u05d3\u05e8\u05d5\u05ea \u05de\u05e2\u05e8\u05db\u05ea'),
                     _switchCard(
-                      'OTP קבוע לאדמינים',
+                      'OTP \u05e7\u05d1\u05d5\u05e2 \u05dc\u05d0\u05d3\u05de\u05d9\u05e0\u05d9\u05dd',
                       _enableFixedOtp,
-                      'קוד 123456 לצרכי פיתוח ובדיקות',
+                      '\u05e7\u05d5\u05d3 123456 \u05dc\u05e6\u05e8\u05db\u05d9 \u05e4\u05d9\u05ea\u05d5\u05d7 \u05d5\u05d1\u05d3\u05d9\u05e7\u05d5\u05ea',
                       _toggleFixedOtp,
                     ),
                     const SizedBox(height: 40),
@@ -343,7 +344,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
             ),
           ),
           Switch(
-              value: value, onChanged: onChange, activeThumbColor: VetoPalette.primary),
+              value: value, onChanged: onChange, activeColor: VetoPalette.primary),
         ]),
       );
 
@@ -378,7 +379,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                   color: VetoPalette.emergency,
                   borderRadius: BorderRadius.circular(99),
                 ),
-                child: Text('$badge',
+                child: Text('\$badge',
                     style: const TextStyle(
                         color: Colors.white,
                         fontSize: 11,
@@ -392,3 +393,11 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
         ),
       );
 }
+`;
+
+fs.writeFileSync(
+  'C:/Users/User/Desktop/VETO_App/frontend/lib/screens/AdminSettingsScreen.dart',
+  content,
+  'utf8'
+);
+console.log('Written', content.length, 'chars');

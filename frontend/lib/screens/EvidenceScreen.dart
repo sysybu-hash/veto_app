@@ -234,7 +234,9 @@ class _EvidenceScreenState extends State<EvidenceScreen>
     if (_camCtrl == null ||
         !_camCtrl!.value.isInitialized ||
         _capturing ||
-        _uploading) return;
+        _uploading) {
+      return;
+    }
 
     HapticFeedback.mediumImpact();
     setState(() => _capturing = true);
@@ -585,12 +587,12 @@ class _EvidenceScreenState extends State<EvidenceScreen>
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Text(
-                                '${_position!.latitude.toStringAsFixed(4)}',
+                                _position!.latitude.toStringAsFixed(4),
                                 style: const TextStyle(
                                     color: _C.silverDim, fontSize: 10),
                               ),
                               Text(
-                                '${_position!.longitude.toStringAsFixed(4)}',
+                                _position!.longitude.toStringAsFixed(4),
                                 style: const TextStyle(
                                     color: _C.silverDim, fontSize: 10),
                               ),

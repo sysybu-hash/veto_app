@@ -103,6 +103,12 @@ const UserSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
+
+    // ── Manually added by admin (exempt from payment) ─────────
+    manually_added: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
     timestamps: true, // createdAt, updatedAt

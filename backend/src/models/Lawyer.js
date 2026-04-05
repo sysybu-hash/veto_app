@@ -157,6 +157,13 @@ const LawyerSchema = new mongoose.Schema(
       default: true,
     },
 
+    // ── Admin approval (self-registered lawyers need approval) ─
+    is_approved: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
+
     // ── Case History ──────────────────────────────────────────
     emergency_events: [
       {

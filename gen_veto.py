@@ -1,7 +1,12 @@
+
+# gen_veto.py — generates the new wizard-style VetoScreen.dart
+import os
+
+DART = """\
 // ============================================================
 //  VetoScreen.dart — Legal Shield Wizard Interface
-//  Attorney Shield-inspired: scenarios, rights, WhatsApp/Telegram,
-//  admin evidence browser, dual-tab (Wizard + AI Chat)
+//  Attorney Shield-inspired features: scenarios, rights,
+//  WhatsApp/Telegram quick contact, admin evidence browser
 // ============================================================
 
 import 'dart:async';
@@ -32,23 +37,21 @@ class _SD {
 
 const Map<_Scenario, _SD> _sdMap = {
   _Scenario.traffic: _SD(
-    emoji: '\u{1F697}',
-    he: 'עצירת תנועה',
-    ru: 'Остановка авто',
-    en: 'Traffic Stop',
+    emoji: '\\u{1F697}', he: '\\u05E2\\u05E6\\u05D9\\u05E8\\u05EA \\u05EA\\u05E0\\u05D5\\u05E2\\u05D4',
+    ru: '\\u041E\\u0441\\u0442\\u0430\\u043D\\u043E\\u0432\\u043A\\u0430 \\u0430\\u0432\\u0442\\u043E', en: 'Traffic Stop',
     rHe: [
-      'הצג תעודת זהות ורישיון נהיגה בלבד',
-      'אינך חייב להסכים לחיפוש ברכב',
-      'שמור על שתיקה מעבר לנתוני זיהוי',
-      'צלם את רכב המשטרה ולוחית הרישוי',
-      'בקש שם ומספר עטרה של השוטר',
+      '\\u05D4\\u05E6\\u05D2 \\u05EA\\u05E2\\u05D5\\u05D3\\u05EA \\u05D6\\u05D4\\u05D5\\u05EA \\u05D5\\u05E8\\u05D9\\u05E9\\u05D9\\u05D5\\u05DF \\u05E0\\u05D4\\u05D9\\u05D2\\u05D4 \\u05D1\\u05DC\\u05D1\\u05D3',
+      '\\u05D0\\u05D9\\u05E0\\u05DA \\u05D7\\u05D9\\u05D9\\u05D1 \\u05DC\\u05D4\\u05E1\\u05DB\\u05D9\\u05DD \\u05DC\\u05D7\\u05D9\\u05E4\\u05D5\\u05E9 \\u05D1\\u05E8\\u05DB\\u05D1',
+      '\\u05E9\\u05DE\\u05D5\\u05E8 \\u05E2\\u05DC \\u05E9\\u05EA\\u05D9\\u05E7\\u05D4 \\u05DE\\u05E2\\u05D1\\u05E8 \\u05DC\\u05E0\\u05EA\\u05D5\\u05E0\\u05D9 \\u05D6\\u05D9\\u05D4\\u05D5\\u05D9',
+      '\\u05E6\\u05DC\\u05DD \\u05D0\\u05EA \\u05E8\\u05DB\\u05D1 \\u05D4\\u05DE\\u05E9\\u05D8\\u05E8\\u05D4 \\u05D5\\u05DC\\u05D5\\u05D7\\u05D9\\u05EA \\u05D4\\u05E8\\u05D9\\u05E9\\u05D5\\u05D9',
+      '\\u05D1\\u05E7\\u05E9 \\u05E9\\u05DD \\u05D5\\u05DE\\u05E1\\u05E4\\u05E8 \\u05E2\\u05D8\\u05E8\\u05D4 \\u05E9\\u05DC \\u05D4\\u05E9\\u05D5\\u05D8\\u05E8',
     ],
     rRu: [
-      'Предъявите только документы',
-      'Не обязаны соглашаться на обыск авто',
-      'Храните молчание сверх идентификации',
-      'Сфотографируйте полицейскую машину',
-      'Запросите имя и жетон офицера',
+      '\\u041F\\u0440\\u0435\\u0434\\u044A\\u044F\\u0432\\u0438\\u0442\\u0435 \\u0442\\u043E\\u043B\\u044C\\u043A\\u043E \\u0434\\u043E\\u043A\\u0443\\u043C\\u0435\\u043D\\u0442\\u044B',
+      '\\u041D\\u0435 \\u043E\\u0431\\u044F\\u0437\\u0430\\u043D\\u044B \\u0441\\u043E\\u0433\\u043B\\u0430\\u0448\\u0430\\u0442\\u044C\\u0441\\u044F \\u043D\\u0430 \\u043E\\u0431\\u044B\\u0441\\u043A \\u0430\\u0432\\u0442\\u043E',
+      '\\u0425\\u0440\\u0430\\u043D\\u0438\\u0442\\u0435 \\u043C\\u043E\\u043B\\u0447\\u0430\\u043D\\u0438\\u0435 \\u0441\\u0432\\u0435\\u0440\\u0445 \\u0438\\u0434\\u0435\\u043D\\u0442\\u0438\\u0444\\u0438\\u043A\\u0430\\u0446\\u0438\\u0438',
+      '\\u0421\\u0444\\u043E\\u0442\\u043E\\u0433\\u0440\\u0430\\u0444\\u0438\\u0440\\u0443\\u0439\\u0442\\u0435 \\u043F\\u043E\\u043B\\u0438\\u0446\\u0435\\u0439\\u0441\\u043A\\u0443\\u044E \\u043C\\u0430\\u0448\\u0438\\u043D\\u0443',
+      '\\u0417\\u0430\\u043F\\u0440\\u043E\\u0441\\u0438\\u0442\\u0435 \\u0438\\u043C\\u044F \\u0438 \\u0436\\u0435\\u0442\\u043E\\u043D \\u043E\\u0444\\u0438\\u0446\\u0435\\u0440\\u0430',
     ],
     rEn: [
       'Present ID and driving license only',
@@ -59,50 +62,46 @@ const Map<_Scenario, _SD> _sdMap = {
     ],
   ),
   _Scenario.interrogation: _SD(
-    emoji: '\u{1F46E}',
-    he: 'חקירת משטרה',
-    ru: 'Допрос',
-    en: 'Police Questioning',
+    emoji: '\\u{1F46E}', he: '\\u05D7\\u05E7\\u05D9\\u05E8\\u05EA \\u05DE\\u05E9\\u05D8\\u05E8\\u05D4',
+    ru: '\\u0414\\u043E\\u043F\\u0440\\u043E\\u0441', en: 'Police Questioning',
     rHe: [
-      'יש לך זכות חוקתית לשתוק — אל תענה על שאלות',
-      'דרוש עורך דין לפני תחילת כל חקירה',
-      'כל דבר שתאמר יכול לשמש נגדך בבית משפט',
-      'אינך חייב לחתום על מסמכים ללא ייעוץ משפטי',
-      'הצהר: "שומר אני על זכות השתיקה"',
+      '\\u05D9\\u05E9 \\u05DC\\u05DA \\u05D6\\u05DB\\u05D5\\u05EA \\u05D7\\u05D5\\u05E7\\u05EA\\u05D9\\u05EA \\u05DC\\u05E9\\u05EA\\u05D5\\u05E7 — \\u05D0\\u05DC \\u05EA\\u05E2\\u05E0\\u05D4 \\u05E2\\u05DC \\u05E9\\u05D0\\u05DC\\u05D5\\u05EA',
+      '\\u05D3\\u05E8\\u05D5\\u05E9 \\u05E2\\u05D5\\u05E8\\u05DA \\u05D3\\u05D9\\u05DF \\u05DC\\u05E4\\u05E0\\u05D9 \\u05EA\\u05D7\\u05D9\\u05DC\\u05EA \\u05DB\\u05DC \\u05D7\\u05E7\\u05D9\\u05E8\\u05D4',
+      '\\u05DB\\u05DC \\u05D3\\u05D1\\u05E8 \\u05E9\\u05EA\\u05D0\\u05DE\\u05E8 \\u05D9\\u05DB\\u05D5\\u05DC \\u05DC\\u05E9\\u05DE\\u05E9 \\u05E0\\u05D2\\u05D3\\u05DA \\u05D1\\u05D1\\u05D9\\u05EA \\u05DE\\u05E9\\u05E4\\u05D8',
+      '\\u05D0\\u05D9\\u05E0\\u05DA \\u05D7\\u05D9\\u05D9\\u05D1 \\u05DC\\u05D7\\u05EA\\u05D5\\u05DD \\u05E2\\u05DC \\u05DE\\u05E1\\u05DE\\u05DB\\u05D9\\u05DD \\u05DC\\u05DC\\u05D0 \\u05D9\\u05D9\\u05E2\\u05D5\\u05E5 \\u05DE\\u05E9\\u05E4\\u05D8\\u05D9',
+      '\\u05D4\\u05E6\\u05D4\\u05E8: "\\u05E9\\u05D5\\u05DE\\u05E8 \\u05D0\\u05E0\\u05D9 \\u05E2\\u05DC \\u05D6\\u05DB\\u05D5\\u05EA \\u05D4\\u05E9\\u05EA\\u05D9\\u05E7\\u05D4"',
     ],
     rRu: [
-      'Конституционное право хранить молчание',
-      'Требуйте адвоката до начала допроса',
-      'Всё сказанное может быть использовано против вас',
-      'Не подписывайте документы без адвоката',
-      'Заявите: "Я пользуюсь правом на молчание"',
+      '\\u041A\\u043E\\u043D\\u0441\\u0442\\u0438\\u0442\\u0443\\u0446\\u0438\\u043E\\u043D\\u043D\\u043E\\u0435 \\u043F\\u0440\\u0430\\u0432\\u043E \\u0445\\u0440\\u0430\\u043D\\u0438\\u0442\\u044C \\u043C\\u043E\\u043B\\u0447\\u0430\\u043D\\u0438\\u0435',
+      '\\u0422\\u0440\\u0435\\u0431\\u0443\\u0439\\u0442\\u0435 \\u0430\\u0434\\u0432\\u043E\\u043A\\u0430\\u0442\\u0430 \\u0434\\u043E \\u043D\\u0430\\u0447\\u0430\\u043B\\u0430 \\u0434\\u043E\\u043F\\u0440\\u043E\\u0441\\u0430',
+      '\\u0412\\u0441\\u0451 \\u0441\\u043A\\u0430\\u0437\\u0430\\u043D\\u043D\\u043E\\u0435 \\u043C\\u043E\\u0436\\u0435\\u0442 \\u0431\\u044B\\u0442\\u044C \\u0438\\u0441\\u043F\\u043E\\u043B\\u044C\\u0437\\u043E\\u0432\\u0430\\u043D\\u043E \\u043F\\u0440\\u043E\\u0442\\u0438\\u0432 \\u0432\\u0430\\u0441',
+      '\\u041D\\u0435 \\u043F\\u043E\\u0434\\u043F\\u0438\\u0441\\u044B\\u0432\\u0430\\u0439\\u0442\\u0435 \\u0434\\u043E\\u043A\\u0443\\u043C\\u0435\\u043D\\u0442\\u044B \\u0431\\u0435\\u0437 \\u0430\\u0434\\u0432\\u043E\\u043A\\u0430\\u0442\\u0430',
+      '\\u0417\\u0430\\u044F\\u0432\\u0438\\u0442\\u0435: "\\u042F \\u043F\\u043E\\u043B\\u044C\\u0437\\u0443\\u044E\\u0441\\u044C \\u043F\\u0440\\u0430\\u0432\\u043E\\u043C \\u043D\\u0430 \\u043C\\u043E\\u043B\\u0447\\u0430\\u043D\\u0438\\u0435"',
     ],
     rEn: [
-      'Constitutional right to remain silent — do not answer',
+      'Constitutional right to remain silent — do not answer questions',
       'Demand a lawyer before any interrogation begins',
-      'Anything you say can be used against you in court',
+      'Anything you say can and will be used against you in court',
       'Do not sign documents without legal counsel',
       'State clearly: "I am exercising my right to silence"',
     ],
   ),
   _Scenario.arrest: _SD(
-    emoji: '\u26D3',
-    he: 'מעצר',
-    ru: 'Арест',
-    en: 'Arrest',
+    emoji: '\\u26D3', he: '\\u05DE\\u05E2\\u05E6\\u05E8',
+    ru: '\\u0410\\u0440\\u0435\\u0441\\u0442', en: 'Arrest',
     rHe: [
-      'יש לך זכות לעורך דין מיידי — דרוש זאת בקול',
-      'יש לך זכות להודיע לבן משפחה על עצרתך',
-      'שמור שתיקה מוחלטת לפני הגעת עורך הדין',
-      'המשטרה חייבת לציין מהי עילת המעצר',
-      'בקש עותק מצו המעצר',
+      '\\u05D9\\u05E9 \\u05DC\\u05DA \\u05D6\\u05DB\\u05D5\\u05EA \\u05DC\\u05E2\\u05D5\\u05E8\\u05DA \\u05D3\\u05D9\\u05DF \\u05DE\\u05D9\\u05D9\\u05D3\\u05D9 — \\u05D3\\u05E8\\u05D5\\u05E9 \\u05D6\\u05D0\\u05EA \\u05D1\\u05E7\\u05D5\\u05DC',
+      '\\u05D9\\u05E9 \\u05DC\\u05DA \\u05D6\\u05DB\\u05D5\\u05EA \\u05DC\\u05D4\\u05D5\\u05D3\\u05D9\\u05E2 \\u05DC\\u05D1\\u05DF \\u05DE\\u05E9\\u05E4\\u05D7\\u05D4 \\u05E2\\u05DC \\u05E2\\u05E6\\u05E8\\u05EA\\u05DA',
+      '\\u05E9\\u05DE\\u05D5\\u05E8 \\u05E9\\u05EA\\u05D9\\u05E7\\u05D4 \\u05DE\\u05D5\\u05D7\\u05DC\\u05D8\\u05EA \\u05DC\\u05E4\\u05E0\\u05D9 \\u05D4\\u05D2\\u05E2\\u05EA \\u05E2\\u05D5\\u05E8\\u05DA \\u05D4\\u05D3\\u05D9\\u05DF',
+      '\\u05D4\\u05DE\\u05E9\\u05D8\\u05E8\\u05D4 \\u05D7\\u05D9\\u05D9\\u05D1\\u05EA \\u05DC\\u05E6\\u05D9\\u05D9\\u05DF \\u05DE\\u05D4\\u05D9 \\u05E2\\u05D9\\u05DC\\u05EA \\u05D4\\u05DE\\u05E2\\u05E6\\u05E8',
+      '\\u05D1\\u05E7\\u05E9 \\u05E2\\u05D5\\u05EA\\u05E7 \\u05DE\\u05E6\\u05D5 \\u05D4\\u05DE\\u05E2\\u05E6\\u05E8',
     ],
     rRu: [
-      'Право на немедленного адвоката',
-      'Право сообщить родственнику об аресте',
-      'Полное молчание до прибытия адвоката',
-      'Полиция обязана назвать причину ареста',
-      'Требуйте копию ордера на арест',
+      '\\u041F\\u0440\\u0430\\u0432\\u043E \\u043D\\u0430 \\u043D\\u0435\\u043C\\u0435\\u0434\\u043B\\u0435\\u043D\\u043D\\u043E\\u0433\\u043E \\u0430\\u0434\\u0432\\u043E\\u043A\\u0430\\u0442\\u0430',
+      '\\u041F\\u0440\\u0430\\u0432\\u043E \\u0441\\u043E\\u043E\\u0431\\u0449\\u0438\\u0442\\u044C \\u0440\\u043E\\u0434\\u0441\\u0442\\u0432\\u0435\\u043D\\u043D\\u0438\\u043A\\u0443 \\u043E\\u0431 \\u0430\\u0440\\u0435\\u0441\\u0442\\u0435',
+      '\\u041F\\u043E\\u043B\\u043D\\u043E\\u0435 \\u043C\\u043E\\u043B\\u0447\\u0430\\u043D\\u0438\\u0435 \\u0434\\u043E \\u043F\\u0440\\u0438\\u0431\\u044B\\u0442\\u0438\\u044F \\u0430\\u0434\\u0432\\u043E\\u043A\\u0430\\u0442\\u0430',
+      '\\u041F\\u043E\\u043B\\u0438\\u0446\\u0438\\u044F \\u043E\\u0431\\u044F\\u0437\\u0430\\u043D\\u0430 \\u043D\\u0430\\u0437\\u0432\\u0430\\u0442\\u044C \\u043F\\u0440\\u0438\\u0447\\u0438\\u043D\\u0443 \\u0430\\u0440\\u0435\\u0441\\u0442\\u0430',
+      '\\u0422\\u0440\\u0435\\u0431\\u0443\\u0439\\u0442\\u0435 \\u043A\\u043E\\u043F\\u0438\\u044E \\u043E\\u0440\\u0434\\u0435\\u0440\\u0430 \\u043D\\u0430 \\u0430\\u0440\\u0435\\u0441\\u0442',
     ],
     rEn: [
       'Right to an immediate attorney — demand it aloud',
@@ -113,23 +112,21 @@ const Map<_Scenario, _SD> _sdMap = {
     ],
   ),
   _Scenario.accident: _SD(
-    emoji: '\u{1F691}',
-    he: 'תאונה',
-    ru: 'ДТП',
-    en: 'Accident',
+    emoji: '\\u{1F691}', he: '\\u05EA\\u05D0\\u05D5\\u05E0\\u05D4',
+    ru: '\\u0414\\u0422\\u041F', en: 'Accident',
     rHe: [
-      'תעד נזקים לרכב מכל זווית — מיידית',
-      'אסוף שמות ופרטי קשר של עדים',
-      'אל תודה באחריות — לא לפני שדיברת עם עורך דין',
-      'צלם לוחיות רישוי של כל הרכבים המעורבים',
-      'הייוועץ עם עורך דין לפני שמוסר מידע לביטוח',
+      '\\u05EA\\u05E2\\u05D3 \\u05E0\\u05D6\\u05E7\\u05D9\\u05DD \\u05DC\\u05E8\\u05DB\\u05D1 \\u05DE\\u05DB\\u05DC \\u05D6\\u05D5\\u05D5\\u05D9\\u05EA — \\u05DE\\u05D9\\u05D9\\u05D3\\u05D9\\u05EA',
+      '\\u05D0\\u05E1\\u05D5\\u05E3 \\u05E9\\u05DE\\u05D5\\u05EA \\u05D5\\u05E4\\u05E8\\u05D8\\u05D9 \\u05E7\\u05E9\\u05E8 \\u05E9\\u05DC \\u05E2\\u05D3\\u05D9\\u05DD',
+      '\\u05D0\\u05DC \\u05EA\\u05D5\\u05D3\\u05D4 \\u05D1\\u05D0\\u05D7\\u05E8\\u05D9\\u05D5\\u05EA — \\u05DC\\u05D0 \\u05DC\\u05E4\\u05E0\\u05D9 \\u05E9\\u05D3\\u05D9\\u05D1\\u05E8\\u05EA \\u05E2\\u05DD \\u05E2\\u05D5\\u05E8\\u05DA \\u05D3\\u05D9\\u05DF',
+      '\\u05E6\\u05DC\\u05DD \\u05DC\\u05D5\\u05D7\\u05D9\\u05D5\\u05EA \\u05E8\\u05D9\\u05E9\\u05D5\\u05D9 \\u05E9\\u05DC \\u05DB\\u05DC \\u05D4\\u05E8\\u05DB\\u05D1\\u05D9\\u05DD \\u05D4\\u05DE\\u05E2\\u05D5\\u05E8\\u05D1\\u05D9\\u05DD',
+      '\\u05D4\\u05D9\\u05D5\\u05D5\\u05E2\\u05E5 \\u05E2\\u05DD \\u05E2\\u05D5\\u05E8\\u05DA \\u05D3\\u05D9\\u05DF \\u05DC\\u05E4\\u05E0\\u05D9 \\u05E9\\u05DE\\u05D5\\u05E1\\u05E8 \\u05DE\\u05D9\\u05D3\\u05E2 \\u05DC\\u05D1\\u05D9\\u05D8\\u05D5\\u05D7',
     ],
     rRu: [
-      'Сфотографируйте все повреждения немедленно',
-      'Соберите данные свидетелей',
-      'Не признавайте вину без адвоката',
-      'Сфотографируйте все номерные знаки',
-      'Проконсультируйтесь с адвокатом перед страховой',
+      '\\u0421\\u0444\\u043E\\u0442\\u043E\\u0433\\u0440\\u0430\\u0444\\u0438\\u0440\\u0443\\u0439\\u0442\\u0435 \\u0432\\u0441\\u0435 \\u043F\\u043E\\u0432\\u0440\\u0435\\u0436\\u0434\\u0435\\u043D\\u0438\\u044F \\u043D\\u0435\\u043C\\u0435\\u0434\\u043B\\u0435\\u043D\\u043D\\u043E',
+      '\\u0421\\u043E\\u0431\\u0435\\u0440\\u0438\\u0442\\u0435 \\u0434\\u0430\\u043D\\u043D\\u044B\\u0435 \\u0441\\u0432\\u0438\\u0434\\u0435\\u0442\\u0435\\u043B\\u0435\\u0439',
+      '\\u041D\\u0435 \\u043F\\u0440\\u0438\\u0437\\u043D\\u0430\\u0432\\u0430\\u0439\\u0442\\u0435 \\u0432\\u0438\\u043D\\u0443 \\u0431\\u0435\\u0437 \\u0430\\u0434\\u0432\\u043E\\u043A\\u0430\\u0442\\u0430',
+      '\\u0421\\u0444\\u043E\\u0442\\u043E\\u0433\\u0440\\u0430\\u0444\\u0438\\u0440\\u0443\\u0439\\u0442\\u0435 \\u0432\\u0441\\u0435 \\u043D\\u043E\\u043C\\u0435\\u0440\\u043D\\u044B\\u0435 \\u0437\\u043D\\u0430\\u043A\\u0438',
+      '\\u041F\\u0440\\u043E\\u043A\\u043E\\u043D\\u0441\\u0443\\u043B\\u044C\\u0442\\u0438\\u0440\\u0443\\u0439\\u0442\\u0435\\u0441\\u044C \\u0441 \\u0430\\u0434\\u0432\\u043E\\u043A\\u0430\\u0442\\u043E\\u043C \\u043F\\u0435\\u0440\\u0435\\u0434 \\u0441\\u0442\\u0440\\u0430\\u0445\\u043E\\u0432\\u043E\\u0439',
     ],
     rEn: [
       'Document all vehicle damage from every angle immediately',
@@ -140,23 +137,21 @@ const Map<_Scenario, _SD> _sdMap = {
     ],
   ),
   _Scenario.other: _SD(
-    emoji: '\u2696',
-    he: 'אחר',
-    ru: 'Другое',
-    en: 'Other',
+    emoji: '\\u2696', he: '\\u05D0\\u05D7\\u05E8',
+    ru: '\\u0414\\u0440\\u0443\\u0433\\u043E\\u0435', en: 'Other',
     rHe: [
-      'יש לך זכות לייצוג משפטי בכל הליך',
-      'שמור על זכות השתיקה תמיד',
-      'תעד הכל: צלם, הקלט, כתוב',
-      'אל תחתום על שום מסמך ללא עורך דין',
-      'VETO ישגר עורך דין לעמדתך בהקדם',
+      '\\u05D9\\u05E9 \\u05DC\\u05DA \\u05D6\\u05DB\\u05D5\\u05EA \\u05DC\\u05D9\\u05D9\\u05E6\\u05D5\\u05D2 \\u05DE\\u05E9\\u05E4\\u05D8\\u05D9 \\u05D1\\u05DB\\u05DC \\u05D4\\u05DC\\u05D9\\u05DA',
+      '\\u05E9\\u05DE\\u05D5\\u05E8 \\u05E2\\u05DC \\u05D6\\u05DB\\u05D5\\u05EA \\u05D4\\u05E9\\u05EA\\u05D9\\u05E7\\u05D4 \\u05EA\\u05DE\\u05D9\\u05D3',
+      '\\u05EA\\u05E2\\u05D3 \\u05D4\\u05DB\\u05DC: \\u05E6\\u05DC\\u05DD, \\u05D4\\u05E7\\u05DC\\u05D8, \\u05DB\\u05EA\\u05D5\\u05D1',
+      '\\u05D0\\u05DC \\u05EA\\u05D7\\u05EA\\u05D5\\u05DD \\u05E2\\u05DC \\u05E9\\u05D5\\u05DD \\u05DE\\u05E1\\u05DE\\u05DA \\u05DC\\u05DC\\u05D0 \\u05E2\\u05D5\\u05E8\\u05DA \\u05D3\\u05D9\\u05DF',
+      'VETO \\u05D9\\u05E9\\u05D2\\u05E8 \\u05E2\\u05D5\\u05E8\\u05DA \\u05D3\\u05D9\\u05DF \\u05DC\\u05E2\\u05DE\\u05D3\\u05EA\\u05DA \\u05D1\\u05D4\\u05E7\\u05D3\\u05DD',
     ],
     rRu: [
-      'Право на юридическое представительство',
-      'Всегда пользуйтесь правом на молчание',
-      'Документируйте всё: фото, аудио, запись',
-      'Не подписывайте ничего без адвоката',
-      'VETO направит адвоката к вам',
+      '\\u041F\\u0440\\u0430\\u0432\\u043E \\u043D\\u0430 \\u044E\\u0440\\u0438\\u0434\\u0438\\u0447\\u0435\\u0441\\u043A\\u043E\\u0435 \\u043F\\u0440\\u0435\\u0434\\u0441\\u0442\\u0430\\u0432\\u0438\\u0442\\u0435\\u043B\\u044C\\u0441\\u0442\\u0432\\u043E',
+      '\\u0412\\u0441\\u0435\\u0433\\u0434\\u0430 \\u043F\\u043E\\u043B\\u044C\\u0437\\u0443\\u0439\\u0442\\u0435\\u0441\\u044C \\u043F\\u0440\\u0430\\u0432\\u043E\\u043C \\u043D\\u0430 \\u043C\\u043E\\u043B\\u0447\\u0430\\u043D\\u0438\\u0435',
+      '\\u0414\\u043E\\u043A\\u0443\\u043C\\u0435\\u043D\\u0442\\u0438\\u0440\\u0443\\u0439\\u0442\\u0435 \\u0432\\u0441\\u0451: \\u0444\\u043E\\u0442\\u043E, \\u0430\\u0443\\u0434\\u0438\\u043E, \\u0437\\u0430\\u043F\\u0438\\u0441\\u044C',
+      '\\u041D\\u0435 \\u043F\\u043E\\u0434\\u043F\\u0438\\u0441\\u044B\\u0432\\u0430\\u0439\\u0442\\u0435 \\u043D\\u0438\\u0447\\u0435\\u0433\\u043E \\u0431\\u0435\\u0437 \\u0430\\u0434\\u0432\\u043E\\u043A\\u0430\\u0442\\u0430',
+      'VETO \\u043D\\u0430\\u043F\\u0440\\u0430\\u0432\\u0438\\u0442 \\u0430\\u0434\\u0432\\u043E\\u043A\\u0430\\u0442\\u0430 \\u043A \\u0432\\u0430\\u043C',
     ],
     rEn: [
       'Right to legal representation in any proceeding',
@@ -179,7 +174,7 @@ class _LL {
 const Map<String, _LL> _langs = {
   'he': _LL(
     label: 'עברית', code: 'he-IL',
-    greeting: 'שלום! אני העוזר המשפטי של VETO.\nתאר את הבעיה המשפטית שלך ואמצא עבורך עורך דין זמין.',
+    greeting: 'שלום! אני העוזר המשפטי של VETO.\\nתאר את הבעיה המשפטית שלך ואמצא עבורך עורך דין זמין.',
     hint: 'תאר את הבעיה...',
     processing: 'מעבד...',
     dispatching: 'בתהליך שיגור...',
@@ -188,7 +183,7 @@ const Map<String, _LL> _langs = {
   ),
   'ru': _LL(
     label: 'Русский', code: 'ru-RU',
-    greeting: 'Здравствуйте! Я юридический помощник VETO.\nОпишите вашу проблему — я найду адвоката.',
+    greeting: 'Здравствуйте! Я юридический помощник VETO.\\nОпишите вашу проблему — я найду адвоката.',
     hint: 'Опишите проблему...',
     processing: 'Обработка...',
     dispatching: 'Отправка...',
@@ -197,7 +192,7 @@ const Map<String, _LL> _langs = {
   ),
   'en': _LL(
     label: 'English', code: 'en-US',
-    greeting: "Hello! I'm the VETO legal assistant.\nDescribe your legal issue and I'll find you an available lawyer.",
+    greeting: "Hello! I'm the VETO legal assistant.\\nDescribe your legal issue and I'll find you an available lawyer.",
     hint: 'Describe your issue...',
     processing: 'Processing...',
     dispatching: 'Dispatching...',
@@ -269,12 +264,14 @@ class _VetoScreenState extends State<VetoScreen> {
     if (isPaymentExempt) return;
     final isSubscribed = await AuthService().getStoredIsSubscribed();
     if (!isSubscribed && mounted) {
-      await showDialog<bool>(
+      final ok = await showDialog<bool>(
         context: context,
         barrierDismissible: false,
         builder: (_) => const _SubscriptionGateDialog(),
       );
-      // User dismissed — stay on screen with limited access (no redirect to login)
+      if (ok != true && mounted) {
+        Navigator.of(context).pushReplacementNamed('/login');
+      }
     }
   }
 
@@ -364,12 +361,14 @@ class _VetoScreenState extends State<VetoScreen> {
         : _langKey == 'en' ? '🚨 SOS sent! Searching for a lawyer...'
         : '🚨 SOS נשלח! מחפש עורך דין...';
     if (mounted) {
-      setState(() { _messages.add(_Msg(text: msg, isUser: false, isSystem: true)); _tab = 1; });
+      setState(() => _messages.add(_Msg(text: msg, isUser: false, isSystem: true)));
       _speak(msg);
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text(msg), backgroundColor: VetoPalette.emergency,
         duration: const Duration(seconds: 4),
       ));
+      // Switch to AI tab so user can see activity
+      setState(() => _tab = 1);
     }
   }
 
@@ -383,13 +382,12 @@ class _VetoScreenState extends State<VetoScreen> {
       lat: pos?.latitude ?? 32.08, lng: pos?.longitude ?? 34.78,
       preferredLanguage: _langKey, specialization: spec,
     );
-    final specLabel = spec ?? '';
     final msg = lawyerName != null
         ? ('🔔 ' + (_langKey == 'he'
-            ? 'מחפש עורך דין בתחום $specLabel...\n$lawyerName ייצור איתך קשר.'
+            ? 'מחפש עורך דין בתחום \$spec...\\n\$lawyerName ייצור איתך קשר.'
             : _langKey == 'ru'
-            ? 'Ищу адвоката по $specLabel...\n$lawyerName свяжется с вами.'
-            : 'Searching $specLabel lawyer...\n$lawyerName will contact you.'))
+            ? 'Ищу адвоката по \$spec...\\n\$lawyerName свяжется с вами.'
+            : 'Searching \$spec lawyer...\\n\$lawyerName will contact you.'))
         : ('🔔 ' + (_langKey == 'he'
             ? 'מחפש עורך דין זמין...'
             : _langKey == 'ru'
@@ -477,7 +475,7 @@ class _VetoScreenState extends State<VetoScreen> {
     if (!mounted) return;
     final lat = pos?.latitude ?? 32.08;
     final lng = pos?.longitude ?? 34.78;
-    await Clipboard.setData(ClipboardData(text: 'https://maps.google.com/?q=${lat},${lng}'));
+    await Clipboard.setData(ClipboardData(text: 'https://maps.google.com/?q=\$lat,\$lng'));
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       content: Text(_langKey == 'he'
@@ -550,13 +548,16 @@ class _VetoScreenState extends State<VetoScreen> {
         preferredSize: Size.fromHeight(1),
         child: Divider(height: 1, color: VetoPalette.border)),
     actions: [
+      // Language switcher
       for (final k in ['he', 'ru', 'en'])
         GestureDetector(
           onTap: () => setState(() {
             _langKey = k;
-            _messages.clear();
-            _geminiHistory.clear();
-            _messages.add(_Msg(text: _langs[k]!.greeting, isUser: false));
+            if (_messages.isNotEmpty && !_messages.first.isUser) {
+              _messages.clear();
+              _geminiHistory.clear();
+              _messages.add(_Msg(text: _langs[k]!.greeting, isUser: false));
+            }
           }),
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 150),
@@ -632,8 +633,8 @@ class _VetoScreenState extends State<VetoScreen> {
           _secLabel(isRtl
               ? 'מה קורה עכשיו?'
               : _langKey == 'ru'
-              ? 'Что происходит?'
-              : "What's happening?"),
+              ? 'Что происходит сейчас?'
+              : "What's happening now?"),
           const SizedBox(height: 8),
           _scenarioBar(isRtl),
           const SizedBox(height: 14),
@@ -718,32 +719,38 @@ class _VetoScreenState extends State<VetoScreen> {
       child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
         const Icon(Icons.crisis_alert_rounded, color: Colors.white, size: 38),
         const SizedBox(width: 16),
-        Expanded(
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(
-              _isDispatching
-                  ? (_langKey == 'he' ? 'שיגור פעיל — מחפש עורך דין'
-                      : _langKey == 'ru' ? 'Активный поиск адвоката...'
-                      : 'Active — finding your lawyer...')
-                  : (_langKey == 'he' ? 'SOS — שלח עזרה עכשיו'
-                      : _langKey == 'ru' ? 'SOS — Вызвать адвоката'
-                      : 'SOS — Send Legal Help Now'),
-              style: const TextStyle(
-                  color: Colors.white, fontSize: 19, fontWeight: FontWeight.w800),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              _isDispatching
-                  ? (_langKey == 'he' ? 'עורך דין בדרך אליך...'
-                      : _langKey == 'ru' ? 'Адвокат уже едет к вам...'
-                      : 'A lawyer is on the way to you...')
-                  : (_langKey == 'he' ? 'לחץ לשגר עורך דין לעמדתך מיידית'
-                      : _langKey == 'ru' ? 'Нажмите для немедленного вызова адвоката'
-                      : 'Tap to instantly dispatch a lawyer to you'),
-              style: const TextStyle(color: Colors.white70, fontSize: 12),
-            ),
-          ]),
-        ),
+        Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(
+            _isDispatching
+                ? (_langKey == 'he'
+                    ? 'שיגור פעיל — מחפש עורך דין'
+                    : _langKey == 'ru'
+                    ? 'Активный поиск адвоката...'
+                    : 'Active — finding your lawyer...')
+                : (_langKey == 'he'
+                    ? 'SOS — שלח עזרה עכשיו'
+                    : _langKey == 'ru'
+                    ? 'SOS — Вызвать адвоката'
+                    : 'SOS — Send Legal Help Now'),
+            style: const TextStyle(
+                color: Colors.white, fontSize: 19, fontWeight: FontWeight.w800),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            _isDispatching
+                ? (_langKey == 'he'
+                    ? 'עורך דין בדרך אליך...'
+                    : _langKey == 'ru'
+                    ? 'Адвокат уже едет к вам...'
+                    : 'A lawyer is on the way to you...')
+                : (_langKey == 'he'
+                    ? 'לחץ לשגר עורך דין לעמדתך מיידית'
+                    : _langKey == 'ru'
+                    ? 'Нажмите для немедленного вызова адвоката'
+                    : 'Tap to instantly dispatch a lawyer to you'),
+            style: const TextStyle(color: Colors.white70, fontSize: 12),
+          ),
+        ]),
       ]),
     ),
   );
@@ -765,8 +772,10 @@ class _VetoScreenState extends State<VetoScreen> {
       reverse: isRtl,
       children: _sdMap.entries.map((e) {
         final sel = e.key == _scenario;
-        final lbl = _langKey == 'ru' ? e.value.ru
-            : _langKey == 'en' ? e.value.en
+        final lbl = _langKey == 'ru'
+            ? e.value.ru
+            : _langKey == 'en'
+            ? e.value.en
             : e.value.he;
         return GestureDetector(
           onTap: () => setState(() { _scenario = e.key; _rightsExpanded = true; }),
@@ -775,7 +784,9 @@ class _VetoScreenState extends State<VetoScreen> {
             width: 90,
             margin: const EdgeInsets.only(left: 8),
             decoration: BoxDecoration(
-              color: sel ? VetoPalette.primary.withValues(alpha: 0.15) : VetoPalette.surface,
+              color: sel
+                  ? VetoPalette.primary.withValues(alpha: 0.15)
+                  : VetoPalette.surface,
               borderRadius: BorderRadius.circular(14),
               border: Border.all(
                   color: sel ? VetoPalette.primary : VetoPalette.border,
@@ -815,15 +826,19 @@ class _VetoScreenState extends State<VetoScreen> {
             const SizedBox(width: 8),
             Expanded(
               child: Text(
-                _langKey == 'he' ? 'הזכויות שלך — $_sLabel'
-                    : _langKey == 'ru' ? 'Ваши права — $_sLabel'
-                    : 'Your Rights — $_sLabel',
+                _langKey == 'he'
+                    ? 'הזכויות שלך — \$_sLabel'
+                    : _langKey == 'ru'
+                    ? 'Ваши права — \$_sLabel'
+                    : 'Your Rights — \$_sLabel',
                 style: const TextStyle(
                     color: VetoPalette.text, fontWeight: FontWeight.w600, fontSize: 14),
               ),
             ),
             Icon(
-              _rightsExpanded ? Icons.keyboard_arrow_up_rounded : Icons.keyboard_arrow_down_rounded,
+              _rightsExpanded
+                  ? Icons.keyboard_arrow_up_rounded
+                  : Icons.keyboard_arrow_down_rounded,
               color: VetoPalette.textMuted,
             ),
           ]),
@@ -833,22 +848,31 @@ class _VetoScreenState extends State<VetoScreen> {
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
           child: Column(
-            children: _rights.map((r) => Padding(
-              padding: const EdgeInsets.symmetric(vertical: 3),
-              child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Container(
-                    margin: const EdgeInsets.only(top: 5, left: 2, right: 2),
-                    width: 6, height: 6,
-                    decoration: const BoxDecoration(
-                        shape: BoxShape.circle, color: VetoPalette.primary)),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(r,
-                      style: const TextStyle(
-                          color: VetoPalette.textMuted, fontSize: 13, height: 1.5)),
-                ),
-              ]),
-            )).toList(),
+            children: _rights
+                .map((r) => Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 3),
+                      child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Container(
+                                margin:
+                                    const EdgeInsets.only(top: 5, left: 2, right: 2),
+                                width: 6,
+                                height: 6,
+                                decoration: const BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: VetoPalette.primary)),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(r,
+                                  style: const TextStyle(
+                                      color: VetoPalette.textMuted,
+                                      fontSize: 13,
+                                      height: 1.5)),
+                            ),
+                          ]),
+                    ))
+                .toList(),
           ),
         ),
     ]),
@@ -863,8 +887,10 @@ class _VetoScreenState extends State<VetoScreen> {
     mainAxisSpacing: 10,
     children: [
       _ctCard(Icons.phone_in_talk_rounded,
-          _langKey == 'he' ? 'עורך דין עכשיו'
-              : _langKey == 'ru' ? 'Вызвать юриста'
+          _langKey == 'he'
+              ? 'עורך דין עכשיו'
+              : _langKey == 'ru'
+              ? 'Вызвать юриста'
               : 'Call Lawyer',
           VetoPalette.primary, _dispatchSOS),
       _ctCard(Icons.chat_rounded, 'WhatsApp', const Color(0xFF25D366),
@@ -872,8 +898,10 @@ class _VetoScreenState extends State<VetoScreen> {
       _ctCard(Icons.send_rounded, 'Telegram', const Color(0xFF229ED9),
           () => _openContact('telegram')),
       _ctCard(Icons.videocam_rounded,
-          _langKey == 'he' ? 'שיחת וידאו'
-              : _langKey == 'ru' ? 'Видеозвонок'
+          _langKey == 'he'
+              ? 'שיחת וידאו'
+              : _langKey == 'ru'
+              ? 'Видеозвонок'
               : 'Video Call',
           const Color(0xFF8B5CF6), () => _openContact('video')),
     ],
@@ -893,14 +921,19 @@ class _VetoScreenState extends State<VetoScreen> {
                 border: Border.all(color: color.withValues(alpha: 0.25))),
             child: Row(children: [
               Container(
-                  width: 34, height: 34,
+                  width: 34,
+                  height: 34,
                   decoration: BoxDecoration(
-                      color: color.withValues(alpha: 0.15), shape: BoxShape.circle),
+                      color: color.withValues(alpha: 0.15),
+                      shape: BoxShape.circle),
                   child: Icon(icon, color: color, size: 17)),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(label,
-                    style: TextStyle(color: color, fontWeight: FontWeight.w700, fontSize: 13)),
+                    style: TextStyle(
+                        color: color,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 13)),
               ),
             ]),
           ),
@@ -915,26 +948,42 @@ class _VetoScreenState extends State<VetoScreen> {
     crossAxisSpacing: 10,
     mainAxisSpacing: 10,
     children: [
-      _toolBtn(Icons.camera_alt_outlined,
-          _langKey == 'he' ? 'תיעוד\nראיות'
-              : _langKey == 'ru' ? 'Запись\nдоказ.'
-              : 'Evidence\nRecord',
-          VetoPalette.warning, _openCamera),
-      _toolBtn(Icons.location_on_outlined,
-          _langKey == 'he' ? 'שתף\nמיקום'
-              : _langKey == 'ru' ? 'Копировать\nгео'
-              : 'Copy\nLocation',
-          VetoPalette.success, _shareLocation),
-      _toolBtn(Icons.volume_off_rounded,
-          _langKey == 'he' ? 'השתק\nקריינות'
-              : _langKey == 'ru' ? 'Стоп\nзвук'
-              : 'Mute\nVoice',
-          VetoPalette.textMuted, _stopSpeaking),
-      _toolBtn(Icons.refresh_rounded,
-          _langKey == 'he' ? 'חדש\nשיחה'
-              : _langKey == 'ru' ? 'Новый\nсеанс'
-              : 'New\nSession',
-          VetoPalette.info, _resetSession),
+      _toolBtn(
+          Icons.camera_alt_outlined,
+          _langKey == 'he'
+              ? 'תיעוד\\nראיות'
+              : _langKey == 'ru'
+              ? 'Запись\\nдоказ.'
+              : 'Evidence\\nRecord',
+          VetoPalette.warning,
+          _openCamera),
+      _toolBtn(
+          Icons.location_on_outlined,
+          _langKey == 'he'
+              ? 'שתף\\nמיקום'
+              : _langKey == 'ru'
+              ? 'Копировать\\nгеолок.'
+              : 'Copy\\nLocation',
+          VetoPalette.success,
+          _shareLocation),
+      _toolBtn(
+          Icons.volume_off_rounded,
+          _langKey == 'he'
+              ? 'השתק\\nקריינות'
+              : _langKey == 'ru'
+              ? 'Стоп\\nзвук'
+              : 'Mute\\nVoice',
+          VetoPalette.textMuted,
+          _stopSpeaking),
+      _toolBtn(
+          Icons.refresh_rounded,
+          _langKey == 'he'
+              ? 'חדש\\nשיחה'
+              : _langKey == 'ru'
+              ? 'Новый\\nсеанс'
+              : 'New\\nSession',
+          VetoPalette.info,
+          _resetSession),
     ],
   );
 
@@ -950,15 +999,19 @@ class _VetoScreenState extends State<VetoScreen> {
             decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: VetoPalette.border)),
-            child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+            child:
+                Column(mainAxisAlignment: MainAxisAlignment.center, children: [
               Container(
-                  width: 38, height: 38,
+                  width: 38,
+                  height: 38,
                   decoration: BoxDecoration(
-                      color: color.withValues(alpha: 0.13), shape: BoxShape.circle),
+                      color: color.withValues(alpha: 0.13),
+                      shape: BoxShape.circle),
                   child: Icon(icon, color: color, size: 18)),
               const SizedBox(height: 5),
               Text(label,
-                  style: const TextStyle(color: VetoPalette.textMuted, fontSize: 9.5),
+                  style: const TextStyle(
+                      color: VetoPalette.textMuted, fontSize: 9.5),
                   textAlign: TextAlign.center),
             ]),
           ),
@@ -967,126 +1020,171 @@ class _VetoScreenState extends State<VetoScreen> {
 
   // ── Admin Evidence Files ──────────────────────────────────
   Widget _adminSection(bool isRtl) => Column(
-    crossAxisAlignment: CrossAxisAlignment.stretch,
-    children: [
-      Row(children: [
-        const Icon(Icons.folder_open_rounded, color: VetoPalette.primary, size: 16),
-        const SizedBox(width: 6),
-        Text(
-          isRtl ? 'ראיות וקבצי שרת' : 'Server Evidence Files',
-          style: const TextStyle(color: VetoPalette.textMuted, fontSize: 12,
-              fontWeight: FontWeight.w700, letterSpacing: 0.8),
-        ),
-        const Spacer(),
-        IconButton(
-            icon: const Icon(Icons.refresh_rounded, size: 16),
-            color: VetoPalette.textMuted,
-            onPressed: _loadAdminFiles),
-      ]),
-      const SizedBox(height: 8),
-      if (_adminFilesLoading)
-        const Center(child: Padding(padding: EdgeInsets.all(16),
-            child: CircularProgressIndicator(color: VetoPalette.primary, strokeWidth: 2)))
-      else if (_adminFiles.isEmpty)
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(color: VetoPalette.surface,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: VetoPalette.border)),
-          child: Text(
-            isRtl ? 'אין אירועים עם ראיות בשרת' : 'No events with evidence on server',
-            style: const TextStyle(color: VetoPalette.textMuted),
-            textAlign: TextAlign.center,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(children: [
+          const Icon(Icons.folder_open_rounded, color: VetoPalette.primary, size: 16),
+          const SizedBox(width: 6),
+          Text(
+            isRtl ? 'ראיות וקבצי שרת' : 'Server Evidence Files',
+            style: const TextStyle(
+                color: VetoPalette.textMuted,
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 0.8),
           ),
-        )
-      else
-        Container(
-          decoration: BoxDecoration(color: VetoPalette.surface,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: VetoPalette.border)),
-          clipBehavior: Clip.antiAlias,
-          child: ListView.separated(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: _adminFiles.length > 25 ? 25 : _adminFiles.length,
-            separatorBuilder: (_, __) => const Divider(height: 1, color: VetoPalette.border),
-            itemBuilder: (_, i) {
-              final ev = _adminFiles[i];
-              final user = ev['user_id'];
-              final status = ev['status'] as String? ?? '?';
-              final evidence = (ev['evidence'] as List?) ?? [];
-              String dateStr = '';
-              try {
-                final d = DateTime.parse(ev['triggered_at']).toLocal();
-                dateStr = '${d.day}/${d.month}/${d.year}  ${d.hour.toString().padLeft(2, "0")}:${d.minute.toString().padLeft(2, "0")}';
-              } catch (_) {}
-              return Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Row(children: [
-                    Container(
-                        width: 8, height: 8,
-                        decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: status == 'active' ? VetoPalette.emergency
-                                : status == 'resolved' ? VetoPalette.success
-                                : VetoPalette.warning)),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        user is Map ? (user['full_name'] ?? user['phone'] ?? 'משתמש').toString() : 'משתמש',
-                        style: const TextStyle(color: VetoPalette.text, fontSize: 13, fontWeight: FontWeight.w600),
-                      ),
-                    ),
-                    Text(dateStr,
-                        style: const TextStyle(color: VetoPalette.textSubtle, fontSize: 11)),
-                  ]),
-                  if (evidence.isNotEmpty) ...[
-                    const SizedBox(height: 6),
-                    Wrap(
-                      spacing: 6, runSpacing: 4,
-                      children: evidence.take(6).map<Widget>((ev2) {
-                        final url = ev2['cloud_url'] as String? ?? '';
-                        final tp = ev2['type'] as String? ?? 'file';
-                        if (url.isEmpty) return const SizedBox.shrink();
-                        return GestureDetector(
-                          onTap: () => launchUrl(Uri.parse(url),
-                              mode: LaunchMode.externalApplication),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                            decoration: BoxDecoration(
-                              color: VetoPalette.primary.withValues(alpha: 0.10),
-                              borderRadius: BorderRadius.circular(6),
-                              border: Border.all(
-                                  color: VetoPalette.primary.withValues(alpha: 0.2)),
+          const Spacer(),
+          IconButton(
+              icon: const Icon(Icons.refresh_rounded, size: 16),
+              color: VetoPalette.textMuted,
+              onPressed: _loadAdminFiles),
+        ]),
+        const SizedBox(height: 8),
+        if (_adminFilesLoading)
+          const Center(
+              child: Padding(
+                  padding: EdgeInsets.all(16),
+                  child: CircularProgressIndicator(
+                      color: VetoPalette.primary, strokeWidth: 2)))
+        else if (_adminFiles.isEmpty)
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+                color: VetoPalette.surface,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: VetoPalette.border)),
+            child: Text(
+              isRtl ? 'אין אירועים עם ראיות בשרת' : 'No events with evidence on server',
+              style: const TextStyle(color: VetoPalette.textMuted),
+              textAlign: TextAlign.center,
+            ),
+          )
+        else
+          Container(
+            decoration: BoxDecoration(
+                color: VetoPalette.surface,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: VetoPalette.border)),
+            clipBehavior: Clip.antiAlias,
+            child: ListView.separated(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount:
+                  _adminFiles.length > 25 ? 25 : _adminFiles.length,
+              separatorBuilder: (_, __) =>
+                  const Divider(height: 1, color: VetoPalette.border),
+              itemBuilder: (_, i) {
+                final ev = _adminFiles[i];
+                final user = ev['user_id'];
+                final status = ev['status'] as String? ?? '?';
+                final evidence = (ev['evidence'] as List?) ?? [];
+                String dateStr = '';
+                try {
+                  final d =
+                      DateTime.parse(ev['triggered_at']).toLocal();
+                  dateStr =
+                      '\${d.day}/\${d.month}/\${d.year}  \${d.hour.toString().padLeft(2, "0")}:\${d.minute.toString().padLeft(2, "0")}';
+                } catch (_) {}
+                return Padding(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 14, vertical: 10),
+                  child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(children: [
+                          Container(
+                              width: 8,
+                              height: 8,
+                              decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: status == 'active'
+                                      ? VetoPalette.emergency
+                                      : status == 'resolved'
+                                      ? VetoPalette.success
+                                      : VetoPalette.warning)),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              user is Map
+                                  ? (user['full_name'] ??
+                                          user['phone'] ??
+                                          'משתמש')
+                                      .toString()
+                                  : 'משתמש',
+                              style: const TextStyle(
+                                  color: VetoPalette.text,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600),
                             ),
-                            child: Row(mainAxisSize: MainAxisSize.min, children: [
-                              Icon(
-                                  tp == 'photo' ? Icons.image_outlined
-                                      : tp == 'video' ? Icons.videocam_outlined
-                                      : Icons.audio_file_outlined,
-                                  size: 12, color: VetoPalette.primary),
-                              const SizedBox(width: 4),
-                              Text(tp,
-                                  style: const TextStyle(
-                                      color: VetoPalette.primary, fontSize: 10)),
-                            ]),
                           ),
-                        );
-                      }).toList(),
-                    ),
-                  ] else
-                    Text(
-                      isRtl ? 'אין ראיות מצורפות' : 'No evidence attached',
-                      style: const TextStyle(color: VetoPalette.textSubtle, fontSize: 11),
-                    ),
-                ]),
-              );
-            },
+                          Text(dateStr,
+                              style: const TextStyle(
+                                  color: VetoPalette.textSubtle,
+                                  fontSize: 11)),
+                        ]),
+                        if (evidence.isNotEmpty) ...[
+                          const SizedBox(height: 6),
+                          Wrap(
+                            spacing: 6,
+                            runSpacing: 4,
+                            children: evidence
+                                .take(6)
+                                .map<Widget>((ev2) {
+                              final url =
+                                  ev2['cloud_url'] as String? ?? '';
+                              final tp =
+                                  ev2['type'] as String? ?? 'file';
+                              if (url.isEmpty) return const SizedBox.shrink();
+                              return GestureDetector(
+                                onTap: () => launchUrl(Uri.parse(url),
+                                    mode: LaunchMode.externalApplication),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 8, vertical: 3),
+                                  decoration: BoxDecoration(
+                                    color: VetoPalette.primary
+                                        .withValues(alpha: 0.10),
+                                    borderRadius: BorderRadius.circular(6),
+                                    border: Border.all(
+                                        color: VetoPalette.primary
+                                            .withValues(alpha: 0.2)),
+                                  ),
+                                  child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(
+                                            tp == 'photo'
+                                                ? Icons.image_outlined
+                                                : tp == 'video'
+                                                ? Icons.videocam_outlined
+                                                : Icons.audio_file_outlined,
+                                            size: 12,
+                                            color: VetoPalette.primary),
+                                        const SizedBox(width: 4),
+                                        Text(tp,
+                                            style: const TextStyle(
+                                                color: VetoPalette.primary,
+                                                fontSize: 10)),
+                                      ]),
+                                ),
+                              );
+                            }).toList(),
+                          ),
+                        ] else
+                          Text(
+                            isRtl
+                                ? 'אין ראיות מצורפות'
+                                : 'No evidence attached',
+                            style: const TextStyle(
+                                color: VetoPalette.textSubtle,
+                                fontSize: 11),
+                          ),
+                      ]),
+                );
+              },
+            ),
           ),
-        ),
-    ],
-  );
+      ]);
 
   // ══════════════════════════════════════════════════════════
   // CHAT TAB
@@ -1107,10 +1205,12 @@ class _VetoScreenState extends State<VetoScreen> {
               decoration: BoxDecoration(
                 color: VetoPalette.emergency.withValues(alpha: 0.10),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: VetoPalette.emergency.withValues(alpha: 0.3)),
+                border: Border.all(
+                    color: VetoPalette.emergency.withValues(alpha: 0.3)),
               ),
               child: Text(msg.text,
-                  style: const TextStyle(color: VetoPalette.text, fontSize: 14, height: 1.5),
+                  style: const TextStyle(
+                      color: VetoPalette.text, fontSize: 14, height: 1.5),
                   textAlign: TextAlign.center),
             );
           }
@@ -1120,10 +1220,14 @@ class _VetoScreenState extends State<VetoScreen> {
                 : (isRtl ? Alignment.centerLeft : Alignment.centerRight),
             child: Container(
               margin: const EdgeInsets.symmetric(vertical: 4),
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-              constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.75),
+              padding: const EdgeInsets.symmetric(
+                  horizontal: 14, vertical: 10),
+              constraints: BoxConstraints(
+                  maxWidth: MediaQuery.of(context).size.width * 0.75),
               decoration: BoxDecoration(
-                color: msg.isUser ? VetoPalette.surface : VetoPalette.success.withValues(alpha: 0.12),
+                color: msg.isUser
+                    ? VetoPalette.surface
+                    : VetoPalette.success.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.only(
                   topLeft: const Radius.circular(16),
                   topRight: const Radius.circular(16),
@@ -1131,10 +1235,13 @@ class _VetoScreenState extends State<VetoScreen> {
                   bottomRight: Radius.circular(msg.isUser ? 16 : 4),
                 ),
                 border: Border.all(
-                    color: msg.isUser ? VetoPalette.border : VetoPalette.success.withValues(alpha: 0.3)),
+                    color: msg.isUser
+                        ? VetoPalette.border
+                        : VetoPalette.success.withValues(alpha: 0.3)),
               ),
               child: Text(msg.text,
-                  style: const TextStyle(color: VetoPalette.text, fontSize: 14, height: 1.4)),
+                  style: const TextStyle(
+                      color: VetoPalette.text, fontSize: 14, height: 1.4)),
             ),
           );
         },
@@ -1159,10 +1266,12 @@ class _VetoScreenState extends State<VetoScreen> {
             width: 36,
             child: LinearProgressIndicator(
                 backgroundColor: VetoPalette.border,
-                valueColor: AlwaysStoppedAnimation(VetoPalette.success))),
+                valueColor:
+                    AlwaysStoppedAnimation(VetoPalette.success))),
         const SizedBox(width: 8),
         Text(_l.processing,
-            style: const TextStyle(color: VetoPalette.textMuted, fontSize: 12)),
+            style: const TextStyle(
+                color: VetoPalette.textMuted, fontSize: 12)),
       ]),
     ),
   );
@@ -1177,9 +1286,13 @@ class _VetoScreenState extends State<VetoScreen> {
           width: 44, height: 44,
           decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: _isListening ? VetoPalette.emergency : VetoPalette.surface,
+              color: _isListening
+                  ? VetoPalette.emergency
+                  : VetoPalette.surface,
               border: Border.all(
-                  color: _isListening ? VetoPalette.emergency : VetoPalette.border)),
+                  color: _isListening
+                      ? VetoPalette.emergency
+                      : VetoPalette.border)),
           child: Icon(
               _isListening ? Icons.mic : Icons.mic_none_rounded,
               color: _isListening ? Colors.white : VetoPalette.textMuted,
@@ -1195,19 +1308,24 @@ class _VetoScreenState extends State<VetoScreen> {
           style: const TextStyle(color: VetoPalette.text, fontSize: 14),
           decoration: InputDecoration(
             hintText: _isDispatching ? _l.dispatching : _l.hint,
-            hintStyle: const TextStyle(color: VetoPalette.textMuted),
+            hintStyle:
+                const TextStyle(color: VetoPalette.textMuted),
             filled: true,
             fillColor: VetoPalette.surface,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16, vertical: 12),
             border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(24),
-                borderSide: const BorderSide(color: VetoPalette.border)),
+                borderSide:
+                    const BorderSide(color: VetoPalette.border)),
             enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(24),
-                borderSide: const BorderSide(color: VetoPalette.border)),
+                borderSide:
+                    const BorderSide(color: VetoPalette.border)),
             focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(24),
-                borderSide: const BorderSide(color: VetoPalette.success)),
+                borderSide:
+                    const BorderSide(color: VetoPalette.success)),
           ),
           onSubmitted: _send,
           textInputAction: TextInputAction.send,
@@ -1220,8 +1338,11 @@ class _VetoScreenState extends State<VetoScreen> {
           width: 44, height: 44,
           decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: (_isLoading || _isDispatching) ? VetoPalette.border : VetoPalette.success),
-          child: const Icon(Icons.send_rounded, color: Colors.white, size: 20),
+              color: (_isLoading || _isDispatching)
+                  ? VetoPalette.border
+                  : VetoPalette.success),
+          child: const Icon(Icons.send_rounded,
+              color: Colors.white, size: 20),
         ),
       ),
     ]),
@@ -1247,7 +1368,8 @@ class _VetoScreenState extends State<VetoScreen> {
         onTap: onTap,
         child: Column(children: [
           Container(
-              width: 52, height: 52,
+              width: 52,
+              height: 52,
               decoration: BoxDecoration(
                   color: VetoPalette.surface,
                   shape: BoxShape.circle,
@@ -1255,17 +1377,21 @@ class _VetoScreenState extends State<VetoScreen> {
               child: Icon(icon, color: VetoPalette.textMuted, size: 22)),
           const SizedBox(height: 4),
           Text(label,
-              style: const TextStyle(color: VetoPalette.textSubtle, fontSize: 11)),
+              style: const TextStyle(
+                  color: VetoPalette.textSubtle, fontSize: 11)),
         ]),
       );
 }
 
 // ══════════════════════════════════════════════════════════════
-//  _ContactSheet — WhatsApp / Telegram / Video chooser
+//  _ContactSheet — WhatsApp / Telegram / Video Chooser
 // ══════════════════════════════════════════════════════════════
 class _ContactSheet extends StatefulWidget {
   final String type, langKey, scenarioLabel;
-  const _ContactSheet({required this.type, required this.langKey, required this.scenarioLabel});
+  const _ContactSheet(
+      {required this.type,
+      required this.langKey,
+      required this.scenarioLabel});
   @override
   State<_ContactSheet> createState() => _ContactSheetState();
 }
@@ -1279,10 +1405,10 @@ class _ContactSheetState extends State<_ContactSheet> {
 
   String _buildMsg() {
     if (widget.langKey == 'he')
-      return 'שלום, אני זקוק לסיוע משפטי דחוף — ${widget.scenarioLabel}. אנא פנה אליי בהקדם.';
+      return 'שלום, אני זקוק לסיוע משפטי דחוף — \${widget.scenarioLabel}. אנא פנה אליי בהקדם.';
     if (widget.langKey == 'ru')
-      return 'Здравствуйте, мне нужна срочная юридическая помощь — ${widget.scenarioLabel}.';
-    return 'Hello, I need urgent legal assistance regarding: ${widget.scenarioLabel}. Please contact me immediately.';
+      return 'Здравствуйте, мне нужна срочная юридическая помощь — \${widget.scenarioLabel}.';
+    return 'Hello, I need urgent legal assistance regarding: \${widget.scenarioLabel}. Please contact me immediately.';
   }
 
   Future<void> _go() async {
@@ -1291,17 +1417,17 @@ class _ContactSheetState extends State<_ContactSheet> {
     try {
       Uri uri;
       if (widget.type == 'whatsapp') {
-        final p = t.replaceAll(RegExp(r'[^\d+]'), '');
-        uri = Uri.parse('https://wa.me/$p?text=${Uri.encodeComponent(_buildMsg())}');
+        final p = t.replaceAll(RegExp(r'[^\\d+]'), '');
+        uri = Uri.parse('https://wa.me/\$p?text=\${Uri.encodeComponent(_buildMsg())}');
       } else if (widget.type == 'telegram') {
         if (t.startsWith('@')) {
-          uri = Uri.parse('https://t.me/${t.substring(1)}');
+          uri = Uri.parse('https://t.me/\${t.substring(1)}');
         } else {
-          final p = t.replaceAll(RegExp(r'[^\d+]'), '');
-          uri = Uri.parse('https://t.me/$p');
+          final p = t.replaceAll(RegExp(r'[^\\d+]'), '');
+          uri = Uri.parse('https://t.me/\$p');
         }
       } else {
-        uri = Uri.parse(t.startsWith('http') ? t : 'https://$t');
+        uri = Uri.parse(t.startsWith('http') ? t : 'https://\$t');
       }
       await launchUrl(uri, mode: LaunchMode.externalApplication);
       if (mounted) Navigator.pop(context);
@@ -1316,14 +1442,20 @@ class _ContactSheetState extends State<_ContactSheet> {
   @override
   Widget build(BuildContext context) {
     final isRtl = widget.langKey == 'he';
-    final Color accent = widget.type == 'whatsapp' ? const Color(0xFF25D366)
-        : widget.type == 'telegram' ? const Color(0xFF229ED9)
+    final Color accent = widget.type == 'whatsapp'
+        ? const Color(0xFF25D366)
+        : widget.type == 'telegram'
+        ? const Color(0xFF229ED9)
         : const Color(0xFF8B5CF6);
-    final String title = widget.type == 'whatsapp' ? 'WhatsApp'
-        : widget.type == 'telegram' ? 'Telegram'
+    final String title = widget.type == 'whatsapp'
+        ? 'WhatsApp'
+        : widget.type == 'telegram'
+        ? 'Telegram'
         : (isRtl ? 'שיחת וידאו' : 'Video Call');
-    final String hintText = widget.type == 'whatsapp' ? '+972XXXXXXXXX'
-        : widget.type == 'telegram' ? '@username'
+    final String hintText = widget.type == 'whatsapp'
+        ? '+972XXXXXXXXX'
+        : widget.type == 'telegram'
+        ? '@username'
         : 'https://zoom.us/j/...';
     final String labelText = widget.type == 'video'
         ? (isRtl ? 'קישור לשיחה' : 'Call link')
@@ -1334,85 +1466,104 @@ class _ContactSheetState extends State<_ContactSheet> {
       child: Padding(
         padding: EdgeInsets.only(
             bottom: MediaQuery.of(context).viewInsets.bottom + 20,
-            top: 20, left: 20, right: 20),
+            top: 20,
+            left: 20,
+            right: 20),
         child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(children: [
-              Container(
-                  width: 36, height: 36,
-                  decoration: BoxDecoration(
-                      color: accent.withValues(alpha: 0.15), shape: BoxShape.circle),
-                  child: Icon(
-                      widget.type == 'whatsapp' ? Icons.chat_rounded
-                          : widget.type == 'telegram' ? Icons.send_rounded
-                          : Icons.videocam_rounded,
-                      color: accent, size: 18)),
-              const SizedBox(width: 10),
-              Text(title, style: const TextStyle(
-                  color: VetoPalette.text, fontSize: 18, fontWeight: FontWeight.w700)),
-              const Spacer(),
-              IconButton(
-                  icon: const Icon(Icons.close),
-                  color: VetoPalette.textMuted,
-                  onPressed: () => Navigator.pop(context)),
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(children: [
+                Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                        color: accent.withValues(alpha: 0.15),
+                        shape: BoxShape.circle),
+                    child: Icon(
+                        widget.type == 'whatsapp'
+                            ? Icons.chat_rounded
+                            : widget.type == 'telegram'
+                            ? Icons.send_rounded
+                            : Icons.videocam_rounded,
+                        color: accent,
+                        size: 18)),
+                const SizedBox(width: 10),
+                Text(title,
+                    style: const TextStyle(
+                        color: VetoPalette.text,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700)),
+                const Spacer(),
+                IconButton(
+                    icon: const Icon(Icons.close),
+                    color: VetoPalette.textMuted,
+                    onPressed: () => Navigator.pop(context)),
+              ]),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _ctrl,
+                textDirection: TextDirection.ltr,
+                style: const TextStyle(color: VetoPalette.text),
+                decoration: InputDecoration(
+                  labelText: labelText,
+                  labelStyle:
+                      const TextStyle(color: VetoPalette.textMuted),
+                  hintText: hintText,
+                  hintStyle:
+                      const TextStyle(color: VetoPalette.textSubtle),
+                  filled: true,
+                  fillColor: VetoPalette.bg,
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide:
+                          const BorderSide(color: VetoPalette.border)),
+                  enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide:
+                          const BorderSide(color: VetoPalette.border)),
+                ),
+                onChanged: (_) => setState(() {}),
+              ),
+              const SizedBox(height: 12),
+              ListenableBuilder(
+                listenable: _ctrl,
+                builder: (_, __) => FilledButton.icon(
+                  onPressed: _busy || _ctrl.text.trim().isEmpty ? null : _go,
+                  style: FilledButton.styleFrom(
+                      backgroundColor: accent,
+                      padding:
+                          const EdgeInsets.symmetric(vertical: 14)),
+                  icon: _busy
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(
+                              strokeWidth: 2, color: Colors.white))
+                      : const Icon(Icons.open_in_new, size: 18),
+                  label: Text(isRtl ? 'פתח' : 'Open',
+                      style: const TextStyle(fontWeight: FontWeight.w700)),
+                ),
+              ),
+              if (widget.type != 'video') ...[
+                const SizedBox(height: 4),
+                TextButton(
+                  onPressed: () => setState(() => _ctrl.text = '+972'),
+                  child: Text(
+                      isRtl ? '▼ ישראל +972...' : '▼ Israel +972...',
+                      style: const TextStyle(
+                          color: VetoPalette.textMuted, fontSize: 12)),
+                ),
+              ],
+              const SizedBox(height: 8),
             ]),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _ctrl,
-              textDirection: TextDirection.ltr,
-              style: const TextStyle(color: VetoPalette.text),
-              decoration: InputDecoration(
-                labelText: labelText,
-                labelStyle: const TextStyle(color: VetoPalette.textMuted),
-                hintText: hintText,
-                hintStyle: const TextStyle(color: VetoPalette.textSubtle),
-                filled: true,
-                fillColor: VetoPalette.bg,
-                border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    borderSide: const BorderSide(color: VetoPalette.border)),
-                enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    borderSide: const BorderSide(color: VetoPalette.border)),
-              ),
-              onChanged: (_) => setState(() {}),
-            ),
-            const SizedBox(height: 12),
-            ListenableBuilder(
-              listenable: _ctrl,
-              builder: (_, __) => FilledButton.icon(
-                onPressed: _busy || _ctrl.text.trim().isEmpty ? null : _go,
-                style: FilledButton.styleFrom(
-                    backgroundColor: accent,
-                    padding: const EdgeInsets.symmetric(vertical: 14)),
-                icon: _busy
-                    ? const SizedBox(width: 16, height: 16,
-                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                    : const Icon(Icons.open_in_new, size: 18),
-                label: Text(isRtl ? 'פתח' : 'Open',
-                    style: const TextStyle(fontWeight: FontWeight.w700)),
-              ),
-            ),
-            if (widget.type != 'video') ...[
-              const SizedBox(height: 4),
-              TextButton(
-                onPressed: () => setState(() => _ctrl.text = '+972'),
-                child: Text(isRtl ? '▼ ישראל +972...' : '▼ Israel +972...',
-                    style: const TextStyle(color: VetoPalette.textMuted, fontSize: 12)),
-              ),
-            ],
-            const SizedBox(height: 8),
-          ],
-        ),
       ),
     );
   }
 }
 
 // ══════════════════════════════════════════════════════════════
-//  _PaymentDialog — Step 1: open PayPal tab
+//  _PaymentDialog — Step 1: confirm charge + open PayPal tab
 // ══════════════════════════════════════════════════════════════
 class _PaymentDialog extends StatefulWidget {
   final String? spec;
@@ -1433,24 +1584,32 @@ class _PaymentDialogState extends State<_PaymentDialog> {
         Icon(Icons.paypal_rounded, color: Color(0xFF009CDE), size: 24),
         SizedBox(width: 10),
         Text('תשלום עם PayPal',
-            style: TextStyle(color: Color(0xFFF1F5F9), fontWeight: FontWeight.w700, fontSize: 16)),
+            style: TextStyle(
+                color: Color(0xFFF1F5F9),
+                fontWeight: FontWeight.w700,
+                fontSize: 16)),
       ]),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text('ייעוץ עורך דין 15 דקות',
-              style: TextStyle(color: Color(0xFFF1F5F9), fontWeight: FontWeight.w600, fontSize: 14)),
+              style: TextStyle(
+                  color: Color(0xFFF1F5F9),
+                  fontWeight: FontWeight.w600,
+                  fontSize: 14)),
           const SizedBox(height: 4),
-          const Text('₪50 (≈ \$13.90 USD) — חיוב חד-פעמי',
-              style: TextStyle(color: Color(0xFF94A3B8), fontSize: 13)),
+          const Text('₪50 (≈ \\$13.90 USD) — חיוב חד-פעמי',
+              style: TextStyle(
+                  color: Color(0xFF94A3B8), fontSize: 13)),
           const SizedBox(height: 12),
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
               color: const Color(0xFFEF4444).withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: const Color(0xFFEF4444).withValues(alpha: 0.2)),
+              border: Border.all(
+                  color: const Color(0xFFEF4444).withValues(alpha: 0.2)),
             ),
             child: const Text('לא ניתן לבטל לאחר תשלום.',
                 style: TextStyle(color: Color(0xFFEF4444), fontSize: 12)),
@@ -1460,17 +1619,22 @@ class _PaymentDialogState extends State<_PaymentDialog> {
       actions: [
         TextButton(
           onPressed: _loading ? null : () => Navigator.pop(context, null),
-          child: const Text('ביטול', style: TextStyle(color: Color(0xFF64748B))),
+          child: const Text('ביטול',
+              style: TextStyle(color: Color(0xFF64748B))),
         ),
         ElevatedButton.icon(
           style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF009CDE),
               foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8))),
           onPressed: _loading ? null : _openPayPal,
           icon: _loading
-              ? const SizedBox(width: 16, height: 16,
-                  child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+              ? const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(
+                      strokeWidth: 2, color: Colors.white))
               : const Icon(Icons.open_in_new, size: 16),
           label: Text(_loading ? 'פותח...' : 'שלם עם PayPal'),
         ),
@@ -1480,12 +1644,13 @@ class _PaymentDialogState extends State<_PaymentDialog> {
 
   Future<void> _openPayPal() async {
     setState(() => _loading = true);
-    final orderId = await PaymentService.createAndOpenOrder(PaymentType.consultation);
+    final orderId =
+        await PaymentService.createAndOpenOrder(PaymentType.consultation);
     if (!mounted) return;
     if (orderId == null) {
       setState(() => _loading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('שגיאה ביצירת הזמנת PayPal. נסה שוב.')));
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('שגיאה ביצירת הזמנת PayPal. נסה שוב.')));
       return;
     }
     Navigator.pop(context, orderId);
@@ -1493,7 +1658,7 @@ class _PaymentDialogState extends State<_PaymentDialog> {
 }
 
 // ══════════════════════════════════════════════════════════════
-//  _CaptureDialog — Step 2: confirm payment
+//  _CaptureDialog — Step 2: wait for PayPal tab confirmation
 // ══════════════════════════════════════════════════════════════
 class _CaptureDialog extends StatefulWidget {
   final String orderId;
@@ -1512,37 +1677,50 @@ class _CaptureDialogState extends State<_CaptureDialog> {
       backgroundColor: const Color(0xFF1E293B),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       title: const Row(children: [
-        Icon(Icons.hourglass_top_rounded, color: Color(0xFFF59E0B), size: 22),
+        Icon(Icons.hourglass_top_rounded,
+            color: Color(0xFFF59E0B), size: 22),
         SizedBox(width: 10),
         Text('אשר את התשלום',
-            style: TextStyle(color: Color(0xFFF1F5F9), fontWeight: FontWeight.w700, fontSize: 16)),
+            style: TextStyle(
+                color: Color(0xFFF1F5F9),
+                fontWeight: FontWeight.w700,
+                fontSize: 16)),
       ]),
       content: Column(mainAxisSize: MainAxisSize.min, children: [
         const Text(
-            'PayPal נפתח בטאב חדש.\nלאחר אישור התשלום שם — חזור לכאן ולחץ "שילמתי".',
-            style: TextStyle(color: Color(0xFF94A3B8), height: 1.6, fontSize: 13),
+            'PayPal נפתח בטאב חדש.\\nלאחר אישור התשלום שם — חזור לכאן ולחץ "שילמתי".',
+            style: TextStyle(
+                color: Color(0xFF94A3B8), height: 1.6, fontSize: 13),
             textAlign: TextAlign.center),
         if (_error != null) ...[
           const SizedBox(height: 10),
           Text(_error!,
-              style: const TextStyle(color: Color(0xFFEF4444), fontSize: 12)),
+              style: const TextStyle(
+                  color: Color(0xFFEF4444), fontSize: 12)),
         ],
       ]),
       actions: [
         TextButton(
-          onPressed: _capturing ? null : () => Navigator.pop(context, false),
-          child: const Text('ביטול', style: TextStyle(color: Color(0xFF64748B))),
+          onPressed:
+              _capturing ? null : () => Navigator.pop(context, false),
+          child: const Text('ביטול',
+              style: TextStyle(color: Color(0xFF64748B))),
         ),
         ElevatedButton(
           style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF22C55E),
               foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8))),
           onPressed: _capturing ? null : _capture,
           child: _capturing
-              ? const SizedBox(width: 16, height: 16,
-                  child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-              : const Text('שילמתי ✓', style: TextStyle(fontWeight: FontWeight.w700)),
+              ? const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(
+                      strokeWidth: 2, color: Colors.white))
+              : const Text('שילמתי ✓',
+                  style: TextStyle(fontWeight: FontWeight.w700)),
         ),
       ],
     );
@@ -1559,7 +1737,7 @@ class _CaptureDialogState extends State<_CaptureDialog> {
       setState(() {
         _capturing = false;
         _error = result.error != null
-            ? 'שגיאה: ${result.error}'
+            ? 'שגיאה: \${result.error}'
             : 'התשלום לא הושלם. נסה שוב לאחר אישור ב-PayPal.';
       });
     }
@@ -1572,7 +1750,8 @@ class _CaptureDialogState extends State<_CaptureDialog> {
 class _SubscriptionGateDialog extends StatefulWidget {
   const _SubscriptionGateDialog();
   @override
-  State<_SubscriptionGateDialog> createState() => _SubscriptionGateDialogState();
+  State<_SubscriptionGateDialog> createState() =>
+      _SubscriptionGateDialogState();
 }
 
 class _SubscriptionGateDialogState extends State<_SubscriptionGateDialog> {
@@ -1583,15 +1762,19 @@ class _SubscriptionGateDialogState extends State<_SubscriptionGateDialog> {
   Future<void> _openPayPal() async {
     setState(() { _loading = true; _error = null; });
     try {
-      final orderId = await PaymentService.createAndOpenOrder(PaymentType.subscription);
+      final orderId =
+          await PaymentService.createAndOpenOrder(PaymentType.subscription);
       if (!mounted) return;
       if (orderId == null) {
-        setState(() { _loading = false; _error = 'לא ניתן לפתוח את PayPal. נסה שוב.'; });
+        setState(() {
+          _loading = false;
+          _error = 'לא ניתן לפתוח את PayPal. נסה שוב.';
+        });
         return;
       }
       setState(() { _loading = false; _orderId = orderId; });
     } catch (e) {
-      if (mounted) setState(() { _loading = false; _error = 'שגיאה: $e'; });
+      if (mounted) setState(() { _loading = false; _error = 'שגיאה: \$e'; });
     }
   }
 
@@ -1600,13 +1783,18 @@ class _SubscriptionGateDialogState extends State<_SubscriptionGateDialog> {
     setState(() { _loading = true; _error = null; });
     final phone = await AuthService().getStoredPhone();
     final result = await PaymentService.captureOrder(
-        orderId: _orderId!, type: PaymentType.subscription, userId: phone);
+        orderId: _orderId!,
+        type: PaymentType.subscription,
+        userId: phone);
     if (!mounted) return;
     if (result.success) {
       await AuthService().setSubscribed(true);
       Navigator.of(context).pop(true);
     } else {
-      setState(() { _loading = false; _error = result.error ?? 'התשלום לא אושר.'; });
+      setState(() {
+        _loading = false;
+        _error = result.error ?? 'התשלום לא אושר.';
+      });
     }
   }
 
@@ -1616,87 +1804,126 @@ class _SubscriptionGateDialogState extends State<_SubscriptionGateDialog> {
       textDirection: TextDirection.rtl,
       child: AlertDialog(
         backgroundColor: const Color(0xFF1E293B),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape:
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Row(children: [
           Icon(Icons.lock_outline, color: Color(0xFF3B82F6)),
           SizedBox(width: 10),
-          Text('נדרש מנוי', style: TextStyle(color: Colors.white, fontSize: 18)),
+          Text('נדרש מנוי',
+              style: TextStyle(color: Colors.white, fontSize: 18)),
         ]),
         content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('כדי להשתמש ב-VETO נדרש מנוי חודשי.',
-                style: TextStyle(color: Color(0xFF94A3B8), fontSize: 14)),
-            const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                color: const Color(0xFF0F172A),
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: const Color(0xFF3B82F6).withValues(alpha: 0.4)),
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('כדי להשתמש ב-VETO נדרש מנוי חודשי.',
+                  style: TextStyle(
+                      color: Color(0xFF94A3B8), fontSize: 14)),
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF0F172A),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                      color: const Color(0xFF3B82F6)
+                          .withValues(alpha: 0.4)),
+                ),
+                child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('מנוי חודשי',
+                          style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 15)),
+                      const SizedBox(height: 6),
+                      const Row(children: [
+                        Text('₪19.90',
+                            style: TextStyle(
+                                color: Color(0xFF22C55E),
+                                fontWeight: FontWeight.w800,
+                                fontSize: 22)),
+                        SizedBox(width: 6),
+                        Text('/ חודש  (USD \\$5.50)',
+                            style: TextStyle(
+                                color: Color(0xFF94A3B8),
+                                fontSize: 13)),
+                      ]),
+                      const SizedBox(height: 8),
+                      const Text('✓ ייעוץ AI משפטי ללא הגבלה',
+                          style: TextStyle(
+                              color: Color(0xFF94A3B8),
+                              fontSize: 12)),
+                      const Text('✓ הזמנת עורך דין חרום (₪50 נוסף)',
+                          style: TextStyle(
+                              color: Color(0xFF94A3B8),
+                              fontSize: 12)),
+                    ]),
               ),
-              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                const Text('מנוי חודשי',
-                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
-                const SizedBox(height: 6),
-                const Row(children: [
-                  Text('₪19.90',
-                      style: TextStyle(color: Color(0xFF22C55E), fontWeight: FontWeight.w800, fontSize: 22)),
-                  SizedBox(width: 6),
-                  Text('/ חודש  (USD \$5.50)',
-                      style: TextStyle(color: Color(0xFF94A3B8), fontSize: 13)),
-                ]),
-                const SizedBox(height: 8),
-                const Text('✓ ייעוץ AI משפטי ללא הגבלה',
-                    style: TextStyle(color: Color(0xFF94A3B8), fontSize: 12)),
-                const Text('✓ הזמנת עורך דין חרום (₪50 נוסף)',
-                    style: TextStyle(color: Color(0xFF94A3B8), fontSize: 12)),
-              ]),
-            ),
-            if (_error != null) ...[
-              const SizedBox(height: 10),
-              Text(_error!, style: const TextStyle(color: Color(0xFFEF4444), fontSize: 12)),
-            ],
-          ],
-        ),
+              if (_error != null) ...[
+                const SizedBox(height: 10),
+                Text(_error!,
+                    style: const TextStyle(
+                        color: Color(0xFFEF4444), fontSize: 12)),
+              ],
+            ]),
         actions: _orderId == null
             ? [
                 TextButton(
                   onPressed: () => Navigator.of(context).pop(false),
-                  child: const Text('לאחר מכן', style: TextStyle(color: Color(0xFF64748B))),
+                  child: const Text('לאחר מכן',
+                      style: TextStyle(color: Color(0xFF64748B))),
                 ),
                 ElevatedButton.icon(
                   style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF009CDE),
                       foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8))),
                   onPressed: _loading ? null : _openPayPal,
                   icon: _loading
-                      ? const SizedBox(width: 16, height: 16,
-                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(
+                              strokeWidth: 2, color: Colors.white))
                       : const Icon(Icons.paypal_rounded, size: 18),
-                  label: Text(_loading ? 'פותח...' : 'שלם עם PayPal'),
+                  label:
+                      Text(_loading ? 'פותח...' : 'שלם עם PayPal'),
                 ),
               ]
             : [
                 TextButton(
                   onPressed: () => Navigator.of(context).pop(false),
-                  child: const Text('ביטול', style: TextStyle(color: Color(0xFF64748B))),
+                  child: const Text('ביטול',
+                      style: TextStyle(color: Color(0xFF64748B))),
                 ),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF22C55E),
                       foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8))),
                   onPressed: _loading ? null : _confirmPayment,
                   child: _loading
-                      ? const SizedBox(width: 16, height: 16,
-                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                      : const Text('שילמתי ✓', style: TextStyle(fontWeight: FontWeight.w700)),
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(
+                              strokeWidth: 2, color: Colors.white))
+                      : const Text('שילמתי ✓',
+                          style:
+                              TextStyle(fontWeight: FontWeight.w700)),
                 ),
               ],
       ),
     );
   }
 }
+"""
+
+path = r'C:\\Users\\User\\Desktop\\VETO_App\\frontend\\lib\\screens\\VetoScreen.dart'
+with open(path, 'w', encoding='utf-8') as f:
+    f.write(DART)
+print('VetoScreen.dart written successfully (' + str(len(DART)) + ' chars)')

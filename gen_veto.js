@@ -1,4 +1,8 @@
-// ============================================================
+
+// gen_veto.js — generates the new wizard-style VetoScreen.dart
+const fs = require('fs');
+
+const DART = `// ============================================================
 //  VetoScreen.dart — Legal Shield Wizard Interface
 //  Attorney Shield-inspired: scenarios, rights, WhatsApp/Telegram,
 //  admin evidence browser, dual-tab (Wizard + AI Chat)
@@ -32,7 +36,7 @@ class _SD {
 
 const Map<_Scenario, _SD> _sdMap = {
   _Scenario.traffic: _SD(
-    emoji: '\u{1F697}',
+    emoji: '\\u{1F697}',
     he: 'עצירת תנועה',
     ru: 'Остановка авто',
     en: 'Traffic Stop',
@@ -59,7 +63,7 @@ const Map<_Scenario, _SD> _sdMap = {
     ],
   ),
   _Scenario.interrogation: _SD(
-    emoji: '\u{1F46E}',
+    emoji: '\\u{1F46E}',
     he: 'חקירת משטרה',
     ru: 'Допрос',
     en: 'Police Questioning',
@@ -86,7 +90,7 @@ const Map<_Scenario, _SD> _sdMap = {
     ],
   ),
   _Scenario.arrest: _SD(
-    emoji: '\u26D3',
+    emoji: '\\u26D3',
     he: 'מעצר',
     ru: 'Арест',
     en: 'Arrest',
@@ -113,7 +117,7 @@ const Map<_Scenario, _SD> _sdMap = {
     ],
   ),
   _Scenario.accident: _SD(
-    emoji: '\u{1F691}',
+    emoji: '\\u{1F691}',
     he: 'תאונה',
     ru: 'ДТП',
     en: 'Accident',
@@ -140,7 +144,7 @@ const Map<_Scenario, _SD> _sdMap = {
     ],
   ),
   _Scenario.other: _SD(
-    emoji: '\u2696',
+    emoji: '\\u2696',
     he: 'אחר',
     ru: 'Другое',
     en: 'Other',
@@ -179,7 +183,7 @@ class _LL {
 const Map<String, _LL> _langs = {
   'he': _LL(
     label: 'עברית', code: 'he-IL',
-    greeting: 'שלום! אני העוזר המשפטי של VETO.\nתאר את הבעיה המשפטית שלך ואמצא עבורך עורך דין זמין.',
+    greeting: 'שלום! אני העוזר המשפטי של VETO.\\nתאר את הבעיה המשפטית שלך ואמצא עבורך עורך דין זמין.',
     hint: 'תאר את הבעיה...',
     processing: 'מעבד...',
     dispatching: 'בתהליך שיגור...',
@@ -188,7 +192,7 @@ const Map<String, _LL> _langs = {
   ),
   'ru': _LL(
     label: 'Русский', code: 'ru-RU',
-    greeting: 'Здравствуйте! Я юридический помощник VETO.\nОпишите вашу проблему — я найду адвоката.',
+    greeting: 'Здравствуйте! Я юридический помощник VETO.\\nОпишите вашу проблему — я найду адвоката.',
     hint: 'Опишите проблему...',
     processing: 'Обработка...',
     dispatching: 'Отправка...',
@@ -197,7 +201,7 @@ const Map<String, _LL> _langs = {
   ),
   'en': _LL(
     label: 'English', code: 'en-US',
-    greeting: "Hello! I'm the VETO legal assistant.\nDescribe your legal issue and I'll find you an available lawyer.",
+    greeting: "Hello! I'm the VETO legal assistant.\\nDescribe your legal issue and I'll find you an available lawyer.",
     hint: 'Describe your issue...',
     processing: 'Processing...',
     dispatching: 'Dispatching...',
@@ -269,12 +273,14 @@ class _VetoScreenState extends State<VetoScreen> {
     if (isPaymentExempt) return;
     final isSubscribed = await AuthService().getStoredIsSubscribed();
     if (!isSubscribed && mounted) {
-      await showDialog<bool>(
+      final ok = await showDialog<bool>(
         context: context,
         barrierDismissible: false,
         builder: (_) => const _SubscriptionGateDialog(),
       );
-      // User dismissed — stay on screen with limited access (no redirect to login)
+      if (ok != true && mounted) {
+        Navigator.of(context).pushReplacementNamed('/login');
+      }
     }
   }
 
@@ -386,10 +392,10 @@ class _VetoScreenState extends State<VetoScreen> {
     final specLabel = spec ?? '';
     final msg = lawyerName != null
         ? ('🔔 ' + (_langKey == 'he'
-            ? 'מחפש עורך דין בתחום $specLabel...\n$lawyerName ייצור איתך קשר.'
+            ? 'מחפש עורך דין בתחום \$specLabel...\\n\$lawyerName ייצור איתך קשר.'
             : _langKey == 'ru'
-            ? 'Ищу адвоката по $specLabel...\n$lawyerName свяжется с вами.'
-            : 'Searching $specLabel lawyer...\n$lawyerName will contact you.'))
+            ? 'Ищу адвоката по \$specLabel...\\n\$lawyerName свяжется с вами.'
+            : 'Searching \$specLabel lawyer...\\n\$lawyerName will contact you.'))
         : ('🔔 ' + (_langKey == 'he'
             ? 'מחפש עורך דין זמין...'
             : _langKey == 'ru'
@@ -477,7 +483,7 @@ class _VetoScreenState extends State<VetoScreen> {
     if (!mounted) return;
     final lat = pos?.latitude ?? 32.08;
     final lng = pos?.longitude ?? 34.78;
-    await Clipboard.setData(ClipboardData(text: 'https://maps.google.com/?q=${lat},${lng}'));
+    await Clipboard.setData(ClipboardData(text: 'https://maps.google.com/?q=\${lat},\${lng}'));
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       content: Text(_langKey == 'he'
@@ -815,9 +821,9 @@ class _VetoScreenState extends State<VetoScreen> {
             const SizedBox(width: 8),
             Expanded(
               child: Text(
-                _langKey == 'he' ? 'הזכויות שלך — $_sLabel'
-                    : _langKey == 'ru' ? 'Ваши права — $_sLabel'
-                    : 'Your Rights — $_sLabel',
+                _langKey == 'he' ? 'הזכויות שלך — \$_sLabel'
+                    : _langKey == 'ru' ? 'Ваши права — \$_sLabel'
+                    : 'Your Rights — \$_sLabel',
                 style: const TextStyle(
                     color: VetoPalette.text, fontWeight: FontWeight.w600, fontSize: 14),
               ),
@@ -916,24 +922,24 @@ class _VetoScreenState extends State<VetoScreen> {
     mainAxisSpacing: 10,
     children: [
       _toolBtn(Icons.camera_alt_outlined,
-          _langKey == 'he' ? 'תיעוד\nראיות'
-              : _langKey == 'ru' ? 'Запись\nдоказ.'
-              : 'Evidence\nRecord',
+          _langKey == 'he' ? 'תיעוד\\nראיות'
+              : _langKey == 'ru' ? 'Запись\\nдоказ.'
+              : 'Evidence\\nRecord',
           VetoPalette.warning, _openCamera),
       _toolBtn(Icons.location_on_outlined,
-          _langKey == 'he' ? 'שתף\nמיקום'
-              : _langKey == 'ru' ? 'Копировать\nгео'
-              : 'Copy\nLocation',
+          _langKey == 'he' ? 'שתף\\nמיקום'
+              : _langKey == 'ru' ? 'Копировать\\nгео'
+              : 'Copy\\nLocation',
           VetoPalette.success, _shareLocation),
       _toolBtn(Icons.volume_off_rounded,
-          _langKey == 'he' ? 'השתק\nקריינות'
-              : _langKey == 'ru' ? 'Стоп\nзвук'
-              : 'Mute\nVoice',
+          _langKey == 'he' ? 'השתק\\nקריינות'
+              : _langKey == 'ru' ? 'Стоп\\nзвук'
+              : 'Mute\\nVoice',
           VetoPalette.textMuted, _stopSpeaking),
       _toolBtn(Icons.refresh_rounded,
-          _langKey == 'he' ? 'חדש\nשיחה'
-              : _langKey == 'ru' ? 'Новый\nсеанс'
-              : 'New\nSession',
+          _langKey == 'he' ? 'חדש\\nשיחה'
+              : _langKey == 'ru' ? 'Новый\\nсеанс'
+              : 'New\\nSession',
           VetoPalette.info, _resetSession),
     ],
   );
@@ -1018,7 +1024,7 @@ class _VetoScreenState extends State<VetoScreen> {
               String dateStr = '';
               try {
                 final d = DateTime.parse(ev['triggered_at']).toLocal();
-                dateStr = '${d.day}/${d.month}/${d.year}  ${d.hour.toString().padLeft(2, "0")}:${d.minute.toString().padLeft(2, "0")}';
+                dateStr = '\${d.day}/\${d.month}/\${d.year}  \${d.hour.toString().padLeft(2, "0")}:\${d.minute.toString().padLeft(2, "0")}';
               } catch (_) {}
               return Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
@@ -1279,10 +1285,10 @@ class _ContactSheetState extends State<_ContactSheet> {
 
   String _buildMsg() {
     if (widget.langKey == 'he')
-      return 'שלום, אני זקוק לסיוע משפטי דחוף — ${widget.scenarioLabel}. אנא פנה אליי בהקדם.';
+      return 'שלום, אני זקוק לסיוע משפטי דחוף — \${widget.scenarioLabel}. אנא פנה אליי בהקדם.';
     if (widget.langKey == 'ru')
-      return 'Здравствуйте, мне нужна срочная юридическая помощь — ${widget.scenarioLabel}.';
-    return 'Hello, I need urgent legal assistance regarding: ${widget.scenarioLabel}. Please contact me immediately.';
+      return 'Здравствуйте, мне нужна срочная юридическая помощь — \${widget.scenarioLabel}.';
+    return 'Hello, I need urgent legal assistance regarding: \${widget.scenarioLabel}. Please contact me immediately.';
   }
 
   Future<void> _go() async {
@@ -1291,13 +1297,13 @@ class _ContactSheetState extends State<_ContactSheet> {
     try {
       Uri uri;
       if (widget.type == 'whatsapp') {
-        final p = t.replaceAll(RegExp(r'[^\d+]'), '');
-        uri = Uri.parse('https://wa.me/$p?text=${Uri.encodeComponent(_buildMsg())}');
+        final p = t.replaceAll(RegExp(r'[^\\d+]'), '');
+        uri = Uri.parse('https://wa.me/$p?text=\${Uri.encodeComponent(_buildMsg())}');
       } else if (widget.type == 'telegram') {
         if (t.startsWith('@')) {
-          uri = Uri.parse('https://t.me/${t.substring(1)}');
+          uri = Uri.parse('https://t.me/\${t.substring(1)}');
         } else {
-          final p = t.replaceAll(RegExp(r'[^\d+]'), '');
+          final p = t.replaceAll(RegExp(r'[^\\d+]'), '');
           uri = Uri.parse('https://t.me/$p');
         }
       } else {
@@ -1519,7 +1525,7 @@ class _CaptureDialogState extends State<_CaptureDialog> {
       ]),
       content: Column(mainAxisSize: MainAxisSize.min, children: [
         const Text(
-            'PayPal נפתח בטאב חדש.\nלאחר אישור התשלום שם — חזור לכאן ולחץ "שילמתי".',
+            'PayPal נפתח בטאב חדש.\\nלאחר אישור התשלום שם — חזור לכאן ולחץ "שילמתי".',
             style: TextStyle(color: Color(0xFF94A3B8), height: 1.6, fontSize: 13),
             textAlign: TextAlign.center),
         if (_error != null) ...[
@@ -1559,7 +1565,7 @@ class _CaptureDialogState extends State<_CaptureDialog> {
       setState(() {
         _capturing = false;
         _error = result.error != null
-            ? 'שגיאה: ${result.error}'
+            ? 'שגיאה: \${result.error}'
             : 'התשלום לא הושלם. נסה שוב לאחר אישור ב-PayPal.';
       });
     }
@@ -1591,7 +1597,7 @@ class _SubscriptionGateDialogState extends State<_SubscriptionGateDialog> {
       }
       setState(() { _loading = false; _orderId = orderId; });
     } catch (e) {
-      if (mounted) setState(() { _loading = false; _error = 'שגיאה: $e'; });
+      if (mounted) setState(() { _loading = false; _error = 'שגיאה: \$e'; });
     }
   }
 
@@ -1700,3 +1706,8 @@ class _SubscriptionGateDialogState extends State<_SubscriptionGateDialog> {
     );
   }
 }
+`;
+
+const path = 'C:\\\\Users\\\\User\\\\Desktop\\\\VETO_App\\\\frontend\\\\lib\\\\screens\\\\VetoScreen.dart';
+fs.writeFileSync(path, DART, { encoding: 'utf8' });
+console.log('VetoScreen.dart written successfully (' + DART.length + ' chars)');
