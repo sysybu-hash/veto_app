@@ -17,10 +17,10 @@ import 'package:flutter/foundation.dart';
 
 class AppConfig {
   /// Host קבוע ב-Render (לתיעוד / שימוש חיצוני; ה-origin המלא ב-[kDefaultRenderOrigin]).
-  static const String kDefaultRenderHost = 'veto-app.onrender.com';
+  static const String kDefaultRenderHost = 'veto-app-new.onrender.com';
 
   /// Origin של ה-API בפרודקשן (Render). משמש כברירת מחדל ב-`kReleaseMode` כשאין `VETO_API_BASE`.
-  static const String kDefaultRenderOrigin = 'https://veto-app.onrender.com';
+  static const String kDefaultRenderOrigin = 'https://veto-app-new.onrender.com';
 
   /// Host שמתאים ל-`npm run tunnel` (שורת ה-subdomain ב-backend/package.json)
   static const String kDefaultTunnelHost = 'localhost';

@@ -1,0 +1,11 @@
+lib/
+test/
+assets/
+web/
+pubspec.yaml
+pubspec.lock
+analysis_options.yaml
+*.iml
+*.py
+*.dart
+README.md

@@ -3,6 +3,7 @@
 // ============================================================
 
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'core/theme/veto_theme.dart';
 import 'screens/LoginScreen.dart';
@@ -26,6 +27,13 @@ class VetoApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'VETO',
       theme: VetoTheme.dark(),
+      locale: const Locale('he'),
+      supportedLocales: const [Locale('he'), Locale('en')],
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
       initialRoute: '/',
       routes: {
         '/': (context) => const SplashScreen(),

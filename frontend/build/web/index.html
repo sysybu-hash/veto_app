@@ -29,8 +29,66 @@
   <!-- Favicon -->
   <link rel="icon" type="image/png" href="favicon.png"/>
 
-  <title>veto</title>
+  <title>VETO</title>
   <link rel="manifest" href="manifest.json">
+
+  <style>
+    body { margin: 0; background: #0F172A; }
+  </style>
+
+  <script>
+    // ── Web Speech API bridge (called from Flutter via dart:js) ──
+
+    // Speech-to-Text
+    window.vetoSTT = {
+      _recognition: null,
+      _listening: false,
+
+      start: function(lang) {
+        const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SR) { window.vetoSTTResult('ERROR:not_supported'); return; }
+        if (this._listening) return;
+        var r = new SR();
+        r.lang = lang || 'he-IL';
+        r.interimResults = false;
+        r.maxAlternatives = 1;
+        this._recognition = r;
+        this._listening = true;
+        r.onresult = function(e) {
+          var t = e.results[0][0].transcript;
+          window.vetoSTTResult('OK:' + t);
+        };
+        r.onerror = function(e) {
+          window.vetoSTTResult('ERROR:' + e.error);
+        };
+        r.onend = function() { window.vetoSTT._listening = false; };
+        r.start();
+      },
+
+      stop: function() {
+        if (this._recognition) { this._recognition.stop(); }
+        this._listening = false;
+      },
+
+      isSupported: function() {
+        return !!(window.SpeechRecognition || window.webkitSpeechRecognition);
+      }
+    };
+
+    // Text-to-Speech
+    window.vetoTTS = {
+      speak: function(text, lang) {
+        if (!window.speechSynthesis) return;
+        window.speechSynthesis.cancel();
+        var u = new SpeechSynthesisUtterance(text);
+        u.lang = lang || 'he-IL';
+        u.rate = 1.0;
+        u.pitch = 1.0;
+        window.speechSynthesis.speak(u);
+      },
+      stop: function() { if (window.speechSynthesis) window.speechSynthesis.cancel(); }
+    };
+  </script>
 </head>
 <body>
   <!--

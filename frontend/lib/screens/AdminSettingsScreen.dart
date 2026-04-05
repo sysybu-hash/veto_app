@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import '../core/theme/veto_theme.dart';
 import '../services/admin_service.dart';
+import 'admin/AllUsersScreen.dart';
+import 'admin/AllLawyersScreen.dart';
+import 'admin/EmergencyLogsScreen.dart';
 
 class AdminSettingsScreen extends StatefulWidget {
   const AdminSettingsScreen({super.key});
@@ -125,11 +128,11 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                   const SizedBox(height: 24),
                   _sectionHeader('ניהול משתמשים'),
                   _actionCard('כל המשתמשים', Icons.group_outlined,
-                      () => _comingSoon('ניהול משתמשים')),
+                      () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AllUsersScreen()))),
                   _actionCard('כל עורכי הדין', Icons.gavel_rounded,
-                      () => _comingSoon('ניהול עורכי דין')),
+                      () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AllLawyersScreen()))),
                   _actionCard('יומני חירום', Icons.history_rounded,
-                      () => _comingSoon('יומני חירום')),
+                      () => Navigator.push(context, MaterialPageRoute(builder: (_) => const EmergencyLogsScreen()))),
                 ],
               ),
             ),
