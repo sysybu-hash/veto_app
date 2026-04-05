@@ -55,8 +55,17 @@ class AuthService {
           if (name.isNotEmpty) await _storage.write(key: 'veto_name', value: name);
           final isSubscribed = user?['is_subscribed'] == true;
           await _storage.write(key: 'veto_subscribed', value: isSubscribed ? 'true' : 'false');
+          // Payment exempt: admin, lawyer, or manually-added users
+          final isPaymentExempt = user?['is_payment_exempt'] == true;
+          await _storage.write(key: 'veto_payment_exempt', value: isPaymentExempt ? 'true' : 'false');
         }
         return {'success': true, 'user': user};
+      }
+      if (response.statusCode == 403) {
+        final body = jsonDecode(response.body);
+        if (body['pending_approval'] == true) {
+          return {'pending_approval': true};
+        }
       }
       return null;
     } catch (e) {
@@ -105,6 +114,12 @@ class AuthService {
   }
   Future<void> setSubscribed(bool value) async {
     await _storage.write(key: 'veto_subscribed', value: value ? 'true' : 'false');
+  }
+  Future<bool> getStoredIsPaymentExempt() async {
+    final role = await getStoredRole();
+    if (role == 'admin' || role == 'lawyer') return true;
+    final val = await _storage.read(key: 'veto_payment_exempt');
+    return val == 'true';
   }
 
   /// Updates full_name on the server and in local storage.

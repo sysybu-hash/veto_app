@@ -22,7 +22,7 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _registerMode = false;
   bool _loading = false;
   String _error = '';
-  String _countryCode = '+972';
+  final String _countryCode = '+972';
 
   final TextEditingController _nameController = TextEditingController();
   // Local part only — user types 05X or 5X, we normalize on submit
@@ -137,6 +137,32 @@ class _LoginScreenState extends State<LoginScreen> {
     if (!mounted) return;
 
     if (data != null) {
+      // Lawyer awaiting admin approval (403 pending_approval)
+      if (data['pending_approval'] == true) {
+        await showDialog(
+          context: context,
+          builder: (_) => Directionality(
+            textDirection: TextDirection.rtl,
+            child: AlertDialog(
+              backgroundColor: const Color(0xFF1E293B),
+              title: const Text('ממתין לאישור', style: TextStyle(color: Colors.white)),
+              content: const Text(
+                'חשבון עורך הדין שלך ממתין לאישור מנהל המערכת.\nתקבל גישה לאחר אישור הבקשה.',
+                style: TextStyle(color: Color(0xFF94A3B8)),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('הבנתי', style: TextStyle(color: Color(0xFF3B82F6))),
+                ),
+              ],
+            ),
+          ),
+        );
+        setState(() => _loading = false);
+        return;
+      }
+
       // Role comes from server response (stored in secure storage by verifyOTP)
       final role = data['user']?['role']?.toString()
           ?? await AuthService().getStoredRole()
@@ -145,11 +171,13 @@ class _LoginScreenState extends State<LoginScreen> {
       if (role == 'lawyer') {
         Navigator.of(context).pushReplacementNamed('/lawyer_dashboard');
       } else if (role == 'admin') {
-        Navigator.of(context).pushReplacementNamed('/admin_settings');
+        // Admin goes to VetoScreen — can access admin panel from there
+        Navigator.of(context).pushReplacementNamed('/veto_screen');
       } else {
-        // Check subscription status
+        // Check payment exemption (manually_added users skip payment)
+        final isPaymentExempt = data['user']?['is_payment_exempt'] == true;
         final isSubscribed = data['user']?['is_subscribed'] == true;
-        if (isSubscribed) {
+        if (isPaymentExempt || isSubscribed) {
           Navigator.of(context).pushReplacementNamed('/veto_screen');
         } else {
           // Show subscription payment dialog before entering app
@@ -691,7 +719,7 @@ class _SubscriptionGateDialogState extends State<_SubscriptionGateDialog> {
       child: AlertDialog(
         backgroundColor: const Color(0xFF1E293B),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Row(children: const [
+        title: const Row(children: [
           Icon(Icons.lock_outline, color: Color(0xFF3B82F6)),
           SizedBox(width: 10),
           Text('הצטרפות ל-VETO', style: TextStyle(color: Colors.white, fontSize: 18)),
@@ -712,9 +740,9 @@ class _SubscriptionGateDialogState extends State<_SubscriptionGateDialog> {
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(color: const Color(0xFF3B82F6).withValues(alpha: 0.4)),
               ),
-              child: Column(
+              child: const Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: const [
+                children: [
                   Text('מנוי חודשי', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                   SizedBox(height: 4),
                   Text('₪19.90 / חודש  (\$5.50 USD)', style: TextStyle(color: Color(0xFF22C55E), fontSize: 16, fontWeight: FontWeight.bold)),

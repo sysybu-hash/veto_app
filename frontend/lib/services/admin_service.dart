@@ -201,4 +201,48 @@ class AdminService {
       return response.statusCode == 200;
     } catch (e) { debugPrint('deleteEmergencyLog error: $e'); return false; }
   }
+
+  Future<List<dynamic>> getPendingLawyers() async {
+    try {
+      final token = await _authService.getToken();
+      if (token == null) return [];
+      final response = await http.get(
+        Uri.parse('${AppConfig.baseUrl}/admin/lawyers/pending'),
+        headers: AppConfig.httpHeaders({'Authorization': 'Bearer $token'}),
+      ).timeout(const Duration(seconds: 30));
+      if (response.statusCode == 200) {
+        return (jsonDecode(response.body)['lawyers'] as List?) ?? [];
+      }
+    } catch (e) { debugPrint('getPendingLawyers error: $e'); }
+    return [];
+  }
+
+  Future<bool> approveLawyer(String id) async {
+    try {
+      final token = await _authService.getToken();
+      if (token == null) return false;
+      final response = await http.put(
+        Uri.parse('${AppConfig.baseUrl}/admin/lawyers/$id/approve'),
+        headers: AppConfig.httpHeaders({'Authorization': 'Bearer $token'}),
+        body: jsonEncode({}),
+      ).timeout(const Duration(seconds: 30));
+      return response.statusCode == 200;
+    } catch (e) { debugPrint('approveLawyer error: $e'); return false; }
+  }
+
+  Future<bool> rejectLawyer(String id) async {
+    try {
+      final token = await _authService.getToken();
+      if (token == null) return false;
+      final response = await http.delete(
+        Uri.parse('${AppConfig.baseUrl}/admin/lawyers/$id/reject'),
+        headers: AppConfig.httpHeaders({'Authorization': 'Bearer $token'}),
+      ).timeout(const Duration(seconds: 30));
+      return response.statusCode == 200;
+    } catch (e) { debugPrint('rejectLawyer error: $e'); return false; }
+  }
+
+  Future<bool> toggleManuallyAdded(String userId, bool value) async {
+    return updateUser(userId, {'manually_added': value});
+  }
 }
