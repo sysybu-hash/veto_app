@@ -246,7 +246,8 @@ const googleAuth = async (req, res, next) => {
     const { id_token, preferred_language = 'he' } = req.body;
     if (!id_token) return res.status(400).json({ error: 'id_token is required.' });
 
-    const clientId = process.env.GOOGLE_CLIENT_ID;
+    const clientId = process.env.GOOGLE_CLIENT_ID ||
+      '752712664923-7loca49f7fggd514q8reljn93meatmrf.apps.googleusercontent.com';
     if (!clientId) {
       return res.status(503).json({ error: 'Google Sign-In is not configured on this server.' });
     }
