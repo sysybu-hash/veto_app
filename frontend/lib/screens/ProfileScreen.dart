@@ -248,6 +248,39 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ],
                         ),
                         const SizedBox(height: 20),
+                        // ── Quick links ────────────────────
+                        Row(children: [
+                          Expanded(child: OutlinedButton.icon(
+                            onPressed: () => Navigator.pushNamed(context, '/files_vault'),
+                            icon: const Icon(Icons.folder_special_outlined, size: 16),
+                            label: Text(
+                              code == 'he' ? 'כספת קבצים' : code == 'ru' ? 'Хранилище' : 'File Vault',
+                              style: const TextStyle(fontSize: 13),
+                            ),
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: VetoPalette.primary,
+                              side: BorderSide(color: VetoPalette.primary.withValues(alpha: 0.4)),
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            ),
+                          )),
+                          const SizedBox(width: 10),
+                          Expanded(child: OutlinedButton.icon(
+                            onPressed: () => Navigator.pushNamed(context, '/settings'),
+                            icon: const Icon(Icons.settings_outlined, size: 16),
+                            label: Text(
+                              code == 'he' ? 'הגדרות' : code == 'ru' ? 'Настройки' : 'Settings',
+                              style: const TextStyle(fontSize: 13),
+                            ),
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: VetoPalette.primary,
+                              side: BorderSide(color: VetoPalette.primary.withValues(alpha: 0.4)),
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            ),
+                          )),
+                        ]),
+                        const SizedBox(height: 10),
                         FilledButton.icon(
                           onPressed: _saving ? null : _saveProfile,
                           icon: _saving

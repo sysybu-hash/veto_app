@@ -222,6 +222,28 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                       _appVersion.isEmpty ? _t(code, 'unknown') : _appVersion,
                     ),
                     const SizedBox(height: 32),
+                    _sectionHeader(
+                      code == 'he' ? 'כלי ניהול' : code == 'ru' ? 'Инструменты' : 'Admin Tools'
+                    ),
+                    _actionCard(
+                      code == 'he' ? 'לוח בקרה ראשי' : code == 'ru' ? 'Главная панель' : 'Admin Dashboard',
+                      Icons.dashboard_rounded,
+                      color: VetoPalette.primary,
+                      onTap: () => Navigator.pushNamed(context, '/admin_dashboard'),
+                    ),
+                    _actionCard(
+                      code == 'he' ? 'ניהול מנויים' : code == 'ru' ? 'Подписки' : 'Subscription Management',
+                      Icons.subscriptions_rounded,
+                      color: const Color(0xFF8B5CF6),
+                      onTap: () => Navigator.pushNamed(context, '/admin_subscriptions'),
+                    ),
+                    _actionCard(
+                      code == 'he' ? 'הגדרות מערכת' : code == 'ru' ? 'Настройки системы' : 'System Settings',
+                      Icons.settings_rounded,
+                      color: VetoPalette.textMuted,
+                      onTap: () => Navigator.pushNamed(context, '/settings'),
+                    ),
+                    const SizedBox(height: 32),
                     _sectionHeader(_t(code, 'userManagement')),
                     _actionCard(
                       '${_t(code, 'allUsers')} ($_totalUsers)',

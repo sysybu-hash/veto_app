@@ -607,8 +607,18 @@ class _VetoScreenState extends State<VetoScreen> {
           tooltip: 'פאנל ניהול',
         ),
       IconButton(
+          icon: const Icon(Icons.folder_special_outlined),
+          color: Colors.white70,
+          onPressed: () => Navigator.pushNamed(context, '/files_vault'),
+          tooltip: _langKey == 'he' ? 'כספת קבצים' : _langKey == 'ru' ? 'Хранилище' : 'File Vault'),
+      IconButton(
+          icon: const Icon(Icons.settings_outlined),
+          color: Colors.white70,
+          onPressed: () => Navigator.pushNamed(context, '/settings'),
+          tooltip: _langKey == 'he' ? 'הגדרות' : _langKey == 'ru' ? 'Настройки' : 'Settings'),
+      IconButton(
           icon: const Icon(Icons.person_outline),
-          color: VetoPalette.textMuted,
+          color: Colors.white70,
           onPressed: () => Navigator.pushNamed(context, '/profile')),
       IconButton(
           icon: const Icon(Icons.logout_rounded),
