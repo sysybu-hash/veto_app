@@ -171,6 +171,19 @@ const LawyerSchema = new mongoose.Schema(
         ref: 'EmergencyEvent',
       },
     ],
+
+    // ── Notification / App Settings ───────────────────────────
+    settings: {
+      notifyEmergency: { type: Boolean, default: true },
+      notifyUpdates:   { type: Boolean, default: true },
+      notifySms:       { type: Boolean, default: false },
+    },
+
+    // ── Response Config ───────────────────────────────────────
+    response_minutes: {
+      type: Number,
+      default: 15,
+    },
   },
   {
     timestamps: true,

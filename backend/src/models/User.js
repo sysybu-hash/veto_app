@@ -116,6 +116,13 @@ const UserSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+
+    // ── Notification / App Settings ───────────────────────────
+    settings: {
+      notifyEmergency: { type: Boolean, default: true },
+      notifyUpdates:   { type: Boolean, default: true },
+      notifySms:       { type: Boolean, default: false },
+    },
   },
   {
     timestamps: true, // createdAt, updatedAt
