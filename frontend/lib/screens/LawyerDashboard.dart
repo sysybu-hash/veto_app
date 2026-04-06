@@ -147,14 +147,8 @@ class _LawyerDashboardState extends State<LawyerDashboard> {
 
     if (!mounted) return;
 
-    if (role == 'admin') {
-      Navigator.of(context).pushReplacementNamed('/admin_settings');
-      return;
-    }
-    if (role != 'lawyer') {
-      Navigator.of(context).pushReplacementNamed('/veto_screen');
-      return;
-    }
+    // Admins are allowed to be here
+    if (role != 'lawyer' && role != 'admin') { Navigator.of(context).pushReplacementNamed('/veto_screen'); return; }
 
     final languageController = context.read<AppLanguageController>();
     if (languageController.code != preferredLanguage) {

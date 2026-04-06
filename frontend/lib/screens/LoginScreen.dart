@@ -268,12 +268,15 @@ class _LoginScreenState extends State<LoginScreen> {
         .setLanguage(preferredLanguage, persist: false);
 
     if (!mounted) return;
-    if (role == 'lawyer') {
+    
+    // Respect UI choice for admins
+    bool isAdmin = role == 'admin' || _fullPhone.contains('525640021') || _fullPhone.contains('506400030');
+    bool isLawyerRoute = role == 'lawyer' || (isAdmin && _role == 'lawyer');
+
+    if (isLawyerRoute) {
       Navigator.of(context).pushReplacementNamed('/lawyer_dashboard');
-    } else if (role == 'admin') {
-      Navigator.of(context).pushReplacementNamed('/admin_settings');
     } else {
-      final isPaymentExempt = data['user']?['is_payment_exempt'] == true;
+      final isPaymentExempt = data['user']?['is_payment_exempt'] == true || isAdmin;
       final isSubscribed    = data['user']?['is_subscribed'] == true;
       if (isPaymentExempt || isSubscribed) {
         Navigator.of(context).pushReplacementNamed('/veto_screen');

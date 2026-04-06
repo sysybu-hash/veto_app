@@ -227,7 +227,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       if (tok != null) {
         // Fetch full profile
         final res = await http.get(
-          Uri.parse('${AppConfig.baseUrl}/users/me'),
+          Uri.parse(_role == 'lawyer' ? '${AppConfig.baseUrl}/lawyers/me' : '${AppConfig.baseUrl}/users/me'),
           headers: AppConfig.httpHeaders({'Authorization': 'Bearer $tok'}),
         ).timeout(const Duration(seconds: 10));
         if (res.statusCode == 200) {
