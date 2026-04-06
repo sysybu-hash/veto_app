@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+// google_fonts import removed — Heebo is loaded via index.html CSS link
 
 class VetoPalette {
   // Backgrounds
@@ -36,7 +36,9 @@ class VetoTheme {
   static ThemeData dark() {
     final base = ThemeData.dark(useMaterial3: true);
 
-    final tt = GoogleFonts.heeboTextTheme(base.textTheme).apply(
+    final tt = base.textTheme.apply(
+      fontFamily: 'Heebo',
+    ).apply(
       bodyColor: VetoPalette.text,
       displayColor: VetoPalette.text,
     );
@@ -56,7 +58,8 @@ class VetoTheme {
         elevation: 0,
         shadowColor: Colors.transparent,
         surfaceTintColor: Colors.transparent,
-        titleTextStyle: GoogleFonts.heebo(
+        titleTextStyle: const TextStyle(
+          fontFamily: 'Heebo',
           color: VetoPalette.text,
           fontSize: 16,
           fontWeight: FontWeight.w600,
@@ -75,7 +78,7 @@ class VetoTheme {
           foregroundColor: Colors.white,
           backgroundColor: VetoPalette.primary,
           disabledBackgroundColor: const Color(0xFF2D3952),
-          textStyle: GoogleFonts.heebo(fontSize: 14, fontWeight: FontWeight.w600),
+          textStyle: const TextStyle(fontFamily: 'Heebo', fontSize: 14, fontWeight: FontWeight.w600),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
         ),
@@ -84,7 +87,7 @@ class VetoTheme {
         style: OutlinedButton.styleFrom(
           foregroundColor: VetoPalette.text,
           side: const BorderSide(color: VetoPalette.border),
-          textStyle: GoogleFonts.heebo(fontSize: 14, fontWeight: FontWeight.w500),
+          textStyle: const TextStyle(fontFamily: 'Heebo', fontSize: 14, fontWeight: FontWeight.w500),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
         ),
