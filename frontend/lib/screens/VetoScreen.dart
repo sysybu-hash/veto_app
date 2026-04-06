@@ -1292,6 +1292,28 @@ class _VetoScreenState extends State<VetoScreen> {
         ),
       ),
       const SizedBox(width: 8),
+      GestureDetector(
+        onTap: () async {
+          final data = await Clipboard.getData(Clipboard.kTextPlain);
+          if (data?.text != null && mounted) {
+            setState(() => _inputCtrl.text = data!.text!);
+            _inputCtrl.selection = TextSelection.fromPosition(
+              TextPosition(offset: _inputCtrl.text.length),
+            );
+          }
+        },
+        child: Container(
+          width: 44, height: 44,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: VetoPalette.surface,
+            border: Border.all(color: VetoPalette.border),
+          ),
+          child: const Icon(Icons.content_paste_rounded,
+              color: VetoPalette.textMuted, size: 20),
+        ),
+      ),
+      const SizedBox(width: 8),
       Expanded(
         child: TextField(
           controller: _inputCtrl,

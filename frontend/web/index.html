@@ -32,7 +32,7 @@
   <!-- Favicon -->
   <link rel="icon" type="image/png" href="favicon.png"/>
 
-  <title>VETO</title>
+  <title>VETO LEGAL</title>
   <link rel="manifest" href="manifest.json">
 
   <meta name="google-signin-client_id" content="752712664923-7loca49f7fggd514q8reljn93meatmrf.apps.googleusercontent.com">
@@ -114,6 +114,36 @@
       stop: function() { if (window.speechSynthesis) window.speechSynthesis.cancel(); }
     };
   </script>
+  <!-- Google Identity Services (GIS) — reliable token client for Flutter Web -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script>
+    // Called from Flutter via dart:js to trigger Google OAuth popup
+    // Returns a Promise that resolves with the access_token
+    window.vetoGoogleOAuth = function(clientId) {
+      return new Promise(function(resolve, reject) {
+        if (!window.google || !window.google.accounts || !window.google.accounts.oauth2) {
+          reject('GIS not loaded yet');
+          return;
+        }
+        var client = google.accounts.oauth2.initTokenClient({
+          client_id: clientId,
+          scope: 'email profile openid',
+          callback: function(response) {
+            if (response && response.access_token) {
+              resolve(response.access_token);
+            } else {
+              reject(response ? response.error : 'No access_token');
+            }
+          },
+          error_callback: function(err) {
+            reject(err ? err.type : 'oauth_error');
+          }
+        });
+        client.requestAccessToken({ prompt: 'select_account' });
+      });
+    };
+  </script>
+
 </head>
 <body>
   <!--

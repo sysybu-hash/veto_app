@@ -26,6 +26,8 @@ import 'screens/admin/AllLawyersScreen.dart';
 import 'screens/admin/AllUsersScreen.dart';
 import 'screens/admin/PendingLawyersScreen.dart';
 import 'screens/admin/EmergencyLogsScreen.dart';
+import 'screens/LawyerSettingsScreen.dart';
+import 'screens/ChatScreen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -89,6 +91,8 @@ class VetoApp extends StatelessWidget {
         '/admin_lawyers': (context) => const AllLawyersScreen(),
         '/admin_pending': (context) => const PendingLawyersScreen(),
         '/admin_logs': (context) => const EmergencyLogsScreen(),
+        '/lawyer_settings': (context) => const LawyerSettingsScreen(),
+        '/chat': (context) => const ChatScreen(),
       },
     );
   }

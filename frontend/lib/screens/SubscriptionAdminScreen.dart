@@ -16,10 +16,12 @@ import '../services/auth_service.dart';
 // ── i18n ──────────────────────────────────────────────────────
 const _i18n = {
   'he': {
-    'title': 'ניהול מנויים',
+    'title': 'משתמשים ומנויים',
+    'tabUsers': 'כל המשתמשים',
+    'tabLogs': 'לוג כניסות',
     'revenue': 'הכנסות',
-    'total': 'סה"כ מנויים',
-    'active': 'פעילים',
+    'total': 'סה"כ משתמשים',
+    'active': 'מנויים פעילים',
     'expired': 'פגי תוקף',
     'cancelled': 'בוטלו',
     'monthly': 'הכנסה חודשית',
@@ -27,36 +29,51 @@ const _i18n = {
     'user': 'משתמש',
     'plan': 'תוכנית',
     'status': 'סטטוס',
-    'startDate': 'התחלה',
+    'startDate': 'הצטרף',
     'endDate': 'פקיעה',
     'amount': 'סכום',
     'actions': 'פעולות',
     'activate': 'הפעל',
     'cancel': 'בטל',
     'extend': 'הארך 30 יום',
-    'search': 'חיפוש לפי שם/מייל',
-    'noSubs': 'אין מנויים',
+    'search': 'חיפוש לפי שם/מייל/טלפון',
+    'noSubs': 'אין משתמשים',
+    'noLogs': 'אין לוג',
     'loading': 'טוען...',
     'refresh': 'רענן',
-    'statusActive': 'פעיל',
+    'statusActive': 'מנוי פעיל',
     'statusExpired': 'פג תוקף',
     'statusCancelled': 'בוטל',
     'statusTrial': 'ניסיון',
+    'statusFree': 'חינמי',
+    'statusNoSub': 'ללא מנוי',
+    'statusUnverified': 'לא מאומת',
     'planFree': 'חינמי',
     'planBasic': 'בסיסי',
     'planPro': 'מקצועי',
+    'planNone': 'ללא',
     'confirmCancel': 'לבטל מנוי זה?',
     'confirmActivate': 'להפעיל מנוי זה?',
     'confirmExtend': 'להאריך ב-30 יום?',
     'yes': 'כן',
     'no': 'לא',
-    'updated': 'המנוי עודכן',
+    'updated': 'עודכן',
+    'logSuccess': 'הצליח',
+    'logFail': 'נכשל',
+    'logRegister': 'הרשמה',
+    'logOtpReq': 'בקשת OTP',
+    'logOtpOk': 'OTP אושר',
+    'logOtpFail': 'OTP נכשל',
+    'logGoogle': 'Google כניסה',
+    'logGoogleFail': 'Google נכשל',
   },
   'en': {
-    'title': 'Subscription Management',
+    'title': 'Users & Subscriptions',
+    'tabUsers': 'All Users',
+    'tabLogs': 'Login Logs',
     'revenue': 'Revenue',
-    'total': 'Total Subscriptions',
-    'active': 'Active',
+    'total': 'Total Users',
+    'active': 'Active Subscribers',
     'expired': 'Expired',
     'cancelled': 'Cancelled',
     'monthly': 'Monthly Revenue',
@@ -64,67 +81,95 @@ const _i18n = {
     'user': 'User',
     'plan': 'Plan',
     'status': 'Status',
-    'startDate': 'Start',
+    'startDate': 'Joined',
     'endDate': 'Expires',
     'amount': 'Amount',
     'actions': 'Actions',
     'activate': 'Activate',
     'cancel': 'Cancel',
     'extend': 'Extend 30d',
-    'search': 'Search by name/email',
-    'noSubs': 'No subscriptions found',
+    'search': 'Search by name/email/phone',
+    'noSubs': 'No users found',
+    'noLogs': 'No logs',
     'loading': 'Loading...',
     'refresh': 'Refresh',
     'statusActive': 'Active',
     'statusExpired': 'Expired',
     'statusCancelled': 'Cancelled',
     'statusTrial': 'Trial',
+    'statusFree': 'Free',
+    'statusNoSub': 'No Subscription',
+    'statusUnverified': 'Unverified',
     'planFree': 'Free',
     'planBasic': 'Basic',
     'planPro': 'Pro',
+    'planNone': 'None',
     'confirmCancel': 'Cancel this subscription?',
     'confirmActivate': 'Activate this subscription?',
     'confirmExtend': 'Extend by 30 days?',
     'yes': 'Yes',
     'no': 'No',
-    'updated': 'Subscription updated',
+    'updated': 'Updated',
+    'logSuccess': 'Success',
+    'logFail': 'Failed',
+    'logRegister': 'Register',
+    'logOtpReq': 'OTP Request',
+    'logOtpOk': 'OTP Verified',
+    'logOtpFail': 'OTP Failed',
+    'logGoogle': 'Google Login',
+    'logGoogleFail': 'Google Failed',
   },
   'ru': {
-    'title': 'Управление подписками',
+    'title': 'Пользователи и подписки',
+    'tabUsers': 'Все пользователи',
+    'tabLogs': 'Журнал входов',
     'revenue': 'Доход',
-    'total': 'Всего подписок',
-    'active': 'Активные',
-    'expired': 'Истекшие',
-    'cancelled': 'Отменённые',
+    'total': 'Всего',
+    'active': 'Активных',
+    'expired': 'Истекших',
+    'cancelled': 'Отменённых',
     'monthly': 'Ежемесячный доход',
     'allTime': 'Общий доход',
     'user': 'Пользователь',
-    'plan': 'Тарифный план',
+    'plan': 'Тариф',
     'status': 'Статус',
-    'startDate': 'Начало',
+    'startDate': 'Зарегистрирован',
     'endDate': 'Истекает',
     'amount': 'Сумма',
     'actions': 'Действия',
     'activate': 'Активировать',
     'cancel': 'Отменить',
     'extend': 'Продлить 30д',
-    'search': 'Поиск по имени/email',
-    'noSubs': 'Подписок не найдено',
+    'search': 'Поиск по имени/email/тел.',
+    'noSubs': 'Нет пользователей',
+    'noLogs': 'Нет записей',
     'loading': 'Загрузка...',
     'refresh': 'Обновить',
     'statusActive': 'Активна',
     'statusExpired': 'Истекла',
     'statusCancelled': 'Отменена',
     'statusTrial': 'Пробная',
+    'statusFree': 'Бесплатный',
+    'statusNoSub': 'Без подписки',
+    'statusUnverified': 'Не подтверждён',
     'planFree': 'Бесплатный',
     'planBasic': 'Базовый',
     'planPro': 'Pro',
+    'planNone': 'Нет',
     'confirmCancel': 'Отменить подписку?',
-    'confirmActivate': 'Активировать подписку?',
+    'confirmActivate': 'Активировать?',
     'confirmExtend': 'Продлить на 30 дней?',
     'yes': 'Да',
     'no': 'Нет',
-    'updated': 'Подписка обновлена',
+    'updated': 'Обновлено',
+    'logSuccess': 'Успех',
+    'logFail': 'Ошибка',
+    'logRegister': 'Регистрация',
+    'logOtpReq': 'Запрос OTP',
+    'logOtpOk': 'OTP принят',
+    'logOtpFail': 'OTP ошибка',
+    'logGoogle': 'Вход Google',
+    'logGoogleFail': 'Google ошибка',
   },
 };
 
@@ -133,37 +178,46 @@ String _t(String code, String key) =>
 
 // ── Data model ────────────────────────────────────────────────
 class _Sub {
-  final String id, userId, userEmail, userName, plan, status;
+  final String id, userId, userEmail, userName, phone, plan, status;
   final double amount;
   final DateTime? startDate, endDate;
 
   const _Sub({
     required this.id, required this.userId, required this.userEmail,
-    required this.userName, required this.plan, required this.status,
-    required this.amount, this.startDate, this.endDate,
+    required this.userName, required this.phone, required this.plan,
+    required this.status, required this.amount,
+    this.startDate, this.endDate,
   });
 
   factory _Sub.fromJson(Map<String, dynamic> j) {
+    // Support both subscription-style and user-with-status style
     final user = j['user'] as Map<String, dynamic>? ?? {};
+    final isUserFormat = j['computed_status'] != null;
     return _Sub(
-      id: j['_id'] ?? j['id'] ?? '',
-      userId: user['_id'] ?? j['userId'] ?? '',
-      userEmail: user['email'] ?? j['email'] ?? '',
-      userName: user['name'] ?? j['userName'] ?? '',
-      plan: j['plan'] ?? 'free',
-      status: j['status'] ?? 'active',
-      amount: ((j['amount'] ?? j['price'] ?? 0) as num).toDouble(),
-      startDate: DateTime.tryParse(j['startDate'] ?? j['createdAt'] ?? ''),
-      endDate: DateTime.tryParse(j['endDate'] ?? j['expiresAt'] ?? ''),
+      id:       j['_id'] ?? j['id'] ?? '',
+      userId:   isUserFormat ? (j['_id'] ?? '') : (user['_id'] ?? j['userId'] ?? ''),
+      userEmail:isUserFormat ? (j['email'] ?? '') : (user['email'] ?? j['email'] ?? ''),
+      userName: isUserFormat ? (j['full_name'] ?? '') : (user['name'] ?? user['full_name'] ?? j['userName'] ?? ''),
+      phone:    j['phone'] ?? user['phone'] ?? '',
+      plan:     isUserFormat
+          ? (j['manually_added'] == true ? 'free' : (j['is_subscribed'] == true ? 'pro' : 'none'))
+          : (j['plan'] ?? 'free'),
+      status:   isUserFormat ? (j['computed_status'] ?? 'no_subscription') : (j['status'] ?? 'active'),
+      amount:   ((j['amount'] ?? j['price'] ?? 0) as num).toDouble(),
+      startDate:DateTime.tryParse(j['startDate'] ?? j['createdAt'] ?? ''),
+      endDate:  DateTime.tryParse(j['endDate'] ?? j['subscription_expiry'] ?? j['expiresAt'] ?? ''),
     );
   }
 
   Color get statusColor {
     switch (status) {
       case 'active': return VetoPalette.success;
+      case 'free': return const Color(0xFF0EA5E9);
       case 'trial': return const Color(0xFF0EA5E9);
       case 'expired': return VetoPalette.warning;
       case 'cancelled': return VetoPalette.emergency;
+      case 'no_subscription': return VetoPalette.textMuted;
+      case 'unverified': return const Color(0xFF6B7280);
       default: return VetoPalette.textMuted;
     }
   }
@@ -171,9 +225,12 @@ class _Sub {
   String statusLabel(String code) {
     switch (status) {
       case 'active': return _t(code, 'statusActive');
+      case 'free': return _t(code, 'statusFree');
       case 'trial': return _t(code, 'statusTrial');
       case 'expired': return _t(code, 'statusExpired');
       case 'cancelled': return _t(code, 'statusCancelled');
+      case 'no_subscription': return _t(code, 'statusNoSub');
+      case 'unverified': return _t(code, 'statusUnverified');
       default: return status;
     }
   }
@@ -183,7 +240,42 @@ class _Sub {
       case 'free': return _t(code, 'planFree');
       case 'basic': return _t(code, 'planBasic');
       case 'pro': return _t(code, 'planPro');
+      case 'none': return _t(code, 'planNone');
       default: return plan;
+    }
+  }
+}
+
+// ── Login log ─────────────────────────────────────────────────
+class _LoginLog {
+  final String id, event;
+  final String? phone, email, role, ip, errorMsg;
+  final bool success;
+  final DateTime createdAt;
+  const _LoginLog({required this.id, required this.event, required this.success,
+      required this.createdAt, this.phone, this.email, this.role, this.ip, this.errorMsg});
+
+  factory _LoginLog.fromJson(Map<String, dynamic> j) => _LoginLog(
+    id:        j['_id'] ?? '',
+    event:     j['event'] ?? '',
+    success:   j['success'] == true,
+    phone:     j['phone'] as String?,
+    email:     j['email'] as String?,
+    role:      j['role'] as String?,
+    ip:        j['ip'] as String?,
+    errorMsg:  j['error_msg'] as String?,
+    createdAt: DateTime.tryParse(j['createdAt'] ?? '') ?? DateTime.now(),
+  );
+
+  String eventLabel(String code) {
+    switch (event) {
+      case 'register':     return _t(code, 'logRegister');
+      case 'otp_request':  return _t(code, 'logOtpReq');
+      case 'otp_success':  return _t(code, 'logOtpOk');
+      case 'otp_fail':     return _t(code, 'logOtpFail');
+      case 'google_login': return _t(code, 'logGoogle');
+      case 'google_fail':  return _t(code, 'logGoogleFail');
+      default: return event;
     }
   }
 }
@@ -198,12 +290,15 @@ class SubscriptionAdminScreen extends StatefulWidget {
 }
 
 class _SubscriptionAdminScreenState
-    extends State<SubscriptionAdminScreen> {
+    extends State<SubscriptionAdminScreen>
+    with SingleTickerProviderStateMixin {
   final AuthService _auth = AuthService();
   final TextEditingController _searchCtrl = TextEditingController();
+  late TabController _tabController;
 
   List<_Sub> _subs = [];
   List<_Sub> _filtered = [];
+  List<_LoginLog> _logs = [];
   bool _loading = true;
 
   double _monthlyRevenue = 0;
@@ -212,12 +307,14 @@ class _SubscriptionAdminScreenState
   @override
   void initState() {
     super.initState();
+    _tabController = TabController(length: 2, vsync: this);
     _load();
     _searchCtrl.addListener(_applyFilter);
   }
 
   @override
   void dispose() {
+    _tabController.dispose();
     _searchCtrl.dispose();
     super.dispose();
   }
@@ -229,7 +326,8 @@ class _SubscriptionAdminScreenState
           ? _subs
           : _subs.where((s) =>
               s.userEmail.toLowerCase().contains(q) ||
-              s.userName.toLowerCase().contains(q)).toList();
+              s.userName.toLowerCase().contains(q) ||
+              s.phone.toLowerCase().contains(q)).toList();
     });
   }
 
@@ -239,26 +337,33 @@ class _SubscriptionAdminScreenState
       final tok = await _auth.getToken();
       if (tok == null) return;
       final headers = AppConfig.httpHeaders({'Authorization': 'Bearer $tok'});
-      final res = await http.get(
+
+      final usersRes = await http.get(
         Uri.parse('${AppConfig.baseUrl}/admin/subscriptions'),
         headers: headers,
       ).timeout(const Duration(seconds: 15));
-      if (res.statusCode == 200) {
-        final data = jsonDecode(res.body);
-        final list = data is List ? data : (data['subscriptions'] ?? data['data'] ?? []);
-        _subs = (list as List)
-            .map((e) => _Sub.fromJson(e as Map<String, dynamic>))
-            .toList();
+
+      final logsRes = await http.get(
+        Uri.parse('${AppConfig.baseUrl}/admin/login-logs?limit=200'),
+        headers: headers,
+      ).timeout(const Duration(seconds: 15));
+
+      if (usersRes.statusCode == 200) {
+        final data = jsonDecode(usersRes.body);
+        final list = data['users'] ?? data['subscriptions'] ?? (data is List ? data : []);
+        _subs = (list as List).map((e) => _Sub.fromJson(e as Map<String, dynamic>)).toList();
         _filtered = _subs;
-        // Compute revenue summaries
-        _totalRevenue = _subs.fold(0, (s, x) => s + x.amount);
+        _totalRevenue = _subs.where((s) => s.amount > 0).fold(0, (s, x) => s + x.amount);
         final now = DateTime.now();
         _monthlyRevenue = _subs
-            .where((s) =>
-                s.status == 'active' &&
-                (s.startDate?.month == now.month ||
-                    s.startDate?.year == now.year))
+            .where((s) => s.status == 'active' && s.startDate?.month == now.month)
             .fold(0, (s, x) => s + x.amount);
+      }
+
+      if (logsRes.statusCode == 200) {
+        final data = jsonDecode(logsRes.body);
+        final list = data['logs'] ?? (data is List ? data : []);
+        _logs = (list as List).map((e) => _LoginLog.fromJson(e as Map<String, dynamic>)).toList();
       }
     } catch (_) {}
     if (mounted) setState(() => _loading = false);
@@ -322,8 +427,8 @@ class _SubscriptionAdminScreenState
     final isRtl = AppLanguage.directionOf(code) == TextDirection.rtl;
 
     final activeCount = _subs.where((s) => s.status == 'active').length;
-    final expiredCount = _subs.where((s) => s.status == 'expired').length;
-    final cancelledCount = _subs.where((s) => s.status == 'cancelled').length;
+    final freeCount   = _subs.where((s) => s.status == 'free').length;
+    final expiredCount= _subs.where((s) => s.status == 'expired').length;
 
     return Directionality(
       textDirection: isRtl ? TextDirection.rtl : TextDirection.ltr,
@@ -332,122 +437,183 @@ class _SubscriptionAdminScreenState
         appBar: AppBar(
           backgroundColor: VetoPalette.darkBg,
           title: Text(_t(code, 'title'),
-              style: const TextStyle(
-                  color: Colors.white, fontWeight: FontWeight.w700)),
+              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
           iconTheme: const IconThemeData(color: Colors.white),
           actions: [
-            IconButton(
-              icon: const Icon(Icons.refresh_rounded),
-              onPressed: _load,
-              tooltip: _t(code, 'refresh'),
-            ),
+            IconButton(icon: const Icon(Icons.refresh_rounded), onPressed: _load,
+                tooltip: _t(code, 'refresh')),
           ],
+          bottom: TabBar(
+            controller: _tabController,
+            labelColor: Colors.white,
+            unselectedLabelColor: Colors.white54,
+            indicatorColor: VetoPalette.primary,
+            tabs: [
+              Tab(text: _t(code, 'tabUsers'), icon: const Icon(Icons.people_rounded, size: 18)),
+              Tab(text: _t(code, 'tabLogs'), icon: const Icon(Icons.history_rounded, size: 18)),
+            ],
+          ),
         ),
         body: _loading
             ? const Center(child: CircularProgressIndicator())
-            : Column(children: [
-                // ── Summary bar ─────────────────────────────
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  color: VetoPalette.surface,
-                  child: Column(children: [
-                    // Revenue row
-                    Row(children: [
-                      _StatChip(
-                          icon: Icons.trending_up_rounded,
-                          color: VetoPalette.success,
-                          label: _t(code, 'monthly'),
-                          value: '\$${_monthlyRevenue.toStringAsFixed(0)}'),
-                      const SizedBox(width: 10),
-                      _StatChip(
-                          icon: Icons.account_balance_wallet_rounded,
-                          color: const Color(0xFF8B5CF6),
-                          label: _t(code, 'allTime'),
-                          value: '\$${_totalRevenue.toStringAsFixed(0)}'),
-                    ]),
-                    const SizedBox(height: 8),
-                    // Status counts row
-                    Row(children: [
-                      _CountBadge(_t(code, 'total'), _subs.length,
-                          VetoPalette.textMuted),
-                      const SizedBox(width: 8),
-                      _CountBadge(_t(code, 'active'), activeCount,
-                          VetoPalette.success),
-                      const SizedBox(width: 8),
-                      _CountBadge(_t(code, 'expired'), expiredCount,
-                          VetoPalette.warning),
-                      const SizedBox(width: 8),
-                      _CountBadge(_t(code, 'cancelled'), cancelledCount,
-                          VetoPalette.emergency),
-                    ]),
-                  ]),
-                ),
-                // ── Search bar ──────────────────────────────
-                Container(
-                  color: VetoPalette.surface,
-                  padding: const EdgeInsets.fromLTRB(14, 0, 14, 10),
-                  child: TextField(
-                    controller: _searchCtrl,
-                    style: const TextStyle(color: VetoPalette.text, fontSize: 14),
-                    decoration: InputDecoration(
-                      hintText: _t(code, 'search'),
-                      hintStyle: const TextStyle(color: VetoPalette.textMuted),
-                      prefixIcon: const Icon(Icons.search_rounded,
-                          color: VetoPalette.textMuted, size: 20),
-                      filled: true,
-                      fillColor: VetoPalette.bg,
-                      contentPadding: const EdgeInsets.symmetric(vertical: 10),
-                      border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10),
-                          borderSide: const BorderSide(color: VetoPalette.border)),
-                      enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10),
-                          borderSide: const BorderSide(color: VetoPalette.border)),
-                      focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10),
-                          borderSide: const BorderSide(
-                              color: VetoPalette.primary, width: 1.5)),
-                    ),
-                  ),
-                ),
-                const Divider(height: 1, color: VetoPalette.border),
-                // ── Subscription list ───────────────────────
-                Expanded(
-                  child: _filtered.isEmpty
-                      ? Center(
-                          child: Text(_t(code, 'noSubs'),
-                              style: const TextStyle(
-                                  color: VetoPalette.textMuted, fontSize: 15)))
-                      : ListView.separated(
-                          padding: const EdgeInsets.all(14),
-                          itemCount: _filtered.length,
-                          separatorBuilder: (_, __) => const SizedBox(height: 8),
-                          itemBuilder: (ctx, i) => _SubCard(
-                            sub: _filtered[i],
-                            code: code,
-                            onActivate: () async {
-                              if (await _confirm(_t(code, 'confirmActivate'))) {
-                                await _updateSub(_filtered[i].id,
-                                    {'status': 'active'}, code);
-                              }
-                            },
-                            onCancel: () async {
-                              if (await _confirm(_t(code, 'confirmCancel'))) {
-                                await _updateSub(_filtered[i].id,
-                                    {'status': 'cancelled'}, code);
-                              }
-                            },
-                            onExtend: () async {
-                              if (await _confirm(_t(code, 'confirmExtend'))) {
-                                await _updateSub(_filtered[i].id,
-                                    {'extendDays': 30}, code);
-                              }
-                            },
-                          ),
-                        ),
-                ),
-              ]),
+            : TabBarView(
+                controller: _tabController,
+                children: [
+                  _buildUsersTab(code, activeCount, freeCount, expiredCount),
+                  _buildLogsTab(code),
+                ],
+              ),
       ),
+    );
+  }
+
+  Widget _buildUsersTab(String code, int activeCount, int freeCount, int expiredCount) {
+    return Column(children: [
+      // ── Summary bar ─────────────────────────────────────────
+      Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        color: VetoPalette.surface,
+        child: Column(children: [
+          Row(children: [
+            _StatChip(icon: Icons.trending_up_rounded, color: VetoPalette.success,
+                label: _t(code, 'monthly'), value: '\$${_monthlyRevenue.toStringAsFixed(0)}'),
+            const SizedBox(width: 10),
+            _StatChip(icon: Icons.account_balance_wallet_rounded, color: const Color(0xFF8B5CF6),
+                label: _t(code, 'allTime'), value: '\$${_totalRevenue.toStringAsFixed(0)}'),
+          ]),
+          const SizedBox(height: 8),
+          Row(children: [
+            _CountBadge(_t(code, 'total'), _subs.length, VetoPalette.textMuted),
+            const SizedBox(width: 8),
+            _CountBadge(_t(code, 'active'), activeCount, VetoPalette.success),
+            const SizedBox(width: 8),
+            _CountBadge('Free', freeCount, const Color(0xFF0EA5E9)),
+            const SizedBox(width: 8),
+            _CountBadge(_t(code, 'expired'), expiredCount, VetoPalette.warning),
+          ]),
+        ]),
+      ),
+      // ── Search ──────────────────────────────────────────────
+      Container(
+        color: VetoPalette.surface,
+        padding: const EdgeInsets.fromLTRB(14, 0, 14, 10),
+        child: TextField(
+          controller: _searchCtrl,
+          style: const TextStyle(color: VetoPalette.text, fontSize: 14),
+          decoration: InputDecoration(
+            hintText: _t(code, 'search'),
+            hintStyle: const TextStyle(color: VetoPalette.textMuted),
+            prefixIcon: const Icon(Icons.search_rounded, color: VetoPalette.textMuted, size: 20),
+            filled: true, fillColor: VetoPalette.bg,
+            contentPadding: const EdgeInsets.symmetric(vertical: 10),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10),
+                borderSide: const BorderSide(color: VetoPalette.border)),
+            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10),
+                borderSide: const BorderSide(color: VetoPalette.border)),
+            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10),
+                borderSide: const BorderSide(color: VetoPalette.primary, width: 1.5)),
+          ),
+        ),
+      ),
+      const Divider(height: 1, color: VetoPalette.border),
+      Expanded(
+        child: _filtered.isEmpty
+            ? Center(child: Text(_t(code, 'noSubs'),
+                style: const TextStyle(color: VetoPalette.textMuted, fontSize: 15)))
+            : ListView.separated(
+                padding: const EdgeInsets.all(14),
+                itemCount: _filtered.length,
+                separatorBuilder: (_, __) => const SizedBox(height: 8),
+                itemBuilder: (ctx, i) => _SubCard(
+                  sub: _filtered[i], code: code,
+                  onActivate: () async {
+                    if (await _confirm(_t(code, 'confirmActivate'))) {
+                      await _updateSub(_filtered[i].id, {'status': 'active'}, code);
+                    }
+                  },
+                  onCancel: () async {
+                    if (await _confirm(_t(code, 'confirmCancel'))) {
+                      await _updateSub(_filtered[i].id, {'status': 'cancelled'}, code);
+                    }
+                  },
+                  onExtend: () async {
+                    if (await _confirm(_t(code, 'confirmExtend'))) {
+                      await _updateSub(_filtered[i].id, {'extendDays': 30}, code);
+                    }
+                  },
+                ),
+              ),
+      ),
+    ]);
+  }
+
+  Widget _buildLogsTab(String code) {
+    if (_logs.isEmpty) {
+      return Center(child: Text(_t(code, 'noLogs'),
+          style: const TextStyle(color: VetoPalette.textMuted)));
+    }
+    return ListView.separated(
+      padding: const EdgeInsets.all(14),
+      itemCount: _logs.length,
+      separatorBuilder: (_, __) => const SizedBox(height: 6),
+      itemBuilder: (_, i) => _LogCard(log: _logs[i], code: code),
+    );
+  }
+}
+
+// ── Log card ─────────────────────────────────────────────────
+class _LogCard extends StatelessWidget {
+  final _LoginLog log;
+  final String code;
+  const _LogCard({required this.log, required this.code});
+
+  @override
+  Widget build(BuildContext context) {
+    final color = log.success ? VetoPalette.success : VetoPalette.emergency;
+    final ts = '${log.createdAt.day}/${log.createdAt.month}/${log.createdAt.year} '
+        '${log.createdAt.hour.toString().padLeft(2,'0')}:${log.createdAt.minute.toString().padLeft(2,'0')}';
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: VetoPalette.surface,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: color.withValues(alpha: 0.25)),
+      ),
+      child: Row(children: [
+        Icon(log.success ? Icons.check_circle_outline_rounded : Icons.cancel_outlined,
+            color: color, size: 20),
+        const SizedBox(width: 10),
+        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Row(children: [
+            Text(log.eventLabel(code),
+                style: TextStyle(color: color, fontWeight: FontWeight.w700, fontSize: 13)),
+            const SizedBox(width: 8),
+            if (log.role != null)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: VetoPalette.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(log.role!, style: const TextStyle(
+                    color: VetoPalette.primary, fontSize: 10, fontWeight: FontWeight.w600)),
+              ),
+            const Spacer(),
+            Text(ts, style: const TextStyle(color: VetoPalette.textMuted, fontSize: 11)),
+          ]),
+          if (log.phone != null || log.email != null) ...[
+            const SizedBox(height: 2),
+            Text(log.phone ?? log.email ?? '',
+                style: const TextStyle(color: VetoPalette.textSubtle, fontSize: 12),
+                textDirection: TextDirection.ltr),
+          ],
+          if (log.errorMsg != null) ...[
+            const SizedBox(height: 2),
+            Text(log.errorMsg!,
+                style: const TextStyle(color: VetoPalette.emergency, fontSize: 11)),
+          ],
+        ])),
+      ]),
     );
   }
 }

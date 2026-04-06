@@ -231,18 +231,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
           headers: AppConfig.httpHeaders({'Authorization': 'Bearer $tok'}),
         ).timeout(const Duration(seconds: 10));
         if (res.statusCode == 200) {
-          final d = jsonDecode(res.body) as Map<String, dynamic>;
+          final raw = jsonDecode(res.body) as Map<String, dynamic>;
+          // Backend returns { user: {...} } or flat object
+          final d = (raw['user'] ?? raw) as Map<String, dynamic>;
           _emailCtrl.text = d['email'] ?? '';
-          _nameCtrl.text = d['name'] ?? name;
+          _nameCtrl.text = d['full_name'] ?? d['name'] ?? name;
           _phoneCtrl.text = d['phone'] ?? phone;
           _plan = d['plan'] ?? d['subscription']?['plan'] ?? 'free';
           _notifyEmergency = d['settings']?['notifyEmergency'] ?? true;
           _notifyUpdates = d['settings']?['notifyUpdates'] ?? true;
           _notifySms = d['settings']?['notifySms'] ?? false;
           if (role == 'lawyer') {
-            _isAvailable = d['isAvailable'] ?? true;
-            _whatsappCtrl.text = d['whatsapp'] ?? '';
-            _telegramCtrl.text = d['telegram'] ?? '';
+            _isAvailable = d['is_available'] ?? d['isAvailable'] ?? true;
+            _whatsappCtrl.text = d['whatsapp_number'] ?? d['whatsapp'] ?? '';
+            _telegramCtrl.text = d['telegram_username'] ?? d['telegram'] ?? '';
             final specs = d['specializations'];
             if (specs is List) {
               _specializations.clear();
@@ -279,8 +281,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
       final headers = AppConfig.httpHeaders({'Authorization': 'Bearer $tok'});
 
       final body = <String, dynamic>{
-        'name': _nameCtrl.text.trim(),
+        'full_name': _nameCtrl.text.trim(),
         'phone': _phoneCtrl.text.trim(),
+        'email': _emailCtrl.text.trim(),
         'settings': {
           'notifyEmergency': _notifyEmergency,
           'notifyUpdates': _notifyUpdates,
@@ -288,20 +291,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
         },
       };
       if (_role == 'lawyer') {
-        body['isAvailable'] = _isAvailable;
-        body['whatsapp'] = _whatsappCtrl.text.trim();
-        body['telegram'] = _telegramCtrl.text.trim();
+        body['is_available'] = _isAvailable;
+        body['whatsapp_number'] = _whatsappCtrl.text.trim();
+        body['telegram_username'] = _telegramCtrl.text.trim();
         body['specializations'] = _specializations;
       }
 
-      await http.patch(
+      await http.put(
         Uri.parse('${AppConfig.baseUrl}/users/me'),
         headers: headers,
         body: jsonEncode(body),
       ).timeout(const Duration(seconds: 10));
 
       if (_role == 'admin') {
-        await http.patch(
+        await http.put(
           Uri.parse('${AppConfig.baseUrl}/admin/settings'),
           headers: headers,
           body: jsonEncode({
@@ -418,7 +421,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         controller: _emailCtrl,
                         icon: Icons.email_outlined,
                         keyboardType: TextInputType.emailAddress,
-                        readOnly: true,
                       ),
                     ],
                   ),

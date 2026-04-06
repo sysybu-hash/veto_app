@@ -5,6 +5,8 @@
 // ============================================================
 
 import 'dart:convert';
+import 'dart:html' as html;
+import 'dart:typed_data';
 import 'package:flutter/foundation.dart' show kIsWeb, debugPrint;
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
@@ -180,8 +182,13 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
   bool _loading = true;
   bool _uploading = false;
   bool _analyzing = false;
+  bool _isDragging = false;
   String? _activeFileId;
   int _tabIndex = 0; // 0=all, 1=cases
+
+  void Function(html.Event)? _dragOverFn;
+  void Function(html.Event)? _dragLeaveFn;
+  void Function(html.Event)? _dropFn;
 
   late TabController _tabController;
 
@@ -206,15 +213,193 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
     _tabController = TabController(length: 2, vsync: this);
     _tabController.addListener(() => setState(() => _tabIndex = _tabController.index));
     _load();
+    if (kIsWeb) {
+      _dragOverFn = _onDragOver;
+      _dragLeaveFn = _onDragLeave;
+      _dropFn = _onDrop;
+      html.document.addEventListener('dragover', _dragOverFn!);
+      html.document.addEventListener('dragleave', _dragLeaveFn!);
+      html.document.addEventListener('drop', _dropFn!);
+    }
   }
 
   @override
   void dispose() {
+    if (kIsWeb && _dragOverFn != null) {
+      html.document.removeEventListener('dragover', _dragOverFn!);
+      html.document.removeEventListener('dragleave', _dragLeaveFn!);
+      html.document.removeEventListener('drop', _dropFn!);
+    }
     _tabController.dispose();
     super.dispose();
   }
 
   Future<String?> get _token async => _auth.getToken();
+
+  // ── Drag & drop (web) ────────────────────────────────────────
+  void _onDragOver(html.Event event) {
+    event.preventDefault();
+    if (!mounted || _isDragging) return;
+    setState(() => _isDragging = true);
+  }
+
+  void _onDragLeave(html.Event event) {
+    if (!mounted) return;
+    final e = event as html.MouseEvent;
+    if (e.relatedTarget == null) setState(() => _isDragging = false);
+  }
+
+  void _onDrop(html.Event event) async {
+    event.preventDefault();
+    if (!mounted) return;
+    setState(() => _isDragging = false);
+    final dt = (event as html.MouseEvent).dataTransfer;
+    if (dt?.files == null || dt!.files!.isEmpty) return;
+    for (final file in dt.files!) {
+      await _uploadHtmlFile(file);
+    }
+  }
+
+  Future<void> _uploadHtmlFile(html.File file) async {
+    if (_usedMb >= _quotaMb) { _snack(_l.quota, isError: true); return; }
+    setState(() => _uploading = true);
+    try {
+      final tok = await _token;
+      if (tok == null) return;
+      final reader = html.FileReader();
+      reader.readAsArrayBuffer(file);
+      await reader.onLoad.first;
+      final bytes = (reader.result as ByteBuffer).asUint8List();
+      final uri = Uri.parse('${AppConfig.baseUrl}/vault/files/upload');
+      final req = http.MultipartRequest('POST', uri)
+        ..headers.addAll(AppConfig.httpHeadersBinary({'Authorization': 'Bearer $tok'}))
+        ..fields['name'] = file.name
+        ..fields['mimeType'] = file.type.isNotEmpty ? file.type : 'application/octet-stream';
+      req.files.add(http.MultipartFile.fromBytes('file', bytes, filename: file.name));
+      final streamed = await req.send();
+      if (streamed.statusCode == 201 || streamed.statusCode == 200) {
+        _snack(_l.successUpload);
+        await _load();
+      } else {
+        _snack(_l.errorUpload, isError: true);
+      }
+    } catch (_) {
+      _snack(_l.errorUpload, isError: true);
+    }
+    if (mounted) setState(() => _uploading = false);
+  }
+
+  // ── Camera capture (web) ─────────────────────────────────────
+  void _captureFromCamera() {
+    if (!kIsWeb) return;
+    final input = html.InputElement(type: 'file')
+      ..accept = 'image/*,video/*'
+      ..setAttribute('capture', 'environment');
+    input.onChange.listen((_) async {
+      if (input.files == null || input.files!.isEmpty) return;
+      for (final f in input.files!) {
+        await _uploadHtmlFile(f);
+      }
+    });
+    input.click();
+  }
+
+  // ── File preview dialog ──────────────────────────────────────
+  void _showPreview(_VaultFile file) {
+    final isImage = file.type.startsWith('image/');
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => Dialog(
+        backgroundColor: VetoPalette.darkBg,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        insetPadding: const EdgeInsets.all(20),
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          // Header
+          Container(
+            padding: const EdgeInsets.fromLTRB(16, 14, 8, 14),
+            decoration: const BoxDecoration(
+                border: Border(bottom: BorderSide(color: VetoPalette.border))),
+            child: Row(children: [
+              Icon(file.icon, color: file.typeColor, size: 20),
+              const SizedBox(width: 8),
+              Expanded(child: Text(file.name,
+                  style: const TextStyle(color: VetoPalette.text,
+                      fontWeight: FontWeight.w700, fontSize: 14),
+                  maxLines: 1, overflow: TextOverflow.ellipsis)),
+              IconButton(
+                icon: const Icon(Icons.close_rounded, color: VetoPalette.textMuted),
+                onPressed: () => Navigator.pop(ctx),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+              ),
+            ]),
+          ),
+          // Preview content
+          if (isImage && file.url.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: Image.network(
+                  file.url,
+                  fit: BoxFit.contain,
+                  errorBuilder: (_, __, ___) => const Padding(
+                    padding: EdgeInsets.all(32),
+                    child: Icon(Icons.broken_image_outlined,
+                        size: 80, color: VetoPalette.textMuted),
+                  ),
+                ),
+              ),
+            )
+          else
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 32),
+              child: Icon(file.icon, size: 80, color: file.typeColor),
+            ),
+          // Metadata row
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+            child: Row(children: [
+              Icon(Icons.storage_rounded, size: 12, color: VetoPalette.textMuted),
+              const SizedBox(width: 4),
+              Text(file.sizeLabel,
+                  style: const TextStyle(color: VetoPalette.textMuted, fontSize: 12)),
+              const SizedBox(width: 16),
+              Icon(Icons.calendar_today_outlined,
+                  size: 12, color: VetoPalette.textMuted),
+              const SizedBox(width: 4),
+              Text(
+                '${file.uploadedAt.day}/${file.uploadedAt.month}/${file.uploadedAt.year}',
+                style: const TextStyle(color: VetoPalette.textMuted, fontSize: 12),
+              ),
+            ]),
+          ),
+          // Open in new tab button
+          if (file.url.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
+              child: SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () {
+                    html.window.open(file.url, '_blank');
+                    Navigator.pop(ctx);
+                  },
+                  icon: const Icon(Icons.open_in_new_rounded, size: 16),
+                  label: const Text('Open in new tab'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: VetoPalette.primary,
+                    side: const BorderSide(color: VetoPalette.primary),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10)),
+                  ),
+                ),
+              ),
+            ),
+        ]),
+      ),
+    );
+  }
 
   // ── API calls ────────────────────────────────────────────────
   Future<void> _load() async {
@@ -446,6 +631,12 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
               style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
           iconTheme: const IconThemeData(color: Colors.white),
           actions: [
+            if (kIsWeb)
+              IconButton(
+                icon: const Icon(Icons.photo_camera_outlined),
+                onPressed: _uploading ? null : _captureFromCamera,
+                tooltip: 'Capture from camera',
+              ),
             IconButton(
               icon: const Icon(Icons.refresh_rounded),
               onPressed: _load,
@@ -473,20 +664,46 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
           label: Text(_uploading ? _l.uploading : _l.upload,
               style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
         ),
-        body: _loading
-            ? const Center(child: CircularProgressIndicator())
-            : Column(children: [
-                _buildQuotaBar(),
-                Expanded(
-                  child: TabBarView(
-                    controller: _tabController,
-                    children: [
-                      _buildAllFilesTab(),
-                      _buildCasesTab(),
-                    ],
+        body: Stack(children: [
+          _loading
+              ? const Center(child: CircularProgressIndicator())
+              : Column(children: [
+                  _buildQuotaBar(),
+                  Expanded(
+                    child: TabBarView(
+                      controller: _tabController,
+                      children: [
+                        _buildAllFilesTab(),
+                        _buildCasesTab(),
+                      ],
+                    ),
                   ),
+                ]),
+          if (_isDragging)
+            IgnorePointer(
+              child: Container(
+                color: VetoPalette.primary.withValues(alpha: 0.18),
+                child: Center(
+                  child: Column(mainAxisSize: MainAxisSize.min, children: [
+                    Container(
+                      padding: const EdgeInsets.all(24),
+                      decoration: BoxDecoration(
+                        color: VetoPalette.primary.withValues(alpha: 0.15),
+                        shape: BoxShape.circle,
+                        border: Border.all(color: VetoPalette.primary, width: 2),
+                      ),
+                      child: const Icon(Icons.upload_file_rounded,
+                          size: 60, color: VetoPalette.primary),
+                    ),
+                    const SizedBox(height: 20),
+                    const Text('Drop files here',
+                        style: TextStyle(color: VetoPalette.primary,
+                            fontSize: 22, fontWeight: FontWeight.w700)),
+                  ]),
                 ),
-              ]),
+              ),
+            ),
+        ]),
       ),
     );
   }
@@ -557,6 +774,7 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
         onDelete: () => _deleteFile(_files[i]),
         onToggleAccess: () => _toggleLawyerAccess(_files[i]),
         onAddToCase: _cases.isEmpty ? null : () => _showAddToCase(_files[i]),
+        onPreview: () => _showPreview(_files[i]),
       ),
     );
   }
@@ -661,11 +879,12 @@ class _FileCard extends StatelessWidget {
   final bool isAnalyzing;
   final VoidCallback onAnalyze, onDelete, onToggleAccess;
   final VoidCallback? onAddToCase;
+  final VoidCallback? onPreview;
 
   const _FileCard({
     required this.file, required this.l, required this.isAnalyzing,
     required this.onAnalyze, required this.onDelete,
-    required this.onToggleAccess, this.onAddToCase,
+    required this.onToggleAccess, this.onAddToCase, this.onPreview,
   });
 
   @override
@@ -703,6 +922,15 @@ class _FileCard extends StatelessWidget {
                   style: const TextStyle(color: VetoPalette.textMuted, fontSize: 12)),
             ],
           )),
+          if (onPreview != null)
+            IconButton(
+              icon: const Icon(Icons.visibility_outlined, size: 18),
+              color: VetoPalette.textMuted,
+              onPressed: onPreview,
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+              tooltip: 'Preview',
+            ),
           // Lawyer access badge
           if (file.lawyerAccess)
             Container(

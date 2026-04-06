@@ -33,10 +33,12 @@ try {
 }
 
 const express = require('express');
-const cors = require('cors');
-const http = require('http');
+const cors    = require('cors');
+const http    = require('http');
+const helmet  = require('helmet');
+const rateLimit = require('express-rate-limit');
 const { Server } = require('socket.io');
-const connectDB = require('./src/config/db');
+const connectDB  = require('./src/config/db');
 
 /** ל-Render health check: השרת חי לפני ש-Mongo מחובר */
 let mongoState = 'pending';
@@ -58,6 +60,26 @@ app.use(
   }),
 );
 
+// ── Security headers (European/banking standard) ──────────────
+app.use(helmet({
+  contentSecurityPolicy: false,  // Flutter web needs inline scripts
+  crossOriginOpenerPolicy: false, // handled by Vercel headers
+}));
+
+// ── Rate limiting on auth routes ──────────────────────────────
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 20,                    // max 20 auth attempts per IP per window
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many requests from this IP. Please wait 15 minutes.' },
+});
+const otpLimiter = rateLimit({
+  windowMs: 10 * 60 * 1000,
+  max: 5,
+  message: { error: 'Too many OTP requests. Please wait 10 minutes.' },
+});
+
 app.use(express.json());
 
 // ── Static uploads folder (evidence files) ─────────────────
@@ -72,13 +94,14 @@ const io = new Server(server, {
 });
 app.set('io', io);
 
-app.use('/api/auth', require('./src/routes/auth.routes'));
+app.use('/api/auth', authLimiter, require('./src/routes/auth.routes'));
 app.use('/api/users', require('./src/routes/user.routes'));
 app.use('/api/lawyers', require('./src/routes/lawyer.routes'));
 app.use('/api/events', require('./src/routes/event.routes'));
 app.use('/api/admin', require('./src/routes/admin.routes'));
 app.use('/api/ai', require('./src/routes/ai.routes'));
 app.use('/api/payments', require('./src/routes/payment.routes'));
+app.use('/api/chat', require('./src/routes/chat.routes'));
 
 app.get('/', (_, res) =>
   res.json({

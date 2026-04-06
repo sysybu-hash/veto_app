@@ -306,8 +306,10 @@ class _LawyerDashboardState extends State<LawyerDashboard> {
                           isAvailable: _isAvailable,
                           profileLabel: _t(code, 'profile'),
                           logoutLabel: _t(code, 'logout'),
+                          settingsLabel: code == 'he' ? 'הגדרות' : code == 'ru' ? 'Настройки' : 'Settings',
                           onProfile: () => Navigator.pushNamed(context, '/profile'),
                           onLogout: () => AuthService().logout(context),
+                          onSettings: () => Navigator.pushNamed(context, '/lawyer_settings'),
                         ),
                       ),
                     ),
@@ -559,8 +561,10 @@ class _HeroHeader extends StatelessWidget {
   final bool isAvailable;
   final String profileLabel;
   final String logoutLabel;
+  final String settingsLabel;
   final VoidCallback onProfile;
   final VoidCallback onLogout;
+  final VoidCallback onSettings;
 
   const _HeroHeader({
     required this.eyebrow,
@@ -571,8 +575,10 @@ class _HeroHeader extends StatelessWidget {
     required this.isAvailable,
     required this.profileLabel,
     required this.logoutLabel,
+    required this.settingsLabel,
     required this.onProfile,
     required this.onLogout,
+    required this.onSettings,
   });
 
   @override
@@ -648,6 +654,12 @@ class _HeroHeader extends StatelessWidget {
                 icon: Icons.person_outline_rounded,
                 tooltip: profileLabel,
                 onTap: onProfile,
+              ),
+              const SizedBox(width: 8),
+              _HeaderAction(
+                icon: Icons.settings_outlined,
+                tooltip: settingsLabel,
+                onTap: onSettings,
               ),
               const SizedBox(width: 8),
               _HeaderAction(

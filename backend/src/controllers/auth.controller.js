@@ -4,9 +4,15 @@
 //  Flow: Register ? Request OTP ? Verify OTP ? JWT issued
 // ============================================================
 
-const User    = require('../models/User');
-const Lawyer  = require('../models/Lawyer');
+const User      = require('../models/User');
+const Lawyer    = require('../models/Lawyer');
+const LoginLog  = require('../models/LoginLog');
 const { signToken } = require('../middleware/auth.middleware');
+
+// ── Helper: persist login attempt log ─────────────────────────
+async function logEvent(data) {
+  try { await LoginLog.create(data); } catch (_) {}
+}
 
 // ?? Helpers ????????????????????????????????????????????????
 
@@ -89,6 +95,8 @@ const register = async (req, res, next) => {
 
     const newDoc = await Model.create(payload);
 
+    logEvent({ phone, email: email || null, role, event: 'register', success: true, user_id: newDoc._id, ip: req.ip, user_agent: req.headers['user-agent'] });
+
     return res.status(201).json({
       message: 'Account created. Please verify your phone.',
       id:      newDoc._id,
@@ -96,6 +104,7 @@ const register = async (req, res, next) => {
     });
   } catch (err) {
     if (err.code === 11000) {
+      logEvent({ phone: req.body.phone, role: req.body.role, event: 'register', success: false, error_msg: 'duplicate', ip: req.ip, user_agent: req.headers['user-agent'] });
       return res.status(409).json({ error: 'Account already exists.' });
     }
     next(err);
@@ -114,6 +123,7 @@ const requestOTP = async (req, res, next) => {
 
     const found = await findByPhone(phone);
     if (!found) {
+      logEvent({ phone, event: 'otp_request', success: false, error_msg: 'not_found', ip: req.ip, user_agent: req.headers['user-agent'] });
       return res.status(404).json({
         error: 'No account found with this phone number. Please register first.',
       });
@@ -129,6 +139,8 @@ const requestOTP = async (req, res, next) => {
     console.log(`[AUTH] OTP for ${phone}: ${otp}`);
 
     console.log(`[AUTH] OTP requested for ${phone} (role: ${role})`);
+
+    logEvent({ phone, role, event: 'otp_request', success: true, user_id: doc._id, ip: req.ip, user_agent: req.headers['user-agent'] });
 
     const exposeOtp =
       process.env.NODE_ENV !== 'production' ||
@@ -177,6 +189,7 @@ const verifyOTP = async (req, res, next) => {
     }
 
     if (!doc) {
+      logEvent({ phone, event: 'otp_fail', success: false, error_msg: 'not_found', ip: req.ip, user_agent: req.headers['user-agent'] });
       return res.status(404).json({ error: 'Account not found.' });
     }
 
@@ -192,9 +205,11 @@ const verifyOTP = async (req, res, next) => {
 
     // ── Validate against DB OTP ────────────────────────
     if (!doc.otp_code || doc.otp_code !== String(otp)) {
+      logEvent({ phone, role, event: 'otp_fail', success: false, error_msg: 'invalid_otp', user_id: doc._id, ip: req.ip, user_agent: req.headers['user-agent'] });
       return res.status(401).json({ error: 'Invalid OTP.' });
     }
     if (!doc.otp_expires_at || doc.otp_expires_at < new Date()) {
+      logEvent({ phone, role, event: 'otp_fail', success: false, error_msg: 'otp_expired', user_id: doc._id, ip: req.ip, user_agent: req.headers['user-agent'] });
       return res.status(401).json({ error: 'OTP has expired. Please request a new one.' });
     }
 
@@ -214,6 +229,8 @@ const verifyOTP = async (req, res, next) => {
 
     // Compute payment exemption: admin, lawyer, or manually_added user
     const isPaymentExempt = role === 'admin' || role === 'lawyer' || doc.manually_added === true;
+
+    logEvent({ phone, role, event: 'otp_success', success: true, user_id: doc._id, ip: req.ip, user_agent: req.headers['user-agent'] });
 
     return res.status(200).json({
       message: 'Verification successful.',
@@ -308,6 +325,8 @@ const googleAuth = async (req, res, next) => {
       full_name:          doc.full_name,
       preferred_language: doc.preferred_language,
     });
+
+    logEvent({ email, role: userRole, event: 'google_login', success: true, user_id: doc._id, ip: req.ip, user_agent: req.headers['user-agent'] });
 
     return res.status(200).json({
       message: 'Google authentication successful.',

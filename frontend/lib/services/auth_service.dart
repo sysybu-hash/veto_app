@@ -90,19 +90,23 @@ class AuthService {
     required String fullName, 
     required String phoneNumber, 
     required String role, 
-    required String language
+    required String language,
+    String? email,
   }) async {
     try {
+      final body = <String, dynamic>{
+        'full_name': fullName,
+        'phone': phoneNumber,
+        'role': role,
+        'preferred_language': language,
+      };
+      if (email != null && email.isNotEmpty) body['email'] = email;
+      if (role == 'lawyer') body['license_number'] = '';
+
       final response = await http.post(
         Uri.parse('${AppConfig.baseUrl}/auth/register'),
         headers: AppConfig.httpHeaders({}),
-        body: jsonEncode({
-          'full_name': fullName,
-          'phone': phoneNumber,
-          'role': role,
-          'preferred_language': language,
-          'license_number': role == 'lawyer' ? '12345' : null // Simple default for demo
-        }),
+        body: jsonEncode(body),
       );
       
       if (response.statusCode == 201) {
@@ -116,16 +120,20 @@ class AuthService {
     }
   }
 
-  /// Authenticate via Google ID token. Returns the same shape as [verifyOTP].
+  /// Authenticate via Google ID token or access token.
   Future<Map<String, dynamic>?> googleAuth({
-    required String idToken,
+    String? idToken,
+    String? accessToken,
     String language = 'he',
   }) async {
     try {
+      final body = <String, dynamic>{'preferred_language': language};
+      if (idToken != null) body['id_token'] = idToken;
+      if (accessToken != null) body['access_token'] = accessToken;
       final response = await http.post(
         Uri.parse('${AppConfig.baseUrl}/auth/google'),
         headers: AppConfig.httpHeaders({}),
-        body: jsonEncode({'id_token': idToken, 'preferred_language': language}),
+        body: jsonEncode(body),
       ).timeout(const Duration(seconds: 25));
 
       if (response.statusCode == 200) {

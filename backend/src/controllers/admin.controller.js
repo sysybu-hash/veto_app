@@ -166,6 +166,57 @@ const deleteLawyer = async (req, res, next) => {
   } catch (err) { next(err); }
 };
 
+// ── Login attempt logs ────────────────────────────────────────
+const getLoginLogs = async (req, res, next) => {
+  try {
+    const LoginLog = require('../models/LoginLog');
+    const limit = Math.min(parseInt(req.query.limit) || 200, 500);
+    const page  = Math.max(1, parseInt(req.query.page) || 1);
+    const logs  = await LoginLog.find({})
+      .sort({ createdAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(limit);
+    const total = await LoginLog.countDocuments();
+    res.json({ logs, total, page, limit });
+  } catch (err) { next(err); }
+};
+
+// ── All users with subscription status (for admin users+subs page) ───
+const getAllUsersWithStatus = async (req, res, next) => {
+  try {
+    const users = await User.find({})
+      .select('full_name phone email role is_verified is_subscribed subscription_expiry manually_added is_active preferred_language createdAt')
+      .sort({ createdAt: -1 });
+
+    const enriched = users.map((u) => {
+      let status = 'unverified';
+      if (u.manually_added) status = 'free';
+      else if (u.is_subscribed) {
+        const expired = u.subscription_expiry && u.subscription_expiry < new Date();
+        status = expired ? 'expired' : 'active';
+      } else if (u.is_verified) {
+        status = 'no_subscription';
+      }
+      return {
+        _id:                u._id,
+        full_name:          u.full_name,
+        phone:              u.phone,
+        email:              u.email,
+        role:               u.role,
+        is_verified:        u.is_verified,
+        is_subscribed:      u.is_subscribed,
+        manually_added:     u.manually_added,
+        subscription_expiry:u.subscription_expiry,
+        is_active:          u.is_active,
+        preferred_language: u.preferred_language,
+        createdAt:          u.createdAt,
+        computed_status:    status,
+      };
+    });
+    res.json({ users: enriched });
+  } catch (err) { next(err); }
+};
+
 const getEmergencyLogs = async (req, res, next) => {
   try {
     const Event = require('../models/EmergencyEvent');
@@ -203,4 +254,5 @@ module.exports = {
   getAllLawyers, createLawyer, updateLawyer, deleteLawyer,
   getPendingLawyers, approveLawyer, rejectLawyer,
   getEmergencyLogs, updateEmergencyLog, deleteEmergencyLog,
+  getLoginLogs, getAllUsersWithStatus,
 };

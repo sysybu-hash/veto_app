@@ -71,7 +71,7 @@ class LandingScreen extends StatelessWidget {
       'ctaTitle': 'בונים שכבת הגנה לפני שהאירוע מתחיל',
       'ctaBody': 'ההרשמה קצרה. מהרגע שהיא מסתיימת, כל חירום משפטי מקבל מסך ברור ומוכן לפעולה.',
       'ctaButton': 'לעבור לאשף',
-      'footer': 'VETO | מערכת תגובה משפטית חכמה, מהירה ורב-לשונית',
+      'footer': 'VETO LEGAL | מערכת תגובה משפטית חכמה, מהירה ורב-לשונית',
     },
     'en': {
       'navLogin': 'Sign in',
@@ -128,7 +128,7 @@ class LandingScreen extends StatelessWidget {
       'ctaTitle': 'Build your legal safety layer before the incident begins',
       'ctaBody': 'Registration is short. Once it is done, every legal emergency starts from one clear, ready-to-use interface.',
       'ctaButton': 'Open the wizard',
-      'footer': 'VETO | Fast, intelligent, multilingual legal response',
+      'footer': 'VETO LEGAL | Fast, intelligent, multilingual legal response',
     },
     'ru': {
       'navLogin': 'Вход',
@@ -185,7 +185,7 @@ class LandingScreen extends StatelessWidget {
       'ctaTitle': 'Создайте юридический слой защиты до начала инцидента',
       'ctaBody': 'Регистрация занимает минимум времени. После нее любое ЧП начинается с одного понятного рабочего экрана.',
       'ctaButton': 'Перейти к мастеру',
-      'footer': 'VETO | Быстрая, умная и мультиязычная юридическая реакция',
+      'footer': 'VETO LEGAL | Быстрая, умная и мультиязычная юридическая реакция',
     },
   };
 
@@ -390,12 +390,16 @@ class _Nav extends StatelessWidget {
                 ),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: const Icon(Icons.shield_rounded, color: Colors.white, size: 18),
+              child: const Icon(Icons.gavel_rounded, color: Colors.white, size: 18),
             ),
             const SizedBox(width: 10),
             const Text('VETO', style: TextStyle(
               color: Colors.white, fontSize: 18,
               fontWeight: FontWeight.w900, letterSpacing: 6,
+            )),
+            const Text(' LEGAL', style: TextStyle(
+              color: Color(0xFF3B82F6), fontSize: 18,
+              fontWeight: FontWeight.w900, letterSpacing: 3,
             )),
             const Spacer(),
             const AppLanguageMenu(compact: true),

@@ -6,13 +6,13 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:google_sign_in/google_sign_in.dart';
 import 'package:pinput/pinput.dart';
 import 'package:provider/provider.dart';
 
 import '../core/i18n/app_language.dart';
 import '../core/theme/future_surface.dart';
 import '../core/theme/veto_theme.dart';
+import '../platform/browser_bridge.dart' as browser_bridge;
 import '../services/auth_service.dart';
 import '../services/payment_service.dart';
 import '../widgets/app_language_menu.dart';
@@ -23,11 +23,6 @@ import '../widgets/app_language_menu.dart';
 // The same ID must also be set in GOOGLE_CLIENT_ID on the backend.
 const _kGoogleClientId =
     '752712664923-7loca49f7fggd514q8reljn93meatmrf.apps.googleusercontent.com';
-
-final _gSignIn = GoogleSignIn(
-  clientId: _kGoogleClientId,
-  scopes: ['email', 'profile'],
-);
 
 enum _Step { role, profile, otp }
 
@@ -63,7 +58,9 @@ const _copy = <String, Map<String, String>>{
     'copyCode': 'העתק קוד',
     'copied': 'הועתק!',
     'verify': 'אמת והמשך',
-    'invalidPhone': 'הכנס מספר טלפון תקין בן 9-10 ספרות.',
+    'emailLabel': 'כתובת אימייל',
+    'emailHint': 'name@example.com',
+    'pasteOtp': 'הדבק קוד',
     'missingName': 'הכנס שם מלא כדי להשלים את ההרשמה.',
     'registerFailed': 'לא ניתן ליצור את החשבון שלך. נסה שוב.',
     'otpFailed': 'לא ניתן לשלוח את הקוד. ודא שהחשבון קיים או עבור להרשמה.',
@@ -146,6 +143,9 @@ const _copy = <String, Map<String, String>>{
     'paymentConfirm': 'Confirm payment',
     'paymentOpenFailed': 'PayPal could not be opened right now.',
     'paymentConfirmFailed': 'Payment not confirmed yet. Check the PayPal tab and try again.',
+    'emailLabel': 'Email address',
+    'emailHint': 'name@example.com',
+    'pasteOtp': 'Paste code',
   },
   'ru': {
     'eyebrow': 'Вход / Регистрация',
@@ -202,6 +202,9 @@ const _copy = <String, Map<String, String>>{
     'paymentConfirm': 'Подтвердить оплату',
     'paymentOpenFailed': 'PayPal сейчас недоступен.',
     'paymentConfirmFailed': 'Оплата ещё не подтверждена. Проверьте PayPal и попробуйте снова.',
+    'emailLabel': 'Адрес электронной почты',
+    'emailHint': 'name@example.com',
+    'pasteOtp': 'Вставить код',
   },
 };
 
@@ -231,6 +234,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   final _nameCtrl  = TextEditingController();
   final _phoneCtrl = TextEditingController();
+  final _emailCtrl = TextEditingController();
   final _otpCtrl   = TextEditingController();
 
   String get _fullPhone {
@@ -243,6 +247,7 @@ class _LoginScreenState extends State<LoginScreen> {
   void dispose() {
     _nameCtrl.dispose();
     _phoneCtrl.dispose();
+    _emailCtrl.dispose();
     _otpCtrl.dispose();
     super.dispose();
   }
@@ -308,6 +313,7 @@ class _LoginScreenState extends State<LoginScreen> {
           phoneNumber: _fullPhone,
           role: _role,
           language: lang,
+          email: _emailCtrl.text.trim().isEmpty ? null : _emailCtrl.text.trim(),
         );
         if (!ok) {
           setState(() { _loading = false; _error = _t(lang, 'registerFailed'); });
@@ -371,29 +377,16 @@ class _LoginScreenState extends State<LoginScreen> {
   // ?? Google flow ?????????????????????????????????????????????
   Future<void> _signInWithGoogle() async {
     final lang = context.read<AppLanguageController>().code;
-
-    if (_kGoogleClientId.startsWith('YOUR_')) {
-      setState(() => _error = _t(lang, 'googleNotConfigured'));
-      return;
-    }
-
     setState(() { _loading = true; _error = ''; });
 
     try {
-      final account = await _gSignIn.signIn();
-      if (account == null) {
-        setState(() => _loading = false);
-        return;
-      }
-      final auth    = await account.authentication;
-      final idToken = auth.idToken;
+      // Use GIS token client via JavaScript bridge (reliable on Flutter Web)
+      final accessToken = await browser_bridge.googleSignInViaGIS(_kGoogleClientId);
 
-      if (idToken == null) {
-        setState(() { _loading = false; _error = _t(lang, 'googleFailed'); });
-        return;
-      }
-
-      final data = await AuthService().googleAuth(idToken: idToken, language: lang);
+      final data = await AuthService().googleAuth(
+        accessToken: accessToken,
+        language: lang,
+      );
       if (!mounted) return;
 
       if (data == null) {
@@ -402,8 +395,11 @@ class _LoginScreenState extends State<LoginScreen> {
       }
 
       await _navigateAfterAuth(data, lang);
-    } catch (_) {
-      setState(() { _loading = false; _error = _t(lang, 'googleFailed'); });
+    } catch (e) {
+      debugPrint('Google Sign-In error: $e');
+      if (mounted) {
+        setState(() { _loading = false; _error = _t(lang, 'googleFailed'); });
+      }
     }
   }
 
@@ -560,6 +556,16 @@ class _LoginScreenState extends State<LoginScreen> {
             action: TextInputAction.next,
             onSubmitted: (_) => FocusScope.of(context).nextFocus(),
           ),
+          _VetoField(
+            controller: _emailCtrl,
+            label: _t(lang, 'emailLabel'),
+            hint: _t(lang, 'emailHint'),
+            icon: Icons.email_outlined,
+            keyboardType: TextInputType.emailAddress,
+            action: TextInputAction.next,
+            onSubmitted: (_) => FocusScope.of(context).nextFocus(),
+          ),
+          const SizedBox(height: 12),
           const SizedBox(height: 12),
         ],
         _PhoneRow(
@@ -638,6 +644,22 @@ class _LoginScreenState extends State<LoginScreen> {
             onChanged: (_) { if (_error.isNotEmpty) setState(() => _error = ''); },
             onCompleted: _verifyOtp,
           ),
+        )),
+        const SizedBox(height: 8),
+        // Paste from clipboard button
+        Center(child: TextButton.icon(
+          icon: const Icon(Icons.content_paste_rounded, size: 16),
+          label: Text(_t(lang, 'pasteOtp'),
+              style: const TextStyle(fontSize: 13)),
+          onPressed: () async {
+            final data = await Clipboard.getData(Clipboard.kTextPlain);
+            final text = (data?.text ?? '').replaceAll(RegExp(r'\D'), '');
+            if (text.length >= 6) {
+              final code = text.substring(0, 6);
+              _otpCtrl.text = code;
+              await _verifyOtp(code);
+            }
+          },
         )),
         const SizedBox(height: 18),
         Row(children: [
@@ -830,7 +852,7 @@ class _RoleCard extends StatelessWidget {
               fontSize: 16, fontWeight: FontWeight.w800)),
           const SizedBox(height: 6),
           Text(body, style: const TextStyle(
-              color: VetoPalette.textMuted, fontSize: 12, height: 1.6)),
+              color: VetoPalette.textMuted, fontSize: 13, height: 1.5)),
         ]),
       ),
     );
@@ -840,12 +862,15 @@ class _RoleCard extends StatelessWidget {
 class _VetoField extends StatelessWidget {
   final TextEditingController controller;
   final String label;
+  final String? hint;
   final IconData icon;
   final TextInputAction action;
+  final TextInputType? keyboardType;
   final ValueChanged<String>? onSubmitted;
   const _VetoField({
     required this.controller, required this.label,
-    required this.icon, required this.action, this.onSubmitted,
+    required this.icon, required this.action,
+    this.hint, this.keyboardType, this.onSubmitted,
   });
 
   @override
@@ -853,9 +878,11 @@ class _VetoField extends StatelessWidget {
     return TextField(
       controller: controller,
       textInputAction: action,
+      keyboardType: keyboardType,
       onSubmitted: onSubmitted,
       decoration: InputDecoration(
         labelText: label,
+        hintText: hint,
         prefixIcon: Icon(icon, size: 20),
       ),
     );
@@ -1036,26 +1063,43 @@ class _AuthHero extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.all(compact ? 20 : 30),
+      padding: EdgeInsets.all(compact ? 20 : 36),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF060C17), Color(0xFF0E1E38), Color(0xFF091629)],
-          begin: Alignment.topLeft, end: Alignment.bottomRight,
-        ),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: VetoPalette.border),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
         boxShadow: [
           BoxShadow(
-            color: Color(0xFF1D6FB8).withValues(alpha: 0.08),
-            blurRadius: 40,
+            color: const Color(0xFF1D6FB8).withValues(alpha: 0.06),
+            blurRadius: 32,
             spreadRadius: 2,
           ),
         ],
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text(_t(lang, 'eyebrow').toUpperCase(), style: const TextStyle(
-            color: VetoPalette.primary, fontSize: 10, fontWeight: FontWeight.w800, letterSpacing: 2.5)),
-        const SizedBox(height: 10),
+        // VETO LEGAL brand row
+        Row(children: [
+          Container(
+            width: compact ? 34 : 42,
+            height: compact ? 34 : 42,
+            decoration: BoxDecoration(
+              color: VetoPalette.primary,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(Icons.gavel_rounded, color: Colors.white, size: compact ? 18 : 22),
+          ),
+          const SizedBox(width: 10),
+          Text(
+            'VETO LEGAL',
+            style: TextStyle(
+              color: VetoPalette.primary,
+              fontSize: compact ? 14 : 17,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 1.8,
+            ),
+          ),
+        ]),
+        SizedBox(height: compact ? 16 : 24),
         Text(
           lang == 'he'
               ? 'כניסה ברורה.\nהצטרפות מהירה.\nשפה אחת שנשארת איתך.'
@@ -1064,25 +1108,54 @@ class _AuthHero extends StatelessWidget {
                   : 'Clear sign-in.\nFast onboarding.\nOne language that stays with you.',
           style: TextStyle(
               color: VetoPalette.text,
-              fontSize: compact ? 26 : 42,
+              fontSize: compact ? 22 : 36,
               fontWeight: FontWeight.w900,
-              height: 1.08),
+              height: 1.12),
         ),
-        const SizedBox(height: 14),
+        SizedBox(height: compact ? 14 : 20),
         _HeroLine(icon: Icons.account_tree_outlined,
             label: lang == 'he' ? 'אזרח, עורך דין או מנהל'
                 : lang == 'ru' ? 'Гражданин, адвокат или администратор'
                 : 'Citizen, lawyer, or admin flow'),
-        const SizedBox(height: 8),
+        const SizedBox(height: 10),
         _HeroLine(icon: Icons.translate_rounded,
             label: lang == 'he' ? 'עברית, English ורוסית'
                 : lang == 'ru' ? 'Иврит, English и русский'
                 : 'Hebrew, English, and Russian'),
-        const SizedBox(height: 8),
+        const SizedBox(height: 10),
         _HeroLine(icon: Icons.auto_awesome_rounded,
-            label: lang == 'he' ? 'OTP ומנוי בקסם אחד'
-                : lang == 'ru' ? 'OTP и подписка в одном мастере'
+            label: lang == 'he' ? 'OTP ומנוי אחד — פשוט ומהיר'
+                : lang == 'ru' ? 'OTP и подписка — просто и быстро'
                 : 'OTP and subscription in one wizard'),
+        if (!compact) ...[
+          const SizedBox(height: 28),
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF0F9FF),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: VetoPalette.primary.withValues(alpha: 0.18)),
+            ),
+            child: Row(children: [
+              const Icon(Icons.verified_user_rounded, color: VetoPalette.success, size: 18),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  lang == 'he'
+                      ? 'מאובטח, מוצפן ובתאימות לתקנות הגנת הפרטיות.'
+                      : lang == 'ru'
+                          ? 'Защищено, зашифровано, соответствует законам о конфиденциальности.'
+                          : 'Secured, encrypted, and privacy-law compliant.',
+                  style: const TextStyle(
+                    color: VetoPalette.textMuted,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            ]),
+          ),
+        ],
       ]),
     );
   }

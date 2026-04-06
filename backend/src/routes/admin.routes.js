@@ -6,6 +6,7 @@ const {
   getAllLawyers, createLawyer, updateLawyer, deleteLawyer,
   getPendingLawyers, approveLawyer, rejectLawyer,
   getEmergencyLogs, updateEmergencyLog, deleteEmergencyLog,
+  getLoginLogs, getAllUsersWithStatus,
 } = require('../controllers/admin.controller');
 
 const router = express.Router();
@@ -25,5 +26,12 @@ router.route('/lawyers/:id').put(updateLawyer).delete(deleteLawyer);
 
 router.get('/emergency-logs', getEmergencyLogs);
 router.route('/emergency-logs/:id').put(updateEmergencyLog).delete(deleteEmergencyLog);
+
+// ── New endpoints ──────────────────────────────────────────────
+router.get('/login-logs', getLoginLogs);
+router.get('/users-with-status', getAllUsersWithStatus);
+
+// Subscriptions endpoint — returns all users with sub status (for SubscriptionAdminScreen)
+router.get('/subscriptions', getAllUsersWithStatus);
 
 module.exports = router;

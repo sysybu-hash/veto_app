@@ -9,3 +9,7 @@ Object? callBrowserMethod(String objectName, String methodName, List<dynamic> ar
 bool supportsBrowserMethod(String objectName, String methodName, List<dynamic> arguments) {
   return false;
 }
+
+Future<String> googleSignInViaGIS(String clientId) async {
+  throw UnsupportedError('Google Sign-In via GIS is only supported on web.');
+}
