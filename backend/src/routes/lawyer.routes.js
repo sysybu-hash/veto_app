@@ -78,4 +78,17 @@ router.put('/location', async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
+// POST /api/lawyers/push-subscription
+// Saves (or clears) the browser push subscription for this lawyer.
+// Body: { subscription: <PushSubscription object> | null }
+router.post('/push-subscription', async (req, res, next) => {
+  try {
+    const { subscription } = req.body;
+    await Lawyer.findByIdAndUpdate(req.user.userId, {
+      push_subscription: subscription || null,
+    });
+    res.json({ message: subscription ? 'Push subscription saved.' : 'Push subscription cleared.' });
+  } catch (err) { next(err); }
+});
+
 module.exports = router;

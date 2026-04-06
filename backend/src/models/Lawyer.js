@@ -179,6 +179,13 @@ const LawyerSchema = new mongoose.Schema(
       notifySms:       { type: Boolean, default: false },
     },
 
+    // ── Web Push Subscription (browser PushSubscription object) ─
+    push_subscription: {
+      type: mongoose.Schema.Types.Mixed,
+      default: null,
+      select: false, // don't expose by default
+    },
+
     // ── Response Config ───────────────────────────────────────
     response_minutes: {
       type: Number,

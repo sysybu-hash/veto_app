@@ -6,6 +6,7 @@
 
 const Lawyer         = require('../models/Lawyer');
 const EmergencyEvent = require('../models/EmergencyEvent');
+const push           = require('../services/push.service');
 
 // ── In-memory lock to prevent double-acceptance ────────────
 // eventId → lawyerId (settled races)
@@ -102,11 +103,14 @@ module.exports = function initDispatch(io) {
         // 1.5. Notify the user immediately that the event was created
         socket.emit('emergency_created', { eventId });
 
-        // 2. Find available online lawyers ───────────────
+        // 2. Find available lawyers (online via socket OR have push subscription) ─
         const lawyerQuery = {
-          is_online:    true,
           is_available: true,
           is_active:    true,
+          $or: [
+            { is_online: true },
+            { push_subscription: { $ne: null, $exists: true } },
+          ],
         };
 
         // Filter by specialization if AI provided one
@@ -116,14 +120,14 @@ module.exports = function initDispatch(io) {
         }
 
         let availableLawyers = await Lawyer.find(lawyerQuery).select(
-          'full_name phone whatsapp_number telegram_username preferred_language socket_id'
+          'full_name phone whatsapp_number telegram_username preferred_language socket_id push_subscription'
         );
 
         // Fallback: if specialization filter yielded no lawyers, try all available
         if (specialization && availableLawyers.length === 0) {
           delete lawyerQuery.specializations;
           availableLawyers = await Lawyer.find(lawyerQuery).select(
-            'full_name phone whatsapp_number telegram_username preferred_language socket_id'
+            'full_name phone whatsapp_number telegram_username preferred_language socket_id push_subscription'
           );
         }
 
@@ -170,6 +174,8 @@ module.exports = function initDispatch(io) {
         };
 
         let emittedCount = 0;
+        const pushLawyers = [];
+
         for (const lawyer of sorted) {
           const room = `lawyer:${lawyer._id}`;
           const roomSockets = await io.in(room).allSockets();
@@ -181,6 +187,18 @@ module.exports = function initDispatch(io) {
             io.to(lawyer.socket_id).emit('new_emergency_alert', alertPayload);
             emittedCount++;
           }
+          // Always try push if lawyer has a subscription (catches offline lawyers)
+          if (lawyer.push_subscription) {
+            pushLawyers.push(lawyer);
+          }
+        }
+
+        // Fire-and-forget push notifications (don't await — non-blocking)
+        if (pushLawyers.length > 0) {
+          const pushTitle = '🚨 VETO Emergency!';
+          const pushBody  = `A client needs legal help urgently. Tap to respond.`;
+          push.sendToMany(pushLawyers, { title: pushTitle, body: pushBody, data: alertPayload })
+            .catch(e => console.error('[PUSH] sendToMany error:', e));
         }
 
         console.log(

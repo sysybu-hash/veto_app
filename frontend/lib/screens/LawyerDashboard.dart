@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import '../core/i18n/app_language.dart';
 import '../core/theme/veto_theme.dart';
 import '../services/auth_service.dart';
+import '../services/push_service.dart';
 import '../services/socket_service.dart';
 import '../widgets/app_language_menu.dart';
 
@@ -168,6 +169,9 @@ class _LawyerDashboardState extends State<LawyerDashboard> {
 
     await SocketService().connect(role: role);
     SocketService().emit('lawyer_availability', {'available': _isAvailable});
+
+    // Register browser push subscription (fire-and-forget — non-blocking)
+    PushService().registerLawyerPush();
 
     _alertSub = SocketService().onNewEmergencyAlert.listen((data) {
       if (!mounted) return;

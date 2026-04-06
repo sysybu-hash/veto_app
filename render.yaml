@@ -30,3 +30,19 @@ services:
         value: 752712664923-7loca49f7fggd514q8reljn93meatmrf.apps.googleusercontent.com
       - key: GOOGLE_CLIENT_SECRET
         sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+      - key: VAPID_PUBLIC_KEY
+        value: BA6oUwfq1kWgWOBSuLmaXiN0TnmZ0xa0aLXGgfg-trezDAwqW_OiVZEWZ0KkaDmNswOeLipP8zcpib_dFE8Q0io
+      - key: VAPID_PRIVATE_KEY
+        sync: false
+      - key: VAPID_SUBJECT
+        value: mailto:admin@veto-legal.com
+      - key: SENTRY_DSN
+        sync: false

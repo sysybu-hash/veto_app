@@ -25,6 +25,17 @@ const fs = require('fs');
   console.warn('⚠️  No .env file found. Tried:', candidates.join(' | '));
 })();
 
+// ── Sentry (error monitoring) — init BEFORE everything else ──
+const Sentry = require('@sentry/node');
+if (process.env.SENTRY_DSN) {
+  Sentry.init({
+    dsn: process.env.SENTRY_DSN,
+    environment: process.env.NODE_ENV || 'development',
+    tracesSampleRate: 0.2,
+  });
+  console.log('🔍 Sentry error monitoring active');
+}
+
 // Prefer IPv4 DNS — helps some Windows setups when Atlas SRV lookup fails
 try {
   require('dns').setDefaultResultOrder('ipv4first');
@@ -98,6 +109,13 @@ app.set('io', io);
 app.use('/api/auth', authLimiter, require('./src/routes/auth.routes'));
 app.use('/api/users', require('./src/routes/user.routes'));
 app.use('/api/lawyers', require('./src/routes/lawyer.routes'));
+
+// ── Public VAPID key for browser push subscription ────────────
+app.get('/api/push/vapid-key', (_, res) => {
+  const key = process.env.VAPID_PUBLIC_KEY;
+  if (!key) return res.status(503).json({ error: 'Push notifications not configured.' });
+  res.json({ publicKey: key });
+});
 app.use('/api/events', require('./src/routes/event.routes'));
 app.use('/api/admin', require('./src/routes/admin.routes'));
 app.use('/api/ai', require('./src/routes/ai.routes'));
@@ -192,3 +210,9 @@ function start() {
 }
 
 start();
+
+// ── Sentry error handler (must be LAST middleware) ────────────
+if (process.env.SENTRY_DSN) {
+  const Sentry = require('@sentry/node');
+  app.use(Sentry.expressErrorHandler());
+}
