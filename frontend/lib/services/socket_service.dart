@@ -68,47 +68,14 @@ class SocketService {
       debugPrint('Socket connected (Role: $role)');
     });
 
-    _socket?.on('emergency_created', (data) {
-      if (data is Map<String, dynamic>) {
-        _emergencyCreatedController.add(data);
-      }
-    });
-
-    _socket?.on('emergency_alert', (data) {
-      if (data is Map<String, dynamic>) {
-        _emergencyAlertController.add(data);
-      }
-    });
-
-    _socket?.on('new_emergency_alert', (data) {
-      if (data is Map<String, dynamic>) {
-        _newEmergencyAlertController.add(data);
-      }
-    });
-
-    _socket?.on('case_accepted', (data) {
-      if (data is Map<String, dynamic>) {
-        _caseAcceptedController.add(data);
-      }
-    });
-
-    _socket?.on('veto_dispatched', (data) {
-      if (data is Map<String, dynamic>) {
-        _vetoDispatchedController.add(data);
-      }
-    });
-
-    _socket?.on('lawyer_found', (data) {
-      if (data is Map<String, dynamic>) {
-        _lawyerFoundController.add(data);
-      }
-    });
-
-    _socket?.on('no_lawyers_available', (data) {
-      if (data is Map<String, dynamic>) {
-        _noLawyersController.add(data);
-      }
-    });
+    _socket?.on('emergency_created',     (d) => _emit(_emergencyCreatedController, d));
+    _socket?.on('emergency_alert',        (d) => _emit(_emergencyAlertController, d));
+    _socket?.on('new_emergency_alert',    (d) => _emit(_newEmergencyAlertController, d));
+    _socket?.on('case_accepted',          (d) => _emit(_caseAcceptedController, d));
+    _socket?.on('case_accepted_confirmed',(d) => _emit(_caseAcceptedController, d));
+    _socket?.on('veto_dispatched',        (d) => _emit(_vetoDispatchedController, d));
+    _socket?.on('lawyer_found',           (d) => _emit(_lawyerFoundController, d));
+    _socket?.on('no_lawyers_available',   (d) => _emit(_noLawyersController, d));
 
     _socket?.onDisconnect((_) {
       debugPrint('Socket disconnected');
@@ -134,5 +101,19 @@ class SocketService {
     _socket?.disconnect();
     _socket?.dispose();
     _socket = null;
+  }
+
+  /// socket.io-client for Dart may deliver payloads as:
+  ///   Map<dynamic, dynamic>  — most common
+  ///   List                   — some versions wrap the object in a list
+  /// This helper normalises both before forwarding to the stream.
+  static void _emit(StreamController<Map<String, dynamic>> ctrl, dynamic data) {
+    Map<String, dynamic>? map;
+    if (data is Map) {
+      map = Map<String, dynamic>.from(data);
+    } else if (data is List && data.isNotEmpty && data.first is Map) {
+      map = Map<String, dynamic>.from(data.first as Map);
+    }
+    if (map != null) ctrl.add(map);
   }
 }

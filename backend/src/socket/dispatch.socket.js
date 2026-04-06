@@ -157,8 +157,10 @@ module.exports = function initDispatch(io) {
         });
 
         // 5. Broadcast alert to ALL available lawyers ─────────
-        //    Socket rooms were joined on connection.
-        //    We emit to each socket_id directly for reliability.
+        //    Use the named room `lawyer:<id>` (joined on connect) so
+        //    reconnected lawyers are reached even when the stored
+        //    socket_id is stale (e.g. after Render free-tier wake-up).
+        //    Fall back to direct socket_id emit if room appears empty.
         const alertPayload = {
           eventId,
           userName:  socket.handshake.auth.decoded.full_name || 'User',
@@ -169,7 +171,13 @@ module.exports = function initDispatch(io) {
 
         let emittedCount = 0;
         for (const lawyer of sorted) {
-          if (lawyer.socket_id) {
+          const room = `lawyer:${lawyer._id}`;
+          const roomSockets = await io.in(room).allSockets();
+          if (roomSockets.size > 0) {
+            io.to(room).emit('new_emergency_alert', alertPayload);
+            emittedCount++;
+          } else if (lawyer.socket_id) {
+            // Fallback: direct socket_id (may be stale but worth trying)
             io.to(lawyer.socket_id).emit('new_emergency_alert', alertPayload);
             emittedCount++;
           }
