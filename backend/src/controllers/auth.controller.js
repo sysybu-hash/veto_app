@@ -243,29 +243,46 @@ const verifyOTP = async (req, res, next) => {
 // ============================================================
 const googleAuth = async (req, res, next) => {
   try {
-    const { id_token, preferred_language = 'he' } = req.body;
-    if (!id_token) return res.status(400).json({ error: 'id_token is required.' });
+    const { id_token, access_token, preferred_language = 'he' } = req.body;
+    if (!id_token && !access_token) {
+      return res.status(400).json({ error: 'id_token or access_token is required.' });
+    }
 
     const clientId = process.env.GOOGLE_CLIENT_ID ||
       '752712664923-7loca49f7fggd514q8reljn93meatmrf.apps.googleusercontent.com';
-    if (!clientId) {
-      return res.status(503).json({ error: 'Google Sign-In is not configured on this server.' });
+
+    let googleId, email, name;
+
+    if (id_token) {
+      // ── Verify via ID token ──────────────────────────────────
+      const { OAuth2Client } = require('google-auth-library');
+      const oauthClient = new OAuth2Client(clientId);
+      let gPayload;
+      try {
+        const ticket = await oauthClient.verifyIdToken({ idToken: id_token, audience: clientId });
+        gPayload = ticket.getPayload();
+      } catch {
+        return res.status(401).json({ error: 'Invalid Google token.' });
+      }
+      googleId = gPayload.sub;
+      email    = gPayload.email;
+      name     = gPayload.name || '';
+    } else {
+      // ── Verify via access token → Google Userinfo endpoint ───
+      let userInfo;
+      try {
+        const uRes = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
+          headers: { Authorization: `Bearer ${access_token}` },
+        });
+        if (!uRes.ok) return res.status(401).json({ error: 'Invalid Google access token.' });
+        userInfo = await uRes.json();
+      } catch {
+        return res.status(401).json({ error: 'Could not verify Google access token.' });
+      }
+      googleId = userInfo.id;
+      email    = userInfo.email;
+      name     = userInfo.name || '';
     }
-
-    const { OAuth2Client } = require('google-auth-library');
-    const oauthClient = new OAuth2Client(clientId);
-
-    let gPayload;
-    try {
-      const ticket = await oauthClient.verifyIdToken({ idToken: id_token, audience: clientId });
-      gPayload = ticket.getPayload();
-    } catch {
-      return res.status(401).json({ error: 'Invalid Google token.' });
-    }
-
-    const googleId = gPayload.sub;
-    const email    = gPayload.email;
-    const name     = gPayload.name || '';
 
     let doc;
     doc = await User.findOne({ google_id: googleId });
