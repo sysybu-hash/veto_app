@@ -3,6 +3,9 @@
 //  VETO Legal Emergency App — dotenv, MongoDB, CORS, Socket.io
 // ============================================================
 
+// !! Sentry MUST be first — before any other require !!
+require('./instrument');
+
 const path = require('path');
 const fs = require('fs');
 
@@ -24,17 +27,6 @@ const fs = require('fs');
   require('dotenv').config();
   console.warn('⚠️  No .env file found. Tried:', candidates.join(' | '));
 })();
-
-// ── Sentry (error monitoring) — init BEFORE everything else ──
-const Sentry = require('@sentry/node');
-if (process.env.SENTRY_DSN) {
-  Sentry.init({
-    dsn: process.env.SENTRY_DSN,
-    environment: process.env.NODE_ENV || 'development',
-    tracesSampleRate: 0.2,
-  });
-  console.log('🔍 Sentry error monitoring active');
-}
 
 // Prefer IPv4 DNS — helps some Windows setups when Atlas SRV lookup fails
 try {
@@ -213,6 +205,6 @@ start();
 
 // ── Sentry error handler (must be LAST middleware) ────────────
 if (process.env.SENTRY_DSN) {
-  const Sentry = require('@sentry/node');
+  const Sentry = require('./instrument');
   app.use(Sentry.expressErrorHandler());
 }
