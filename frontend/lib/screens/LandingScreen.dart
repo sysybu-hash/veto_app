@@ -249,7 +249,7 @@ class LandingScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               // ── NAV ──────────────────────────────────────────────────
-              _Nav(loginLabel: _t(code, 'navLogin'), ctaLabel: _t(code, 'navCta'), onTap: () => _goNext(context)),
+              _Nav(code: code, loginLabel: _t(code, 'navLogin'), ctaLabel: _t(code, 'navCta'), onTap: () => _goNext(context)),
 
               // ── HERO ─────────────────────────────────────────────────
               _HeroSection(
@@ -269,6 +269,9 @@ class LandingScreen extends StatelessWidget {
 
               // ── STAT BAR ─────────────────────────────────────────────
               _StatBar(),
+
+              // ── INCIDENTS (4 use-case cards, attorney-shield style) ────
+              _IncidentsSection(compact: compact, code: code),
 
               // ── SIGNALS ──────────────────────────────────────────────
               _ContentSection(
@@ -306,6 +309,9 @@ class LandingScreen extends StatelessWidget {
                   onTap: () => _goNext(context),
                 ),
               ),
+
+              // ── TESTIMONIALS ─────────────────────────────────────────
+              _TestimonialsSection(compact: compact, code: code),
 
               // ── CTA ───────────────────────────────────────────────────
               _CtaSection(
@@ -363,57 +369,129 @@ class _ItemData {
 // ═══════════════════════════════════════════════════════════════════
 //  NAV
 // ═══════════════════════════════════════════════════════════════════
-class _Nav extends StatelessWidget {
-  final String loginLabel, ctaLabel;
+class _Nav extends StatefulWidget {
+  final String loginLabel, ctaLabel, code;
   final VoidCallback onTap;
-  const _Nav({required this.loginLabel, required this.ctaLabel, required this.onTap});
+  const _Nav({required this.loginLabel, required this.ctaLabel, required this.code, required this.onTap});
+
+  @override
+  State<_Nav> createState() => _NavState();
+}
+
+class _NavState extends State<_Nav> {
+  bool _loggedIn = false;
+  String? _role;
+
+  static const _menuLabels = {
+    'he': ['תמחור', 'איך זה עובד', 'לעורכי דין', 'אודות'],
+    'en': ['Pricing', 'How It Works', 'For Lawyers', 'About'],
+    'ru': ['Тарифы', 'Как работает', 'Адвокатам', 'О нас'],
+  };
+  static const _enterAppLabel = {
+    'he': 'כניסה לאפליקציה',
+    'en': 'Enter App',
+    'ru': 'Войти в приложение',
+  };
+
+  @override
+  void initState() {
+    super.initState();
+    _checkAuth();
+  }
+
+  Future<void> _checkAuth() async {
+    final token = await AuthService().getToken();
+    if (token != null && token.isNotEmpty) {
+      final role = await AuthService().getStoredRole();
+      if (mounted) setState(() { _loggedIn = true; _role = role; });
+    }
+  }
+
+  void _enterApp(BuildContext context) {
+    if (_loggedIn) {
+      if (_role == 'lawyer') Navigator.pushNamed(context, '/lawyer_dashboard');
+      else if (_role == 'admin') Navigator.pushNamed(context, '/admin_settings');
+      else Navigator.pushNamed(context, '/veto_screen');
+    } else {
+      widget.onTap();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    final c = widget.code;
+    final menuItems = _menuLabels[c] ?? _menuLabels['en']!;
+    final enterLabel = _enterAppLabel[c] ?? _enterAppLabel['en']!;
+    final wide = MediaQuery.of(context).size.width > 860;
+
     return Container(
       decoration: const BoxDecoration(
         color: _Clr.heroBg,
         border: Border(bottom: BorderSide(color: _Clr.heroBorder, width: 1)),
       ),
-      padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
       child: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 1200),
           child: Row(children: [
-            // Logo mark
+            // Logo
             Container(
-              width: 36, height: 36,
+              width: 34, height: 34,
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
                   colors: [Color(0xFF3B82F6), Color(0xFF1D4ED8)],
                   begin: Alignment.topLeft, end: Alignment.bottomRight,
                 ),
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(9),
               ),
-              child: const Icon(Icons.gavel_rounded, color: Colors.white, size: 18),
+              child: const Icon(Icons.shield_rounded, color: Colors.white, size: 17),
             ),
             const SizedBox(width: 10),
-            const Text('VETO', style: TextStyle(
-              color: Colors.white, fontSize: 18,
-              fontWeight: FontWeight.w900, letterSpacing: 6,
-            )),
-            const Text(' LEGAL', style: TextStyle(
-              color: Color(0xFF3B82F6), fontSize: 18,
-              fontWeight: FontWeight.w900, letterSpacing: 3,
-            )),
+            const Text('VETO', style: TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.w900, letterSpacing: 5)),
+            const Text(' LEGAL', style: TextStyle(color: Color(0xFF3B82F6), fontSize: 17, fontWeight: FontWeight.w900, letterSpacing: 2)),
+            if (wide) ...[
+              const SizedBox(width: 28),
+              for (final item in menuItems)
+                TextButton(
+                  onPressed: widget.onTap,
+                  style: TextButton.styleFrom(
+                    foregroundColor: Colors.white70,
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    minimumSize: Size.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                  child: Text(item, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500)),
+                ),
+            ],
             const Spacer(),
             const AppLanguageMenu(compact: true),
-            const SizedBox(width: 6),
-            TextButton(
-              onPressed: onTap,
-              style: TextButton.styleFrom(
-                foregroundColor: Colors.white70,
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            const SizedBox(width: 8),
+            if (_loggedIn)
+              FilledButton.icon(
+                onPressed: () => _enterApp(context),
+                icon: const Icon(Icons.apps_rounded, size: 15),
+                label: Text(enterLabel),
+                style: FilledButton.styleFrom(
+                  backgroundColor: const Color(0xFF3B82F6),
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 11),
+                  textStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  elevation: 0,
+                ),
+              )
+            else ...[
+              TextButton(
+                onPressed: widget.onTap,
+                style: TextButton.styleFrom(
+                  foregroundColor: Colors.white70,
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                ),
+                child: Text(widget.loginLabel),
               ),
-              child: Text(loginLabel),
-            ),
-            const SizedBox(width: 4),
-            _PrimaryBtn(label: ctaLabel, onTap: onTap),
+              const SizedBox(width: 4),
+              _PrimaryBtn(label: widget.ctaLabel, onTap: widget.onTap),
+            ],
           ]),
         ),
       ),
@@ -673,15 +751,17 @@ class _StatBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const stats = [
-      ('3', 'שפות'),
-      ('3', 'סוגי משתמשים'),
-      ('1', 'מסלול נחיתה'),
+      ('24/7', 'Legal Protection'),
+      ('3+',   'Languages'),
+      ('Real', 'Lawyers'),
+      ('Live', 'Dispatch'),
     ];
     return Container(
       decoration: const BoxDecoration(
-        border: Border.symmetric(horizontal: BorderSide(color: _Clr.border)),
+        color: Color(0xFF0F172A),
+        border: Border.symmetric(horizontal: BorderSide(color: _Clr.heroBorder)),
       ),
-      padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 28),
+      padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 28),
       child: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 1200),
@@ -691,10 +771,10 @@ class _StatBar extends StatelessWidget {
               for (var (num, label) in stats) ...[
                 Column(children: [
                   Text(num, style: const TextStyle(
-                    color: VetoPalette.primary, fontSize: 36, fontWeight: FontWeight.w900,
+                    color: Color(0xFF3B82F6), fontSize: 32, fontWeight: FontWeight.w900, letterSpacing: -1,
                   )),
-                  const SizedBox(height: 2),
-                  Text(label, style: const TextStyle(color: _Clr.muted, fontSize: 12)),
+                  const SizedBox(height: 4),
+                  Text(label, style: const TextStyle(color: Color(0xFF94A3B8), fontSize: 11, fontWeight: FontWeight.w600, letterSpacing: 0.5)),
                 ]),
               ],
             ],
@@ -1072,8 +1152,239 @@ class _CtaSection extends StatelessWidget {
 // ═══════════════════════════════════════════════════════════════════
 //  SHARED WIDGETS
 // ═══════════════════════════════════════════════════════════════════
-class _PrimaryBtn extends StatelessWidget {
-  final String label;
+// ═══════════════════════════════════════════════════════════════════
+//  INCIDENTS SECTION — 4 use-case cards (attorney-shield style)
+// ═══════════════════════════════════════════════════════════════════
+class _IncidentsSection extends StatelessWidget {
+  final bool compact;
+  final String code;
+  const _IncidentsSection({required this.compact, required this.code});
+
+  static const _data = {
+    'he': {
+      'eyebrow': 'כל מפגש עם רשויות האכיפה',
+      'title': 'הגנה משפטית בכל תרחיש',
+      'subtitle': 'VETO מכסה את כל סוגי המפגשים עם גורמי אכיפה — בכל זמן, בכל מקום.',
+      'inc1Title': 'עצירת תנועה',
+      'inc1Body': 'נורות כחולות מאחוריך? VETO מחבר אותך מיידית לייעוץ משפטי חי שיגן על זכויותיך.',
+      'inc2Title': 'תאונת דרכים',
+      'inc2Body': 'אחרי תאונה — תיעוד מיידי, ייעוץ ביטוחי ומשפטי, ושמירה על ראיות מהשטח.',
+      'inc3Title': 'עימות שגרתי',
+      'inc3Body': 'בסיטואציות של מתח ביתי או ציבורי — עורך הדין מכייל את השיחה ומונע הסלמה.',
+      'inc4Title': 'עצירה בהליכה',
+      'inc4Body': 'נעצרת ברחוב? VETO מאשר זכויות, מנחה מה לומר ומזניק ייצוג מיידי.',
+    },
+    'en': {
+      'eyebrow': 'All Police-Initiated Contact',
+      'title': 'Unlimited Access to Legal Protection',
+      'subtitle': 'VETO delivers real-time legal guidance for every type of law-enforcement encounter.',
+      'inc1Title': 'Traffic Stops',
+      'inc1Body': 'Blue lights behind you? One tap connects you to a live attorney who guides the encounter and protects your rights.',
+      'inc2Title': 'Auto Accidents',
+      'inc2Body': 'After a crash — document instantly, get expert legal guidance and avoid costly mistakes.',
+      'inc3Title': 'Domestic',
+      'inc3Body': 'When emotions run high, an attorney provides immediate guidance to de-escalate and protect your rights.',
+      'inc4Title': 'Pedestrian',
+      'inc4Body': 'Stopped while walking? An attorney affirms your rights, advises on compliance, and de-escalates encounters.',
+    },
+    'ru': {
+      'eyebrow': 'Все контакты с полицией',
+      'title': 'Юридическая защита в любой ситуации',
+      'subtitle': 'VETO обеспечивает правовую поддержку при любом контакте с правоохранительными органами.',
+      'inc1Title': 'Остановка ТС',
+      'inc1Body': 'Мигалки сзади? Одно нажатие — и адвокат на связи, защищает ваши права в реальном времени.',
+      'inc2Title': 'Аварии',
+      'inc2Body': 'После ДТП — немедленная фиксация, юридическая консультация и защита от ошибок.',
+      'inc3Title': 'Бытовые ситуации',
+      'inc3Body': 'В напряжённых ситуациях адвокат помогает де-эскалировать и соблюдать ваши права.',
+      'inc4Title': 'Пешеходные остановки',
+      'inc4Body': 'Остановили на улице? Адвокат подтверждает ваши права и советует, как вести себя.',
+    },
+  };
+
+  Map<String, String> get _t => _data[code] ?? _data['en']!;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = _t;
+    final incidents = [
+      _ItemData(icon: Icons.directions_car_filled_outlined, accent: const Color(0xFF3B82F6), title: t['inc1Title']!, body: t['inc1Body']!),
+      _ItemData(icon: Icons.car_crash_outlined, accent: const Color(0xFFF59E0B), title: t['inc2Title']!, body: t['inc2Body']!),
+      _ItemData(icon: Icons.home_outlined, accent: const Color(0xFF10B981), title: t['inc3Title']!, body: t['inc3Body']!),
+      _ItemData(icon: Icons.directions_walk_rounded, accent: const Color(0xFFEF4444), title: t['inc4Title']!, body: t['inc4Body']!),
+    ];
+
+    return Container(
+      padding: const EdgeInsets.fromLTRB(28, 80, 28, 0),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 1200),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Row(mainAxisSize: MainAxisSize.min, children: [
+              Container(width: 28, height: 1.5, color: VetoPalette.primary),
+              const SizedBox(width: 10),
+              Text(t['eyebrow']!.toUpperCase(), style: const TextStyle(
+                color: VetoPalette.primary, fontSize: 10, fontWeight: FontWeight.w800, letterSpacing: 3,
+              )),
+            ]),
+            const SizedBox(height: 14),
+            Text(t['title']!, style: const TextStyle(
+              color: Color(0xFF0F172A), fontSize: 36, fontWeight: FontWeight.w900, height: 1.1,
+            )),
+            const SizedBox(height: 12),
+            Text(t['subtitle']!, style: const TextStyle(color: _Clr.muted, fontSize: 15, height: 1.8)),
+            const SizedBox(height: 36),
+            compact
+                ? Column(children: [
+                    for (var i = 0; i < incidents.length; i++) ...[
+                      _IncidentCard(data: incidents[i]),
+                      if (i < incidents.length - 1) const SizedBox(height: 10),
+                    ],
+                  ])
+                : Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    for (var i = 0; i < incidents.length; i++) ...[
+                      Expanded(child: _IncidentCard(data: incidents[i])),
+                      if (i < incidents.length - 1) const SizedBox(width: 10),
+                    ],
+                  ]),
+          ]),
+        ),
+      ),
+    );
+  }
+}
+
+class _IncidentCard extends StatelessWidget {
+  final _ItemData data;
+  const _IncidentCard({required this.data});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: _Clr.surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: _Clr.border),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 12, offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Icon(data.icon, size: 28, color: data.accent),
+        const SizedBox(height: 14),
+        Text(data.title, style: TextStyle(
+          color: data.accent, fontSize: 15, fontWeight: FontWeight.w800,
+        )),
+        const SizedBox(height: 8),
+        Text(data.body, style: const TextStyle(color: _Clr.muted, fontSize: 13, height: 1.7)),
+      ]),
+    );
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  TESTIMONIALS SECTION — social proof cards
+// ═══════════════════════════════════════════════════════════════════
+class _TestimonialsSection extends StatelessWidget {
+  final bool compact;
+  final String code;
+  const _TestimonialsSection({required this.compact, required this.code});
+
+  static const _sectionLabel = {
+    'he': 'מה אומרים המשתמשים',
+    'en': 'Trusted by Users Nationwide',
+    'ru': 'Отзывы наших пользователей',
+  };
+  static const _subtitle = {
+    'he': 'חוויות אמיתיות של אנשים שהשתמשו ב-VETO ברגע הקריטי.',
+    'en': 'Real experiences from people who used VETO when it mattered most.',
+    'ru': 'Реальные истории людей, которые воспользовались VETO в нужный момент.',
+  };
+
+  static const _reviews = [
+    (name: 'David B.',   date: '04/2025', text: 'Having an attorney with me in real time when I needed one was an absolute game changer. The confidence and security I felt was enough to keep the situation in check.', rating: 5),
+    (name: 'Adam H.',    date: '07/2025', text: 'I used this app at a traffic stop. It works great! The licensed attorney was on the phone within seconds. Amazing!', rating: 5),
+    (name: 'Mike K.',    date: '09/2025', text: 'The attorney provided excellent support when I was questioned by police while parked on a public road. Highly recommend.', rating: 5),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    final label   = _sectionLabel[code] ?? _sectionLabel['en']!;
+    final subtitle = _subtitle[code]    ?? _subtitle['en']!;
+
+    return Container(
+      padding: const EdgeInsets.fromLTRB(28, 80, 28, 0),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 1200),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Row(mainAxisSize: MainAxisSize.min, children: [
+              Container(width: 28, height: 1.5, color: VetoPalette.primary),
+              const SizedBox(width: 10),
+              Text(label.toUpperCase(), style: const TextStyle(
+                color: VetoPalette.primary, fontSize: 10, fontWeight: FontWeight.w800, letterSpacing: 3,
+              )),
+            ]),
+            const SizedBox(height: 14),
+            Text(subtitle, style: const TextStyle(color: _Clr.muted, fontSize: 14, height: 1.6)),
+            const SizedBox(height: 32),
+            compact
+                ? Column(children: [
+                    for (var i = 0; i < _reviews.length; i++) ...[
+                      _ReviewCard(review: _reviews[i]),
+                      if (i < _reviews.length - 1) const SizedBox(height: 10),
+                    ],
+                  ])
+                : Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    for (var i = 0; i < _reviews.length; i++) ...[
+                      Expanded(child: _ReviewCard(review: _reviews[i])),
+                      if (i < _reviews.length - 1) const SizedBox(width: 10),
+                    ],
+                  ]),
+          ]),
+        ),
+      ),
+    );
+  }
+}
+
+class _ReviewCard extends StatelessWidget {
+  final ({String name, String date, String text, int rating}) review;
+  const _ReviewCard({required this.review});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(22),
+      decoration: BoxDecoration(
+        color: _Clr.surface,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: _Clr.border),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 10, offset: const Offset(0, 3)),
+        ],
+      ),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Row(children: [
+          for (int i = 0; i < review.rating; i++)
+            const Icon(Icons.star_rounded, color: Color(0xFFF59E0B), size: 14),
+          const Spacer(),
+          Text(review.date, style: const TextStyle(color: _Clr.sub, fontSize: 11)),
+        ]),
+        const SizedBox(height: 12),
+        Text('"${review.text}"', style: const TextStyle(color: _Clr.muted, fontSize: 13, height: 1.65, fontStyle: FontStyle.italic)),
+        const SizedBox(height: 14),
+        Text(review.name, style: const TextStyle(color: Color(0xFF0F172A), fontSize: 12, fontWeight: FontWeight.w700)),
+      ]),
+    );
+  }
+}
+
+class _PrimaryBtn extends StatelessWidget {  final String label;
   final VoidCallback onTap;
   final bool large;
   const _PrimaryBtn({required this.label, required this.onTap, this.large = false});

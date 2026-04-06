@@ -186,6 +186,34 @@ class AuthService {
     return val == 'true';
   }
 
+  /// Fetches the current user profile from the server and updates local storage.
+  /// Returns the profile data map or null on failure.
+  Future<Map<String, dynamic>?> fetchProfile() async {
+    try {
+      final token = await getToken();
+      if (token == null) return null;
+      final role = await getStoredRole();
+      final baseUrl = AppConfig.baseUrl;
+      final endpoint = role == 'lawyer' ? '$baseUrl/lawyers/me' : '$baseUrl/users/me';
+      final response = await http.get(
+        Uri.parse(endpoint),
+        headers: AppConfig.httpHeaders({'Authorization': 'Bearer $token'}),
+      ).timeout(const Duration(seconds: 15));
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body) as Map<String, dynamic>;
+        final user = data['user'] ?? data;
+        final name = user['full_name'] as String?;
+        final phone = user['phone'] as String?;
+        if (name != null) await _storage.write(key: 'veto_name', value: name);
+        if (phone != null) await _storage.write(key: 'veto_phone', value: phone);
+        return user as Map<String, dynamic>;
+      }
+    } catch (e) {
+      debugPrint('fetchProfile error: $e');
+    }
+    return null;
+  }
+
   /// Updates full_name on the server and in local storage.
   Future<bool> updateProfile({String? fullName, String? preferredLanguage}) async {
     try {

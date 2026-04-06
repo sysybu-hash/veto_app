@@ -359,6 +359,13 @@ class _VetoScreenState extends State<VetoScreen> {
   }
 
   Future<void> _payAndDispatch(String? spec, String? lawyerName) async {
+    // Admins and payment-exempt users skip the PayPal flow
+    final role = await AuthService().getStoredRole();
+    final isPaymentExempt = await AuthService().getStoredIsPaymentExempt();
+    if (role == 'admin' || isPaymentExempt) {
+      _dispatch(spec, lawyerName);
+      return;
+    }
     final orderId = await showDialog<String?>(
       context: context, barrierDismissible: false,
       builder: (ctx) => _PaymentDialog(spec: spec),
@@ -611,6 +618,11 @@ class _VetoScreenState extends State<VetoScreen> {
           onPressed: () => Navigator.pushNamed(context, '/admin_settings'),
           tooltip: 'פאנל ניהול',
         ),
+      IconButton(
+          icon: const Icon(Icons.home_outlined),
+          color: Colors.white70,
+          onPressed: () => Navigator.pushNamed(context, '/landing'),
+          tooltip: _langKey == 'he' ? 'דף הבית' : _langKey == 'ru' ? 'Главная' : 'Home'),
       IconButton(
           icon: const Icon(Icons.folder_special_outlined),
           color: Colors.white70,

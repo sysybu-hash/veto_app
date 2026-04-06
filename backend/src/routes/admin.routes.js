@@ -1,7 +1,7 @@
 const express = require('express');
 const { protect, authorize } = require('../middleware/auth.middleware');
 const {
-  getAdminSettings, updateFixedOtpSetting,
+  getAdminSettings, updateFixedOtpSetting, getAdminStats,
   getAllUsers, createUser, updateUser, deleteUser,
   getAllLawyers, createLawyer, updateLawyer, deleteLawyer,
   getPendingLawyers, approveLawyer, rejectLawyer,
@@ -33,5 +33,8 @@ router.get('/users-with-status', getAllUsersWithStatus);
 
 // Subscriptions endpoint — returns all users with sub status (for SubscriptionAdminScreen)
 router.get('/subscriptions', getAllUsersWithStatus);
+
+// Dashboard KPI stats
+router.get('/stats', getAdminStats);
 
 module.exports = router;

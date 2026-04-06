@@ -190,8 +190,10 @@ class _AdminDashboardState extends State<AdminDashboard> {
       if (res.statusCode == 200) {
         final d = jsonDecode(res.body) as Map<String, dynamic>;
         _backendStatus = 'online';
-        _dbStatus = d['db'] == 'connected' ? 'online' : 'offline';
-        _socketStatus = d['socket'] == true ? 'online' : 'offline';
+        // server returns 'db' (alias for 'mongo') and 'socket' boolean
+        final dbVal = d['db'] ?? d['mongo'] ?? '';
+        _dbStatus = (dbVal == 'connected') ? 'online' : 'offline';
+        _socketStatus = (d['socket'] == true) ? 'online' : 'offline';
       } else {
         _backendStatus = 'offline';
       }
@@ -217,6 +219,11 @@ class _AdminDashboardState extends State<AdminDashboard> {
                   color: Colors.white, fontWeight: FontWeight.w700)),
           iconTheme: const IconThemeData(color: Colors.white),
           actions: [
+            IconButton(
+              icon: const Icon(Icons.home_outlined),
+              onPressed: () => Navigator.of(context).pushNamed('/landing'),
+              tooltip: _t(code, 'title') == 'Admin Dashboard' ? 'Home' : 'דף הבית',
+            ),
             IconButton(
               icon: const Icon(Icons.refresh_rounded),
               onPressed: _loadAll,

@@ -307,9 +307,11 @@ class _LawyerDashboardState extends State<LawyerDashboard> {
                           profileLabel: _t(code, 'profile'),
                           logoutLabel: _t(code, 'logout'),
                           settingsLabel: code == 'he' ? 'הגדרות' : code == 'ru' ? 'Настройки' : 'Settings',
+                          homeLabel: code == 'he' ? 'דף הבית' : code == 'ru' ? 'Главная' : 'Home',
                           onProfile: () => Navigator.pushNamed(context, '/profile'),
                           onLogout: () => AuthService().logout(context),
                           onSettings: () => Navigator.pushNamed(context, '/lawyer_settings'),
+                          onHome: () => Navigator.pushNamed(context, '/landing'),
                         ),
                       ),
                     ),
@@ -562,9 +564,11 @@ class _HeroHeader extends StatelessWidget {
   final String profileLabel;
   final String logoutLabel;
   final String settingsLabel;
+  final String homeLabel;
   final VoidCallback onProfile;
   final VoidCallback onLogout;
   final VoidCallback onSettings;
+  final VoidCallback onHome;
 
   const _HeroHeader({
     required this.eyebrow,
@@ -576,9 +580,11 @@ class _HeroHeader extends StatelessWidget {
     required this.profileLabel,
     required this.logoutLabel,
     required this.settingsLabel,
+    required this.homeLabel,
     required this.onProfile,
     required this.onLogout,
     required this.onSettings,
+    required this.onHome,
   });
 
   @override
@@ -650,6 +656,12 @@ class _HeroHeader extends StatelessWidget {
                   ],
                 ),
               ),
+              _HeaderAction(
+                icon: Icons.home_outlined,
+                tooltip: homeLabel,
+                onTap: onHome,
+              ),
+              const SizedBox(width: 8),
               _HeaderAction(
                 icon: Icons.person_outline_rounded,
                 tooltip: profileLabel,

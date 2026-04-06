@@ -31,6 +31,33 @@ const getAdminSettings = async (req, res, next) => {
   }
 };
 
+const getAdminStats = async (req, res, next) => {
+  try {
+    const now = new Date();
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const startOfWeek  = new Date(now); startOfWeek.setDate(now.getDate() - 6);
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    const [
+      totalUsers,
+      activeLawyers,
+      pendingLawyers,
+      eventsToday,
+      eventsWeek,
+      eventsMonth,
+    ] = await Promise.all([
+      User.countDocuments({}),
+      Lawyer.countDocuments({ is_active: true }),
+      Lawyer.countDocuments({ is_verified: false }),
+      Event.countDocuments({ triggered_at: { $gte: startOfToday } }),
+      Event.countDocuments({ triggered_at: { $gte: startOfWeek } }),
+      Event.countDocuments({ triggered_at: { $gte: startOfMonth } }),
+    ]);
+
+    res.json({ totalUsers, activeLawyers, pendingLawyers, eventsToday, eventsWeek, eventsMonth });
+  } catch (err) { next(err); }
+};
+
 const updateFixedOtpSetting = async (req, res, next) => {
   try {
     const { enable } = req.body;
@@ -249,7 +276,7 @@ const deleteEmergencyLog = async (req, res, next) => {
 };
 
 module.exports = {
-  getAdminSettings, updateFixedOtpSetting,
+  getAdminSettings, updateFixedOtpSetting, getAdminStats,
   getAllUsers, createUser, updateUser, deleteUser,
   getAllLawyers, createLawyer, updateLawyer, deleteLawyer,
   getPendingLawyers, approveLawyer, rejectLawyer,

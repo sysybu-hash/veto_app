@@ -133,6 +133,11 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                 ),
               ),
             IconButton(
+              icon: const Icon(Icons.home_outlined),
+              tooltip: code == 'he' ? 'דף הבית' : code == 'ru' ? 'Главная' : 'Home',
+              onPressed: () => Navigator.of(context).pushNamed('/landing'),
+            ),
+            IconButton(
               icon: const Icon(Icons.apps_rounded),
               tooltip: _t(code, 'openApp'),
               onPressed: () =>

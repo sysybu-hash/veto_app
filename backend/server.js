@@ -42,6 +42,7 @@ const connectDB  = require('./src/config/db');
 
 /** ל-Render health check: השרת חי לפני ש-Mongo מחובר */
 let mongoState = 'pending';
+let ioReady    = false;
 
 const app = express();
 const server = http.createServer(app);
@@ -133,11 +134,14 @@ app.get('/health', (_, res) =>
     message: 'VETO Server is Alive!',
     env: process.env.NODE_ENV || 'development',
     mongo: mongoState,
+    db: mongoState,          // alias used by AdminDashboard
+    socket: ioReady,         // socket.io ready flag
   }),
 );
 
 app.use(require('./src/middleware/error.middleware'));
 require('./src/socket/dispatch.socket')(io);
+ioReady = true;
 
 const PORT = Number(process.env.PORT) || 5001;
 

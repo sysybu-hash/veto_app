@@ -91,15 +91,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _loadUserData() async {
-    final name = await AuthService().getStoredName();
-    final role = await AuthService().getStoredRole();
+    // First show local cache immediately, then refresh from server
+    final name  = await AuthService().getStoredName();
+    final role  = await AuthService().getStoredRole();
     final phone = await AuthService().getStoredPhone();
-    setState(() {
-      _nameCtrl.text = name ?? '';
-      _role = role;
-      _phone = phone;
-      _loading = false;
-    });
+    if (mounted) {
+      setState(() {
+        _nameCtrl.text = name ?? '';
+        _role  = role;
+        _phone = phone;
+        _loading = false;
+      });
+    }
+    // Refresh from server in background
+    final serverData = await AuthService().fetchProfile();
+    if (serverData != null && mounted) {
+      setState(() {
+        _nameCtrl.text = (serverData['full_name'] as String?) ?? _nameCtrl.text;
+        _phone = (serverData['phone'] as String?) ?? _phone;
+      });
+    }
   }
 
   String _t(String code, String key) {
@@ -125,8 +136,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
             preferredSize: Size.fromHeight(1),
             child: Divider(height: 1, color: VetoPalette.darkBorder),
           ),
-          actions: const [
-            Padding(
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.home_outlined),
+              color: Colors.white70,
+              onPressed: () => Navigator.of(context).pushNamed('/landing'),
+              tooltip: code == 'he' ? 'דף הבית' : code == 'ru' ? 'Главная' : 'Home',
+            ),
+            const Padding(
               padding: EdgeInsets.symmetric(horizontal: 12),
               child: Center(child: AppLanguageMenu(compact: true)),
             ),
