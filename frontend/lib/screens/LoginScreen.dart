@@ -22,7 +22,7 @@ import '../widgets/app_language_menu.dart';
 // Google Cloud Console ? APIs & Services ? Credentials (Web client).
 // The same ID must also be set in GOOGLE_CLIENT_ID on the backend.
 const _kGoogleClientId =
-    'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com';
+    '752712664923-7loca49f7fggd514q8reljn93meatmrf.apps.googleusercontent.com';
 
 final _gSignIn = GoogleSignIn(
   clientId: _kGoogleClientId,
