@@ -283,8 +283,12 @@ class _LoginScreenState extends State<LoginScreen> {
           barrierDismissible: false,
           builder: (_) => _SubscriptionGateDialog(code: preferredLanguage),
         );
-        if (subscribed == true && mounted) {
+        if (!mounted) return;
+        if (subscribed == true) {
           Navigator.of(context).pushReplacementNamed('/veto_screen');
+        } else {
+          // No subscription — logout and return to login
+          await AuthService().logout(context);
         }
       }
     }
@@ -1358,6 +1362,9 @@ class _SubscriptionGateDialogState extends State<_SubscriptionGateDialog> {
           children: [
             Text(_t(c, 'subscriptionBody'),
                 style: const TextStyle(color: VetoPalette.textMuted, fontSize: 14, height: 1.6)),
+            const SizedBox(height: 6),
+            const Text('ללא מנוי פעיל לא ניתן להשתמש במערכת.',
+                style: TextStyle(color: VetoPalette.emergency, fontSize: 12, fontWeight: FontWeight.w600)),
             const SizedBox(height: 16),
             Container(
               padding: const EdgeInsets.all(16),
@@ -1393,8 +1400,8 @@ class _SubscriptionGateDialogState extends State<_SubscriptionGateDialog> {
             ? [
                 TextButton(
                   onPressed: _loading ? null : () => Navigator.of(context).pop(false),
-                  child: Text(_t(c, 'later'),
-                      style: const TextStyle(color: VetoPalette.textMuted)),
+                  child: const Text('התנתק',
+                      style: TextStyle(color: VetoPalette.emergency)),
                 ),
                 FilledButton(
                   onPressed: _loading ? null : _openPayPal,
@@ -1408,8 +1415,8 @@ class _SubscriptionGateDialogState extends State<_SubscriptionGateDialog> {
             : [
                 TextButton(
                   onPressed: _loading ? null : () => Navigator.of(context).pop(false),
-                  child: Text(_t(c, 'later'),
-                      style: const TextStyle(color: VetoPalette.textMuted)),
+                  child: const Text('התנתק',
+                      style: TextStyle(color: VetoPalette.emergency)),
                 ),
                 FilledButton(
                   onPressed: _loading ? null : _confirmPayment,

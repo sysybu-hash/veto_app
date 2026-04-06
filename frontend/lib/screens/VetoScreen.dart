@@ -275,7 +275,12 @@ class _VetoScreenState extends State<VetoScreen> {
         barrierDismissible: false,
         builder: (_) => const _SubscriptionGateDialog(),
       );
-      // User dismissed — stay on screen with limited access (no redirect to login)
+      // Re-check — if still not subscribed, force logout
+      if (!mounted) return;
+      final nowSubscribed = await AuthService().getStoredIsSubscribed();
+      if (!nowSubscribed && mounted) {
+        await AuthService().logout(context);
+      }
     }
   }
 
@@ -1766,6 +1771,9 @@ class _SubscriptionGateDialogState extends State<_SubscriptionGateDialog> {
           children: [
             const Text('כדי להשתמש ב-VETO נדרש מנוי חודשי.',
                 style: TextStyle(color: Color(0xFF94A3B8), fontSize: 14)),
+            const SizedBox(height: 4),
+            const Text('ללא מנוי פעיל לא ניתן להשתמש במערכת.',
+                style: TextStyle(color: Color(0xFFEF4444), fontSize: 12, fontWeight: FontWeight.w600)),
             const SizedBox(height: 16),
             Container(
               padding: const EdgeInsets.all(14),
@@ -1802,7 +1810,7 @@ class _SubscriptionGateDialogState extends State<_SubscriptionGateDialog> {
             ? [
                 TextButton(
                   onPressed: () => Navigator.of(context).pop(false),
-                  child: const Text('לאחר מכן', style: TextStyle(color: Color(0xFF64748B))),
+                  child: const Text('התנתק', style: TextStyle(color: Color(0xFFEF4444))),
                 ),
                 ElevatedButton.icon(
                   style: ElevatedButton.styleFrom(
@@ -1820,7 +1828,7 @@ class _SubscriptionGateDialogState extends State<_SubscriptionGateDialog> {
             : [
                 TextButton(
                   onPressed: () => Navigator.of(context).pop(false),
-                  child: const Text('ביטול', style: TextStyle(color: Color(0xFF64748B))),
+                  child: const Text('התנתק', style: TextStyle(color: Color(0xFFEF4444))),
                 ),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(

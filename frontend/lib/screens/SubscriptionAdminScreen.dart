@@ -303,6 +303,7 @@ class _SubscriptionAdminScreenState
 
   double _monthlyRevenue = 0;
   double _totalRevenue = 0;
+  String? _loadError;
 
   @override
   void initState() {
@@ -332,10 +333,13 @@ class _SubscriptionAdminScreenState
   }
 
   Future<void> _load() async {
-    setState(() => _loading = true);
+    setState(() { _loading = true; _loadError = null; });
     try {
       final tok = await _auth.getToken();
-      if (tok == null) return;
+      if (tok == null) {
+        setState(() { _loading = false; _loadError = 'Not authenticated'; });
+        return;
+      }
       final headers = AppConfig.httpHeaders({'Authorization': 'Bearer $tok'});
 
       final usersRes = await http.get(
@@ -352,12 +356,13 @@ class _SubscriptionAdminScreenState
         final data = jsonDecode(usersRes.body);
         final list = data['users'] ?? data['subscriptions'] ?? (data is List ? data : []);
         _subs = (list as List).map((e) => _Sub.fromJson(e as Map<String, dynamic>)).toList();
-        _filtered = _subs;
-        _totalRevenue = _subs.where((s) => s.amount > 0).fold(0, (s, x) => s + x.amount);
         final now = DateTime.now();
+        _totalRevenue = _subs.where((s) => s.amount > 0).fold(0, (s, x) => s + x.amount);
         _monthlyRevenue = _subs
             .where((s) => s.status == 'active' && s.startDate?.month == now.month)
             .fold(0, (s, x) => s + x.amount);
+      } else {
+        _loadError = 'שגיאת שרת: ${usersRes.statusCode}';
       }
 
       if (logsRes.statusCode == 200) {
@@ -365,9 +370,13 @@ class _SubscriptionAdminScreenState
         final list = data['logs'] ?? (data is List ? data : []);
         _logs = (list as List).map((e) => _LoginLog.fromJson(e as Map<String, dynamic>)).toList();
       }
-    } catch (_) {}
-    if (mounted) setState(() => _loading = false);
-    _applyFilter();
+    } catch (e) {
+      _loadError = 'שגיאת חיבור: $e';
+    }
+    if (mounted) {
+      setState(() { _loading = false; });
+      _applyFilter();
+    }
   }
 
   Future<void> _updateSub(String id, Map<String, dynamic> body,
@@ -456,7 +465,28 @@ class _SubscriptionAdminScreenState
         ),
         body: _loading
             ? const Center(child: CircularProgressIndicator())
-            : TabBarView(
+            : _loadError != null
+                ? Center(child: Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Column(mainAxisSize: MainAxisSize.min, children: [
+                      const Icon(Icons.cloud_off_rounded,
+                          size: 48, color: VetoPalette.emergency),
+                      const SizedBox(height: 12),
+                      Text(_loadError!,
+                          style: const TextStyle(
+                              color: VetoPalette.emergency, fontSize: 14),
+                          textAlign: TextAlign.center),
+                      const SizedBox(height: 16),
+                      FilledButton.icon(
+                        onPressed: _load,
+                        icon: const Icon(Icons.refresh_rounded),
+                        label: const Text('נסה שוב'),
+                        style: FilledButton.styleFrom(
+                            backgroundColor: VetoPalette.primary),
+                      ),
+                    ]),
+                  ))
+                : TabBarView(
                 controller: _tabController,
                 children: [
                   _buildUsersTab(code, activeCount, freeCount, expiredCount),

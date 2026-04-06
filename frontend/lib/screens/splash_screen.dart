@@ -45,10 +45,12 @@ class _SplashScreenState extends State<SplashScreen>
       } else if (role == 'admin') {
         Navigator.pushReplacementNamed(context, '/admin_settings');
       } else {
+        // For regular users, always land on veto_screen
+        // (subscription gate will handle unsubscribed users there)
         Navigator.pushReplacementNamed(context, '/veto_screen');
       }
     } else {
-      Navigator.pushReplacementNamed(context, '/landing');
+      Navigator.pushReplacementNamed(context, '/login');
     }
   }
 
