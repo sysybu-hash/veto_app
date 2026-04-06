@@ -195,7 +195,12 @@ class _AllUsersScreenState extends State<AllUsersScreen> {
                         decoration: BoxDecoration(
                           color: VetoPalette.surface,
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: VetoPalette.border),
+                          border: Border(
+                            left: const BorderSide(color: VetoPalette.primary, width: 3),
+                            top: BorderSide(color: VetoPalette.border),
+                            right: BorderSide(color: VetoPalette.border),
+                            bottom: BorderSide(color: VetoPalette.border),
+                          ),
                         ),
                         child: Row(children: [
                           CircleAvatar(

@@ -249,7 +249,9 @@ class _WizardShellScreenState extends State<WizardShellScreen> {
                 const Text(
                   'VETO',
                   style: TextStyle(
-                      fontWeight: FontWeight.w700, letterSpacing: 2),
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 4,
+                      color: VetoPalette.text),
                 ),
                 Text(
                   _phone.isEmpty ? displayName : '$displayName | $_phone',
@@ -454,7 +456,13 @@ class _WizardShellScreenState extends State<WizardShellScreen> {
                           padding: const EdgeInsets.all(14),
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: VetoPalette.border),
+                            border: Border(
+                              left: const BorderSide(
+                                  color: VetoPalette.warning, width: 3),
+                              top: BorderSide(color: VetoPalette.border),
+                              right: BorderSide(color: VetoPalette.border),
+                              bottom: BorderSide(color: VetoPalette.border),
+                            ),
                             color: VetoPalette.surface2,
                           ),
                           child: Row(
@@ -540,9 +548,15 @@ class _WizardShellScreenState extends State<WizardShellScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title, style: Theme.of(context).textTheme.titleLarge),
+          Text(title,
+              style: const TextStyle(
+                  color: VetoPalette.text,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800)),
           const SizedBox(height: 4),
-          Text(subtitle, style: const TextStyle(color: Colors.white70)),
+          Text(subtitle,
+              style: const TextStyle(
+                  color: VetoPalette.textMuted, fontSize: 13)),
           const SizedBox(height: 14),
           child,
         ],

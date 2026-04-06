@@ -372,12 +372,12 @@ class _LawyerDashboardState extends State<LawyerDashboard> {
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
                                         Text(
-                                          _t(code, 'shift'),
+                                          _t(code, 'shift').toUpperCase(),
                                           style: const TextStyle(
-                                            color: VetoPalette.textSubtle,
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.w600,
-                                            letterSpacing: 0.8,
+                                            color: VetoPalette.primary,
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.w800,
+                                            letterSpacing: 2.5,
                                           ),
                                         ),
                                         const SizedBox(height: 4),
@@ -478,15 +478,15 @@ class _LawyerDashboardState extends State<LawyerDashboard> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              _t(code, 'activity'),
+                              _t(code, 'activity').toUpperCase(),
                               style: const TextStyle(
-                                color: VetoPalette.textSubtle,
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                                letterSpacing: 0.8,
+                                color: VetoPalette.primary,
+                                fontSize: 10,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: 2.5,
                               ),
                             ),
-                            const SizedBox(height: 4),
+                            const SizedBox(height: 6),
                             Text(
                               _t(code, 'activityTitle'),
                               style: const TextStyle(
@@ -581,11 +581,11 @@ class _HeroHeader extends StatelessWidget {
       padding: const EdgeInsets.all(22),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(28),
-        gradient: LinearGradient(
+        gradient: const LinearGradient(
           colors: [
-            const Color(0xFF14213A),
+            Color(0xFF14213A),
             VetoPalette.surface,
-            const Color(0xFF10284B),
+            Color(0xFF10284B),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -788,7 +788,12 @@ class _MetricCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: VetoPalette.surface,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: VetoPalette.border),
+        border: Border(
+          left: BorderSide(color: color, width: 3),
+          top: BorderSide(color: VetoPalette.border),
+          right: BorderSide(color: VetoPalette.border),
+          bottom: BorderSide(color: VetoPalette.border),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -799,16 +804,17 @@ class _MetricCard extends StatelessWidget {
             label,
             style: const TextStyle(
               color: VetoPalette.textSubtle,
-              fontSize: 12,
+              fontSize: 11,
               fontWeight: FontWeight.w600,
+              letterSpacing: 0.5,
             ),
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 4),
           Text(
             value,
             style: TextStyle(
               color: color,
-              fontSize: 16,
+              fontSize: 15,
               fontWeight: FontWeight.w800,
             ),
           ),

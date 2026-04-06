@@ -69,54 +69,98 @@ class _SplashScreenState extends State<SplashScreen>
     };
 
     return Scaffold(
-      backgroundColor: VetoPalette.bg,
-      body: Center(
-        child: AnimatedBuilder(
-          animation: _ac,
-          builder: (_, __) => Opacity(
-            opacity: _fade.value,
-            child: Transform.scale(
-              scale: _scale.value,
-              child: Column(mainAxisSize: MainAxisSize.min, children: [
-                Container(
-                  width: 100, height: 100,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: VetoPalette.primary.withValues(alpha: 0.12),
-                    border: Border.all(
-                        color: VetoPalette.primary.withValues(alpha: 0.4), width: 2),
-                    boxShadow: [BoxShadow(
-                        color: VetoPalette.primary.withValues(alpha: 0.25),
-                        blurRadius: 32, spreadRadius: 4)],
-                  ),
-                  child: const Icon(Icons.shield_rounded,
-                      color: VetoPalette.primary, size: 52),
+      backgroundColor: const Color(0xFF060C17),
+      body: Stack(
+        children: [
+          // Radial glow blob
+          Positioned(
+            top: -120,
+            right: -120,
+            child: Container(
+              width: 500,
+              height: 500,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [
+                    const Color(0xFF3B82F6).withValues(alpha: 0.1),
+                    Colors.transparent,
+                  ],
                 ),
-                const SizedBox(height: 24),
-                const Text('VETO',
-                    style: TextStyle(
-                        color: VetoPalette.text,
-                        fontSize: 36,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 10)),
-                const SizedBox(height: 6),
-                Text(tagline,
-                  style: const TextStyle(
-                        color: VetoPalette.textMuted,
-                        fontSize: 13,
-                        letterSpacing: 1)),
-                const SizedBox(height: 48),
-                SizedBox(
-                  width: 28,
-                  height: 28,
-                  child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: VetoPalette.primary.withValues(alpha: 0.5)),
-                ),
-              ]),
+              ),
             ),
           ),
-        ),
+          Center(
+            child: AnimatedBuilder(
+              animation: _ac,
+              builder: (_, __) => Opacity(
+                opacity: _fade.value,
+                child: Transform.scale(
+                  scale: _scale.value,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Logo mark
+                      Container(
+                        width: 96,
+                        height: 96,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(28),
+                          gradient: const LinearGradient(
+                            colors: [Color(0xFF3B82F6), Color(0xFF1D4ED8)],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFF3B82F6).withValues(alpha: 0.3),
+                              blurRadius: 40,
+                              spreadRadius: 0,
+                            ),
+                          ],
+                        ),
+                        child: const Icon(
+                          Icons.shield_rounded,
+                          color: Colors.white,
+                          size: 48,
+                        ),
+                      ),
+                      const SizedBox(height: 28),
+                      const Text(
+                        'VETO',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 40,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 12,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        tagline,
+                        style: const TextStyle(
+                          color: Color(0xFF94A3B8),
+                          fontSize: 13,
+                          letterSpacing: 1.5,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(height: 56),
+                      SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: VetoPalette.primary.withValues(alpha: 0.5),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

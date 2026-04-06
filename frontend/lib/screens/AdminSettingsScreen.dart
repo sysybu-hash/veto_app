@@ -110,11 +110,13 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
       child: Scaffold(
         backgroundColor: VetoPalette.bg,
         appBar: AppBar(
-          title: Text(_t(code, 'adminPanel')),
-          backgroundColor: VetoPalette.surface,
+          title: Text(_t(code, 'adminPanel'),
+              style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 18)),
+          backgroundColor: const Color(0xFF060C17),
+          elevation: 0,
           bottom: const PreferredSize(
             preferredSize: Size.fromHeight(1),
-            child: Divider(height: 1, color: VetoPalette.border),
+            child: Divider(height: 1, color: Color(0xFF182336)),
           ),
           actions: [
             const Padding(
@@ -142,7 +144,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
               onPressed: _loadAll,
             ),
             IconButton(
-              icon: const Icon(Icons.logout),
+              icon: const Icon(Icons.logout, color: VetoPalette.emergency),
               tooltip: _t(code, 'logout'),
               onPressed: () => AuthService().logout(context),
             ),
@@ -153,10 +155,10 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
           color: VetoPalette.primary,
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.all(24),
             child: Center(
               child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 640),
+                constraints: const BoxConstraints(maxWidth: 720),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
@@ -183,7 +185,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                         ),
                       ),
                     ]),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 32),
                     if (_pendingLawyersCount > 0) ...[
                       _sectionHeader(_t(code, 'pendingApprovals')),
                       _actionCard(
@@ -200,7 +202,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                           _loadAll();
                         },
                       ),
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 32),
                     ],
                     _sectionHeader(_t(code, 'systemOverview')),
                     _infoCard(
@@ -219,7 +221,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                       _t(code, 'appVersion'),
                       _appVersion.isEmpty ? _t(code, 'unknown') : _appVersion,
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 32),
                     _sectionHeader(_t(code, 'userManagement')),
                     _actionCard(
                       '${_t(code, 'allUsers')} ($_totalUsers)',
@@ -254,7 +256,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                             builder: (_) => const EmergencyLogsScreen()),
                       ),
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 32),
                     _sectionHeader(_t(code, 'systemSettings')),
                     _switchCard(
                       _t(code, 'fixedOtp'),
@@ -262,7 +264,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                       _t(code, 'fixedOtpHint'),
                       _toggleFixedOtp,
                     ),
-                    const SizedBox(height: 40),
+                    const SizedBox(height: 48),
                   ],
                 ),
               ),
@@ -274,30 +276,39 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
   }
 
   Widget _sectionHeader(String title) => Padding(
-    padding: const EdgeInsets.only(bottom: 10),
-    child: Text(title,
-        style: const TextStyle(
-            color: VetoPalette.textMuted,
-            fontSize: 11,
-            fontWeight: FontWeight.w600,
-            letterSpacing: 1)),
+    padding: const EdgeInsets.only(bottom: 12),
+    child: Row(children: [
+      Container(width: 20, height: 1.5, color: VetoPalette.primary),
+      const SizedBox(width: 8),
+      Text(title.toUpperCase(),
+          style: const TextStyle(
+              color: VetoPalette.primary,
+              fontSize: 10,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 2.5)),
+    ]),
   );
 
   Widget _statCard(String label, String value, IconData icon, Color color) =>
       Container(
-        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+        padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 12),
         decoration: BoxDecoration(
           color: VetoPalette.surface,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: VetoPalette.border),
+          borderRadius: BorderRadius.circular(18),
+          border: Border(
+            left: BorderSide(color: color, width: 3),
+            top: BorderSide(color: VetoPalette.border),
+            right: BorderSide(color: VetoPalette.border),
+            bottom: BorderSide(color: VetoPalette.border),
+          ),
         ),
         child: Column(children: [
           Icon(icon, color: color, size: 22),
-          const SizedBox(height: 6),
+          const SizedBox(height: 8),
           Text(value,
               style: TextStyle(
-                  color: color, fontSize: 20, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 2),
+                  color: color, fontSize: 26, fontWeight: FontWeight.w900)),
+          const SizedBox(height: 3),
           Text(label,
               style: const TextStyle(
                   color: VetoPalette.textMuted, fontSize: 11)),
@@ -307,10 +318,10 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
   Widget _infoCard(String label, String value, {Color? statusColor}) =>
       Container(
         margin: const EdgeInsets.only(bottom: 8),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
         decoration: BoxDecoration(
           color: VetoPalette.surface,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(16),
           border: Border.all(color: VetoPalette.border),
         ),
         child: Row(
@@ -323,7 +334,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
               if (statusColor != null)
                 Container(
                   width: 7, height: 7,
-                  margin: const EdgeInsets.only(left: 8),
+                  margin: const EdgeInsets.only(left: 8, right: 6),
                   decoration: BoxDecoration(
                       shape: BoxShape.circle, color: statusColor),
                 ),
@@ -331,7 +342,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                   style: TextStyle(
                     color: statusColor ?? VetoPalette.text,
                     fontSize: 13,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: FontWeight.w700,
                   )),
             ]),
           ],

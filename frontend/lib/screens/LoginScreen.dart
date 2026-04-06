@@ -811,12 +811,16 @@ class _RoleCard extends StatelessWidget {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: selected ? VetoPalette.primary.withValues(alpha: 0.12) : VetoPalette.surface,
+          color: selected ? VetoPalette.primary.withValues(alpha: 0.10) : VetoPalette.surface,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: selected ? VetoPalette.primary : VetoPalette.border,
-            width: selected ? 1.5 : 1,
-          ),
+          border: selected
+              ? Border(
+                  left: const BorderSide(color: VetoPalette.primary, width: 3),
+                  top: BorderSide(color: VetoPalette.primary.withValues(alpha: 0.3)),
+                  right: BorderSide(color: VetoPalette.primary.withValues(alpha: 0.3)),
+                  bottom: BorderSide(color: VetoPalette.primary.withValues(alpha: 0.3)),
+                )
+              : Border.all(color: VetoPalette.border),
         ),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Icon(icon, color: selected ? VetoPalette.primary : VetoPalette.textMuted, size: 24),
@@ -1035,15 +1039,22 @@ class _AuthHero extends StatelessWidget {
       padding: EdgeInsets.all(compact ? 20 : 30),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [Color(0xFF0F172A), Color(0xFF122744), Color(0xFF0F1D33)],
+          colors: [Color(0xFF060C17), Color(0xFF0E1E38), Color(0xFF091629)],
           begin: Alignment.topLeft, end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(28),
         border: Border.all(color: VetoPalette.border),
+        boxShadow: [
+          BoxShadow(
+            color: Color(0xFF1D6FB8).withValues(alpha: 0.08),
+            blurRadius: 40,
+            spreadRadius: 2,
+          ),
+        ],
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text(_t(lang, 'eyebrow'), style: const TextStyle(
-            color: VetoPalette.info, fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 0.9)),
+        Text(_t(lang, 'eyebrow').toUpperCase(), style: const TextStyle(
+            color: VetoPalette.primary, fontSize: 10, fontWeight: FontWeight.w800, letterSpacing: 2.5)),
         const SizedBox(height: 10),
         Text(
           lang == 'he'

@@ -66,6 +66,11 @@ flutter:
   assets:
     - assets/fonts/
 
+  fonts:
+    - family: Heebo
+      fonts:
+        - asset: assets/fonts/Heebo-VF.ttf
+
 # ── Platform permissions reminder ─────────────────────────────
 # iOS  → Info.plist: NSCameraUsageDescription,
 #                    NSLocationWhenInUseUsageDescription,

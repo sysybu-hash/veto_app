@@ -117,11 +117,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
       child: Scaffold(
         backgroundColor: VetoPalette.bg,
         appBar: AppBar(
-          title: Text(_t(code, 'title')),
-          backgroundColor: VetoPalette.surface,
+          title: Text(_t(code, 'title'),
+              style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 18)),
+          backgroundColor: const Color(0xFF060C17),
+          elevation: 0,
           bottom: const PreferredSize(
             preferredSize: Size.fromHeight(1),
-            child: Divider(height: 1, color: VetoPalette.border),
+            child: Divider(height: 1, color: Color(0xFF182336)),
           ),
           actions: const [
             Padding(
@@ -135,24 +137,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 child: CircularProgressIndicator(
                     color: VetoPalette.primary))
             : SingleChildScrollView(
-                padding: const EdgeInsets.all(20),
+                padding: const EdgeInsets.all(24),
                 child: Center(
                   child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 480),
+                    constraints: const BoxConstraints(maxWidth: 520),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         const SizedBox(height: 8),
+                        // Avatar
                         Center(
                           child: Container(
-                            width: 72,
-                            height: 72,
+                            width: 80, height: 80,
                             decoration: BoxDecoration(
-                              color: VetoPalette.primary.withValues(alpha: 0.12),
-                              shape: BoxShape.circle,
-                              border: Border.all(
-                                  color:
-                                      VetoPalette.primary.withValues(alpha: 0.3)),
+                              borderRadius: BorderRadius.circular(24),
+                              gradient: const LinearGradient(
+                                colors: [Color(0xFF3B82F6), Color(0xFF1D4ED8)],
+                                begin: Alignment.topLeft, end: Alignment.bottomRight,
+                              ),
+                              boxShadow: [BoxShadow(
+                                  color: VetoPalette.primary.withValues(alpha: 0.25),
+                                  blurRadius: 24, spreadRadius: 0)],
                             ),
                             child: Center(
                               child: Text(
@@ -160,15 +165,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     ? _nameCtrl.text[0].toUpperCase()
                                     : '?',
                                 style: const TextStyle(
-                                  fontSize: 28,
-                                  fontWeight: FontWeight.w600,
-                                  color: VetoPalette.primary,
+                                  fontSize: 32, fontWeight: FontWeight.w900,
+                                  color: Colors.white,
                                 ),
                               ),
                             ),
                           ),
                         ),
-                        const SizedBox(height: 24),
+                        const SizedBox(height: 28),
                         _buildCard(
                           children: [
                             _sectionLabel(_t(code, 'name')),
@@ -180,16 +184,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     const Icon(Icons.person_outline, size: 18),
                               ),
                             ),
-                            const SizedBox(height: 16),
+                            const SizedBox(height: 20),
                             _sectionLabel(_t(code, 'phone')),
                             Container(
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 16, vertical: 14),
                               decoration: BoxDecoration(
-                                color: VetoPalette.surface,
-                                borderRadius: BorderRadius.circular(10),
-                                border:
-                                    Border.all(color: VetoPalette.border),
+                                color: VetoPalette.bg,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: VetoPalette.border),
                               ),
                               child: Text(
                                 _phone ?? '—',
@@ -197,16 +200,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     color: VetoPalette.textMuted),
                               ),
                             ),
-                            const SizedBox(height: 16),
+                            const SizedBox(height: 20),
                             _sectionLabel(_t(code, 'role')),
                             Container(
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 16, vertical: 14),
                               decoration: BoxDecoration(
-                                color: VetoPalette.surface,
-                                borderRadius: BorderRadius.circular(10),
-                                border:
-                                    Border.all(color: VetoPalette.border),
+                                color: VetoPalette.bg,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: VetoPalette.border),
                               ),
                               child: Row(
                                 children: [
@@ -228,14 +230,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 ],
                               ),
                             ),
-                            const SizedBox(height: 16),
+                            const SizedBox(height: 20),
                             _sectionLabel(_t(code, 'language')),
                             Container(
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 16, vertical: 14),
                               decoration: BoxDecoration(
-                                color: VetoPalette.surface,
-                                borderRadius: BorderRadius.circular(10),
+                                color: VetoPalette.bg,
+                                borderRadius: BorderRadius.circular(12),
                                 border: Border.all(color: VetoPalette.border),
                               ),
                               child: const Align(
@@ -245,19 +247,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             ),
                           ],
                         ),
-                        const SizedBox(height: 16),
-                        FilledButton(
+                        const SizedBox(height: 20),
+                        FilledButton.icon(
                           onPressed: _saving ? null : _saveProfile,
-                          child: _saving
-                              ? const SizedBox(
-                                  width: 18,
-                                  height: 18,
+                          icon: _saving
+                              ? const SizedBox(width: 16, height: 16,
                                   child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      color: Colors.white))
-                              : Text(_t(code, 'save')),
+                                      strokeWidth: 2, color: Colors.white))
+                              : const Icon(Icons.check_rounded, size: 18),
+                          label: Text(_t(code, 'save')),
+                          style: FilledButton.styleFrom(
+                            backgroundColor: VetoPalette.primary,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            textStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12)),
+                          ),
                         ),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: 10),
                         OutlinedButton.icon(
                           onPressed: () => AuthService().logout(context),
                           icon: const Icon(Icons.logout_rounded, size: 18),
@@ -267,6 +275,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             side: BorderSide(
                                 color: VetoPalette.emergency
                                     .withValues(alpha: 0.4)),
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12)),
                           ),
                         ),
                       ],
@@ -303,13 +314,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Widget _sectionLabel(String text) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 6),
+      padding: const EdgeInsets.only(bottom: 7),
       child: Text(
-        text,
+        text.toUpperCase(),
         style: const TextStyle(
-          color: VetoPalette.textMuted,
-          fontSize: 12,
-          fontWeight: FontWeight.w500,
+          color: VetoPalette.primary,
+          fontSize: 10,
+          fontWeight: FontWeight.w800,
+          letterSpacing: 2,
         ),
       ),
     );

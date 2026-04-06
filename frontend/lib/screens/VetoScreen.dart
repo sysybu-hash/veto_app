@@ -771,12 +771,12 @@ class _VetoScreenState extends State<VetoScreen> {
 
   Widget _secLabel(String txt) => Padding(
     padding: const EdgeInsets.only(bottom: 2),
-    child: Text(txt,
+    child: Text(txt.toUpperCase(),
         style: const TextStyle(
-            color: VetoPalette.textMuted,
-            fontSize: 12,
-            fontWeight: FontWeight.w700,
-            letterSpacing: 0.8)),
+            color: VetoPalette.primary,
+            fontSize: 10,
+            fontWeight: FontWeight.w800,
+            letterSpacing: 2.5)),
   );
 
   Widget _scenarioBar(bool isRtl) => SizedBox(
@@ -798,9 +798,14 @@ class _VetoScreenState extends State<VetoScreen> {
             decoration: BoxDecoration(
               color: sel ? VetoPalette.primary.withValues(alpha: 0.15) : VetoPalette.surface,
               borderRadius: BorderRadius.circular(14),
-              border: Border.all(
-                  color: sel ? VetoPalette.primary : VetoPalette.border,
-                  width: sel ? 1.5 : 1),
+              border: sel
+                  ? Border(
+                      left: const BorderSide(color: VetoPalette.primary, width: 3),
+                      top: BorderSide(color: VetoPalette.primary.withValues(alpha: 0.35)),
+                      right: BorderSide(color: VetoPalette.primary.withValues(alpha: 0.35)),
+                      bottom: BorderSide(color: VetoPalette.primary.withValues(alpha: 0.35)),
+                    )
+                  : Border.all(color: VetoPalette.border),
             ),
             child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
               Text(e.value.emoji, style: const TextStyle(fontSize: 28)),
@@ -824,7 +829,12 @@ class _VetoScreenState extends State<VetoScreen> {
     decoration: BoxDecoration(
         color: VetoPalette.surface,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: VetoPalette.border)),
+        border: Border(
+          left: const BorderSide(color: VetoPalette.primary, width: 3),
+          top: BorderSide(color: VetoPalette.border),
+          right: BorderSide(color: VetoPalette.border),
+          bottom: BorderSide(color: VetoPalette.border),
+        )),
     child: Column(children: [
       InkWell(
         onTap: () => setState(() => _rightsExpanded = !_rightsExpanded),

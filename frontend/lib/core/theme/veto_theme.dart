@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 // google_fonts import removed — Heebo is loaded via index.html CSS link
 
 class VetoPalette {
-  // Backgrounds
-  static const Color bg       = Color(0xFF0F172A); // slate-900
-  static const Color surface  = Color(0xFF1E293B); // slate-800
-  static const Color surface2 = Color(0xFF263348); // elevated card
-  static const Color border   = Color(0xFF334155); // slate-700
+  // Backgrounds — Attorney Shield dark palette
+  static const Color bg       = Color(0xFF060C17); // near-black
+  static const Color surface  = Color(0xFF0C1526); // deep dark surface
+  static const Color surface2 = Color(0xFF0E1A2C); // elevated card
+  static const Color border   = Color(0xFF182336); // subtle border
 
-  // Semantics
+  // Semantics — keep same accents
   static const Color primary   = Color(0xFF3B82F6); // blue-500  — trust, actions
   static const Color emergency = Color(0xFFEF4444); // red-500   — danger, SOS
   static const Color success   = Color(0xFF22C55E); // green-500 — OK, available
