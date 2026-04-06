@@ -157,7 +157,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
       final results = await Future.wait([
         http.get(Uri.parse('${AppConfig.baseUrl}/admin/stats'),
             headers: headers).timeout(const Duration(seconds: 15)),
-        http.get(Uri.parse('${AppConfig.baseUrl}/events?limit=10'),
+        http.get(Uri.parse('${AppConfig.baseUrl}/events/history?limit=10'),
             headers: headers).timeout(const Duration(seconds: 15)),
       ]);
 
@@ -185,7 +185,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
   Future<void> _checkHealth() async {
     try {
       final res = await http.get(
-        Uri.parse('${AppConfig.baseUrl}/health'),
+        Uri.parse(AppConfig.healthCheckUrl),
       ).timeout(const Duration(seconds: 8));
       if (res.statusCode == 200) {
         final d = jsonDecode(res.body) as Map<String, dynamic>;
@@ -583,3 +583,4 @@ class _KpiCard extends StatelessWidget {
     );
   }
 }
+
