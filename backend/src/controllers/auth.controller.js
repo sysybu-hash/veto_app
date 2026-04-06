@@ -265,8 +265,10 @@ const googleAuth = async (req, res, next) => {
       return res.status(400).json({ error: 'id_token or access_token is required.' });
     }
 
-    const clientId = process.env.GOOGLE_CLIENT_ID ||
-      '752712664923-7loca49f7fggd514q8reljn93meatmrf.apps.googleusercontent.com';
+    const clientId = process.env.GOOGLE_CLIENT_ID;
+    if (!clientId) {
+      return res.status(503).json({ error: 'Google OAuth not configured on this server.' });
+    }
 
     let googleId, email, name;
 

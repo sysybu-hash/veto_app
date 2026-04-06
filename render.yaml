@@ -28,3 +28,5 @@ services:
         value: 30d
       - key: GOOGLE_CLIENT_ID
         value: 752712664923-7loca49f7fggd514q8reljn93meatmrf.apps.googleusercontent.com
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false

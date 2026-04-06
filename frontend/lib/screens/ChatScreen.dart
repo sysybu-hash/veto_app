@@ -160,10 +160,6 @@ class _ChatScreenState extends State<ChatScreen> {
     return _i18n[code]?[key] ?? _i18n['en']![key] ?? key;
   }
 
-  bool get _isRtl =>
-      AppLanguage.directionOf(context.read<AppLanguageController>().code) ==
-      TextDirection.rtl;
-
   @override
   void initState() {
     super.initState();

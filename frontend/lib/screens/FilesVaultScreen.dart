@@ -184,7 +184,6 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
   bool _analyzing = false;
   bool _isDragging = false;
   String? _activeFileId;
-  int _tabIndex = 0; // 0=all, 1=cases
 
   void Function(html.Event)? _dragOverFn;
   void Function(html.Event)? _dragLeaveFn;
@@ -203,15 +202,11 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
     return _en;
   }
 
-  bool get _isRtl =>
-      AppLanguage.directionOf(context.read<AppLanguageController>().code) ==
-      TextDirection.rtl;
-
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
-    _tabController.addListener(() => setState(() => _tabIndex = _tabController.index));
+    _tabController.addListener(() => setState(() {}));
     _load();
     if (kIsWeb) {
       _dragOverFn = _onDragOver;
@@ -254,7 +249,7 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
     if (!mounted) return;
     setState(() => _isDragging = false);
     final dt = (event as html.MouseEvent).dataTransfer;
-    if (dt?.files == null || dt!.files!.isEmpty) return;
+    if (dt.files == null || dt.files!.isEmpty) return;
     for (final file in dt.files!) {
       await _uploadHtmlFile(file);
     }

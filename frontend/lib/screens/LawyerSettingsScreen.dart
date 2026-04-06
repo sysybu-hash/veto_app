@@ -732,11 +732,10 @@ class _FieldTile extends StatelessWidget {
   final String? hint;
   final TextEditingController controller;
   final IconData icon;
-  final bool readOnly;
   final TextInputType keyboardType;
   const _FieldTile({
     required this.label, this.hint, required this.controller,
-    required this.icon, this.readOnly = false,
+    required this.icon,
     this.keyboardType = TextInputType.text,
   });
 
@@ -754,14 +753,13 @@ class _FieldTile extends StatelessWidget {
         const SizedBox(height: 6),
         TextField(
           controller: controller,
-          readOnly: readOnly,
           keyboardType: keyboardType,
           style: const TextStyle(color: VetoPalette.text, fontSize: 14),
           decoration: InputDecoration(
             hintText: hint,
             hintStyle: const TextStyle(color: VetoPalette.textSubtle),
             filled: true,
-            fillColor: readOnly ? VetoPalette.bg : VetoPalette.bg,
+            fillColor: VetoPalette.surface,
             contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(10),
