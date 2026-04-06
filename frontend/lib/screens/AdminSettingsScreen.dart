@@ -112,11 +112,11 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
         appBar: AppBar(
           title: Text(_t(code, 'adminPanel'),
               style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 18)),
-          backgroundColor: const Color(0xFF060C17),
+          backgroundColor: VetoPalette.darkBg,
           elevation: 0,
           bottom: const PreferredSize(
             preferredSize: Size.fromHeight(1),
-            child: Divider(height: 1, color: Color(0xFF182336)),
+            child: Divider(height: 1, color: VetoPalette.darkBorder),
           ),
           actions: [
             const Padding(

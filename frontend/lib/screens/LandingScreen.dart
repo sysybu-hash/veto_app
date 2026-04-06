@@ -336,10 +336,13 @@ class LandingScreen extends StatelessWidget {
 //  Color palette
 // ═══════════════════════════════════════════════════════════════════
 class _Clr {
-  static const bg      = Color(0xFF060C17);
-  static const surface = Color(0xFF0C1526);
-  static const card    = Color(0xFF0E1A2C);
-  static const border  = Color(0xFF182336);
+  static const bg      = Color(0xFFF1F5F9); // slate-100 page bg
+  static const surface = Color(0xFFFFFFFF); // white cards
+  static const card    = Color(0xFFF8FAFC); // slate-50 elevated
+  static const border  = Color(0xFFE2E8F0); // slate-200
+  static const heroBg  = Color(0xFF0F172A); // dark hero keep
+  static const heroBg2 = Color(0xFF1E293B); // dark hero mid
+  static const heroBorder = Color(0xFF334155); // dark hero border
   static const glow    = Color(0xFF3B82F6);
   static const muted   = Color(0xFF475569);
   static const sub     = Color(0xFF94A3B8);
@@ -369,7 +372,8 @@ class _Nav extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: const BoxDecoration(
-        border: Border(bottom: BorderSide(color: _Clr.border, width: 1)),
+        color: _Clr.heroBg,
+        border: Border(bottom: BorderSide(color: _Clr.heroBorder, width: 1)),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 16),
       child: Center(
@@ -399,7 +403,7 @@ class _Nav extends StatelessWidget {
             TextButton(
               onPressed: onTap,
               style: TextButton.styleFrom(
-                foregroundColor: _Clr.sub,
+                foregroundColor: Colors.white70,
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               ),
               child: Text(loginLabel),
@@ -438,11 +442,11 @@ class _HeroSection extends StatelessWidget {
       width: double.infinity,
       decoration: const BoxDecoration(
         gradient: LinearGradient(
-          colors: [Color(0xFF060C17), Color(0xFF091428), Color(0xFF060C17)],
+          colors: [_Clr.heroBg, _Clr.heroBg2, _Clr.heroBg],
           begin: Alignment.topRight,
           end: Alignment.bottomLeft,
         ),
-        border: Border(bottom: BorderSide(color: _Clr.border)),
+        border: Border(bottom: BorderSide(color: _Clr.heroBorder)),
       ),
       child: Stack(
         children: [
@@ -566,7 +570,7 @@ class _HeroContent extends StatelessWidget {
           label: Text(secondaryLabel),
           style: OutlinedButton.styleFrom(
             foregroundColor: Colors.white,
-            side: const BorderSide(color: _Clr.border, width: 1.5),
+            side: const BorderSide(color: _Clr.heroBorder, width: 1.5),
             padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 16),
             textStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -576,7 +580,7 @@ class _HeroContent extends StatelessWidget {
       const SizedBox(height: 32),
 
       // Divider
-      const Divider(color: _Clr.border, height: 1),
+      const Divider(color: _Clr.heroBorder, height: 1),
       const SizedBox(height: 20),
 
       // Proof pills
@@ -611,7 +615,7 @@ class _StackRail extends StatelessWidget {
             Container(width: 3, height: 18, color: VetoPalette.primary),
             const SizedBox(width: 10),
             Text(title, style: const TextStyle(
-              color: Colors.white, fontSize: 16, fontWeight: FontWeight.w800,
+              color: Color(0xFF0F172A), fontSize: 16, fontWeight: FontWeight.w800,
             )),
           ]),
         ),
@@ -646,11 +650,11 @@ class _StackItem extends StatelessWidget {
         const SizedBox(width: 14),
         Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Text(data.title, style: const TextStyle(
-            color: Colors.white, fontSize: 14, fontWeight: FontWeight.w700,
+            color: Color(0xFF0F172A), fontSize: 14, fontWeight: FontWeight.w700,
           )),
           const SizedBox(height: 4),
           Text(data.body, style: const TextStyle(
-            color: _Clr.sub, fontSize: 12, height: 1.65,
+            color: _Clr.muted, fontSize: 12, height: 1.65,
           )),
         ])),
       ]),
@@ -725,12 +729,12 @@ class _ContentSection extends StatelessWidget {
             ]),
             const SizedBox(height: 14),
             Text(title, style: const TextStyle(
-              color: Colors.white, fontSize: 36, fontWeight: FontWeight.w900, height: 1.1,
+              color: Color(0xFF0F172A), fontSize: 36, fontWeight: FontWeight.w900, height: 1.1,
             )),
             if (subtitle != null) ...[
               const SizedBox(height: 12),
               Text(subtitle!, style: const TextStyle(
-                color: _Clr.sub, fontSize: 15, height: 1.8, fontWeight: FontWeight.w400,
+                color: _Clr.muted, fontSize: 15, height: 1.8, fontWeight: FontWeight.w400,
               )),
             ],
             const SizedBox(height: 36),
@@ -799,11 +803,11 @@ class _FeatureCard extends StatelessWidget {
         ),
         const SizedBox(height: 16),
         Text(data.title, style: const TextStyle(
-          color: Colors.white, fontSize: 16, fontWeight: FontWeight.w800,
+          color: Color(0xFF0F172A), fontSize: 16, fontWeight: FontWeight.w800,
         )),
         const SizedBox(height: 8),
         Text(data.body, style: const TextStyle(
-          color: _Clr.sub, fontSize: 13, height: 1.75,
+          color: _Clr.muted, fontSize: 13, height: 1.75,
         )),
       ]),
     );
@@ -870,12 +874,12 @@ class _FlowCard extends StatelessWidget {
           Icon(data.icon, color: data.accent, size: 18),
           const SizedBox(width: 8),
           Expanded(child: Text(data.title, style: const TextStyle(
-            color: Colors.white, fontSize: 15, fontWeight: FontWeight.w800,
+            color: Color(0xFF0F172A), fontSize: 15, fontWeight: FontWeight.w800,
           ))),
         ]),
         const SizedBox(height: 8),
         Text(data.body, style: const TextStyle(
-          color: _Clr.sub, fontSize: 13, height: 1.75,
+          color: _Clr.muted, fontSize: 13, height: 1.75,
         )),
       ]),
     );
@@ -941,7 +945,7 @@ class _PricingCard extends StatelessWidget {
       const SizedBox(height: 10),
       Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
         Text(price, style: const TextStyle(
-          color: Colors.white, fontSize: 58, fontWeight: FontWeight.w900, height: 1,
+          color: Color(0xFF0F172A), fontSize: 58, fontWeight: FontWeight.w900, height: 1,
         )),
         const SizedBox(width: 8),
         Padding(padding: const EdgeInsets.only(bottom: 10),
@@ -966,7 +970,7 @@ class _PricingCard extends StatelessWidget {
           child: Row(children: [
             Icon(Icons.check_rounded, color: colors[i], size: 16),
             const SizedBox(width: 10),
-            Expanded(child: Text(lines[i], style: const TextStyle(color: _Clr.sub, fontSize: 14))),
+            Expanded(child: Text(lines[i], style: const TextStyle(color: _Clr.muted, fontSize: 14))),
           ]),
         ),
       ],
@@ -995,11 +999,11 @@ class _CtaSection extends StatelessWidget {
       margin: const EdgeInsets.only(top: 80),
       decoration: const BoxDecoration(
         gradient: LinearGradient(
-          colors: [Color(0xFF060C17), Color(0xFF0B1B36), Color(0xFF060C17)],
+          colors: [_Clr.heroBg, _Clr.heroBg2, _Clr.heroBg],
           begin: Alignment.topRight,
           end: Alignment.bottomLeft,
         ),
-        border: Border(top: BorderSide(color: _Clr.border)),
+        border: Border(top: BorderSide(color: _Clr.heroBorder)),
       ),
       child: Stack(children: [
         // glow
@@ -1103,9 +1107,9 @@ class _ProofChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 7),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.03),
+        color: Colors.white.withValues(alpha: 0.06),
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: _Clr.border),
+        border: Border.all(color: _Clr.heroBorder),
       ),
       child: Row(mainAxisSize: MainAxisSize.min, children: [
         const Icon(Icons.check_circle_outline_rounded, color: VetoPalette.info, size: 13),

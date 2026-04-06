@@ -18,6 +18,14 @@ import 'screens/VetoScreen.dart';
 import 'screens/ProfileScreen.dart';
 import 'screens/AdminSettingsScreen.dart';
 import 'screens/wizard/WizardShellScreen.dart';
+import 'screens/FilesVaultScreen.dart';
+import 'screens/AdminDashboard.dart';
+import 'screens/SubscriptionAdminScreen.dart';
+import 'screens/SettingsScreen.dart';
+import 'screens/admin/AllLawyersScreen.dart';
+import 'screens/admin/AllUsersScreen.dart';
+import 'screens/admin/PendingLawyersScreen.dart';
+import 'screens/admin/EmergencyLogsScreen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -73,6 +81,14 @@ class VetoApp extends StatelessWidget {
         '/lawyer_dashboard': (context) => const LawyerDashboard(),
         '/profile': (context) => const ProfileScreen(),
         '/admin_settings': (context) => const AdminSettingsScreen(),
+        '/files_vault': (context) => const FilesVaultScreen(),
+        '/admin_dashboard': (context) => const AdminDashboard(),
+        '/admin_subscriptions': (context) => const SubscriptionAdminScreen(),
+        '/settings': (context) => const SettingsScreen(),
+        '/admin_users': (context) => const AllUsersScreen(),
+        '/admin_lawyers': (context) => const AllLawyersScreen(),
+        '/admin_pending': (context) => const PendingLawyersScreen(),
+        '/admin_logs': (context) => const EmergencyLogsScreen(),
       },
     );
   }

@@ -118,10 +118,10 @@ class _EmergencyLogsScreenState extends State<EmergencyLogsScreen> {
       child: Scaffold(
         backgroundColor: VetoPalette.bg,
         appBar: AppBar(
-          backgroundColor: VetoPalette.surface,
+          backgroundColor: VetoPalette.darkBg,
           title: Text('${_t(code, 'emergencyLogs')} (${_loading ? _t(code, 'loading') : _events.length})',
-              style: const TextStyle(color: VetoPalette.text)),
-          iconTheme: const IconThemeData(color: VetoPalette.text),
+              style: const TextStyle(color: Colors.white)),
+          iconTheme: const IconThemeData(color: Colors.white),
           actions: [
             const Padding(
               padding: EdgeInsets.symmetric(horizontal: 8),

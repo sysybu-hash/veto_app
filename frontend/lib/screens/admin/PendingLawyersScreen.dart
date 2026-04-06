@@ -88,12 +88,12 @@ class _PendingLawyersScreenState extends State<PendingLawyersScreen> {
       child: Scaffold(
         backgroundColor: VetoPalette.bg,
         appBar: AppBar(
-          backgroundColor: VetoPalette.surface,
+          backgroundColor: VetoPalette.darkBg,
           title: Text(
             _t(code, 'pendingLawyersTitle'),
-            style: const TextStyle(color: VetoPalette.text, fontSize: 18),
+            style: const TextStyle(color: Colors.white, fontSize: 18),
           ),
-          iconTheme: const IconThemeData(color: VetoPalette.text),
+          iconTheme: const IconThemeData(color: Colors.white),
           actions: [
             const Padding(
               padding: EdgeInsets.symmetric(horizontal: 8),

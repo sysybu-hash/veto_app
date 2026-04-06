@@ -160,10 +160,10 @@ class _AllUsersScreenState extends State<AllUsersScreen> {
       child: Scaffold(
         backgroundColor: VetoPalette.bg,
         appBar: AppBar(
-          backgroundColor: VetoPalette.surface,
+          backgroundColor: VetoPalette.darkBg,
           title: Text('${_t(code, 'users')} (${_loading ? _t(code, 'loading') : _users.length})',
-              style: const TextStyle(color: VetoPalette.text)),
-          iconTheme: const IconThemeData(color: VetoPalette.text),
+              style: const TextStyle(color: Colors.white)),
+          iconTheme: const IconThemeData(color: Colors.white),
           actions: [
             const Padding(
               padding: EdgeInsets.symmetric(horizontal: 8),

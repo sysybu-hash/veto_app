@@ -544,13 +544,13 @@ class _VetoScreenState extends State<VetoScreen> {
 
   // ── AppBar ────────────────────────────────────────────────
   PreferredSizeWidget _buildAppBar(bool isAdmin) => AppBar(
-    backgroundColor: VetoPalette.surface,
+    backgroundColor: VetoPalette.darkBg,
     automaticallyImplyLeading: false,
     title: Row(children: [
       const Icon(Icons.shield, color: VetoPalette.primary, size: 22),
       const SizedBox(width: 8),
       const Text('VETO',
-          style: TextStyle(fontWeight: FontWeight.w800, letterSpacing: 4, color: VetoPalette.text)),
+          style: TextStyle(fontWeight: FontWeight.w800, letterSpacing: 4, color: Colors.white)),
       const SizedBox(width: 4),
       if (_isDispatching)
         Container(
@@ -565,7 +565,7 @@ class _VetoScreenState extends State<VetoScreen> {
     ]),
     bottom: const PreferredSize(
         preferredSize: Size.fromHeight(1),
-        child: Divider(height: 1, color: VetoPalette.border)),
+        child: Divider(height: 1, color: VetoPalette.darkBorder)),
     actions: [
       for (final k in ['he', 'ru', 'en'])
         GestureDetector(
@@ -593,7 +593,7 @@ class _VetoScreenState extends State<VetoScreen> {
             ),
             child: Text(_langs[k]!.label,
                 style: TextStyle(
-                    color: k == _langKey ? VetoPalette.primary : VetoPalette.textMuted,
+                    color: k == _langKey ? VetoPalette.primary : Colors.white60,
                     fontSize: 11,
                     fontWeight: k == _langKey ? FontWeight.w700 : FontWeight.normal)),
           ),
@@ -1123,10 +1123,39 @@ class _VetoScreenState extends State<VetoScreen> {
   // CHAT TAB
   // ══════════════════════════════════════════════════════════
   Widget _buildChatTab(bool isRtl) => Column(children: [
+    // ── Status banner when dispatching ──────────────────────
+    if (_isDispatching)
+      Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        color: VetoPalette.emergency.withValues(alpha: 0.08),
+        child: Row(children: [
+          const Icon(Icons.broadcast_on_personal_rounded,
+              color: VetoPalette.emergency, size: 16),
+          const SizedBox(width: 8),
+          Expanded(child: Text(
+            _langKey == 'he' ? '🚨 בתהליך שיגור — מחפש עורך דין זמין...'
+                : _langKey == 'ru' ? '🚨 Диспетчеризация — ищем адвоката...'
+                : '🚨 Dispatching — searching for a lawyer...',
+            style: const TextStyle(
+              color: VetoPalette.emergency, fontSize: 12, fontWeight: FontWeight.w700),
+          )),
+          if (_activeEventId != null)
+            TextButton(
+              onPressed: _resetSession,
+              style: TextButton.styleFrom(
+                  foregroundColor: VetoPalette.textMuted, padding: EdgeInsets.zero),
+              child: Text(_langKey == 'he' ? 'ביטול'
+                  : _langKey == 'ru' ? 'Отмена' : 'Cancel',
+                  style: const TextStyle(fontSize: 12)),
+            ),
+        ]),
+      ),
+    // ── Messages ─────────────────────────────────────────────
     Expanded(
       child: ListView.builder(
         controller: _scrollCtrl,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         itemCount: _messages.length + (_isLoading ? 1 : 0),
         itemBuilder: (context, i) {
           if (i == _messages.length) return _typingBubble();
@@ -1136,64 +1165,99 @@ class _VetoScreenState extends State<VetoScreen> {
               margin: const EdgeInsets.symmetric(vertical: 8),
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: VetoPalette.emergency.withValues(alpha: 0.10),
+                color: VetoPalette.emergency.withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: VetoPalette.emergency.withValues(alpha: 0.3)),
+                border: Border.all(color: VetoPalette.emergency.withValues(alpha: 0.25)),
               ),
               child: Text(msg.text,
-                  style: const TextStyle(color: VetoPalette.text, fontSize: 14, height: 1.5),
+                  style: const TextStyle(
+                      color: VetoPalette.emergency,
+                      fontSize: 14, height: 1.5, fontWeight: FontWeight.w600),
                   textAlign: TextAlign.center),
             );
           }
+          final isUser = msg.isUser;
           return Align(
-            alignment: msg.isUser
+            alignment: isUser
                 ? (isRtl ? Alignment.centerRight : Alignment.centerLeft)
                 : (isRtl ? Alignment.centerLeft : Alignment.centerRight),
             child: Container(
-              margin: const EdgeInsets.symmetric(vertical: 4),
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-              constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.75),
+              margin: const EdgeInsets.symmetric(vertical: 5),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              constraints: BoxConstraints(
+                  maxWidth: MediaQuery.of(context).size.width * 0.78),
               decoration: BoxDecoration(
-                color: msg.isUser ? VetoPalette.surface : VetoPalette.success.withValues(alpha: 0.12),
+                color: isUser
+                    ? VetoPalette.primary.withValues(alpha: 0.10)
+                    : VetoPalette.surface,
                 borderRadius: BorderRadius.only(
-                  topLeft: const Radius.circular(16),
-                  topRight: const Radius.circular(16),
-                  bottomLeft: Radius.circular(msg.isUser ? 4 : 16),
-                  bottomRight: Radius.circular(msg.isUser ? 16 : 4),
+                  topLeft: const Radius.circular(18),
+                  topRight: const Radius.circular(18),
+                  bottomLeft: Radius.circular(isUser ? 18 : 4),
+                  bottomRight: Radius.circular(isUser ? 4 : 18),
                 ),
                 border: Border.all(
-                    color: msg.isUser ? VetoPalette.border : VetoPalette.success.withValues(alpha: 0.3)),
+                    color: isUser
+                        ? VetoPalette.primary.withValues(alpha: 0.30)
+                        : VetoPalette.border,
+                    width: 1.5),
+                boxShadow: [
+                  BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.04),
+                      blurRadius: 8, offset: const Offset(0, 2)),
+                ],
               ),
               child: Text(msg.text,
-                  style: const TextStyle(color: VetoPalette.text, fontSize: 14, height: 1.4)),
+                  style: TextStyle(
+                      color: isUser ? VetoPalette.primary : VetoPalette.text,
+                      fontSize: 14.5,
+                      height: 1.55,
+                      fontWeight: isUser ? FontWeight.w600 : FontWeight.w400)),
             ),
           );
         },
       ),
     ),
-    _chatInput(isRtl),
-    _chatActBar(isRtl),
-    const SizedBox(height: 6),
+    // ── Input row ────────────────────────────────────────────
+    Container(
+      decoration: BoxDecoration(
+        color: VetoPalette.surface,
+        border: Border(top: BorderSide(color: VetoPalette.border)),
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 8)],
+      ),
+      child: Column(mainAxisSize: MainAxisSize.min, children: [
+        _chatInput(isRtl),
+        _chatActBar(isRtl),
+        const SizedBox(height: 4),
+      ]),
+    ),
   ]);
 
   Widget _typingBubble() => Align(
-    alignment: Alignment.centerLeft,
+    alignment: Alignment.centerRight,
     child: Container(
-      margin: const EdgeInsets.symmetric(vertical: 4),
+      margin: const EdgeInsets.symmetric(vertical: 5),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
           color: VetoPalette.surface,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: VetoPalette.border)),
+          borderRadius: const BorderRadius.only(
+            topLeft: Radius.circular(18), topRight: Radius.circular(18),
+            bottomLeft: Radius.circular(18), bottomRight: Radius.circular(4)),
+          border: Border.all(color: VetoPalette.border, width: 1.5),
+          boxShadow: [BoxShadow(
+              color: Colors.black.withValues(alpha: 0.04),
+              blurRadius: 8, offset: const Offset(0, 2))]),
       child: Row(mainAxisSize: MainAxisSize.min, children: [
-        const SizedBox(
-            width: 36,
+        SizedBox(
+            width: 48,
             child: LinearProgressIndicator(
+                borderRadius: BorderRadius.circular(4),
                 backgroundColor: VetoPalette.border,
-                valueColor: AlwaysStoppedAnimation(VetoPalette.success))),
-        const SizedBox(width: 8),
+                valueColor: const AlwaysStoppedAnimation(VetoPalette.success))),
+        const SizedBox(width: 10),
         Text(_l.processing,
-            style: const TextStyle(color: VetoPalette.textMuted, fontSize: 12)),
+            style: const TextStyle(color: VetoPalette.textMuted,
+                fontSize: 13, fontWeight: FontWeight.w500)),
       ]),
     ),
   );
@@ -1259,35 +1323,43 @@ class _VetoScreenState extends State<VetoScreen> {
   );
 
   Widget _chatActBar(bool isRtl) => Padding(
-    padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 4),
-    child: Row(mainAxisAlignment: MainAxisAlignment.spaceAround, children: [
-      _chatActBtn(Icons.camera_alt_outlined,
+    padding: const EdgeInsets.fromLTRB(16, 2, 16, 6),
+    child: Row(children: [
+      _chatActBtn(Icons.camera_alt_outlined, const Color(0xFF0EA5E9),
           _langKey == 'he' ? 'תיעוד' : _langKey == 'ru' ? 'Камера' : 'Camera',
           _openCamera),
-      _chatActBtn(Icons.volume_off_rounded,
+      const SizedBox(width: 10),
+      _chatActBtn(Icons.volume_off_rounded, const Color(0xFF8B5CF6),
           _langKey == 'he' ? 'השתק' : _langKey == 'ru' ? 'Звук' : 'Mute',
           _stopSpeaking),
-      _chatActBtn(Icons.location_on_outlined,
+      const SizedBox(width: 10),
+      _chatActBtn(Icons.location_on_outlined, VetoPalette.success,
           _langKey == 'he' ? 'מיקום' : _langKey == 'ru' ? 'Геолок.' : 'Location',
           _shareLocation),
+      const Spacer(),
+      Text(
+        _langKey == 'he' ? 'כלים מהירים' : _langKey == 'ru' ? 'Быстрые действия' : 'Quick tools',
+        style: const TextStyle(color: VetoPalette.textSubtle, fontSize: 11),
+      ),
     ]),
   );
 
-  Widget _chatActBtn(IconData icon, String label, VoidCallback onTap) =>
+  Widget _chatActBtn(IconData icon, Color color, String label, VoidCallback onTap) =>
       GestureDetector(
         onTap: onTap,
-        child: Column(children: [
-          Container(
-              width: 52, height: 52,
-              decoration: BoxDecoration(
-                  color: VetoPalette.surface,
-                  shape: BoxShape.circle,
-                  border: Border.all(color: VetoPalette.border)),
-              child: Icon(icon, color: VetoPalette.textMuted, size: 22)),
-          const SizedBox(height: 4),
-          Text(label,
-              style: const TextStyle(color: VetoPalette.textSubtle, fontSize: 11)),
-        ]),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+          decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: color.withValues(alpha: 0.25))),
+          child: Row(mainAxisSize: MainAxisSize.min, children: [
+            Icon(icon, color: color, size: 16),
+            const SizedBox(width: 5),
+            Text(label, style: TextStyle(
+                color: color, fontSize: 12, fontWeight: FontWeight.w600)),
+          ]),
+        ),
       );
 }
 
