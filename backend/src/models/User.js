@@ -16,11 +16,18 @@ const UserSchema = new mongoose.Schema(
 
     phone: {
       type: String,
-      required: [true, 'Phone number is required'],
       unique: true,
+      sparse: true, // Google-only users won't have a phone number
       trim: true,
       // E.164 format: +972501234567
       match: [/^\+[1-9]\d{7,14}$/, 'Please provide a valid phone number'],
+    },
+
+    // ── Google OAuth ──────────────────────────────────────────
+    google_id: {
+      type: String,
+      unique: true,
+      sparse: true,
     },
 
     email: {

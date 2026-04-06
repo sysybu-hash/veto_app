@@ -13,10 +13,12 @@ const {
   register,
   requestOTP,
   verifyOTP,
+  googleAuth,
 } = require('../controllers/auth.controller');
 
 router.post('/register',    register);
 router.post('/request-otp', requestOTP);
 router.post('/verify-otp',  verifyOTP);
+router.post('/google',      googleAuth);
 
 module.exports = router;

@@ -236,4 +236,80 @@ const verifyOTP = async (req, res, next) => {
   }
 };
 
-module.exports = { register, requestOTP, verifyOTP };
+// ============================================================
+//  POST /auth/google
+//  Body: { id_token, preferred_language? }
+//  Verifies a Google ID token, creates or finds the user, issues JWT.
+// ============================================================
+const googleAuth = async (req, res, next) => {
+  try {
+    const { id_token, preferred_language = 'he' } = req.body;
+    if (!id_token) return res.status(400).json({ error: 'id_token is required.' });
+
+    const clientId = process.env.GOOGLE_CLIENT_ID;
+    if (!clientId) {
+      return res.status(503).json({ error: 'Google Sign-In is not configured on this server.' });
+    }
+
+    const { OAuth2Client } = require('google-auth-library');
+    const oauthClient = new OAuth2Client(clientId);
+
+    let gPayload;
+    try {
+      const ticket = await oauthClient.verifyIdToken({ idToken: id_token, audience: clientId });
+      gPayload = ticket.getPayload();
+    } catch {
+      return res.status(401).json({ error: 'Invalid Google token.' });
+    }
+
+    const googleId = gPayload.sub;
+    const email    = gPayload.email;
+    const name     = gPayload.name || '';
+
+    let doc;
+    doc = await User.findOne({ google_id: googleId });
+    if (!doc && email) doc = await User.findOne({ email });
+
+    if (doc) {
+      if (!doc.google_id) { doc.google_id = googleId; await doc.save(); }
+    } else {
+      doc = await User.create({
+        full_name:          name,
+        email:              email || undefined,
+        google_id:          googleId,
+        role:               'user',
+        preferred_language,
+        is_verified:        true,
+      });
+    }
+
+    const userRole = doc.role === 'admin' ? 'admin' : 'user';
+    const token    = signToken({
+      userId:             doc._id,
+      role:               userRole,
+      full_name:          doc.full_name,
+      preferred_language: doc.preferred_language,
+    });
+
+    return res.status(200).json({
+      message: 'Google authentication successful.',
+      token,
+      user: {
+        id:                  doc._id,
+        full_name:           doc.full_name,
+        email:               doc.email,
+        role:                userRole,
+        preferred_language:  doc.preferred_language,
+        is_verified:         true,
+        is_subscribed:       doc.is_subscribed    ?? false,
+        subscription_expiry: doc.subscription_expiry ?? null,
+        manually_added:      doc.manually_added   ?? false,
+        is_payment_exempt:   userRole === 'admin' || doc.manually_added === true,
+      },
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+module.exports = { register, requestOTP, verifyOTP, googleAuth };

@@ -116,6 +116,45 @@ class AuthService {
     }
   }
 
+  /// Authenticate via Google ID token. Returns the same shape as [verifyOTP].
+  Future<Map<String, dynamic>?> googleAuth({
+    required String idToken,
+    String language = 'he',
+  }) async {
+    try {
+      final response = await http.post(
+        Uri.parse('${AppConfig.baseUrl}/auth/google'),
+        headers: AppConfig.httpHeaders({}),
+        body: jsonEncode({'id_token': idToken, 'preferred_language': language}),
+      ).timeout(const Duration(seconds: 25));
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body) as Map<String, dynamic>;
+        final token = data['token'];
+        final user  = data['user'];
+        final role  = user?['role']?.toString() ?? 'user';
+        final name  = user?['full_name']?.toString() ?? '';
+        final preferredLanguage = user?['preferred_language']?.toString() ?? language;
+        if (token != null) {
+          await _storage.write(key: 'jwt', value: token);
+          await _storage.write(key: 'veto_role', value: role);
+          if (name.isNotEmpty) await _storage.write(key: 'veto_name', value: name);
+          await _storage.write(key: 'veto_language', value: preferredLanguage);
+          final isSubscribed = user?['is_subscribed'] == true;
+          await _storage.write(key: 'veto_subscribed', value: isSubscribed ? 'true' : 'false');
+          final isPaymentExempt = user?['is_payment_exempt'] == true;
+          await _storage.write(key: 'veto_payment_exempt', value: isPaymentExempt ? 'true' : 'false');
+        }
+        return {'success': true, 'user': user};
+      }
+      debugPrint('googleAuth error: ${response.statusCode} ${response.body}');
+      return null;
+    } catch (e) {
+      debugPrint('googleAuth error: $e');
+      return null;
+    }
+  }
+
   Future<String?> getToken() async => await _storage.read(key: 'jwt');
   Future<String?> getStoredRole() async => await _storage.read(key: 'veto_role');
   Future<String?> getStoredName() async => await _storage.read(key: 'veto_name');
