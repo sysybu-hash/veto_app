@@ -36,6 +36,8 @@
   <link rel="manifest" href="manifest.json">
 
   <meta name="google-signin-client_id" content="752712664923-7loca49f7fggd514q8reljn93meatmrf.apps.googleusercontent.com">
+  <!-- Google Site Verification (Search Console) -->
+  <meta name="google-site-verification" content="INSERT_VERIFICATION_CODE_HERE" />
 
   <!-- Heebo — Hebrew+Latin font, loaded directly from Google Fonts CDN -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -180,6 +182,39 @@
         .catch(function(e) { console.warn('[VETO SW] push-sw registration failed:', e); });
     }
   </script>
+  
+  <!-- GDPR Cookie Consent Banner -->
+  <style>
+    #gdpr-banner {
+      position: fixed; bottom: 0; left: 0; right: 0; background: #0F172A;
+      border-top: 1px solid #1E293B; color: #F1F5F9; padding: 16px 24px;
+      display: none; justify-content: space-between; align-items: center; z-index: 999999;
+      box-shadow: 0 -4px 12px rgba(0,0,0,0.2); font-size: 14px; flex-wrap: wrap; gap: 12px;
+    }
+    #gdpr-banner a { color: #3B82F6; text-decoration: underline; }
+    #gdpr-banner button {
+      background: #3B82F6; color: white; border: none; padding: 8px 16px;
+      border-radius: 6px; font-weight: 600; cursor: pointer; transition: background 0.2s;
+    }
+    #gdpr-banner button:hover { background: #2563EB; }
+  </style>
+  <div id="gdpr-banner">
+    <div>
+      We use cookies to enhance your experience and analyze traffic, in compliance with European GDPR regulations. <br/>
+      Read our <a href="#" onclick="alert('Privacy Policy goes here')">Privacy Policy</a> & <a href="#" onclick="alert('Terms of Service go here')">Terms of Service</a>.
+    </div>
+    <button onclick="acceptCookies()">Accept Cookies</button>
+  </div>
+  <script>
+    if (!localStorage.getItem('veto_gdpr_accepted')) {
+      document.getElementById('gdpr-banner').style.display = 'flex';
+    }
+    function acceptCookies() {
+      localStorage.setItem('veto_gdpr_accepted', 'true');
+      document.getElementById('gdpr-banner').style.display = 'none';
+    }
+  </script>
+
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>

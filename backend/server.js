@@ -113,6 +113,7 @@ app.use('/api/admin', require('./src/routes/admin.routes'));
 app.use('/api/ai', require('./src/routes/ai.routes'));
 app.use('/api/payments', require('./src/routes/payment.routes'));
 app.use('/api/chat', require('./src/routes/chat.routes'));
+app.use('/api/vault', require('./src/routes/vault.routes'));
 
 app.get('/', (_, res) =>
   res.json({
