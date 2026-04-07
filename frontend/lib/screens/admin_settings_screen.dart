@@ -12,10 +12,10 @@ import '../core/theme/veto_theme.dart';
 import '../services/admin_service.dart';
 import '../services/auth_service.dart';
 import '../widgets/app_language_menu.dart';
-import 'admin/AllUsersScreen.dart';
-import 'admin/AllLawyersScreen.dart';
-import 'admin/EmergencyLogsScreen.dart';
-import 'admin/PendingLawyersScreen.dart';
+import 'admin/all_users_screen.dart';
+import 'admin/all_lawyers_screen.dart';
+import 'admin/emergency_logs_screen.dart';
+import 'admin/pending_lawyers_screen.dart';
 import 'admin/admin_i18n.dart';
 
 class AdminSettingsScreen extends StatefulWidget {

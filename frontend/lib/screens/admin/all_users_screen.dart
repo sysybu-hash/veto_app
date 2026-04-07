@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 
 import 'package:provider/provider.dart';
 
@@ -84,7 +84,8 @@ class _AllUsersScreenState extends State<AllUsersScreen> {
                   value: manuallyAdded,
                   onChanged: (v) => ss(() => manuallyAdded = v),
                   contentPadding: EdgeInsets.zero,
-                  activeColor: VetoPalette.success,
+                  activeThumbColor: VetoPalette.success,
+                  activeTrackColor: VetoPalette.success.withValues(alpha: 0.5),
                   title: Text(_t(code, 'manualExempt'),
                       style: const TextStyle(color: VetoPalette.text, fontSize: 14)),
                   subtitle: Text(_t(code, 'manualExemptHint'),

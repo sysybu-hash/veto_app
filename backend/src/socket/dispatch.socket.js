@@ -58,6 +58,16 @@ module.exports = function initDispatch(io) {
       }).catch(console.error);
 
       socket.join(`lawyer:${userId}`);
+
+      // Listen for explicit availability toggles from the dashboard
+      socket.on('lawyer_availability', async ({ available }) => {
+        try {
+          await Lawyer.findByIdAndUpdate(userId, { is_available: !!available });
+          console.log(`Lawyer ${userId} availability set to ${!!available}`);
+        } catch (err) {
+          console.error(`Error updating availability for ${userId}:`, err);
+        }
+      });
     }
 
     // ── User joins their private room ──────────────────────

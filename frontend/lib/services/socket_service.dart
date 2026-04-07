@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
-import 'package:socket_io_client/socket_io_client.dart' as IO;
+import 'package:socket_io_client/socket_io_client.dart' as io;
 import '../config/app_config.dart';
 import 'auth_service.dart';
 
@@ -8,7 +8,7 @@ class SocketService {
   static final SocketService _instance = SocketService._internal();
   factory SocketService() => _instance;
 
-  IO.Socket? _socket;
+  io.Socket? _socket;
 
   final _emergencyCreatedController =
       StreamController<Map<String, dynamic>>.broadcast();
@@ -50,7 +50,7 @@ class SocketService {
 
     _socket?.dispose();
 
-    _socket = IO.io(AppConfig.socketOrigin, <String, dynamic>{
+    _socket = io.io(AppConfig.socketOrigin, <String, dynamic>{
       'transports': ['websocket', 'polling'],
       'autoConnect': false,
       'auth': {'token': token},

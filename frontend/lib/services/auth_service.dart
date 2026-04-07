@@ -255,6 +255,7 @@ class AuthService {
     if (language != null && language.isNotEmpty) {
       await _storage.write(key: 'veto_language', value: language);
     }
+    if (!context.mounted) return;
     Navigator.of(context).pushReplacementNamed('/login');
   }
 }

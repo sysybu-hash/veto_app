@@ -19,7 +19,7 @@ import '../services/socket_service.dart';
 import '../services/ai_service.dart';
 import '../services/payment_service.dart';
 import '../services/admin_service.dart';
-import 'EvidenceScreen.dart';
+import 'evidence_screen.dart';
 
 // ── Scenarios ─────────────────────────────────────────────
 enum _Scenario { traffic, interrogation, arrest, accident, other }
@@ -628,6 +628,11 @@ class _VetoScreenState extends State<VetoScreen> {
           color: Colors.white70,
           onPressed: () => Navigator.pushNamed(context, '/files_vault'),
           tooltip: _langKey == 'he' ? 'כספת קבצים' : _langKey == 'ru' ? 'Хранилище' : 'File Vault'),
+      IconButton(
+          icon: const Icon(Icons.map_outlined),
+          color: Colors.white70,
+          onPressed: () => Navigator.pushNamed(context, '/waze_map'),
+          tooltip: _langKey == 'he' ? 'ניווט Waze' : _langKey == 'ru' ? 'Навигация Waze' : 'Waze Navigation'),
       IconButton(
           icon: const Icon(Icons.settings_outlined),
           color: Colors.white70,

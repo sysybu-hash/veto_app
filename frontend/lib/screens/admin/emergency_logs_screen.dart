@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 
 import 'package:provider/provider.dart';
 
@@ -67,7 +67,7 @@ class _EmergencyLogsScreenState extends State<EmergencyLogsScreen> {
             children: ['active', 'pending', 'resolved'].map((s) => RadioListTile<String>(
               value: s,
               groupValue: selected,
-              onChanged: (v) => ss(() => selected = v!),
+              onChanged: (v) { if (v != null) ss(() => selected = v); },
               title: Text(_sl(s), style: TextStyle(color: _sc(s))),
             )).toList(),
           )),

@@ -98,4 +98,9 @@ class AuthService {
       throw Exception('Failed to register: $e');
     }
   }
+
+  /// Logout (Stub)
+  static Future<void> logout(String token) async {
+    // Stub implementation to fix compilation error.
+  }
 }
