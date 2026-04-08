@@ -39,6 +39,15 @@
   <!-- Google Site Verification (Search Console) -->
   <meta name="google-site-verification" content="INSERT_VERIFICATION_CODE_HERE" />
 
+  <!-- Global site tag (gtag.js) - Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-XXXXXXXXXX');
+  </script>
+
   <!-- Heebo — Hebrew+Latin font, loaded directly from Google Fonts CDN -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -201,7 +210,7 @@
   <div id="gdpr-banner">
     <div>
       We use cookies to enhance your experience and analyze traffic, in compliance with European GDPR regulations. <br/>
-      Read our <a href="#" onclick="alert('Privacy Policy goes here')">Privacy Policy</a> & <a href="#" onclick="alert('Terms of Service go here')">Terms of Service</a>.
+      Read our <a href="privacy.html" target="_blank">Privacy Policy</a> & <a href="terms.html" target="_blank">Terms of Service</a>.
     </div>
     <button onclick="acceptCookies()">Accept Cookies</button>
   </div>
