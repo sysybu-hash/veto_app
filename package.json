@@ -8,7 +8,7 @@
     "render-build": "npm ci --prefix backend",
     "render-start": "npm start --prefix backend",
     "install:backend": "npm install --prefix backend",
-    "dev": "npm run dev --prefix backend",
+    "dev": "npm start --prefix backend",
     "dev:clean": "npm run dev:clean --prefix backend",
     "free-5001": "npm run free-5001 --prefix backend",
     "start": "npm start --prefix backend",
