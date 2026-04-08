@@ -16,5 +16,10 @@
     "tunnel:any": "npm run tunnel:any --prefix backend",
     "tunnel:help": "npm run tunnel:help --prefix backend",
     "dev:urls": "npm run dev:urls --prefix backend"
+  },
+  "overrides": {
+    "multer-storage-cloudinary": {
+      "cloudinary": "^2.9.0"
+    }
   }
 }
