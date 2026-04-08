@@ -43,7 +43,8 @@ router.post('/files/upload', upload.single('file'), async (req, res, next) => {
   try {
     if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
     
-    let cloudUrl = req.file.path ? req.file.path : `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
+    // Cloudinary returns req.file.path, local disk returns req.file.filename
+    const cloudUrl = req.file.path || `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
     
     // Some Cloudinary setup appends resource type, some return http url. Check and fix secure url here if needed:
     if (cloudUrl.startsWith('http://res.cloudinary')) cloudUrl = cloudUrl.replace('http:', 'https:');

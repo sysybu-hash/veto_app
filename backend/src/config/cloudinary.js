@@ -27,7 +27,7 @@ const cloudinaryStorage = new CloudinaryStorage({
     const isAudio = file.mimetype.startsWith('audio/');
     return {
       folder:         'veto/evidence',
-      resource_type:  isVideo ? 'video' : isAudio ? 'video' : 'image',
+      resource_type:  isVideo ? 'video' : isAudio ? 'audio' : 'image',
       allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp', 'mp4', 'mov', 'avi', 'mp3', 'wav', 'm4a'],
       public_id:       `${Date.now()}-${req.params.eventId}`,
     };
