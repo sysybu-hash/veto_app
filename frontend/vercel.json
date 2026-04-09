@@ -1,0 +1,8 @@
+{
+  "version": 2,
+  "public": true,
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/build/web/$1" },
+    { "source": "/(.*)", "destination": "/build/web/index.html" }
+  ]
+}

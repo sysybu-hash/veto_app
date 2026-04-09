@@ -29,6 +29,7 @@ import 'screens/admin/emergency_logs_screen.dart';
 import 'screens/lawyer_settings_screen.dart';
 import 'screens/chat_screen.dart';
 import 'screens/waze_map_screen.dart';
+import 'screens/shared_vault_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -95,6 +96,7 @@ class VetoApp extends StatelessWidget {
         '/lawyer_settings': (context) => const LawyerSettingsScreen(),
         '/chat': (context) => const ChatScreen(),
         '/waze_map': (context) => const WazeMapScreen(),
+        '/shared_vault': (context) => const SharedVaultScreen(),
       },
     );
   }

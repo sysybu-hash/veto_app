@@ -91,3 +91,32 @@ exports.createCase = async (req, res, next) => {
     res.status(201).json(newCase);
   } catch (err) { next(err); }
 };
+
+exports.updateCase = async (req, res, next) => {
+  try {
+    const { name } = req.body;
+    const legalCase = await VaultCase.findOneAndUpdate(
+      { _id: req.params.caseId, user_id: req.user.userId },
+      { name },
+      { new: true }
+    );
+    if (!legalCase) return res.status(404).json({ error: 'Case not found or unauthorized' });
+    res.json(legalCase);
+  } catch (err) { next(err); }
+};
+
+exports.deleteCase = async (req, res, next) => {
+  try {
+    // 1. Delete the case
+    const legalCase = await VaultCase.findOneAndDelete({ _id: req.params.caseId, user_id: req.user.userId });
+    if (!legalCase) return res.status(404).json({ error: 'Case not found or unauthorized' });
+
+    // 2. Unlink all files associated with this case
+    await VaultFile.updateMany(
+      { caseId: req.params.caseId, user_id: req.user.userId },
+      { $unset: { caseId: 1 } }
+    );
+
+    res.json({ success: true, message: 'Case deleted and files unlinked' });
+  } catch (err) { next(err); }
+};

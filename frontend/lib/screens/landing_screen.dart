@@ -447,7 +447,7 @@ class _NavState extends State<_Nav> {
               child: const Icon(Icons.shield_rounded, color: Colors.white, size: 17),
             ),
             const SizedBox(width: 10),
-            const Text('VETO', style: TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.w900, letterSpacing: 5)),
+            const Text('VETO v7.0', style: TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.w900, letterSpacing: 5)),
             const Text(' LEGAL', style: TextStyle(color: Color(0xFF3B82F6), fontSize: 17, fontWeight: FontWeight.w900, letterSpacing: 2)),
             if (wide) ...[
               const SizedBox(width: 28),

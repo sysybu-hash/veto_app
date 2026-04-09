@@ -21,6 +21,8 @@ router.get('/shared/:userId', authorize('lawyer', 'admin'), getSharedFiles);
 
 router.get('/cases', getCases);
 router.post('/cases', createCase);
+router.patch('/cases/:caseId', updateCase);
+router.delete('/cases/:caseId', deleteCase);
 
 // ── Multer setup for Vault Uploads ──
 // Same as Event evidence logic or just basic disk/Cloudinary

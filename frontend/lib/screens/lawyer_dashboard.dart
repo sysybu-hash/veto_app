@@ -23,6 +23,7 @@ class _LawyerDashboardState extends State<LawyerDashboard> {
   bool _isAvailable = true;
   bool _isBooting = true;
   final List<Map<String, dynamic>> _alerts = [];
+  final List<Map<String, dynamic>> _activeCases = [];
   StreamSubscription<Map<String, dynamic>>? _alertSub;
 
   static const Map<String, Map<String, String>> _copy = {
@@ -190,6 +191,7 @@ class _LawyerDashboardState extends State<LawyerDashboard> {
     SocketService().emit('accept_case', {'eventId': eventId});
     setState(() {
       _alerts.removeWhere((item) => item['eventId'] == eventId);
+      _activeCases.insert(0, alert);
       _isAvailable = false;
     });
     SocketService().emit('lawyer_availability', {'available': false});
@@ -544,6 +546,47 @@ class _LawyerDashboardState extends State<LawyerDashboard> {
                           separatorBuilder: (_, __) => const SizedBox(height: 12),
                         ),
                       ),
+                    if (_activeCases.isNotEmpty) ...[
+                      SliverToBoxAdapter(
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
+                          child: Text(
+                            code == 'he' ? 'תיקים פעילים' : 'ACTIVE CASES',
+                            style: const TextStyle(
+                              color: VetoPalette.primary,
+                              fontSize: 10,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 2.5,
+                            ),
+                          ),
+                        ),
+                      ),
+                      SliverPadding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        sliver: SliverList.separated(
+                          itemCount: _activeCases.length,
+                          itemBuilder: (context, index) {
+                            final c = _activeCases[index];
+                            return _ActiveCaseCard(
+                              data: c,
+                              onViewVault: () {
+                                final uid = c['userId'];
+                                if (uid != null) {
+                                  Navigator.pushNamed(context, '/shared_vault', arguments: {
+                                    'userId': uid,
+                                    'userName': c['userName'] ?? 'User',
+                                  });
+                                }
+                              },
+                              onComplete: () {
+                                setState(() => _activeCases.removeAt(index));
+                              },
+                            );
+                          },
+                          separatorBuilder: (_, __) => const SizedBox(height: 12),
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),
@@ -1112,3 +1155,66 @@ class _AlertSummary extends StatelessWidget {
     );
   }
 }
+
+class _ActiveCaseCard extends StatelessWidget {
+  final Map<String, dynamic> data;
+  final VoidCallback onViewVault;
+  final VoidCallback onComplete;
+
+  const _ActiveCaseCard({
+    required this.data,
+    required this.onViewVault,
+    required this.onComplete,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final userId = data['userId']?.toString() ?? '—';
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: VetoPalette.surface,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: VetoPalette.success.withValues(alpha: 0.3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.gavel_rounded, color: VetoPalette.success, size: 20),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'User ID: $userId',
+                  style: const TextStyle(color: VetoPalette.text, fontWeight: FontWeight.w700),
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.check_circle_outline, color: VetoPalette.success),
+                onPressed: onComplete,
+                tooltip: 'Mark Complete',
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: FilledButton.icon(
+                  onPressed: onViewVault,
+                  icon: const Icon(Icons.lock_open_rounded, size: 16),
+                  label: const Text('VIEW SHARED VAULT'),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: VetoPalette.primary,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}

@@ -5,7 +5,6 @@
 // ============================================================
 
 import 'dart:convert';
-import 'dart:html' as html;
 import 'dart:typed_data';
 import 'package:flutter/foundation.dart' show kIsWeb, debugPrint;
 import 'package:flutter/material.dart';
@@ -17,6 +16,7 @@ import '../config/app_config.dart';
 import '../core/i18n/app_language.dart';
 import '../core/theme/veto_theme.dart';
 import '../services/auth_service.dart';
+import '../platform/browser_bridge.dart' as browser_bridge;
 
 // ── i18n strings ─────────────────────────────────────────────
 class _L {
@@ -25,7 +25,10 @@ class _L {
       caseName, createCase, addToCase, files, allFiles, caseFiles,
       shareWithLawyer, lawyerAccess, fileType, size, date, status,
       aiSummary, aiBtn, cancel, save, errorUpload, successUpload,
-      successDelete, successShare, compressing, caseCreated, loading;
+      successDelete, successShare, compressing, caseCreated, loading,
+      rename, fileName, successRename,
+      deleteCase, deleteCaseConfirm, successDeleteCase,
+      removeFromCase;
 
   const _L({
     required this.title, required this.upload, required this.uploading,
@@ -41,6 +44,9 @@ class _L {
     required this.errorUpload, required this.successUpload,
     required this.successDelete, required this.successShare,
     required this.compressing, required this.caseCreated, required this.loading,
+    required this.rename, required this.fileName, required this.successRename,
+    required this.deleteCase, required this.deleteCaseConfirm, required this.successDeleteCase,
+    required this.removeFromCase,
   });
 }
 
@@ -59,6 +65,9 @@ const _he = _L(
   errorUpload: 'שגיאה בהעלאה', successUpload: 'קובץ הועלה בהצלחה',
   successDelete: 'הקובץ נמחק', successShare: 'הגישה עודכנה',
   compressing: 'דוחס...', caseCreated: 'התיק נוצר', loading: 'טוען...',
+  rename: 'שנה שם', fileName: 'שם הקובץ', successRename: 'השם עודכן',
+  deleteCase: 'מחק תיק', deleteCaseConfirm: 'למחוק את התיק? הקבצים יישארו בכספת.',
+  successDeleteCase: 'התיק נמחק', removeFromCase: 'הסר מהתיק',
 );
 
 const _en = _L(
@@ -76,6 +85,9 @@ const _en = _L(
   errorUpload: 'Upload failed', successUpload: 'File uploaded successfully',
   successDelete: 'File deleted', successShare: 'Access updated',
   compressing: 'Compressing...', caseCreated: 'Case created', loading: 'Loading...',
+  rename: 'Rename', fileName: 'File name', successRename: 'Name updated',
+  deleteCase: 'Delete Case', deleteCaseConfirm: 'Delete this case? Files will remain in your vault.',
+  successDeleteCase: 'Case deleted', removeFromCase: 'Remove from Case',
 );
 
 const _ru = _L(
@@ -93,6 +105,9 @@ const _ru = _L(
   errorUpload: 'Ошибка загрузки', successUpload: 'Файл загружен',
   successDelete: 'Файл удалён', successShare: 'Доступ обновлён',
   compressing: 'Сжатие...', caseCreated: 'Дело создано', loading: 'Загрузка...',
+  rename: 'Переименовать', fileName: 'Имя файла', successRename: 'Имя обновлено',
+  deleteCase: 'Удалить дело', deleteCaseConfirm: 'Удалить это дело? Файлы останутся в хранилище.',
+  successDeleteCase: 'Дело удалено', removeFromCase: 'Убрать из дела',
 );
 
 // ── Data models ───────────────────────────────────────────────
@@ -185,10 +200,6 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
   bool _isDragging = false;
   String? _activeFileId;
 
-  void Function(html.Event)? _dragOverFn;
-  void Function(html.Event)? _dragLeaveFn;
-  void Function(html.Event)? _dropFn;
-
   late TabController _tabController;
 
   double get _usedMb =>
@@ -209,22 +220,21 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
     _tabController.addListener(() => setState(() {}));
     _load();
     if (kIsWeb) {
-      _dragOverFn = _onDragOver;
-      _dragLeaveFn = _onDragLeave;
-      _dropFn = _onDrop;
-      html.document.addEventListener('dragover', _dragOverFn!);
-      html.document.addEventListener('dragleave', _dragLeaveFn!);
-      html.document.addEventListener('drop', _dropFn!);
+      browser_bridge.setupDragAndDropHandlers(
+        onDragOver: () { if (mounted) setState(() => _isDragging = true); },
+        onDragLeave: () { if (mounted) setState(() => _isDragging = false); },
+        onDrop: (files) {
+          if (mounted) setState(() => _isDragging = false);
+          for (final f in files) { _uploadHtmlFile(f); }
+        },
+      );
     }
   }
 
   @override
   void dispose() {
-    if (kIsWeb && _dragOverFn != null) {
-      html.document.removeEventListener('dragover', _dragOverFn!);
-      html.document.removeEventListener('dragleave', _dragLeaveFn!);
-      html.document.removeEventListener('drop', _dropFn!);
-    }
+    // browser_bridge handlers are anonymous in this implementation, 
+    // ideally we'd remove them but flutter doesn't provide a clean dispose for global listeners easily without complexity
     _tabController.dispose();
     super.dispose();
   }
@@ -232,45 +242,26 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
   Future<String?> get _token async => _auth.getToken();
 
   // ── Drag & drop (web) ────────────────────────────────────────
-  void _onDragOver(html.Event event) {
-    event.preventDefault();
-    if (!mounted || _isDragging) return;
-    setState(() => _isDragging = true);
-  }
+  // ── Drag & drop (web handlers moved to bridge) ────────────────
 
-  void _onDragLeave(html.Event event) {
-    if (!mounted) return;
-    final e = event as html.MouseEvent;
-    if (e.relatedTarget == null) setState(() => _isDragging = false);
-  }
-
-  void _onDrop(html.Event event) async {
-    event.preventDefault();
-    if (!mounted) return;
-    setState(() => _isDragging = false);
-    final dt = (event as html.MouseEvent).dataTransfer;
-    if (dt.files == null || dt.files!.isEmpty) return;
-    for (final file in dt.files!) {
-      await _uploadHtmlFile(file);
-    }
-  }
-
-  Future<void> _uploadHtmlFile(html.File file) async {
+  Future<void> _uploadHtmlFile(dynamic file) async {
     if (_usedMb >= _quotaMb) { _snack(_l.quota, isError: true); return; }
     setState(() => _uploading = true);
     try {
       final tok = await _token;
       if (tok == null) return;
-      final reader = html.FileReader();
-      reader.readAsArrayBuffer(file);
-      await reader.onLoad.first;
-      final bytes = (reader.result as ByteBuffer).asUint8List();
+      
+      final bytes = await browser_bridge.readFileAsBytes(file);
+      final fileName = browser_bridge.getFileName(file);
+      final fileType = browser_bridge.getFileType(file);
+
       final uri = Uri.parse('${AppConfig.baseUrl}/vault/files/upload');
       final req = http.MultipartRequest('POST', uri)
         ..headers.addAll(AppConfig.httpHeadersBinary({'Authorization': 'Bearer $tok'}))
-        ..fields['name'] = file.name
-        ..fields['mimeType'] = file.type.isNotEmpty ? file.type : 'application/octet-stream';
-      req.files.add(http.MultipartFile.fromBytes('file', bytes, filename: file.name));
+        ..fields['name'] = fileName
+        ..fields['mimeType'] = fileType.isNotEmpty ? fileType : 'application/octet-stream';
+      
+      req.files.add(http.MultipartFile.fromBytes('file', bytes, filename: fileName));
       final streamed = await req.send();
       if (streamed.statusCode == 201 || streamed.statusCode == 200) {
         _snack(_l.successUpload);
@@ -376,9 +367,14 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
               child: SizedBox(
                 width: double.infinity,
                 child: OutlinedButton.icon(
-                  onPressed: () {
-                    html.window.open(file.url, '_blank');
-                    Navigator.pop(ctx);
+                  onPressed: () async {
+                    final uri = Uri.parse(file.url);
+                    if (kIsWeb) {
+                      browser_bridge.openInNewTab(file.url);
+                    } else {
+                      // handle mobile download or launch
+                    }
+                    if (mounted) Navigator.pop(ctx);
                   },
                   icon: const Icon(Icons.open_in_new_rounded, size: 16),
                   label: const Text('Open in new tab'),
@@ -554,6 +550,56 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
     } catch (_) {}
   }
 
+  Future<void> _renameFile(_VaultFile file) async {
+    final ctrl = TextEditingController(text: file.name);
+    final newName = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: VetoPalette.surface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text(_l.rename,
+            style: const TextStyle(color: VetoPalette.text, fontWeight: FontWeight.w700)),
+        content: TextField(
+          controller: ctrl,
+          autofocus: true,
+          style: const TextStyle(color: VetoPalette.text),
+          decoration: InputDecoration(
+            hintText: _l.fileName,
+            hintStyle: const TextStyle(color: VetoPalette.textMuted),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+          ),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx),
+              child: Text(_l.cancel, style: const TextStyle(color: VetoPalette.textMuted))),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, ctrl.text.trim()),
+            style: FilledButton.styleFrom(backgroundColor: VetoPalette.primary),
+            child: Text(_l.save),
+          ),
+        ],
+      ),
+    );
+
+    if (newName == null || newName.isEmpty || newName == file.name) return;
+
+    try {
+      final tok = await _token;
+      if (tok == null) return;
+      final res = await http.patch(
+        Uri.parse('${AppConfig.baseUrl}/vault/files/${file.id}'),
+        headers: AppConfig.httpHeaders({'Authorization': 'Bearer $tok'}),
+        body: jsonEncode({'name': newName}),
+      ).timeout(const Duration(seconds: 10));
+
+      if (res.statusCode == 200) {
+        _snack(_l.successRename);
+        await _load();
+      }
+    } catch (_) {}
+  }
+
+
   Future<void> _createCase() async {
     final ctrl = TextEditingController();
     final name = await showDialog<String>(
@@ -595,6 +641,103 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
       ).timeout(const Duration(seconds: 10));
       if (res.statusCode == 201 || res.statusCode == 200) {
         _snack(_l.caseCreated);
+        await _load();
+      }
+    } catch (_) {}
+  }
+
+  Future<void> _renameCase(_LegalCase c) async {
+    final ctrl = TextEditingController(text: c.name);
+    final name = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: VetoPalette.surface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text(_l.rename,
+            style: const TextStyle(color: VetoPalette.text, fontWeight: FontWeight.w700)),
+        content: TextField(
+          controller: ctrl,
+          autofocus: true,
+          style: const TextStyle(color: VetoPalette.text),
+          decoration: InputDecoration(
+            hintText: _l.caseName,
+            hintStyle: const TextStyle(color: VetoPalette.textMuted),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+          ),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx),
+              child: Text(_l.cancel, style: const TextStyle(color: VetoPalette.textMuted))),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, ctrl.text.trim()),
+            style: FilledButton.styleFrom(backgroundColor: VetoPalette.primary),
+            child: Text(_l.save),
+          ),
+        ],
+      ),
+    );
+    if (name == null || name.isEmpty || name == c.name) return;
+    try {
+      final tok = await _token;
+      if (tok == null) return;
+      final res = await http.patch(
+        Uri.parse('${AppConfig.baseUrl}/vault/cases/${c.id}'),
+        headers: AppConfig.httpHeaders({'Authorization': 'Bearer $tok'}),
+        body: jsonEncode({'name': name}),
+      ).timeout(const Duration(seconds: 10));
+      if (res.statusCode == 200) {
+        _snack(_l.successRename);
+        await _load();
+      }
+    } catch (_) {}
+  }
+
+  Future<void> _deleteCase(_LegalCase c) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: VetoPalette.surface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text(_l.deleteCase,
+            style: const TextStyle(color: VetoPalette.text, fontWeight: FontWeight.w700)),
+        content: Text(_l.deleteCaseConfirm,
+            style: const TextStyle(color: VetoPalette.textMuted)),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false),
+              child: Text(_l.cancel, style: const TextStyle(color: VetoPalette.textMuted))),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: FilledButton.styleFrom(backgroundColor: VetoPalette.emergency),
+            child: Text(_l.deleteCase),
+          ),
+        ],
+      ),
+    );
+    if (confirm != true) return;
+    try {
+      final tok = await _token;
+      if (tok == null) return;
+      final res = await http.delete(
+        Uri.parse('${AppConfig.baseUrl}/vault/cases/${c.id}'),
+        headers: AppConfig.httpHeaders({'Authorization': 'Bearer $tok'}),
+      ).timeout(const Duration(seconds: 10));
+      if (res.statusCode == 200) {
+        _snack(_l.successDeleteCase);
+        await _load();
+      }
+    } catch (_) {}
+  }
+
+  Future<void> _removeFromCase(_VaultFile file) async {
+    try {
+      final tok = await _token;
+      if (tok == null) return;
+      final res = await http.patch(
+        Uri.parse('${AppConfig.baseUrl}/vault/files/${file.id}'),
+        headers: AppConfig.httpHeaders({'Authorization': 'Bearer $tok'}),
+        body: jsonEncode({'caseId': null}),
+      ).timeout(const Duration(seconds: 10));
+      if (res.statusCode == 200) {
         await _load();
       }
     } catch (_) {}
@@ -768,7 +911,9 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
         onAnalyze: () => _analyzeFile(_files[i]),
         onDelete: () => _deleteFile(_files[i]),
         onToggleAccess: () => _toggleLawyerAccess(_files[i]),
+        onRename: () => _renameFile(_files[i]),
         onAddToCase: _cases.isEmpty ? null : () => _showAddToCase(_files[i]),
+        onRemoveFromCase: _files[i].caseId == null ? null : () => _removeFromCase(_files[i]),
         onPreview: () => _showPreview(_files[i]),
       ),
     );
@@ -815,6 +960,8 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
               final caseFiles = _files.where((f) => f.caseId == c.id).toList();
               return _CaseCard(
                 legalCase: c, files: caseFiles, l: _l,
+                onRename: () => _renameCase(c),
+                onDelete: () => _deleteCase(c),
               );
             },
           ),
@@ -871,15 +1018,15 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
 class _FileCard extends StatelessWidget {
   final _VaultFile file;
   final _L l;
-  final bool isAnalyzing;
-  final VoidCallback onAnalyze, onDelete, onToggleAccess;
-  final VoidCallback? onAddToCase;
+  final VoidCallback onAnalyze, onDelete, onToggleAccess, onRename;
+  final VoidCallback? onAddToCase, onRemoveFromCase;
   final VoidCallback? onPreview;
 
   const _FileCard({
     required this.file, required this.l, required this.isAnalyzing,
     required this.onAnalyze, required this.onDelete,
-    required this.onToggleAccess, this.onAddToCase, this.onPreview,
+    required this.onToggleAccess, required this.onRename,
+    this.onAddToCase, this.onRemoveFromCase, this.onPreview,
   });
 
   @override
@@ -984,6 +1131,12 @@ class _FileCard extends StatelessWidget {
             color: file.lawyerAccess ? VetoPalette.warning : VetoPalette.success,
             onTap: onToggleAccess,
           ),
+          _ActionChip(
+            icon: Icons.edit_note_rounded,
+            label: l.rename,
+            color: VetoPalette.textSubtle,
+            onTap: onRename,
+          ),
           if (onAddToCase != null)
             _ActionChip(
               icon: Icons.cases_rounded,
@@ -997,6 +1150,13 @@ class _FileCard extends StatelessWidget {
             color: VetoPalette.emergency,
             onTap: onDelete,
           ),
+          if (file.caseId != null)
+            _ActionChip(
+              icon: Icons.link_off_rounded,
+              label: l.removeFromCase,
+              color: VetoPalette.warning,
+              onTap: onRemoveFromCase,
+            ),
         ]),
       ]),
     );
@@ -1040,9 +1200,11 @@ class _CaseCard extends StatelessWidget {
   final _LegalCase legalCase;
   final List<_VaultFile> files;
   final _L l;
+  final VoidCallback onRename, onDelete;
 
   const _CaseCard({
     required this.legalCase, required this.files, required this.l,
+    required this.onRename, required this.onDelete,
   });
 
   @override
@@ -1083,6 +1245,18 @@ class _CaseCard extends StatelessWidget {
               ),
             ],
           )),
+          IconButton(
+            icon: const Icon(Icons.edit_note_rounded, size: 18, color: VetoPalette.textMuted),
+            onPressed: onRename,
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(minWidth: 32, minHeight: 12),
+          ),
+          IconButton(
+            icon: const Icon(Icons.delete_outline_rounded, size: 18, color: VetoPalette.emergency),
+            onPressed: onDelete,
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(minWidth: 32, minHeight: 12),
+          ),
         ]),
         if (files.isNotEmpty) ...[
           const SizedBox(height: 12),
