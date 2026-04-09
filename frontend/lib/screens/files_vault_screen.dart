@@ -413,63 +413,71 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
     if (mounted) setState(() => _loading = false);
   }
 
-  Future<void> _pickAndUpload() async {
+  Future<void> _pickFile() async {
+    if (_uploading) return;
     if (_usedMb >= _quotaMb) {
-      _snack(_l.quota, isError: true); return;
-    }
-    final result = await FilePicker.platform.pickFiles(
-      allowMultiple: false,
-      type: FileType.any,
-      withData: kIsWeb,
-    );
-    if (result == null || result.files.isEmpty) return;
-    final pf = result.files.first;
-
-    // Check size quota
-    final fileSize = (pf.size) / (1024 * 1024);
-    if (_usedMb + fileSize > _quotaMb) {
-      _snack('${_l.quota} — not enough space', isError: true); return;
+      _snack(_l.quota, isError: true);
+      return;
     }
 
-    setState(() => _uploading = true);
     try {
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.any,
+        withData: kIsWeb,
+        allowMultiple: false,
+      ).timeout(const Duration(minutes: 2), onTimeout: () => null);
+
+      if (result == null || result.files.isEmpty) {
+        debugPrint('File picker cancelled or timed out');
+        return;
+      }
+
+      final pf = result.files.first;
+      final fileSizeMb = pf.size / (1024 * 1024);
+      
+      if (_usedMb + fileSizeMb > _quotaMb) {
+        _snack('${_l.quota} (max 100MB)', isError: true);
+        return;
+      }
+
+      setState(() => _uploading = true);
+
       final tok = await _token;
-      if (tok == null) return;
+      if (tok == null) throw Exception('No auth token');
 
       final uri = Uri.parse('${AppConfig.baseUrl}/vault/files/upload');
       final req = http.MultipartRequest('POST', uri)
         ..headers.addAll(AppConfig.httpHeadersBinary({'Authorization': 'Bearer $tok'}))
-        ..fields['name'] = pf.name
-        ..fields['mimeType'] = pf.extension != null
-            ? 'application/${pf.extension}'
-            : 'application/octet-stream';
+        ..fields['name'] = pf.name;
 
-      if (kIsWeb && pf.bytes != null) {
-        req.files.add(http.MultipartFile.fromBytes(
-          'file', pf.bytes!,
-          filename: pf.name,
-        ));
-      } else if (!kIsWeb && pf.path != null) {
-        req.files.add(await http.MultipartFile.fromPath('file', pf.path!));
-      } else {
-        _snack(_l.errorUpload, isError: true);
-        setState(() => _uploading = false);
-        return;
+      if (pf.extension != null) {
+        req.fields['mimeType'] = 'application/${pf.extension}';
       }
 
-      final streamed = await req.send();
-      final body = await streamed.stream.bytesToString();
-      if (streamed.statusCode == 201 || streamed.statusCode == 200) {
+      if (kIsWeb) {
+        if (pf.bytes == null) throw Exception('No file data received');
+        req.files.add(http.MultipartFile.fromBytes('file', pf.bytes!, filename: pf.name));
+      } else {
+        if (pf.path == null) throw Exception('File path is null');
+        req.files.add(await http.MultipartFile.fromPath('file', pf.path!));
+      }
+
+      final streamedRes = await req.send().timeout(const Duration(seconds: 60));
+      final responseBody = await streamedRes.stream.bytesToString();
+
+      if (streamedRes.statusCode == 200 || streamedRes.statusCode == 201) {
         _snack(_l.successUpload);
         await _load();
       } else {
-        debugPrint('Upload failed: $body');
-        _snack(_l.errorUpload, isError: true);
+        debugPrint('Upload failed (${streamedRes.statusCode}): $responseBody');
+        _snack('${_l.errorUpload} (${streamedRes.statusCode})', isError: true);
       }
     } catch (e) {
+      debugPrint('Error in _pickFile: $e');
       _snack(_l.errorUpload, isError: true);
+    } finally {
+      if (mounted) setState(() => _uploading = false);
     }
-    if (mounted) setState(() => _uploading = false);
   }
 
   Future<void> _analyzeFile(_VaultFile file) async {
@@ -784,7 +792,7 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
           ),
         ),
         floatingActionButton: FloatingActionButton.extended(
-          onPressed: _uploading ? null : _pickAndUpload,
+          onPressed: _uploading ? null : _pickFile,
           backgroundColor: _uploading ? VetoPalette.border : VetoPalette.primary,
           icon: _uploading
               ? const SizedBox(width: 20, height: 20,

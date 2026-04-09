@@ -209,3 +209,13 @@ if (process.env.SENTRY_DSN) {
   const Sentry = require('./instrument');
   app.use(Sentry.expressErrorHandler());
 }
+
+// Custom error logger
+app.use((err, req, res, next) => {
+  console.error(' [Backend Error]:', err.message);
+  if (err.stack) console.error(err.stack);
+  res.status(err.status || 500).json({
+    error: err.message || 'Internal Server Error',
+    status: err.status || 500,
+  });
+});
