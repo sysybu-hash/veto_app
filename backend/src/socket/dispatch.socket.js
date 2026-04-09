@@ -177,6 +177,7 @@ module.exports = function initDispatch(io) {
         //    Fall back to direct socket_id emit if room appears empty.
         const alertPayload = {
           eventId,
+          userId,
           userName:  socket.handshake.auth.decoded.full_name || 'User',
           location,            // { lat, lng }
           language:  preferredLanguage || 'en',
