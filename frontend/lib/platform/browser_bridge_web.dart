@@ -59,3 +59,17 @@ Future<Uint8List> readFileAsBytes(dynamic htmlFile) async {
 
 String getFileName(dynamic htmlFile) => (htmlFile as html.File).name;
 String getFileType(dynamic htmlFile) => (htmlFile as html.File).type;
+
+void triggerCameraCapture(void Function(dynamic file) onFile) {
+  final input = html.InputElement(type: 'file')
+    ..accept = 'image/*,video/*'
+    ..setAttribute('capture', 'environment');
+  input.onChange.listen((_) {
+    if (input.files != null && input.files!.isNotEmpty) {
+      for (final f in input.files!) {
+        onFile(f);
+      }
+    }
+  });
+  input.click();
+}

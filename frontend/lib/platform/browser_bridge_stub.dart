@@ -28,3 +28,5 @@ Future<Uint8List> readFileAsBytes(dynamic htmlFile) async {
 
 String getFileName(dynamic htmlFile) => '';
 String getFileType(dynamic htmlFile) => '';
+
+void triggerCameraCapture(void Function(dynamic file) onFile) {}

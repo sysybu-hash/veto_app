@@ -278,16 +278,7 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
   // ── Camera capture (web) ─────────────────────────────────────
   void _captureFromCamera() {
     if (!kIsWeb) return;
-    final input = html.InputElement(type: 'file')
-      ..accept = 'image/*,video/*'
-      ..setAttribute('capture', 'environment');
-    input.onChange.listen((_) async {
-      if (input.files == null || input.files!.isEmpty) return;
-      for (final f in input.files!) {
-        await _uploadHtmlFile(f);
-      }
-    });
-    input.click();
+    browser_bridge.triggerCameraCapture((f) => _uploadHtmlFile(f));
   }
 
   // ── File preview dialog ──────────────────────────────────────
@@ -1018,6 +1009,7 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
 class _FileCard extends StatelessWidget {
   final _VaultFile file;
   final _L l;
+  final bool isAnalyzing;
   final VoidCallback onAnalyze, onDelete, onToggleAccess, onRename;
   final VoidCallback? onAddToCase, onRemoveFromCase;
   final VoidCallback? onPreview;
