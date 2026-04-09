@@ -25,11 +25,18 @@ const cloudinaryStorage = new CloudinaryStorage({
   params: async (req, file) => {
     const isVideo = file.mimetype.startsWith('video/');
     const isAudio = file.mimetype.startsWith('audio/');
+    const isImage = file.mimetype.startsWith('image/');
+    
+    // Auto resource type for PDFs/Docs etc.
+    let resourceType = 'auto';
+    if (isImage) resourceType = 'image';
+    if (isVideo || isAudio) resourceType = 'video';
+
     return {
-      folder:         'veto/evidence',
-      resource_type:  isVideo ? 'video' : isAudio ? 'video' : 'image',
-      allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp', 'mp4', 'mov', 'avi', 'mp3', 'wav', 'm4a'],
-      public_id:       `${Date.now()}-${req.params.eventId}`,
+      folder:         'veto/vault',
+      resource_type:  resourceType,
+      // No strict allowed_formats here for 'raw' types, but Cloudinary handles many.
+      public_id:       `${Date.now()}-${file.originalname.split('.')[0]}`,
     };
   },
 });

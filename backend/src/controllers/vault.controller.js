@@ -4,6 +4,15 @@ const VaultCase = require('../models/VaultCase');
 // ── Vault Controller ──────────────────────────────────────────
 // Ensures users can only access their OWN files.
 
+exports.getSharedFiles = async (req, res, next) => {
+  try {
+    const { userId } = req.params;
+    // We only return files where lawyerAccess is true
+    const files = await VaultFile.find({ user_id: userId, lawyerAccess: true }).sort({ uploadedAt: -1 });
+    res.json({ files });
+  } catch (err) { next(err); }
+};
+
 exports.getFiles = async (req, res, next) => {
   try {
     const files = await VaultFile.find({ user_id: req.user.userId }).sort({ uploadedAt: -1 });
@@ -25,6 +34,23 @@ exports.updateFileAccess = async (req, res, next) => {
     const file = await VaultFile.findOneAndUpdate(
       { _id: req.params.fileId, user_id: req.user.userId },
       { lawyerAccess: !!lawyerAccess },
+      { new: true }
+    );
+    if (!file) return res.status(404).json({ error: 'File not found or unauthorized' });
+    res.json(file);
+  } catch (err) { next(err); }
+};
+
+exports.updateFile = async (req, res, next) => {
+  try {
+    const allowedFields = ['name', 'caseId', 'status'];
+    const update = {};
+    for (const f of allowedFields) {
+      if (req.body[f] !== undefined) update[f] = req.body[f];
+    }
+    const file = await VaultFile.findOneAndUpdate(
+      { _id: req.params.fileId, user_id: req.user.userId },
+      update,
       { new: true }
     );
     if (!file) return res.status(404).json({ error: 'File not found or unauthorized' });

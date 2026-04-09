@@ -13,7 +13,11 @@ router.use(protect);
 router.get('/files', getFiles);
 router.delete('/files/:fileId', deleteFile);
 router.patch('/files/:fileId/access', updateFileAccess);
+router.patch('/files/:fileId', updateFile);
 router.post('/files/:fileId/analyze', analyzeFile);
+
+// Lawyer-specific view: see files shared by a user
+router.get('/shared/:userId', authorize('lawyer', 'admin'), getSharedFiles);
 
 router.get('/cases', getCases);
 router.post('/cases', createCase);
