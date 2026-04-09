@@ -4,7 +4,7 @@ const multer = require('multer');
 const { protect, authorize } = require('../middleware/auth.middleware');
 const {
   getFiles, deleteFile, updateFileAccess, analyzeFile,
-  getCases, createCase, updateFile, getSharedFiles
+  getCases, createCase, updateCase, deleteCase, updateFile, getSharedFiles
 } = require('../controllers/vault.controller');
 
 // Secure all routes with protect middleware
