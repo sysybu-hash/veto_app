@@ -1,10 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const multer = require('multer');
-const { protect } = require('../middleware/auth.middleware');
+const { protect, authorize } = require('../middleware/auth.middleware');
 const {
   getFiles, deleteFile, updateFileAccess, analyzeFile,
-  getCases, createCase
+  getCases, createCase, updateFile, getSharedFiles
 } = require('../controllers/vault.controller');
 
 // Secure all routes with protect middleware
