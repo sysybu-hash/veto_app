@@ -140,7 +140,7 @@ class _VaultFile {
 
   Color get typeColor {
     if (type.startsWith('image/')) return const Color(0xFF0EA5E9);
-    if (type.startsWith('video/')) return const Color(0xFF8B5CF6);
+    if (type.startsWith('video/')) return const Color(0xFFC9A050);
     if (type.startsWith('audio/')) return const Color(0xFFF59E0B);
     if (type.contains('pdf')) return VetoPalette.emergency;
     return VetoPalette.textMuted;

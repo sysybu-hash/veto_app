@@ -169,7 +169,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(24),
                               gradient: const LinearGradient(
-                                colors: [Color(0xFF3B82F6), Color(0xFF1D4ED8)],
+                                colors: [Color(0xFFC9A050), Color(0xFF8B6B1A)],
                                 begin: Alignment.topLeft, end: Alignment.bottomRight,
                               ),
                               boxShadow: [BoxShadow(

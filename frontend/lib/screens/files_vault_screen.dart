@@ -154,9 +154,9 @@ class _VaultFile {
   }
 
   Color get typeColor {
-    if (type.startsWith('image/')) return const Color(0xFF0EA5E9);
-    if (type.startsWith('video/')) return const Color(0xFF8B5CF6);
-    if (type.startsWith('audio/')) return const Color(0xFFF59E0B);
+    if (type.startsWith('image/')) return const Color(0xFFC9A050);
+    if (type.startsWith('video/')) return const Color(0xFF2ECC71);
+    if (type.startsWith('audio/')) return const Color(0xFFC9A050);
     if (type.contains('pdf')) return VetoPalette.emergency;
     return VetoPalette.textMuted;
   }
@@ -765,7 +765,7 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
         appBar: AppBar(
           backgroundColor: VetoPalette.darkBg,
           title: Text(_l.title,
-              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
+              style: const TextStyle(color: VetoColors.white, fontWeight: FontWeight.w700)),
           iconTheme: const IconThemeData(color: Colors.white),
           actions: [
             if (kIsWeb)
@@ -799,7 +799,7 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
                   child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
               : const Icon(Icons.upload_file_rounded, color: Colors.white),
           label: Text(_uploading ? _l.uploading : _l.upload,
-              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
+              style: const TextStyle(color: VetoColors.white, fontWeight: FontWeight.w700)),
         ),
         body: Stack(children: [
           _loading
@@ -1141,7 +1141,7 @@ class _FileCard extends StatelessWidget {
             _ActionChip(
               icon: Icons.cases_rounded,
               label: l.addToCase,
-              color: const Color(0xFF0EA5E9),
+              color: const Color(0xFFC9A050),
               onTap: onAddToCase!,
             ),
           _ActionChip(

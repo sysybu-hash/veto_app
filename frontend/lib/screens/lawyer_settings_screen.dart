@@ -400,13 +400,13 @@ class _LawyerSettingsScreenState extends State<LawyerSettingsScreen> {
         appBar: AppBar(
           backgroundColor: VetoPalette.darkBg,
           title: Text(_t(code, 'title'),
-              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
+              style: const TextStyle(color: VetoColors.white, fontWeight: FontWeight.w700)),
           iconTheme: const IconThemeData(color: Colors.white),
           actions: [
             TextButton(
               onPressed: _saving ? null : () => _save(code),
               child: Text(_saving ? '...' : _t(code, 'save'),
-                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
+                  style: const TextStyle(color: VetoColors.white, fontWeight: FontWeight.w700)),
             ),
           ],
         ),

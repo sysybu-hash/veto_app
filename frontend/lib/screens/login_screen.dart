@@ -1072,12 +1072,12 @@ class _AuthHero extends StatelessWidget {
       width: double.infinity,
       padding: EdgeInsets.all(compact ? 20 : 36),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        color: VetoColors.surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: VetoColors.border),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF1D6FB8).withValues(alpha: 0.06),
+            color: VetoColors.accent.withValues(alpha: 0.08),
             blurRadius: 32,
             spreadRadius: 2,
           ),
@@ -1139,7 +1139,7 @@ class _AuthHero extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: const Color(0xFFF0F9FF),
+              color: const Color(0xFF0C1827),
               borderRadius: BorderRadius.circular(14),
               border: Border.all(color: VetoPalette.primary.withValues(alpha: 0.18)),
             ),

@@ -342,16 +342,16 @@ class LandingScreen extends StatelessWidget {
 //  Color palette
 // ═══════════════════════════════════════════════════════════════════
 class _Clr {
-  static const bg      = Color(0xFFF1F5F9); // slate-100 page bg
-  static const surface = Color(0xFFFFFFFF); // white cards
-  static const card    = Color(0xFFF8FAFC); // slate-50 elevated
-  static const border  = Color(0xFFE2E8F0); // slate-200
-  static const heroBg  = Color(0xFF0F172A); // dark hero keep
-  static const heroBg2 = Color(0xFF1E293B); // dark hero mid
-  static const heroBorder = Color(0xFF334155); // dark hero border
-  static const glow    = Color(0xFF3B82F6);
-  static const muted   = Color(0xFF475569);
-  static const sub     = Color(0xFF94A3B8);
+  static const bg         = Color(0xFF07101C); // deep navy bg
+  static const surface    = Color(0xFF0C1827); // dark cards
+  static const card       = Color(0xFF121F32); // elevated card
+  static const border     = Color(0x35C9A050); // gold border
+  static const heroBg     = Color(0xFF07101C); // dark hero
+  static const heroBg2    = Color(0xFF0C1827); // dark hero mid
+  static const heroBorder = Color(0x30C9A050); // gold hero border
+  static const glow       = Color(0xFFC9A050); // legal gold
+  static const muted      = Color(0xFF7A7260); // warm muted
+  static const sub        = Color(0xFFA8A090); // warm silver
 }
 
 // ═══════════════════════════════════════════════════════════════════
@@ -439,7 +439,7 @@ class _NavState extends State<_Nav> {
               width: 34, height: 34,
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
-                  colors: [Color(0xFF3B82F6), Color(0xFF1D4ED8)],
+                  colors: [Color(0xFFC9A050), Color(0xFF8B6B1A)],
                   begin: Alignment.topLeft, end: Alignment.bottomRight,
                 ),
                 borderRadius: BorderRadius.circular(9),
@@ -447,8 +447,8 @@ class _NavState extends State<_Nav> {
               child: const Icon(Icons.shield_rounded, color: Colors.white, size: 17),
             ),
             const SizedBox(width: 10),
-            const Text('VETO v7.0', style: TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.w900, letterSpacing: 5)),
-            const Text(' LEGAL', style: TextStyle(color: Color(0xFF3B82F6), fontSize: 17, fontWeight: FontWeight.w900, letterSpacing: 2)),
+            const Text('VETO v7.0', style: TextStyle(color: VetoColors.white, fontSize: 17, fontWeight: FontWeight.w900, letterSpacing: 5)),
+            const Text(' LEGAL', style: TextStyle(color: Color(0xFFC9A050), fontSize: 17, fontWeight: FontWeight.w900, letterSpacing: 2)),
             if (wide) ...[
               const SizedBox(width: 28),
               for (final item in menuItems)
@@ -472,7 +472,7 @@ class _NavState extends State<_Nav> {
                 icon: const Icon(Icons.apps_rounded, size: 15),
                 label: Text(enterLabel),
                 style: FilledButton.styleFrom(
-                  backgroundColor: const Color(0xFF3B82F6),
+                  backgroundColor: const Color(0xFFC9A050),
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 11),
                   textStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
@@ -620,7 +620,7 @@ class _HeroContent extends StatelessWidget {
       // Title — massive, dramatic
       Text(title,
         style: TextStyle(
-          color: Colors.white,
+          color: VetoColors.white,
           fontSize: compact ? 38 : 64,
           fontWeight: FontWeight.w900,
           height: 1.04,
@@ -697,7 +697,7 @@ class _StackRail extends StatelessWidget {
             Container(width: 3, height: 18, color: VetoPalette.primary),
             const SizedBox(width: 10),
             Text(title, style: const TextStyle(
-              color: Color(0xFF0F172A), fontSize: 16, fontWeight: FontWeight.w800,
+              color: Color(0xFF07101C), fontSize: 16, fontWeight: FontWeight.w800,
             )),
           ]),
         ),
@@ -732,7 +732,7 @@ class _StackItem extends StatelessWidget {
         const SizedBox(width: 14),
         Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Text(data.title, style: const TextStyle(
-            color: Color(0xFF0F172A), fontSize: 14, fontWeight: FontWeight.w700,
+            color: Color(0xFF07101C), fontSize: 14, fontWeight: FontWeight.w700,
           )),
           const SizedBox(height: 4),
           Text(data.body, style: const TextStyle(
@@ -758,7 +758,7 @@ class _StatBar extends StatelessWidget {
     ];
     return Container(
       decoration: const BoxDecoration(
-        color: Color(0xFF0F172A),
+        color: Color(0xFF07101C),
         border: Border.symmetric(horizontal: BorderSide(color: _Clr.heroBorder)),
       ),
       padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 28),
@@ -771,10 +771,10 @@ class _StatBar extends StatelessWidget {
               for (var (num, label) in stats) ...[
                 Column(children: [
                   Text(num, style: const TextStyle(
-                    color: Color(0xFF3B82F6), fontSize: 32, fontWeight: FontWeight.w900, letterSpacing: -1,
+                    color: Color(0xFFC9A050), fontSize: 32, fontWeight: FontWeight.w900, letterSpacing: -1,
                   )),
                   const SizedBox(height: 4),
-                  Text(label, style: const TextStyle(color: Color(0xFF94A3B8), fontSize: 11, fontWeight: FontWeight.w600, letterSpacing: 0.5)),
+                  Text(label, style: const TextStyle(color: Color(0xFFA8A090), fontSize: 11, fontWeight: FontWeight.w600, letterSpacing: 0.5)),
                 ]),
               ],
             ],
@@ -813,7 +813,7 @@ class _ContentSection extends StatelessWidget {
             ]),
             const SizedBox(height: 14),
             Text(title, style: const TextStyle(
-              color: Color(0xFF0F172A), fontSize: 36, fontWeight: FontWeight.w900, height: 1.1,
+              color: Color(0xFF07101C), fontSize: 36, fontWeight: FontWeight.w900, height: 1.1,
             )),
             if (subtitle != null) ...[
               const SizedBox(height: 12),
@@ -887,7 +887,7 @@ class _FeatureCard extends StatelessWidget {
         ),
         const SizedBox(height: 16),
         Text(data.title, style: const TextStyle(
-          color: Color(0xFF0F172A), fontSize: 16, fontWeight: FontWeight.w800,
+          color: Color(0xFF07101C), fontSize: 16, fontWeight: FontWeight.w800,
         )),
         const SizedBox(height: 8),
         Text(data.body, style: const TextStyle(
@@ -958,7 +958,7 @@ class _FlowCard extends StatelessWidget {
           Icon(data.icon, color: data.accent, size: 18),
           const SizedBox(width: 8),
           Expanded(child: Text(data.title, style: const TextStyle(
-            color: Color(0xFF0F172A), fontSize: 15, fontWeight: FontWeight.w800,
+            color: Color(0xFF07101C), fontSize: 15, fontWeight: FontWeight.w800,
           ))),
         ]),
         const SizedBox(height: 8),
@@ -1029,7 +1029,7 @@ class _PricingCard extends StatelessWidget {
       const SizedBox(height: 10),
       Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
         Text(price, style: const TextStyle(
-          color: Color(0xFF0F172A), fontSize: 58, fontWeight: FontWeight.w900, height: 1,
+          color: Color(0xFF07101C), fontSize: 58, fontWeight: FontWeight.w900, height: 1,
         )),
         const SizedBox(width: 8),
         Padding(padding: const EdgeInsets.only(bottom: 10),
@@ -1126,7 +1126,7 @@ class _CtaSection extends StatelessWidget {
                 Text(title,
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    color: Colors.white,
+                    color: VetoColors.white,
                     fontSize: compact ? 28 : 50,
                     fontWeight: FontWeight.w900,
                     height: 1.1,
@@ -1208,9 +1208,9 @@ class _IncidentsSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final t = _t;
     final incidents = [
-      _ItemData(icon: Icons.directions_car_filled_outlined, accent: const Color(0xFF3B82F6), title: t['inc1Title']!, body: t['inc1Body']!),
-      _ItemData(icon: Icons.car_crash_outlined, accent: const Color(0xFFF59E0B), title: t['inc2Title']!, body: t['inc2Body']!),
-      _ItemData(icon: Icons.home_outlined, accent: const Color(0xFF10B981), title: t['inc3Title']!, body: t['inc3Body']!),
+      _ItemData(icon: Icons.directions_car_filled_outlined, accent: const Color(0xFFC9A050), title: t['inc1Title']!, body: t['inc1Body']!),
+      _ItemData(icon: Icons.car_crash_outlined, accent: const Color(0xFFC9A050), title: t['inc2Title']!, body: t['inc2Body']!),
+      _ItemData(icon: Icons.home_outlined, accent: const Color(0xFF2ECC71), title: t['inc3Title']!, body: t['inc3Body']!),
       _ItemData(icon: Icons.directions_walk_rounded, accent: const Color(0xFFEF4444), title: t['inc4Title']!, body: t['inc4Body']!),
     ];
 
@@ -1229,7 +1229,7 @@ class _IncidentsSection extends StatelessWidget {
             ]),
             const SizedBox(height: 14),
             Text(t['title']!, style: const TextStyle(
-              color: Color(0xFF0F172A), fontSize: 36, fontWeight: FontWeight.w900, height: 1.1,
+              color: Color(0xFF07101C), fontSize: 36, fontWeight: FontWeight.w900, height: 1.1,
             )),
             const SizedBox(height: 12),
             Text(t['subtitle']!, style: const TextStyle(color: _Clr.muted, fontSize: 15, height: 1.8)),
@@ -1268,7 +1268,7 @@ class _IncidentCard extends StatelessWidget {
         border: Border.all(color: _Clr.border),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
+            color: const Color(0xFF07101C).withValues(alpha: 0.12),
             blurRadius: 12, offset: const Offset(0, 4),
           ),
         ],
@@ -1365,20 +1365,20 @@ class _ReviewCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(18),
         border: Border.all(color: _Clr.border),
         boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 10, offset: const Offset(0, 3)),
+          BoxShadow(color: const Color(0xFF07101C).withValues(alpha: 0.12), blurRadius: 10, offset: const Offset(0, 3)),
         ],
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Row(children: [
           for (int i = 0; i < review.rating; i++)
-            const Icon(Icons.star_rounded, color: Color(0xFFF59E0B), size: 14),
+            const Icon(Icons.star_rounded, color: Color(0xFFC9A050), size: 14),
           const Spacer(),
           Text(review.date, style: const TextStyle(color: _Clr.sub, fontSize: 11)),
         ]),
         const SizedBox(height: 12),
         Text('"${review.text}"', style: const TextStyle(color: _Clr.muted, fontSize: 13, height: 1.65, fontStyle: FontStyle.italic)),
         const SizedBox(height: 14),
-        Text(review.name, style: const TextStyle(color: Color(0xFF0F172A), fontSize: 12, fontWeight: FontWeight.w700)),
+        Text(review.name, style: const TextStyle(color: Color(0xFF07101C), fontSize: 12, fontWeight: FontWeight.w700)),
       ]),
     );
   }
@@ -1430,9 +1430,4 @@ class _ProofChip extends StatelessWidget {
         const Icon(Icons.check_circle_outline_rounded, color: VetoPalette.info, size: 13),
         const SizedBox(width: 6),
         Text(label, style: const TextStyle(
-          color: _Clr.sub, fontSize: 11, fontWeight: FontWeight.w600,
-        )),
-      ]),
-    );
-  }
-}
+          color: _Clr.sub, fontSize: 11, fontWei

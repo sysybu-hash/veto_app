@@ -239,7 +239,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                     _actionCard(
                       code == 'he' ? 'ניהול מנויים' : code == 'ru' ? 'Подписки' : 'Subscription Management',
                       Icons.subscriptions_rounded,
-                      color: const Color(0xFF8B5CF6),
+                      color: const Color(0xFFC9A050),
                       onTap: () => Navigator.pushNamed(context, '/admin_subscriptions'),
                     ),
                     _actionCard(
@@ -439,7 +439,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                 ),
                 child: Text('$badge',
                     style: const TextStyle(
-                        color: Colors.white,
+                        color: VetoColors.white,
                         fontSize: 11,
                         fontWeight: FontWeight.bold)),
               ),

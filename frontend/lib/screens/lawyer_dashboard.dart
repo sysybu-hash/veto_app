@@ -636,9 +636,9 @@ class _HeroHeader extends StatelessWidget {
         borderRadius: BorderRadius.circular(28),
         gradient: const LinearGradient(
           colors: [
-            Color(0xFF14213A),
+            Color(0xFF0C1827),
             VetoPalette.surface,
-            Color(0xFF10284B),
+            Color(0xFF0C1827),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,

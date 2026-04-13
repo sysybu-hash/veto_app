@@ -556,13 +556,29 @@ class _VetoScreenState extends State<VetoScreen> {
 
   // ── AppBar ────────────────────────────────────────────────
   PreferredSizeWidget _buildAppBar(bool isAdmin) => AppBar(
-    backgroundColor: VetoPalette.darkBg,
+    backgroundColor: VetoColors.background,
     automaticallyImplyLeading: false,
+    elevation: 0,
     title: Row(children: [
-      const Icon(Icons.shield, color: VetoPalette.primary, size: 22),
-      const SizedBox(width: 8),
-      const Text('VETO',
-          style: TextStyle(fontWeight: FontWeight.w800, letterSpacing: 4, color: Colors.white)),
+      // Gold shield icon
+      Container(
+        padding: const EdgeInsets.all(5),
+        decoration: BoxDecoration(
+          color: VetoColors.accent.withValues(alpha: 0.12),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: VetoColors.accent.withValues(alpha: 0.3), width: 1),
+        ),
+        child: const Icon(Icons.shield, color: VetoColors.accent, size: 18),
+      ),
+      const SizedBox(width: 10),
+      Text('VETO',
+          style: TextStyle(
+            fontWeight: FontWeight.w900,
+            letterSpacing: 5,
+            fontSize: 18,
+            color: VetoColors.accent,
+            shadows: [Shadow(color: VetoColors.accent.withOpacity(0.3), blurRadius: 8)],
+          )),
       const SizedBox(width: 4),
       if (_isDispatching)
         Container(
@@ -575,9 +591,9 @@ class _VetoScreenState extends State<VetoScreen> {
               style: TextStyle(color: VetoPalette.emergency, fontSize: 9, fontWeight: FontWeight.w800, letterSpacing: 1.5)),
         ),
     ]),
-    bottom: const PreferredSize(
-        preferredSize: Size.fromHeight(1),
-        child: Divider(height: 1, color: VetoPalette.darkBorder)),
+    bottom: PreferredSize(
+        preferredSize: const Size.fromHeight(1),
+        child: Container(height: 1, color: VetoColors.accent.withOpacity(0.2))),
     actions: [
       for (final k in ['he', 'ru', 'en'])
         GestureDetector(
@@ -597,15 +613,15 @@ class _VetoScreenState extends State<VetoScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
             decoration: BoxDecoration(
               color: k == _langKey
-                  ? VetoPalette.primary.withValues(alpha: 0.18)
+                  ? VetoColors.accent.withValues(alpha: 0.15)
                   : Colors.transparent,
               borderRadius: BorderRadius.circular(7),
               border: Border.all(
-                  color: k == _langKey ? VetoPalette.primary : Colors.transparent),
+                  color: k == _langKey ? VetoColors.accent : VetoColors.border),
             ),
             child: Text(_langs[k]!.label,
                 style: TextStyle(
-                    color: k == _langKey ? VetoPalette.primary : Colors.white60,
+                    color: k == _langKey ? VetoColors.accent : VetoColors.silverDim,
                     fontSize: 11,
                     fontWeight: k == _langKey ? FontWeight.w700 : FontWeight.normal)),
           ),
@@ -614,59 +630,67 @@ class _VetoScreenState extends State<VetoScreen> {
       if (isAdmin)
         IconButton(
           icon: const Icon(Icons.admin_panel_settings_outlined),
-          color: VetoPalette.primary,
+          color: VetoColors.accent,
           onPressed: () => Navigator.pushNamed(context, '/admin_settings'),
           tooltip: 'פאנל ניהול',
         ),
       IconButton(
           icon: const Icon(Icons.home_outlined),
-          color: Colors.white70,
+          color: VetoColors.silverDim,
           onPressed: () => Navigator.pushNamed(context, '/landing'),
           tooltip: _langKey == 'he' ? 'דף הבית' : _langKey == 'ru' ? 'Главная' : 'Home'),
       IconButton(
           icon: const Icon(Icons.folder_special_outlined),
-          color: Colors.white70,
+          color: VetoColors.silverDim,
           onPressed: () => Navigator.pushNamed(context, '/files_vault'),
           tooltip: _langKey == 'he' ? 'כספת קבצים' : _langKey == 'ru' ? 'Хранилище' : 'File Vault'),
       IconButton(
           icon: const Icon(Icons.map_outlined),
-          color: Colors.white70,
+          color: VetoColors.silverDim,
           onPressed: () => Navigator.pushNamed(context, '/waze_map'),
           tooltip: _langKey == 'he' ? 'ניווט Waze' : _langKey == 'ru' ? 'Навигация Waze' : 'Waze Navigation'),
       IconButton(
           icon: const Icon(Icons.settings_outlined),
-          color: Colors.white70,
+          color: VetoColors.silverDim,
           onPressed: () => Navigator.pushNamed(context, '/settings'),
           tooltip: _langKey == 'he' ? 'הגדרות' : _langKey == 'ru' ? 'Настройки' : 'Settings'),
       IconButton(
           icon: const Icon(Icons.person_outline),
-          color: Colors.white70,
+          color: VetoColors.silverDim,
           onPressed: () => Navigator.pushNamed(context, '/profile')),
       IconButton(
           icon: const Icon(Icons.logout_rounded),
-          color: VetoPalette.textMuted,
+          color: VetoColors.textMuted,
           onPressed: () => AuthService().logout(context)),
     ],
   );
 
   // ── Bottom Nav ────────────────────────────────────────────
-  Widget _buildNavBar(bool isRtl) => NavigationBar(
-    selectedIndex: _tab,
-    backgroundColor: VetoPalette.surface,
-    indicatorColor: VetoPalette.primary.withValues(alpha: 0.2),
-    onDestinationSelected: (i) => setState(() => _tab = i),
-    destinations: [
-      NavigationDestination(
-        icon: const Icon(Icons.shield_outlined, color: VetoPalette.textMuted),
-        selectedIcon: const Icon(Icons.shield, color: VetoPalette.primary),
-        label: isRtl ? 'VETO מגן' : 'VETO Shield',
-      ),
-      NavigationDestination(
-        icon: const Icon(Icons.smart_toy_outlined, color: VetoPalette.textMuted),
-        selectedIcon: const Icon(Icons.smart_toy, color: VetoPalette.primary),
-        label: isRtl ? 'AI עוזר' : 'AI Assistant',
-      ),
-    ],
+  Widget _buildNavBar(bool isRtl) => Container(
+    decoration: BoxDecoration(
+      color: VetoColors.surface,
+      border: Border(top: BorderSide(color: VetoColors.accent.withOpacity(0.25), width: 1)),
+    ),
+    child: NavigationBar(
+      selectedIndex: _tab,
+      backgroundColor: Colors.transparent,
+      surfaceTintColor: Colors.transparent,
+      indicatorColor: VetoColors.accent.withValues(alpha: 0.15),
+      labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+      onDestinationSelected: (i) => setState(() => _tab = i),
+      destinations: [
+        NavigationDestination(
+          icon: const Icon(Icons.shield_outlined, color: VetoColors.textMuted),
+          selectedIcon: Icon(Icons.shield, color: VetoColors.accent),
+          label: isRtl ? 'VETO מגן' : 'VETO Shield',
+        ),
+        NavigationDestination(
+          icon: const Icon(Icons.smart_toy_outlined, color: VetoColors.textMuted),
+          selectedIcon: Icon(Icons.smart_toy, color: VetoColors.accent),
+          label: isRtl ? 'AI עוזר' : 'AI Assistant',
+        ),
+      ],
+    ),
   );
 
   // ══════════════════════════════════════════════════════════
@@ -802,13 +826,21 @@ class _VetoScreenState extends State<VetoScreen> {
   );
 
   Widget _secLabel(String txt) => Padding(
-    padding: const EdgeInsets.only(bottom: 2),
-    child: Text(txt.toUpperCase(),
-        style: const TextStyle(
-            color: VetoPalette.primary,
-            fontSize: 10,
-            fontWeight: FontWeight.w800,
-            letterSpacing: 2.5)),
+    padding: const EdgeInsets.only(bottom: 4),
+    child: Row(children: [
+      Container(width: 3, height: 12,
+          decoration: BoxDecoration(
+            color: VetoColors.accent,
+            borderRadius: BorderRadius.circular(2),
+          )),
+      const SizedBox(width: 8),
+      Text(txt.toUpperCase(),
+          style: const TextStyle(
+              color: VetoColors.accent,
+              fontSize: 10,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 2.5)),
+    ]),
   );
 
   Widget _scenarioBar(bool isRtl) => SizedBox(
@@ -938,7 +970,7 @@ class _VetoScreenState extends State<VetoScreen> {
           _langKey == 'he' ? 'שיחת וידאו'
               : _langKey == 'ru' ? 'Видеозвонок'
               : 'Video Call',
-          const Color(0xFF8B5CF6), () => _openContact('video')),
+          const Color(0xFFC9A050), () => _openContact('video')),
     ],
   );
 
@@ -1379,11 +1411,11 @@ class _VetoScreenState extends State<VetoScreen> {
   Widget _chatActBar(bool isRtl) => Padding(
     padding: const EdgeInsets.fromLTRB(16, 2, 16, 6),
     child: Row(children: [
-      _chatActBtn(Icons.camera_alt_outlined, const Color(0xFF0EA5E9),
+      _chatActBtn(Icons.camera_alt_outlined, const Color(0xFFC9A050),
           _langKey == 'he' ? 'תיעוד' : _langKey == 'ru' ? 'Камера' : 'Camera',
           _openCamera),
       const SizedBox(width: 10),
-      _chatActBtn(Icons.volume_off_rounded, const Color(0xFF8B5CF6),
+      _chatActBtn(Icons.volume_off_rounded, const Color(0xFFC9A050),
           _langKey == 'he' ? 'השתק' : _langKey == 'ru' ? 'Звук' : 'Mute',
           _stopSpeaking),
       const SizedBox(width: 10),
@@ -1478,7 +1510,7 @@ class _ContactSheetState extends State<_ContactSheet> {
     final isRtl = widget.langKey == 'he';
     final Color accent = widget.type == 'whatsapp' ? const Color(0xFF25D366)
         : widget.type == 'telegram' ? const Color(0xFF229ED9)
-        : const Color(0xFF8B5CF6);
+        : const Color(0xFFC9A050);
     final String title = widget.type == 'whatsapp' ? 'WhatsApp'
         : widget.type == 'telegram' ? 'Telegram'
         : (isRtl ? 'שיחת וידאו' : 'Video Call');
@@ -1587,23 +1619,23 @@ class _PaymentDialogState extends State<_PaymentDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      backgroundColor: const Color(0xFF1E293B),
+      backgroundColor: const Color(0xFF0C1827),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       title: const Row(children: [
         Icon(Icons.paypal_rounded, color: Color(0xFF009CDE), size: 24),
         SizedBox(width: 10),
         Text('תשלום עם PayPal',
-            style: TextStyle(color: Color(0xFFF1F5F9), fontWeight: FontWeight.w700, fontSize: 16)),
+            style: TextStyle(color: Color(0xFF0C1827), fontWeight: FontWeight.w700, fontSize: 16)),
       ]),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text('ייעוץ עורך דין 15 דקות',
-              style: TextStyle(color: Color(0xFFF1F5F9), fontWeight: FontWeight.w600, fontSize: 14)),
+              style: TextStyle(color: Color(0xFF0C1827), fontWeight: FontWeight.w600, fontSize: 14)),
           const SizedBox(height: 4),
           const Text('₪50 (≈ \$13.90 USD) — חיוב חד-פעמי',
-              style: TextStyle(color: Color(0xFF94A3B8), fontSize: 13)),
+              style: TextStyle(color: Color(0xFFA8A090), fontSize: 13)),
           const SizedBox(height: 12),
           Container(
             padding: const EdgeInsets.all(10),
@@ -1620,7 +1652,7 @@ class _PaymentDialogState extends State<_PaymentDialog> {
       actions: [
         TextButton(
           onPressed: _loading ? null : () => Navigator.pop(context, null),
-          child: const Text('ביטול', style: TextStyle(color: Color(0xFF64748B))),
+          child: const Text('ביטול', style: TextStyle(color: Color(0xFF7A7260))),
         ),
         ElevatedButton.icon(
           style: ElevatedButton.styleFrom(
@@ -1669,18 +1701,18 @@ class _CaptureDialogState extends State<_CaptureDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      backgroundColor: const Color(0xFF1E293B),
+      backgroundColor: const Color(0xFF0C1827),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       title: const Row(children: [
-        Icon(Icons.hourglass_top_rounded, color: Color(0xFFF59E0B), size: 22),
+        Icon(Icons.hourglass_top_rounded, color: Color(0xFFC9A050), size: 22),
         SizedBox(width: 10),
         Text('אשר את התשלום',
-            style: TextStyle(color: Color(0xFFF1F5F9), fontWeight: FontWeight.w700, fontSize: 16)),
+            style: TextStyle(color: Color(0xFF0C1827), fontWeight: FontWeight.w700, fontSize: 16)),
       ]),
       content: Column(mainAxisSize: MainAxisSize.min, children: [
         const Text(
             'PayPal נפתח בטאב חדש.\nלאחר אישור התשלום שם — חזור לכאן ולחץ "שילמתי".',
-            style: TextStyle(color: Color(0xFF94A3B8), height: 1.6, fontSize: 13),
+            style: TextStyle(color: Color(0xFFA8A090), height: 1.6, fontSize: 13),
             textAlign: TextAlign.center),
         if (_error != null) ...[
           const SizedBox(height: 10),
@@ -1691,11 +1723,11 @@ class _CaptureDialogState extends State<_CaptureDialog> {
       actions: [
         TextButton(
           onPressed: _capturing ? null : () => Navigator.pop(context, false),
-          child: const Text('ביטול', style: TextStyle(color: Color(0xFF64748B))),
+          child: const Text('ביטול', style: TextStyle(color: Color(0xFF7A7260))),
         ),
         ElevatedButton(
           style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF22C55E),
+              backgroundColor: const Color(0xFF2ECC71),
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))),
           onPressed: _capturing ? null : _capture,
@@ -1775,19 +1807,19 @@ class _SubscriptionGateDialogState extends State<_SubscriptionGateDialog> {
     return Directionality(
       textDirection: TextDirection.rtl,
       child: AlertDialog(
-        backgroundColor: const Color(0xFF1E293B),
+        backgroundColor: const Color(0xFF0C1827),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Row(children: [
-          Icon(Icons.lock_outline, color: Color(0xFF3B82F6)),
+          Icon(Icons.lock_outline, color: Color(0xFFC9A050)),
           SizedBox(width: 10),
-          Text('נדרש מנוי', style: TextStyle(color: Colors.white, fontSize: 18)),
+          Text('נדרש מנוי', style: TextStyle(color: VetoColors.white, fontSize: 18)),
         ]),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text('כדי להשתמש ב-VETO נדרש מנוי חודשי.',
-                style: TextStyle(color: Color(0xFF94A3B8), fontSize: 14)),
+                style: TextStyle(color: Color(0xFFA8A090), fontSize: 14)),
             const SizedBox(height: 4),
             const Text('ללא מנוי פעיל לא ניתן להשתמש במערכת.',
                 style: TextStyle(color: Color(0xFFEF4444), fontSize: 12, fontWeight: FontWeight.w600)),
@@ -1795,26 +1827,26 @@ class _SubscriptionGateDialogState extends State<_SubscriptionGateDialog> {
             Container(
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: const Color(0xFF0F172A),
+                color: const Color(0xFF07101C),
                 borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: const Color(0xFF3B82F6).withValues(alpha: 0.4)),
+                border: Border.all(color: const Color(0xFFC9A050).withValues(alpha: 0.4)),
               ),
               child: const Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Text('מנוי חודשי',
-                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
+                    style: TextStyle(color: VetoColors.white, fontWeight: FontWeight.bold, fontSize: 15)),
                 SizedBox(height: 6),
                 Row(children: [
                   Text('₪19.90',
-                      style: TextStyle(color: Color(0xFF22C55E), fontWeight: FontWeight.w800, fontSize: 22)),
+                      style: TextStyle(color: Color(0xFF2ECC71), fontWeight: FontWeight.w800, fontSize: 22)),
                   SizedBox(width: 6),
                   Text('/ חודש  (USD \$5.50)',
-                      style: TextStyle(color: Color(0xFF94A3B8), fontSize: 13)),
+                      style: TextStyle(color: Color(0xFFA8A090), fontSize: 13)),
                 ]),
                 SizedBox(height: 8),
                 Text('✓ ייעוץ AI משפטי ללא הגבלה',
-                    style: TextStyle(color: Color(0xFF94A3B8), fontSize: 12)),
+                    style: TextStyle(color: Color(0xFFA8A090), fontSize: 12)),
                 Text('✓ הזמנת עורך דין חרום (₪50 נוסף)',
-                    style: TextStyle(color: Color(0xFF94A3B8), fontSize: 12)),
+                    style: TextStyle(color: Color(0xFFA8A090), fontSize: 12)),
               ]),
             ),
             if (_error != null) ...[
@@ -1849,7 +1881,7 @@ class _SubscriptionGateDialogState extends State<_SubscriptionGateDialog> {
                 ),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF22C55E),
+                      backgroundColor: const Color(0xFF2ECC71),
                       foregroundColor: Colors.white,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))),
                   onPressed: _loading ? null : _confirmPayment,

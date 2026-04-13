@@ -212,12 +212,12 @@ class _Sub {
   Color get statusColor {
     switch (status) {
       case 'active': return VetoPalette.success;
-      case 'free': return const Color(0xFF0EA5E9);
-      case 'trial': return const Color(0xFF0EA5E9);
+      case 'free': return const Color(0xFFC9A050);
+      case 'trial': return const Color(0xFFC9A050);
       case 'expired': return VetoPalette.warning;
       case 'cancelled': return VetoPalette.emergency;
       case 'no_subscription': return VetoPalette.textMuted;
-      case 'unverified': return const Color(0xFF6B7280);
+      case 'unverified': return const Color(0xFF7A7260);
       default: return VetoPalette.textMuted;
     }
   }
@@ -446,7 +446,7 @@ class _SubscriptionAdminScreenState
         appBar: AppBar(
           backgroundColor: VetoPalette.darkBg,
           title: Text(_t(code, 'title'),
-              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
+              style: const TextStyle(color: VetoColors.white, fontWeight: FontWeight.w700)),
           iconTheme: const IconThemeData(color: Colors.white),
           actions: [
             IconButton(icon: const Icon(Icons.refresh_rounded), onPressed: _load,
@@ -508,7 +508,7 @@ class _SubscriptionAdminScreenState
             _StatChip(icon: Icons.trending_up_rounded, color: VetoPalette.success,
                 label: _t(code, 'monthly'), value: '\$${_monthlyRevenue.toStringAsFixed(0)}'),
             const SizedBox(width: 10),
-            _StatChip(icon: Icons.account_balance_wallet_rounded, color: const Color(0xFF8B5CF6),
+            _StatChip(icon: Icons.account_balance_wallet_rounded, color: const Color(0xFFC9A050),
                 label: _t(code, 'allTime'), value: '\$${_totalRevenue.toStringAsFixed(0)}'),
           ]),
           const SizedBox(height: 8),
@@ -517,7 +517,7 @@ class _SubscriptionAdminScreenState
             const SizedBox(width: 8),
             _CountBadge(_t(code, 'active'), activeCount, VetoPalette.success),
             const SizedBox(width: 8),
-            _CountBadge('Free', freeCount, const Color(0xFF0EA5E9)),
+            _CountBadge('Free', freeCount, const Color(0xFFC9A050)),
             const SizedBox(width: 8),
             _CountBadge(_t(code, 'expired'), expiredCount, VetoPalette.warning),
           ]),
@@ -710,7 +710,7 @@ class _SubCard extends StatelessWidget {
         // Plan + dates + amount
         Wrap(spacing: 14, runSpacing: 4, children: [
           _InfoPill(Icons.card_membership_rounded, sub.planLabel(code),
-              const Color(0xFF8B5CF6)),
+              const Color(0xFFC9A050)),
           if (sub.amount > 0)
             _InfoPill(Icons.attach_money_rounded,
                 '\$${sub.amount.toStringAsFixed(2)}', VetoPalette.success),
@@ -741,7 +741,7 @@ class _SubCard extends StatelessWidget {
           _ActionBtn(
               label: _t(code, 'extend'),
               icon: Icons.add_circle_outline_rounded,
-              color: const Color(0xFF0EA5E9),
+              color: const Color(0xFFC9A050),
               onTap: onExtend),
         ]),
       ]),

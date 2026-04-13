@@ -71,7 +71,7 @@ class _SplashScreenState extends State<SplashScreen>
     };
 
     return Scaffold(
-      backgroundColor: const Color(0xFF060C17),
+      backgroundColor: const Color(0xFF07101C),
       body: Stack(
         children: [
           // Radial glow blob
@@ -85,7 +85,7 @@ class _SplashScreenState extends State<SplashScreen>
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
                   colors: [
-                    const Color(0xFF3B82F6).withValues(alpha: 0.1),
+                    const Color(0xFFC9A050).withValues(alpha: 0.1),
                     Colors.transparent,
                   ],
                 ),
@@ -109,13 +109,13 @@ class _SplashScreenState extends State<SplashScreen>
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(28),
                           gradient: const LinearGradient(
-                            colors: [Color(0xFF3B82F6), Color(0xFF1D4ED8)],
+                            colors: [Color(0xFFC9A050), Color(0xFF8B6B1A)],
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color: const Color(0xFF3B82F6).withValues(alpha: 0.3),
+                              color: const Color(0xFFC9A050).withValues(alpha: 0.3),
                               blurRadius: 40,
                               spreadRadius: 0,
                             ),
@@ -123,37 +123,53 @@ class _SplashScreenState extends State<SplashScreen>
                         ),
                         child: const Icon(
                           Icons.shield_rounded,
-                          color: Colors.white,
+                          color: VetoColors.white,
                           size: 48,
                         ),
                       ),
                       const SizedBox(height: 28),
-                      const Text(
+                      Text(
                         'VETO',
                         style: TextStyle(
-                          color: Colors.white,
+                          color: VetoColors.accent,
                           fontSize: 40,
                           fontWeight: FontWeight.w900,
                           letterSpacing: 12,
+                          shadows: [
+                            Shadow(
+                              color: VetoColors.accent.withOpacity(0.4),
+                              blurRadius: 16,
+                            ),
+                          ],
                         ),
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 6),
+                      // Gold decorative line
+                      Container(
+                        width: 48, height: 1,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [Colors.transparent, VetoColors.accent, Colors.transparent],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 10),
                       Text(
                         tagline,
                         style: const TextStyle(
-                          color: Color(0xFF94A3B8),
+                          color: VetoColors.silverDim,
                           fontSize: 13,
                           letterSpacing: 1.5,
-                          fontWeight: FontWeight.w500,
+                          fontWeight: FontWeight.w400,
                         ),
                       ),
                       const SizedBox(height: 56),
                       SizedBox(
-                        width: 24,
-                        height: 24,
+                        width: 20,
+                        height: 20,
                         child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: VetoPalette.primary.withValues(alpha: 0.5),
+                          strokeWidth: 1.5,
+                          color: VetoColors.accent.withValues(alpha: 0.6),
                         ),
                       ),
                     ],
