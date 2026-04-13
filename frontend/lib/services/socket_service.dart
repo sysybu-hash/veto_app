@@ -44,12 +44,19 @@ class SocketService {
 
   Future<void> connect({String role = 'user'}) async {
     final token = await AuthService().getToken();
-    if (token == null) return;
+    if (token == null) {
+      debugPrint('SocketService: No token, cannot connect.');
+      return;
+    }
 
-    if (_socket?.connected ?? false) return;
+    if (_socket?.connected ?? false) {
+      debugPrint('SocketService: Already connected.');
+      return;
+    }
 
     _socket?.dispose();
 
+    debugPrint('SocketService: Connecting to $socketOrigin with role $role');
     _socket = IO.io(AppConfig.socketOrigin, <String, dynamic>{
       'transports': ['websocket', 'polling'],
       'autoConnect': false,
@@ -65,7 +72,7 @@ class SocketService {
     _socket?.connect();
 
     _socket?.onConnect((_) {
-      debugPrint('Socket connected (Role: $role)');
+      debugPrint('Socket connected (Role: $role) - Socket ID: ${_socket?.id}');
     });
 
     _socket?.on('emergency_created',     (d) => _emit(_emergencyCreatedController, d));
@@ -80,9 +87,14 @@ class SocketService {
     _socket?.onDisconnect((_) {
       debugPrint('Socket disconnected');
     });
+
+    _socket?.onError((err) {
+      debugPrint('Socket Error: $err');
+    });
   }
 
   void emit(String event, dynamic data) {
+    debugPrint('SocketService: Emitting event "$event" with data: $data');
     _socket?.emit(event, data);
   }
 

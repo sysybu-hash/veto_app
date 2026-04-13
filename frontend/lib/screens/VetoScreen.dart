@@ -186,6 +186,7 @@ class _VetoScreenState extends State<VetoScreen>
   Future<void> _onVetoPressed() async {
     if (_vetoState != VetoState.idle) return;
 
+    debugPrint('VetoScreen: VETO button pressed.');
     // Haptic + animation
     HapticFeedback.heavyImpact();
     await _scaleCtrl.forward();
