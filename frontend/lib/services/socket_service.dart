@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
-import 'package:socket_io_client/socket_io_client.dart' as io;
+import 'package:socket_io_client/socket_io_client.dart' as IO;
 import '../config/app_config.dart';
 import 'auth_service.dart';
 
@@ -8,7 +8,7 @@ class SocketService {
   static final SocketService _instance = SocketService._internal();
   factory SocketService() => _instance;
 
-  io.Socket? _socket;
+  IO.Socket? _socket;
 
   final _emergencyCreatedController =
       StreamController<Map<String, dynamic>>.broadcast();
@@ -50,7 +50,7 @@ class SocketService {
 
     _socket?.dispose();
 
-    _socket = io.io(AppConfig.socketOrigin, <String, dynamic>{
+    _socket = IO.io(AppConfig.socketOrigin, <String, dynamic>{
       'transports': ['websocket', 'polling'],
       'autoConnect': false,
       'auth': {'token': token},
@@ -82,9 +82,28 @@ class SocketService {
     });
   }
 
-  void emit(String event, Map<String, dynamic> data) {
+  void emit(String event, dynamic data) {
     _socket?.emit(event, data);
   }
+
+  /// Register a dynamic listener for any socket event.
+  /// Used by WebRTCService and call screens for WebRTC signaling events.
+  void on(String event, Function(dynamic) handler) {
+    _socket?.on(event, (data) {
+      dynamic parsed = data;
+      if (data is List && data.isNotEmpty) parsed = data.first;
+      if (parsed is Map) parsed = Map<String, dynamic>.from(parsed as Map);
+      handler(parsed);
+    });
+  }
+
+  /// Remove a dynamic listener.
+  void off(String event) {
+    _socket?.off(event);
+  }
+
+  /// Whether the socket is currently connected.
+  bool get isConnected => _socket?.connected ?? false;
 
   void emitStartVeto(
       {required double lat, required double lng, String? preferredLanguage, String? specialization}) {

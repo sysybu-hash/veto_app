@@ -1,62 +1,233 @@
-# VETO — לינק קבוע לבדיקות (API ציבורי)
+# 🚀 VETO — מדריך Deploy מלא
+## Render (Backend) + Vercel (Frontend Web)
 
-האפליקציה משתמשת ב-**Express + Socket.io** וארוח ארוך-זמן. **Vercel (Serverless)** לא מתאים כ-backend לפרויקט הזה.  
-הפתרון המומלץ: **Render** (חינמי, URL קבוע מסוג `https://….onrender.com`) + אותו קוד ב-`backend/`.
+---
 
-## שלבים (פעם אחת)
+## ארכיטקטורת Deploy
 
-1. **GitHub**  
-   דחוף (push) את ה-repo (ללא `backend/.env` — כבר ב-`.gitignore`).
+```
+┌─────────────────────────────────────┐     ┌──────────────────────────────────────┐
+│  VERCEL (Frontend)                  │     │  RENDER (Backend)                    │
+│  Flutter Web — Static Site          │────▶│  Node.js + Express + Socket.io       │
+│  https://veto-app.vercel.app        │     │  https://veto-app-new.onrender.com   │
+└─────────────────────────────────────┘     └──────────────────────────────────────┘
+                                                          │
+                                            ┌─────────────┴──────────────┐
+                                            │  MongoDB Atlas (Database)   │
+                                            │  Cloudinary (Recordings)    │
+                                            │  Gemini AI (Transcription)  │
+                                            └────────────────────────────┘
+```
 
-2. **Render** (מומלץ: Blueprint)  
-   - [Dashboard](https://dashboard.render.com) → **New** → **Blueprint**.  
-   - בחר את ה-repo; Render קורא את `render.yaml` (שירות **`veto-app`**, `rootDir: backend`).  
-   - ב-**Environment** חובה:
-     - `MONGO_URI` — כמו ב־`backend/.env` (Atlas).
-     - `JWT_SECRET` — מחרוזת סודית ארוכה.
-   - **בדיקת התחברות Web בלי SMS:** הוסף `RETURN_OTP_IN_JSON` = `1` — אז תשובת `request-otp` תכלול את ה-OTP (להסיר כשמחברים SMS).
+---
 
-3. **אם כבר יש Web Service ו־Failed deploy** (למשל יצרת מ-GitHub בלי Blueprint):  
-   **Settings** של השירות:
-   - **Root Directory:** `backend`  
-   - **Build Command:** `npm ci`  
-   - **Start Command:** `npm start`  
-   או השאר **Root Directory ריק** ואז:
-   - **Build Command:** `npm run render-build`  
-   - **Start Command:** `npm run render-start`  
-   ואז **Save** → **Manual Deploy** → **Clear build cache & deploy**.
+## שלב 0 — לפני הכל: Push ל-GitHub
 
-4. אחרי Deploy ירוק, הכתובת לרוב:  
-   `https://veto-app.onrender.com`  
-   בדיקה: `https://veto-app.onrender.com/health`
+```bash
+# ודא שאין סודות ב-repo
+npm run check:git-secrets
 
-5. **Flutter**:
+# Push
+git add .
+git commit -m "chore: prepare for production deploy"
+git push origin main
+```
 
-   - **בניית release / פרודקשן** (`flutter build web` וכו'): ברירת המחדל היא כבר `https://veto-app.onrender.com` — אין חובה ב־`--dart-define`.
-   - **בדיקה מ־debug מול Render:**
+> ⚠️ `backend/.env` כבר ב-`.gitignore` — לא יעלה ל-GitHub.  
+> ✅ `frontend/build/web/` **כן** עולה (הוחרג מה-gitignore) — Vercel יגיש אותו ישירות.
 
-   ```bash
-   cd frontend
-   flutter run -d chrome --dart-define=VETO_API_BASE=https://veto-app.onrender.com
-   ```
+---
 
-   אל תכלול `/api` ב־`VETO_API_BASE` — רק מקור (scheme + host); הנתיב `/api` נוסף אוטומטית ל־REST.
+## חלק א׳ — Render (Backend API)
 
-   **Windows + נתיב עם רווח** (למשל `...\VETO App\`): בניית Web נכשלת בגלל hook של `objective_c`. פתרונות:
-   - הרץ: `powershell -ExecutionPolicy Bypass -File "...\VETO App\scripts\flutter-web.ps1"` (ממפה `V:` ב־`subst` ומריץ מ־`V:\frontend`), או
-   - העבר את הפרויקט לתיקייה **בלי רווח** (למשל `C:\dev\veto-app`), או
-   - `subst V: "C:\מלא\נתיב\VETO App"` ואז `cd V:\frontend` ו־`flutter run ...`.
+### אפשרות 1: Blueprint (מומלץ — אוטומטי)
 
-## התנהגות לפי מצב
+1. פתח [dashboard.render.com](https://dashboard.render.com)
+2. **New → Blueprint**
+3. בחר את ה-repo ו-branch `main`
+4. Render יקרא את `render.yaml` ויצור שירות `veto-app-new`
+5. בסיום הצג ← **Environment** ← הוסף ידנית את המשתנים הסודיים:
 
-- **Debug / profile** בלי `VETO_API_BASE`: `VETO_HOST`, tunnel (`loca.lt`), או `localhost:5001` לפי ההגדרות ב־`app_config.dart`.
-- **Release**: אם לא הוגדר `VETO_API_BASE`, משתמשים ב־`https://veto-app.onrender.com` (קבוע `kDefaultRenderOrigin`).
+| משתנה | ערך |
+|---|---|
+| `MONGO_URI` | `mongodb+srv://user:pass@cluster/dbname?retryWrites=true&w=majority` |
+| `JWT_SECRET` | מחרוזת אקראית ארוכה (מינימום 64 תווים) |
+| `GOOGLE_CLIENT_SECRET` | מ-Google Cloud Console |
+| `GEMINI_API_KEY` | מ-Google AI Studio |
+| `CLOUDINARY_CLOUD_NAME` | מ-Cloudinary Dashboard |
+| `CLOUDINARY_API_KEY` | מ-Cloudinary Dashboard |
+| `CLOUDINARY_API_SECRET` | מ-Cloudinary Dashboard |
+| `VAPID_PRIVATE_KEY` | `npx web-push generate-vapid-keys` |
+| `SENTRY_DSN` | אופציונלי |
 
-## אם עדיין נכשל
+6. **Save Changes → Manual Deploy**
 
-- **Logs** ב-Render: חפש `MONGO_URI is missing` או `Cannot find module` — הראשון = חסר env; השני = build לא רץ מתוך `backend` או לא השתמשת ב־`render-build`.
+### אפשרות 2: Web Service ידני
 
-## הערות
+Settings של השירות:
 
-- **Free tier** עלול להירדם אחרי חוסר שימוש; הבקשה הראשונה אחרי הפעלה מחדש עלולה לקחת ~30–60 שניות (`/health` עוזר לבדוק שחזר לפעילות).
-- אם תרצה **Flutter Web** על Vercel — זה אפשרי בנפרד; ה-API נשאר על Render (או שירות דומה).
+| שדה | ערך |
+|---|---|
+| **Root Directory** | `backend` |
+| **Build Command** | `npm ci --legacy-peer-deps` |
+| **Start Command** | `npm start` |
+| **Health Check Path** | `/health` |
+
+### בדיקה אחרי Deploy
+
+```
+GET https://veto-app-new.onrender.com/health
+```
+
+תגובה תקינה:
+```json
+{ "status": "ok", "db": "connected", "socket": true }
+```
+
+### טיפ: OTP בפיתוח (בלי SMS)
+
+ב-Render Environment הוסף:
+```
+RETURN_OTP_IN_JSON = 1
+```
+תגובת `/api/auth/request-otp` תכלול את ה-OTP בשדה `otp`.  
+**הסר בפרודקשן** כשמחברים ספק SMS.
+
+### Free Tier — שינה אחרי חוסר שימוש
+
+Render Free נכנס לשינה אחרי ~15 דקות. הבקשה הראשונה לוקחת 30–60 שניות.  
+לשמירה על זמינות: הגדר **Cron Job** שמפעיל `/health` כל 14 דקות, או שדרג ל-Starter ($7/חודש).
+
+---
+
+## חלק ב׳ — Vercel (Flutter Web Frontend)
+
+Flutter Web בנוי מראש ל-`frontend/build/web/` (**כולל ב-git**).  
+Vercel מגיש את התיקייה הזו ישירות — **אין צורך ב-build step**.
+
+### אפשרות 1: Vercel CLI (מהיר)
+
+```bash
+# התקן Vercel CLI
+npm i -g vercel
+
+# Deploy מתוך תיקיית frontend
+cd frontend
+vercel --prod
+```
+
+בשאלות:
+- **Root Directory:** `.` (frontend)
+- **Build Command:** *(ריק — לא נדרש)*
+- **Output Directory:** `build/web`
+- **Override?** `Yes`
+
+### אפשרות 2: Vercel Dashboard
+
+1. [vercel.com/new](https://vercel.com/new) → **Import Git Repository**
+2. בחר את ה-repo
+3. **Root Directory:** `frontend`
+4. **Build & Output Settings** → Override:
+   - Build Command: *(ריק)*
+   - Output Directory: `build/web`
+5. **Deploy**
+
+URL שיתקבל: `https://veto-app-xxxx.vercel.app`
+
+### בדיקה
+
+- פתח את ה-URL — אמור לעלות מסך Landing
+- Navigation לנתיבים כמו `/login` ולרענן דף — אמור לעבוד (SPA routing)
+
+### עדכון Frontend (אחרי שינויי קוד)
+
+```bash
+# בנה מחדש
+cd frontend
+flutter build web --release
+
+# Push ל-GitHub — Vercel יעשה redeploy אוטומטי
+git add build/web
+git commit -m "feat: rebuild web"
+git push
+```
+
+---
+
+## חלק ג׳ — Flutter Mobile (iOS / Android)
+
+לאחר Deploy של הבאקנד:
+
+```bash
+cd frontend
+
+# Android (debug)
+flutter run -d android --dart-define=VETO_API_BASE=https://veto-app-new.onrender.com
+
+# Android (release APK)
+flutter build apk --release --dart-define=VETO_API_BASE=https://veto-app-new.onrender.com
+
+# iOS (Simulator)
+flutter run -d ios --dart-define=VETO_API_BASE=https://veto-app-new.onrender.com
+```
+
+> `VETO_API_BASE` — רק origin בלי `/api` (נוסף אוטומטית).  
+> ב-Release builds: אם לא מגדירים `--dart-define`, הברירת מחדל היא `https://veto-app-new.onrender.com`.
+
+### Windows + נתיב עם רווח (`VETO App\`)
+
+```powershell
+# פתרון: subst מיפוי Drive
+subst V: "C:\נתיב\מלא\VETO App"
+cd V:\frontend
+flutter build web --release
+```
+
+---
+
+## חלק ד׳ — משתני סביבה מקומיים
+
+העתק והגדר:
+
+```bash
+cp backend/.env.example backend/.env
+# ערוך backend/.env עם הערכים האמיתיים
+```
+
+משתנים נדרשים לפיתוח מקומי:
+
+```env
+PORT=5001
+NODE_ENV=development
+MONGO_URI=mongodb+srv://...
+JWT_SECRET=your_secret_here
+GEMINI_API_KEY=...
+CLOUDINARY_CLOUD_NAME=...
+CLOUDINARY_API_KEY=...
+CLOUDINARY_API_SECRET=...
+RETURN_OTP_IN_JSON=1
+```
+
+---
+
+## פתרון בעיות
+
+| בעיה | פתרון |
+|---|---|
+| `MONGO_URI is missing` | הוסף MONGO_URI ב-Render Environment |
+| `Cannot find module` | ודא Root Directory = `backend` |
+| `WebSocket connection failed` | בדוק שה-URL ב-app_config.dart מצביע ל-Render |
+| Vercel מציג 404 | ודא Output Directory = `build/web` |
+| `flutter_webrtc` לא עובד | דרוש HTTPS — Render ו-Vercel מספקים TLS אוטומטי |
+| Render ישן (cold start) | הוסף `/health` ping כל 14 דקות או שדרג plan |
+
+---
+
+## סיכום URLs
+
+| שירות | URL |
+|---|---|
+| **Backend API** | `https://veto-app-new.onrender.com/api` |
+| **Health Check** | `https://veto-app-new.onrender.com/health` |
+| **Frontend Web** | `https://veto-app-xxxx.vercel.app` |
+| **Socket.io** | `https://veto-app-new.onrender.com` (WebSocket upgrade) |

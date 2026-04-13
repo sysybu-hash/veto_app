@@ -114,6 +114,7 @@ app.use('/api/ai', require('./src/routes/ai.routes'));
 app.use('/api/payments', require('./src/routes/payment.routes'));
 app.use('/api/chat', require('./src/routes/chat.routes'));
 app.use('/api/vault', require('./src/routes/vault.routes'));
+app.use('/api/calls', require('./src/routes/call.routes'));
 
 app.get('/', (_, res) =>
   res.json({
@@ -152,6 +153,7 @@ app.get('/health', (_, res) =>
 
 app.use(require('./src/middleware/error.middleware'));
 require('./src/socket/dispatch.socket')(io);
+require('./src/socket/webrtc.socket')(io);
 ioReady = true;
 
 const PORT = Number(process.env.PORT) || 5001;

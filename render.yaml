@@ -1,15 +1,24 @@
-# Render Blueprint — API ב-https://<שם-השירות>.onrender.com
-# Dashboard → New → Blueprint → בחר repo. חובה למלא MONGO_URI + JWT_SECRET.
-# Flutter: flutter run --dart-define=VETO_API_BASE=https://veto-app.onrender.com
+# ============================================================
+#  render.yaml — VETO App · Render Blueprint
+#  Backend: Node.js + Express + Socket.io + MongoDB
 #
-# אם יצרת Web Service ידנית בלי Blueprint: Settings → Root Directory = backend
-#   Build: npm ci  |  Start: npm start
-# או השאר Root ריק ואז: Build: npm run render-build  |  Start: npm run render-start
+#  Deploy בפעם הראשונה:
+#    Render Dashboard → New → Blueprint → בחר repo
+#    Render יקרא קובץ זה ויצור את השירות אוטומטית
+#
+#  Deploy ידני (Service קיים):
+#    Settings → Root Directory: backend
+#    Build Command:  npm ci --legacy-peer-deps
+#    Start Command:  npm start
+#    Health Check:   /health
+#
+#  URL לאחר deploy:  https://veto-app-new.onrender.com
+#  בדיקת בריאות:     https://veto-app-new.onrender.com/health
+# ============================================================
 
 services:
-  # Backend Service (Node.js API)
   - type: web
-    name: veto-app
+    name: veto-app-new
     runtime: node
     region: frankfurt
     plan: free
@@ -17,32 +26,57 @@ services:
     buildCommand: npm ci --legacy-peer-deps
     startCommand: npm start
     healthCheckPath: /health
+
     envVars:
+
+      # ── Server ──────────────────────────────────────────────
       - key: NODE_ENV
         value: production
+
+      # ── Database ─────────────────────────────────────────────
+      # חובה: mongodb+srv://user:pass@cluster/dbname?retryWrites=true&w=majority
       - key: MONGO_URI
         sync: false
+
+      # ── Auth ──────────────────────────────────────────────────
+      # חובה: מחרוזת אקראית ארוכה (openssl rand -hex 64)
       - key: JWT_SECRET
         sync: false
       - key: JWT_EXPIRES_IN
         value: 30d
+
+      # ── Google OAuth ──────────────────────────────────────────
       - key: GOOGLE_CLIENT_ID
         value: 752712664923-7loca49f7fggd514q8reljn93meatmrf.apps.googleusercontent.com
       - key: GOOGLE_CLIENT_SECRET
         sync: false
+
+      # ── AI — Gemini (תמלול שיחות) ─────────────────────────────
       - key: GEMINI_API_KEY
         sync: false
+
+      # ── Cloudinary (הקלטות + ראיות) ───────────────────────────
       - key: CLOUDINARY_CLOUD_NAME
         sync: false
       - key: CLOUDINARY_API_KEY
         sync: false
       - key: CLOUDINARY_API_SECRET
         sync: false
+
+      # ── Web Push (VAPID) ──────────────────────────────────────
       - key: VAPID_PUBLIC_KEY
         value: BA6oUwfq1kWgWOBSuLmaXiN0TnmZ0xa0aLXGgfg-trezDAwqW_OiVZEWZ0KkaDmNswOeLipP8zcpib_dFE8Q0io
       - key: VAPID_PRIVATE_KEY
         sync: false
       - key: VAPID_SUBJECT
         value: mailto:admin@veto-legal.com
+
+      # ── Monitoring (Sentry) — אופציונלי ──────────────────────
       - key: SENTRY_DSN
         sync: false
+
+      # ── OTP בפיתוח (אין SMS עדיין) ────────────────────────────
+      # הפעל ב-Dashboard: key=RETURN_OTP_IN_JSON  value=1
+      # הסר או שנה ל-0 כשמחברים ספק SMS אמיתי
+      # - key: RETURN_OTP_IN_JSON
+      #   value: "1"

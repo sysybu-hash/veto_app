@@ -1,0 +1,583 @@
+// ============================================================
+//  LoginScreen.dart — Authentication Screen
+//  OTP-based login for users, lawyers, admins
+//  New luxury design
+// ============================================================
+
+import 'dart:async';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:pinput/pinput.dart';
+import 'package:provider/provider.dart';
+import '../core/i18n/app_language.dart';
+import '../core/theme/veto_theme.dart';
+import '../services/auth_service.dart';
+
+enum _LoginStep { role, phone, otp }
+enum _Role { user, lawyer }
+
+class LoginScreen extends StatefulWidget {
+  const LoginScreen({super.key});
+  @override
+  State<LoginScreen> createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStateMixin {
+  _LoginStep _step   = _LoginStep.role;
+  _Role      _role   = _Role.user;
+  bool       _loading = false;
+  String?    _error;
+  String     _phone = '';
+  String     _otp   = '';
+  int        _countdown = 0;
+  Timer?     _timer;
+
+  final _phoneCtrl = TextEditingController();
+  final _formKey   = GlobalKey<FormState>();
+  final _auth      = AuthService();
+
+  late AnimationController _slideCtrl;
+  late Animation<Offset>   _slideAnim;
+
+  @override
+  void initState() {
+    super.initState();
+    _slideCtrl = AnimationController(duration: const Duration(milliseconds: 400), vsync: this);
+    _slideAnim = Tween<Offset>(begin: const Offset(0.3, 0), end: Offset.zero)
+        .animate(CurvedAnimation(parent: _slideCtrl, curve: Curves.easeOutCubic));
+    _slideCtrl.forward();
+  }
+
+  @override
+  void dispose() {
+    _phoneCtrl.dispose();
+    _timer?.cancel();
+    _slideCtrl.dispose();
+    super.dispose();
+  }
+
+  // ── Step navigation ───────────────────────────────────────
+  void _goTo(_LoginStep step) {
+    _slideCtrl.reset();
+    setState(() { _step = step; _error = null; });
+    _slideCtrl.forward();
+  }
+
+  // ── Request OTP ───────────────────────────────────────────
+  // requestOTPDetailed returns: null/'OTP_CODE' = success, 'error' = failure
+  Future<void> _requestOTP() async {
+    if (!(_formKey.currentState?.validate() ?? false)) return;
+    setState(() { _loading = true; _error = null; });
+
+    try {
+      // Normalize phone: strip non-digits, ensure it starts with 972
+      String phone = _phoneCtrl.text.trim().replaceAll(RegExp(r'\D'), '');
+      if (phone.startsWith('0')) phone = '972${phone.substring(1)}';
+      if (!phone.startsWith('972')) phone = '972$phone';
+      _phone = phone;
+
+      final result = await _auth.requestOTPDetailed(phone, _role.name);
+      if (!mounted) return;
+      if (result != 'error') {
+        _goTo(_LoginStep.otp);
+        _startCountdown();
+      } else {
+        setState(() => _error = 'שגיאה בשליחת קוד. בדוק את המספר ונסה שוב.');
+      }
+    } catch (e) {
+      setState(() => _error = 'שגיאת רשת. נסה שוב.');
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  void _startCountdown() {
+    _countdown = 60;
+    _timer?.cancel();
+    _timer = Timer.periodic(const Duration(seconds: 1), (t) {
+      if (!mounted) { t.cancel(); return; }
+      setState(() => _countdown--);
+      if (_countdown <= 0) t.cancel();
+    });
+  }
+
+  // ── Verify OTP ────────────────────────────────────────────
+  // verifyOTP returns: {'success': true, 'user': {...}} | {'pending_approval': true} | null
+  Future<void> _verifyOTP() async {
+    if (_otp.length != 6) return;
+    setState(() { _loading = true; _error = null; });
+
+    try {
+      final result = await _auth.verifyOTP(_phone, _otp);
+      if (!mounted) return;
+
+      if (result == null) {
+        setState(() => _error = 'קוד שגוי. נסה שוב.');
+        HapticFeedback.mediumImpact();
+        return;
+      }
+
+      if (result['pending_approval'] == true) {
+        setState(() => _error = 'הפרופיל שלך ממתין לאישור מנהל.');
+        return;
+      }
+
+      if (result['success'] == true) {
+        HapticFeedback.heavyImpact();
+        // Role is inside the 'user' sub-object
+        final user = result['user'] as Map<String, dynamic>?;
+        final role = user?['role']?.toString() ?? 'user';
+
+        if (role == 'admin') {
+          Navigator.pushReplacementNamed(context, '/admin_dashboard');
+        } else if (role == 'lawyer') {
+          Navigator.pushReplacementNamed(context, '/lawyer_dashboard');
+        } else {
+          Navigator.pushReplacementNamed(context, '/veto_screen');
+        }
+      } else {
+        setState(() => _error = 'קוד שגוי. נסה שוב.');
+        HapticFeedback.mediumImpact();
+      }
+    } catch (e) {
+      setState(() => _error = 'שגיאת רשת. נסה שוב.');
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: VetoColors.background,
+      body: Container(
+        decoration: VetoDecorations.gradientBg(),
+        child: SafeArea(
+          child: Column(
+            children: [
+              // ── Header ──────────────────────────────────────
+              _buildHeader(),
+
+              // ── Content ─────────────────────────────────────
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(horizontal: 28),
+                  child: SlideTransition(
+                    position: _slideAnim,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SizedBox(height: 32),
+                        _buildStepContent(),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHeader() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      child: Row(
+        children: [
+          if (_step != _LoginStep.role)
+            IconButton(
+              icon: const Icon(Icons.arrow_back_ios, color: VetoColors.silver, size: 20),
+              onPressed: () {
+                if (_step == _LoginStep.otp) _goTo(_LoginStep.phone);
+                else if (_step == _LoginStep.phone) _goTo(_LoginStep.role);
+              },
+            ),
+          const Spacer(),
+          RichText(
+            text: const TextSpan(
+              style: TextStyle(fontFamily: 'Heebo', fontSize: 20, fontWeight: FontWeight.w800),
+              children: [
+                TextSpan(text: 'VE', style: TextStyle(color: VetoColors.white)),
+                TextSpan(text: 'TO', style: TextStyle(color: VetoColors.vetoRed)),
+              ],
+            ),
+          ),
+          const Spacer(),
+          if (_step != _LoginStep.role) const SizedBox(width: 48),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStepContent() {
+    switch (_step) {
+      case _LoginStep.role:   return _buildRoleStep();
+      case _LoginStep.phone:  return _buildPhoneStep();
+      case _LoginStep.otp:    return _buildOTPStep();
+    }
+  }
+
+  // ─────────────────────────────────────────────────────────
+  //  Step 1: Role selection
+  // ─────────────────────────────────────────────────────────
+  Widget _buildRoleStep() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'ברוך הבא',
+          style: TextStyle(fontFamily: 'Heebo', fontSize: 32, fontWeight: FontWeight.w800, color: VetoColors.white),
+        ),
+        const SizedBox(height: 8),
+        const Text(
+          'בחר את התפקיד שלך להמשך',
+          style: TextStyle(fontFamily: 'Heebo', fontSize: 15, color: VetoColors.silver),
+        ),
+        const SizedBox(height: 40),
+
+        _buildRoleCard(
+          role:     _Role.user,
+          icon:     Icons.person_outline,
+          title:    'לקוח',
+          subtitle: 'אני צריך ייעוץ משפטי דחוף',
+          color:    VetoColors.vetoRed,
+        ),
+        const SizedBox(height: 16),
+        _buildRoleCard(
+          role:     _Role.lawyer,
+          icon:     Icons.balance_outlined,
+          title:    'עורך דין',
+          subtitle: 'אני מספק שירותים משפטיים',
+          color:    VetoColors.accent,
+        ),
+
+        const SizedBox(height: 48),
+
+        SizedBox(
+          width: double.infinity,
+          height: 56,
+          child: ElevatedButton(
+            onPressed: () => _goTo(_LoginStep.phone),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: _role == _Role.user ? VetoColors.vetoRed : VetoColors.accent,
+              foregroundColor: VetoColors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            ),
+            child: const Text(
+              'המשך',
+              style: TextStyle(fontFamily: 'Heebo', fontSize: 18, fontWeight: FontWeight.w700),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildRoleCard({
+    required _Role    role,
+    required IconData icon,
+    required String   title,
+    required String   subtitle,
+    required Color    color,
+  }) {
+    final selected = _role == role;
+    return GestureDetector(
+      onTap: () => setState(() => _role = role),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: selected ? color.withOpacity(0.12) : VetoColors.surface,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: selected ? color : VetoColors.border,
+            width: selected ? 2 : 1,
+          ),
+          boxShadow: selected
+              ? [BoxShadow(color: color.withOpacity(0.2), blurRadius: 20, spreadRadius: 2)]
+              : [],
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 52,
+              height: 52,
+              decoration: BoxDecoration(
+                color: color.withOpacity(selected ? 0.2 : 0.1),
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Icon(icon, color: color, size: 26),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontFamily: 'Heebo',
+                      fontSize: 17,
+                      fontWeight: FontWeight.w700,
+                      color: selected ? VetoColors.white : VetoColors.silverLight,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    style: TextStyle(
+                      fontFamily: 'Heebo',
+                      fontSize: 13,
+                      color: selected ? VetoColors.silver : VetoColors.textMuted,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (selected)
+              Container(
+                width: 22,
+                height: 22,
+                decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+                child: const Icon(Icons.check, color: Colors.white, size: 14),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ─────────────────────────────────────────────────────────
+  //  Step 2: Phone number
+  // ─────────────────────────────────────────────────────────
+  Widget _buildPhoneStep() {
+    return Form(
+      key: _formKey,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'מספר טלפון',
+            style: TextStyle(fontFamily: 'Heebo', fontSize: 28, fontWeight: FontWeight.w800, color: VetoColors.white),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            'נשלח קוד אימות לנייד שלך',
+            style: TextStyle(fontFamily: 'Heebo', fontSize: 15, color: VetoColors.silver),
+          ),
+          const SizedBox(height: 40),
+
+          TextFormField(
+            controller: _phoneCtrl,
+            keyboardType: TextInputType.phone,
+            textDirection: TextDirection.ltr,
+            autofocus: true,
+            style: const TextStyle(
+              fontFamily: 'Heebo',
+              fontSize: 20,
+              color: VetoColors.white,
+              letterSpacing: 2,
+            ),
+            decoration: InputDecoration(
+              hintText: '050-000-0000',
+              hintStyle: const TextStyle(
+                fontFamily: 'Heebo',
+                color: VetoColors.textMuted,
+                fontSize: 18,
+                letterSpacing: 1,
+              ),
+              prefixIcon: const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16),
+                child: Text('+972', style: TextStyle(fontFamily: 'Heebo', fontSize: 18, color: VetoColors.silver)),
+              ),
+              prefixIconConstraints: const BoxConstraints(minWidth: 0, minHeight: 0),
+              filled: true,
+              fillColor: VetoColors.surfaceHigh,
+              contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+                borderSide: const BorderSide(color: VetoColors.border, width: 1),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+                borderSide: const BorderSide(color: VetoColors.accent, width: 2),
+              ),
+              errorBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+                borderSide: const BorderSide(color: VetoColors.error, width: 1),
+              ),
+            ),
+            onChanged: (v) => _phone = v.replaceAll(RegExp(r'\D'), ''),
+            validator: (v) {
+              final d = v?.replaceAll(RegExp(r'\D'), '') ?? '';
+              if (d.length < 9) return 'מספר לא תקין';
+              return null;
+            },
+            onFieldSubmitted: (_) => _requestOTP(),
+          ),
+
+          if (_error != null) ...[
+            const SizedBox(height: 12),
+            _buildError(_error!),
+          ],
+
+          const SizedBox(height: 40),
+
+          SizedBox(
+            width: double.infinity,
+            height: 56,
+            child: ElevatedButton(
+              onPressed: _loading ? null : _requestOTP,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: _role == _Role.user ? VetoColors.vetoRed : VetoColors.accent,
+                foregroundColor: VetoColors.white,
+                disabledBackgroundColor: VetoColors.surfaceHigh,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              ),
+              child: _loading
+                  ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5))
+                  : const Text('שלח קוד', style: TextStyle(fontFamily: 'Heebo', fontSize: 18, fontWeight: FontWeight.w700)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ─────────────────────────────────────────────────────────
+  //  Step 3: OTP verification
+  // ─────────────────────────────────────────────────────────
+  Widget _buildOTPStep() {
+    final pinTheme = PinTheme(
+      width: 52,
+      height: 60,
+      textStyle: const TextStyle(
+        fontFamily: 'Heebo',
+        fontSize: 24,
+        fontWeight: FontWeight.w700,
+        color: VetoColors.white,
+      ),
+      decoration: BoxDecoration(
+        color: VetoColors.surfaceHigh,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: VetoColors.border, width: 1.5),
+      ),
+    );
+
+    final activePinTheme = pinTheme.copyDecorationWith(
+      border: Border.all(color: VetoColors.accent, width: 2),
+    );
+
+    final errorPinTheme = pinTheme.copyDecorationWith(
+      border: Border.all(color: VetoColors.error, width: 2),
+    );
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'קוד אימות',
+          style: TextStyle(fontFamily: 'Heebo', fontSize: 28, fontWeight: FontWeight.w800, color: VetoColors.white),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          'הזן את הקוד שנשלח ל-+972$_phone',
+          style: const TextStyle(fontFamily: 'Heebo', fontSize: 14, color: VetoColors.silver),
+        ),
+        const SizedBox(height: 48),
+
+        Center(
+          child: Pinput(
+            length: 6,
+            defaultPinTheme: pinTheme,
+            focusedPinTheme: activePinTheme,
+            errorPinTheme: errorPinTheme,
+            autofocus: true,
+            hapticFeedbackType: HapticFeedbackType.lightImpact,
+            onCompleted: (pin) {
+              _otp = pin;
+              _verifyOTP();
+            },
+            onChanged: (pin) => _otp = pin,
+          ),
+        ),
+
+        if (_error != null) ...[
+          const SizedBox(height: 16),
+          Center(child: _buildError(_error!)),
+        ],
+
+        const SizedBox(height: 40),
+
+        // Loading or verify button
+        if (_loading)
+          const Center(
+            child: SizedBox(
+              width: 32,
+              height: 32,
+              child: CircularProgressIndicator(color: VetoColors.accent, strokeWidth: 3),
+            ),
+          )
+        else
+          SizedBox(
+            width: double.infinity,
+            height: 56,
+            child: ElevatedButton(
+              onPressed: _otp.length == 6 ? _verifyOTP : null,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: _role == _Role.user ? VetoColors.vetoRed : VetoColors.accent,
+                foregroundColor: VetoColors.white,
+                disabledBackgroundColor: VetoColors.surfaceHigh,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              ),
+              child: const Text('אמת', style: TextStyle(fontFamily: 'Heebo', fontSize: 18, fontWeight: FontWeight.w700)),
+            ),
+          ),
+
+        const SizedBox(height: 24),
+
+        // Resend
+        Center(
+          child: _countdown > 0
+              ? Text(
+                  'שלח שוב בעוד $_countdown שניות',
+                  style: const TextStyle(fontFamily: 'Heebo', fontSize: 13, color: VetoColors.textMuted),
+                )
+              : TextButton(
+                  onPressed: _requestOTP,
+                  child: const Text(
+                    'שלח קוד שוב',
+                    style: TextStyle(fontFamily: 'Heebo', color: VetoColors.accent, fontWeight: FontWeight.w600),
+                  ),
+                ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildError(String msg) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      decoration: BoxDecoration(
+        color: VetoColors.error.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: VetoColors.error.withOpacity(0.3)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.error_outline, color: VetoColors.error, size: 16),
+          const SizedBox(width: 8),
+          Flexible(
+            child: Text(
+              msg,
+              style: const TextStyle(fontFamily: 'Heebo', fontSize: 13, color: VetoColors.error),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}

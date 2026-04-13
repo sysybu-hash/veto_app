@@ -32,7 +32,15 @@ dependencies:
   # ── Socket.io (real-time dispatch) ──────────────────────────
   socket_io_client: ^2.0.3+1
 
-  # ── Deep Linking (WhatsApp / Telegram call links) ───────────
+  # ── WebRTC (in-app audio/video calls) ───────────────────────
+  flutter_webrtc: ^0.9.47
+  # Peer-to-peer WebRTC calls — web + iOS + Android
+
+  # ── Permissions ─────────────────────────────────────────────
+  permission_handler: ^11.3.0
+  # Camera, microphone, storage permissions
+
+  # ── Deep Linking ─────────────────────────────────────────────
   url_launcher: ^6.3.0
 
   # ── Local storage (JWT + user session) ──────────────────────

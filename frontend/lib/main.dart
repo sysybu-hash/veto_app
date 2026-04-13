@@ -10,26 +10,26 @@ import 'package:provider/provider.dart';
 import 'config/app_config.dart';
 import 'core/i18n/app_language.dart';
 import 'core/theme/veto_theme.dart';
-import 'screens/login_screen.dart';
-import 'screens/landing_screen.dart';
-import 'screens/lawyer_dashboard.dart';
+import 'screens/LoginScreen.dart';
+import 'screens/LandingScreen.dart';
+import 'screens/LawyerDashboard.dart';
 import 'screens/splash_screen.dart';
-import 'screens/veto_screen.dart';
-import 'screens/profile_screen.dart';
-import 'screens/admin_settings_screen.dart';
-import 'screens/wizard/wizard_shell_screen.dart';
-import 'screens/files_vault_screen.dart';
-import 'screens/admin_dashboard.dart';
-import 'screens/subscription_admin_screen.dart';
-import 'screens/settings_screen.dart';
-import 'screens/admin/all_lawyers_screen.dart';
-import 'screens/admin/all_users_screen.dart';
-import 'screens/admin/pending_lawyers_screen.dart';
-import 'screens/admin/emergency_logs_screen.dart';
-import 'screens/lawyer_settings_screen.dart';
-import 'screens/chat_screen.dart';
-import 'screens/waze_map_screen.dart';
-import 'screens/shared_vault_screen.dart';
+import 'screens/VetoScreen.dart';
+import 'screens/ProfileScreen.dart';
+import 'screens/AdminSettingsScreen.dart';
+import 'screens/wizard/WizardShellScreen.dart';
+import 'screens/FilesVaultScreen.dart';
+import 'screens/AdminDashboard.dart';
+import 'screens/SubscriptionAdminScreen.dart';
+import 'screens/SettingsScreen.dart';
+import 'screens/admin/AllLawyersScreen.dart';
+import 'screens/admin/AllUsersScreen.dart';
+import 'screens/admin/PendingLawyersScreen.dart';
+import 'screens/admin/EmergencyLogsScreen.dart';
+import 'screens/LawyerSettingsScreen.dart';
+import 'screens/ChatScreen.dart';
+import 'screens/call_screen.dart';
+import 'services/socket_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -40,8 +40,14 @@ Future<void> main() async {
     _warmUpBackend(),
   ]);
   runApp(
-    ChangeNotifierProvider.value(
-      value: languageController,
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider.value(value: languageController),
+        Provider<SocketService>(
+          create: (_) => SocketService(),
+          lazy: true,
+        ),
+      ],
       child: const VetoApp(),
     ),
   );
@@ -95,8 +101,7 @@ class VetoApp extends StatelessWidget {
         '/admin_logs': (context) => const EmergencyLogsScreen(),
         '/lawyer_settings': (context) => const LawyerSettingsScreen(),
         '/chat': (context) => const ChatScreen(),
-        '/waze_map': (context) => const WazeMapScreen(),
-        '/shared_vault': (context) => const SharedVaultScreen(),
+        '/call': (context) => const CallScreen(),
       },
     );
   }

@@ -12,16 +12,10 @@ const push           = require('../services/push.service');
 // eventId → lawyerId (settled races)
 const settledEvents = new Map();
 
-// ── Deep-link builder ──────────────────────────────────────
-function buildCallLink(lawyer) {
-  if (lawyer.whatsapp_number) {
-    const num = lawyer.whatsapp_number.replace(/\D/g, '');
-    return `https://wa.me/${num}`;
-  }
-  if (lawyer.telegram_username) {
-    return `https://t.me/${lawyer.telegram_username}`;
-  }
-  return `tel:${lawyer.phone}`;
+// ── Build WebRTC room link (replaces WhatsApp/Telegram) ───────
+// The room ID is the eventId. Both parties join /call?roomId=eventId
+function buildRoomId(eventId) {
+  return eventId.toString();
 }
 
 // ── Sorted lawyer list ─────────────────────────────────────
@@ -256,11 +250,11 @@ module.exports = function initDispatch(io) {
         }
 
         const lawyer = await Lawyer.findById(userId).select(
-          'full_name phone whatsapp_number telegram_username preferred_language'
+          'full_name phone preferred_language'
         );
 
-        const callLink = buildCallLink(lawyer);
-        const now      = new Date();
+        const roomId = buildRoomId(eventId);
+        const now    = new Date();
 
         // 1. Update EmergencyEvent ────────────────────────────
         const timeToAccept = Math.round(
@@ -271,7 +265,7 @@ module.exports = function initDispatch(io) {
           status:               'accepted',
           assigned_lawyer_id:   userId,
           accepted_at:          now,
-          call_link:            callLink,
+          room_id:              roomId,
           time_to_accept_seconds: timeToAccept,
           // Mark this lawyer's dispatch entry as accepted
           $set: {
@@ -286,23 +280,22 @@ module.exports = function initDispatch(io) {
         // 2. Mark lawyer as busy ───────────────────────────────
         await Lawyer.findByIdAndUpdate(userId, { is_available: false });
 
-        // 3. Notify the User: lawyer found ────────────────────
-        //    Send to user's private room
+        // 3. Notify the User: lawyer found — navigate to call room ─
         io.to(`user:${event.user_id}`).emit('lawyer_found', {
           eventId,
+          roomId,
           lawyerName:   lawyer.full_name,
           lawyerPhone:  lawyer.phone,
-          callLink,
           language:     lawyer.preferred_language,
           message:      'A lawyer has accepted your request!',
         });
 
-        // 4. Confirm to the winning lawyer ─────────────────────
+        // 4. Confirm to the winning lawyer — navigate to call room ─
         socket.emit('case_accepted_confirmed', {
           eventId,
+          roomId,
           userLocation: event.event_location?.coordinates,
-          userName:     event.user_id?.toString(),
-          callLink,
+          userId:       event.user_id?.toString(),
         });
 
         // 5. Notify ALL other lawyers: case is gone ────────────
