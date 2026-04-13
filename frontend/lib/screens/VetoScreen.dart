@@ -115,7 +115,7 @@ class _VetoScreenState extends State<VetoScreen>
       }
       if (perm == LocationPermission.denied || perm == LocationPermission.deniedForever) return;
       final pos = await Geolocator.getCurrentPosition(
-        locationSettings: const LocationSettings(accuracy: LocationAccuracy.high),
+        desiredAccuracy: LocationAccuracy.high,
       );
       if (mounted) setState(() { _lat = pos.latitude; _lng = pos.longitude; });
     } catch (_) {}
