@@ -15,19 +15,19 @@ import 'screens/LandingScreen.dart';
 import 'screens/LawyerDashboard.dart';
 import 'screens/splash_screen.dart';
 import 'screens/VetoScreen.dart';
-// import 'screens/ProfileScreen.dart';
+import 'screens/ProfileScreen.dart';
 import 'screens/AdminSettingsScreen.dart';
 import 'screens/wizard/WizardShellScreen.dart';
 import 'screens/FilesVaultScreen.dart';
 import 'screens/AdminDashboard.dart';
-// import 'screens/SubscriptionAdminScreen.dart';
+import 'screens/SubscriptionAdminScreen.dart';
 import 'screens/SettingsScreen.dart';
 import 'screens/admin/AllLawyersScreen.dart';
 import 'screens/admin/AllUsersScreen.dart';
 import 'screens/admin/PendingLawyersScreen.dart';
 import 'screens/admin/EmergencyLogsScreen.dart';
 import 'screens/LawyerSettingsScreen.dart';
-// import 'screens/ChatScreen.dart';
+import 'screens/ChatScreen.dart';
 import 'screens/call_screen.dart';
 import 'services/socket_service.dart';
 
@@ -89,18 +89,18 @@ class VetoApp extends StatelessWidget {
         '/wizard_home': (context) => const WizardShellScreen(),
         '/veto_screen': (context) => const VetoScreen(),
         '/lawyer_dashboard': (context) => const LawyerDashboard(),
-        // '/profile': (context) => const ProfileScreen(),
+        '/profile': (context) => const ProfileScreen(),
         '/admin_settings': (context) => const AdminSettingsScreen(),
         '/files_vault': (context) => const FilesVaultScreen(),
         '/admin_dashboard': (context) => const AdminDashboard(),
-        // '/admin_subscriptions': (context) => const SubscriptionAdminScreen(),
+        '/admin_subscriptions': (context) => const SubscriptionAdminScreen(),
         '/settings': (context) => const SettingsScreen(),
         '/admin_users': (context) => const AllUsersScreen(),
         '/admin_lawyers': (context) => const AllLawyersScreen(),
         '/admin_pending': (context) => const PendingLawyersScreen(),
         '/admin_logs': (context) => const EmergencyLogsScreen(),
         '/lawyer_settings': (context) => const LawyerSettingsScreen(),
-        // '/chat': (context) => const ChatScreen(),
+        '/chat': (context) => const ChatScreen(),
         '/call': (context) => const CallScreen(),
       },
     );
