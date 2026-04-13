@@ -158,28 +158,4 @@ class _SplashScreenState extends State<SplashScreen>
                         tagline,
                         style: const TextStyle(
                           color: VetoColors.silverDim,
-                          fontSize: 13,
-                          letterSpacing: 1.5,
-                          fontWeight: FontWeight.w400,
-                        ),
-                      ),
-                      const SizedBox(height: 56),
-                      SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 1.5,
-                          color: VetoColors.accent.withValues(alpha: 0.6),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
+          
