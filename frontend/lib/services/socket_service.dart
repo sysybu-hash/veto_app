@@ -56,7 +56,7 @@ class SocketService {
 
     _socket?.dispose();
 
-    debugPrint('SocketService: Connecting to $socketOrigin with role $role');
+    debugPrint('SocketService: Connecting to ${AppConfig.socketOrigin} with role $role');
     _socket = IO.io(AppConfig.socketOrigin, <String, dynamic>{
       'transports': ['websocket', 'polling'],
       'autoConnect': false,
