@@ -18,8 +18,8 @@ Thumbs.db
 
 # Flutter
 frontend/.dart_tool/
-frontend/build/*
-!frontend/build/web/
+frontend/build/
+!frontend/build/web/**
 frontend/.flutter-plugins-dependencies
 
 # IDE
