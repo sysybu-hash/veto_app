@@ -176,9 +176,9 @@ class _EmergencyLogsScreenState extends State<EmergencyLogsScreen> {
                               child: Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                                 decoration: BoxDecoration(
-                                  color: _sc(status).withOpacity(0.15),
+                                  color: _sc(status).withValues(alpha: 0.15),
                                   borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(color: _sc(status).withOpacity(0.4)),
+                                  border: Border.all(color: _sc(status).withValues(alpha: 0.4)),
                                 ),
                                 child: Row(mainAxisSize: MainAxisSize.min, children: [
                                   Text(_sl(status), style: TextStyle(color: _sc(status), fontSize: 11)),

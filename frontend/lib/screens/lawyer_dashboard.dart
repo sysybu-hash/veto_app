@@ -419,7 +419,7 @@ class _LawyerDashboardState extends State<LawyerDashboard> {
                                     color: (_isAvailable
                                             ? VetoPalette.success
                                             : VetoPalette.border)
-                                        .withOpacity(0.45),
+                                        .withValues(alpha: 0.45),
                                   ),
                                 ),
                                 child: Row(
@@ -646,7 +646,7 @@ class _HeroHeader extends StatelessWidget {
         border: Border.all(color: VetoPalette.border),
         boxShadow: [
           BoxShadow(
-            color: VetoPalette.primary.withOpacity(0.10),
+            color: VetoPalette.primary.withValues(alpha: 0.10),
             blurRadius: 34,
             spreadRadius: 2,
             offset: const Offset(0, 18),
@@ -662,10 +662,10 @@ class _HeroHeader extends StatelessWidget {
                 width: 52,
                 height: 52,
                 decoration: BoxDecoration(
-                  color: VetoPalette.primary.withOpacity(0.16),
+                  color: VetoPalette.primary.withValues(alpha: 0.16),
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
-                    color: VetoPalette.primary.withOpacity(0.35),
+                    color: VetoPalette.primary.withValues(alpha: 0.35),
                   ),
                 ),
                 child: const Icon(Icons.gavel_rounded,
@@ -789,7 +789,7 @@ class _HeaderAction extends StatelessWidget {
           width: 44,
           height: 44,
           decoration: BoxDecoration(
-            color: VetoPalette.surface2.withOpacity(0.85),
+            color: VetoPalette.surface2.withValues(alpha: 0.85),
             borderRadius: BorderRadius.circular(14),
             border: Border.all(color: VetoPalette.border),
           ),
@@ -816,9 +816,9 @@ class _StatusPill extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.12),
+        color: color.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: color.withOpacity(0.28)),
+        border: Border.all(color: color.withValues(alpha: 0.28)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -922,7 +922,7 @@ class _EmptyQueue extends StatelessWidget {
             height: 72,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: VetoPalette.primary.withOpacity(0.12),
+              color: VetoPalette.primary.withValues(alpha: 0.12),
             ),
             child: const Icon(Icons.mark_email_read_outlined,
                 color: VetoPalette.primary, size: 30),
@@ -1000,7 +1000,7 @@ class _RequestCard extends StatelessWidget {
         color: VetoPalette.surface,
         borderRadius: BorderRadius.circular(22),
         border: Border.all(
-          color: VetoPalette.emergency.withOpacity(0.30),
+          color: VetoPalette.emergency.withValues(alpha: 0.30),
         ),
       ),
       child: Column(
@@ -1012,10 +1012,10 @@ class _RequestCard extends StatelessWidget {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                 decoration: BoxDecoration(
-                  color: VetoPalette.emergency.withOpacity(0.12),
+                  color: VetoPalette.emergency.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(999),
                   border: Border.all(
-                    color: VetoPalette.emergency.withOpacity(0.25),
+                    color: VetoPalette.emergency.withValues(alpha: 0.25),
                   ),
                 ),
                 child: Text(
@@ -1033,7 +1033,7 @@ class _RequestCard extends StatelessWidget {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
                   decoration: BoxDecoration(
-                    color: VetoPalette.primary.withOpacity(0.12),
+                    color: VetoPalette.primary.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(999),
                   ),
                   child: Text(
@@ -1175,7 +1175,7 @@ class _ActiveCaseCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: VetoPalette.surface,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: VetoPalette.success.withOpacity(0.3)),
+        border: Border.all(color: VetoPalette.success.withValues(alpha: 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

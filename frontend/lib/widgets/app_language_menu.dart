@@ -53,7 +53,7 @@ class AppLanguageMenu extends StatelessWidget {
           vertical: compact ? 8 : 10,
         ),
         decoration: BoxDecoration(
-          color: VetoPalette.surface.withOpacity(0.92),
+          color: VetoPalette.surface.withValues(alpha: 0.92),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: VetoPalette.border),
         ),

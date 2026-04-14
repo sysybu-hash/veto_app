@@ -379,7 +379,7 @@ class _ChatScreenState extends State<ChatScreen> {
                               return ListTile(
                                 leading: CircleAvatar(
                                   backgroundColor:
-                                      VetoPalette.primary.withOpacity(0.15),
+                                      VetoPalette.primary.withValues(alpha: 0.15),
                                   child: Text(p.name.isNotEmpty ? p.name[0].toUpperCase() : '?',
                                       style: const TextStyle(
                                           color: VetoPalette.primary,
@@ -502,7 +502,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   child: Column(mainAxisSize: MainAxisSize.min, children: [
                     Icon(Icons.chat_bubble_outline_rounded,
                         size: 64,
-                        color: VetoPalette.textSubtle.withOpacity(0.5)),
+                        color: VetoPalette.textSubtle.withValues(alpha: 0.5)),
                     const SizedBox(height: 16),
                     Text(_t('noConversations'),
                         style: const TextStyle(
@@ -538,10 +538,10 @@ class _ChatScreenState extends State<ChatScreen> {
 
     return ListTile(
       selected: isActive,
-      selectedTileColor: VetoPalette.primary.withOpacity(0.08),
+      selectedTileColor: VetoPalette.primary.withValues(alpha: 0.08),
       tileColor: Colors.transparent,
       leading: CircleAvatar(
-        backgroundColor: VetoPalette.primary.withOpacity(0.15),
+        backgroundColor: VetoPalette.primary.withValues(alpha: 0.15),
         child: Text(initial,
             style: const TextStyle(
                 color: VetoPalette.primary, fontWeight: FontWeight.w700)),
@@ -600,7 +600,7 @@ class _ChatScreenState extends State<ChatScreen> {
         child: Column(mainAxisSize: MainAxisSize.min, children: [
           Icon(Icons.forum_outlined,
               size: 64,
-              color: VetoPalette.textSubtle.withOpacity(0.4)),
+              color: VetoPalette.textSubtle.withValues(alpha: 0.4)),
           const SizedBox(height: 16),
           Text(_t('selectPartner'),
               style: const TextStyle(
@@ -635,7 +635,7 @@ class _ChatScreenState extends State<ChatScreen> {
         title: Row(children: [
           CircleAvatar(
             radius: 16,
-            backgroundColor: VetoPalette.primary.withOpacity(0.2),
+            backgroundColor: VetoPalette.primary.withValues(alpha: 0.2),
             child: Text(
               (_activePartnerName?.isNotEmpty == true)
                   ? _activePartnerName![0].toUpperCase()
@@ -784,7 +784,7 @@ class _ChatScreenState extends State<ChatScreen> {
               Text(time,
                   style: TextStyle(
                       color: msg.isOwn
-                          ? Colors.white.withOpacity(0.65)
+                          ? Colors.white.withValues(alpha: 0.65)
                           : VetoPalette.textSubtle,
                       fontSize: 10)),
             ],

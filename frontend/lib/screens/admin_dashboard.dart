@@ -341,7 +341,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
           decoration: BoxDecoration(
-            color: color.withOpacity(0.10),
+            color: color.withValues(alpha: 0.10),
             borderRadius: BorderRadius.circular(20),
           ),
           child: Text(statusLabel,
@@ -358,7 +358,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: VetoPalette.border),
         boxShadow: [BoxShadow(
-            color: Colors.black.withOpacity(0.03),
+            color: Colors.black.withValues(alpha: 0.03),
             blurRadius: 6, offset: const Offset(0, 2))],
       ),
       child: Column(children: [
@@ -393,7 +393,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: VetoPalette.border),
         boxShadow: [BoxShadow(
-            color: Colors.black.withOpacity(0.03),
+            color: Colors.black.withValues(alpha: 0.03),
             blurRadius: 6, offset: const Offset(0, 2))],
       ),
       child: ListView.separated(
@@ -423,7 +423,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
               Container(
                 width: 36, height: 36,
                 decoration: BoxDecoration(
-                  color: statusColor.withOpacity(0.10),
+                  color: statusColor.withValues(alpha: 0.10),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(Icons.warning_amber_rounded,
@@ -447,7 +447,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
-                  color: statusColor.withOpacity(0.10),
+                  color: statusColor.withValues(alpha: 0.10),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(statusLabel,
@@ -497,7 +497,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
               borderRadius: BorderRadius.circular(14),
               border: Border.all(color: VetoPalette.border),
               boxShadow: [BoxShadow(
-                  color: Colors.black.withOpacity(0.03),
+                  color: Colors.black.withValues(alpha: 0.03),
                   blurRadius: 6, offset: const Offset(0, 2))],
             ),
             child: Column(
@@ -505,7 +505,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                    color: color.withOpacity(0.10),
+                    color: color.withValues(alpha: 0.10),
                     shape: BoxShape.circle),
                 child: Icon(icon, color: color, size: 22),
               ),
@@ -546,7 +546,7 @@ class _KpiCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: VetoPalette.border),
         boxShadow: [BoxShadow(
-            color: Colors.black.withOpacity(0.03),
+            color: Colors.black.withValues(alpha: 0.03),
             blurRadius: 6, offset: const Offset(0, 2))],
       ),
       child: Column(
@@ -557,7 +557,7 @@ class _KpiCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                  color: color.withOpacity(0.10),
+                  color: color.withValues(alpha: 0.10),
                   borderRadius: BorderRadius.circular(8)),
               child: Icon(icon, color: color, size: 18),
             ),

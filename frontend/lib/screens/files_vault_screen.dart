@@ -819,13 +819,13 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
           if (_isDragging)
             IgnorePointer(
               child: Container(
-                color: VetoPalette.primary.withOpacity(0.18),
+                color: VetoPalette.primary.withValues(alpha: 0.18),
                 child: Center(
                   child: Column(mainAxisSize: MainAxisSize.min, children: [
                     Container(
                       padding: const EdgeInsets.all(24),
                       decoration: BoxDecoration(
-                        color: VetoPalette.primary.withOpacity(0.15),
+                        color: VetoPalette.primary.withValues(alpha: 0.15),
                         shape: BoxShape.circle,
                         border: Border.all(color: VetoPalette.primary, width: 2),
                       ),
@@ -888,7 +888,7 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
       return Center(
         child: Column(mainAxisSize: MainAxisSize.min, children: [
           Icon(Icons.folder_open_outlined,
-              size: 64, color: VetoPalette.textSubtle.withOpacity(0.5)),
+              size: 64, color: VetoPalette.textSubtle.withValues(alpha: 0.5)),
           const SizedBox(height: 16),
           Text(_l.noFiles,
               style: const TextStyle(color: VetoPalette.textMuted,
@@ -940,7 +940,7 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
           child: Center(
             child: Column(mainAxisSize: MainAxisSize.min, children: [
               Icon(Icons.cases_outlined,
-                  size: 64, color: VetoPalette.textSubtle.withOpacity(0.5)),
+                  size: 64, color: VetoPalette.textSubtle.withValues(alpha: 0.5)),
               const SizedBox(height: 16),
               Text(_l.createCase,
                   style: const TextStyle(color: VetoPalette.textMuted,
@@ -1038,7 +1038,7 @@ class _FileCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: VetoPalette.border),
         boxShadow: [BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 8, offset: const Offset(0, 2))],
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -1047,7 +1047,7 @@ class _FileCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: file.typeColor.withOpacity(0.10),
+              color: file.typeColor.withValues(alpha: 0.10),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Icon(file.icon, color: file.typeColor, size: 22),
@@ -1078,9 +1078,9 @@ class _FileCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
               decoration: BoxDecoration(
-                color: VetoPalette.success.withOpacity(0.10),
+                color: VetoPalette.success.withValues(alpha: 0.10),
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: VetoPalette.success.withOpacity(0.3)),
+                border: Border.all(color: VetoPalette.success.withValues(alpha: 0.3)),
               ),
               child: Row(mainAxisSize: MainAxisSize.min, children: [
                 const Icon(Icons.lock_open_rounded,
@@ -1098,9 +1098,9 @@ class _FileCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: VetoPalette.primary.withOpacity(0.06),
+              color: VetoPalette.primary.withValues(alpha: 0.06),
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: VetoPalette.primary.withOpacity(0.20)),
+              border: Border.all(color: VetoPalette.primary.withValues(alpha: 0.20)),
             ),
             child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
               const Icon(Icons.auto_awesome, size: 14, color: VetoPalette.primary),
@@ -1182,13 +1182,13 @@ class _ActionChip extends StatelessWidget {
       decoration: BoxDecoration(
         color: color.withValues(alpha: onTap == null ? 0.04 : 0.08),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color.withOpacity(0.25)),
+        border: Border.all(color: color.withValues(alpha: 0.25)),
       ),
       child: Row(mainAxisSize: MainAxisSize.min, children: [
-        Icon(icon, size: 13, color: onTap == null ? color.withOpacity(0.4) : color),
+        Icon(icon, size: 13, color: onTap == null ? color.withValues(alpha: 0.4) : color),
         const SizedBox(width: 4),
         Text(label, style: TextStyle(
-            color: onTap == null ? color.withOpacity(0.4) : color,
+            color: onTap == null ? color.withValues(alpha: 0.4) : color,
             fontSize: 12, fontWeight: FontWeight.w600)),
       ]),
     ),
@@ -1216,7 +1216,7 @@ class _CaseCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: VetoPalette.border),
         boxShadow: [BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 8, offset: const Offset(0, 2))],
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -1225,7 +1225,7 @@ class _CaseCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: VetoPalette.primary.withOpacity(0.10),
+              color: VetoPalette.primary.withValues(alpha: 0.10),
               borderRadius: BorderRadius.circular(10),
             ),
             child: const Icon(Icons.cases_rounded,

@@ -205,7 +205,7 @@ class _AllUsersScreenState extends State<AllUsersScreen> {
                         child: Row(children: [
                           CircleAvatar(
                             radius: 20,
-                            backgroundColor: VetoPalette.primary.withOpacity(0.15),
+                            backgroundColor: VetoPalette.primary.withValues(alpha: 0.15),
                             child: Text(
                               ((u['full_name'] as String?) ?? '?').isNotEmpty
                                   ? (u['full_name'] as String).characters.first : '?',
@@ -227,7 +227,7 @@ class _AllUsersScreenState extends State<AllUsersScreen> {
                             margin: const EdgeInsets.only(left: 4),
                             padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
                             decoration: BoxDecoration(
-                              color: (verified ? VetoPalette.success : VetoPalette.warning).withOpacity(0.15),
+                              color: (verified ? VetoPalette.success : VetoPalette.warning).withValues(alpha: 0.15),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(verified ? _t(code, 'verified') : _t(code, 'unverified'),
@@ -238,7 +238,7 @@ class _AllUsersScreenState extends State<AllUsersScreen> {
                               margin: const EdgeInsets.only(left: 4),
                               padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
                               decoration: BoxDecoration(
-                                color: VetoPalette.success.withOpacity(0.15),
+                                color: VetoPalette.success.withValues(alpha: 0.15),
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Text(_t(code, 'exempt'),

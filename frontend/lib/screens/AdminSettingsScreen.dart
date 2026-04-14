@@ -239,7 +239,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                     _actionCard(
                       code == 'he' ? 'ניהול מנויים' : code == 'ru' ? 'Подписки' : 'Subscription Management',
                       Icons.subscriptions_rounded,
-                      color: const Color(0xFF8B5CF6),
+                      color: const Color(0xFFC9A050),
                       onTap: () => Navigator.pushNamed(context, '/admin_subscriptions'),
                     ),
                     _actionCard(
@@ -422,7 +422,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
             color: VetoPalette.surface,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-                color: color?.withOpacity(0.4) ?? VetoPalette.border),
+                color: color?.withValues(alpha: 0.4) ?? VetoPalette.border),
           ),
           child: Row(children: [
             Icon(icon, color: color ?? VetoPalette.primary, size: 18),

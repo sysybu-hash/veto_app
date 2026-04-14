@@ -85,7 +85,7 @@ class _AllUsersScreenState extends State<AllUsersScreen> {
                   onChanged: (v) => ss(() => manuallyAdded = v),
                   contentPadding: EdgeInsets.zero,
                   activeThumbColor: VetoPalette.success,
-                  activeTrackColor: VetoPalette.success.withOpacity(0.5),
+                  activeTrackColor: VetoPalette.success.withValues(alpha: 0.5),
                   title: Text(_t(code, 'manualExempt'),
                       style: const TextStyle(color: VetoPalette.text, fontSize: 14)),
                   subtitle: Text(_t(code, 'manualExemptHint'),
@@ -196,71 +196,66 @@ class _AllUsersScreenState extends State<AllUsersScreen> {
                         decoration: BoxDecoration(
                           color: VetoPalette.surface,
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: VetoPalette.border),
+                          border: Border(
+                            left: const BorderSide(color: VetoPalette.primary, width: 3),
+                            top: BorderSide(color: VetoPalette.border),
+                            right: BorderSide(color: VetoPalette.border),
+                            bottom: BorderSide(color: VetoPalette.border),
+                          ),
                         ),
-                        child: IntrinsicHeight(
-                          child: Row(children: [
-                            Container(
-                              width: 3,
-                              decoration: BoxDecoration(
-                                color: VetoPalette.primary,
-                                borderRadius: BorderRadius.circular(3),
-                              ),
+                        child: Row(children: [
+                          CircleAvatar(
+                            radius: 20,
+                            backgroundColor: VetoPalette.primary.withValues(alpha: 0.15),
+                            child: Text(
+                              ((u['full_name'] as String?) ?? '?').isNotEmpty
+                                  ? (u['full_name'] as String).characters.first : '?',
+                              style: const TextStyle(color: VetoPalette.primary, fontWeight: FontWeight.bold),
                             ),
-                            const SizedBox(width: 12),
-                            CircleAvatar(
-                              radius: 20,
-                              backgroundColor: VetoPalette.primary.withOpacity(0.15),
-                              child: Text(
-                                ((u['full_name'] as String?) ?? '?').isNotEmpty
-                                    ? (u['full_name'] as String).characters.first : '?',
-                                style: const TextStyle(color: VetoPalette.primary, fontWeight: FontWeight.bold),
-                              ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                            Text(u['full_name'] ?? _t(code, 'noName'),
+                                style: const TextStyle(color: VetoPalette.text, fontWeight: FontWeight.w600)),
+                            Text(u['phone'] ?? '', textDirection: TextDirection.ltr,
+                                style: const TextStyle(color: VetoPalette.textMuted, fontSize: 12)),
+                            Text(AdminStrings.roleLabel(code, u['role']?.toString()),
+                                style: const TextStyle(color: VetoPalette.textSubtle, fontSize: 11)),
+                            Text(AdminStrings.languageLabel(code, u['preferred_language']?.toString()),
+                              style: const TextStyle(color: VetoPalette.info, fontSize: 11)),
+                          ])),
+                          Container(
+                            margin: const EdgeInsets.only(left: 4),
+                            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: (verified ? VetoPalette.success : VetoPalette.warning).withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(8),
                             ),
-                            const SizedBox(width: 12),
-                            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                              Text(u['full_name'] ?? _t(code, 'noName'),
-                                  style: const TextStyle(color: VetoPalette.text, fontWeight: FontWeight.w600)),
-                              Text(u['phone'] ?? '', textDirection: TextDirection.ltr,
-                                  style: const TextStyle(color: VetoPalette.textMuted, fontSize: 12)),
-                              Text(AdminStrings.roleLabel(code, u['role']?.toString()),
-                                  style: const TextStyle(color: VetoPalette.textSubtle, fontSize: 11)),
-                              Text(AdminStrings.languageLabel(code, u['preferred_language']?.toString()),
-                                style: const TextStyle(color: VetoPalette.info, fontSize: 11)),
-                            ])),
+                            child: Text(verified ? _t(code, 'verified') : _t(code, 'unverified'),
+                                style: TextStyle(color: verified ? VetoPalette.success : VetoPalette.warning, fontSize: 10)),
+                          ),
+                          if (u['manually_added'] == true)
                             Container(
                               margin: const EdgeInsets.only(left: 4),
                               padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
                               decoration: BoxDecoration(
-                                color: (verified ? VetoPalette.success : VetoPalette.warning).withOpacity(0.15),
+                                color: VetoPalette.success.withValues(alpha: 0.15),
                                 borderRadius: BorderRadius.circular(8),
                               ),
-                              child: Text(verified ? _t(code, 'verified') : _t(code, 'unverified'),
-                                  style: TextStyle(color: verified ? VetoPalette.success : VetoPalette.warning, fontSize: 10)),
+                              child: Text(_t(code, 'exempt'),
+                                  style: const TextStyle(color: VetoPalette.success, fontSize: 10)),
                             ),
-                            if (u['manually_added'] == true)
-                              Container(
-                                margin: const EdgeInsets.only(left: 4),
-                                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-                                decoration: BoxDecoration(
-                                  color: VetoPalette.success.withOpacity(0.15),
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Text(_t(code, 'exempt'),
-                                    style: const TextStyle(color: VetoPalette.success, fontSize: 10)),
-                              ),
-                            IconButton(
-                              icon: const Icon(Icons.edit_outlined, size: 20, color: VetoPalette.primary),
-                              onPressed: () => _showForm(user: Map<String, dynamic>.from(u as Map)),
-                              tooltip: _t(code, 'edit'),
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.delete_outline, size: 20, color: VetoPalette.emergency),
-                              onPressed: () => _confirmDelete(uid, u['full_name']?.toString() ?? ''),
-                              tooltip: _t(code, 'delete'),
-                            ),
-                          ]),
-                        ),
+                          IconButton(
+                            icon: const Icon(Icons.edit_outlined, size: 20, color: VetoPalette.primary),
+                            onPressed: () => _showForm(user: Map<String, dynamic>.from(u as Map)),
+                            tooltip: _t(code, 'edit'),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.delete_outline, size: 20, color: VetoPalette.emergency),
+                            onPressed: () => _confirmDelete(uid, u['full_name']?.toString() ?? ''),
+                            tooltip: _t(code, 'delete'),
+                          ),
+                        ]),
                       );
                     },
                   ),

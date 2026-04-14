@@ -703,7 +703,7 @@ class _ToggleTile extends StatelessWidget {
         Container(
           width: 36, height: 36,
           decoration: BoxDecoration(
-            color: color.withOpacity(0.12),
+            color: color.withValues(alpha: 0.12),
             borderRadius: BorderRadius.circular(10),
           ),
           child: Icon(icon, color: color, size: 18),
@@ -800,7 +800,7 @@ class _SliderTile extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
             decoration: BoxDecoration(
-              color: VetoPalette.primary.withOpacity(0.12),
+              color: VetoPalette.primary.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Text('$value $unit', style: const TextStyle(
@@ -855,9 +855,9 @@ class _SpecChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
-        color: VetoPalette.primary.withOpacity(0.10),
+        color: VetoPalette.primary.withValues(alpha: 0.10),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: VetoPalette.primary.withOpacity(0.25)),
+        border: Border.all(color: VetoPalette.primary.withValues(alpha: 0.25)),
       ),
       child: Row(mainAxisSize: MainAxisSize.min, children: [
         Text(label, style: const TextStyle(

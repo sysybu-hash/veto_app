@@ -173,7 +173,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 begin: Alignment.topLeft, end: Alignment.bottomRight,
                               ),
                               boxShadow: [BoxShadow(
-                                  color: VetoPalette.primary.withOpacity(0.25),
+                                  color: VetoPalette.primary.withValues(alpha: 0.25),
                                   blurRadius: 24, spreadRadius: 0)],
                             ),
                             child: Center(
@@ -276,7 +276,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             ),
                             style: OutlinedButton.styleFrom(
                               foregroundColor: VetoPalette.primary,
-                              side: BorderSide(color: VetoPalette.primary.withOpacity(0.4)),
+                              side: BorderSide(color: VetoPalette.primary.withValues(alpha: 0.4)),
                               padding: const EdgeInsets.symmetric(vertical: 12),
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                             ),
@@ -291,7 +291,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             ),
                             style: OutlinedButton.styleFrom(
                               foregroundColor: VetoPalette.primary,
-                              side: BorderSide(color: VetoPalette.primary.withOpacity(0.4)),
+                              side: BorderSide(color: VetoPalette.primary.withValues(alpha: 0.4)),
                               padding: const EdgeInsets.symmetric(vertical: 12),
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                             ),
@@ -324,7 +324,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             foregroundColor: VetoPalette.emergency,
                             side: BorderSide(
                                 color: VetoPalette.emergency
-                                    .withOpacity(0.4)),
+                                    .withValues(alpha: 0.4)),
                             padding: const EdgeInsets.symmetric(vertical: 14),
                             shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12)),

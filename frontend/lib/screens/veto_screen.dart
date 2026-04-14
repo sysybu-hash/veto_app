@@ -564,9 +564,9 @@ class _VetoScreenState extends State<VetoScreen> {
       Container(
         padding: const EdgeInsets.all(5),
         decoration: BoxDecoration(
-          color: VetoColors.accent.withOpacity(0.12),
+          color: VetoColors.accent.withValues(alpha: 0.12),
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: VetoColors.accent.withOpacity(0.3), width: 1),
+          border: Border.all(color: VetoColors.accent.withValues(alpha: 0.3), width: 1),
         ),
         child: const Icon(Icons.shield, color: VetoColors.accent, size: 18),
       ),
@@ -584,9 +584,9 @@ class _VetoScreenState extends State<VetoScreen> {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
           decoration: BoxDecoration(
-              color: VetoPalette.emergency.withOpacity(0.15),
+              color: VetoPalette.emergency.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(6),
-              border: Border.all(color: VetoPalette.emergency.withOpacity(0.3))),
+              border: Border.all(color: VetoPalette.emergency.withValues(alpha: 0.3))),
           child: const Text('LIVE',
               style: TextStyle(color: VetoPalette.emergency, fontSize: 9, fontWeight: FontWeight.w800, letterSpacing: 1.5)),
         ),
@@ -613,7 +613,7 @@ class _VetoScreenState extends State<VetoScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
             decoration: BoxDecoration(
               color: k == _langKey
-                  ? VetoColors.accent.withOpacity(0.15)
+                  ? VetoColors.accent.withValues(alpha: 0.15)
                   : Colors.transparent,
               borderRadius: BorderRadius.circular(7),
               border: Border.all(
@@ -675,7 +675,7 @@ class _VetoScreenState extends State<VetoScreen> {
       selectedIndex: _tab,
       backgroundColor: Colors.transparent,
       surfaceTintColor: Colors.transparent,
-      indicatorColor: VetoColors.accent.withOpacity(0.15),
+      indicatorColor: VetoColors.accent.withValues(alpha: 0.15),
       labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
       onDestinationSelected: (i) => setState(() => _tab = i),
       destinations: [
@@ -742,11 +742,11 @@ class _VetoScreenState extends State<VetoScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
         color: (_isDispatching ? VetoPalette.emergency : VetoPalette.success)
-            .withOpacity(0.1),
+            .withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(999),
         border: Border.all(
             color: (_isDispatching ? VetoPalette.emergency : VetoPalette.success)
-                .withOpacity(0.3)),
+                .withValues(alpha: 0.3)),
       ),
       child: Row(mainAxisSize: MainAxisSize.min, children: [
         Container(
@@ -780,8 +780,8 @@ class _VetoScreenState extends State<VetoScreen> {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: _isDispatching
-              ? [VetoPalette.emergency.withOpacity(0.35),
-                 VetoPalette.emergency.withOpacity(0.15)]
+              ? [VetoPalette.emergency.withValues(alpha: 0.35),
+                 VetoPalette.emergency.withValues(alpha: 0.15)]
               : [VetoPalette.emergency, const Color(0xFFB91C1C)],
           begin: Alignment.topLeft, end: Alignment.bottomRight,
         ),
@@ -789,7 +789,7 @@ class _VetoScreenState extends State<VetoScreen> {
         boxShadow: _isDispatching
             ? []
             : [BoxShadow(
-                color: VetoPalette.emergency.withOpacity(0.4),
+                color: VetoPalette.emergency.withValues(alpha: 0.4),
                 blurRadius: 20, offset: const Offset(0, 6))],
       ),
       child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
@@ -860,14 +860,14 @@ class _VetoScreenState extends State<VetoScreen> {
             width: 90,
             margin: const EdgeInsets.only(left: 8),
             decoration: BoxDecoration(
-              color: sel ? VetoPalette.primary.withOpacity(0.15) : VetoPalette.surface,
+              color: sel ? VetoPalette.primary.withValues(alpha: 0.15) : VetoPalette.surface,
               borderRadius: BorderRadius.circular(14),
               border: sel
                   ? Border(
                       left: const BorderSide(color: VetoPalette.primary, width: 3),
-                      top: BorderSide(color: VetoPalette.primary.withOpacity(0.35)),
-                      right: BorderSide(color: VetoPalette.primary.withOpacity(0.35)),
-                      bottom: BorderSide(color: VetoPalette.primary.withOpacity(0.35)),
+                      top: BorderSide(color: VetoPalette.primary.withValues(alpha: 0.35)),
+                      right: BorderSide(color: VetoPalette.primary.withValues(alpha: 0.35)),
+                      bottom: BorderSide(color: VetoPalette.primary.withValues(alpha: 0.35)),
                     )
                   : Border.all(color: VetoPalette.border),
             ),
@@ -893,72 +893,60 @@ class _VetoScreenState extends State<VetoScreen> {
     decoration: BoxDecoration(
         color: VetoPalette.surface,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: VetoPalette.border)),
-    child: Stack(
-      children: [
-        Positioned(
-          left: 0,
-          top: 10,
-          bottom: 10,
-          width: 3,
-          child: Container(
-            decoration: BoxDecoration(
-              color: VetoPalette.primary,
-              borderRadius: BorderRadius.circular(3),
-            ),
-          ),
-        ),
-        Column(children: [
-          InkWell(
-            onTap: () => setState(() => _rightsExpanded = !_rightsExpanded),
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(14)),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              child: Row(children: [
-                const SizedBox(width: 8),
-                const Icon(Icons.verified_user_outlined, color: VetoPalette.primary, size: 18),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    _langKey == 'he' ? 'הזכויות שלך — $_sLabel'
-                        : _langKey == 'ru' ? 'Ваши права — $_sLabel'
-                        : 'Your Rights — $_sLabel',
-                    style: const TextStyle(
-                        color: VetoPalette.text, fontWeight: FontWeight.w600, fontSize: 14),
-                  ),
-                ),
-                Icon(
-                  _rightsExpanded ? Icons.keyboard_arrow_up_rounded : Icons.keyboard_arrow_down_rounded,
-                  color: VetoPalette.textMuted,
-                ),
-              ]),
-            ),
-          ),
-          if (_rightsExpanded)
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
-              child: Column(
-                children: _rights.map((r) => Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 3),
-                  child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Container(
-                        margin: const EdgeInsets.only(top: 5, left: 2, right: 2),
-                        width: 6, height: 6,
-                        decoration: const BoxDecoration(
-                            shape: BoxShape.circle, color: VetoPalette.primary)),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(r,
-                          style: const TextStyle(
-                              color: VetoPalette.textMuted, fontSize: 13, height: 1.5)),
-                    ),
-                  ]),
-                )).toList(),
+        border: Border(
+          left: const BorderSide(color: VetoPalette.primary, width: 3),
+          top: BorderSide(color: VetoPalette.border),
+          right: BorderSide(color: VetoPalette.border),
+          bottom: BorderSide(color: VetoPalette.border),
+        )),
+    child: Column(children: [
+      InkWell(
+        onTap: () => setState(() => _rightsExpanded = !_rightsExpanded),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(14)),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          child: Row(children: [
+            const Icon(Icons.verified_user_outlined, color: VetoPalette.primary, size: 18),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                _langKey == 'he' ? 'הזכויות שלך — $_sLabel'
+                    : _langKey == 'ru' ? 'Ваши права — $_sLabel'
+                    : 'Your Rights — $_sLabel',
+                style: const TextStyle(
+                    color: VetoPalette.text, fontWeight: FontWeight.w600, fontSize: 14),
               ),
             ),
-        ]),
-      ],
-    ),
+            Icon(
+              _rightsExpanded ? Icons.keyboard_arrow_up_rounded : Icons.keyboard_arrow_down_rounded,
+              color: VetoPalette.textMuted,
+            ),
+          ]),
+        ),
+      ),
+      if (_rightsExpanded)
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
+          child: Column(
+            children: _rights.map((r) => Padding(
+              padding: const EdgeInsets.symmetric(vertical: 3),
+              child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Container(
+                    margin: const EdgeInsets.only(top: 5, left: 2, right: 2),
+                    width: 6, height: 6,
+                    decoration: const BoxDecoration(
+                        shape: BoxShape.circle, color: VetoPalette.primary)),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(r,
+                      style: const TextStyle(
+                          color: VetoPalette.textMuted, fontSize: 13, height: 1.5)),
+                ),
+              ]),
+            )).toList(),
+          ),
+        ),
+    ]),
   );
 
   Widget _contactGrid(bool isRtl) => GridView.count(
@@ -997,12 +985,12 @@ class _VetoScreenState extends State<VetoScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 12),
             decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: color.withOpacity(0.25))),
+                border: Border.all(color: color.withValues(alpha: 0.25))),
             child: Row(children: [
               Container(
                   width: 34, height: 34,
                   decoration: BoxDecoration(
-                      color: color.withOpacity(0.15), shape: BoxShape.circle),
+                      color: color.withValues(alpha: 0.15), shape: BoxShape.circle),
                   child: Icon(icon, color: color, size: 17)),
               const SizedBox(width: 8),
               Expanded(
@@ -1061,7 +1049,7 @@ class _VetoScreenState extends State<VetoScreen> {
               Container(
                   width: 38, height: 38,
                   decoration: BoxDecoration(
-                      color: color.withOpacity(0.13), shape: BoxShape.circle),
+                      color: color.withValues(alpha: 0.13), shape: BoxShape.circle),
                   child: Icon(icon, color: color, size: 18)),
               const SizedBox(height: 5),
               Text(label,
@@ -1162,10 +1150,10 @@ class _VetoScreenState extends State<VetoScreen> {
                           child: Container(
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                             decoration: BoxDecoration(
-                              color: VetoPalette.primary.withOpacity(0.10),
+                              color: VetoPalette.primary.withValues(alpha: 0.10),
                               borderRadius: BorderRadius.circular(6),
                               border: Border.all(
-                                  color: VetoPalette.primary.withOpacity(0.2)),
+                                  color: VetoPalette.primary.withValues(alpha: 0.2)),
                             ),
                             child: Row(mainAxisSize: MainAxisSize.min, children: [
                               Icon(
@@ -1204,7 +1192,7 @@ class _VetoScreenState extends State<VetoScreen> {
       Container(
         width: double.infinity,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        color: VetoPalette.emergency.withOpacity(0.08),
+        color: VetoPalette.emergency.withValues(alpha: 0.08),
         child: Row(children: [
           const Icon(Icons.broadcast_on_personal_rounded,
               color: VetoPalette.emergency, size: 16),
@@ -1241,9 +1229,9 @@ class _VetoScreenState extends State<VetoScreen> {
               margin: const EdgeInsets.symmetric(vertical: 8),
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: VetoPalette.emergency.withOpacity(0.08),
+                color: VetoPalette.emergency.withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: VetoPalette.emergency.withOpacity(0.25)),
+                border: Border.all(color: VetoPalette.emergency.withValues(alpha: 0.25)),
               ),
               child: Text(msg.text,
                   style: const TextStyle(
@@ -1264,7 +1252,7 @@ class _VetoScreenState extends State<VetoScreen> {
                   maxWidth: MediaQuery.of(context).size.width * 0.78),
               decoration: BoxDecoration(
                 color: isUser
-                    ? VetoPalette.primary.withOpacity(0.10)
+                    ? VetoPalette.primary.withValues(alpha: 0.10)
                     : VetoPalette.surface,
                 borderRadius: BorderRadius.only(
                   topLeft: const Radius.circular(18),
@@ -1274,12 +1262,12 @@ class _VetoScreenState extends State<VetoScreen> {
                 ),
                 border: Border.all(
                     color: isUser
-                        ? VetoPalette.primary.withOpacity(0.30)
+                        ? VetoPalette.primary.withValues(alpha: 0.30)
                         : VetoPalette.border,
                     width: 1.5),
                 boxShadow: [
                   BoxShadow(
-                      color: Colors.black.withOpacity(0.04),
+                      color: Colors.black.withValues(alpha: 0.04),
                       blurRadius: 8, offset: const Offset(0, 2)),
                 ],
               ),
@@ -1299,7 +1287,7 @@ class _VetoScreenState extends State<VetoScreen> {
       decoration: BoxDecoration(
         color: VetoPalette.surface,
         border: Border(top: BorderSide(color: VetoPalette.border)),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 8)],
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 8)],
       ),
       child: Column(mainAxisSize: MainAxisSize.min, children: [
         _chatInput(isRtl),
@@ -1321,7 +1309,7 @@ class _VetoScreenState extends State<VetoScreen> {
             bottomLeft: Radius.circular(18), bottomRight: Radius.circular(4)),
           border: Border.all(color: VetoPalette.border, width: 1.5),
           boxShadow: [BoxShadow(
-              color: Colors.black.withOpacity(0.04),
+              color: Colors.black.withValues(alpha: 0.04),
               blurRadius: 8, offset: const Offset(0, 2))]),
       child: Row(mainAxisSize: MainAxisSize.min, children: [
         SizedBox(
@@ -1448,9 +1436,9 @@ class _VetoScreenState extends State<VetoScreen> {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
           decoration: BoxDecoration(
-              color: color.withOpacity(0.08),
+              color: color.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: color.withOpacity(0.25))),
+              border: Border.all(color: color.withValues(alpha: 0.25))),
           child: Row(mainAxisSize: MainAxisSize.min, children: [
             Icon(icon, color: color, size: 16),
             const SizedBox(width: 5),
@@ -1547,7 +1535,7 @@ class _ContactSheetState extends State<_ContactSheet> {
               Container(
                   width: 36, height: 36,
                   decoration: BoxDecoration(
-                      color: accent.withOpacity(0.15), shape: BoxShape.circle),
+                      color: accent.withValues(alpha: 0.15), shape: BoxShape.circle),
                   child: Icon(
                       widget.type == 'whatsapp' ? Icons.chat_rounded
                           : widget.type == 'telegram' ? Icons.send_rounded
@@ -1652,9 +1640,9 @@ class _PaymentDialogState extends State<_PaymentDialog> {
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: const Color(0xFFEF4444).withOpacity(0.08),
+              color: const Color(0xFFEF4444).withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: const Color(0xFFEF4444).withOpacity(0.2)),
+              border: Border.all(color: const Color(0xFFEF4444).withValues(alpha: 0.2)),
             ),
             child: const Text('לא ניתן לבטל לאחר תשלום.',
                 style: TextStyle(color: Color(0xFFEF4444), fontSize: 12)),
@@ -1841,7 +1829,7 @@ class _SubscriptionGateDialogState extends State<_SubscriptionGateDialog> {
               decoration: BoxDecoration(
                 color: const Color(0xFF07101C),
                 borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: const Color(0xFFC9A050).withOpacity(0.4)),
+                border: Border.all(color: const Color(0xFFC9A050).withValues(alpha: 0.4)),
               ),
               child: const Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Text('מנוי חודשי',
@@ -1881,4 +1869,29 @@ class _SubscriptionGateDialogState extends State<_SubscriptionGateDialog> {
                   onPressed: _loading ? null : _openPayPal,
                   icon: _loading
                       ? const SizedBox(width: 16, height: 16,
-                          child: CircularProgressIndicator(strokeWidth: 2, color
+                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                      : const Icon(Icons.paypal_rounded, size: 18),
+                  label: Text(_loading ? 'פותח...' : 'שלם עם PayPal'),
+                ),
+              ]
+            : [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(false),
+                  child: const Text('התנתק', style: TextStyle(color: Color(0xFFEF4444))),
+                ),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF2ECC71),
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))),
+                  onPressed: _loading ? null : _confirmPayment,
+                  child: _loading
+                      ? const SizedBox(width: 16, height: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                      : const Text('שילמתי ✓', style: TextStyle(fontWeight: FontWeight.w700)),
+                ),
+              ],
+      ),
+    );
+  }
+}
