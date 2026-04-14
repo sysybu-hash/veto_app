@@ -26,7 +26,7 @@ jobs:
       - name: Build Flutter Web
         run: |
           cd frontend
-          flutter build web --release \
+          flutter build web --release --no-wasm-dry-run \
             --dart-define=VETO_API_BASE=https://veto-app-new.onrender.com
 
       - name: Deploy to Vercel
