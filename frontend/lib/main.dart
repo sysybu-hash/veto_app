@@ -35,6 +35,10 @@ import 'screens/call_screen.dart';
 import 'screens/maps_screen.dart';
 import 'services/socket_service.dart';
 
+/// Used by [AccessibilityToolbarHost] so modal routes attach to the app
+/// [Navigator] overlay (the host sits beside the navigator in `MaterialApp.builder`).
+final GlobalKey<NavigatorState> vetoRootNavigatorKey = GlobalKey<NavigatorState>();
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final languageController = AppLanguageController();
@@ -80,6 +84,7 @@ class VetoApp extends StatelessWidget {
     final baseTheme = VetoTheme.luxuryLight();
 
     return MaterialApp(
+      navigatorKey: vetoRootNavigatorKey,
       debugShowCheckedModeBanner: false,
       title: 'VETO',
       theme: a11y.mergeTheme(baseTheme),
@@ -112,7 +117,10 @@ class VetoApp extends StatelessWidget {
             highContrast: a11y.highContrast,
             disableAnimations: a11y.reduceMotion,
           ),
-          child: AccessibilityToolbarHost(child: navigatorChild),
+          child: AccessibilityToolbarHost(
+            navigatorKey: vetoRootNavigatorKey,
+            child: navigatorChild,
+          ),
         );
       },
       initialRoute: '/',

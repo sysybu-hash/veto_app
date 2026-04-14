@@ -334,6 +334,10 @@ class _VetoScreenState extends State<VetoScreen> {
       Navigator.of(context).pushReplacementNamed('/lawyer_dashboard');
       return;
     }
+    if (r == 'admin') {
+      Navigator.of(context).pushReplacementNamed('/admin_settings');
+      return;
+    }
     final languageController = context.read<AppLanguageController>();
     if (languageController.code != language) {
       await languageController.setLanguage(language, persist: false);
@@ -708,138 +712,199 @@ class _VetoScreenState extends State<VetoScreen> {
     );
   }
 
-  // ── AppBar ────────────────────────────────────────────────
+  // ── AppBar (balanced: langs | brand | tools) ──────────────
   PreferredSizeWidget _buildAppBar(bool isAdmin) => AppBar(
     backgroundColor: VetoColors.surface,
     surfaceTintColor: Colors.transparent,
     automaticallyImplyLeading: false,
     elevation: 1,
     shadowColor: Colors.black12,
+    centerTitle: false,
+    titleSpacing: 0,
+    toolbarHeight: 52,
     iconTheme: const IconThemeData(color: VetoColors.white, size: 24),
     actionsIconTheme: const IconThemeData(color: VetoColors.accentDark, size: 24),
-    title: Row(children: [
-      // Gold shield icon
-      Container(
-        padding: const EdgeInsets.all(5),
-        decoration: BoxDecoration(
-          color: VetoColors.accent.withValues(alpha: 0.12),
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: VetoColors.accent.withValues(alpha: 0.3), width: 1),
-        ),
-        child: const Icon(Icons.shield, color: VetoColors.accent, size: 18),
-      ),
-      const SizedBox(width: 10),
-      Text('VETO',
-          style: TextStyle(
-            fontWeight: FontWeight.w900,
-            letterSpacing: 5,
-            fontSize: 18,
-            color: VetoColors.accent,
-            shadows: [Shadow(color: VetoColors.accent.withValues(alpha:0.3), blurRadius: 8)],
-          )),
-      const SizedBox(width: 4),
-      if (_isDispatching)
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-          decoration: BoxDecoration(
-              color: VetoPalette.emergency.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(6),
-              border: Border.all(color: VetoPalette.emergency.withValues(alpha: 0.3))),
-          child: const Text('LIVE',
-              style: TextStyle(color: VetoPalette.emergency, fontSize: 9, fontWeight: FontWeight.w800, letterSpacing: 1.5)),
-        ),
-    ]),
-    bottom: PreferredSize(
-        preferredSize: const Size.fromHeight(1),
-        child: Container(height: 1, color: VetoColors.accent.withValues(alpha:0.2))),
-    actions: [
-      for (final k in ['he', 'ru', 'en'])
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 8),
-          child: Material(
-            color: k == _langKey
-                ? VetoColors.accent.withValues(alpha: 0.14)
-                : VetoColors.surfaceHigh.withValues(alpha: 0.6),
-            borderRadius: BorderRadius.circular(8),
-            child: InkWell(
-              borderRadius: BorderRadius.circular(8),
-              onTap: () async {
-                await context.read<AppLanguageController>().setLanguage(k);
-                if (!mounted) return;
-                setState(() {
-                  _langKey = k;
-                  _messages.clear();
-                  _geminiHistory.clear();
-                  _messages.add(_Msg(text: _langs[k]!.greeting, isUser: false));
-                });
-              },
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 150),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
-                    color: k == _langKey ? VetoColors.accent : VetoColors.border,
-                    width: k == _langKey ? 1.5 : 1,
-                  ),
-                ),
-                child: Text(
-                  _langs[k]!.label,
-                  style: TextStyle(
-                    color: k == _langKey ? VetoColors.accent : VetoColors.white,
-                    fontSize: 12,
-                    fontWeight:
-                        k == _langKey ? FontWeight.w900 : FontWeight.w700,
-                  ),
-                ),
+    title: Row(
+      children: [
+        Expanded(
+          child: Align(
+            alignment: AlignmentDirectional.centerStart,
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  for (final k in ['he', 'ru', 'en'])
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 4),
+                      child: Material(
+                        color: k == _langKey
+                            ? VetoColors.accent.withValues(alpha: 0.14)
+                            : VetoColors.surfaceHigh.withValues(alpha: 0.6),
+                        borderRadius: BorderRadius.circular(8),
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(8),
+                          onTap: () async {
+                            await context.read<AppLanguageController>().setLanguage(k);
+                            if (!mounted) return;
+                            setState(() {
+                              _langKey = k;
+                              _messages.clear();
+                              _geminiHistory.clear();
+                              _messages.add(_Msg(text: _langs[k]!.greeting, isUser: false));
+                            });
+                          },
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 150),
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                color: k == _langKey ? VetoColors.accent : VetoColors.border,
+                                width: k == _langKey ? 1.5 : 1,
+                              ),
+                            ),
+                            child: Text(
+                              _langs[k]!.label,
+                              style: TextStyle(
+                                color: k == _langKey ? VetoColors.accent : VetoColors.white,
+                                fontSize: 12,
+                                fontWeight: k == _langKey ? FontWeight.w900 : FontWeight.w700,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
               ),
             ),
           ),
         ),
-      const SizedBox(width: 2),
-      if (isAdmin)
-        IconButton(
-          icon: const Icon(Icons.admin_panel_settings_outlined),
-          color: VetoColors.accent,
-          onPressed: () => Navigator.pushNamed(context, '/admin_settings'),
-          tooltip: 'פאנל ניהול',
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(5),
+              decoration: BoxDecoration(
+                color: VetoColors.accent.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: VetoColors.accent.withValues(alpha: 0.3), width: 1),
+              ),
+              child: const Icon(Icons.shield, color: VetoColors.accent, size: 18),
+            ),
+            const SizedBox(width: 10),
+            Text(
+              'VETO',
+              style: TextStyle(
+                fontWeight: FontWeight.w900,
+                letterSpacing: 5,
+                fontSize: 18,
+                color: VetoColors.accent,
+                shadows: [Shadow(color: VetoColors.accent.withValues(alpha: 0.3), blurRadius: 8)],
+              ),
+            ),
+            const SizedBox(width: 4),
+            if (_isDispatching)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: VetoPalette.emergency.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(color: VetoPalette.emergency.withValues(alpha: 0.3)),
+                ),
+                child: const Text(
+                  'LIVE',
+                  style: TextStyle(
+                    color: VetoPalette.emergency,
+                    fontSize: 9,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 1.5,
+                  ),
+                ),
+              ),
+          ],
         ),
-      IconButton(
-          icon: const Icon(Icons.home_outlined),
-          color: VetoColors.accentDark,
-          onPressed: () => Navigator.pushNamed(context, '/landing'),
-          tooltip: _langKey == 'he' ? 'דף הבית' : _langKey == 'ru' ? 'Главная' : 'Home'),
-      IconButton(
-          icon: const Icon(Icons.folder_special_outlined),
-          color: VetoColors.accentDark,
-          onPressed: () => Navigator.pushNamed(context, '/files_vault'),
-          tooltip: _langKey == 'he' ? 'כספת קבצים' : _langKey == 'ru' ? 'Хранилище' : 'File Vault'),
-      IconButton(
-          icon: const Icon(Icons.map_outlined),
-          color: VetoColors.accentDark,
-          onPressed: () => Navigator.pushNamed(context, '/maps'),
-          tooltip: _langKey == 'he'
-              ? 'מפת Google'
-              : _langKey == 'ru'
-                  ? 'Google Карты'
-                  : 'Google Maps'),
-      IconButton(
-          icon: const Icon(Icons.settings_outlined),
-          color: VetoColors.accentDark,
-          onPressed: () => Navigator.pushNamed(context, '/settings'),
-          tooltip: _langKey == 'he' ? 'הגדרות' : _langKey == 'ru' ? 'Настройки' : 'Settings'),
-      IconButton(
-          icon: const Icon(Icons.person_outline),
-          color: VetoColors.accentDark,
-          onPressed: () => Navigator.pushNamed(context, '/profile'),
-          tooltip: _langKey == 'he' ? 'פרופיל' : _langKey == 'ru' ? 'Профиль' : 'Profile'),
-      IconButton(
-          icon: const Icon(Icons.logout_rounded),
-          color: VetoColors.silver,
-          tooltip: _langKey == 'he' ? 'התנתקות' : _langKey == 'ru' ? 'Выход' : 'Log out',
-          onPressed: () => AuthService().logout(context)),
-    ],
+        Expanded(
+          child: Align(
+            alignment: AlignmentDirectional.centerEnd,
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (isAdmin)
+                    IconButton(
+                      visualDensity: VisualDensity.compact,
+                      constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
+                      icon: const Icon(Icons.admin_panel_settings_outlined),
+                      color: VetoColors.accent,
+                      onPressed: () => Navigator.pushNamed(context, '/admin_settings'),
+                      tooltip: 'פאנל ניהול',
+                    ),
+                  IconButton(
+                    visualDensity: VisualDensity.compact,
+                    constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
+                    icon: const Icon(Icons.home_outlined),
+                    color: VetoColors.accentDark,
+                    onPressed: () => Navigator.pushNamed(context, '/landing'),
+                    tooltip: _langKey == 'he' ? 'דף הבית' : _langKey == 'ru' ? 'Главная' : 'Home',
+                  ),
+                  IconButton(
+                    visualDensity: VisualDensity.compact,
+                    constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
+                    icon: const Icon(Icons.folder_special_outlined),
+                    color: VetoColors.accentDark,
+                    onPressed: () => Navigator.pushNamed(context, '/files_vault'),
+                    tooltip: _langKey == 'he' ? 'כספת קבצים' : _langKey == 'ru' ? 'Хранилище' : 'File Vault',
+                  ),
+                  IconButton(
+                    visualDensity: VisualDensity.compact,
+                    constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
+                    icon: const Icon(Icons.map_outlined),
+                    color: VetoColors.accentDark,
+                    onPressed: () => Navigator.pushNamed(context, '/maps'),
+                    tooltip: _langKey == 'he'
+                        ? 'מפת Google'
+                        : _langKey == 'ru'
+                            ? 'Google Карты'
+                            : 'Google Maps',
+                  ),
+                  IconButton(
+                    visualDensity: VisualDensity.compact,
+                    constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
+                    icon: const Icon(Icons.settings_outlined),
+                    color: VetoColors.accentDark,
+                    onPressed: () => Navigator.pushNamed(context, '/settings'),
+                    tooltip: _langKey == 'he' ? 'הגדרות' : _langKey == 'ru' ? 'Настройки' : 'Settings',
+                  ),
+                  IconButton(
+                    visualDensity: VisualDensity.compact,
+                    constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
+                    icon: const Icon(Icons.person_outline),
+                    color: VetoColors.accentDark,
+                    onPressed: () => Navigator.pushNamed(context, '/profile'),
+                    tooltip: _langKey == 'he' ? 'פרופיל' : _langKey == 'ru' ? 'Профиль' : 'Profile',
+                  ),
+                  IconButton(
+                    visualDensity: VisualDensity.compact,
+                    constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
+                    icon: const Icon(Icons.logout_rounded),
+                    color: VetoColors.silver,
+                    tooltip: _langKey == 'he' ? 'התנתקות' : _langKey == 'ru' ? 'Выход' : 'Log out',
+                    onPressed: () => AuthService().logout(context),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
+    ),
+    bottom: PreferredSize(
+      preferredSize: const Size.fromHeight(1),
+      child: Container(height: 1, color: VetoColors.accent.withValues(alpha: 0.2)),
+    ),
   );
 
   // ── Bottom Nav ────────────────────────────────────────────
@@ -1683,7 +1748,7 @@ class _VetoScreenState extends State<VetoScreen> {
       ),
       child: Column(mainAxisSize: MainAxisSize.min, children: [
         _chatInput(isRtl),
-        _chatActBar(isRtl),
+        _chatActBar(),
         const SizedBox(height: 4),
       ]),
     ),
@@ -1718,109 +1783,183 @@ class _VetoScreenState extends State<VetoScreen> {
     ),
   );
 
-  Widget _chatInput(bool isRtl) => Padding(
-    padding: const EdgeInsets.fromLTRB(12, 4, 12, 4),
-    child: Row(children: [
-      GestureDetector(
-        onTap: _toggleMic,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          width: 44, height: 44,
-          decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: _isListening ? VetoPalette.emergency : VetoPalette.surface,
-              border: Border.all(
-                  color: _isListening ? VetoPalette.emergency : VetoPalette.border)),
-          child: Icon(
-              _isListening ? Icons.mic : Icons.mic_none_rounded,
-              color: _isListening ? Colors.white : VetoPalette.textMuted,
-              size: 20),
-        ),
-      ),
-      const SizedBox(width: 8),
-      GestureDetector(
-        onTap: () async {
-          final data = await Clipboard.getData(Clipboard.kTextPlain);
-          if (data?.text != null && mounted) {
-            setState(() => _inputCtrl.text = data!.text!);
-            _inputCtrl.selection = TextSelection.fromPosition(
-              TextPosition(offset: _inputCtrl.text.length),
-            );
-          }
-        },
-        child: Container(
-          width: 44, height: 44,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: VetoPalette.surface,
-            border: Border.all(color: VetoPalette.border),
+  Widget _chatInput(bool isRtl) {
+    const sideSlot = 96.0;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 4, 12, 4),
+      child: Row(
+        children: [
+          SizedBox(
+            width: sideSlot,
+            child: Align(
+              alignment: AlignmentDirectional.centerEnd,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                GestureDetector(
+                  onTap: _toggleMic,
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: _isListening ? VetoPalette.emergency : VetoPalette.surface,
+                      border: Border.all(
+                        color: _isListening ? VetoPalette.emergency : VetoPalette.border,
+                      ),
+                    ),
+                    child: Icon(
+                      _isListening ? Icons.mic : Icons.mic_none_rounded,
+                      color: _isListening ? Colors.white : VetoPalette.textMuted,
+                      size: 20,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                GestureDetector(
+                  onTap: () async {
+                    final data = await Clipboard.getData(Clipboard.kTextPlain);
+                    if (data?.text != null && mounted) {
+                      setState(() => _inputCtrl.text = data!.text!);
+                      _inputCtrl.selection = TextSelection.fromPosition(
+                        TextPosition(offset: _inputCtrl.text.length),
+                      );
+                    }
+                  },
+                  child: Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: VetoPalette.surface,
+                      border: Border.all(color: VetoPalette.border),
+                    ),
+                    child: const Icon(Icons.content_paste_rounded,
+                        color: VetoPalette.textMuted, size: 20),
+                  ),
+                ),
+                ],
+              ),
+            ),
           ),
-          child: const Icon(Icons.content_paste_rounded,
-              color: VetoPalette.textMuted, size: 20),
-        ),
-      ),
-      const SizedBox(width: 8),
-      Expanded(
-        child: TextField(
-          controller: _inputCtrl,
-          enabled: !_isDispatching,
-          textDirection: isRtl ? TextDirection.rtl : TextDirection.ltr,
-          style: const TextStyle(color: VetoPalette.text, fontSize: 14),
-          decoration: InputDecoration(
-            hintText: _isDispatching ? _l.dispatching : _l.hint,
-            hintStyle: const TextStyle(color: VetoPalette.textMuted),
-            filled: true,
-            fillColor: VetoPalette.surface,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(24),
-                borderSide: const BorderSide(color: VetoPalette.border)),
-            enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(24),
-                borderSide: const BorderSide(color: VetoPalette.border)),
-            focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(24),
-                borderSide: const BorderSide(color: VetoPalette.success)),
+          Expanded(
+            child: TextField(
+              controller: _inputCtrl,
+              enabled: !_isDispatching,
+              textDirection: isRtl ? TextDirection.rtl : TextDirection.ltr,
+              style: const TextStyle(color: VetoPalette.text, fontSize: 14),
+              decoration: InputDecoration(
+                hintText: _isDispatching ? _l.dispatching : _l.hint,
+                hintStyle: const TextStyle(color: VetoPalette.textMuted),
+                filled: true,
+                fillColor: VetoPalette.surface,
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(24),
+                    borderSide: const BorderSide(color: VetoPalette.border)),
+                enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(24),
+                    borderSide: const BorderSide(color: VetoPalette.border)),
+                focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(24),
+                    borderSide: const BorderSide(color: VetoPalette.success)),
+              ),
+              onSubmitted: _send,
+              textInputAction: TextInputAction.send,
+            ),
           ),
-          onSubmitted: _send,
-          textInputAction: TextInputAction.send,
-        ),
+          SizedBox(
+            width: sideSlot,
+            child: Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: GestureDetector(
+                onTap: () => _send(_inputCtrl.text),
+                child: Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: (_isLoading || _isDispatching)
+                        ? VetoPalette.border
+                        : VetoPalette.success,
+                  ),
+                  child: const Icon(Icons.send_rounded, color: Colors.white, size: 20),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
-      const SizedBox(width: 8),
-      GestureDetector(
-        onTap: () => _send(_inputCtrl.text),
-        child: Container(
-          width: 44, height: 44,
-          decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: (_isLoading || _isDispatching) ? VetoPalette.border : VetoPalette.success),
-          child: const Icon(Icons.send_rounded, color: Colors.white, size: 20),
-        ),
-      ),
-    ]),
-  );
+    );
+  }
 
-  Widget _chatActBar(bool isRtl) => Padding(
-    padding: const EdgeInsets.fromLTRB(16, 2, 16, 6),
-    child: Row(children: [
-      _chatActBtn(Icons.camera_alt_outlined, const Color(0xFFC9A050),
-          _langKey == 'he' ? 'תיעוד' : _langKey == 'ru' ? 'Камера' : 'Camera',
-          _openCamera),
-      const SizedBox(width: 10),
-      _chatActBtn(Icons.volume_off_rounded, const Color(0xFFC9A050),
-          _langKey == 'he' ? 'השתק' : _langKey == 'ru' ? 'Звук' : 'Mute',
-          _stopSpeaking),
-      const SizedBox(width: 10),
-      _chatActBtn(Icons.location_on_outlined, VetoPalette.success,
-          _langKey == 'he' ? 'מיקום' : _langKey == 'ru' ? 'Геолок.' : 'Location',
-          _shareLocation),
-      const Spacer(),
-      Text(
-        _langKey == 'he' ? 'כלים מהירים' : _langKey == 'ru' ? 'Быстрые действия' : 'Quick tools',
-        style: const TextStyle(color: VetoPalette.textSubtle, fontSize: 11),
-      ),
-    ]),
-  );
+  Widget _chatActBar() => Padding(
+        padding: const EdgeInsets.fromLTRB(12, 2, 12, 8),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              _langKey == 'he'
+                  ? 'כלים מהירים'
+                  : _langKey == 'ru'
+                      ? 'Быстрые действия'
+                      : 'Quick tools',
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: VetoPalette.textSubtle, fontSize: 11),
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Expanded(
+                  child: Center(
+                    child: _chatActBtn(
+                      Icons.camera_alt_outlined,
+                      const Color(0xFFC9A050),
+                      _langKey == 'he'
+                          ? 'תיעוד'
+                          : _langKey == 'ru'
+                              ? 'Камера'
+                              : 'Camera',
+                      _openCamera,
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: Center(
+                    child: _chatActBtn(
+                      Icons.volume_off_rounded,
+                      const Color(0xFFC9A050),
+                      _langKey == 'he'
+                          ? 'השתק'
+                          : _langKey == 'ru'
+                              ? 'Звук'
+                              : 'Mute',
+                      _stopSpeaking,
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: Center(
+                    child: _chatActBtn(
+                      Icons.location_on_outlined,
+                      VetoPalette.success,
+                      _langKey == 'he'
+                          ? 'מיקום'
+                          : _langKey == 'ru'
+                              ? 'Геолок.'
+                              : 'Location',
+                      _shareLocation,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      );
 
   Widget _chatActBtn(IconData icon, Color color, String label, VoidCallback onTap) =>
       GestureDetector(

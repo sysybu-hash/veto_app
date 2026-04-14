@@ -268,15 +268,13 @@ class _LoginScreenState extends State<LoginScreen> {
         .setLanguage(preferredLanguage, persist: false);
 
     if (!mounted) return;
-    
-    // Respect UI choice for admins
-    bool isAdmin = role == 'admin' || _fullPhone.contains('525640021') || _fullPhone.contains('506400030');
-    bool isLawyerRoute = role == 'lawyer' || (isAdmin && _role == 'lawyer');
 
-    if (isLawyerRoute) {
+    // Server role wins: lawyers and admins never land on the citizen VETO chat shell.
+    if (role == 'lawyer') {
       Navigator.of(context).pushReplacementNamed('/lawyer_dashboard');
+    } else if (role == 'admin') {
+      Navigator.of(context).pushReplacementNamed('/admin_settings');
     } else {
-      // תמיד מסך VETO אחרי התחברות/רישום — שער מנוי רץ ב־VetoScreen (לא חוסם כאן)
       Navigator.of(context).pushReplacementNamed('/veto_screen');
     }
   }

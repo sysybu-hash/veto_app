@@ -84,6 +84,15 @@ const _i18n = {
     'webrtcMux': 'RTCP mux',
     'webrtcMuxReq': 'require (מומלץ)',
     'webrtcMuxNeg': 'negotiate',
+    'wizStep': 'שלב',
+    'wizOf': 'מתוך',
+    'wizNext': 'הבא',
+    'wizBack': 'חזרה',
+    'wiz1Title': 'כללי',
+    'wiz2Title': 'שפה והתראות',
+    'wiz3Title': 'שיחות ומדיה',
+    'wiz4Title': 'חשבון ומנוי',
+    'wiz5Title': 'בטיחות',
   },
   'en': {
     'title': 'Settings',
@@ -150,6 +159,15 @@ const _i18n = {
     'webrtcMux': 'RTCP mux policy',
     'webrtcMuxReq': 'require (recommended)',
     'webrtcMuxNeg': 'negotiate',
+    'wizStep': 'Step',
+    'wizOf': 'of',
+    'wizNext': 'Next',
+    'wizBack': 'Back',
+    'wiz1Title': 'General',
+    'wiz2Title': 'Language & alerts',
+    'wiz3Title': 'Calls & media',
+    'wiz4Title': 'Account & plan',
+    'wiz5Title': 'Safety',
   },
   'ru': {
     'title': 'Настройки',
@@ -216,6 +234,15 @@ const _i18n = {
     'webrtcMux': 'Политика RTCP mux',
     'webrtcMuxReq': 'require (рекомендуется)',
     'webrtcMuxNeg': 'negotiate',
+    'wizStep': 'Шаг',
+    'wizOf': 'из',
+    'wizNext': 'Далее',
+    'wizBack': 'Назад',
+    'wiz1Title': 'Общие',
+    'wiz2Title': 'Язык и уведомления',
+    'wiz3Title': 'Звонки и медиа',
+    'wiz4Title': 'Аккаунт и план',
+    'wiz5Title': 'Безопасность',
   },
 };
 
@@ -236,7 +263,8 @@ class SettingsScreen extends StatefulWidget {
   State<SettingsScreen> createState() => _SettingsScreenState();
 }
 
-class _SettingsScreenState extends State<SettingsScreen> {
+class _SettingsScreenState extends State<SettingsScreen>
+    with SingleTickerProviderStateMixin {
   final AuthService _auth = AuthService();
 
   String _role = 'user';
@@ -269,9 +297,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
   // WebRTC (local prefs — not sent to API)
   WebRtcUserSettings _webrtc = WebRtcUserSettings.defaults();
 
+  /// Wizard: 0 general → 1 WebRTC → 2 account & safety
+  late TabController _wizardTab;
+
   @override
   void initState() {
     super.initState();
+    _wizardTab = TabController(length: 3, vsync: this);
     _nameCtrl = TextEditingController();
     _phoneCtrl = TextEditingController();
     _emailCtrl = TextEditingController();
@@ -285,6 +317,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   @override
   void dispose() {
+    _wizardTab.dispose();
     for (final c in [
       _nameCtrl, _phoneCtrl, _emailCtrl,
       _whatsappCtrl, _telegramCtrl,
@@ -470,25 +503,53 @@ class _SettingsScreenState extends State<SettingsScreen> {
       child: Scaffold(
         backgroundColor: VetoPalette.bg,
         appBar: AppBar(
-          backgroundColor: VetoPalette.darkBg,
+          backgroundColor: const Color(0xFF2A2420),
+          foregroundColor: Colors.white,
           title: Text(_t(code, 'title'),
               style: const TextStyle(
                   color: Colors.white, fontWeight: FontWeight.w700)),
           iconTheme: const IconThemeData(color: Colors.white),
           actions: [
-            TextButton(
+            IconButton(
+              tooltip: _t(code, 'save'),
               onPressed: _saving ? null : () => _save(code),
-              child: Text(_saving ? '...' : _t(code, 'save'),
-                  style: const TextStyle(
-                      color: Colors.white, fontWeight: FontWeight.w700)),
+              icon: _saving
+                  ? const SizedBox(
+                      width: 22,
+                      height: 22,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Icon(Icons.save_rounded, color: Colors.white),
             ),
           ],
+          bottom: TabBar(
+            controller: _wizardTab,
+            indicatorColor: VetoPalette.primary,
+            labelColor: Colors.white,
+            unselectedLabelColor: Colors.white70,
+            labelStyle: const TextStyle(
+                fontWeight: FontWeight.w700, fontSize: 12),
+            isScrollable: true,
+            tabs: [
+              Tab(text: _t(code, 'wiz1Title')),
+              Tab(text: _t(code, 'wiz3Title')),
+              Tab(text: _t(code, 'wiz5Title')),
+            ],
+          ),
         ),
         body: _loading
             ? const Center(child: CircularProgressIndicator())
-            : ListView(
-                padding: const EdgeInsets.all(16),
+            : TabBarView(
+                controller: _wizardTab,
                 children: [
+                  SingleChildScrollView(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
                   // ── Profile section ─────────────────────
                   _Section(
                     icon: Icons.person_rounded,
@@ -552,6 +613,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ],
                   ),
                   const SizedBox(height: 16),
+                    ],
+                  ),
+                ),
+                  SingleChildScrollView(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
                   // ── WebRTC (audio/video calls) ───────────
                   _Section(
                     icon: Icons.video_call_rounded,
@@ -827,6 +896,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ],
                     ),
                   const SizedBox(height: 16),
+                    ],
+                  ),
+                ),
+                  SingleChildScrollView(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
                   // ── Subscription section (non-admin) ────
                   if (_role != 'admin') ...[
                     _Section(
@@ -978,6 +1055,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ],
                   ),
                   const SizedBox(height: 32),
+                    ],
+                  ),
+                ),
                 ],
               ),
       ),
