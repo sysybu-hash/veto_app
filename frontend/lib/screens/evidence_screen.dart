@@ -6,12 +6,16 @@
 
 import 'dart:async';
 import 'dart:io';
+
 import 'package:camera/camera.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 import '../core/theme/veto_theme.dart';
+import '../platform/browser_bridge.dart' as browser_bridge;
 import '../services/upload_service.dart';
 
 // ── Brand palette (shared across the app) ─────────────────
@@ -38,6 +42,7 @@ class _L {
       'noGps':      'Acquiring GPS...',
       'camError':   'Camera unavailable',
       'empty':      'No evidence captured yet',
+      'webHint':    'Tap capture to take a photo or choose a file',
     },
     EvidenceLanguage.he: {
       'capture':    'צלם',
@@ -48,6 +53,7 @@ class _L {
       'noGps':      'מאתר GPS...',
       'camError':   'המצלמה אינה זמינה',
       'empty':      'טרם נלכדו ראיות',
+      'webHint':    'לחץ על ״צלם״ לצילום או לבחירת קובץ מהמכשיר',
     },
     EvidenceLanguage.ru: {
       'capture':    'Снять',
@@ -58,6 +64,7 @@ class _L {
       'noGps':      'Определяем GPS...',
       'camError':   'Камера недоступна',
       'empty':      'Доказательства еще не записаны',
+      'webHint':    'Нажмите «Снять», чтобы сделать фото или выбрать файл',
     },
   };
 
@@ -69,13 +76,13 @@ class _L {
 
 // ── Evidence item model ────────────────────────────────────
 class _EvidenceItem {
-  final File   file;
+  final Uint8List thumbBytes;
   final String cloudUrl;
   final double lat;
   final double lng;
   final DateTime capturedAt;
   _EvidenceItem({
-    required this.file,
+    required this.thumbBytes,
     required this.cloudUrl,
     required this.lat,
     required this.lng,
@@ -161,6 +168,7 @@ class _EvidenceScreenState extends State<EvidenceScreen>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (kIsWeb) return;
     if (_camCtrl == null || !_camCtrl!.value.isInitialized) return;
     if (state == AppLifecycleState.inactive) {
       _camCtrl!.dispose();
@@ -182,15 +190,27 @@ class _EvidenceScreenState extends State<EvidenceScreen>
   //  INIT
   // ══════════════════════════════════════════════════════════
   Future<void> _initCamera() async {
+    if (kIsWeb) {
+      setState(() {
+        _camReady = true;
+        _camError = false;
+      });
+      return;
+    }
     try {
+      final camPerm = await Permission.camera.request();
+      if (!camPerm.isGranted) {
+        if (mounted) setState(() => _camError = true);
+        return;
+      }
       _cameras = await availableCameras();
       if (_cameras.isEmpty) {
-        setState(() => _camError = true);
+        if (mounted) setState(() => _camError = true);
         return;
       }
       await _initCameraController(_cameras[_camIndex]);
     } catch (_) {
-      setState(() => _camError = true);
+      if (mounted) setState(() => _camError = true);
     }
   }
 
@@ -235,6 +255,10 @@ class _EvidenceScreenState extends State<EvidenceScreen>
   //  CAPTURE
   // ══════════════════════════════════════════════════════════
   Future<void> _capture() async {
+    if (kIsWeb) {
+      await _captureWeb();
+      return;
+    }
     if (_camCtrl == null ||
         !_camCtrl!.value.isInitialized ||
         _capturing ||
@@ -275,6 +299,51 @@ class _EvidenceScreenState extends State<EvidenceScreen>
     }
   }
 
+  Future<void> _captureWeb() async {
+    if (_capturing || _uploading) return;
+    HapticFeedback.mediumImpact();
+    setState(() => _capturing = true);
+    _flashCtrl.forward().then((_) => _flashCtrl.reverse());
+    try {
+      final picked = await browser_bridge.pickEvidenceMedia();
+      if (picked == null) {
+        return;
+      }
+      final bytes = await browser_bridge.readFileAsBytes(picked);
+      if (bytes.isEmpty) return;
+
+      var name = browser_bridge.getFileName(picked);
+      if (name.isEmpty) name = 'evidence.jpg';
+      final mime = browser_bridge.getFileType(picked);
+
+      if (_gpsReady) {
+        try {
+          _position = await Geolocator.getCurrentPosition(
+            locationSettings: const LocationSettings(
+              accuracy: LocationAccuracy.high,
+              timeLimit: Duration(seconds: 3),
+            ),
+          );
+        } catch (_) {}
+      }
+      final lat = _position?.latitude ?? 0.0;
+      final lng = _position?.longitude ?? 0.0;
+
+      await _uploadBytes(
+        bytes: bytes,
+        fileName: name,
+        mimeType: mime.isEmpty ? null : mime,
+        type: 'photo',
+        lat: lat,
+        lng: lng,
+      );
+    } catch (_) {
+      _setStatus('error');
+    } finally {
+      if (mounted) setState(() => _capturing = false);
+    }
+  }
+
   // ══════════════════════════════════════════════════════════
   //  UPLOAD
   // ══════════════════════════════════════════════════════════
@@ -304,8 +373,14 @@ class _EvidenceScreenState extends State<EvidenceScreen>
 
     if (mounted) {
       if (result.success) {
+        Uint8List thumb;
+        try {
+          thumb = await file.readAsBytes();
+        } catch (_) {
+          thumb = Uint8List(0);
+        }
         _gallery.add(_EvidenceItem(
-          file:       file,
+          thumbBytes: thumb,
           cloudUrl:   result.cloudUrl ?? '',
           lat:        lat,
           lng:        lng,
@@ -319,6 +394,54 @@ class _EvidenceScreenState extends State<EvidenceScreen>
     }
   }
 
+  Future<void> _uploadBytes({
+    required Uint8List bytes,
+    required String fileName,
+    required String type,
+    required double lat,
+    required double lng,
+    String? mimeType,
+  }) async {
+    setState(() {
+      _uploading = true;
+      _uploadProg = 0.0;
+      _uploadStatus = '';
+    });
+
+    final result = await _uploader.uploadEvidenceBytes(
+      bytes: bytes,
+      fileName: fileName,
+      type: type,
+      eventId: widget.eventId,
+      lat: lat,
+      lng: lng,
+      token: widget.token,
+      mimeType: mimeType,
+      onProgress: (p) {
+        if (mounted) setState(() => _uploadProg = p);
+      },
+    );
+
+    if (mounted) {
+      if (result.success) {
+        _gallery.add(_EvidenceItem(
+          thumbBytes: bytes,
+          cloudUrl: result.cloudUrl ?? '',
+          lat: lat,
+          lng: lng,
+          capturedAt: DateTime.now(),
+        ));
+        _setStatus('saved');
+      } else {
+        _setStatus('error');
+      }
+      setState(() {
+        _uploading = false;
+        _uploadProg = 0.0;
+      });
+    }
+  }
+
   void _setStatus(String status) {
     setState(() => _uploadStatus = status);
     _statusTimer?.cancel();
@@ -329,7 +452,7 @@ class _EvidenceScreenState extends State<EvidenceScreen>
 
   // ── Flip camera ────────────────────────────────────────────
   Future<void> _flipCamera() async {
-    if (_cameras.length < 2) return;
+    if (kIsWeb || _cameras.length < 2) return;
     setState(() { _camReady = false; _camIndex = (_camIndex + 1) % _cameras.length; });
     await _initCameraController(_cameras[_camIndex]);
   }
@@ -400,6 +523,35 @@ class _EvidenceScreenState extends State<EvidenceScreen>
             Text(_t('camError'),
                 style: const TextStyle(color: _C.silverDim, fontSize: 14)),
           ]),
+        ),
+      );
+    }
+    if (kIsWeb && _camReady) {
+      return Container(
+        width: double.infinity,
+        height: double.infinity,
+        color: Colors.black,
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 32),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.photo_camera_outlined,
+                    color: _C.silver.withValues(alpha: 0.85), size: 72),
+                const SizedBox(height: 24),
+                Text(
+                  _t('webHint'),
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: _C.silverDim,
+                    fontSize: 15,
+                    height: 1.35,
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       );
     }
@@ -620,14 +772,16 @@ class _EvidenceScreenState extends State<EvidenceScreen>
                     label:       _t('capture'),
                   ),
 
-                  // Flip camera
+                  // Flip camera (native only)
                   SizedBox(
                     width: 80,
                     child: Center(
-                      child: _HUDButton(
-                        icon: Icons.flip_camera_ios_outlined,
-                        onTap: _flipCamera,
-                      ),
+                      child: !kIsWeb && _cameras.length >= 2
+                          ? _HUDButton(
+                              icon: Icons.flip_camera_ios_outlined,
+                              onTap: _flipCamera,
+                            )
+                          : const SizedBox.shrink(),
                     ),
                   ),
                 ],
@@ -824,7 +978,13 @@ class _GalleryThumb extends StatelessWidget {
         child: Stack(
           fit: StackFit.expand,
           children: [
-            Image.file(item.file, fit: BoxFit.cover),
+            item.thumbBytes.isEmpty
+                ? const ColoredBox(
+                    color: Colors.black26,
+                    child: Icon(Icons.broken_image_outlined,
+                        color: _C.silverDim, size: 28),
+                  )
+                : Image.memory(item.thumbBytes, fit: BoxFit.cover),
             // GPS dot overlay
             Positioned(
               bottom: 4, right: 4,

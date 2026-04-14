@@ -66,5 +66,11 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>NSCameraUsageDescription</key>
+	<string>Camera access is used to capture evidence photos during an emergency session.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Microphone access is used for emergency calls and optional video evidence.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Location is used to tag evidence and emergency requests with GPS coordinates.</string>
 </dict>
 </plist>

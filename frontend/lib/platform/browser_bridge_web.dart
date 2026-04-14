@@ -98,17 +98,65 @@ String getFileName(dynamic htmlFile) => (htmlFile as File).name;
 String getFileType(dynamic htmlFile) => (htmlFile as File).type;
 
 void triggerCameraCapture(void Function(dynamic file) onFile) {
+  pickEvidenceMedia().then((f) {
+    if (f != null) onFile(f);
+  });
+}
+
+/// Opens the system file / camera picker (mobile web uses [capture] when supported).
+/// Returns the first selected [File], or `null` if cancelled / empty.
+Future<File?> pickEvidenceMedia() async {
   final input = HTMLInputElement()
     ..type = 'file'
-    ..accept = 'image/*,video/*';
+    ..accept = 'image/*'
+    ..multiple = false;
   input.setAttribute('capture', 'environment');
+  input.style.setProperty('position', 'fixed');
+  input.style.setProperty('left', '-9999px');
+  input.style.setProperty('top', '0');
+  input.style.setProperty('opacity', '0');
+  input.style.setProperty('pointer-events', 'none');
+
+  final completer = Completer<File?>();
+  var done = false;
+
+  late final JSFunction focusListener;
+
+  void finish(File? f) {
+    if (done) return;
+    done = true;
+    input.remove();
+    window.removeEventListener('focus', focusListener);
+    if (!completer.isCompleted) completer.complete(f);
+  }
+
+  focusListener = ((Event _) {
+    if (done) return;
+    // Picker closed: allow [onchange] to run first (order varies by browser).
+    Future<void>.delayed(const Duration(milliseconds: 600), () {
+      if (done) return;
+      final files = input.files;
+      if (files != null && files.length > 0) {
+        finish(files.item(0));
+      } else {
+        finish(null);
+      }
+    });
+  }).toJS;
+
   input.onchange = ((Event _) {
     final files = input.files;
-    if (files == null) return;
-    for (var i = 0; i < files.length; i++) {
-      final f = files.item(i);
-      if (f != null) onFile(f);
+    if (files != null && files.length > 0) {
+      final f = files.item(0);
+      finish(f);
+    } else {
+      finish(null);
     }
   }).toJS;
+
+  document.body!.appendChild(input);
+  window.addEventListener('focus', focusListener);
   input.click();
+
+  return completer.future;
 }

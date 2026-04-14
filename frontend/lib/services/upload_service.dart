@@ -7,6 +7,7 @@
 
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
@@ -65,6 +66,81 @@ class UploadService {
         ));
 
       // ── Track progress via stream ────────────────────────
+      final streamedResponse = await request.send();
+      final totalBytes = streamedResponse.contentLength ?? 0;
+      int receivedBytes = 0;
+
+      final responseBytes = <int>[];
+      await for (final chunk in streamedResponse.stream) {
+        responseBytes.addAll(chunk);
+        receivedBytes += chunk.length;
+        if (totalBytes > 0 && onProgress != null) {
+          onProgress((receivedBytes / totalBytes).clamp(0.0, 1.0));
+        }
+      }
+
+      if (streamedResponse.statusCode == 201) {
+        final body = json.decode(utf8.decode(responseBytes));
+        final cloudUrl = body['evidence']?['cloud_url'] as String?;
+        onProgress?.call(1.0);
+        return UploadResult(success: true, cloudUrl: cloudUrl);
+      } else {
+        final body = json.decode(utf8.decode(responseBytes));
+        return UploadResult(
+          success: false,
+          error: body['error'] ?? 'Upload failed (${streamedResponse.statusCode})',
+        );
+      }
+    } catch (e) {
+      return UploadResult(success: false, error: e.toString());
+    }
+  }
+
+  /// Web / in-memory uploads (no local filesystem path).
+  Future<UploadResult> uploadEvidenceBytes({
+    required Uint8List bytes,
+    required String fileName,
+    required String type,
+    required String eventId,
+    required double lat,
+    required double lng,
+    required String token,
+    String? mimeType,
+    void Function(double progress)? onProgress,
+  }) async {
+    try {
+      final uri =
+          Uri.parse('${AppConfig.baseUrl}/events/$eventId/evidence/upload');
+
+      MediaType mime;
+      if (mimeType != null && mimeType.isNotEmpty) {
+        try {
+          mime = MediaType.parse(mimeType);
+        } catch (_) {
+          mime = _mimeFor(type, fileName);
+        }
+      } else {
+        mime = _mimeFor(type, fileName);
+      }
+
+      final request = http.MultipartRequest('POST', uri)
+        ..headers.addAll(
+          AppConfig.httpHeadersBinary({'Authorization': 'Bearer $token'}),
+        )
+        ..fields['type'] = type
+        ..fields['lat'] = lat.toString()
+        ..fields['lng'] = lng.toString()
+        ..fields['client_timestamp'] =
+            DateTime.now().toUtc().toIso8601String()
+        ..files.add(
+          http.MultipartFile.fromBytes(
+            'file',
+            bytes,
+            filename: fileName,
+            contentType: mime,
+          ),
+        );
+
       final streamedResponse = await request.send();
       final totalBytes = streamedResponse.contentLength ?? 0;
       int receivedBytes = 0;
