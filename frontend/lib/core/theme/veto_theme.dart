@@ -126,6 +126,14 @@ class VetoTheme {
         onError: Colors.white,
       ),
       fontFamily: 'Heebo',
+      // Web + Heebo: some glyphs (e.g. rare punctuation / mixed scripts) need a
+      // broad Hebrew-capable fallback — avoids "Could not find Noto" warnings.
+      fontFamilyFallback: const [
+        'Noto Sans Hebrew',
+        'Noto Sans',
+        'Arial',
+        'sans-serif',
+      ],
 
       appBarTheme: const AppBarTheme(
         backgroundColor: VetoColors.surface,

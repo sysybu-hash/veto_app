@@ -1335,7 +1335,7 @@ class _VetoScreenState extends State<VetoScreen> {
     shrinkWrap: true,
     physics: const NeverScrollableScrollPhysics(),
     crossAxisCount: compact ? 1 : 2,
-    childAspectRatio: compact ? 3.6 : 2.5,
+    childAspectRatio: compact ? 2.85 : 2.05,
     crossAxisSpacing: 10,
     mainAxisSpacing: 10,
     children: [
@@ -1346,6 +1346,11 @@ class _VetoScreenState extends State<VetoScreen> {
             : _langKey == 'ru'
                 ? 'Адвокат עכשיו'
                 : 'Human Lawyer',
+        _langKey == 'he'
+            ? 'חיבור מיידי לנציג אנושי'
+            : _langKey == 'ru'
+                ? 'Соединение с живым адвокатом'
+                : 'Connect with a live representative',
         VetoPalette.primary,
         () => _openContact('audio'),
       ),
@@ -1356,6 +1361,11 @@ class _VetoScreenState extends State<VetoScreen> {
             : _langKey == 'ru'
                 ? 'Аудиозвонок'
                 : 'Audio Call',
+        _langKey == 'he'
+            ? 'שיחה קולית מאובטחת'
+            : _langKey == 'ru'
+                ? 'Защищённый голосовой звонок'
+                : 'Encrypted voice session',
         const Color(0xFF0EA5A4),
         () => _openContact('audio'),
       ),
@@ -1366,6 +1376,11 @@ class _VetoScreenState extends State<VetoScreen> {
             : _langKey == 'ru'
                 ? 'Видеозвонок'
                 : 'Video Call',
+        _langKey == 'he'
+            ? 'וידאו מוצפן (WebRTC)'
+            : _langKey == 'ru'
+                ? 'Видео через WebRTC'
+                : 'Secure WebRTC video',
         const Color(0xFFC9A050),
         () => _openContact('video'),
       ),
@@ -1376,13 +1391,24 @@ class _VetoScreenState extends State<VetoScreen> {
             : _langKey == 'ru'
                 ? 'Быстрый SOS'
                 : 'Quick SOS',
+        _langKey == 'he'
+            ? 'שיגור חירום למערכת'
+            : _langKey == 'ru'
+                ? 'Экстренный сигнал в систему'
+                : 'Emergency signal to VETO',
         VetoPalette.emergency,
         _dispatchSOS,
       ),
     ],
   );
 
-  Widget _ctCard(IconData icon, String label, Color color, VoidCallback onTap) =>
+  Widget _ctCard(
+    IconData icon,
+    String label,
+    String subtitle,
+    Color color,
+    VoidCallback onTap,
+  ) =>
       Material(
         color: VetoPalette.surface,
         elevation: 0,
@@ -1391,7 +1417,7 @@ class _VetoScreenState extends State<VetoScreen> {
           onTap: onTap,
           borderRadius: BorderRadius.circular(14),
           child: Container(
-            constraints: const BoxConstraints(minHeight: 54),
+            constraints: const BoxConstraints(minHeight: 64),
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(14),
@@ -1405,26 +1431,46 @@ class _VetoScreenState extends State<VetoScreen> {
               ],
             ),
             child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Container(
-                  width: 40,
-                  height: 40,
+                  width: 48,
+                  height: 48,
+                  alignment: Alignment.center,
                   decoration: BoxDecoration(
-                    color: color.withValues(alpha: 0.18),
+                    color: color.withValues(alpha: 0.22),
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(icon, color: color, size: 20),
+                  child: Icon(icon, color: color, size: 26),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: Text(
-                    label,
-                    style: const TextStyle(
-                      color: VetoPalette.text,
-                      fontWeight: FontWeight.w900,
-                      fontSize: 15,
-                      height: 1.2,
-                    ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        label,
+                        style: const TextStyle(
+                          color: VetoPalette.text,
+                          fontWeight: FontWeight.w900,
+                          fontSize: 15,
+                          height: 1.2,
+                        ),
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        subtitle,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: VetoPalette.text.withValues(alpha: 0.62),
+                          fontWeight: FontWeight.w600,
+                          fontSize: 12,
+                          height: 1.25,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
                 Icon(
