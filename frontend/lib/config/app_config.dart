@@ -38,6 +38,16 @@ class AppConfig {
   static String get _apiBaseFromEnv =>
       const String.fromEnvironment('VETO_API_BASE', defaultValue: '').trim();
 
+  /// Set by CI: `--dart-define=VETO_BUILD_ID=<short-sha>` — shown in Settings to confirm a fresh deploy.
+  static const String _buildIdRaw =
+      String.fromEnvironment('VETO_BUILD_ID', defaultValue: '');
+
+  /// Non-null after a CI/Vercel build that passed [VETO_BUILD_ID]; null in local `flutter run`.
+  static String? get deployBuildLabel {
+    final s = _buildIdRaw.trim();
+    return s.isEmpty ? null : s;
+  }
+
   static String get _host =>
       const String.fromEnvironment('VETO_HOST', defaultValue: kDefaultTunnelHost);
 
