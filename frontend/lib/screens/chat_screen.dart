@@ -466,11 +466,10 @@ class _ChatScreenState extends State<ChatScreen> {
       backgroundColor: VetoPalette.bg,
       appBar: showAppBar
           ? AppBar(
-              backgroundColor: VetoPalette.darkBg,
-              title: Text(_t('title'),
-                  style: const TextStyle(
-                      color: Colors.white, fontWeight: FontWeight.w700)),
-              iconTheme: const IconThemeData(color: Colors.white),
+              title: Text(
+                _t('title'),
+                style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 18),
+              ),
               actions: [
                 IconButton(
                   icon: const Icon(Icons.edit_outlined),
@@ -480,12 +479,11 @@ class _ChatScreenState extends State<ChatScreen> {
               ],
             )
           : AppBar(
-              backgroundColor: VetoPalette.darkBg,
-              title: Text(_t('title'),
-                  style: const TextStyle(
-                      color: Colors.white, fontWeight: FontWeight.w700)),
-              iconTheme: const IconThemeData(color: Colors.white),
-              leading: BackButton(color: Colors.white,
+              title: Text(
+                _t('title'),
+                style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 18),
+              ),
+              leading: BackButton(
                   onPressed: () => Navigator.of(context).pop()),
               actions: [
                 IconButton(
@@ -622,10 +620,9 @@ class _ChatScreenState extends State<ChatScreen> {
     return Scaffold(
       backgroundColor: VetoPalette.bg,
       appBar: AppBar(
-        backgroundColor: VetoPalette.darkBg,
         leading: showBackButton
             ? IconButton(
-                icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
+                icon: const Icon(Icons.arrow_back_rounded),
                 onPressed: () => setState(() {
                   _activePartnerId = null;
                   _activePartnerName = null;
@@ -648,14 +645,14 @@ class _ChatScreenState extends State<ChatScreen> {
           Expanded(
             child: Text(_activePartnerName ?? '',
                 style: const TextStyle(
-                    color: Colors.white, fontWeight: FontWeight.w700, fontSize: 15),
+                    color: VetoPalette.text, fontWeight: FontWeight.w700, fontSize: 15),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis),
           ),
         ]),
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh_rounded, color: Colors.white),
+            icon: const Icon(Icons.refresh_rounded),
             onPressed: () => _loadMessages(reset: true),
           ),
         ],
@@ -803,7 +800,7 @@ class _ChatScreenState extends State<ChatScreen> {
         bottom: MediaQuery.of(context).viewInsets.bottom + 12,
       ),
       decoration: const BoxDecoration(
-        color: VetoPalette.darkBg,
+        color: VetoPalette.surface,
         border: Border(top: BorderSide(color: VetoPalette.border)),
       ),
       child: Row(children: [

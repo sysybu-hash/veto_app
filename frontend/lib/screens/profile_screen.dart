@@ -128,18 +128,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
       child: Scaffold(
         backgroundColor: VetoPalette.bg,
         appBar: AppBar(
-          title: Text(_t(code, 'title'),
-              style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 18)),
-          backgroundColor: VetoPalette.darkBg,
-          elevation: 0,
-          bottom: const PreferredSize(
-            preferredSize: Size.fromHeight(1),
-            child: Divider(height: 1, color: VetoPalette.darkBorder),
+          title: Text(
+            _t(code, 'title'),
+            style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 18),
           ),
           actions: [
             IconButton(
               icon: const Icon(Icons.home_outlined),
-              color: Colors.white70,
               onPressed: () => Navigator.of(context).pushNamed('/landing'),
               tooltip: code == 'he' ? 'דף הבית' : code == 'ru' ? 'Главная' : 'Home',
             ),

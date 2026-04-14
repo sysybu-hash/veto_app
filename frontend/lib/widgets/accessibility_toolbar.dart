@@ -60,10 +60,10 @@ const _copy = {
   },
 };
 
-// Explicit sheet colors — do not use VetoColors.white here (it is ink #1C1814).
+// Explicit sheet colors (VetoColors.white is primary *text* ink, not a light fill).
 const Color _sheetBg = Color(0xFFFFFFFF);
-const Color _sheetInk = Color(0xFF1A1612);
-const Color _sheetMuted = Color(0xFF5E5A52);
+const Color _sheetInk = Color(0xFF0F172A);
+const Color _sheetMuted = Color(0xFF64748B);
 
 String _tx(String code, String k) =>
     (_copy[AppLanguage.normalize(code)] ?? _copy['en']!)[k] ?? k;
@@ -336,7 +336,7 @@ class AccessibilityToolbarHost extends StatelessWidget {
                     height: 58,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: const Color(0xFF1A1612),
+                      color: _sheetInk,
                       border: Border.all(
                         color: VetoPalette.primary,
                         width: 2.5,

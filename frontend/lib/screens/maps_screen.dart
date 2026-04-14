@@ -75,11 +75,10 @@ class _MapsScreenState extends State<MapsScreen> {
     return Scaffold(
       backgroundColor: VetoPalette.bg,
       appBar: AppBar(
-        backgroundColor: VetoPalette.darkBg,
-        title: Text(title,
-            style: const TextStyle(
-                color: Colors.white, fontWeight: FontWeight.w700)),
-        iconTheme: const IconThemeData(color: Colors.white),
+        title: Text(
+          title,
+          style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 18),
+        ),
       ),
       body: _error != null
           ? Center(

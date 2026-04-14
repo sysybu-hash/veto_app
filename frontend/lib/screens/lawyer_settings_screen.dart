@@ -400,15 +400,20 @@ class _LawyerSettingsScreenState extends State<LawyerSettingsScreen> {
       child: Scaffold(
         backgroundColor: VetoPalette.bg,
         appBar: AppBar(
-          backgroundColor: VetoPalette.darkBg,
-          title: Text(_t(code, 'title'),
-              style: const TextStyle(color: VetoColors.white, fontWeight: FontWeight.w700)),
-          iconTheme: const IconThemeData(color: Colors.white),
+          title: Text(
+            _t(code, 'title'),
+            style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 18),
+          ),
           actions: [
             TextButton(
               onPressed: _saving ? null : () => _save(code),
-              child: Text(_saving ? '...' : _t(code, 'save'),
-                  style: const TextStyle(color: VetoColors.white, fontWeight: FontWeight.w700)),
+              child: Text(
+                _saving ? '...' : _t(code, 'save'),
+                style: const TextStyle(
+                  color: VetoPalette.primary,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
             ),
           ],
         ),

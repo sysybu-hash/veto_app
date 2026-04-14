@@ -1121,9 +1121,9 @@ class _AuthHero extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: const Color(0xFF0C1827),
+              color: VetoPalette.surfaceSkyTint,
               borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: VetoPalette.primary.withValues(alpha: 0.18)),
+              border: Border.all(color: VetoPalette.primary.withValues(alpha: 0.28)),
             ),
             child: Row(children: [
               const Icon(Icons.verified_user_rounded, color: VetoPalette.success, size: 18),

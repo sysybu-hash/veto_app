@@ -451,16 +451,16 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
               children: [
                 Icon(
                   _callType == 'video' ? Icons.videocam : Icons.mic,
-                  color: VetoColors.silver,
+                  color: Colors.white.withValues(alpha: 0.85),
                   size: 14,
                 ),
                 const SizedBox(width: 6),
                 Text(
                   _callType == 'video' ? 'וידאו' : 'אודיו',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontFamily: 'Heebo',
                     fontSize: 12,
-                    color: VetoColors.silver,
+                    color: Colors.white.withValues(alpha: 0.88),
                   ),
                 ),
               ],

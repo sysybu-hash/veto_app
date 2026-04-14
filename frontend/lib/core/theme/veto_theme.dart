@@ -70,7 +70,7 @@ class VetoPalette {
   static const Color background    = VetoColors.background;
   /// Alias: main background
   static const Color bg            = VetoColors.background;
-  /// Alias: slightly elevated surface (darker)
+  /// Legacy name: light tinted surface (not a dark chrome bar).
   static const Color darkBg        = VetoColors.surfaceHigh;
   static const Color surface       = VetoColors.surface;
   /// Alias: secondary surface

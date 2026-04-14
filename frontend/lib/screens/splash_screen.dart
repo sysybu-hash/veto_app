@@ -71,7 +71,7 @@ class _SplashScreenState extends State<SplashScreen>
     };
 
     return Scaffold(
-      backgroundColor: const Color(0xFF07101C),
+      backgroundColor: VetoPalette.bg,
       body: Stack(
         children: [
           // Radial glow blob
@@ -123,7 +123,7 @@ class _SplashScreenState extends State<SplashScreen>
                         ),
                         child: const Icon(
                           Icons.shield_rounded,
-                          color: VetoColors.white,
+                          color: Colors.white,
                           size: 48,
                         ),
                       ),
@@ -161,10 +161,10 @@ class _SplashScreenState extends State<SplashScreen>
                       Text(
                         tagline,
                         style: const TextStyle(
-                          color: VetoColors.silverDim,
+                          color: VetoPalette.textMuted,
                           fontSize: 13,
                           letterSpacing: 1.5,
-                          fontWeight: FontWeight.w400,
+                          fontWeight: FontWeight.w500,
                         ),
                       ),
                       const SizedBox(height: 56),

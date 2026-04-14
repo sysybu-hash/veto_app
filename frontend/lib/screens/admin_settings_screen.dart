@@ -110,13 +110,9 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
       child: Scaffold(
         backgroundColor: VetoPalette.bg,
         appBar: AppBar(
-          title: Text(_t(code, 'adminPanel'),
-              style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 18)),
-          backgroundColor: VetoPalette.darkBg,
-          elevation: 0,
-          bottom: const PreferredSize(
-            preferredSize: Size.fromHeight(1),
-            child: Divider(height: 1, color: VetoPalette.darkBorder),
+          title: Text(
+            _t(code, 'adminPanel'),
+            style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 18),
           ),
           actions: [
             const Padding(
@@ -129,7 +125,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                 child: SizedBox(
                   width: 18, height: 18,
                   child: CircularProgressIndicator(
-                      strokeWidth: 2, color: VetoPalette.primary),
+                      strokeWidth: 2, color: VetoPalette.accent),
                 ),
               ),
             IconButton(

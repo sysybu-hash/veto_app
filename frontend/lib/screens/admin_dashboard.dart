@@ -213,11 +213,10 @@ class _AdminDashboardState extends State<AdminDashboard> {
       child: Scaffold(
         backgroundColor: VetoPalette.bg,
         appBar: AppBar(
-          backgroundColor: VetoPalette.darkBg,
-          title: Text(_t(code, 'title'),
-              style: const TextStyle(
-                  color: Colors.white, fontWeight: FontWeight.w700)),
-          iconTheme: const IconThemeData(color: Colors.white),
+          title: Text(
+            _t(code, 'title'),
+            style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 18),
+          ),
           actions: [
             IconButton(
               icon: const Icon(Icons.home_outlined),

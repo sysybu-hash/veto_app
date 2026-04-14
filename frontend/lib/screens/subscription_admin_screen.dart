@@ -268,7 +268,7 @@ class _Sub {
       case 'expired': return VetoPalette.warning;
       case 'cancelled': return VetoPalette.emergency;
       case 'no_subscription': return VetoPalette.textMuted;
-      case 'unverified': return const Color(0xFF7A7260);
+      case 'unverified': return VetoPalette.textMuted;
       default: return VetoPalette.textMuted;
     }
   }
@@ -686,18 +686,18 @@ class _SubscriptionAdminScreenState
       child: Scaffold(
         backgroundColor: VetoPalette.bg,
         appBar: AppBar(
-          backgroundColor: VetoPalette.darkBg,
-          title: Text(_t(code, 'title'),
-              style: const TextStyle(color: VetoColors.white, fontWeight: FontWeight.w700)),
-          iconTheme: const IconThemeData(color: Colors.white),
+          title: Text(
+            _t(code, 'title'),
+            style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 18),
+          ),
           actions: [
             IconButton(icon: const Icon(Icons.refresh_rounded), onPressed: _load,
                 tooltip: _t(code, 'refresh')),
           ],
           bottom: TabBar(
             controller: _tabController,
-            labelColor: Colors.white,
-            unselectedLabelColor: Colors.white54,
+            labelColor: VetoPalette.text,
+            unselectedLabelColor: VetoPalette.textMuted,
             indicatorColor: VetoPalette.primary,
             tabs: [
               Tab(text: _t(code, 'tabUsers'), icon: const Icon(Icons.people_rounded, size: 18)),

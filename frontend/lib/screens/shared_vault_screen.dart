@@ -60,8 +60,6 @@ class _SharedVaultScreenState extends State<SharedVaultScreen> {
     return Scaffold(
       backgroundColor: VetoPalette.bg,
       appBar: AppBar(
-        backgroundColor: VetoPalette.bg,
-        elevation: 0,
         title: Text(
           'Shared Vault: ${_userName ?? "User"}',
           style: const TextStyle(color: VetoPalette.text, fontWeight: FontWeight.w800),

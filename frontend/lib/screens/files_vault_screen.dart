@@ -286,7 +286,7 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
     showDialog<void>(
       context: context,
       builder: (ctx) => Dialog(
-        backgroundColor: VetoPalette.darkBg,
+        backgroundColor: VetoPalette.surface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         insetPadding: const EdgeInsets.all(20),
         child: Column(mainAxisSize: MainAxisSize.min, children: [
@@ -761,10 +761,10 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
       child: Scaffold(
         backgroundColor: VetoPalette.bg,
         appBar: AppBar(
-          backgroundColor: VetoPalette.darkBg,
-          title: Text(_l.title,
-              style: const TextStyle(color: VetoColors.white, fontWeight: FontWeight.w700)),
-          iconTheme: const IconThemeData(color: Colors.white),
+          title: Text(
+            _l.title,
+            style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 18),
+          ),
           actions: [
             if (kIsWeb)
               IconButton(
@@ -781,8 +781,8 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
           bottom: TabBar(
             controller: _tabController,
             indicatorColor: VetoPalette.primary,
-            labelColor: Colors.white,
-            unselectedLabelColor: Colors.white60,
+            labelColor: VetoPalette.text,
+            unselectedLabelColor: VetoPalette.textMuted,
             tabs: [
               Tab(text: _l.allFiles),
               Tab(text: _l.legalCase),

@@ -143,10 +143,10 @@ class _AllLawyersScreenState extends State<AllLawyersScreen> {
       child: Scaffold(
         backgroundColor: VetoPalette.bg,
         appBar: AppBar(
-          backgroundColor: VetoPalette.darkBg,
-          title: Text('${_t(code, 'lawyers')} (${_loading ? _t(code, 'loading') : _lawyers.length})',
-              style: const TextStyle(color: Colors.white)),
-          iconTheme: const IconThemeData(color: Colors.white),
+          title: Text(
+            '${_t(code, 'lawyers')} (${_loading ? _t(code, 'loading') : _lawyers.length})',
+            style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 17),
+          ),
           actions: [
             const Padding(
               padding: EdgeInsets.symmetric(horizontal: 8),

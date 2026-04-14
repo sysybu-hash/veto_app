@@ -780,7 +780,7 @@ class _StatBar extends StatelessWidget {
                     color: Color(0xFF0D9488), fontSize: 32, fontWeight: FontWeight.w900, letterSpacing: -1,
                   )),
                   const SizedBox(height: 4),
-                  Text(label, style: const TextStyle(color: Color(0xFFA8A090), fontSize: 11, fontWeight: FontWeight.w600, letterSpacing: 0.5)),
+                  Text(label, style: const TextStyle(color: Color(0xFF64748B), fontSize: 11, fontWeight: FontWeight.w600, letterSpacing: 0.5)),
                 ]),
               ],
             ],

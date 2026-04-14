@@ -503,12 +503,10 @@ class _SettingsScreenState extends State<SettingsScreen>
       child: Scaffold(
         backgroundColor: VetoPalette.bg,
         appBar: AppBar(
-          backgroundColor: const Color(0xFF2A2420),
-          foregroundColor: Colors.white,
-          title: Text(_t(code, 'title'),
-              style: const TextStyle(
-                  color: Colors.white, fontWeight: FontWeight.w700)),
-          iconTheme: const IconThemeData(color: Colors.white),
+          title: Text(
+            _t(code, 'title'),
+            style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 18),
+          ),
           actions: [
             IconButton(
               tooltip: _t(code, 'save'),
@@ -519,17 +517,17 @@ class _SettingsScreenState extends State<SettingsScreen>
                       height: 22,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
-                        color: Colors.white,
+                        color: VetoPalette.primary,
                       ),
                     )
-                  : const Icon(Icons.save_rounded, color: Colors.white),
+                  : const Icon(Icons.save_rounded),
             ),
           ],
           bottom: TabBar(
             controller: _wizardTab,
             indicatorColor: VetoPalette.primary,
-            labelColor: Colors.white,
-            unselectedLabelColor: Colors.white70,
+            labelColor: VetoPalette.text,
+            unselectedLabelColor: VetoPalette.textMuted,
             labelStyle: const TextStyle(
                 fontWeight: FontWeight.w700, fontSize: 12),
             isScrollable: true,
