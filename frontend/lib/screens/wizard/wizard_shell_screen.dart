@@ -34,6 +34,7 @@ class _WizardShellScreenState extends State<WizardShellScreen> {
   StreamSubscription<Map<String, dynamic>>? _dispatchSub;
   StreamSubscription<Map<String, dynamic>>? _lawyerFoundSub;
   StreamSubscription<Map<String, dynamic>>? _noLawyersSub;
+  StreamSubscription<Map<String, dynamic>>? _caseTakenSub;
 
   @override
   void initState() {
@@ -119,6 +120,14 @@ class _WizardShellScreenState extends State<WizardShellScreen> {
         ),
       );
     });
+
+    if (role == 'lawyer') {
+      _caseTakenSub = _socket.onCaseTaken.listen((data) {
+        final eventId = data['eventId']?.toString();
+        if (!mounted || eventId == null) return;
+        setState(() => _alerts.removeWhere((a) => a['eventId']?.toString() == eventId));
+      });
+    }
   }
 
   @override
@@ -127,6 +136,7 @@ class _WizardShellScreenState extends State<WizardShellScreen> {
     _dispatchSub?.cancel();
     _lawyerFoundSub?.cancel();
     _noLawyersSub?.cancel();
+    _caseTakenSub?.cancel();
     super.dispose();
   }
 

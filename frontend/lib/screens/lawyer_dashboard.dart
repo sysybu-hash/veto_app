@@ -26,6 +26,7 @@ class _LawyerDashboardState extends State<LawyerDashboard> {
   final List<Map<String, dynamic>> _activeCases = [];
   StreamSubscription<Map<String, dynamic>>? _alertSub;
   StreamSubscription<Map<String, dynamic>>? _caseAcceptedSub;
+  StreamSubscription<Map<String, dynamic>>? _caseTakenSub;
 
   static const Map<String, Map<String, String>> _copy = {
     'he': {
@@ -190,12 +191,22 @@ class _LawyerDashboardState extends State<LawyerDashboard> {
         },
       );
     });
+
+    _caseTakenSub = SocketService().onCaseTaken.listen((data) {
+      final eventId = data['eventId']?.toString();
+      if (!mounted || eventId == null) return;
+      setState(() {
+        _alerts.removeWhere((a) => a['eventId']?.toString() == eventId);
+        _activeCases.removeWhere((c) => c['eventId']?.toString() == eventId);
+      });
+    });
   }
 
   @override
   void dispose() {
     _alertSub?.cancel();
     _caseAcceptedSub?.cancel();
+    _caseTakenSub?.cancel();
     super.dispose();
   }
 

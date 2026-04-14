@@ -10,6 +10,9 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'socket_service.dart';
+import 'webrtc_ice_config_service.dart';
+import 'webrtc_settings_store.dart';
+import 'webrtc_user_settings.dart';
 
 enum CallState { idle, joining, ringing, connected, ended, error }
 enum CallType  { audio, video }
@@ -37,16 +40,6 @@ class WebRTCService extends ChangeNotifier {
 
   final RTCVideoRenderer localRenderer  = RTCVideoRenderer();
   final RTCVideoRenderer remoteRenderer = RTCVideoRenderer();
-
-  // ── STUN servers ──────────────────────────────────────────
-  static const Map<String, dynamic> _iceConfig = {
-    'iceServers': [
-      {'urls': 'stun:stun.l.google.com:19302'},
-      {'urls': 'stun:stun1.l.google.com:19302'},
-      {'urls': 'stun:stun2.l.google.com:19302'},
-    ],
-    'iceCandidatePoolSize': 10,
-  };
 
   // ── Getters ───────────────────────────────────────────────
   CallState get state        => _state;
@@ -98,27 +91,31 @@ class WebRTCService extends ChangeNotifier {
   Future<void> _initCall(bool isCaller, String? peerSocketId) async {
     _peerSocketId = peerSocketId;
 
-    // ── Get local media ───────────────────────────────────────
-    final constraints = <String, dynamic>{
-      'audio': {
-        'echoCancellation': true,
-        'noiseSuppression': true,
-        'autoGainControl': true,
-      },
-      'video': _callType == CallType.video
-          ? {
-              'width': {'ideal': 1280},
-              'height': {'ideal': 720},
-              'facingMode': 'user',
-            }
-          : false,
-    };
+    final WebRtcUserSettings mediaPrefs =
+        await WebRtcSettingsStore.instance.load();
+
+    // ── Get local media (constraints from Settings) ───────────
+    final constraints = mediaPrefs.mediaConstraints(
+      wantVideo: _callType == CallType.video,
+    );
 
     _localStream = await navigator.mediaDevices.getUserMedia(constraints);
     localRenderer.srcObject = _localStream;
 
-    // ── Create peer connection ────────────────────────────────
-    _pc = await createPeerConnection(_iceConfig);
+    // ── Create peer connection (local STUN + optional server TURN) ─
+    final rtcCfg = Map<String, dynamic>.from(
+      mediaPrefs.peerConnectionConfiguration(),
+    );
+    final serverIce = await WebRtcIceConfigService.instance.fetchServerIceServers();
+    if (serverIce != null && serverIce.isNotEmpty) {
+      final local = rtcCfg['iceServers'];
+      if (local is List) {
+        rtcCfg['iceServers'] = <dynamic>[...local, ...serverIce];
+      } else {
+        rtcCfg['iceServers'] = serverIce;
+      }
+    }
+    _pc = await createPeerConnection(rtcCfg);
 
     // Add local tracks
     _localStream!.getTracks().forEach((track) {
@@ -210,7 +207,11 @@ class WebRTCService extends ChangeNotifier {
         await _pc!.setRemoteDescription(
           RTCSessionDescription(offerMap['sdp'], offerMap['type']),
         );
-        final answer = await _pc!.createAnswer();
+        final wantVideo = _callType == CallType.video;
+        final answer = await _pc!.createAnswer({
+          'offerToReceiveAudio': true,
+          'offerToReceiveVideo': wantVideo,
+        });
         await _pc!.setLocalDescription(answer);
         _socket.emit('webrtc-answer', {
           'roomId':         _roomId,

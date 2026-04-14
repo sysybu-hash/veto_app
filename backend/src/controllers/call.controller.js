@@ -14,6 +14,41 @@ const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
+/**
+ * Build extra ICE servers from env (TURN credentials never ship in the Flutter bundle).
+ * Priority:
+ *   1) WEBRTC_ICE_SERVERS_JSON — JSON array, WebRTC shape, e.g.
+ *      [{"urls":"turn:turn.example.com:3478","username":"u","credential":"p"}]
+ *   2) TURN_URL + TURN_USERNAME + TURN_CREDENTIAL — single TURN entry
+ */
+function iceServersFromEnv() {
+  const raw = process.env.WEBRTC_ICE_SERVERS_JSON;
+  if (raw && String(raw).trim()) {
+    try {
+      const parsed = JSON.parse(String(raw).trim());
+      if (Array.isArray(parsed)) return parsed;
+    } catch (_) {
+      /* fall through */
+    }
+  }
+  const url = process.env.TURN_URL;
+  const user = process.env.TURN_USERNAME;
+  const pass = process.env.TURN_CREDENTIAL;
+  if (url && user && pass) {
+    return [{ urls: url, username: user, credential: pass }];
+  }
+  return [];
+}
+
+// ── WebRTC ICE (authenticated; no event id) ───────────────────
+exports.getIceConfig = (_req, res) => {
+  try {
+    res.json({ iceServers: iceServersFromEnv() });
+  } catch {
+    res.status(500).json({ error: 'ICE configuration unavailable', iceServers: [] });
+  }
+};
+
 // ── Upload recording ──────────────────────────────────────────
 exports.uploadRecording = async (req, res, next) => {
   try {

@@ -8,8 +8,10 @@ import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 
 import 'config/app_config.dart';
+import 'core/accessibility/accessibility_settings.dart';
 import 'core/i18n/app_language.dart';
 import 'core/theme/veto_theme.dart';
+import 'widgets/accessibility_toolbar.dart';
 import 'screens/login_screen.dart';
 import 'screens/landing_screen.dart';
 import 'screens/lawyer_dashboard.dart';
@@ -34,15 +36,18 @@ import 'services/socket_service.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final languageController = AppLanguageController();
-  // Load language and warm up the backend concurrently.
+  final accessibilitySettings = AccessibilitySettings();
+  // Load language, accessibility prefs, and warm up the backend concurrently.
   await Future.wait([
     languageController.load(),
+    accessibilitySettings.hydrate(),
     _warmUpBackend(),
   ]);
   runApp(
     MultiProvider(
       providers: [
         ChangeNotifierProvider.value(value: languageController),
+        ChangeNotifierProvider.value(value: accessibilitySettings),
         Provider<SocketService>(
           create: (_) => SocketService(),
           lazy: true,
@@ -69,11 +74,13 @@ class VetoApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final language = context.watch<AppLanguageController>();
+    final a11y = context.watch<AccessibilitySettings>();
+    final baseTheme = VetoTheme.luxuryLight();
 
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'VETO',
-      theme: VetoTheme.dark(),
+      theme: a11y.mergeTheme(baseTheme),
       locale: language.locale,
       supportedLocales: const [Locale('he'), Locale('en'), Locale('ru')],
       localizationsDelegates: const [
@@ -81,6 +88,22 @@ class VetoApp extends StatelessWidget {
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
+      builder: (context, child) {
+        final navigatorChild = child ?? const SizedBox.shrink();
+        final mq = MediaQuery.of(context);
+        // Respect OS font scaling, then apply in-app size steps.
+        final os = mq.textScaler.scale(1.0);
+        final combined = (os * a11y.textScale).clamp(0.75, 2.25);
+        return MediaQuery(
+          data: mq.copyWith(
+            textScaler: TextScaler.linear(combined),
+            boldText: a11y.boldBody,
+            highContrast: a11y.highContrast,
+            disableAnimations: a11y.reduceMotion,
+          ),
+          child: AccessibilityToolbarHost(child: navigatorChild),
+        );
+      },
       initialRoute: '/',
       routes: {
         '/': (context) => const SplashScreen(),

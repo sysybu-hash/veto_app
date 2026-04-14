@@ -236,6 +236,7 @@ class _VetoScreenState extends State<VetoScreen> {
   StreamSubscription<Map<String, dynamic>>? _emergencyCreatedSub;
   StreamSubscription<Map<String, dynamic>>? _lawyerFoundSub;
   StreamSubscription<Map<String, dynamic>>? _noLawyersSub;
+  StreamSubscription<Map<String, dynamic>>? _vetoDispatchedSub;
   final List<_Msg> _messages = [];
   final List<Map<String, dynamic>> _geminiHistory = [];
   final _inputCtrl = TextEditingController();
@@ -266,6 +267,8 @@ class _VetoScreenState extends State<VetoScreen> {
     _lawyerFoundSub = SocketService().onLawyerFound.listen(_handleLawyerFound);
     _noLawyersSub =
         SocketService().onNoLawyersAvailable.listen(_handleNoLawyersAvailable);
+    _vetoDispatchedSub =
+        SocketService().onVetoDispatched.listen(_handleVetoDispatched);
     WidgetsBinding.instance.addPostFrameCallback((_) => _checkSubscription());
   }
 
@@ -299,6 +302,7 @@ class _VetoScreenState extends State<VetoScreen> {
     _emergencyCreatedSub?.cancel();
     _lawyerFoundSub?.cancel();
     _noLawyersSub?.cancel();
+    _vetoDispatchedSub?.cancel();
     super.dispose();
   }
 
@@ -521,6 +525,21 @@ class _VetoScreenState extends State<VetoScreen> {
     );
   }
 
+  void _handleVetoDispatched(Map<String, dynamic> data) {
+    if (!mounted) return;
+    final n = data['lawyersNotified'];
+    final count = n is int ? n : int.tryParse('$n') ?? 0;
+    final msg = _langKey == 'ru'
+        ? '📡 Запрос отправлен. Уведомлено адвокатов: $count.'
+        : _langKey == 'en'
+            ? '📡 Request broadcast. Lawyers notified: $count.'
+            : '📡 הבקשה שודרה לעורכי דין. נשלחה התראה ל־$count עורכי דין.';
+    setState(() {
+      _messages.add(_Msg(text: msg, isUser: false, isSystem: true));
+    });
+    _scrollToBottom();
+  }
+
   void _handleNoLawyersAvailable(Map<String, dynamic> data) {
     if (!mounted) return;
     setState(() {
@@ -573,7 +592,14 @@ class _VetoScreenState extends State<VetoScreen> {
 
   Future<void> _shareLocation() async {
     Position? pos;
-    try { pos = await Geolocator.getCurrentPosition(); } catch (_) {}
+    try {
+      pos = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+          timeLimit: Duration(seconds: 5),
+        ),
+      );
+    } catch (_) {}
     if (!mounted) return;
     final lat = pos?.latitude ?? 32.08;
     final lng = pos?.longitude ?? 34.78;
@@ -728,10 +754,12 @@ class _VetoScreenState extends State<VetoScreen> {
       IconButton(
           icon: const Icon(Icons.person_outline),
           color: VetoColors.silverDim,
-          onPressed: () => Navigator.pushNamed(context, '/profile')),
+          onPressed: () => Navigator.pushNamed(context, '/profile'),
+          tooltip: _langKey == 'he' ? 'פרופיל' : _langKey == 'ru' ? 'Профиль' : 'Profile'),
       IconButton(
           icon: const Icon(Icons.logout_rounded),
           color: VetoColors.textMuted,
+          tooltip: _langKey == 'he' ? 'התנתקות' : _langKey == 'ru' ? 'Выход' : 'Log out',
           onPressed: () => AuthService().logout(context)),
     ],
   );

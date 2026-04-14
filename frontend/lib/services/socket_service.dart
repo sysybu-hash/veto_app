@@ -24,6 +24,8 @@ class SocketService {
       StreamController<Map<String, dynamic>>.broadcast();
   final _noLawyersController =
       StreamController<Map<String, dynamic>>.broadcast();
+  final _caseTakenController =
+      StreamController<Map<String, dynamic>>.broadcast();
 
   Stream<Map<String, dynamic>> get onEmergencyCreated =>
       _emergencyCreatedController.stream;
@@ -39,6 +41,8 @@ class SocketService {
       _lawyerFoundController.stream;
   Stream<Map<String, dynamic>> get onNoLawyersAvailable =>
       _noLawyersController.stream;
+  Stream<Map<String, dynamic>> get onCaseTaken =>
+      _caseTakenController.stream;
 
   SocketService._internal();
 
@@ -83,6 +87,7 @@ class SocketService {
     _socket?.on('veto_dispatched',        (d) => _emit(_vetoDispatchedController, d));
     _socket?.on('lawyer_found',           (d) => _emit(_lawyerFoundController, d));
     _socket?.on('no_lawyers_available',   (d) => _emit(_noLawyersController, d));
+    _socket?.on('case_taken',             (d) => _emit(_caseTakenController, d));
 
     _socket?.onDisconnect((_) {
       debugPrint('Socket disconnected');

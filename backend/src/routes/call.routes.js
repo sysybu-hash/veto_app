@@ -23,6 +23,9 @@ const upload = multer({
   },
 });
 
+// GET  /api/calls/ice-config        — Extra ICE/TURN (secrets stay on server)
+router.get('/ice-config', protect, callCtrl.getIceConfig);
+
 // GET  /api/calls/:eventId          — Get call details
 router.get('/:eventId', protect, callCtrl.getCallDetails);
 

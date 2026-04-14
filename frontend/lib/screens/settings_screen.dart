@@ -14,6 +14,8 @@ import '../config/app_config.dart';
 import '../core/i18n/app_language.dart';
 import '../core/theme/veto_theme.dart';
 import '../services/auth_service.dart';
+import '../services/webrtc_settings_store.dart';
+import '../services/webrtc_user_settings.dart';
 
 // ── i18n ──────────────────────────────────────────────────────
 const _i18n = {
@@ -59,6 +61,29 @@ const _i18n = {
     'planFree': 'חינמי',
     'planBasic': 'בסיסי',
     'planPro': 'מקצועי',
+    'webrtcTitle': 'שיחות WebRTC',
+    'webrtcHint': 'חל על השיחה הבאה. STUN מההגדרות כאן; אם בשרת הוגדרו TURN/ICE (משתני סביבה), הם יתווספו אוטומטית לשיחה.',
+    'webrtcIce': 'רשימת STUN',
+    'webrtcIceMin': 'מינימלי (3 שרתים)',
+    'webrtcIceExt': 'מורחב (5 שרתים)',
+    'webrtcPool': 'גודל מאגר ICE',
+    'webrtcEcho': 'ביטול הד (אודיו)',
+    'webrtcNoise': 'דיכוי רעש',
+    'webrtcAgc': 'בקרת רווח אוטומטית',
+    'webrtcRes': 'רזולוציית וידאו',
+    'webrtcResSd': 'SD ‎640×480',
+    'webrtcResHd': 'HD ‎1280×720',
+    'webrtcResFhd': 'Full HD ‎1920×1080',
+    'webrtcFacing': 'כיוון מצלמה',
+    'webrtcFacingUser': 'קדמית (selfie)',
+    'webrtcFacingEnv': 'אחורית',
+    'webrtcBundle': 'מדיניות Bundle',
+    'webrtcBundleBalanced': 'balanced',
+    'webrtcBundleMaxBundle': 'max-bundle (מומלץ)',
+    'webrtcBundleMaxCompat': 'max-compat',
+    'webrtcMux': 'RTCP mux',
+    'webrtcMuxReq': 'require (מומלץ)',
+    'webrtcMuxNeg': 'negotiate',
   },
   'en': {
     'title': 'Settings',
@@ -102,6 +127,29 @@ const _i18n = {
     'planFree': 'Free',
     'planBasic': 'Basic',
     'planPro': 'Pro',
+    'webrtcTitle': 'WebRTC calls',
+    'webrtcHint': 'Applies to the next call. STUN from here; if the backend exposes TURN/ICE env vars, they are merged automatically.',
+    'webrtcIce': 'STUN server set',
+    'webrtcIceMin': 'Minimal (3 servers)',
+    'webrtcIceExt': 'Extended (5 servers)',
+    'webrtcPool': 'ICE candidate pool size',
+    'webrtcEcho': 'Echo cancellation',
+    'webrtcNoise': 'Noise suppression',
+    'webrtcAgc': 'Auto gain control',
+    'webrtcRes': 'Video resolution',
+    'webrtcResSd': 'SD 640×480',
+    'webrtcResHd': 'HD 1280×720',
+    'webrtcResFhd': 'Full HD 1920×1080',
+    'webrtcFacing': 'Camera facing',
+    'webrtcFacingUser': 'Front (user)',
+    'webrtcFacingEnv': 'Back (environment)',
+    'webrtcBundle': 'Bundle policy',
+    'webrtcBundleBalanced': 'balanced',
+    'webrtcBundleMaxBundle': 'max-bundle (recommended)',
+    'webrtcBundleMaxCompat': 'max-compat',
+    'webrtcMux': 'RTCP mux policy',
+    'webrtcMuxReq': 'require (recommended)',
+    'webrtcMuxNeg': 'negotiate',
   },
   'ru': {
     'title': 'Настройки',
@@ -145,11 +193,40 @@ const _i18n = {
     'planFree': 'Бесплатный',
     'planBasic': 'Базовый',
     'planPro': 'Pro',
+    'webrtcTitle': 'Звонки WebRTC',
+    'webrtcHint': 'Со следующего звонка. STUN — здесь; TURN/ICE с сервера (env) подмешиваются автоматически.',
+    'webrtcIce': 'Набор STUN',
+    'webrtcIceMin': 'Минимальный (3 сервера)',
+    'webrtcIceExt': 'Расширенный (5 серверов)',
+    'webrtcPool': 'Размер пула ICE',
+    'webrtcEcho': 'Подавление эха',
+    'webrtcNoise': 'Шумоподавление',
+    'webrtcAgc': 'Автоусиление (AGC)',
+    'webrtcRes': 'Разрешение видео',
+    'webrtcResSd': 'SD 640×480',
+    'webrtcResHd': 'HD 1280×720',
+    'webrtcResFhd': 'Full HD 1920×1080',
+    'webrtcFacing': 'Камера',
+    'webrtcFacingUser': 'Передняя',
+    'webrtcFacingEnv': 'Задняя',
+    'webrtcBundle': 'Политика bundle',
+    'webrtcBundleBalanced': 'balanced',
+    'webrtcBundleMaxBundle': 'max-bundle (рекомендуется)',
+    'webrtcBundleMaxCompat': 'max-compat',
+    'webrtcMux': 'Политика RTCP mux',
+    'webrtcMuxReq': 'require (рекомендуется)',
+    'webrtcMuxNeg': 'negotiate',
   },
 };
 
 String _t(String code, String key) =>
     (_i18n[code] ?? _i18n['en']!)[key] ?? key;
+
+String _webrtcVideoPreset(WebRtcUserSettings w) {
+  if (w.videoWidth >= 1920 && w.videoHeight >= 1000) return 'fhd';
+  if (w.videoWidth <= 854 && w.videoHeight <= 520) return 'sd';
+  return 'hd';
+}
 
 // ── Screen ────────────────────────────────────────────────────
 class SettingsScreen extends StatefulWidget {
@@ -188,6 +265,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool _maintenanceMode = false;
   late TextEditingController _maxFileSizeCtrl;
   late TextEditingController _defaultQuotaCtrl;
+
+  // WebRTC (local prefs — not sent to API)
+  WebRtcUserSettings _webrtc = WebRtcUserSettings.defaults();
 
   @override
   void initState() {
@@ -272,6 +352,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
         }
       }
     } catch (_) {}
+    try {
+      final w = await WebRtcSettingsStore.instance.load();
+      if (mounted) setState(() => _webrtc = w);
+    } catch (_) {}
     if (mounted) setState(() => _loading = false);
   }
 
@@ -318,6 +402,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ).timeout(const Duration(seconds: 10));
       }
 
+      await WebRtcSettingsStore.instance.save(_webrtc);
       _snack(_t(code, 'saved'));
     } catch (_) {}
     if (mounted) setState(() => _saving = false);
@@ -466,6 +551,281 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ),
                     ],
                   ),
+                  const SizedBox(height: 16),
+                  // ── WebRTC (audio/video calls) ───────────
+                  _Section(
+                    icon: Icons.video_call_rounded,
+                    title: _t(code, 'webrtcTitle'),
+                    children: [
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+                          child: Text(
+                            _t(code, 'webrtcHint'),
+                            style: const TextStyle(
+                              color: VetoPalette.textMuted,
+                              fontSize: 12,
+                              height: 1.45,
+                            ),
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                _t(code, 'webrtcIce'),
+                                style: const TextStyle(
+                                    color: VetoPalette.textMuted, fontSize: 13),
+                              ),
+                              const SizedBox(height: 4),
+                              DropdownButton<WebRtcIcePreset>(
+                                isExpanded: true,
+                                value: _webrtc.icePreset,
+                                borderRadius: BorderRadius.circular(10),
+                                dropdownColor: VetoPalette.surface,
+                                style: const TextStyle(
+                                    color: VetoPalette.text, fontSize: 14),
+                                items: [
+                                  DropdownMenuItem(
+                                    value: WebRtcIcePreset.minimal,
+                                    child: Text(_t(code, 'webrtcIceMin')),
+                                  ),
+                                  DropdownMenuItem(
+                                    value: WebRtcIcePreset.extended,
+                                    child: Text(_t(code, 'webrtcIceExt')),
+                                  ),
+                                ],
+                                onChanged: (v) {
+                                  if (v == null) return;
+                                  setState(
+                                      () => _webrtc = _webrtc.copyWith(icePreset: v));
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                '${_t(code, 'webrtcPool')}: ${_webrtc.iceCandidatePoolSize}',
+                                style: const TextStyle(
+                                    color: VetoPalette.text,
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600),
+                              ),
+                              Slider.adaptive(
+                                value: _webrtc.iceCandidatePoolSize.toDouble(),
+                                min: 0,
+                                max: 30,
+                                divisions: 30,
+                                label: '${_webrtc.iceCandidatePoolSize}',
+                                onChanged: (v) => setState(() => _webrtc =
+                                    _webrtc.copyWith(
+                                        iceCandidatePoolSize: v.round())),
+                              ),
+                            ],
+                          ),
+                        ),
+                        _ToggleTile(
+                          label: _t(code, 'webrtcEcho'),
+                          icon: Icons.hearing_rounded,
+                          color: VetoPalette.primary,
+                          value: _webrtc.echoCancellation,
+                          onChanged: (v) => setState(
+                              () => _webrtc = _webrtc.copyWith(echoCancellation: v)),
+                        ),
+                        _ToggleTile(
+                          label: _t(code, 'webrtcNoise'),
+                          icon: Icons.graphic_eq_rounded,
+                          color: VetoPalette.primary,
+                          value: _webrtc.noiseSuppression,
+                          onChanged: (v) => setState(
+                              () => _webrtc = _webrtc.copyWith(noiseSuppression: v)),
+                        ),
+                        _ToggleTile(
+                          label: _t(code, 'webrtcAgc'),
+                          icon: Icons.trending_up_rounded,
+                          color: VetoPalette.primary,
+                          value: _webrtc.autoGainControl,
+                          onChanged: (v) => setState(
+                              () => _webrtc = _webrtc.copyWith(autoGainControl: v)),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                _t(code, 'webrtcRes'),
+                                style: const TextStyle(
+                                    color: VetoPalette.textMuted, fontSize: 13),
+                              ),
+                              const SizedBox(height: 4),
+                              DropdownButton<String>(
+                                isExpanded: true,
+                                value: _webrtcVideoPreset(_webrtc),
+                                borderRadius: BorderRadius.circular(10),
+                                dropdownColor: VetoPalette.surface,
+                                style: const TextStyle(
+                                    color: VetoPalette.text, fontSize: 14),
+                                items: [
+                                  DropdownMenuItem(
+                                    value: 'sd',
+                                    child: Text(_t(code, 'webrtcResSd')),
+                                  ),
+                                  DropdownMenuItem(
+                                    value: 'hd',
+                                    child: Text(_t(code, 'webrtcResHd')),
+                                  ),
+                                  DropdownMenuItem(
+                                    value: 'fhd',
+                                    child: Text(_t(code, 'webrtcResFhd')),
+                                  ),
+                                ],
+                                onChanged: (v) {
+                                  if (v == null) return;
+                                  setState(() {
+                                    switch (v) {
+                                      case 'sd':
+                                        _webrtc = _webrtc.copyWith(
+                                            videoWidth: 640, videoHeight: 480);
+                                        break;
+                                      case 'fhd':
+                                        _webrtc = _webrtc.copyWith(
+                                            videoWidth: 1920,
+                                            videoHeight: 1080);
+                                        break;
+                                      case 'hd':
+                                        _webrtc = _webrtc.copyWith(
+                                            videoWidth: 1280, videoHeight: 720);
+                                    }
+                                  });
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                _t(code, 'webrtcFacing'),
+                                style: const TextStyle(
+                                    color: VetoPalette.textMuted, fontSize: 13),
+                              ),
+                              const SizedBox(height: 4),
+                              DropdownButton<String>(
+                                isExpanded: true,
+                                value: _webrtc.facingMode,
+                                borderRadius: BorderRadius.circular(10),
+                                dropdownColor: VetoPalette.surface,
+                                style: const TextStyle(
+                                    color: VetoPalette.text, fontSize: 14),
+                                items: [
+                                  DropdownMenuItem(
+                                    value: 'user',
+                                    child: Text(_t(code, 'webrtcFacingUser')),
+                                  ),
+                                  DropdownMenuItem(
+                                    value: 'environment',
+                                    child: Text(_t(code, 'webrtcFacingEnv')),
+                                  ),
+                                ],
+                                onChanged: (v) {
+                                  if (v == null) return;
+                                  setState(() =>
+                                      _webrtc = _webrtc.copyWith(facingMode: v));
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                _t(code, 'webrtcBundle'),
+                                style: const TextStyle(
+                                    color: VetoPalette.textMuted, fontSize: 13),
+                              ),
+                              const SizedBox(height: 4),
+                              DropdownButton<String>(
+                                isExpanded: true,
+                                value: _webrtc.bundlePolicy,
+                                borderRadius: BorderRadius.circular(10),
+                                dropdownColor: VetoPalette.surface,
+                                style: const TextStyle(
+                                    color: VetoPalette.text, fontSize: 14),
+                                items: [
+                                  DropdownMenuItem(
+                                    value: 'balanced',
+                                    child: Text(_t(code, 'webrtcBundleBalanced')),
+                                  ),
+                                  DropdownMenuItem(
+                                    value: 'max-bundle',
+                                    child: Text(_t(code, 'webrtcBundleMaxBundle')),
+                                  ),
+                                  DropdownMenuItem(
+                                    value: 'max-compat',
+                                    child: Text(_t(code, 'webrtcBundleMaxCompat')),
+                                  ),
+                                ],
+                                onChanged: (v) {
+                                  if (v == null) return;
+                                  setState(() => _webrtc =
+                                      _webrtc.copyWith(bundlePolicy: v));
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                _t(code, 'webrtcMux'),
+                                style: const TextStyle(
+                                    color: VetoPalette.textMuted, fontSize: 13),
+                              ),
+                              const SizedBox(height: 4),
+                              DropdownButton<String>(
+                                isExpanded: true,
+                                value: _webrtc.rtcpMuxPolicy,
+                                borderRadius: BorderRadius.circular(10),
+                                dropdownColor: VetoPalette.surface,
+                                style: const TextStyle(
+                                    color: VetoPalette.text, fontSize: 14),
+                                items: [
+                                  DropdownMenuItem(
+                                    value: 'require',
+                                    child: Text(_t(code, 'webrtcMuxReq')),
+                                  ),
+                                  DropdownMenuItem(
+                                    value: 'negotiate',
+                                    child: Text(_t(code, 'webrtcMuxNeg')),
+                                  ),
+                                ],
+                                onChanged: (v) {
+                                  if (v == null) return;
+                                  setState(() => _webrtc =
+                                      _webrtc.copyWith(rtcpMuxPolicy: v));
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
                   const SizedBox(height: 16),
                   // ── Subscription section (non-admin) ────
                   if (_role != 'admin') ...[

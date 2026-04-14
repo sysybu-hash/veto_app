@@ -342,16 +342,17 @@ class LandingScreen extends StatelessWidget {
 //  Color palette
 // ═══════════════════════════════════════════════════════════════════
 class _Clr {
-  static const bg         = Color(0xFF07101C); // deep navy bg
-  static const surface    = Color(0xFF0C1827); // dark cards
-  static const card       = Color(0xFF121F32); // elevated card
-  static const border     = Color(0x35C9A050); // gold border
-  static const heroBg     = Color(0xFF07101C); // dark hero
-  static const heroBg2    = Color(0xFF0C1827); // dark hero mid
-  static const heroBorder = Color(0x30C9A050); // gold hero border
-  static const glow       = Color(0xFFC9A050); // legal gold
-  static const muted      = Color(0xFF7A7260); // warm muted
-  static const sub        = Color(0xFFA8A090); // warm silver
+  static const bg         = Color(0xFFFBF9F5);
+  static const surface    = Color(0xFFFFFFFF);
+  static const card       = Color(0xFFF7F2EB);
+  static const border     = Color(0x40B8941E);
+  static const heroBg     = Color(0xFFFFFFFF);
+  static const heroBg2    = Color(0xFFF3EEE6);
+  static const heroBorder = Color(0x38C9A050);
+  static const glow       = Color(0xFFC6A24A);
+  static const muted      = Color(0xFF7A756C);
+  static const sub        = Color(0xFF3D3832);
+  static const navInk    = Color(0xFF4A453C);
 }
 
 // ═══════════════════════════════════════════════════════════════════
@@ -448,23 +449,23 @@ class _NavState extends State<_Nav> {
                 ),
                 borderRadius: BorderRadius.circular(9),
               ),
-              child: const Icon(Icons.shield_rounded, color: Colors.white, size: 17),
+              child: const Icon(Icons.shield_rounded, color: Colors.white, size: 17), // on gold chip
             ),
             const SizedBox(width: 10),
-            const Text('VETO v7.0', style: TextStyle(color: VetoColors.white, fontSize: 17, fontWeight: FontWeight.w900, letterSpacing: 5)),
-            const Text(' LEGAL', style: TextStyle(color: Color(0xFFC9A050), fontSize: 17, fontWeight: FontWeight.w900, letterSpacing: 2)),
+            const Text('VETO v7.0', style: TextStyle(color: _Clr.sub, fontSize: 17, fontWeight: FontWeight.w900, letterSpacing: 5)),
+            const Text(' LEGAL', style: TextStyle(color: _Clr.glow, fontSize: 17, fontWeight: FontWeight.w900, letterSpacing: 2)),
             if (wide) ...[
               const SizedBox(width: 28),
               for (final item in menuItems)
                 TextButton(
                   onPressed: widget.onTap,
                   style: TextButton.styleFrom(
-                    foregroundColor: Colors.white70,
+                    foregroundColor: _Clr.navInk,
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    minimumSize: Size.zero,
+                    minimumSize: const Size(48, 40),
                     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   ),
-                  child: Text(item, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500)),
+                  child: Text(item, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
                 ),
             ],
             const Spacer(),
@@ -488,10 +489,11 @@ class _NavState extends State<_Nav> {
               TextButton(
                 onPressed: widget.onTap,
                 style: TextButton.styleFrom(
-                  foregroundColor: Colors.white70,
+                  foregroundColor: _Clr.navInk,
                   padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  minimumSize: const Size(48, 40),
                 ),
-                child: Text(widget.loginLabel),
+                child: Text(widget.loginLabel, style: const TextStyle(fontWeight: FontWeight.w600)),
               ),
               const SizedBox(width: 4),
               _PrimaryBtn(label: widget.ctaLabel, onTap: widget.onTap),
@@ -655,7 +657,7 @@ class _HeroContent extends StatelessWidget {
           icon: const Icon(Icons.login_rounded, size: 16),
           label: Text(secondaryLabel),
           style: OutlinedButton.styleFrom(
-            foregroundColor: Colors.white,
+            foregroundColor: _Clr.sub,
             side: const BorderSide(color: _Clr.heroBorder, width: 1.5),
             padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 16),
             textStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
@@ -1382,7 +1384,7 @@ class _ReviewCard extends StatelessWidget {
         const SizedBox(height: 12),
         Text('"${review.text}"', style: const TextStyle(color: _Clr.muted, fontSize: 13, height: 1.65, fontStyle: FontStyle.italic)),
         const SizedBox(height: 14),
-        Text(review.name, style: const TextStyle(color: Color(0xFF07101C), fontSize: 12, fontWeight: FontWeight.w700)),
+        Text(review.name, style: const TextStyle(color: _Clr.sub, fontSize: 12, fontWeight: FontWeight.w700)),
       ]),
     );
   }
@@ -1426,7 +1428,7 @@ class _ProofChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 7),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.06),
+        color: _Clr.card,
         borderRadius: BorderRadius.circular(999),
         border: Border.all(color: _Clr.heroBorder),
       ),
