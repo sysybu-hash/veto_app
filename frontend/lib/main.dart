@@ -11,7 +11,7 @@ import 'config/app_config.dart';
 import 'core/i18n/app_language.dart';
 import 'core/theme/veto_theme.dart';
 import 'screens/LoginScreen.dart';
-import 'screens/landing_screen.dart';
+import 'screens/LandingScreen.dart';
 import 'screens/LawyerDashboard.dart';
 import 'screens/splash_screen.dart';
 import 'screens/VetoScreen.dart';

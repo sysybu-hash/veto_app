@@ -85,7 +85,7 @@ class _SplashScreenState extends State<SplashScreen>
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
                   colors: [
-                    const Color(0xFFC9A050).withOpacity(0.1),
+                    const Color(0xFFC9A050).withValues(alpha: 0.1),
                     Colors.transparent,
                   ],
                 ),
@@ -115,7 +115,7 @@ class _SplashScreenState extends State<SplashScreen>
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color: const Color(0xFFC9A050).withOpacity(0.3),
+                              color: const Color(0xFFC9A050).withValues(alpha: 0.3),
                               blurRadius: 40,
                               spreadRadius: 0,
                             ),
@@ -158,9 +158,18 @@ class _SplashScreenState extends State<SplashScreen>
                         tagline,
                         style: const TextStyle(
                           color: VetoColors.silverDim,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          letterSpacing: 2,
+                          fontSize: 13,
+                          letterSpacing: 1.5,
+                          fontWeight: FontWeight.w400,
+                        ),
+                      ),
+                      const SizedBox(height: 56),
+                      SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 1.5,
+                          color: VetoColors.accent.withValues(alpha: 0.6),
                         ),
                       ),
                     ],
@@ -174,4 +183,3 @@ class _SplashScreenState extends State<SplashScreen>
     );
   }
 }
-          

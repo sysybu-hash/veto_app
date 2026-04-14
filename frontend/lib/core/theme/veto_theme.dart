@@ -103,56 +103,6 @@ class VetoPalette {
   static const Color darkBorder    = VetoColors.borderLight;
 }
 
-class VetoDecorations {
-  VetoDecorations._();
-
-  static BoxDecoration gradientBg() {
-    return const BoxDecoration(
-      gradient: LinearGradient(
-        begin: Alignment.topCenter,
-        end: Alignment.bottomCenter,
-        colors: [Color(0xFF07101C), Color(0xFF0C1827)],
-      ),
-    );
-  }
-
-  static BoxDecoration surfaceCard({double radius = 16}) {
-    return BoxDecoration(
-      color: VetoColors.surface,
-      borderRadius: BorderRadius.circular(radius),
-      border: Border.all(color: VetoColors.border),
-    );
-  }
-
-  static List<BoxShadow> accentGlow({double intensity = 1.0}) {
-    return [
-      BoxShadow(
-        color: VetoColors.accent.withOpacity(0.3 * intensity),
-        blurRadius: 20 * intensity,
-        spreadRadius: 2 * intensity,
-      ),
-    ];
-  }
-  
-  /// Create a gold glow effect for elevated elements
-  static List<BoxShadow> vetoGlow({double intensity = 1.0}) {
-    return [
-      BoxShadow(
-        color: VetoColors.accent.withOpacity(0.3 * intensity),
-        blurRadius: 20 * intensity,
-        spreadRadius: 4 * intensity,
-        offset: const Offset(0, 4),
-      ),
-      BoxShadow(
-        color: VetoColors.accent.withOpacity(0.15 * intensity),
-        blurRadius: 40 * intensity,
-        spreadRadius: 8 * intensity,
-        offset: const Offset(0, 8),
-      ),
-    ];
-  }
-}
-
 class VetoTheme {
   VetoTheme._();
 
@@ -296,14 +246,122 @@ class VetoTheme {
       ),
 
       // ── Snack Bar ───────────────────────────────────────────
-      snackBarTheme: const SnackBarThemeData(
+      snackBarTheme: SnackBarThemeData(
         backgroundColor: VetoColors.surfaceHigh,
-        contentTextStyle: TextStyle(
-          fontFamily: 'Heebo',
-          fontSize: 14,
-          color: VetoColors.white,
-        ),
+        contentTextStyle: const TextStyle(fontFamily: 'Heebo', color: VetoColors.white, fontSize: 14),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        behavior: SnackBarBehavior.floating,
+      ),
+
+      // ── Misc ────────────────────────────────────────────────
+      dividerTheme: const DividerThemeData(color: VetoColors.divider, thickness: 1, space: 1),
+      chipTheme: ChipThemeData(
+        backgroundColor: VetoColors.surfaceHigh,
+        selectedColor: VetoColors.goldSoft,
+        labelStyle: const TextStyle(fontFamily: 'Heebo', color: VetoColors.silver, fontSize: 13),
+        side: const BorderSide(color: VetoColors.border, width: 1),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      ),
+      switchTheme: SwitchThemeData(
+        thumbColor: WidgetStateProperty.resolveWith((s) =>
+            s.contains(WidgetState.selected) ? VetoColors.accent : VetoColors.silverDim),
+        trackColor: WidgetStateProperty.resolveWith((s) =>
+            s.contains(WidgetState.selected) ? VetoColors.accentGlow : VetoColors.surfaceHigh),
+      ),
+      listTileTheme: const ListTileThemeData(
+        tileColor: Colors.transparent,
+        textColor: VetoColors.white,
+        iconColor: VetoColors.silver,
+        contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       ),
     );
   }
+}
+
+// ── Decoration Helpers ──────────────────────────────────────
+
+class VetoDecorations {
+  VetoDecorations._();
+
+  static BoxDecoration glassCard({double radius = 16, double opacity = 0.08}) =>
+      BoxDecoration(
+        color: Color.fromRGBO(201, 160, 80, opacity),
+        borderRadius: BorderRadius.circular(radius),
+        border: Border.all(color: VetoColors.border, width: 1),
+      );
+
+  static BoxDecoration surfaceCard({double radius = 16}) => BoxDecoration(
+        color: VetoColors.surface,
+        borderRadius: BorderRadius.circular(radius),
+        border: Border.all(color: VetoColors.border, width: 1),
+      );
+
+  static BoxDecoration goldCard({double radius = 12}) => BoxDecoration(
+        color: VetoColors.surface,
+        borderRadius: BorderRadius.circular(radius),
+        border: Border.all(color: VetoColors.accent.withOpacity(0.4), width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: VetoColors.accent.withOpacity(0.06),
+            blurRadius: 16,
+            spreadRadius: 0,
+          ),
+        ],
+      );
+
+  static BoxDecoration gradientBg() => const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFF07101C), Color(0xFF0C1827), Color(0xFF07101C)],
+          stops: [0.0, 0.5, 1.0],
+        ),
+      );
+
+  static BoxDecoration legalHeaderBg() => const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFF0C1827), Color(0xFF121F32)],
+        ),
+        border: Border(
+          bottom: BorderSide(color: Color(0x40C9A050), width: 1),
+        ),
+      );
+
+  static List<BoxShadow> vetoGlow({double intensity = 1.0}) => [
+        BoxShadow(
+          color: VetoColors.vetoRedGlow.withOpacity(0.6 * intensity),
+          blurRadius: 40 * intensity,
+          spreadRadius: 4 * intensity,
+        ),
+        BoxShadow(
+          color: VetoColors.vetoRed.withOpacity(0.2 * intensity),
+          blurRadius: 80 * intensity,
+          spreadRadius: 10 * intensity,
+        ),
+      ];
+
+  static List<BoxShadow> accentGlow({double intensity = 1.0}) => [
+        BoxShadow(
+          color: VetoColors.accentGlow.withOpacity(0.6 * intensity),
+          blurRadius: 30 * intensity,
+          spreadRadius: 2 * intensity,
+        ),
+      ];
+
+  static List<BoxShadow> goldGlow({double intensity = 1.0}) => [
+        BoxShadow(
+          color: VetoColors.accent.withOpacity(0.25 * intensity),
+          blurRadius: 24 * intensity,
+          spreadRadius: 0,
+          offset: const Offset(0, 4),
+        ),
+        BoxShadow(
+          color: VetoColors.accent.withOpacity(0.1 * intensity),
+          blurRadius: 48 * intensity,
+          spreadRadius: 4 * intensity,
+        ),
+      ];
 }

@@ -479,7 +479,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                   ? _t(code, 'planBasic')
                                   : _t(code, 'planFree'),
                           color: _plan == 'pro'
-                              ? const Color(0xFF8B5CF6)
+                              ? const Color(0xFFC9A050)
                               : _plan == 'basic'
                                   ? VetoPalette.primary
                                   : VetoPalette.textMuted,
