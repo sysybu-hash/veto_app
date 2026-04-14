@@ -1,6 +1,8 @@
 // ============================================================
-//  accessibility_toolbar.dart — Global accessibility FAB + panel
-//  Sheet context MUST be the app [Navigator] (see vetoRootNavigatorKey in main).
+//  accessibility_toolbar.dart — (optional) FAB + bottom sheet
+//  NOT mounted from main.dart — Web builds had full-screen barrier bugs when the FAB
+//  lived in MaterialApp.builder beside the Navigator. Prefer a dedicated /accessibility
+//  screen if you need this UI again. [AccessibilitySettings] still runs from main.
 // ============================================================
 
 import 'package:flutter/material.dart';
@@ -66,7 +68,7 @@ const Color _sheetMuted = Color(0xFF5E5A52);
 String _tx(String code, String k) =>
     (_copy[AppLanguage.normalize(code)] ?? _copy['en']!)[k] ?? k;
 
-/// Wraps the navigator subtree; shows a persistent accessibility FAB.
+/// Optional host — currently unused (see file header).
 class AccessibilityToolbarHost extends StatelessWidget {
   final GlobalKey<NavigatorState> navigatorKey;
   final Widget child;

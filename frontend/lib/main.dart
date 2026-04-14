@@ -12,7 +12,6 @@ import 'config/app_config.dart';
 import 'core/accessibility/accessibility_settings.dart';
 import 'core/i18n/app_language.dart';
 import 'core/theme/veto_theme.dart';
-import 'widgets/accessibility_toolbar.dart';
 import 'screens/login_screen.dart';
 import 'screens/landing_screen.dart';
 import 'screens/lawyer_dashboard.dart';
@@ -34,10 +33,6 @@ import 'screens/chat_screen.dart';
 import 'screens/call_screen.dart';
 import 'screens/maps_screen.dart';
 import 'services/socket_service.dart';
-
-/// Used by [AccessibilityToolbarHost] so modal routes attach to the app
-/// [Navigator] overlay (the host sits beside the navigator in `MaterialApp.builder`).
-final GlobalKey<NavigatorState> vetoRootNavigatorKey = GlobalKey<NavigatorState>();
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -84,7 +79,6 @@ class VetoApp extends StatelessWidget {
     final baseTheme = VetoTheme.luxuryLight();
 
     return MaterialApp(
-      navigatorKey: vetoRootNavigatorKey,
       debugShowCheckedModeBanner: false,
       title: 'VETO',
       theme: a11y.mergeTheme(baseTheme),
@@ -110,6 +104,10 @@ class VetoApp extends StatelessWidget {
         // Respect OS font scaling, then apply in-app size steps.
         final os = mq.textScaler.scale(1.0);
         final combined = (os * a11y.textScale).clamp(0.75, 2.25);
+        // Floating accessibility FAB + bottom sheet removed: on Web it could leave a
+        // full-screen modal barrier with no usable sheet. Preferences still load via
+        // [AccessibilitySettings] (theme + text scaler). Re-introduce as a dedicated
+        // route (/accessibility) when needed — do not wrap the navigator in a Stack FAB.
         return MediaQuery(
           data: mq.copyWith(
             textScaler: TextScaler.linear(combined),
@@ -117,10 +115,7 @@ class VetoApp extends StatelessWidget {
             highContrast: a11y.highContrast,
             disableAnimations: a11y.reduceMotion,
           ),
-          child: AccessibilityToolbarHost(
-            navigatorKey: vetoRootNavigatorKey,
-            child: navigatorChild,
-          ),
+          child: navigatorChild,
         );
       },
       initialRoute: '/',
