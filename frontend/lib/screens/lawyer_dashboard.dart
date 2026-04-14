@@ -25,6 +25,7 @@ class _LawyerDashboardState extends State<LawyerDashboard> {
   final List<Map<String, dynamic>> _alerts = [];
   final List<Map<String, dynamic>> _activeCases = [];
   StreamSubscription<Map<String, dynamic>>? _alertSub;
+  StreamSubscription<Map<String, dynamic>>? _caseAcceptedSub;
 
   static const Map<String, Map<String, String>> _copy = {
     'he': {
@@ -173,11 +174,28 @@ class _LawyerDashboardState extends State<LawyerDashboard> {
       setState(() => _alerts.insert(0, data));
       _showAlertDialog(data);
     });
+
+    _caseAcceptedSub = SocketService().onCaseAccepted.listen((data) {
+      final roomId = data['roomId']?.toString();
+      if (!mounted || roomId == null || roomId.isEmpty) return;
+      Navigator.of(context).pushNamed(
+        '/call',
+        arguments: {
+          'roomId': roomId,
+          'callType': data['callType']?.toString() ?? 'audio',
+          'peerName': data['peerName']?.toString() ?? 'Client',
+          'role': 'lawyer',
+          'eventId': data['eventId']?.toString() ?? roomId,
+          'language': data['language']?.toString() ?? preferredLanguage,
+        },
+      );
+    });
   }
 
   @override
   void dispose() {
     _alertSub?.cancel();
+    _caseAcceptedSub?.cancel();
     super.dispose();
   }
 
@@ -1217,4 +1235,4 @@ class _ActiveCaseCard extends StatelessWidget {
       ),
     );
   }
-}
+}

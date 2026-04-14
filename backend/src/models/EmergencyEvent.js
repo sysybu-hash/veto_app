@@ -147,7 +147,7 @@ const EmergencyEventSchema = new mongoose.Schema(
     // ── Language ──────────────────────────────────────────────
     language: {
       type: String,
-      enum: ['en', 'he', 'ar'],
+      enum: ['en', 'he', 'ar', 'ru'],
       default: 'en', // user's preferred_language at event time
     },
 

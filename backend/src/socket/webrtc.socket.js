@@ -53,9 +53,9 @@ module.exports = function initWebRTC(io) {
             callType: callType || 'video',
             startedAt: new Date(),
           });
-          // Update event status to 'active'
+          // Update event status to in-progress once a real call room is created
           await EmergencyEvent.findByIdAndUpdate(roomId, {
-            status: 'active',
+            status: 'in_progress',
             call_type: callType || 'video',
             call_started_at: new Date(),
           });

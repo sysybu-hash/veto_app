@@ -77,7 +77,7 @@ module.exports = function initDispatch(io) {
     socket.on('start_veto', async (payload) => {
       if (role !== 'user') return; // lawyers can't trigger VETO
 
-      const { location, preferredLanguage, specialization } = payload;
+      const { location, preferredLanguage, specialization, callType } = payload;
 
       // Specialization → English DB terms map (mirrors ai.controller.js)
       const SPEC_MAP = {
@@ -95,6 +95,7 @@ module.exports = function initDispatch(io) {
           user_id:        userId,
           status:         'dispatching',
           language:       preferredLanguage || 'en',
+          call_type:      callType || 'audio',
           event_location: {
             type:        'Point',
             coordinates: [location.lng, location.lat],
@@ -284,6 +285,7 @@ module.exports = function initDispatch(io) {
         io.to(`user:${event.user_id}`).emit('lawyer_found', {
           eventId,
           roomId,
+          callType:     event.call_type || 'audio',
           lawyerName:   lawyer.full_name,
           lawyerPhone:  lawyer.phone,
           language:     lawyer.preferred_language,
@@ -294,6 +296,9 @@ module.exports = function initDispatch(io) {
         socket.emit('case_accepted_confirmed', {
           eventId,
           roomId,
+          callType:     event.call_type || 'audio',
+          peerName:     'Client',
+          language:     event.language || 'he',
           userLocation: event.event_location?.coordinates,
           userId:       event.user_id?.toString(),
         });

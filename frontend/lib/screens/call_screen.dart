@@ -11,6 +11,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:provider/provider.dart';
 import '../core/theme/veto_theme.dart';
+import '../services/call_api_service.dart';
+import '../services/call_recording_service.dart';
 import '../services/webrtc_service.dart';
 import '../services/socket_service.dart';
 
@@ -32,8 +34,16 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
   String  _callType = 'video';
   String  _peerName = 'Connecting...';
   String  _myRole   = 'user';
+  String  _eventId  = '';
+  String  _language = 'he';
 
   bool _showTranscript = false;
+  bool _recordingStarted = false;
+  bool _finalizedCall = false;
+  bool _savingArtifacts = false;
+  String? _transcriptText;
+  late final CallRecordingService _recordingService;
+  final CallApiService _callApiService = CallApiService();
 
   @override
   void initState() {
@@ -52,6 +62,7 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
     _fadeCtrl = AnimationController(duration: const Duration(milliseconds: 600), vsync: this);
     _fadeAnim = CurvedAnimation(parent: _fadeCtrl, curve: Curves.easeIn);
     _fadeCtrl.forward();
+    _recordingService = createCallRecordingService();
 
     WidgetsBinding.instance.addPostFrameCallback((_) => _init());
   }
@@ -65,6 +76,8 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
       _callType  = args['callType']?.toString() ?? 'video';
       _peerName  = args['peerName']?.toString() ?? 'Legal Counsel';
       _myRole    = args['role']?.toString() ?? 'user';
+      _eventId   = args['eventId']?.toString() ?? '';
+      _language  = args['language']?.toString() ?? 'he';
     });
 
     final socketService = context.read<SocketService>();
@@ -82,19 +95,73 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
     if (!mounted) return;
     setState(() {});
 
-    if (_webrtc.state == CallState.ended) {
-      _navigateBack();
+    if (_webrtc.state == CallState.connected && !_recordingStarted) {
+      _recordingStarted = true;
+      _recordingService.start(
+        localStream: _webrtc.localStream,
+        remoteStream: _webrtc.remoteStream,
+        video: _callType == 'video',
+      );
+    }
+
+    if ((_webrtc.state == CallState.ended || _webrtc.state == CallState.error) &&
+        !_finalizedCall) {
+      _finalizedCall = true;
+      unawaited(_finalizeAndNavigate());
     }
   }
 
-  void _navigateBack() {
-    Future.delayed(const Duration(seconds: 1), () {
-      if (mounted) Navigator.of(context).pushReplacementNamed('/veto_screen');
-    });
+  Future<void> _finalizeAndNavigate() async {
+    await _finalizeArtifacts();
+    if (!mounted) return;
+    Navigator.of(context).pushReplacementNamed(
+      _myRole == 'lawyer' ? '/lawyer_dashboard' : '/veto_screen',
+    );
   }
 
   Future<void> _endCall() async {
     await _webrtc.endCall();
+  }
+
+  Future<void> _finalizeArtifacts() async {
+    if (_savingArtifacts || _eventId.isEmpty) return;
+    _savingArtifacts = true;
+    if (mounted) {
+      setState(() => _showTranscript = true);
+    }
+
+    try {
+      final recording = await _recordingService.stop();
+      if (recording == null || recording.bytes.isEmpty) return;
+
+      await _callApiService.uploadRecording(
+        eventId: _eventId,
+        bytes: recording.bytes,
+        mimeType: recording.mimeType,
+        fileName: recording.fileName,
+      );
+
+      final transcript = await _callApiService.transcribeRecording(
+        eventId: _eventId,
+        bytes: recording.bytes,
+        mimeType: recording.mimeType,
+        language: _language,
+      );
+
+      if (mounted) {
+        setState(() => _transcriptText = transcript);
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _transcriptText = _language == 'he'
+              ? 'שמירת ההקלטה או התמלול נכשלה.'
+              : 'Recording or transcription failed to save.';
+        });
+      }
+    } finally {
+      _savingArtifacts = false;
+    }
   }
 
   @override
@@ -463,9 +530,12 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
             ],
           ),
           const SizedBox(height: 8),
-          const Text(
-            'התמלול יהיה זמין בסיום השיחה...',
-            style: TextStyle(
+          Text(
+            _transcriptText ??
+                (_savingArtifacts
+                    ? 'שומר הקלטה ומכין תמלול...'
+                    : 'התמלול יהיה זמין בסיום השיחה...'),
+            style: const TextStyle(
               fontFamily: 'Heebo',
               fontSize: 13,
               color: VetoColors.silver,

@@ -117,14 +117,20 @@ class SocketService {
   /// Whether the socket is currently connected.
   bool get isConnected => _socket?.connected ?? false;
 
-  void emitStartVeto(
-      {required double lat, required double lng, String? preferredLanguage, String? specialization}) {
+  void emitStartVeto({
+    required double lat,
+    required double lng,
+    String? preferredLanguage,
+    String? specialization,
+    String? callType,
+  }) {
     final payload = {
       'location': {'lat': lat, 'lng': lng},
       'preferredLanguage': preferredLanguage,
       'details': 'Emergency triggered via VETO AI agent',
     };
     if (specialization != null) payload['specialization'] = specialization;
+    if (callType != null && callType.isNotEmpty) payload['callType'] = callType;
     emit('start_veto', payload);
   }
 

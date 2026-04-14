@@ -1430,4 +1430,11 @@ class _ProofChip extends StatelessWidget {
         const Icon(Icons.check_circle_outline_rounded, color: VetoPalette.info, size: 13),
         const SizedBox(width: 6),
         Text(label, style: const TextStyle(
-          color: _Clr.sub, fontSize: 11, fontWei
+          color: _Clr.sub,
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+        )),
+      ]),
+    );
+  }
+}

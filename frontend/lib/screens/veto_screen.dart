@@ -230,9 +230,12 @@ class _VetoScreenState extends State<VetoScreen> {
   bool _isDispatching = false;
   bool _isLoading = false;
   bool _isListening = false;
+  String _pendingCallType = 'audio';
   String? _activeEventId;
   String? _token;
   StreamSubscription<Map<String, dynamic>>? _emergencyCreatedSub;
+  StreamSubscription<Map<String, dynamic>>? _lawyerFoundSub;
+  StreamSubscription<Map<String, dynamic>>? _noLawyersSub;
   final List<_Msg> _messages = [];
   final List<Map<String, dynamic>> _geminiHistory = [];
   final _inputCtrl = TextEditingController();
@@ -260,6 +263,9 @@ class _VetoScreenState extends State<VetoScreen> {
       final id = data['eventId'] as String?;
       if (id != null && mounted) setState(() => _activeEventId = id);
     });
+    _lawyerFoundSub = SocketService().onLawyerFound.listen(_handleLawyerFound);
+    _noLawyersSub =
+        SocketService().onNoLawyersAvailable.listen(_handleNoLawyersAvailable);
     WidgetsBinding.instance.addPostFrameCallback((_) => _checkSubscription());
   }
 
@@ -291,6 +297,8 @@ class _VetoScreenState extends State<VetoScreen> {
     _inputCtrl.dispose();
     _scrollCtrl.dispose();
     _emergencyCreatedSub?.cancel();
+    _lawyerFoundSub?.cancel();
+    _noLawyersSub?.cancel();
     super.dispose();
   }
 
@@ -323,6 +331,9 @@ class _VetoScreenState extends State<VetoScreen> {
       });
       _messages.add(_Msg(text: _l.greeting, isUser: false));
       if (_role == 'admin') _loadAdminFiles();
+    }
+    if ((r ?? '').isNotEmpty) {
+      await SocketService().connect(role: r ?? 'user');
     }
   }
 
@@ -388,7 +399,9 @@ class _VetoScreenState extends State<VetoScreen> {
     try { pos = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high); } catch (_) {}
     SocketService().emitStartVeto(
       lat: pos?.latitude ?? 32.08, lng: pos?.longitude ?? 34.78,
-      preferredLanguage: _langKey, specialization: _s.he,
+      preferredLanguage: _langKey,
+      specialization: _s.he,
+      callType: _pendingCallType,
     );
     final msg = _langKey == 'ru' ? '🚨 SOS отправлен! Поиск адвоката...'
         : _langKey == 'en' ? '🚨 SOS sent! Searching for a lawyer...'
@@ -411,7 +424,9 @@ class _VetoScreenState extends State<VetoScreen> {
     try { pos = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high); } catch (_) {}
     SocketService().emitStartVeto(
       lat: pos?.latitude ?? 32.08, lng: pos?.longitude ?? 34.78,
-      preferredLanguage: _langKey, specialization: spec,
+      preferredLanguage: _langKey,
+      specialization: spec,
+      callType: _pendingCallType,
     );
     final specLabel = spec ?? '';
     final msg = lawyerName != null
@@ -466,13 +481,56 @@ class _VetoScreenState extends State<VetoScreen> {
 
   // ── Contact / Tools ───────────────────────────────────────
   void _openContact(String type) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: VetoPalette.surface,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-      builder: (_) => _ContactSheet(type: type, langKey: _langKey, scenarioLabel: _sLabel),
+    _pendingCallType = type == 'video' ? 'video' : 'audio';
+    _dispatchSOS();
+  }
+
+  void _handleLawyerFound(Map<String, dynamic> data) {
+    final roomId = data['roomId']?.toString();
+    if (!mounted || roomId == null || roomId.isEmpty) return;
+
+    setState(() {
+      _isDispatching = false;
+      _activeEventId = data['eventId']?.toString() ?? roomId;
+    });
+
+    Navigator.of(context).pushNamed(
+      '/call',
+      arguments: {
+        'roomId': roomId,
+        'callType': data['callType']?.toString() ?? _pendingCallType,
+        'peerName': data['lawyerName']?.toString() ??
+            (_langKey == 'he' ? 'עורך דין' : 'Lawyer'),
+        'role': 'user',
+        'eventId': data['eventId']?.toString() ?? roomId,
+        'language': _langKey,
+      },
+    );
+  }
+
+  void _handleNoLawyersAvailable(Map<String, dynamic> data) {
+    if (!mounted) return;
+    setState(() {
+      _isDispatching = false;
+      _messages.add(_Msg(text: data['message']?.toString() ??
+          (_langKey == 'he'
+              ? 'כרגע אין עורכי דין זמינים.'
+              : _langKey == 'ru'
+                  ? 'В данный момент нет доступных адвокатов.'
+                  : 'No lawyers are currently available.'), isUser: false, isSystem: true));
+    });
+    final message = data['message']?.toString() ??
+        (_langKey == 'he'
+            ? 'כרגע אין עורכי דין זמינים.'
+            : _langKey == 'ru'
+                ? 'В данный момент нет доступных адвокатов.'
+                : 'No lawyers are currently available.');
+    _scrollToBottom();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: VetoPalette.warning,
+      ),
     );
   }
 
@@ -722,7 +780,7 @@ class _VetoScreenState extends State<VetoScreen> {
               ? 'Быстрая связь'
               : 'Quick Contact'),
           const SizedBox(height: 8),
-          _contactGrid(isRtl),
+          _liveContactGrid(isRtl),
           const SizedBox(height: 16),
           _secLabel(isRtl ? 'כלים מהירים' : _langKey == 'ru' ? 'Инструменты' : 'Quick Tools'),
           const SizedBox(height: 8),
@@ -947,6 +1005,57 @@ class _VetoScreenState extends State<VetoScreen> {
           ),
         ),
     ]),
+  );
+
+  Widget _liveContactGrid(bool isRtl) => GridView.count(
+    shrinkWrap: true,
+    physics: const NeverScrollableScrollPhysics(),
+    crossAxisCount: 2,
+    childAspectRatio: 2.8,
+    crossAxisSpacing: 10,
+    mainAxisSpacing: 10,
+    children: [
+      _ctCard(
+        Icons.phone_in_talk_rounded,
+        _langKey == 'he'
+            ? 'עורך דין אנושי'
+            : _langKey == 'ru'
+                ? 'Адвокат עכשיו'
+                : 'Human Lawyer',
+        VetoPalette.primary,
+        () => _openContact('audio'),
+      ),
+      _ctCard(
+        Icons.mic_rounded,
+        _langKey == 'he'
+            ? 'שיחת אודיו'
+            : _langKey == 'ru'
+                ? 'Аудиозвонок'
+                : 'Audio Call',
+        const Color(0xFF0EA5A4),
+        () => _openContact('audio'),
+      ),
+      _ctCard(
+        Icons.videocam_rounded,
+        _langKey == 'he'
+            ? 'שיחת וידאו'
+            : _langKey == 'ru'
+                ? 'Видеозвонок'
+                : 'Video Call',
+        const Color(0xFFC9A050),
+        () => _openContact('video'),
+      ),
+      _ctCard(
+        Icons.bolt_rounded,
+        _langKey == 'he'
+            ? 'SOS מהיר'
+            : _langKey == 'ru'
+                ? 'Быстрый SOS'
+                : 'Quick SOS',
+        VetoPalette.emergency,
+        _dispatchSOS,
+      ),
+    ],
   );
 
   Widget _contactGrid(bool isRtl) => GridView.count(
