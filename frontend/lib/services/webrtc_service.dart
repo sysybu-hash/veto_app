@@ -23,11 +23,10 @@ class WebRTCService extends ChangeNotifier {
   CallType  _callType   = CallType.video;
   String?   _roomId;
   String?   _peerSocketId;
-  bool      _isCaller   = false;
 
   bool _micMuted        = false;
   bool _cameraOff       = false;
-  bool _isRecording     = false;
+  final bool _isRecording = false;
   int  _callDuration    = 0;
   Timer? _durationTimer;
 
@@ -97,7 +96,6 @@ class WebRTCService extends ChangeNotifier {
   //  Get user media and init peer connection
   // ═══════════════════════════════════════════════════════════
   Future<void> _initCall(bool isCaller, String? peerSocketId) async {
-    _isCaller    = isCaller;
     _peerSocketId = peerSocketId;
 
     // ── Get local media ───────────────────────────────────────
@@ -205,7 +203,7 @@ class WebRTCService extends ChangeNotifier {
       try {
         if (_pc == null) {
           // Init without creating offer (we're callee)
-          await _initCall(false, data['fromSocketId']);
+          await _initCall(false, data['fromSocketId'] as String?);
         }
         _peerSocketId = data['fromSocketId'];
         final offerMap = Map<String, dynamic>.from(data['offer']);

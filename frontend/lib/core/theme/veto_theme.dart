@@ -300,10 +300,10 @@ class VetoDecorations {
   static BoxDecoration goldCard({double radius = 12}) => BoxDecoration(
         color: VetoColors.surface,
         borderRadius: BorderRadius.circular(radius),
-        border: Border.all(color: VetoColors.accent.withOpacity(0.4), width: 1),
+        border: Border.all(color: VetoColors.accent.withValues(alpha:0.4), width: 1),
         boxShadow: [
           BoxShadow(
-            color: VetoColors.accent.withOpacity(0.06),
+            color: VetoColors.accent.withValues(alpha:0.06),
             blurRadius: 16,
             spreadRadius: 0,
           ),
@@ -332,12 +332,12 @@ class VetoDecorations {
 
   static List<BoxShadow> vetoGlow({double intensity = 1.0}) => [
         BoxShadow(
-          color: VetoColors.vetoRedGlow.withOpacity(0.6 * intensity),
+          color: VetoColors.vetoRedGlow.withValues(alpha:0.6 * intensity),
           blurRadius: 40 * intensity,
           spreadRadius: 4 * intensity,
         ),
         BoxShadow(
-          color: VetoColors.vetoRed.withOpacity(0.2 * intensity),
+          color: VetoColors.vetoRed.withValues(alpha:0.2 * intensity),
           blurRadius: 80 * intensity,
           spreadRadius: 10 * intensity,
         ),
@@ -345,7 +345,7 @@ class VetoDecorations {
 
   static List<BoxShadow> accentGlow({double intensity = 1.0}) => [
         BoxShadow(
-          color: VetoColors.accentGlow.withOpacity(0.6 * intensity),
+          color: VetoColors.accentGlow.withValues(alpha:0.6 * intensity),
           blurRadius: 30 * intensity,
           spreadRadius: 2 * intensity,
         ),
@@ -353,13 +353,13 @@ class VetoDecorations {
 
   static List<BoxShadow> goldGlow({double intensity = 1.0}) => [
         BoxShadow(
-          color: VetoColors.accent.withOpacity(0.25 * intensity),
+          color: VetoColors.accent.withValues(alpha:0.25 * intensity),
           blurRadius: 24 * intensity,
           spreadRadius: 0,
           offset: const Offset(0, 4),
         ),
         BoxShadow(
-          color: VetoColors.accent.withOpacity(0.1 * intensity),
+          color: VetoColors.accent.withValues(alpha:0.1 * intensity),
           blurRadius: 48 * intensity,
           spreadRadius: 4 * intensity,
         ),

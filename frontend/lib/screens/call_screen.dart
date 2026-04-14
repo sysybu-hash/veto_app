@@ -368,7 +368,7 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: VetoColors.success,
-              boxShadow: [BoxShadow(color: VetoColors.success.withOpacity(0.5), blurRadius: 6)],
+              boxShadow: [BoxShadow(color: VetoColors.success.withValues(alpha:0.5), blurRadius: 6)],
             ),
           ),
         Text(text, style: TextStyle(fontFamily: 'Heebo', fontSize: 14, color: color)),
@@ -388,10 +388,10 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
               begin: Alignment.topCenter,
               end:   Alignment.bottomCenter,
               colors: [
-                Colors.black.withOpacity(0.6),
+                Colors.black.withValues(alpha:0.6),
                 Colors.transparent,
                 Colors.transparent,
-                Colors.black.withOpacity(0.8),
+                Colors.black.withValues(alpha:0.8),
               ],
               stops: const [0.0, 0.15, 0.75, 1.0],
             ),
@@ -415,7 +415,7 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
             decoration: BoxDecoration(
               color: VetoColors.vetoRedSoft,
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: VetoColors.vetoRed.withOpacity(0.3)),
+              border: Border.all(color: VetoColors.vetoRed.withValues(alpha:0.3)),
             ),
             child: const Row(
               mainAxisSize: MainAxisSize.min,
@@ -442,7 +442,7 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              color: Colors.black.withOpacity(0.4),
+              color: Colors.black.withValues(alpha:0.4),
               borderRadius: BorderRadius.circular(20),
               border: Border.all(color: VetoColors.border),
             ),
@@ -474,9 +474,9 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
-                color: VetoColors.success.withOpacity(0.15),
+                color: VetoColors.success.withValues(alpha:0.15),
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: VetoColors.success.withOpacity(0.3)),
+                border: Border.all(color: VetoColors.success.withValues(alpha:0.3)),
               ),
               child: Text(
                 _webrtc.formattedDuration,
@@ -501,7 +501,7 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
       constraints: const BoxConstraints(maxHeight: 200),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: VetoColors.surface.withOpacity(0.95),
+        color: VetoColors.surface.withValues(alpha:0.95),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: VetoColors.border),
       ),
@@ -642,8 +642,8 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
             height: 52,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: Colors.white.withOpacity(0.1),
-              border: Border.all(color: Colors.white.withOpacity(0.2)),
+              color: Colors.white.withValues(alpha:0.1),
+              border: Border.all(color: Colors.white.withValues(alpha:0.2)),
             ),
             child: Icon(icon, color: color, size: 24),
           ),

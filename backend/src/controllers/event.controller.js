@@ -61,8 +61,8 @@ const getHistory = async (req, res, next) => {
 // ============================================================
 const getEventById = async (req, res, next) => {
   try {
-    const { userId, role } = req.user;
-    const { eventId }      = req.params;
+    const { userId } = req.user;
+    const { eventId } = req.params;
 
     const event = await EmergencyEvent.findById(eventId)
       .populate('user_id',            'full_name phone email preferred_language last_location')

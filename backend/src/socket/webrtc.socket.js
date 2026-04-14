@@ -95,7 +95,6 @@ module.exports = function initWebRTC(io) {
     //  Payload:    { roomId, offer: RTCSessionDescription, targetSocketId }
     // ════════════════════════════════════════════════════════════
     socket.on('webrtc-offer', ({ roomId, offer, targetSocketId }) => {
-      const target = targetSocketId ? targetSocketId : `call:${roomId}`;
       const to = targetSocketId ? socket.to(targetSocketId) : socket.to(`call:${roomId}`);
       to.emit('webrtc-offer', {
         offer,

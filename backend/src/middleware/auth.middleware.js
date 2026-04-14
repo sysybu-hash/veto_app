@@ -28,7 +28,7 @@ const protect = (req, res, next) => {
     const decoded = jwt.verify(token, jwtSecret());
     req.user = decoded;
     next();
-  } catch (err) {
+  } catch {
     return res.status(401).json({ error: 'Invalid or expired token.' });
   }
 };
@@ -53,7 +53,7 @@ const socketAuth = (socket, next) => {
     const decoded = jwt.verify(token, jwtSecret());
     socket.handshake.auth.decoded = decoded;
     next();
-  } catch (err) {
+  } catch {
     return next(new Error('Socket auth failed: invalid token.'));
   }
 };

@@ -37,13 +37,16 @@ class _HomeScreenState extends State<HomeScreen> {
         );
       }
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Logout error: $e')),
       );
     } finally {
-      setState(() {
-        _isLoggingOut = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isLoggingOut = false;
+        });
+      }
     }
   }
 

@@ -5,7 +5,6 @@
 // ============================================================
 
 import 'dart:convert';
-import 'dart:typed_data';
 import 'package:flutter/foundation.dart' show kIsWeb, debugPrint;
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
@@ -337,12 +336,12 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
             child: Row(children: [
-              Icon(Icons.storage_rounded, size: 12, color: VetoPalette.textMuted),
+              const Icon(Icons.storage_rounded, size: 12, color: VetoPalette.textMuted),
               const SizedBox(width: 4),
               Text(file.sizeLabel,
                   style: const TextStyle(color: VetoPalette.textMuted, fontSize: 12)),
               const SizedBox(width: 16),
-              Icon(Icons.calendar_today_outlined,
+              const Icon(Icons.calendar_today_outlined,
                   size: 12, color: VetoPalette.textMuted),
               const SizedBox(width: 4),
               Text(
@@ -359,7 +358,6 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
                 width: double.infinity,
                 child: OutlinedButton.icon(
                   onPressed: () async {
-                    final uri = Uri.parse(file.url);
                     if (kIsWeb) {
                       browser_bridge.openInNewTab(file.url);
                     } else {
@@ -854,7 +852,7 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
             : VetoPalette.success;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: VetoPalette.surface,
         border: Border(bottom: BorderSide(color: VetoPalette.border)),
       ),

@@ -373,6 +373,7 @@ class _VetoScreenState extends State<VetoScreen> {
     // Admins and payment-exempt users skip the PayPal flow
     final role = await AuthService().getStoredRole();
     final isPaymentExempt = await AuthService().getStoredIsPaymentExempt();
+    if (!mounted) return;
     if (role == 'admin' || isPaymentExempt) {
       _dispatch(spec, lawyerName);
       return;
@@ -396,7 +397,13 @@ class _VetoScreenState extends State<VetoScreen> {
     HapticFeedback.heavyImpact();
     setState(() => _isDispatching = true);
     Position? pos;
-    try { pos = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high); } catch (_) {}
+    try {
+      pos = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+        ),
+      );
+    } catch (_) {}
     SocketService().emitStartVeto(
       lat: pos?.latitude ?? 32.08, lng: pos?.longitude ?? 34.78,
       preferredLanguage: _langKey,
@@ -421,7 +428,13 @@ class _VetoScreenState extends State<VetoScreen> {
     setState(() => _isDispatching = true);
     HapticFeedback.heavyImpact();
     Position? pos;
-    try { pos = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high); } catch (_) {}
+    try {
+      pos = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+        ),
+      );
+    } catch (_) {}
     SocketService().emitStartVeto(
       lat: pos?.latitude ?? 32.08, lng: pos?.longitude ?? 34.78,
       preferredLanguage: _langKey,
@@ -635,7 +648,7 @@ class _VetoScreenState extends State<VetoScreen> {
             letterSpacing: 5,
             fontSize: 18,
             color: VetoColors.accent,
-            shadows: [Shadow(color: VetoColors.accent.withOpacity(0.3), blurRadius: 8)],
+            shadows: [Shadow(color: VetoColors.accent.withValues(alpha:0.3), blurRadius: 8)],
           )),
       const SizedBox(width: 4),
       if (_isDispatching)
@@ -651,7 +664,7 @@ class _VetoScreenState extends State<VetoScreen> {
     ]),
     bottom: PreferredSize(
         preferredSize: const Size.fromHeight(1),
-        child: Container(height: 1, color: VetoColors.accent.withOpacity(0.2))),
+        child: Container(height: 1, color: VetoColors.accent.withValues(alpha:0.2))),
     actions: [
       for (final k in ['he', 'ru', 'en'])
         GestureDetector(
@@ -727,7 +740,7 @@ class _VetoScreenState extends State<VetoScreen> {
   Widget _buildNavBar(bool isRtl) => Container(
     decoration: BoxDecoration(
       color: VetoColors.surface,
-      border: Border(top: BorderSide(color: VetoColors.accent.withOpacity(0.25), width: 1)),
+      border: Border(top: BorderSide(color: VetoColors.accent.withValues(alpha:0.25), width: 1)),
     ),
     child: NavigationBar(
       selectedIndex: _tab,
@@ -739,12 +752,12 @@ class _VetoScreenState extends State<VetoScreen> {
       destinations: [
         NavigationDestination(
           icon: const Icon(Icons.shield_outlined, color: VetoColors.textMuted),
-          selectedIcon: Icon(Icons.shield, color: VetoColors.accent),
+          selectedIcon: const Icon(Icons.shield, color: VetoColors.accent),
           label: isRtl ? 'VETO מגן' : 'VETO Shield',
         ),
         NavigationDestination(
           icon: const Icon(Icons.smart_toy_outlined, color: VetoColors.textMuted),
-          selectedIcon: Icon(Icons.smart_toy, color: VetoColors.accent),
+          selectedIcon: const Icon(Icons.smart_toy, color: VetoColors.accent),
           label: isRtl ? 'AI עוזר' : 'AI Assistant',
         ),
       ],
@@ -951,8 +964,8 @@ class _VetoScreenState extends State<VetoScreen> {
     decoration: BoxDecoration(
         color: VetoPalette.surface,
         borderRadius: BorderRadius.circular(14),
-        border: Border(
-          left: const BorderSide(color: VetoPalette.primary, width: 3),
+        border: const Border(
+          left: BorderSide(color: VetoPalette.primary, width: 3),
           top: BorderSide(color: VetoPalette.border),
           right: BorderSide(color: VetoPalette.border),
           bottom: BorderSide(color: VetoPalette.border),
@@ -1055,31 +1068,6 @@ class _VetoScreenState extends State<VetoScreen> {
         VetoPalette.emergency,
         _dispatchSOS,
       ),
-    ],
-  );
-
-  Widget _contactGrid(bool isRtl) => GridView.count(
-    shrinkWrap: true,
-    physics: const NeverScrollableScrollPhysics(),
-    crossAxisCount: 2,
-    childAspectRatio: 2.8,
-    crossAxisSpacing: 10,
-    mainAxisSpacing: 10,
-    children: [
-      _ctCard(Icons.phone_in_talk_rounded,
-          _langKey == 'he' ? 'עורך דין עכשיו'
-              : _langKey == 'ru' ? 'Вызвать юриста'
-              : 'Call Lawyer',
-          VetoPalette.primary, _dispatchSOS),
-      _ctCard(Icons.chat_rounded, 'WhatsApp', const Color(0xFF25D366),
-          () => _openContact('whatsapp')),
-      _ctCard(Icons.send_rounded, 'Telegram', const Color(0xFF229ED9),
-          () => _openContact('telegram')),
-      _ctCard(Icons.videocam_rounded,
-          _langKey == 'he' ? 'שיחת וידאו'
-              : _langKey == 'ru' ? 'Видеозвонок'
-              : 'Video Call',
-          const Color(0xFFC9A050), () => _openContact('video')),
     ],
   );
 
@@ -1393,10 +1381,12 @@ class _VetoScreenState extends State<VetoScreen> {
     ),
     // ── Input row ────────────────────────────────────────────
     Container(
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: VetoPalette.surface,
         border: Border(top: BorderSide(color: VetoPalette.border)),
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 8)],
+        boxShadow: [
+          BoxShadow(color: Color(0x0A000000), blurRadius: 8),
+        ],
       ),
       child: Column(mainAxisSize: MainAxisSize.min, children: [
         _chatInput(isRtl),
@@ -1905,6 +1895,7 @@ class _SubscriptionGateDialogState extends State<_SubscriptionGateDialog> {
     if (!mounted) return;
     if (result.success) {
       await AuthService().setSubscribed(true);
+      if (!mounted) return;
       Navigator.of(context).pop(true);
     } else {
       setState(() { _loading = false; _error = result.error ?? 'התשלום לא אושר.'; });

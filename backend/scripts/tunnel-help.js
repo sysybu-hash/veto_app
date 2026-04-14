@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-// eslint-disable-next-line no-console -- CLI help
 console.log(`
 VETO — localtunnel (הכתובת הציבורית משתנה לעיתים)
 =================================================
@@ -22,13 +21,13 @@ VETO — localtunnel (הכתובת הציבורית משתנה לעיתים)
      npm run tunnel
    Uses tunnel-run.js: real URL is printed. If localtunnel assigns something
    other than sweet-turkey-60.loca.lt, the script prints the exact
-   `flutter run --dart-define=VETO_HOST=...` line to copy.
+   flutter run --dart-define=VETO_HOST=... line to copy.
 
    OR: npm run tunnel:any
    → Random *.loca.lt via CLI
    → Use the printed hostname with --dart-define=VETO_HOST=...
 
-   Legacy CLI: npm run tunnel:cli (same ambiguity as plain `lt`)
+   Legacy CLI: npm run tunnel:cli (same ambiguity as plain lt)
 
 3) Flutter already sends header: bypass-tunnel-reminder: true on REST + socket (loca.lt).
 

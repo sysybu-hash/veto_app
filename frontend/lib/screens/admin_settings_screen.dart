@@ -324,9 +324,9 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
           borderRadius: BorderRadius.circular(18),
           border: Border(
             left: BorderSide(color: color, width: 3),
-            top: BorderSide(color: VetoPalette.border),
-            right: BorderSide(color: VetoPalette.border),
-            bottom: BorderSide(color: VetoPalette.border),
+            top: const BorderSide(color: VetoPalette.border),
+            right: const BorderSide(color: VetoPalette.border),
+            bottom: const BorderSide(color: VetoPalette.border),
           ),
         ),
         child: Column(children: [

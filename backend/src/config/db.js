@@ -18,7 +18,7 @@ const connectDB = async () => {
   // Windows: DNS מקומי לפעמים נכשל על SRV של Atlas — ניסיון עם DNS ציבורי
   try {
     dns.setServers(['8.8.8.8', '1.1.1.1']);
-  } catch (_) {
+  } catch {
     /* ignore */
   }
 

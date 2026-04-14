@@ -137,7 +137,7 @@ class _SplashScreenState extends State<SplashScreen>
                           letterSpacing: 12,
                           shadows: [
                             Shadow(
-                              color: VetoColors.accent.withOpacity(0.4),
+                              color: VetoColors.accent.withValues(alpha:0.4),
                               blurRadius: 16,
                             ),
                           ],
@@ -147,9 +147,13 @@ class _SplashScreenState extends State<SplashScreen>
                       // Gold decorative line
                       Container(
                         width: 48, height: 1,
-                        decoration: BoxDecoration(
+                        decoration: const BoxDecoration(
                           gradient: LinearGradient(
-                            colors: [Colors.transparent, VetoColors.accent, Colors.transparent],
+                            colors: [
+                              Colors.transparent,
+                              VetoColors.accent,
+                              Colors.transparent,
+                            ],
                           ),
                         ),
                       ),

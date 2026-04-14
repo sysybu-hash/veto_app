@@ -4,7 +4,7 @@
 //
 //  Flow:
 //    1. Call createOrder(type) → get orderId + approveUrl
-//    2. Open approveUrl in new browser tab (dart:html window.open)
+//    2. Open approveUrl in new browser tab (browser_bridge on web)
 //    3. User completes PayPal flow in that tab
 //    4. User returns to VETO tab and taps "שילמתי"
 //    5. Call captureOrder(orderId, type, userId) → confirm payment

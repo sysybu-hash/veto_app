@@ -1,10 +1,7 @@
-// ignore_for_file: avoid_web_libraries_in_flutter
-
-import 'dart:typed_data';
-import 'dart:html' as html;
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
+import 'package:http/http.dart' as http;
+import 'package:web/web.dart' show URL;
 
 import 'call_recording_service.dart';
 
@@ -71,13 +68,11 @@ class _WebCallRecordingService implements CallRecordingService {
     if (objectUrl == null || objectUrl.isEmpty) return null;
 
     try {
-      final request = await html.HttpRequest.request(
-        objectUrl,
-        responseType: 'arraybuffer',
-      );
-      final buffer = request.response as ByteBuffer?;
-      if (buffer == null) return null;
-      final bytes = Uint8List.view(buffer);
+      final response = await http.get(Uri.parse(objectUrl));
+      if (response.statusCode < 200 || response.statusCode >= 300) {
+        return null;
+      }
+      final bytes = Uint8List.fromList(response.bodyBytes);
       return CallRecordingResult(
         bytes: bytes,
         mimeType: _mimeType,
@@ -86,7 +81,7 @@ class _WebCallRecordingService implements CallRecordingService {
             : 'veto-call-audio.webm',
       );
     } finally {
-      html.Url.revokeObjectUrl(objectUrl);
+      URL.revokeObjectURL(objectUrl);
     }
   }
 }

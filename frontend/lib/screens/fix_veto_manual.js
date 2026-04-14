@@ -1,5 +1,5 @@
 ﻿const fs = require('fs');
-let c = fs.readFileSync('VetoScreen.dart', 'utf8');
+let c = fs.readFileSync('veto_screen.dart', 'utf8');
 
 // Find the precise IconButton for files_vault and replace it with TWO buttons: files_vault and waze_map
 const oldPart = IconButton(
@@ -20,4 +20,4 @@ const newPart = IconButton(
           tooltip: _langKey == 'he' ? 'ניווט Waze' : 'Waze Navigation'),;
 
 c = c.replace(oldPart, newPart);
-fs.writeFileSync('VetoScreen.dart', c, 'utf8');
+fs.writeFileSync('veto_screen.dart', c, 'utf8');

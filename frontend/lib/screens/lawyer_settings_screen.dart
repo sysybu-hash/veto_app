@@ -363,8 +363,10 @@ class _LawyerSettingsScreenState extends State<LawyerSettingsScreen> {
         Uri.parse('${AppConfig.baseUrl}/users/me'),
         headers: AppConfig.httpHeaders({'Authorization': 'Bearer $tok'}),
       ).timeout(const Duration(seconds: 10));
+      if (!mounted) return;
       await _auth.logout(context);
-      if (mounted) Navigator.of(context).pushNamedAndRemoveUntil('/', (_) => false);
+      if (!mounted) return;
+      Navigator.of(context).pushNamedAndRemoveUntil('/', (_) => false);
     } catch (_) {}
   }
 
@@ -720,7 +722,7 @@ class _ToggleTile extends StatelessWidget {
         Switch(
           value: value,
           onChanged: onChanged,
-          activeColor: VetoPalette.primary,
+          activeThumbColor: VetoPalette.primary,
         ),
       ]),
     );
@@ -898,7 +900,7 @@ class _ScheduleRow extends StatelessWidget {
         Switch(
           value: schedule.open,
           onChanged: (v) { schedule.open = v; onChanged(); },
-          activeColor: VetoPalette.success,
+          activeThumbColor: VetoPalette.success,
           materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
         ),
         if (!schedule.open)
@@ -913,9 +915,9 @@ class _ScheduleRow extends StatelessWidget {
             value: schedule.from,
             onChanged: (v) { schedule.from = v; onChanged(); },
           ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 6),
-            child: Text('–', style: const TextStyle(color: VetoPalette.textMuted)),
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 6),
+            child: Text('–', style: TextStyle(color: VetoPalette.textMuted)),
           ),
           _TimeDropdown(
             label: toLabel,

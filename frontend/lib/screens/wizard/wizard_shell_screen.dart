@@ -456,8 +456,8 @@ class _WizardShellScreenState extends State<WizardShellScreen> {
                           padding: const EdgeInsets.all(14),
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(12),
-                            border: Border(
-                              left: const BorderSide(
+                            border: const Border(
+                              left: BorderSide(
                                   color: VetoPalette.warning, width: 3),
                               top: BorderSide(color: VetoPalette.border),
                               right: BorderSide(color: VetoPalette.border),

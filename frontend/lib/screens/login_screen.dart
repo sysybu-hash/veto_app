@@ -263,6 +263,7 @@ class _LoginScreenState extends State<LoginScreen> {
     final preferredLanguage = AppLanguage.normalize(
       data['user']?['preferred_language']?.toString() ?? lang,
     );
+    if (!mounted) return;
     await context
         .read<AppLanguageController>()
         .setLanguage(preferredLanguage, persist: false);
@@ -447,9 +448,9 @@ class _LoginScreenState extends State<LoginScreen> {
                             _AuthHero(lang: lang, compact: true),
                             const SizedBox(height: 20),
                           ],
-                          Align(
+                          const Align(
                             alignment: AlignmentDirectional.centerEnd,
-                            child: const AppLanguageMenu(compact: true),
+                            child: AppLanguageMenu(compact: true),
                           ),
                           const SizedBox(height: 14),
                           GlassPanel(
@@ -1336,6 +1337,7 @@ class _SubscriptionGateDialogState extends State<_SubscriptionGateDialog> {
     if (!mounted) return;
     if (result.success) {
       await AuthService().setSubscribed(true);
+      if (!mounted) return;
       Navigator.of(context).pop(true);
       return;
     }

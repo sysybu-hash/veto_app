@@ -17,10 +17,10 @@ def replace_in_file(file_path, old_str, new_str):
     print(f"Successfully updated {file_path}")
     return True
 
-base_dir = r"C:\Users\User\Desktop\VETO_App\frontend\lib\screens"
+base_dir = os.path.dirname(os.path.abspath(__file__))
 
-# 1. Update LoginScreen.dart
-login_path = os.path.join(base_dir, "LoginScreen.dart")
+# 1. Update login_screen.dart
+login_path = os.path.join(base_dir, "login_screen.dart")
 old_login = """    if (!mounted) return;
     if (role == 'lawyer') {
       Navigator.of(context).pushReplacementNamed('/lawyer_dashboard');
@@ -50,20 +50,20 @@ new_login = """    if (!mounted) return;
 
 replace_in_file(login_path, old_login, new_login)
 
-# 2. Update SettingsScreen.dart
-settings_path = os.path.join(base_dir, "SettingsScreen.dart")
+# 2. Update settings_screen.dart
+settings_path = os.path.join(base_dir, "settings_screen.dart")
 old_settings = """      Uri.parse('${AppConfig.baseUrl}/users/me'),"""
 new_settings = """      Uri.parse(_role == 'lawyer' ? '${AppConfig.baseUrl}/lawyers/me' : '${AppConfig.baseUrl}/users/me'),"""
 replace_in_file(settings_path, old_settings, new_settings)
 
-# 3. Update VetoScreen.dart admin check
-veto_path = os.path.join(base_dir, "VetoScreen.dart")
+# 3. Update veto_screen.dart admin check
+veto_path = os.path.join(base_dir, "veto_screen.dart")
 old_veto = """    final bool isAdmin = _role == 'admin';"""
 new_veto = """    final bool isAdmin = _role == 'admin' || _phone.contains('525640021') || _phone.contains('506400030');"""
 replace_in_file(veto_path, old_veto, new_veto)
 
-# 4. Update LawyerDashboard.dart admin check
-lawyer_path = os.path.join(base_dir, "LawyerDashboard.dart")
+# 4. Update lawyer_dashboard.dart admin check
+lawyer_path = os.path.join(base_dir, "lawyer_dashboard.dart")
 old_lawyer = """if (_role == 'admin')"""
 new_lawyer = """if (_role == 'admin' || _phone.contains('525640021') || _phone.contains('506400030'))"""
 replace_in_file(lawyer_path, old_lawyer, new_lawyer)

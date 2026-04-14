@@ -223,7 +223,9 @@ class _EvidenceScreenState extends State<EvidenceScreen>
 
     try {
       final pos = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high,
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+        ),
       );
       if (mounted) setState(() { _position = pos; _gpsReady = true; });
     } catch (_) {/* GPS unavailable – proceed without */ }
@@ -254,8 +256,10 @@ class _EvidenceScreenState extends State<EvidenceScreen>
       if (_gpsReady) {
         try {
           _position = await Geolocator.getCurrentPosition(
-            desiredAccuracy: LocationAccuracy.high,
-            timeLimit: const Duration(seconds: 3),
+            locationSettings: const LocationSettings(
+              accuracy: LocationAccuracy.high,
+              timeLimit: Duration(seconds: 3),
+            ),
           );
         } catch (_) { /* keep last known */ }
       }
@@ -368,7 +372,7 @@ class _EvidenceScreenState extends State<EvidenceScreen>
               animation: _flashOpacity,
               builder: (_, __) => IgnorePointer(
                 child: Container(
-                  color: Colors.white.withOpacity(_flashOpacity.value),
+                  color: Colors.white.withValues(alpha:_flashOpacity.value),
                 ),
               ),
             ),
@@ -424,7 +428,7 @@ class _EvidenceScreenState extends State<EvidenceScreen>
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end:   Alignment.bottomCenter,
-          colors: [Colors.black.withOpacity(0.75), Colors.transparent],
+          colors: [Colors.black.withValues(alpha:0.75), Colors.transparent],
         ),
       ),
       child: SafeArea(
@@ -445,9 +449,9 @@ class _EvidenceScreenState extends State<EvidenceScreen>
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
                 decoration: BoxDecoration(
-                  color: _C.bg.withOpacity(0.7),
+                  color: _C.bg.withValues(alpha:0.7),
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: _C.silver.withOpacity(0.3)),
+                  border: Border.all(color: _C.silver.withValues(alpha:0.3)),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -458,7 +462,7 @@ class _EvidenceScreenState extends State<EvidenceScreen>
                         shape: BoxShape.circle,
                         color: _C.accept,
                         boxShadow: [
-                          BoxShadow(color: _C.accept.withOpacity(0.7), blurRadius: 4)
+                          BoxShadow(color: _C.accept.withValues(alpha:0.7), blurRadius: 4)
                         ],
                       ),
                     ),
@@ -509,7 +513,7 @@ class _EvidenceScreenState extends State<EvidenceScreen>
             borderRadius: BorderRadius.circular(4),
             child: LinearProgressIndicator(
               value: _uploadProg > 0 ? _uploadProg : null,
-              backgroundColor: _C.silver.withOpacity(0.12),
+              backgroundColor: _C.silver.withValues(alpha:0.12),
               valueColor: const AlwaysStoppedAnimation(_C.uploading),
               minHeight: 3,
             ),
@@ -526,10 +530,10 @@ class _EvidenceScreenState extends State<EvidenceScreen>
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 7),
         decoration: BoxDecoration(
-          color: (isSaved ? _C.accept : Colors.redAccent).withOpacity(0.15),
+          color: (isSaved ? _C.accept : Colors.redAccent).withValues(alpha:0.15),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: (isSaved ? _C.accept : Colors.redAccent).withOpacity(0.4),
+            color: (isSaved ? _C.accept : Colors.redAccent).withValues(alpha:0.4),
           ),
         ),
         child: Row(
@@ -562,7 +566,7 @@ class _EvidenceScreenState extends State<EvidenceScreen>
         gradient: LinearGradient(
           begin: Alignment.bottomCenter,
           end:   Alignment.topCenter,
-          colors: [Colors.black.withOpacity(0.88), Colors.transparent],
+          colors: [Colors.black.withValues(alpha:0.88), Colors.transparent],
         ),
       ),
       child: SafeArea(
@@ -643,7 +647,7 @@ class _EvidenceScreenState extends State<EvidenceScreen>
           Text(
             _t('empty'),
             style: TextStyle(
-              color: _C.silverDim.withOpacity(0.4),
+              color: _C.silverDim.withValues(alpha:0.4),
               fontSize: 11,
               letterSpacing: 0.5,
             ),
@@ -712,8 +716,8 @@ class _ShutterButton extends StatelessWidget {
             decoration: BoxDecoration(
               shape:  BoxShape.circle,
               color:  locked
-                  ? _C.silver.withOpacity(0.08)
-                  : _C.silver.withOpacity(0.15),
+                  ? _C.silver.withValues(alpha:0.08)
+                  : _C.silver.withValues(alpha:0.15),
               border: Border.all(
                 color: locked ? _C.silverDim : _C.silver,
                 width: locked ? 1.5 : 2.5,
@@ -722,7 +726,7 @@ class _ShutterButton extends StatelessWidget {
                   ? []
                   : [
                       BoxShadow(
-                        color: _C.silver.withOpacity(0.25),
+                        color: _C.silver.withValues(alpha:0.25),
                         blurRadius: 20,
                         spreadRadius: 2,
                       ),
@@ -736,7 +740,7 @@ class _ShutterButton extends StatelessWidget {
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: locked
-                      ? _C.silverDim.withOpacity(0.3)
+                      ? _C.silverDim.withValues(alpha:0.3)
                       : _C.silver,
                 ),
                 child: locked
@@ -788,8 +792,8 @@ class _HUDButton extends StatelessWidget {
         width: 40, height: 40,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          color: Colors.black.withOpacity(0.35),
-          border: Border.all(color: _C.silver.withOpacity(0.2)),
+          color: Colors.black.withValues(alpha:0.35),
+          border: Border.all(color: _C.silver.withValues(alpha:0.2)),
         ),
         child: Icon(icon, color: color, size: 18),
       ),
@@ -810,9 +814,9 @@ class _GalleryThumb extends StatelessWidget {
       margin: const EdgeInsets.only(right: 8),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: _C.silver.withOpacity(0.3), width: 1),
+        border: Border.all(color: _C.silver.withValues(alpha:0.3), width: 1),
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.4), blurRadius: 8),
+          BoxShadow(color: Colors.black.withValues(alpha:0.4), blurRadius: 8),
         ],
       ),
       child: ClipRRect(

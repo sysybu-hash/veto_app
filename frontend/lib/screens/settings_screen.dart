@@ -209,7 +209,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
       _nameCtrl, _phoneCtrl, _emailCtrl,
       _whatsappCtrl, _telegramCtrl,
       _systemEmailCtrl, _maxFileSizeCtrl, _defaultQuotaCtrl,
-    ]) c.dispose();
+    ]) {
+      c.dispose();
+    }
     super.dispose();
   }
 
@@ -355,8 +357,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
         Uri.parse('${AppConfig.baseUrl}/users/me'),
         headers: AppConfig.httpHeaders({'Authorization': 'Bearer $tok'}),
       ).timeout(const Duration(seconds: 10));
+      if (!mounted) return;
       await _auth.logout(context);
-      if (mounted) Navigator.of(context).pushNamedAndRemoveUntil('/', (_) => false);
+      if (!mounted) return;
+      Navigator.of(context).pushNamedAndRemoveUntil('/', (_) => false);
     } catch (_) {}
   }
 
@@ -594,10 +598,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             color: VetoPalette.textMuted),
                         onTap: () async {
                           await _auth.logout(context);
-                          if (mounted) {
-                            Navigator.of(context).pushNamedAndRemoveUntil(
-                                '/', (_) => false);
-                          }
+                          if (!context.mounted) return;
+                          Navigator.of(context).pushNamedAndRemoveUntil(
+                              '/', (_) => false);
                         },
                       ),
                       ListTile(
@@ -726,7 +729,7 @@ class _ToggleTile extends StatelessWidget {
         color: VetoPalette.text, fontSize: 14, fontWeight: FontWeight.w500)),
     value: value,
     onChanged: onChanged,
-    activeColor: color,
+    activeThumbColor: color,
   );
 }
 

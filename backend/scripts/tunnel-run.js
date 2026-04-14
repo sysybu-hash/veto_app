@@ -77,7 +77,7 @@ function banner(lines) {
   const shutdown = () => {
     try {
       tunnel.close();
-    } catch (_) {
+    } catch {
       process.exit(0);
     }
   };

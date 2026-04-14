@@ -323,7 +323,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
   }
 
   Widget _buildHealthCard(String code) {
-    Widget _indicator(String label, String status) {
+    Widget indicatorRow(String label, String status) {
       final good = status == 'online';
       final unknown = status == 'unknown';
       final color = good ? VetoPalette.success
@@ -362,13 +362,13 @@ class _AdminDashboardState extends State<AdminDashboard> {
             blurRadius: 6, offset: const Offset(0, 2))],
       ),
       child: Column(children: [
-        _indicator(_t(code, 'backend'), _backendStatus),
+        indicatorRow(_t(code, 'backend'), _backendStatus),
         const Padding(padding: EdgeInsets.symmetric(vertical: 8),
             child: Divider(height: 1, color: VetoPalette.border)),
-        _indicator(_t(code, 'db'), _dbStatus),
+        indicatorRow(_t(code, 'db'), _dbStatus),
         const Padding(padding: EdgeInsets.symmetric(vertical: 8),
             child: Divider(height: 1, color: VetoPalette.border)),
-        _indicator(_t(code, 'socket'), _socketStatus),
+        indicatorRow(_t(code, 'socket'), _socketStatus),
       ]),
     );
   }

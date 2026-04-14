@@ -11,7 +11,11 @@ const { signToken } = require('../middleware/auth.middleware');
 
 // ── Helper: persist login attempt log ─────────────────────────
 async function logEvent(data) {
-  try { await LoginLog.create(data); } catch (_) {}
+  try {
+    await LoginLog.create(data);
+  } catch {
+    /* ignore log failures */
+  }
 }
 
 // ?? Helpers ????????????????????????????????????????????????
@@ -200,8 +204,6 @@ const verifyOTP = async (req, res, next) => {
         pending_approval: true,
       });
     }
-
-    const useFixed = isAdminPhone(phone) || process.env.ENABLE_FIXED_OTP_FOR_ADMINS === 'true';
 
     // ── Validate against DB OTP ────────────────────────
     if (!doc.otp_code || doc.otp_code !== String(otp)) {

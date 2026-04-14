@@ -142,8 +142,8 @@ class _PendingLawyersScreenState extends State<PendingLawyersScreen> {
                         decoration: BoxDecoration(
                           color: VetoPalette.surface,
                           borderRadius: BorderRadius.circular(12),
-                          border: Border(
-                            left: const BorderSide(color: VetoPalette.warning, width: 3),
+                          border: const Border(
+                            left: BorderSide(color: VetoPalette.warning, width: 3),
                             top: BorderSide(color: VetoPalette.border),
                             right: BorderSide(color: VetoPalette.border),
                             bottom: BorderSide(color: VetoPalette.border),

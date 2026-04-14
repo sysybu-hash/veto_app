@@ -62,15 +62,22 @@ class _EmergencyLogsScreenState extends State<EmergencyLogsScreen> {
         child: AlertDialog(
           backgroundColor: VetoPalette.surface,
           title: Text(_t(code, 'changeStatus'), style: const TextStyle(color: VetoPalette.text)),
-          content: StatefulBuilder(builder: (_, ss) => Column(
-            mainAxisSize: MainAxisSize.min,
-            children: ['active', 'pending', 'resolved'].map((s) => RadioListTile<String>(
-              value: s,
-              groupValue: selected,
-              onChanged: (v) { if (v != null) ss(() => selected = v); },
-              title: Text(_sl(s), style: TextStyle(color: _sc(s))),
-            )).toList(),
-          )),
+          content: StatefulBuilder(
+            builder: (_, ss) => Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: SegmentedButton<String>(
+                segments: [
+                  ButtonSegment(value: 'active', label: Text(_sl('active'))),
+                  ButtonSegment(value: 'pending', label: Text(_sl('pending'))),
+                  ButtonSegment(value: 'resolved', label: Text(_sl('resolved'))),
+                ],
+                selected: {selected},
+                onSelectionChanged: (Set<String> next) {
+                  if (next.isNotEmpty) ss(() => selected = next.first);
+                },
+              ),
+            ),
+          ),
           actions: [
             TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(_t(code, 'cancel'))),
             FilledButton(onPressed: () => Navigator.pop(ctx, true), child: Text(_t(code, 'save'))),
@@ -155,9 +162,9 @@ class _EmergencyLogsScreenState extends State<EmergencyLogsScreen> {
                           borderRadius: BorderRadius.circular(12),
                           border: Border(
                             left: BorderSide(color: _sc(status), width: 3),
-                            top: BorderSide(color: VetoPalette.border),
-                            right: BorderSide(color: VetoPalette.border),
-                            bottom: BorderSide(color: VetoPalette.border),
+                            top: const BorderSide(color: VetoPalette.border),
+                            right: const BorderSide(color: VetoPalette.border),
+                            bottom: const BorderSide(color: VetoPalette.border),
                           ),
                         ),
                         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [

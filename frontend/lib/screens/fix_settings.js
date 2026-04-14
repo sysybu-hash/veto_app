@@ -18,10 +18,10 @@ function replaceInFile(filePath, oldStr, newStr) {
   }
 }
 
-const baseDir = "C:\\Users\\User\\Desktop\\VETO_App\\frontend\\lib\\screens";
+const baseDir = __dirname;
 
-// 1. Update LoginScreen.dart
-const loginPath = path.join(baseDir, "LoginScreen.dart");
+// 1. Update login_screen.dart
+const loginPath = path.join(baseDir, "login_screen.dart");
 const oldLogin = `    if (!mounted) return;
     if (role == 'lawyer') {
       Navigator.of(context).pushReplacementNamed('/lawyer_dashboard');
@@ -49,20 +49,20 @@ const newLogin = `    if (!mounted) return;
       } else {`;
 replaceInFile(loginPath, oldLogin, newLogin);
 
-// 2. Update SettingsScreen.dart
-const settingsPath = path.join(baseDir, "SettingsScreen.dart");
+// 2. Update settings_screen.dart
+const settingsPath = path.join(baseDir, "settings_screen.dart");
 const oldSettings = `      Uri.parse('\${AppConfig.baseUrl}/users/me'),`;
 const newSettings = `      Uri.parse(_role == 'lawyer' ? '\${AppConfig.baseUrl}/lawyers/me' : '\${AppConfig.baseUrl}/users/me'),`;
 replaceInFile(settingsPath, oldSettings, newSettings);
 
-// 3. Update VetoScreen.dart admin check
-const vetoPath = path.join(baseDir, "VetoScreen.dart");
+// 3. Update veto_screen.dart admin check
+const vetoPath = path.join(baseDir, "veto_screen.dart");
 const oldVeto = `    final bool isAdmin = _role == 'admin';`;
 const newVeto = `    final bool isAdmin = _role == 'admin' || _phone.contains('525640021') || _phone.contains('506400030');`;
 replaceInFile(vetoPath, oldVeto, newVeto);
 
-// 4. Update LawyerDashboard.dart admin check
-const lawyerPath = path.join(baseDir, "LawyerDashboard.dart");
+// 4. Update lawyer_dashboard.dart admin check
+const lawyerPath = path.join(baseDir, "lawyer_dashboard.dart");
 const oldLawyer = `if (_role == 'admin')`;
 const newLawyer = `if (_role == 'admin' || _phone.contains('525640021') || _phone.contains('506400030'))`;
 replaceInFile(lawyerPath, oldLawyer, newLawyer);

@@ -409,9 +409,13 @@ class _NavState extends State<_Nav> {
 
   void _enterApp(BuildContext context) {
     if (_loggedIn) {
-      if (_role == 'lawyer') Navigator.pushNamed(context, '/lawyer_dashboard');
-      else if (_role == 'admin') Navigator.pushNamed(context, '/admin_settings');
-      else Navigator.pushNamed(context, '/veto_screen');
+      if (_role == 'lawyer') {
+        Navigator.pushNamed(context, '/lawyer_dashboard');
+      } else if (_role == 'admin') {
+        Navigator.pushNamed(context, '/admin_settings');
+      } else {
+        Navigator.pushNamed(context, '/veto_screen');
+      }
     } else {
       widget.onTap();
     }
@@ -871,9 +875,9 @@ class _FeatureCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         border: Border(
           left:   BorderSide(color: data.accent, width: 3),
-          top:    BorderSide(color: _Clr.border),
-          right:  BorderSide(color: _Clr.border),
-          bottom: BorderSide(color: _Clr.border),
+          top:    const BorderSide(color: _Clr.border),
+          right:  const BorderSide(color: _Clr.border),
+          bottom: const BorderSide(color: _Clr.border),
         ),
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [

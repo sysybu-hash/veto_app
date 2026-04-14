@@ -4,7 +4,7 @@ publish_to: 'none'
 version: 1.0.0+1
 
 environment:
-  sdk: '>=3.3.0 <4.0.0'
+  sdk: '>=3.4.0 <4.0.0'
 
 # ══════════════════════════════════════════════════════════════
 #  Dependencies
@@ -20,7 +20,7 @@ dependencies:
   # Full-featured camera plugin (preview, capture, flash control)
 
   # ── Location / GPS ──────────────────────────────────────────
-  geolocator: ^11.1.0
+  geolocator: ^14.0.2
   # High-accuracy GPS with permissions handling
 
   # ── Networking & Upload ─────────────────────────────────────
@@ -44,7 +44,7 @@ dependencies:
   url_launcher: ^6.3.0
 
   # ── Local storage (JWT + user session) ──────────────────────
-  flutter_secure_storage: ^9.0.0
+  flutter_secure_storage: ^10.0.0
 
   # ── State management ────────────────────────────────────────
   provider: ^6.1.2
@@ -59,6 +59,7 @@ dependencies:
 
   # ── File Picker (vault uploads) ─────────────────────────────
   file_picker: ^8.0.0
+  web: ^1.1.1
 
 # ══════════════════════════════════════════════════════════════
 #  Dev Dependencies

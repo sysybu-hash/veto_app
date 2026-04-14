@@ -8,6 +8,7 @@
 // ============================================================
 
 const express = require('express');
+const rateLimit = require('express-rate-limit');
 const router  = express.Router();
 const {
   register,
@@ -16,8 +17,16 @@ const {
   googleAuth,
 } = require('../controllers/auth.controller');
 
+const otpLimiter = rateLimit({
+  windowMs: 10 * 60 * 1000,
+  max: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many OTP requests. Please wait 10 minutes.' },
+});
+
 router.post('/register',    register);
-router.post('/request-otp', requestOTP);
+router.post('/request-otp', otpLimiter, requestOTP);
 router.post('/verify-otp',  verifyOTP);
 router.post('/google',      googleAuth);
 

@@ -31,7 +31,7 @@ const fs = require('fs');
 // Prefer IPv4 DNS — helps some Windows setups when Atlas SRV lookup fails
 try {
   require('dns').setDefaultResultOrder('ipv4first');
-} catch (_) {
+} catch {
   /* older Node */
 }
 
@@ -78,12 +78,6 @@ const authLimiter = rateLimit({
   legacyHeaders: false,
   message: { error: 'Too many requests from this IP. Please wait 15 minutes.' },
 });
-const otpLimiter = rateLimit({
-  windowMs: 10 * 60 * 1000,
-  max: 5,
-  message: { error: 'Too many OTP requests. Please wait 10 minutes.' },
-});
-
 app.use(express.json());
 
 // ── Static uploads folder (evidence files) ─────────────────
@@ -213,7 +207,7 @@ if (process.env.SENTRY_DSN) {
 }
 
 // Custom error logger
-app.use((err, req, res, next) => {
+app.use((err, req, res, _next) => {
   console.error(' [Backend Error]:', err.message);
   if (err.stack) console.error(err.stack);
   res.status(err.status || 500).json({
