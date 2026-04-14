@@ -10,6 +10,7 @@
 
 const EmergencyEvent = require('../models/EmergencyEvent');
 const cloudinary     = require('../config/cloudinary');
+const { getGeminiModelId } = require('../config/gemini.config');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
@@ -136,7 +137,7 @@ exports.transcribeRecording = async (req, res, next) => {
     };
     const lang = langMap[language || event.language] || 'the call language';
 
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+    const model = genAI.getGenerativeModel({ model: getGeminiModelId() });
 
     let transcript;
 

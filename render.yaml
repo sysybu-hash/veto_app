@@ -51,9 +51,11 @@ services:
       - key: GOOGLE_CLIENT_SECRET
         sync: false
 
-      # ── AI — Gemini (תמלול שיחות) ─────────────────────────────
+      # ── AI — Gemini (צ'אט + תמלול) ────────────────────────────
       - key: GEMINI_API_KEY
         sync: false
+      - key: GEMINI_MODEL
+        value: gemini-3-flash-preview
 
       # ── Cloudinary (הקלטות + ראיות) ───────────────────────────
       - key: CLOUDINARY_CLOUD_NAME
