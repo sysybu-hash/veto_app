@@ -1869,29 +1869,4 @@ class _SubscriptionGateDialogState extends State<_SubscriptionGateDialog> {
                   onPressed: _loading ? null : _openPayPal,
                   icon: _loading
                       ? const SizedBox(width: 16, height: 16,
-                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                      : const Icon(Icons.paypal_rounded, size: 18),
-                  label: Text(_loading ? 'פותח...' : 'שלם עם PayPal'),
-                ),
-              ]
-            : [
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(false),
-                  child: const Text('התנתק', style: TextStyle(color: Color(0xFFEF4444))),
-                ),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF2ECC71),
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))),
-                  onPressed: _loading ? null : _confirmPayment,
-                  child: _loading
-                      ? const SizedBox(width: 16, height: 16,
-                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                      : const Text('שילמתי ✓', style: TextStyle(fontWeight: FontWeight.w700)),
-                ),
-              ],
-      ),
-    );
-  }
-}
+                          child: CircularProgressIndicator(strokeWidth: 2, color
