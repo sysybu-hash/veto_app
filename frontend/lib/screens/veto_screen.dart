@@ -334,10 +334,8 @@ class _VetoScreenState extends State<VetoScreen> {
       Navigator.of(context).pushReplacementNamed('/lawyer_dashboard');
       return;
     }
-    if (r == 'admin') {
-      Navigator.of(context).pushReplacementNamed('/admin_settings');
-      return;
-    }
+    // Admins may open /veto_screen on purpose (e.g. from admin panel); do not bounce
+    // them back — splash/login still land admins on /admin_settings first.
     final languageController = context.read<AppLanguageController>();
     if (languageController.code != language) {
       await languageController.setLanguage(language, persist: false);

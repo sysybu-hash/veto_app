@@ -141,7 +141,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
               icon: const Icon(Icons.apps_rounded),
               tooltip: _t(code, 'openApp'),
               onPressed: () =>
-                  Navigator.of(context).pushReplacementNamed('/veto_screen'),
+                  Navigator.of(context).pushNamed('/veto_screen'),
             ),
             IconButton(
               icon: const Icon(Icons.refresh_rounded),
@@ -229,6 +229,13 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                     const SizedBox(height: 32),
                     _sectionHeader(
                       code == 'he' ? 'כלי ניהול' : code == 'ru' ? 'Инструменты' : 'Admin Tools'
+                    ),
+                    _actionCard(
+                      _t(code, 'citizenApp'),
+                      Icons.shield_outlined,
+                      color: VetoPalette.success,
+                      onTap: () =>
+                          Navigator.of(context).pushNamed('/veto_screen'),
                     ),
                     _actionCard(
                       code == 'he' ? 'לוח בקרה ראשי' : code == 'ru' ? 'Главная панель' : 'Admin Dashboard',
