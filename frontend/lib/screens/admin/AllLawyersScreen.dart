@@ -189,7 +189,7 @@ class _AllLawyersScreenState extends State<AllLawyersScreen> {
                         child: Row(children: [
                           CircleAvatar(
                             radius: 20,
-                            backgroundColor: VetoPalette.primary.withValues(alpha: 0.15),
+                            backgroundColor: VetoPalette.primary.withOpacity(0.15),
                             child: const Icon(Icons.gavel_rounded, color: VetoPalette.primary, size: 18),
                           ),
                           const SizedBox(width: 12),
@@ -205,7 +205,7 @@ class _AllLawyersScreenState extends State<AllLawyersScreen> {
                             margin: const EdgeInsets.only(left: 4),
                             padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
                             decoration: BoxDecoration(
-                              color: (available ? VetoPalette.success : VetoPalette.textMuted).withValues(alpha: 0.15),
+                              color: (available ? VetoPalette.success : VetoPalette.textMuted).withOpacity(0.15),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(available ? _t(code, 'available') : _t(code, 'unavailable'),
@@ -216,7 +216,7 @@ class _AllLawyersScreenState extends State<AllLawyersScreen> {
                               margin: const EdgeInsets.only(left: 4),
                               padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
                               decoration: BoxDecoration(
-                                color: VetoPalette.warning.withValues(alpha: 0.15),
+                                color: VetoPalette.warning.withOpacity(0.15),
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Text(_t(code, 'pendingSingle'),

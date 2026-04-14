@@ -702,9 +702,9 @@ class _BrandRow extends StatelessWidget {
       Container(
         width: 52, height: 52,
         decoration: BoxDecoration(
-          color: VetoPalette.primary.withValues(alpha: 0.12),
+          color: VetoPalette.primary.withOpacity(0.12),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: VetoPalette.primary.withValues(alpha: 0.3)),
+          border: Border.all(color: VetoPalette.primary.withOpacity(0.3)),
         ),
         child: const Icon(Icons.shield_rounded, color: VetoPalette.primary, size: 28),
       ),
@@ -840,27 +840,42 @@ class _RoleCard extends StatelessWidget {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: selected ? VetoPalette.primary.withValues(alpha: 0.10) : VetoPalette.surface,
+          color: selected ? VetoPalette.primary.withOpacity(0.10) : VetoPalette.surface,
           borderRadius: BorderRadius.circular(20),
-          border: selected
-              ? Border(
-                  left: const BorderSide(color: VetoPalette.primary, width: 3),
-                  top: BorderSide(color: VetoPalette.primary.withValues(alpha: 0.3)),
-                  right: BorderSide(color: VetoPalette.primary.withValues(alpha: 0.3)),
-                  bottom: BorderSide(color: VetoPalette.primary.withValues(alpha: 0.3)),
-                )
-              : Border.all(color: VetoPalette.border),
+          border: Border.all(
+            color: selected ? VetoPalette.primary.withOpacity(0.3) : VetoPalette.border,
+          ),
         ),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Icon(icon, color: selected ? VetoPalette.primary : VetoPalette.textMuted, size: 24),
-          const SizedBox(height: 12),
-          Text(title, style: TextStyle(
-              color: selected ? VetoPalette.primary : VetoPalette.text,
-              fontSize: 16, fontWeight: FontWeight.w800)),
-          const SizedBox(height: 6),
-          Text(body, style: const TextStyle(
-              color: VetoPalette.textMuted, fontSize: 13, height: 1.5)),
-        ]),
+        child: Stack(
+          children: [
+            if (selected)
+              Positioned(
+                left: 0,
+                top: 8,
+                bottom: 8,
+                width: 3,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: VetoPalette.primary,
+                    borderRadius: BorderRadius.circular(3),
+                  ),
+                ),
+              ),
+            Padding(
+              padding: EdgeInsets.only(left: selected ? 12 : 0),
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Icon(icon, color: selected ? VetoPalette.primary : VetoPalette.textMuted, size: 24),
+                const SizedBox(height: 12),
+                Text(title, style: TextStyle(
+                    color: selected ? VetoPalette.primary : VetoPalette.text,
+                    fontSize: 16, fontWeight: FontWeight.w800)),
+                const SizedBox(height: 6),
+                Text(body, style: const TextStyle(
+                    color: VetoPalette.textMuted, fontSize: 13, height: 1.5)),
+              ]),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -1043,9 +1058,9 @@ class _ErrorBanner extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: VetoPalette.emergency.withValues(alpha: 0.12),
+        color: VetoPalette.emergency.withOpacity(0.12),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: VetoPalette.emergency.withValues(alpha: 0.3)),
+        border: Border.all(color: VetoPalette.emergency.withOpacity(0.3)),
       ),
       child: Row(children: [
         const Icon(Icons.error_outline_rounded, color: VetoPalette.emergency, size: 18),
@@ -1077,7 +1092,7 @@ class _AuthHero extends StatelessWidget {
         border: Border.all(color: VetoColors.border),
         boxShadow: [
           BoxShadow(
-            color: VetoColors.accent.withValues(alpha: 0.08),
+            color: VetoColors.accent.withOpacity(0.08),
             blurRadius: 32,
             spreadRadius: 2,
           ),
@@ -1141,7 +1156,7 @@ class _AuthHero extends StatelessWidget {
             decoration: BoxDecoration(
               color: const Color(0xFF0C1827),
               borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: VetoPalette.primary.withValues(alpha: 0.18)),
+              border: Border.all(color: VetoPalette.primary.withOpacity(0.18)),
             ),
             child: Row(children: [
               const Icon(Icons.verified_user_rounded, color: VetoPalette.success, size: 18),
@@ -1225,7 +1240,7 @@ class _OtpCodeDialogState extends State<_OtpCodeDialog> {
             decoration: BoxDecoration(
               color: VetoPalette.bg,
               borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: VetoPalette.primary.withValues(alpha: 0.4)),
+              border: Border.all(color: VetoPalette.primary.withOpacity(0.4)),
             ),
             child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
               Text(widget.otp, style: const TextStyle(
@@ -1374,7 +1389,7 @@ class _SubscriptionGateDialogState extends State<_SubscriptionGateDialog> {
               decoration: BoxDecoration(
                 color: VetoPalette.bg,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: VetoPalette.primary.withValues(alpha: 0.28)),
+                border: Border.all(color: VetoPalette.primary.withOpacity(0.28)),
               ),
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Text(_t(c, 'subscriptionPlan'),

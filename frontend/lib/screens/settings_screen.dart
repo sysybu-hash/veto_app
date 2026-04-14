@@ -580,7 +580,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     icon: Icons.warning_amber_rounded,
                     title: _t(code, 'danger'),
                     iconColor: VetoPalette.emergency,
-                    borderColor: VetoPalette.emergency.withValues(alpha: 0.25),
+                    borderColor: VetoPalette.emergency.withOpacity(0.25),
                     children: [
                       ListTile(
                         dense: true,
@@ -645,7 +645,7 @@ class _Section extends StatelessWidget {
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: borderColor ?? VetoPalette.border),
         boxShadow: [BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
+            color: Colors.black.withOpacity(0.03),
             blurRadius: 6, offset: const Offset(0, 2))],
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -745,7 +745,7 @@ class _InfoRow extends StatelessWidget {
       Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
         decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.10),
+          color: color.withOpacity(0.10),
           borderRadius: BorderRadius.circular(20),
         ),
         child: Text(value, style: TextStyle(
@@ -777,7 +777,7 @@ class _LanguagePicker extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
             decoration: BoxDecoration(
               color: selected
-                  ? VetoPalette.primary.withValues(alpha: 0.10)
+                  ? VetoPalette.primary.withOpacity(0.10)
                   : VetoPalette.bg,
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
@@ -818,8 +818,8 @@ class _SpecializationChips extends StatelessWidget {
         Wrap(spacing: 6, runSpacing: 6, children: [
           ...items.map((s) => Chip(
             label: Text(s, style: const TextStyle(fontSize: 12)),
-            backgroundColor: VetoPalette.primary.withValues(alpha: 0.08),
-            side: BorderSide(color: VetoPalette.primary.withValues(alpha: 0.25)),
+            backgroundColor: VetoPalette.primary.withOpacity(0.08),
+            side: BorderSide(color: VetoPalette.primary.withOpacity(0.25)),
             deleteIconColor: VetoPalette.textMuted,
             onDeleted: () {
               final updated = List<String>.from(items)..remove(s);
@@ -831,8 +831,8 @@ class _SpecializationChips extends StatelessWidget {
                 color: VetoPalette.primary, fontSize: 12,
                 fontWeight: FontWeight.w600)),
             avatar: const Icon(Icons.add, size: 14, color: VetoPalette.primary),
-            backgroundColor: VetoPalette.primary.withValues(alpha: 0.08),
-            side: BorderSide(color: VetoPalette.primary.withValues(alpha: 0.25)),
+            backgroundColor: VetoPalette.primary.withOpacity(0.08),
+            side: BorderSide(color: VetoPalette.primary.withOpacity(0.25)),
             onPressed: () async {
               final ctrl = TextEditingController();
               final result = await showDialog<String>(

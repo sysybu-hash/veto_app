@@ -233,10 +233,10 @@ class _WizardShellScreenState extends State<WizardShellScreen> {
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: VetoPalette.primary.withValues(alpha: 0.12),
+              color: VetoPalette.primary.withOpacity(0.12),
               borderRadius: BorderRadius.circular(10),
               border: Border.all(
-                  color: VetoPalette.primary.withValues(alpha: 0.3)),
+                  color: VetoPalette.primary.withOpacity(0.3)),
             ),
             child: const Icon(Icons.gavel_rounded,
                 color: VetoPalette.primary, size: 20),

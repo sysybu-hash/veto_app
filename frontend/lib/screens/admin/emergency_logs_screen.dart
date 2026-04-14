@@ -153,58 +153,67 @@ class _EmergencyLogsScreenState extends State<EmergencyLogsScreen> {
                         decoration: BoxDecoration(
                           color: VetoPalette.surface,
                           borderRadius: BorderRadius.circular(12),
-                          border: Border(
-                            left: BorderSide(color: _sc(status), width: 3),
-                            top: BorderSide(color: VetoPalette.border),
-                            right: BorderSide(color: VetoPalette.border),
-                            bottom: BorderSide(color: VetoPalette.border),
-                          ),
+                          border: Border.all(color: VetoPalette.border),
                         ),
-                        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                          Row(children: [
-                            Icon(Icons.warning_amber_rounded, color: _sc(status), size: 20),
-                            const SizedBox(width: 8),
-                            Expanded(child: Text(
-                              user != null
-                                  ? (user['full_name'] ?? user['phone'] ?? _t(code, 'unknown'))
-                                  : _t(code, 'unknown'),
-                              style: const TextStyle(color: VetoPalette.text, fontWeight: FontWeight.w600),
-                            )),
-                            // Status badge — tap to change
-                            GestureDetector(
-                              onTap: () => _changeStatus(eid, status ?? ''),
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                                decoration: BoxDecoration(
-                                  color: _sc(status).withValues(alpha: 0.15),
-                                  borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(color: _sc(status).withValues(alpha: 0.4)),
-                                ),
-                                child: Row(mainAxisSize: MainAxisSize.min, children: [
-                                  Text(_sl(status), style: TextStyle(color: _sc(status), fontSize: 11)),
-                                  const SizedBox(width: 3),
-                                  Icon(Icons.edit, size: 10, color: _sc(status)),
-                                ]),
+                        child: IntrinsicHeight(
+                          child: Row(children: [
+                            Container(
+                              width: 3,
+                              decoration: BoxDecoration(
+                                color: _sc(status),
+                                borderRadius: BorderRadius.circular(3),
                               ),
                             ),
-                            IconButton(
-                              icon: const Icon(Icons.delete_outline, size: 20, color: VetoPalette.emergency),
-                              onPressed: () => _confirmDelete(eid),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                                Row(children: [
+                                  Icon(Icons.warning_amber_rounded, color: _sc(status), size: 20),
+                                  const SizedBox(width: 8),
+                                  Expanded(child: Text(
+                                    user != null
+                                        ? (user['full_name'] ?? user['phone'] ?? _t(code, 'unknown'))
+                                        : _t(code, 'unknown'),
+                                    style: const TextStyle(color: VetoPalette.text, fontWeight: FontWeight.w600),
+                                  )),
+                                  // Status badge — tap to change
+                                  GestureDetector(
+                                    onTap: () => _changeStatus(eid, status ?? ''),
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                      decoration: BoxDecoration(
+                                        color: _sc(status).withOpacity(0.15),
+                                        borderRadius: BorderRadius.circular(8),
+                                        border: Border.all(color: _sc(status).withOpacity(0.4)),
+                                      ),
+                                      child: Row(mainAxisSize: MainAxisSize.min, children: [
+                                        Text(_sl(status), style: TextStyle(color: _sc(status), fontSize: 11)),
+                                        const SizedBox(width: 3),
+                                        Icon(Icons.edit, size: 10, color: _sc(status)),
+                                      ]),
+                                    ),
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(Icons.delete_outline, size: 20, color: VetoPalette.emergency),
+                                    onPressed: () => _confirmDelete(eid),
+                                  ),
+                                ]),
+                                const SizedBox(height: 6),
+                                Text(_fmt(e['triggered_at']?.toString()),
+                                    style: const TextStyle(color: VetoPalette.textMuted, fontSize: 12)),
+                                if (lawyer != null) ...[
+                                  const SizedBox(height: 4),
+                                  Row(children: [
+                                    const Icon(Icons.gavel_rounded, color: VetoPalette.primary, size: 14),
+                                    const SizedBox(width: 4),
+                                    Text('${_t(code, 'lawyerPrefix')}: ${lawyer['full_name'] ?? lawyer['phone'] ?? ""}',
+                                        style: const TextStyle(color: VetoPalette.primary, fontSize: 12)),
+                                  ]),
+                                ],
+                              ]),
                             ),
                           ]),
-                          const SizedBox(height: 6),
-                          Text(_fmt(e['triggered_at']?.toString()),
-                              style: const TextStyle(color: VetoPalette.textMuted, fontSize: 12)),
-                          if (lawyer != null) ...[
-                            const SizedBox(height: 4),
-                            Row(children: [
-                              const Icon(Icons.gavel_rounded, color: VetoPalette.primary, size: 14),
-                              const SizedBox(width: 4),
-                              Text('${_t(code, 'lawyerPrefix')}: ${lawyer['full_name'] ?? lawyer['phone'] ?? ""}',
-                                  style: const TextStyle(color: VetoPalette.primary, fontSize: 12)),
-                            ]),
-                          ],
-                        ]),
+                        ),
                       );
                     },
                   ),

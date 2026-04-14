@@ -233,10 +233,10 @@ class _WizardShellScreenState extends State<WizardShellScreen> {
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: VetoPalette.primary.withValues(alpha: 0.12),
+              color: VetoPalette.primary.withOpacity(0.12),
               borderRadius: BorderRadius.circular(10),
               border: Border.all(
-                  color: VetoPalette.primary.withValues(alpha: 0.3)),
+                  color: VetoPalette.primary.withOpacity(0.3)),
             ),
             child: const Icon(Icons.gavel_rounded,
                 color: VetoPalette.primary, size: 20),
@@ -456,45 +456,49 @@ class _WizardShellScreenState extends State<WizardShellScreen> {
                           padding: const EdgeInsets.all(14),
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(12),
-                            border: Border(
-                              left: const BorderSide(
-                                  color: VetoPalette.warning, width: 3),
-                              top: BorderSide(color: VetoPalette.border),
-                              right: BorderSide(color: VetoPalette.border),
-                              bottom: BorderSide(color: VetoPalette.border),
-                            ),
+                            border: Border.all(color: VetoPalette.border),
                             color: VetoPalette.surface2,
                           ),
-                          child: Row(
-                            children: [
-                              const Icon(Icons.notification_important_outlined,
-                                  color: VetoPalette.warning, size: 18),
-                              const SizedBox(width: 10),
-                              Expanded(
-                                child: Text(
-                                    'קריאה #${alert['eventId'] ?? 'N/A'}'),
-                              ),
-                              IconButton(
-                                tooltip: 'דחה',
-                                onPressed: () => _rejectAlert(alert),
-                                icon: const Icon(Icons.close_rounded,
-                                    color: VetoPalette.emergency, size: 20),
-                              ),
-                              FilledButton.icon(
-                                onPressed: () => _acceptAlert(alert),
-                                style: FilledButton.styleFrom(
-                                  backgroundColor: VetoPalette.success,
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 14, vertical: 8),
-                                  minimumSize: Size.zero,
-                                  tapTargetSize:
-                                      MaterialTapTargetSize.shrinkWrap,
+                          child: IntrinsicHeight(
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 3,
+                                  decoration: BoxDecoration(
+                                    color: VetoPalette.warning,
+                                    borderRadius: BorderRadius.circular(3),
+                                  ),
                                 ),
-                                icon: const Icon(Icons.check_rounded, size: 16),
-                                label: const Text('קבל',
-                                    style: TextStyle(fontSize: 13)),
-                              ),
-                            ],
+                                const SizedBox(width: 10),
+                                const Icon(Icons.notification_important_outlined,
+                                    color: VetoPalette.warning, size: 18),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: Text(
+                                      'קריאה #${alert['eventId'] ?? 'N/A'}'),
+                                ),
+                                IconButton(
+                                  tooltip: 'דחה',
+                                  onPressed: () => _rejectAlert(alert),
+                                  icon: const Icon(Icons.close_rounded,
+                                      color: VetoPalette.emergency, size: 20),
+                                ),
+                                FilledButton.icon(
+                                  onPressed: () => _acceptAlert(alert),
+                                  style: FilledButton.styleFrom(
+                                    backgroundColor: VetoPalette.success,
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 14, vertical: 8),
+                                    minimumSize: Size.zero,
+                                    tapTargetSize:
+                                        MaterialTapTargetSize.shrinkWrap,
+                                  ),
+                                  icon: const Icon(Icons.check_rounded, size: 16),
+                                  label: const Text('קבל',
+                                      style: TextStyle(fontSize: 13)),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       )

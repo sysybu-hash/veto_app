@@ -607,7 +607,7 @@ class _LogCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: VetoPalette.surface,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: color.withValues(alpha: 0.25)),
+        border: Border.all(color: color.withOpacity(0.25)),
       ),
       child: Row(children: [
         Icon(log.success ? Icons.check_circle_outline_rounded : Icons.cancel_outlined,
@@ -622,7 +622,7 @@ class _LogCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 decoration: BoxDecoration(
-                  color: VetoPalette.primary.withValues(alpha: 0.1),
+                  color: VetoPalette.primary.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(log.role!, style: const TextStyle(
@@ -668,7 +668,7 @@ class _SubCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: VetoPalette.border),
         boxShadow: [BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
+            color: Colors.black.withOpacity(0.03),
             blurRadius: 6, offset: const Offset(0, 2))],
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -676,7 +676,7 @@ class _SubCard extends StatelessWidget {
         Row(children: [
           CircleAvatar(
             radius: 18,
-            backgroundColor: VetoPalette.primary.withValues(alpha: 0.12),
+            backgroundColor: VetoPalette.primary.withOpacity(0.12),
             child: Text(sub.userName.isNotEmpty ? sub.userName[0].toUpperCase() : '?',
                 style: const TextStyle(
                     color: VetoPalette.primary, fontWeight: FontWeight.w700)),
@@ -696,9 +696,9 @@ class _SubCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             decoration: BoxDecoration(
-              color: sub.statusColor.withValues(alpha: 0.10),
+              color: sub.statusColor.withOpacity(0.10),
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: sub.statusColor.withValues(alpha: 0.3)),
+              border: Border.all(color: sub.statusColor.withOpacity(0.3)),
             ),
             child: Text(sub.statusLabel(code),
                 style: TextStyle(
@@ -779,9 +779,9 @@ class _ActionBtn extends StatelessWidget {
     child: Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.10),
+          color: color.withOpacity(0.10),
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: color.withValues(alpha: 0.25))),
+          border: Border.all(color: color.withOpacity(0.25))),
       child: Row(mainAxisSize: MainAxisSize.min, children: [
         Icon(icon, size: 14, color: color),
         const SizedBox(width: 4),
@@ -803,9 +803,9 @@ class _StatChip extends StatelessWidget {
   Widget build(BuildContext context) => Expanded(child: Container(
     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
     decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.08),
+        color: color.withOpacity(0.08),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: color.withValues(alpha: 0.20))),
+        border: Border.all(color: color.withOpacity(0.20))),
     child: Row(children: [
       Icon(icon, color: color, size: 18),
       const SizedBox(width: 8),
@@ -829,9 +829,9 @@ class _CountBadge extends StatelessWidget {
   Widget build(BuildContext context) => Container(
     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
     decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.10),
+        color: color.withOpacity(0.10),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withValues(alpha: 0.25))),
+        border: Border.all(color: color.withOpacity(0.25))),
     child: Text('$label: $count',
         style: TextStyle(color: color, fontSize: 11,
             fontWeight: FontWeight.w600)),

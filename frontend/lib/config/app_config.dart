@@ -54,6 +54,7 @@ class AppConfig {
     final fromEnv = _apiBaseFromEnv;
     if (fromEnv.isNotEmpty) return _stripTrailingSlashes(fromEnv);
     if (kReleaseMode) return _stripTrailingSlashes(kDefaultRenderOrigin);
+    if (_host.contains('onrender.com')) return 'https://$_host';
     if (_host.contains('loca.lt')) return 'https://$_host';
     return 'http://$_host:$kLocalPort';
   }

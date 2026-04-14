@@ -422,7 +422,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
             color: VetoPalette.surface,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-                color: color?.withValues(alpha: 0.4) ?? VetoPalette.border),
+                color: color?.withOpacity(0.4) ?? VetoPalette.border),
           ),
           child: Row(children: [
             Icon(icon, color: color ?? VetoPalette.primary, size: 18),

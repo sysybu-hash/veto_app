@@ -540,7 +540,7 @@ class _HeroSection extends StatelessWidget {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
-                  colors: [_Clr.glow.withValues(alpha: 0.12), Colors.transparent],
+                  colors: [_Clr.glow.withOpacity(0.12), Colors.transparent],
                 ),
               ),
             ),
@@ -603,8 +603,8 @@ class _HeroContent extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(999),
-          color: VetoPalette.primary.withValues(alpha: 0.1),
-          border: Border.all(color: VetoPalette.primary.withValues(alpha: 0.35)),
+          color: VetoPalette.primary.withOpacity(0.1),
+          border: Border.all(color: VetoPalette.primary.withOpacity(0.35)),
         ),
         child: Row(mainAxisSize: MainAxisSize.min, children: [
           Container(width: 5, height: 5,
@@ -724,7 +724,7 @@ class _StackItem extends StatelessWidget {
         Container(
           width: 40, height: 40,
           decoration: BoxDecoration(
-            color: data.accent.withValues(alpha: 0.12),
+            color: data.accent.withOpacity(0.12),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Icon(data.icon, color: data.accent, size: 20),
@@ -869,31 +869,40 @@ class _FeatureCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: _Clr.card,
         borderRadius: BorderRadius.circular(20),
-        border: Border(
-          left:   BorderSide(color: data.accent, width: 3),
-          top:    BorderSide(color: _Clr.border),
-          right:  BorderSide(color: _Clr.border),
-          bottom: BorderSide(color: _Clr.border),
-        ),
+        border: Border.all(color: _Clr.border),
       ),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Container(
-          width: 44, height: 44,
-          decoration: BoxDecoration(
-            color: data.accent.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(12),
+      child: Stack(
+        children: [
+          Positioned(
+            left: 0,
+            top: 20,
+            bottom: 20,
+            width: 3,
+            child: Container(color: data.accent),
           ),
-          child: Icon(data.icon, color: data.accent, size: 22),
-        ),
-        const SizedBox(height: 16),
-        Text(data.title, style: const TextStyle(
-          color: Color(0xFF07101C), fontSize: 16, fontWeight: FontWeight.w800,
-        )),
-        const SizedBox(height: 8),
-        Text(data.body, style: const TextStyle(
-          color: _Clr.muted, fontSize: 13, height: 1.75,
-        )),
-      ]),
+          Padding(
+            padding: const EdgeInsets.only(left: 12),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Container(
+                width: 44, height: 44,
+                decoration: BoxDecoration(
+                  color: data.accent.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(data.icon, color: data.accent, size: 22),
+              ),
+              const SizedBox(height: 16),
+              Text(data.title, style: const TextStyle(
+                color: Color(0xFF07101C), fontSize: 16, fontWeight: FontWeight.w800,
+              )),
+              const SizedBox(height: 8),
+              Text(data.body, style: const TextStyle(
+                color: _Clr.muted, fontSize: 13, height: 1.75,
+              )),
+            ]),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -924,7 +933,7 @@ class _FlowGrid extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.only(top: 22),
             child: Container(width: 32, height: 1.5,
-                color: _Clr.border.withValues(alpha: 0.6)),
+                color: _Clr.border.withOpacity(0.6)),
           ),
           const SizedBox(width: 0),
         ],
@@ -991,10 +1000,10 @@ class _PricingCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: _Clr.card,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: VetoPalette.primary.withValues(alpha: 0.4), width: 1.5),
+        border: Border.all(color: VetoPalette.primary.withOpacity(0.4), width: 1.5),
         gradient: LinearGradient(
           colors: [
-            VetoPalette.primary.withValues(alpha: 0.05),
+            VetoPalette.primary.withOpacity(0.05),
             Colors.transparent,
           ],
           begin: Alignment.topRight,
@@ -1098,7 +1107,7 @@ class _CtaSection extends StatelessWidget {
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               gradient: RadialGradient(
-                colors: [_Clr.glow.withValues(alpha: 0.1), Colors.transparent],
+                colors: [_Clr.glow.withOpacity(0.1), Colors.transparent],
               ),
             ),
           ),
@@ -1114,8 +1123,8 @@ class _CtaSection extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(999),
-                    color: VetoPalette.primary.withValues(alpha: 0.08),
-                    border: Border.all(color: VetoPalette.primary.withValues(alpha: 0.35)),
+                    color: VetoPalette.primary.withOpacity(0.08),
+                    border: Border.all(color: VetoPalette.primary.withOpacity(0.35)),
                   ),
                   child: Text(badge.toUpperCase(), style: const TextStyle(
                     color: VetoPalette.info, fontSize: 10,
@@ -1268,7 +1277,7 @@ class _IncidentCard extends StatelessWidget {
         border: Border.all(color: _Clr.border),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF07101C).withValues(alpha: 0.12),
+            color: const Color(0xFF07101C).withOpacity(0.12),
             blurRadius: 12, offset: const Offset(0, 4),
           ),
         ],
@@ -1365,7 +1374,7 @@ class _ReviewCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(18),
         border: Border.all(color: _Clr.border),
         boxShadow: [
-          BoxShadow(color: const Color(0xFF07101C).withValues(alpha: 0.12), blurRadius: 10, offset: const Offset(0, 3)),
+          BoxShadow(color: const Color(0xFF07101C).withOpacity(0.12), blurRadius: 10, offset: const Offset(0, 3)),
         ],
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -1422,7 +1431,7 @@ class _ProofChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 7),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.06),
+        color: Colors.white.withOpacity(0.06),
         borderRadius: BorderRadius.circular(999),
         border: Border.all(color: _Clr.heroBorder),
       ),

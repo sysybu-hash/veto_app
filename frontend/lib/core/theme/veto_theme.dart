@@ -103,6 +103,56 @@ class VetoPalette {
   static const Color darkBorder    = VetoColors.borderLight;
 }
 
+class VetoDecorations {
+  VetoDecorations._();
+
+  static BoxDecoration gradientBg() {
+    return const BoxDecoration(
+      gradient: LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [Color(0xFF07101C), Color(0xFF0C1827)],
+      ),
+    );
+  }
+
+  static BoxDecoration surfaceCard({double radius = 16}) {
+    return BoxDecoration(
+      color: VetoColors.surface,
+      borderRadius: BorderRadius.circular(radius),
+      border: Border.all(color: VetoColors.border),
+    );
+  }
+
+  static List<BoxShadow> accentGlow({double intensity = 1.0}) {
+    return [
+      BoxShadow(
+        color: VetoColors.accent.withOpacity(0.3 * intensity),
+        blurRadius: 20 * intensity,
+        spreadRadius: 2 * intensity,
+      ),
+    ];
+  }
+  
+  /// Create a gold glow effect for elevated elements
+  static List<BoxShadow> vetoGlow({double intensity = 1.0}) {
+    return [
+      BoxShadow(
+        color: VetoColors.accent.withOpacity(0.3 * intensity),
+        blurRadius: 20 * intensity,
+        spreadRadius: 4 * intensity,
+        offset: const Offset(0, 4),
+      ),
+      BoxShadow(
+        color: VetoColors.accent.withOpacity(0.15 * intensity),
+        blurRadius: 40 * intensity,
+        spreadRadius: 8 * intensity,
+        offset: const Offset(0, 8),
+      ),
+    ];
+  }
+}
+
 class VetoTheme {
   VetoTheme._();
 
@@ -246,6 +296,14 @@ class VetoTheme {
       ),
 
       // ── Snack Bar ───────────────────────────────────────────
-      snackBarTheme: SnackBarThemeData(
+      snackBarTheme: const SnackBarThemeData(
         backgroundColor: VetoColors.surfaceHigh,
-        contentTextStyle: const TextStyle(fontFamily: 
+        contentTextStyle: TextStyle(
+          fontFamily: 'Heebo',
+          fontSize: 14,
+          color: VetoColors.white,
+        ),
+      ),
+    );
+  }
+}

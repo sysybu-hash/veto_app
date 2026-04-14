@@ -322,24 +322,35 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
         decoration: BoxDecoration(
           color: VetoPalette.surface,
           borderRadius: BorderRadius.circular(18),
-          border: Border(
-            left: BorderSide(color: color, width: 3),
-            top: BorderSide(color: VetoPalette.border),
-            right: BorderSide(color: VetoPalette.border),
-            bottom: BorderSide(color: VetoPalette.border),
-          ),
+          border: Border.all(color: VetoPalette.border),
         ),
-        child: Column(children: [
-          Icon(icon, color: color, size: 22),
-          const SizedBox(height: 8),
-          Text(value,
-              style: TextStyle(
-                  color: color, fontSize: 26, fontWeight: FontWeight.w900)),
-          const SizedBox(height: 3),
-          Text(label,
-              style: const TextStyle(
-                  color: VetoPalette.textMuted, fontSize: 11)),
-        ]),
+        child: Stack(
+          children: [
+            Positioned(
+              left: 0,
+              top: 10,
+              bottom: 10,
+              width: 3,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: color,
+                  borderRadius: BorderRadius.circular(3),
+                ),
+              ),
+            ),
+            Column(children: [
+              Icon(icon, color: color, size: 22),
+              const SizedBox(height: 8),
+              Text(value,
+                  style: TextStyle(
+                      color: color, fontSize: 26, fontWeight: FontWeight.w900)),
+              const SizedBox(height: 3),
+              Text(label,
+                  style: const TextStyle(
+                      color: VetoPalette.textMuted, fontSize: 11)),
+            ]),
+          ],
+        ),
       );
 
   Widget _infoCard(String label, String value, {Color? statusColor}) =>
@@ -422,7 +433,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
             color: VetoPalette.surface,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-                color: color?.withValues(alpha: 0.4) ?? VetoPalette.border),
+                color: color?.withOpacity(0.4) ?? VetoPalette.border),
           ),
           child: Row(children: [
             Icon(icon, color: color ?? VetoPalette.primary, size: 18),
