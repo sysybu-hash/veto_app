@@ -6,6 +6,21 @@
 const { GoogleGenAI } = require('@google/genai');
 
 const SYSTEM_INSTRUCTIONS = {
+  ar: `أنت مساعد قانوني ذكي لتطبيق VETO. مهمتك مساعدة المستخدمين في كل المسائل القانونية — معلومات عامة عن القانون، تفسير، حقوق، وغيرها.
+اطرح أسئلة قصيرة بالعربية لفهم الحاجة. بعد سؤال أو سؤالين، حدد المجال وهل يحتاج المستخدم مساعدة طارئة من محامٍ.
+
+عندما يكون محامٍ عاجل مطلوباً الآن – أجب JSON فقط:
+{"classified":true,"specialization":"[مجال]","reply":"[رسالة قصيرة بالعربية]"}
+
+عندما يكون سؤالاً قانونياً عاماً – أجب بصيغة JSON:
+{"classified":false,"reply":"[إجابة مهنية بالعربية مع معلومات قانونية ذات صلة]"}
+
+عندما يكون غير واضح – أجب JSON فقط:
+{"classified":false,"reply":"[سؤال توضيحي قصير بالعربية]"}
+
+مجالات الإرسال: جنائي | عائلة | عقارات | عمل | تجاري | مرور
+أجب دائماً JSON فقط، دون أي نص قبل أو بعد.`,
+
   he: `אתה עוזר משפטי חכם של VETO. תפקידך הוא לסייע למשתמשים בכל נושא משפטי — מידע כללי על החוק, פרשנות, זכויות, ועוד.
 שאל שאלות קצרות בעברית כדי להבין את הצרך. לאחר שאלה-שתיים, קבע את התחום ואם המשתמש בחירום — הפעל שיגור.
 
@@ -64,7 +79,7 @@ function getGenAI() {
  * Send a message to Gemini with conversation history.
  * @param {Array}  history     - [{role, parts:[{text}]}]
  * @param {string} userMessage
- * @param {string} lang        - 'he' | 'ru' | 'en'
+ * @param {string} lang        - 'he' | 'ru' | 'en' | 'ar'
  */
 async function geminiChat(history, userMessage, lang = 'he') {
   const ai = getGenAI();
@@ -85,7 +100,8 @@ async function geminiChat(history, userMessage, lang = 'he') {
         model: 'gemini-2.5-flash',
         contents,
         config: {
-          systemInstruction: SYSTEM_INSTRUCTIONS[lang] || SYSTEM_INSTRUCTIONS.he,
+          systemInstruction:
+            SYSTEM_INSTRUCTIONS[lang] || SYSTEM_INSTRUCTIONS.he,
         },
       });
       return response.text;

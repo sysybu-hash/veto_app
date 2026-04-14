@@ -107,6 +107,10 @@ exports.uploadRecording = async (req, res, next) => {
 // ── Transcribe recording with Gemini ─────────────────────────
 exports.transcribeRecording = async (req, res, next) => {
   try {
+    if (!process.env.GEMINI_API_KEY) {
+      return res.status(503).json({ error: 'Transcription not configured' });
+    }
+
     const { eventId } = req.params;
     const { userId }  = req.user;
     const { audioBase64, language, mimeType } = req.body;
@@ -132,7 +136,7 @@ exports.transcribeRecording = async (req, res, next) => {
     };
     const lang = langMap[language || event.language] || 'the call language';
 
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
     let transcript;
 

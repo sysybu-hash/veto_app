@@ -38,7 +38,8 @@ const SPEC_MAP = {
 exports.aiChat = async (req, res) => {
   try {
     const { message, history, lang } = req.body;
-    const safeLang = ['he', 'ar', 'en'].includes(lang) ? lang : 'he';
+    // Must match AppLanguage (he / en / ru) + optional Arabic UI.
+    const safeLang = ['he', 'ar', 'en', 'ru'].includes(lang) ? lang : 'he';
 
     if (!message || typeof message !== 'string' || message.trim().length === 0) {
       return res.status(400).json({ error: 'message is required' });
@@ -93,8 +94,12 @@ exports.aiChat = async (req, res) => {
         he: 'תאר לי את הבעיה המשפטית שלך — במה אני יכול לעזור?',
         ar: 'صف لي مشكلتك القانونية — كيف يمكنني مساعدتك؟',
         en: 'Describe your legal issue — how can I help you?',
+        ru: 'Опишите вашу юридическую проблему — чем я могу помочь?',
       };
-      const lang = req.body?.lang && ['he','ar','en'].includes(req.body.lang) ? req.body.lang : 'he';
+      const lang =
+        req.body?.lang && ['he', 'ar', 'en', 'ru'].includes(req.body.lang)
+          ? req.body.lang
+          : 'he';
       return res.json({ classified: false, reply: fallbacks[lang] });
     }
     return res.status(500).json({ error: 'AI service unavailable', detail: err.message });

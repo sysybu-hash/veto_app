@@ -32,8 +32,30 @@ class AiService {
         return jsonDecode(resp.body) as Map<String, dynamic>;
       }
       if (resp.statusCode == 429) {
-        final body = jsonDecode(resp.body) as Map<String, dynamic>;
-        return {'classified': false, 'reply': body['reply'] ?? 'השירות עמוס, נסה שוב בעוד כמה שניות.'};
+        try {
+          final body = jsonDecode(resp.body) as Map<String, dynamic>;
+          return {
+            'classified': false,
+            'reply': body['reply'] ?? 'השירות עמוס, נסה שוב בעוד כמה שניות.',
+          };
+        } catch (_) {
+          return {
+            'classified': false,
+            'reply': 'השירות עמוס, נסה שוב בעוד כמה שניות.',
+          };
+        }
+      }
+      if (resp.statusCode == 503) {
+        try {
+          final body = jsonDecode(resp.body) as Map<String, dynamic>;
+          final msg = body['error'] as String?;
+          return {
+            'classified': false,
+            'reply': msg ?? 'שירות ה-AI לא הוגדר בשרת.',
+          };
+        } catch (_) {
+          return {'classified': false, 'reply': 'שירות ה-AI לא זמין כרגע.'};
+        }
       }
       return {'classified': false, 'reply': 'שגיאה בחיבור לשירות ה-AI'};
     } catch (_) {
