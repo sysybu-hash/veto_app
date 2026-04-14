@@ -2,6 +2,7 @@
 //  main.dart — VETO app entry + named routes
 // ============================================================
 
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:http/http.dart' as http;
@@ -31,6 +32,7 @@ import 'screens/admin/emergency_logs_screen.dart';
 import 'screens/lawyer_settings_screen.dart';
 import 'screens/chat_screen.dart';
 import 'screens/call_screen.dart';
+import 'screens/waze_map_screen.dart';
 import 'services/socket_service.dart';
 
 Future<void> main() async {
@@ -81,6 +83,15 @@ class VetoApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'VETO',
       theme: a11y.mergeTheme(baseTheme),
+      scrollBehavior: const MaterialScrollBehavior().copyWith(
+        dragDevices: {
+          PointerDeviceKind.touch,
+          PointerDeviceKind.mouse,
+          PointerDeviceKind.trackpad,
+          PointerDeviceKind.stylus,
+          PointerDeviceKind.unknown,
+        },
+      ),
       locale: language.locale,
       supportedLocales: const [Locale('he'), Locale('en'), Locale('ru')],
       localizationsDelegates: const [
@@ -125,6 +136,7 @@ class VetoApp extends StatelessWidget {
         '/lawyer_settings': (context) => const LawyerSettingsScreen(),
         '/chat': (context) => const ChatScreen(),
         '/call': (context) => const CallScreen(),
+        '/waze_map': (context) => const WazeMapScreen(),
       },
     );
   }

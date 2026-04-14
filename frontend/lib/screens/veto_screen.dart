@@ -269,7 +269,11 @@ class _VetoScreenState extends State<VetoScreen> {
         SocketService().onNoLawyersAvailable.listen(_handleNoLawyersAvailable);
     _vetoDispatchedSub =
         SocketService().onVetoDispatched.listen(_handleVetoDispatched);
-    WidgetsBinding.instance.addPostFrameCallback((_) => _checkSubscription());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Future<void>.delayed(const Duration(milliseconds: 350), () {
+        if (mounted) _checkSubscription();
+      });
+    });
   }
 
   Future<void> _checkSubscription() async {
@@ -311,12 +315,17 @@ class _VetoScreenState extends State<VetoScreen> {
   }
 
   Future<void> _loadData() async {
-    final r = await AuthService().getStoredRole();
-    final p = await AuthService().getStoredPhone();
-    final t = await AuthService().getToken();
-    final language = AppLanguage.normalize(
-      await AuthService().getStoredPreferredLanguage(),
-    );
+    final auth = AuthService();
+    final outs = await Future.wait<Object?>([
+      auth.getStoredRole(),
+      auth.getStoredPhone(),
+      auth.getToken(),
+      auth.getStoredPreferredLanguage(),
+    ]);
+    final r = outs[0] as String?;
+    final p = outs[1] as String?;
+    final t = outs[2] as String?;
+    final language = AppLanguage.normalize(outs[3] as String?);
     if (!mounted) return;
     if (r == 'lawyer') {
       Navigator.of(context).pushReplacementNamed('/lawyer_dashboard');
@@ -693,34 +702,47 @@ class _VetoScreenState extends State<VetoScreen> {
         child: Container(height: 1, color: VetoColors.accent.withValues(alpha:0.2))),
     actions: [
       for (final k in ['he', 'ru', 'en'])
-        GestureDetector(
-          onTap: () async {
-            await context.read<AppLanguageController>().setLanguage(k);
-            if (!mounted) return;
-            setState(() {
-              _langKey = k;
-              _messages.clear();
-              _geminiHistory.clear();
-              _messages.add(_Msg(text: _langs[k]!.greeting, isUser: false));
-            });
-          },
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 150),
-            margin: const EdgeInsets.symmetric(horizontal: 2, vertical: 10),
-            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
-            decoration: BoxDecoration(
-              color: k == _langKey
-                  ? VetoColors.accent.withValues(alpha: 0.15)
-                  : Colors.transparent,
-              borderRadius: BorderRadius.circular(7),
-              border: Border.all(
-                  color: k == _langKey ? VetoColors.accent : VetoColors.border),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 8),
+          child: Material(
+            color: k == _langKey
+                ? VetoColors.accent.withValues(alpha: 0.14)
+                : VetoColors.surfaceHigh.withValues(alpha: 0.6),
+            borderRadius: BorderRadius.circular(8),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(8),
+              onTap: () async {
+                await context.read<AppLanguageController>().setLanguage(k);
+                if (!mounted) return;
+                setState(() {
+                  _langKey = k;
+                  _messages.clear();
+                  _geminiHistory.clear();
+                  _messages.add(_Msg(text: _langs[k]!.greeting, isUser: false));
+                });
+              },
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 150),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: k == _langKey ? VetoColors.accent : VetoColors.border,
+                    width: k == _langKey ? 1.5 : 1,
+                  ),
+                ),
+                child: Text(
+                  _langs[k]!.label,
+                  style: TextStyle(
+                    color: k == _langKey ? VetoColors.accent : VetoColors.white,
+                    fontSize: 12,
+                    fontWeight:
+                        k == _langKey ? FontWeight.w900 : FontWeight.w700,
+                  ),
+                ),
+              ),
             ),
-            child: Text(_langs[k]!.label,
-                style: TextStyle(
-                    color: k == _langKey ? VetoColors.accent : VetoColors.silverDim,
-                    fontSize: 11,
-                    fontWeight: k == _langKey ? FontWeight.w700 : FontWeight.normal)),
           ),
         ),
       const SizedBox(width: 2),
@@ -795,46 +817,61 @@ class _VetoScreenState extends State<VetoScreen> {
   // ══════════════════════════════════════════════════════════
   // WIZARD TAB
   // ══════════════════════════════════════════════════════════
-  Widget _buildWizardTab(bool isAdmin, bool isRtl) => SingleChildScrollView(
-    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-    child: Center(
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 640),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-          _statusBadge(),
-          const SizedBox(height: 14),
-          _sosButton(),
-          const SizedBox(height: 20),
-          _secLabel(isRtl
-              ? 'מה קורה עכשיו?'
-              : _langKey == 'ru'
-              ? 'Что происходит?'
-              : "What's happening?"),
-          const SizedBox(height: 8),
-          _scenarioBar(isRtl),
-          const SizedBox(height: 14),
-          _rightsCard(),
-          const SizedBox(height: 16),
-          _secLabel(isRtl
-              ? 'צור קשר מיידי'
-              : _langKey == 'ru'
-              ? 'Быстрая связь'
-              : 'Quick Contact'),
-          const SizedBox(height: 8),
-          _liveContactGrid(isRtl),
-          const SizedBox(height: 16),
-          _secLabel(isRtl ? 'כלים מהירים' : _langKey == 'ru' ? 'Инструменты' : 'Quick Tools'),
-          const SizedBox(height: 8),
-          _toolsGrid(isRtl),
-          if (isAdmin) ...[
-            const SizedBox(height: 20),
-            _adminSection(isRtl),
-          ],
-          const SizedBox(height: 40),
-        ]),
-      ),
-    ),
-  );
+  Widget _buildWizardTab(bool isAdmin, bool isRtl) => LayoutBuilder(
+        builder: (context, constraints) {
+          final compact = constraints.maxWidth < 600;
+          final hPad = compact ? 12.0 : 18.0;
+          return SingleChildScrollView(
+            padding: EdgeInsets.fromLTRB(hPad, 10, hPad, compact ? 28 : 44),
+            child: Align(
+              alignment: Alignment.topCenter,
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxWidth: compact ? double.infinity : 720,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _statusBadge(),
+                    SizedBox(height: compact ? 12 : 14),
+                    _sosButton(compact),
+                    SizedBox(height: compact ? 16 : 20),
+                    _secLabel(isRtl
+                        ? 'מה קורה עכשיו?'
+                        : _langKey == 'ru'
+                            ? 'Что происходит?'
+                            : "What's happening?"),
+                    const SizedBox(height: 8),
+                    _buildScenarioSelector(isRtl, compact),
+                    SizedBox(height: compact ? 12 : 14),
+                    _rightsCard(),
+                    SizedBox(height: compact ? 14 : 16),
+                    _secLabel(isRtl
+                        ? 'צור קשר מיידי'
+                        : _langKey == 'ru'
+                            ? 'Быстрая связь'
+                            : 'Quick Contact'),
+                    const SizedBox(height: 8),
+                    _liveContactGrid(isRtl, compact),
+                    SizedBox(height: compact ? 14 : 16),
+                    _secLabel(isRtl
+                        ? 'כלים מהירים'
+                        : _langKey == 'ru'
+                            ? 'Инструменты'
+                            : 'Quick Tools'),
+                    const SizedBox(height: 8),
+                    _toolsGrid(isRtl, compact),
+                    if (isAdmin) ...[
+                      const SizedBox(height: 20),
+                      _adminSection(isRtl),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
+      );
 
   Widget _statusBadge() => Center(
     child: Container(
@@ -858,8 +895,8 @@ class _VetoScreenState extends State<VetoScreen> {
           _isDispatching ? _l.broadcasting : _l.protected,
           style: TextStyle(
               color: _isDispatching ? VetoPalette.emergency : VetoPalette.success,
-              fontWeight: FontWeight.w600,
-              fontSize: 13),
+              fontWeight: FontWeight.w800,
+              fontSize: 14),
         ),
         if (_phone.isNotEmpty) ...[
           const SizedBox(width: 10),
@@ -871,188 +908,315 @@ class _VetoScreenState extends State<VetoScreen> {
     ),
   );
 
-  Widget _sosButton() => GestureDetector(
-    onTap: _isDispatching ? null : _dispatchSOS,
-    child: AnimatedContainer(
-      duration: const Duration(milliseconds: 300),
-      padding: const EdgeInsets.symmetric(vertical: 22, horizontal: 20),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: _isDispatching
-              ? [VetoPalette.emergency.withValues(alpha: 0.35),
-                 VetoPalette.emergency.withValues(alpha: 0.15)]
-              : [VetoPalette.emergency, const Color(0xFFB91C1C)],
-          begin: Alignment.topLeft, end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: _isDispatching
-            ? []
-            : [BoxShadow(
-                color: VetoPalette.emergency.withValues(alpha: 0.4),
-                blurRadius: 20, offset: const Offset(0, 6))],
-      ),
-      child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-        const Icon(Icons.crisis_alert_rounded, color: Colors.white, size: 38),
-        const SizedBox(width: 16),
-        Expanded(
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(
-              _isDispatching
-                  ? (_langKey == 'he' ? 'שיגור פעיל — מחפש עורך דין'
-                      : _langKey == 'ru' ? 'Активный поиск адвоката...'
-                      : 'Active — finding your lawyer...')
-                  : (_langKey == 'he' ? 'SOS — שלח עזרה עכשיו'
-                      : _langKey == 'ru' ? 'SOS — Вызвать адвоката'
-                      : 'SOS — Send Legal Help Now'),
-              style: const TextStyle(
-                  color: Colors.white, fontSize: 19, fontWeight: FontWeight.w800),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              _isDispatching
-                  ? (_langKey == 'he' ? 'עורך דין בדרך אליך...'
-                      : _langKey == 'ru' ? 'Адвокат уже едет к вам...'
-                      : 'A lawyer is on the way to you...')
-                  : (_langKey == 'he' ? 'לחץ לשגר עורך דין לעמדתך מיידית'
-                      : _langKey == 'ru' ? 'Нажмите для немедленного вызова адвоката'
-                      : 'Tap to instantly dispatch a lawyer to you'),
-              style: const TextStyle(color: Colors.white70, fontSize: 12),
-            ),
-          ]),
-        ),
-      ]),
-    ),
-  );
-
-  Widget _secLabel(String txt) => Padding(
-    padding: const EdgeInsets.only(bottom: 4),
-    child: Row(children: [
-      Container(width: 3, height: 12,
-          decoration: BoxDecoration(
-            color: VetoColors.accent,
-            borderRadius: BorderRadius.circular(2),
-          )),
-      const SizedBox(width: 8),
-      Text(txt.toUpperCase(),
-          style: const TextStyle(
-              color: VetoColors.accent,
-              fontSize: 10,
-              fontWeight: FontWeight.w800,
-              letterSpacing: 2.5)),
-    ]),
-  );
-
-  Widget _scenarioBar(bool isRtl) => SizedBox(
-    height: 92,
-    child: ListView(
-      scrollDirection: Axis.horizontal,
-      reverse: isRtl,
-      children: _sdMap.entries.map((e) {
-        final sel = e.key == _scenario;
-        final lbl = _langKey == 'ru' ? e.value.ru
-            : _langKey == 'en' ? e.value.en
-            : e.value.he;
-        return GestureDetector(
-          onTap: () => setState(() { _scenario = e.key; _rightsExpanded = true; }),
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            width: 90,
-            margin: const EdgeInsets.only(left: 8),
+  Widget _sosButton(bool compact) => Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: _isDispatching ? null : _dispatchSOS,
+          borderRadius: BorderRadius.circular(18),
+          child: Ink(
             decoration: BoxDecoration(
-              color: sel ? VetoPalette.primary.withValues(alpha: 0.15) : VetoPalette.surface,
-              borderRadius: BorderRadius.circular(14),
-              border: sel
-                  ? Border(
-                      left: const BorderSide(color: VetoPalette.primary, width: 3),
-                      top: BorderSide(color: VetoPalette.primary.withValues(alpha: 0.35)),
-                      right: BorderSide(color: VetoPalette.primary.withValues(alpha: 0.35)),
-                      bottom: BorderSide(color: VetoPalette.primary.withValues(alpha: 0.35)),
-                    )
-                  : Border.all(color: VetoPalette.border),
+              gradient: LinearGradient(
+                colors: _isDispatching
+                    ? [
+                        VetoPalette.emergency.withValues(alpha: 0.35),
+                        VetoPalette.emergency.withValues(alpha: 0.15),
+                      ]
+                    : [VetoPalette.emergency, const Color(0xFFB91C1C)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(18),
+              boxShadow: _isDispatching
+                  ? []
+                  : [
+                      BoxShadow(
+                        color: VetoPalette.emergency.withValues(alpha: 0.45),
+                        blurRadius: 18,
+                        offset: const Offset(0, 6),
+                      ),
+                    ],
             ),
-            child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-              Text(e.value.emoji, style: const TextStyle(fontSize: 28)),
-              const SizedBox(height: 4),
-              Text(lbl,
-                  style: TextStyle(
-                      color: sel ? VetoPalette.primary : VetoPalette.textMuted,
-                      fontSize: 10,
-                      fontWeight: sel ? FontWeight.w700 : FontWeight.normal),
-                  textAlign: TextAlign.center,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis),
-            ]),
-          ),
-        );
-      }).toList(),
-    ),
-  );
-
-  Widget _rightsCard() => Container(
-    decoration: BoxDecoration(
-        color: VetoPalette.surface,
-        borderRadius: BorderRadius.circular(14),
-        border: const Border(
-          left: BorderSide(color: VetoPalette.primary, width: 3),
-          top: BorderSide(color: VetoPalette.border),
-          right: BorderSide(color: VetoPalette.border),
-          bottom: BorderSide(color: VetoPalette.border),
-        )),
-    child: Column(children: [
-      InkWell(
-        onTap: () => setState(() => _rightsExpanded = !_rightsExpanded),
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(14)),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          child: Row(children: [
-            const Icon(Icons.verified_user_outlined, color: VetoPalette.primary, size: 18),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                _langKey == 'he' ? 'הזכויות שלך — $_sLabel'
-                    : _langKey == 'ru' ? 'Ваши права — $_sLabel'
-                    : 'Your Rights — $_sLabel',
-                style: const TextStyle(
-                    color: VetoPalette.text, fontWeight: FontWeight.w600, fontSize: 14),
+            child: Padding(
+              padding: EdgeInsets.symmetric(
+                vertical: compact ? 18 : 22,
+                horizontal: compact ? 16 : 20,
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.crisis_alert_rounded,
+                    color: Colors.white,
+                    size: compact ? 34 : 38,
+                  ),
+                  SizedBox(width: compact ? 12 : 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          _isDispatching
+                              ? (_langKey == 'he'
+                                  ? 'שיגור פעיל — מחפש עורך דין'
+                                  : _langKey == 'ru'
+                                      ? 'Активный поиск адвоката...'
+                                      : 'Active — finding your lawyer...')
+                              : (_langKey == 'he'
+                                  ? 'SOS — שלח עזרה עכשיו'
+                                  : _langKey == 'ru'
+                                      ? 'SOS — Вызвать адвоката'
+                                      : 'SOS — Send Legal Help Now'),
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: compact ? 17 : 19,
+                            fontWeight: FontWeight.w900,
+                            height: 1.15,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          _isDispatching
+                              ? (_langKey == 'he'
+                                  ? 'עורך דין בדרך אליך...'
+                                  : _langKey == 'ru'
+                                      ? 'Адвокат уже едет к вам...'
+                                      : 'A lawyer is on the way to you...')
+                              : (_langKey == 'he'
+                                  ? 'לחץ לשגר עורך דין לעמדתך מיידית'
+                                  : _langKey == 'ru'
+                                      ? 'Нажмите для немедленного вызова адвоката'
+                                      : 'Tap to instantly dispatch a lawyer to you'),
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.95),
+                            fontSize: compact ? 13 : 14,
+                            fontWeight: FontWeight.w700,
+                            height: 1.25,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ),
-            Icon(
-              _rightsExpanded ? Icons.keyboard_arrow_up_rounded : Icons.keyboard_arrow_down_rounded,
-              color: VetoPalette.textMuted,
-            ),
-          ]),
-        ),
-      ),
-      if (_rightsExpanded)
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
-          child: Column(
-            children: _rights.map((r) => Padding(
-              padding: const EdgeInsets.symmetric(vertical: 3),
-              child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Container(
-                    margin: const EdgeInsets.only(top: 5, left: 2, right: 2),
-                    width: 6, height: 6,
-                    decoration: const BoxDecoration(
-                        shape: BoxShape.circle, color: VetoPalette.primary)),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(r,
-                      style: const TextStyle(
-                          color: VetoPalette.textMuted, fontSize: 13, height: 1.5)),
-                ),
-              ]),
-            )).toList(),
           ),
         ),
-    ]),
-  );
+      );
 
-  Widget _liveContactGrid(bool isRtl) => GridView.count(
+  Widget _secLabel(String txt) => Padding(
+        padding: const EdgeInsets.only(bottom: 4),
+        child: Row(
+          children: [
+            Container(
+              width: 4,
+              height: 14,
+              decoration: BoxDecoration(
+                color: VetoColors.accent,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              txt.toUpperCase(),
+              style: const TextStyle(
+                color: VetoColors.accent,
+                fontSize: 11,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 1.8,
+              ),
+            ),
+          ],
+        ),
+      );
+
+  Widget _scenarioTile(MapEntry<_Scenario, _SD> e, bool compact) {
+    final sel = e.key == _scenario;
+    final lbl = _langKey == 'ru'
+        ? e.value.ru
+        : _langKey == 'en'
+            ? e.value.en
+            : e.value.he;
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () => setState(() {
+          _scenario = e.key;
+          _rightsExpanded = true;
+        }),
+        borderRadius: BorderRadius.circular(14),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+          decoration: BoxDecoration(
+            color: sel
+                ? VetoPalette.primary.withValues(alpha: 0.14)
+                : VetoPalette.surface,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: sel ? VetoPalette.primary : VetoPalette.border,
+              width: sel ? 2.5 : 1,
+            ),
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(e.value.emoji, style: TextStyle(fontSize: compact ? 26 : 28)),
+              const SizedBox(height: 6),
+              Text(
+                lbl,
+                style: TextStyle(
+                  color: sel ? VetoPalette.primary : VetoPalette.text,
+                  fontSize: compact ? 12.5 : 11,
+                  fontWeight: sel ? FontWeight.w900 : FontWeight.w700,
+                  height: 1.2,
+                ),
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildScenarioSelector(bool isRtl, bool compact) {
+    final entries = _sdMap.entries.toList();
+    if (compact) {
+      return GridView.builder(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        itemCount: entries.length,
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          crossAxisSpacing: 10,
+          mainAxisSpacing: 10,
+          childAspectRatio: 1.78,
+        ),
+        itemBuilder: (_, i) => _scenarioTile(entries[i], true),
+      );
+    }
+    return SizedBox(
+      height: 102,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        reverse: isRtl,
+        itemCount: entries.length,
+        separatorBuilder: (_, __) => const SizedBox(width: 8),
+        itemBuilder: (_, i) => SizedBox(
+          width: 112,
+          child: _scenarioTile(entries[i], false),
+        ),
+      ),
+    );
+  }
+
+  Widget _rightsCard() => Container(
+        decoration: BoxDecoration(
+          color: VetoPalette.surface,
+          borderRadius: BorderRadius.circular(16),
+          border: BorderDirectional(
+            top: BorderSide(color: VetoPalette.border.withValues(alpha: 0.9)),
+            start: const BorderSide(color: VetoPalette.primary, width: 4),
+            end: BorderSide(color: VetoPalette.border.withValues(alpha: 0.9)),
+            bottom: BorderSide(color: VetoPalette.border.withValues(alpha: 0.9)),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.04),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          children: [
+            InkWell(
+              onTap: () => setState(() => _rightsExpanded = !_rightsExpanded),
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                child: Row(
+                  children: [
+                    const Icon(Icons.verified_user_rounded,
+                        color: VetoPalette.primary, size: 22),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        _langKey == 'he'
+                            ? 'הזכויות שלך — $_sLabel'
+                            : _langKey == 'ru'
+                                ? 'Ваши права — $_sLabel'
+                                : 'Your Rights — $_sLabel',
+                        style: const TextStyle(
+                          color: VetoPalette.text,
+                          fontWeight: FontWeight.w900,
+                          fontSize: 16,
+                          height: 1.25,
+                        ),
+                      ),
+                    ),
+                    Icon(
+                      _rightsExpanded
+                          ? Icons.keyboard_arrow_up_rounded
+                          : Icons.keyboard_arrow_down_rounded,
+                      color: VetoPalette.primary,
+                      size: 28,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            if (_rightsExpanded)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                child: Column(
+                  children: _rights
+                      .map(
+                        (r) => Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 6),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Container(
+                                margin: const EdgeInsetsDirectional.only(
+                                    top: 7, start: 2, end: 2),
+                                width: 7,
+                                height: 7,
+                                decoration: const BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: VetoPalette.primary,
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Text(
+                                  r,
+                                  style: const TextStyle(
+                                    color: VetoPalette.text,
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w700,
+                                    height: 1.45,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      )
+                      .toList(),
+                ),
+              ),
+          ],
+        ),
+      );
+
+  Widget _liveContactGrid(bool isRtl, bool compact) => GridView.count(
     shrinkWrap: true,
     physics: const NeverScrollableScrollPhysics(),
-    crossAxisCount: 2,
-    childAspectRatio: 2.8,
+    crossAxisCount: compact ? 1 : 2,
+    childAspectRatio: compact ? 3.6 : 2.5,
     crossAxisSpacing: 10,
     mainAxisSpacing: 10,
     children: [
@@ -1102,36 +1266,66 @@ class _VetoScreenState extends State<VetoScreen> {
   Widget _ctCard(IconData icon, String label, Color color, VoidCallback onTap) =>
       Material(
         color: VetoPalette.surface,
-        borderRadius: BorderRadius.circular(12),
+        elevation: 0,
+        borderRadius: BorderRadius.circular(14),
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(14),
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12),
+            constraints: const BoxConstraints(minHeight: 54),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: color.withValues(alpha: 0.25))),
-            child: Row(children: [
-              Container(
-                  width: 34, height: 34,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: color.withValues(alpha: 0.5), width: 2),
+              boxShadow: [
+                BoxShadow(
+                  color: color.withValues(alpha: 0.1),
+                  blurRadius: 8,
+                  offset: const Offset(0, 3),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
                   decoration: BoxDecoration(
-                      color: color.withValues(alpha: 0.15), shape: BoxShape.circle),
-                  child: Icon(icon, color: color, size: 17)),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(label,
-                    style: TextStyle(color: color, fontWeight: FontWeight.w700, fontSize: 13)),
-              ),
-            ]),
+                    color: color.withValues(alpha: 0.18),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(icon, color: color, size: 20),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    label,
+                    style: const TextStyle(
+                      color: VetoPalette.text,
+                      fontWeight: FontWeight.w900,
+                      fontSize: 15,
+                      height: 1.2,
+                    ),
+                  ),
+                ),
+                Icon(
+                  Directionality.of(context) == TextDirection.rtl
+                      ? Icons.chevron_left_rounded
+                      : Icons.chevron_right_rounded,
+                  size: 22,
+                  color: color.withValues(alpha: 0.85),
+                ),
+              ],
+            ),
           ),
         ),
       );
 
-  Widget _toolsGrid(bool isRtl) => GridView.count(
+  Widget _toolsGrid(bool isRtl, bool compact) => GridView.count(
     shrinkWrap: true,
     physics: const NeverScrollableScrollPhysics(),
-    crossAxisCount: 4,
-    childAspectRatio: 0.85,
+    crossAxisCount: compact ? 2 : 4,
+    childAspectRatio: compact ? 1.35 : 0.88,
     crossAxisSpacing: 10,
     mainAxisSpacing: 10,
     children: [
@@ -1161,26 +1355,41 @@ class _VetoScreenState extends State<VetoScreen> {
   Widget _toolBtn(IconData icon, String label, Color color, VoidCallback onTap) =>
       Material(
         color: VetoPalette.surface,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(14),
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(14),
           child: Container(
-            padding: const EdgeInsets.all(6),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
             decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: VetoPalette.border)),
-            child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-              Container(
-                  width: 38, height: 38,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: color.withValues(alpha: 0.35), width: 1.5),
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  width: 42,
+                  height: 42,
                   decoration: BoxDecoration(
-                      color: color.withValues(alpha: 0.13), shape: BoxShape.circle),
-                  child: Icon(icon, color: color, size: 18)),
-              const SizedBox(height: 5),
-              Text(label,
-                  style: const TextStyle(color: VetoPalette.textMuted, fontSize: 9.5),
-                  textAlign: TextAlign.center),
-            ]),
+                    color: color.withValues(alpha: 0.16),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(icon, color: color, size: 20),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  label,
+                  style: const TextStyle(
+                    color: VetoPalette.text,
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w800,
+                    height: 1.2,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
           ),
         ),
       );
@@ -1401,7 +1610,7 @@ class _VetoScreenState extends State<VetoScreen> {
                       color: isUser ? VetoPalette.primary : VetoPalette.text,
                       fontSize: 14.5,
                       height: 1.55,
-                      fontWeight: isUser ? FontWeight.w600 : FontWeight.w400)),
+                      fontWeight: isUser ? FontWeight.w700 : FontWeight.w600)),
             ),
           );
         },

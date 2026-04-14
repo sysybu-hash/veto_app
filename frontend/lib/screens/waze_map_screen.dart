@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
-import 'dart:ui_web' as ui_web;
-import 'package:web/web.dart' hide Navigator, Text;
-import '../core/theme/veto_theme.dart';
-import '../core/i18n/app_language.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
+
+import '../core/i18n/app_language.dart';
+import '../core/theme/veto_theme.dart';
+import '../platform/waze_embed_stub.dart'
+    if (dart.library.html) '../platform/waze_embed_web.dart' as waze_embed;
 
 class WazeMapScreen extends StatefulWidget {
   final double? lat;
@@ -22,33 +24,18 @@ class WazeMapScreen extends StatefulWidget {
 }
 
 class _WazeMapScreenState extends State<WazeMapScreen> {
-  final String _viewID = 'waze-map-view-v2';
-  late String _wazeUrl;
+  final String _viewID = 'waze-map-view-v3';
+  late final String _wazeUrl;
 
   @override
   void initState() {
     super.initState();
-    
-    // Default to Tel Aviv center if not provided
     final double lat = widget.lat ?? 32.0853;
     final double lon = widget.lon ?? 34.7818;
     final int zoom = widget.zoom ?? 14;
-
-    _wazeUrl = 'https://embed.waze.com/he/iframe?zoom=$zoom&lat=$lat&lon=$lon&pin=1&routing_mode=1';
-
-    // Register the iframe factory for Flutter Web using ui_web
-    ui_web.platformViewRegistry.registerViewFactory(
-      _viewID,
-      (int viewId) {
-        final iframe = HTMLIFrameElement()
-          ..src = _wazeUrl
-          ..style.border = 'none'
-          ..style.width = '100%'
-          ..style.height = '100%'
-          ..allowFullscreen = true;
-        return iframe;
-      },
-    );
+    _wazeUrl =
+        'https://embed.waze.com/he/iframe?zoom=$zoom&lat=$lat&lon=$lon&pin=1&routing_mode=1';
+    waze_embed.registerWazeEmbed(_viewID, _wazeUrl);
   }
 
   @override
@@ -57,21 +44,33 @@ class _WazeMapScreenState extends State<WazeMapScreen> {
     final isHe = lang == 'he';
 
     return Scaffold(
+      backgroundColor: VetoPalette.bg,
       appBar: AppBar(
-        title: Text(isHe ? 'מפת Waze' : 'Waze Navigation'),
-        backgroundColor: VetoPalette.bg,
+        title: Text(
+          isHe ? 'מפת Waze' : 'Waze map',
+          style: const TextStyle(fontWeight: FontWeight.w800),
+        ),
+        backgroundColor: VetoPalette.surface,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: VetoPalette.primary),
+          icon: const Icon(Icons.arrow_back_rounded, color: VetoPalette.primary),
           onPressed: () => Navigator.pop(context),
         ),
-        actions: const [],
-      ),
-      body: Stack(
-        children: [
-          HtmlElementView(viewType: _viewID),
+        actions: [
+          TextButton.icon(
+            onPressed: () => launchUrl(
+              Uri.parse(_wazeUrl),
+              mode: LaunchMode.externalApplication,
+            ),
+            icon: const Icon(Icons.open_in_new_rounded, size: 20),
+            label: Text(
+              isHe ? 'בחלון חדש' : 'Open',
+              style: const TextStyle(fontWeight: FontWeight.w700),
+            ),
+          ),
         ],
       ),
+      body: waze_embed.buildWazeEmbed(_viewID, _wazeUrl),
     );
   }
 }

@@ -4,11 +4,11 @@
   <base href="$FLUTTER_BASE_HREF">
 
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
   <meta http-equiv="X-UA-Compatible" content="IE=Edge">
   <meta name="description" content="VETO — מערכת תגובה משפטית חכמה, מהירה ורב-לשונית. סיוע AI, SSO, שיגור עורכי דין בזמן אמת.">
-  <meta name="theme-color" content="#0F172A">
-  <meta name="color-scheme" content="dark">
+  <meta name="theme-color" content="#FBF9F5">
+  <meta name="color-scheme" content="light">
 
   <!-- Open Graph -->
   <meta property="og:type" content="website">
@@ -39,14 +39,7 @@
   <!-- Google Site Verification (Search Console) -->
   <meta name="google-site-verification" content="INSERT_VERIFICATION_CODE_HERE" />
 
-  <!-- Global site tag (gtag.js) - Google Analytics -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-    gtag('config', 'G-XXXXXXXXXX');
-  </script>
+  <!-- Analytics: add real gtag id when ready (placeholder blocked first paint). -->
 
   <!-- Heebo — Hebrew+Latin font, loaded directly from Google Fonts CDN -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -60,7 +53,7 @@
       height: 100%;
       width: 100%;
       overflow: hidden;
-      background: #0F172A;
+      background: #FBF9F5;
       /* Prevent pull-to-refresh on mobile Chrome/Safari */
       overscroll-behavior: none;
     }
@@ -224,6 +217,6 @@
     }
   </script>
 
-  <script src="flutter_bootstrap.js" async></script>
+  <script src="flutter_bootstrap.js" defer></script>
 </body>
 </html>

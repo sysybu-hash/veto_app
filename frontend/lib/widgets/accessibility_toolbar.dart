@@ -201,6 +201,7 @@ class AccessibilityToolbarHost extends StatelessWidget {
     final isRtl = Directionality.of(context) == TextDirection.rtl;
     final endPad = isRtl ? pad.left : pad.right;
     return Stack(
+      clipBehavior: Clip.none,
       fit: StackFit.expand,
       children: [
         child,
@@ -211,8 +212,8 @@ class AccessibilityToolbarHost extends StatelessWidget {
             button: true,
             label: _tx(code, 'fab'),
             child: Material(
-              elevation: 6,
-              shadowColor: Colors.black45,
+              elevation: 20,
+              shadowColor: Colors.black54,
               shape: const CircleBorder(),
               color: Theme.of(context).colorScheme.primary,
               child: InkWell(
