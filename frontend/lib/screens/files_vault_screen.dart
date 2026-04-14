@@ -153,9 +153,9 @@ class _VaultFile {
   }
 
   Color get typeColor {
-    if (type.startsWith('image/')) return const Color(0xFFC9A050);
+    if (type.startsWith('image/')) return VetoPalette.accentSky;
     if (type.startsWith('video/')) return const Color(0xFF2ECC71);
-    if (type.startsWith('audio/')) return const Color(0xFFC9A050);
+    if (type.startsWith('audio/')) return VetoPalette.accentSky;
     if (type.contains('pdf')) return VetoPalette.emergency;
     return VetoPalette.textMuted;
   }
@@ -1139,7 +1139,7 @@ class _FileCard extends StatelessWidget {
             _ActionChip(
               icon: Icons.cases_rounded,
               label: l.addToCase,
-              color: const Color(0xFFC9A050),
+              color: VetoPalette.accentSky,
               onTap: onAddToCase!,
             ),
           _ActionChip(

@@ -121,7 +121,7 @@ class AccessibilitySettings extends ChangeNotifier {
 
     if (_strongerFocus) {
       t = t.copyWith(
-        focusColor: _highContrast ? Colors.black : const Color(0xFFB8941E),
+        focusColor: _highContrast ? Colors.black : const Color(0xFF0D9488),
         highlightColor: Colors.black12,
       );
     }

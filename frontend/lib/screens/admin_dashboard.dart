@@ -293,7 +293,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
       )),
       const SizedBox(width: 10),
       Expanded(child: _KpiCard(
-        icon: Icons.calendar_month_rounded, color: const Color(0xFFC9A050),
+        icon: Icons.calendar_month_rounded, color: VetoPalette.accentSky,
         label: _t(code, 'eventsMonth'), value: _eventsMonth.toString(),
       )),
     ]);
@@ -310,7 +310,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
       const SizedBox(width: 10),
       Expanded(child: Column(children: [
         _KpiCard(
-          icon: Icons.balance_rounded, color: const Color(0xFFC9A050),
+          icon: Icons.balance_rounded, color: VetoPalette.accentSky,
           label: _t(code, 'active'), value: _activeLawyers.toString(),
           sublabel: _t(code, 'lawyers'),
         ),
@@ -409,7 +409,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
           final statusColor = status == 'resolved'
               ? VetoPalette.success
               : status == 'dispatched'
-                  ? const Color(0xFFC9A050)
+                  ? VetoPalette.accentSky
                   : VetoPalette.emergency;
           final statusLabel = status == 'resolved'
               ? _t(code, 'resolvedStatus')
@@ -467,13 +467,13 @@ class _AdminDashboardState extends State<AdminDashboard> {
     final links = [
       (Icons.people_rounded, VetoPalette.success, _t(code, 'allUsers'),
           '/admin_users'),
-      (Icons.balance_rounded, const Color(0xFFC9A050), _t(code, 'allLawyers'),
+      (Icons.balance_rounded, VetoPalette.accentSky, _t(code, 'allLawyers'),
           '/admin_lawyers'),
       (Icons.pending_actions_rounded, VetoPalette.warning,
           _t(code, 'pendingLawyers'), '/admin_pending'),
       (Icons.warning_amber_rounded, VetoPalette.emergency,
           _t(code, 'emergencyLogs'), '/admin_logs'),
-      (Icons.subscriptions_rounded, const Color(0xFFC9A050),
+      (Icons.subscriptions_rounded, VetoPalette.accentSky,
           _t(code, 'subscriptions'), '/admin_subscriptions'),
       (Icons.settings_rounded, VetoPalette.textMuted,
           'Settings', '/admin_settings'),

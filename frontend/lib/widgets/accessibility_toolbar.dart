@@ -338,7 +338,7 @@ class AccessibilityToolbarHost extends StatelessWidget {
                       shape: BoxShape.circle,
                       color: const Color(0xFF1A1612),
                       border: Border.all(
-                        color: const Color(0xFFC9A050),
+                        color: VetoPalette.primary,
                         width: 2.5,
                       ),
                       boxShadow: [

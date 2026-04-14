@@ -342,17 +342,17 @@ class LandingScreen extends StatelessWidget {
 //  Color palette
 // ═══════════════════════════════════════════════════════════════════
 class _Clr {
-  static const bg         = Color(0xFFFBF9F5);
+  static const bg         = Color(0xFFF8FAFC);
   static const surface    = Color(0xFFFFFFFF);
-  static const card       = Color(0xFFF7F2EB);
-  static const border     = Color(0x40B8941E);
+  static const card       = Color(0xFFF0F9FF);
+  static const border     = Color(0x330D9488);
   static const heroBg     = Color(0xFFFFFFFF);
-  static const heroBg2    = Color(0xFFF3EEE6);
-  static const heroBorder = Color(0x38C9A050);
-  static const glow       = Color(0xFFC6A24A);
-  static const muted      = Color(0xFF7A756C);
-  static const sub        = Color(0xFF3D3832);
-  static const navInk    = Color(0xFF4A453C);
+  static const heroBg2    = Color(0xFFE8F4FC);
+  static const heroBorder = Color(0x440D9488);
+  static const glow       = Color(0xFF0D9488);
+  static const muted      = Color(0xFF64748B);
+  static const sub        = Color(0xFF0F172A);
+  static const navInk    = Color(0xFF334155);
 }
 
 // ═══════════════════════════════════════════════════════════════════
@@ -444,7 +444,7 @@ class _NavState extends State<_Nav> {
               width: 34, height: 34,
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
-                  colors: [Color(0xFFC9A050), Color(0xFF8B6B1A)],
+                  colors: [Color(0xFF0D9488), Color(0xFF0284C7)],
                   begin: Alignment.topLeft, end: Alignment.bottomRight,
                 ),
                 borderRadius: BorderRadius.circular(9),
@@ -477,7 +477,7 @@ class _NavState extends State<_Nav> {
                 icon: const Icon(Icons.apps_rounded, size: 15),
                 label: Text(enterLabel),
                 style: FilledButton.styleFrom(
-                  backgroundColor: const Color(0xFFC9A050),
+                  backgroundColor: const Color(0xFF0D9488),
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 11),
                   textStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
@@ -777,7 +777,7 @@ class _StatBar extends StatelessWidget {
               for (var (num, label) in stats) ...[
                 Column(children: [
                   Text(num, style: const TextStyle(
-                    color: Color(0xFFC9A050), fontSize: 32, fontWeight: FontWeight.w900, letterSpacing: -1,
+                    color: Color(0xFF0D9488), fontSize: 32, fontWeight: FontWeight.w900, letterSpacing: -1,
                   )),
                   const SizedBox(height: 4),
                   Text(label, style: const TextStyle(color: Color(0xFFA8A090), fontSize: 11, fontWeight: FontWeight.w600, letterSpacing: 0.5)),
@@ -1214,8 +1214,8 @@ class _IncidentsSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final t = _t;
     final incidents = [
-      _ItemData(icon: Icons.directions_car_filled_outlined, accent: const Color(0xFFC9A050), title: t['inc1Title']!, body: t['inc1Body']!),
-      _ItemData(icon: Icons.car_crash_outlined, accent: const Color(0xFFC9A050), title: t['inc2Title']!, body: t['inc2Body']!),
+      _ItemData(icon: Icons.directions_car_filled_outlined, accent: const Color(0xFF6366F1), title: t['inc1Title']!, body: t['inc1Body']!),
+      _ItemData(icon: Icons.car_crash_outlined, accent: const Color(0xFFF97316), title: t['inc2Title']!, body: t['inc2Body']!),
       _ItemData(icon: Icons.home_outlined, accent: const Color(0xFF2ECC71), title: t['inc3Title']!, body: t['inc3Body']!),
       _ItemData(icon: Icons.directions_walk_rounded, accent: const Color(0xFFEF4444), title: t['inc4Title']!, body: t['inc4Body']!),
     ];
@@ -1377,7 +1377,7 @@ class _ReviewCard extends StatelessWidget {
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Row(children: [
           for (int i = 0; i < review.rating; i++)
-            const Icon(Icons.star_rounded, color: Color(0xFFC9A050), size: 14),
+            const Icon(Icons.star_rounded, color: Color(0xFF0D9488), size: 14),
           const Spacer(),
           Text(review.date, style: const TextStyle(color: _Clr.sub, fontSize: 11)),
         ]),

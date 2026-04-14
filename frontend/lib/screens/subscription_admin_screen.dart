@@ -263,8 +263,8 @@ class _Sub {
   Color get statusColor {
     switch (status) {
       case 'active': return VetoPalette.success;
-      case 'free': return const Color(0xFFC9A050);
-      case 'trial': return const Color(0xFFC9A050);
+      case 'free': return VetoPalette.accentSky;
+      case 'trial': return VetoPalette.accentSky;
       case 'expired': return VetoPalette.warning;
       case 'cancelled': return VetoPalette.emergency;
       case 'no_subscription': return VetoPalette.textMuted;
@@ -750,7 +750,7 @@ class _SubscriptionAdminScreenState
             _StatChip(icon: Icons.trending_up_rounded, color: VetoPalette.success,
                 label: _t(code, 'monthly'), value: '\$${_monthlyRevenue.toStringAsFixed(0)}'),
             const SizedBox(width: 10),
-            _StatChip(icon: Icons.account_balance_wallet_rounded, color: const Color(0xFFC9A050),
+            _StatChip(icon: Icons.account_balance_wallet_rounded, color: VetoPalette.accentSky,
                 label: _t(code, 'allTime'), value: '\$${_totalRevenue.toStringAsFixed(0)}'),
           ]),
           const SizedBox(height: 8),
@@ -759,7 +759,7 @@ class _SubscriptionAdminScreenState
             const SizedBox(width: 8),
             _CountBadge(_t(code, 'active'), activeCount, VetoPalette.success),
             const SizedBox(width: 8),
-            _CountBadge('Free', freeCount, const Color(0xFFC9A050)),
+            _CountBadge('Free', freeCount, VetoPalette.accentSky),
             const SizedBox(width: 8),
             _CountBadge(_t(code, 'expired'), expiredCount, VetoPalette.warning),
           ]),
@@ -967,7 +967,7 @@ class _SubCard extends StatelessWidget {
         // Plan + dates + amount
         Wrap(spacing: 14, runSpacing: 4, children: [
           _InfoPill(Icons.card_membership_rounded, sub.planLabel(code),
-              const Color(0xFFC9A050)),
+              VetoPalette.accentSky),
           if (sub.amount > 0)
             _InfoPill(Icons.attach_money_rounded,
                 '\$${sub.amount.toStringAsFixed(2)}', VetoPalette.success),
@@ -1008,7 +1008,7 @@ class _SubCard extends StatelessWidget {
           _ActionBtn(
               label: _t(code, 'extend'),
               icon: Icons.add_circle_outline_rounded,
-              color: const Color(0xFFC9A050),
+              color: VetoPalette.accentSky,
               onTap: onExtend),
         ]),
       ]),

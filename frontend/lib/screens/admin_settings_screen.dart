@@ -246,7 +246,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                     _actionCard(
                       code == 'he' ? 'ניהול מנויים' : code == 'ru' ? 'Подписки' : 'Subscription Management',
                       Icons.subscriptions_rounded,
-                      color: const Color(0xFFC9A050),
+                      color: VetoPalette.accentSky,
                       onTap: () => Navigator.pushNamed(context, '/admin_subscriptions'),
                     ),
                     _actionCard(

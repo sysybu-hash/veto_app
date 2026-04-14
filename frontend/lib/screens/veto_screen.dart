@@ -713,10 +713,14 @@ class _VetoScreenState extends State<VetoScreen> {
   // ── AppBar (balanced: langs | brand | tools) ──────────────
   PreferredSizeWidget _buildAppBar(bool isAdmin) => AppBar(
     backgroundColor: VetoColors.surface,
-    surfaceTintColor: Colors.transparent,
+    surfaceTintColor: const Color(0x0D0D9488),
     automaticallyImplyLeading: false,
-    elevation: 1,
-    shadowColor: Colors.black12,
+    elevation: 0,
+    scrolledUnderElevation: 1,
+    shadowColor: const Color(0x140D9488),
+    shape: const Border(
+      bottom: BorderSide(color: Color(0xFF0D9488), width: 2),
+    ),
     centerTitle: false,
     titleSpacing: 0,
     toolbarHeight: 52,
@@ -1381,7 +1385,7 @@ class _VetoScreenState extends State<VetoScreen> {
             : _langKey == 'ru'
                 ? 'Видео через WebRTC'
                 : 'Secure WebRTC video',
-        const Color(0xFFC9A050),
+        VetoPalette.accentSky,
         () => _openContact('video'),
       ),
       _ctCard(
@@ -1961,7 +1965,7 @@ class _VetoScreenState extends State<VetoScreen> {
                   child: Center(
                     child: _chatActBtn(
                       Icons.camera_alt_outlined,
-                      const Color(0xFFC9A050),
+                      VetoPalette.accentSky,
                       _langKey == 'he'
                           ? 'תיעוד'
                           : _langKey == 'ru'
@@ -1975,7 +1979,7 @@ class _VetoScreenState extends State<VetoScreen> {
                   child: Center(
                     child: _chatActBtn(
                       Icons.volume_off_rounded,
-                      const Color(0xFFC9A050),
+                      VetoPalette.accentSky,
                       _langKey == 'he'
                           ? 'השתק'
                           : _langKey == 'ru'
@@ -2085,7 +2089,7 @@ class _ContactSheetState extends State<_ContactSheet> {
     final isRtl = widget.langKey == 'he';
     final Color accent = widget.type == 'whatsapp' ? const Color(0xFF25D366)
         : widget.type == 'telegram' ? const Color(0xFF229ED9)
-        : const Color(0xFFC9A050);
+        : VetoPalette.accentSky;
     final String title = widget.type == 'whatsapp' ? 'WhatsApp'
         : widget.type == 'telegram' ? 'Telegram'
         : (isRtl ? 'שיחת וידאו' : 'Video Call');
@@ -2278,11 +2282,11 @@ class _CaptureDialogState extends State<_CaptureDialog> {
     return AlertDialog(
       backgroundColor: const Color(0xFF0C1827),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      title: const Row(children: [
-        Icon(Icons.hourglass_top_rounded, color: Color(0xFFC9A050), size: 22),
-        SizedBox(width: 10),
-        Text('אשר את התשלום',
-            style: TextStyle(color: Color(0xFF0C1827), fontWeight: FontWeight.w700, fontSize: 16)),
+      title: Row(children: [
+        Icon(Icons.hourglass_top_rounded, color: VetoPalette.accentSky, size: 22),
+        const SizedBox(width: 10),
+        const Text('אשר את התשלום',
+            style: TextStyle(color: Color(0xFFE2E8F0), fontWeight: FontWeight.w700, fontSize: 16)),
       ]),
       content: Column(mainAxisSize: MainAxisSize.min, children: [
         const Text(
@@ -2385,10 +2389,10 @@ class _SubscriptionGateDialogState extends State<_SubscriptionGateDialog> {
       child: AlertDialog(
         backgroundColor: const Color(0xFF0C1827),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Row(children: [
-          Icon(Icons.lock_outline, color: Color(0xFFC9A050)),
-          SizedBox(width: 10),
-          Text('נדרש מנוי', style: TextStyle(color: VetoColors.white, fontSize: 18)),
+        title: Row(children: [
+          Icon(Icons.lock_outline, color: VetoPalette.accentSky),
+          const SizedBox(width: 10),
+          const Text('נדרש מנוי', style: TextStyle(color: Color(0xFFF8FAFC), fontSize: 18)),
         ]),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -2405,11 +2409,11 @@ class _SubscriptionGateDialogState extends State<_SubscriptionGateDialog> {
               decoration: BoxDecoration(
                 color: const Color(0xFF07101C),
                 borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: const Color(0xFFC9A050).withValues(alpha: 0.4)),
+                border: Border.all(color: VetoPalette.accentSky.withValues(alpha: 0.4)),
               ),
               child: const Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Text('מנוי חודשי',
-                    style: TextStyle(color: VetoColors.white, fontWeight: FontWeight.bold, fontSize: 15)),
+                    style: TextStyle(color: Color(0xFFF8FAFC), fontWeight: FontWeight.bold, fontSize: 15)),
                 SizedBox(height: 6),
                 Row(children: [
                   Text('₪19.90',
