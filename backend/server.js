@@ -201,9 +201,11 @@ function start() {
 start();
 
 // ── Sentry error handler (must be LAST middleware) ────────────
-if (process.env.SENTRY_DSN) {
+{
   const Sentry = require('./instrument');
-  app.use(Sentry.expressErrorHandler());
+  if (Sentry.__vetoInstrumented) {
+    app.use(Sentry.expressErrorHandler());
+  }
 }
 
 // Custom error logger
