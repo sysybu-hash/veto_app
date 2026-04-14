@@ -105,6 +105,7 @@ const EmergencyEventSchema = new mongoose.Schema(
         'completed',    // Event resolved
         'cancelled',    // User cancelled before lawyer accepted
         'failed',       // No lawyer responded in time
+        'documentation', // User-only evidence session (no SOS / dispatch)
       ],
       default: 'dispatching',
       index: true,

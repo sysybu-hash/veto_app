@@ -4,6 +4,7 @@
 // ============================================================
 
 const EmergencyEvent = require('../models/EmergencyEvent');
+const User = require('../models/User');
 
 // ── Pagination defaults ────────────────────────────────────
 const DEFAULT_PAGE  = 1;
@@ -87,6 +88,50 @@ const getEventById = async (req, res, next) => {
     if (err.name === 'CastError') {
       return res.status(400).json({ error: 'Invalid event ID.' });
     }
+    next(err);
+  }
+};
+
+// ============================================================
+//  POST /events/documentation-session
+//  Protected (user). Creates a lightweight event for evidence capture
+//  without triggering SOS / lawyer dispatch.
+// ============================================================
+const createDocumentationSession = async (req, res, next) => {
+  try {
+    const { userId, role } = req.user;
+    if (role === 'lawyer') {
+      return res.status(403).json({ error: 'Documentation sessions are for member accounts only.' });
+    }
+
+    const user = await User.findById(userId).select('preferred_language last_location');
+    if (!user) return res.status(404).json({ error: 'User not found.' });
+
+    const coords =
+      user.last_location?.coordinates?.length >= 2
+        ? [...user.last_location.coordinates]
+        : [34.7818, 32.0853]; // Tel Aviv area [lng, lat]
+
+    const event = await EmergencyEvent.create({
+      user_id: userId,
+      status: 'documentation',
+      language: user.preferred_language || 'he',
+      event_location: {
+        type: 'Point',
+        coordinates: coords,
+      },
+      call_type: 'audio',
+    });
+
+    await User.findByIdAndUpdate(userId, {
+      $addToSet: { emergency_events: event._id },
+    });
+
+    return res.status(201).json({
+      message: 'Documentation session started.',
+      eventId: event._id.toString(),
+    });
+  } catch (err) {
     next(err);
   }
 };
@@ -195,4 +240,10 @@ const rateEvent = async (req, res, next) => {
   }
 };
 
-module.exports = { getHistory, getEventById, addEvidence, rateEvent };
+module.exports = {
+  getHistory,
+  getEventById,
+  addEvidence,
+  rateEvent,
+  createDocumentationSession,
+};

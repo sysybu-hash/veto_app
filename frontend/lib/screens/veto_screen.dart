@@ -5,12 +5,15 @@
 // ============================================================
 
 import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../config/app_config.dart';
 import '../core/i18n/app_language.dart';
 import '../platform/browser_bridge.dart' as browser_bridge;
 import '../core/theme/veto_theme.dart';
@@ -575,26 +578,71 @@ class _VetoScreenState extends State<VetoScreen> {
     );
   }
 
-  void _openCamera() {
-    if (_activeEventId == null || _token == null) {
+  Future<void> _openCamera() async {
+    if (_token == null) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text(_langKey == 'he'
-            ? 'לחץ SOS תחילה כדי להפעיל תיעוד ראיות'
+            ? 'נדרשת התחברות לתיעוד ראיות'
             : _langKey == 'ru'
-            ? 'Сначала нажмите SOS для записи доказательств'
-            : 'Tap SOS first to enable evidence recording'),
+                ? 'Войдите, чтобы записывать доказательства'
+                : 'Sign in to capture evidence'),
       ));
       return;
     }
+
+    var eventId = _activeEventId;
+    if (eventId == null) {
+      try {
+        final res = await http
+            .post(
+              Uri.parse('${AppConfig.baseUrl}/events/documentation-session'),
+              headers:
+                  AppConfig.httpHeaders({'Authorization': 'Bearer $_token'}),
+            )
+            .timeout(const Duration(seconds: 20));
+        if (res.statusCode == 201) {
+          final b = jsonDecode(res.body) as Map<String, dynamic>;
+          eventId = b['eventId']?.toString();
+          if (eventId != null && mounted) {
+            setState(() => _activeEventId = eventId);
+          }
+        } else {
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text(_langKey == 'he'
+                ? 'לא ניתן לפתוח תיעוד ראיות (${res.statusCode})'
+                : _langKey == 'ru'
+                    ? 'Не удалось начать запись (${res.statusCode})'
+                    : 'Could not start evidence session (${res.statusCode})'),
+            backgroundColor: VetoPalette.emergency,
+          ));
+          return;
+        }
+      } catch (e) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(_langKey == 'he'
+              ? 'שגיאת רשת בתיעוד ראיות'
+              : _langKey == 'ru'
+                  ? 'Ошибка сети'
+                  : 'Network error starting evidence'),
+          backgroundColor: VetoPalette.emergency,
+        ));
+        return;
+      }
+    }
+
+    if (!mounted || eventId == null) return;
+    final String eid = eventId;
     Navigator.of(context).push(MaterialPageRoute(
       builder: (_) => EvidenceScreen(
-        eventId: _activeEventId!,
+        eventId: eid,
         token: _token!,
         language: _langKey == 'he'
             ? EvidenceLanguage.he
             : _langKey == 'ru'
-            ? EvidenceLanguage.ru
-            : EvidenceLanguage.en,
+                ? EvidenceLanguage.ru
+                : EvidenceLanguage.en,
       ),
     ));
   }
@@ -770,8 +818,12 @@ class _VetoScreenState extends State<VetoScreen> {
       IconButton(
           icon: const Icon(Icons.map_outlined),
           color: VetoColors.accentDark,
-          onPressed: () => Navigator.pushNamed(context, '/waze_map'),
-          tooltip: _langKey == 'he' ? 'ניווט Waze' : _langKey == 'ru' ? 'Навигация Waze' : 'Waze Navigation'),
+          onPressed: () => Navigator.pushNamed(context, '/maps'),
+          tooltip: _langKey == 'he'
+              ? 'מפת Google'
+              : _langKey == 'ru'
+                  ? 'Google Карты'
+                  : 'Google Maps'),
       IconButton(
           icon: const Icon(Icons.settings_outlined),
           color: VetoColors.accentDark,

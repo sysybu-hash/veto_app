@@ -55,9 +55,23 @@ const _i18n = {
     'confirmCancel': 'לבטל מנוי זה?',
     'confirmActivate': 'להפעיל מנוי זה?',
     'confirmExtend': 'להאריך ב-30 יום?',
+    'confirmDeleteUser': 'למחוק משתמש זה לצמיתות? פעולה בלתי הפיכה.',
     'yes': 'כן',
     'no': 'לא',
     'updated': 'עודכן',
+    'edit': 'עריכה',
+    'delete': 'מחיקה',
+    'save': 'שמור',
+    'deleted': 'נמחק',
+    'errorSave': 'שגיאה',
+    'fullName': 'שם מלא',
+    'phoneLabel': 'טלפון',
+    'emailLabel': 'אימייל',
+    'subscriptionExpiry': 'תאריך פקיעת מנוי',
+    'subscribed': 'מנוי פעיל',
+    'manualExempt': 'פטור ידני (מנהל)',
+    'accountEnabled': 'חשבון פעיל',
+    'clearExpiry': 'נקה תאריך',
     'logSuccess': 'הצליח',
     'logFail': 'נכשל',
     'logRegister': 'הרשמה',
@@ -107,9 +121,23 @@ const _i18n = {
     'confirmCancel': 'Cancel this subscription?',
     'confirmActivate': 'Activate this subscription?',
     'confirmExtend': 'Extend by 30 days?',
+    'confirmDeleteUser': 'Delete this user permanently? This cannot be undone.',
     'yes': 'Yes',
     'no': 'No',
     'updated': 'Updated',
+    'edit': 'Edit',
+    'delete': 'Delete',
+    'save': 'Save',
+    'deleted': 'Deleted',
+    'errorSave': 'Error',
+    'fullName': 'Full name',
+    'phoneLabel': 'Phone',
+    'emailLabel': 'Email',
+    'subscriptionExpiry': 'Subscription expiry',
+    'subscribed': 'Subscribed',
+    'manualExempt': 'Manual exempt (admin)',
+    'accountEnabled': 'Account active',
+    'clearExpiry': 'Clear expiry',
     'logSuccess': 'Success',
     'logFail': 'Failed',
     'logRegister': 'Register',
@@ -159,9 +187,23 @@ const _i18n = {
     'confirmCancel': 'Отменить подписку?',
     'confirmActivate': 'Активировать?',
     'confirmExtend': 'Продлить на 30 дней?',
+    'confirmDeleteUser': 'Удалить этого пользователя навсегда?',
     'yes': 'Да',
     'no': 'Нет',
     'updated': 'Обновлено',
+    'edit': 'Изменить',
+    'delete': 'Удалить',
+    'save': 'Сохранить',
+    'deleted': 'Удалено',
+    'errorSave': 'Ошибка',
+    'fullName': 'Имя',
+    'phoneLabel': 'Телефон',
+    'emailLabel': 'Email',
+    'subscriptionExpiry': 'Окончание подписки',
+    'subscribed': 'Подписка',
+    'manualExempt': 'Вручную (админ)',
+    'accountEnabled': 'Аккаунт активен',
+    'clearExpiry': 'Сброс даты',
     'logSuccess': 'Успех',
     'logFail': 'Ошибка',
     'logRegister': 'Регистрация',
@@ -181,12 +223,18 @@ class _Sub {
   final String id, userId, userEmail, userName, phone, plan, status;
   final double amount;
   final DateTime? startDate, endDate;
+  final bool isSubscribed;
+  final bool manuallyAdded;
+  final bool isActive;
 
   const _Sub({
     required this.id, required this.userId, required this.userEmail,
     required this.userName, required this.phone, required this.plan,
     required this.status, required this.amount,
     this.startDate, this.endDate,
+    this.isSubscribed = false,
+    this.manuallyAdded = false,
+    this.isActive = true,
   });
 
   factory _Sub.fromJson(Map<String, dynamic> j) {
@@ -206,6 +254,9 @@ class _Sub {
       amount:   ((j['amount'] ?? j['price'] ?? 0) as num).toDouble(),
       startDate:DateTime.tryParse(j['startDate'] ?? j['createdAt'] ?? ''),
       endDate:  DateTime.tryParse(j['endDate'] ?? j['subscription_expiry'] ?? j['expiresAt'] ?? ''),
+      isSubscribed: j['is_subscribed'] == true,
+      manuallyAdded: j['manually_added'] == true,
+      isActive: j['is_active'] != false,
     );
   }
 
@@ -379,21 +430,212 @@ class _SubscriptionAdminScreenState
     }
   }
 
-  Future<void> _updateSub(String id, Map<String, dynamic> body,
-      String code) async {
+  String _userApiId(_Sub s) =>
+      s.userId.isNotEmpty ? s.userId : s.id;
+
+  Future<void> _putUser(
+      String userId, Map<String, dynamic> body, String code) async {
     try {
       final tok = await _auth.getToken();
       if (tok == null) return;
-      final res = await http.patch(
-        Uri.parse('${AppConfig.baseUrl}/admin/subscriptions/$id'),
-        headers: AppConfig.httpHeaders({'Authorization': 'Bearer $tok'}),
-        body: jsonEncode(body),
-      ).timeout(const Duration(seconds: 10));
+      final res = await http
+          .put(
+            Uri.parse('${AppConfig.baseUrl}/admin/users/$userId'),
+            headers: AppConfig.httpHeaders({'Authorization': 'Bearer $tok'}),
+            body: jsonEncode(body),
+          )
+          .timeout(const Duration(seconds: 15));
       if (res.statusCode == 200) {
         _snack(_t(code, 'updated'));
         await _load();
+      } else if (mounted) {
+        _snack('${_t(code, 'errorSave')}: ${res.statusCode}', ok: false);
       }
-    } catch (_) {}
+    } catch (e) {
+      if (mounted) _snack('${_t(code, 'errorSave')}: $e', ok: false);
+    }
+  }
+
+  Future<void> _deleteUserApi(String userId, String code) async {
+    try {
+      final tok = await _auth.getToken();
+      if (tok == null) return;
+      final res = await http
+          .delete(
+            Uri.parse('${AppConfig.baseUrl}/admin/users/$userId'),
+            headers: AppConfig.httpHeaders({'Authorization': 'Bearer $tok'}),
+          )
+          .timeout(const Duration(seconds: 15));
+      if (res.statusCode == 200) {
+        _snack(_t(code, 'deleted'));
+        await _load();
+      } else if (mounted) {
+        _snack('${_t(code, 'errorSave')}: ${res.statusCode}', ok: false);
+      }
+    } catch (e) {
+      if (mounted) _snack('${_t(code, 'errorSave')}: $e', ok: false);
+    }
+  }
+
+  Future<void> _openEditDialog(_Sub sub, String code) async {
+    final uid = _userApiId(sub);
+    if (uid.isEmpty) return;
+
+    final nameCtrl = TextEditingController(text: sub.userName);
+    final phoneCtrl = TextEditingController(text: sub.phone);
+    final emailCtrl = TextEditingController(text: sub.userEmail);
+    var subscribed = sub.isSubscribed;
+    var manual = sub.manuallyAdded;
+    var active = sub.isActive;
+    DateTime? expiry = sub.endDate;
+
+    final saved = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDlg) => AlertDialog(
+          backgroundColor: VetoPalette.surface,
+          title: Text(_t(code, 'edit'),
+              style: const TextStyle(
+                  color: VetoPalette.text, fontWeight: FontWeight.w800)),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                TextField(
+                  controller: nameCtrl,
+                  decoration: InputDecoration(
+                    labelText: _t(code, 'fullName'),
+                    labelStyle: const TextStyle(color: VetoPalette.textMuted),
+                  ),
+                  style: const TextStyle(color: VetoPalette.text),
+                ),
+                TextField(
+                  controller: phoneCtrl,
+                  decoration: InputDecoration(
+                    labelText: _t(code, 'phoneLabel'),
+                    labelStyle: const TextStyle(color: VetoPalette.textMuted),
+                  ),
+                  style: const TextStyle(color: VetoPalette.text),
+                  keyboardType: TextInputType.phone,
+                ),
+                TextField(
+                  controller: emailCtrl,
+                  decoration: InputDecoration(
+                    labelText: _t(code, 'emailLabel'),
+                    labelStyle: const TextStyle(color: VetoPalette.textMuted),
+                  ),
+                  style: const TextStyle(color: VetoPalette.text),
+                  keyboardType: TextInputType.emailAddress,
+                ),
+                const SizedBox(height: 8),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(_t(code, 'subscribed'),
+                      style: const TextStyle(color: VetoPalette.text, fontSize: 14)),
+                  trailing: Switch(
+                    value: subscribed,
+                    onChanged: (v) => setDlg(() => subscribed = v),
+                  ),
+                ),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(_t(code, 'manualExempt'),
+                      style: const TextStyle(color: VetoPalette.text, fontSize: 14)),
+                  trailing: Switch(
+                    value: manual,
+                    onChanged: (v) => setDlg(() => manual = v),
+                  ),
+                ),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(_t(code, 'accountEnabled'),
+                      style: const TextStyle(color: VetoPalette.text, fontSize: 14)),
+                  trailing: Switch(
+                    value: active,
+                    onChanged: (v) => setDlg(() => active = v),
+                  ),
+                ),
+                Row(children: [
+                  Expanded(
+                    child: Text(
+                      expiry == null
+                          ? _t(code, 'subscriptionExpiry')
+                          : () {
+                              final x = expiry!;
+                              return '${_t(code, 'subscriptionExpiry')}: '
+                                  '${x.day}/${x.month}/${x.year}';
+                            }(),
+                      style: const TextStyle(
+                          color: VetoPalette.textMuted, fontSize: 13),
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: () async {
+                      final now = DateTime.now();
+                      final d = await showDatePicker(
+                        context: ctx,
+                        initialDate: expiry ?? now,
+                        firstDate: DateTime(now.year - 1),
+                        lastDate: DateTime(now.year + 5),
+                      );
+                      if (d != null) setDlg(() => expiry = d);
+                    },
+                    child: Text(_t(code, 'endDate')),
+                  ),
+                  TextButton(
+                    onPressed: () => setDlg(() => expiry = null),
+                    child: Text(_t(code, 'clearExpiry')),
+                  ),
+                ]),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: Text(_t(code, 'no'),
+                  style: const TextStyle(color: VetoPalette.textMuted)),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              style: FilledButton.styleFrom(backgroundColor: VetoPalette.primary),
+              child: Text(_t(code, 'save')),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (saved != true || !mounted) {
+      nameCtrl.dispose();
+      phoneCtrl.dispose();
+      emailCtrl.dispose();
+      return;
+    }
+
+    final body = <String, dynamic>{
+      'full_name': nameCtrl.text.trim(),
+      'is_subscribed': subscribed,
+      'manually_added': manual,
+      'is_active': active,
+    };
+    final ph = phoneCtrl.text.trim();
+    if (ph.isNotEmpty) body['phone'] = ph;
+    final em = emailCtrl.text.trim();
+    if (em.isNotEmpty) body['email'] = em;
+    if (expiry != null) {
+      body['subscription_expiry'] = expiry!.toUtc().toIso8601String();
+    } else {
+      body['subscription_expiry'] = null;
+    }
+    body.removeWhere((k, v) => v == null && k != 'subscription_expiry');
+
+    nameCtrl.dispose();
+    phoneCtrl.dispose();
+    emailCtrl.dispose();
+
+    await _putUser(uid, body, code);
   }
 
   Future<bool> _confirm(String msg) async =>
@@ -419,11 +661,11 @@ class _SubscriptionAdminScreenState
         ),
       ) == true;
 
-  void _snack(String msg) {
+  void _snack(String msg, {bool ok = true}) {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       content: Text(msg),
-      backgroundColor: VetoPalette.success,
+      backgroundColor: ok ? VetoPalette.success : VetoPalette.emergency,
       behavior: SnackBarBehavior.floating,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
     ));
@@ -554,24 +796,38 @@ class _SubscriptionAdminScreenState
                 padding: const EdgeInsets.all(14),
                 itemCount: _filtered.length,
                 separatorBuilder: (_, __) => const SizedBox(height: 8),
-                itemBuilder: (ctx, i) => _SubCard(
-                  sub: _filtered[i], code: code,
-                  onActivate: () async {
-                    if (await _confirm(_t(code, 'confirmActivate'))) {
-                      await _updateSub(_filtered[i].id, {'status': 'active'}, code);
-                    }
-                  },
-                  onCancel: () async {
-                    if (await _confirm(_t(code, 'confirmCancel'))) {
-                      await _updateSub(_filtered[i].id, {'status': 'cancelled'}, code);
-                    }
-                  },
-                  onExtend: () async {
-                    if (await _confirm(_t(code, 'confirmExtend'))) {
-                      await _updateSub(_filtered[i].id, {'extendDays': 30}, code);
-                    }
-                  },
-                ),
+                itemBuilder: (ctx, i) {
+                  final s = _filtered[i];
+                  final uid = _userApiId(s);
+                  return _SubCard(
+                    sub: s,
+                    code: code,
+                    onActivate: () async {
+                      if (await _confirm(_t(code, 'confirmActivate'))) {
+                        await _putUser(uid, {
+                          'is_subscribed': true,
+                          'extendDays': 30,
+                        }, code);
+                      }
+                    },
+                    onCancel: () async {
+                      if (await _confirm(_t(code, 'confirmCancel'))) {
+                        await _putUser(uid, {'is_subscribed': false}, code);
+                      }
+                    },
+                    onExtend: () async {
+                      if (await _confirm(_t(code, 'confirmExtend'))) {
+                        await _putUser(uid, {'extendDays': 30}, code);
+                      }
+                    },
+                    onEdit: () => _openEditDialog(s, code),
+                    onDelete: () async {
+                      if (await _confirm(_t(code, 'confirmDeleteUser'))) {
+                        await _deleteUserApi(uid, code);
+                      }
+                    },
+                  );
+                },
               ),
       ),
     ]);
@@ -652,11 +908,12 @@ class _LogCard extends StatelessWidget {
 class _SubCard extends StatelessWidget {
   final _Sub sub;
   final String code;
-  final VoidCallback onActivate, onCancel, onExtend;
+  final VoidCallback onActivate, onCancel, onExtend, onEdit, onDelete;
 
   const _SubCard({
     required this.sub, required this.code,
     required this.onActivate, required this.onCancel, required this.onExtend,
+    required this.onEdit, required this.onDelete,
   });
 
   @override
@@ -725,7 +982,17 @@ class _SubCard extends StatelessWidget {
         ]),
         const SizedBox(height: 10),
         // Action buttons
-        Wrap(spacing: 8, children: [
+        Wrap(spacing: 8, runSpacing: 6, children: [
+          _ActionBtn(
+              label: _t(code, 'edit'),
+              icon: Icons.edit_outlined,
+              color: VetoPalette.info,
+              onTap: onEdit),
+          _ActionBtn(
+              label: _t(code, 'delete'),
+              icon: Icons.delete_outline_rounded,
+              color: VetoPalette.emergency,
+              onTap: onDelete),
           if (sub.status != 'active')
             _ActionBtn(
                 label: _t(code, 'activate'),

@@ -32,7 +32,7 @@ import 'screens/admin/emergency_logs_screen.dart';
 import 'screens/lawyer_settings_screen.dart';
 import 'screens/chat_screen.dart';
 import 'screens/call_screen.dart';
-import 'screens/waze_map_screen.dart';
+import 'screens/maps_screen.dart';
 import 'services/socket_service.dart';
 
 Future<void> main() async {
@@ -136,7 +136,7 @@ class VetoApp extends StatelessWidget {
         '/lawyer_settings': (context) => const LawyerSettingsScreen(),
         '/chat': (context) => const ChatScreen(),
         '/call': (context) => const CallScreen(),
-        '/waze_map': (context) => const WazeMapScreen(),
+        '/maps': (context) => const MapsScreen(),
       },
     );
   }

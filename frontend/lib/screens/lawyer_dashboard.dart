@@ -740,8 +740,8 @@ class _HeroHeader extends StatelessWidget {
               const SizedBox(width: 8),
               _HeaderAction(
                 icon: Icons.map_outlined,
-                tooltip: 'Waze',
-                onTap: () => Navigator.pushNamed(context, '/waze_map'),
+                tooltip: 'Google Maps',
+                onTap: () => Navigator.pushNamed(context, '/maps'),
               ),
               const SizedBox(width: 8),
               _HeaderAction(

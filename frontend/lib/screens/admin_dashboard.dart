@@ -262,7 +262,9 @@ class _AdminDashboardState extends State<AdminDashboard> {
                       // Quick links
                       _sectionLabel(_t(code, 'quickLinks')),
                       const SizedBox(height: 8),
-                      _buildQuickLinks(code),
+                      LayoutBuilder(builder: (context, bc) {
+                        return _buildQuickLinks(code, bc.maxWidth);
+                      }),
                       const SizedBox(height: 24),
                     ],
                   ),
@@ -461,7 +463,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
     );
   }
 
-  Widget _buildQuickLinks(String code) {
+  Widget _buildQuickLinks(String code, double maxWidth) {
     final links = [
       (Icons.people_rounded, VetoPalette.success, _t(code, 'allUsers'),
           '/admin_users'),
@@ -477,45 +479,66 @@ class _AdminDashboardState extends State<AdminDashboard> {
           'Settings', '/admin_settings'),
     ];
 
+    final cols = maxWidth >= 720
+        ? 6
+        : maxWidth >= 520
+            ? 4
+            : maxWidth >= 380
+                ? 3
+                : 2;
+
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3,
-        childAspectRatio: 1.1,
-        crossAxisSpacing: 10,
-        mainAxisSpacing: 10,
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: cols,
+        childAspectRatio: 2.35,
+        crossAxisSpacing: 8,
+        mainAxisSpacing: 8,
       ),
       itemCount: links.length,
       itemBuilder: (ctx, i) {
         final (icon, color, label, route) = links[i];
-        return GestureDetector(
-          onTap: () => Navigator.pushNamed(ctx, route),
-          child: Container(
-            decoration: BoxDecoration(
-              color: VetoPalette.surface,
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: VetoPalette.border),
-              boxShadow: [BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.03),
-                  blurRadius: 6, offset: const Offset(0, 2))],
-            ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center, children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                    color: color.withValues(alpha: 0.10),
-                    shape: BoxShape.circle),
-                child: Icon(icon, color: color, size: 22),
+        return Material(
+          color: Colors.transparent,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(12),
+            onTap: () => Navigator.pushNamed(ctx, route),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+              decoration: BoxDecoration(
+                color: VetoPalette.surface,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: VetoPalette.border),
+                boxShadow: [
+                  BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.03),
+                      blurRadius: 4,
+                      offset: const Offset(0, 1))
+                ],
               ),
-              const SizedBox(height: 6),
-              Text(label, textAlign: TextAlign.center,
-                  style: const TextStyle(
-                      color: VetoPalette.text, fontSize: 12,
-                      fontWeight: FontWeight.w600),
-                  maxLines: 2, overflow: TextOverflow.ellipsis),
-            ]),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                        color: color.withValues(alpha: 0.10),
+                        borderRadius: BorderRadius.circular(8)),
+                    child: Icon(icon, color: color, size: 18),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(label,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                            color: VetoPalette.text,
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.w600)),
+                  ),
+                ],
+              ),
+            ),
           ),
         );
       },
@@ -573,7 +596,7 @@ class _KpiCard extends StatelessWidget {
               style: TextStyle(
                   color: VetoPalette.text,
                   fontWeight: FontWeight.w900,
-                  fontSize: large ? 32 : 26)),
+                  fontSize: large ? 26 : 22)),
           const SizedBox(height: 2),
           Text(label,
               style: const TextStyle(

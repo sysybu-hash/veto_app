@@ -97,10 +97,24 @@ const createUser = async (req, res, next) => {
 
 const updateUser = async (req, res, next) => {
   try {
-    const allowed = ['full_name', 'phone', 'role', 'preferred_language', 'email', 'is_verified', 'manually_added', 'is_subscribed', 'is_active'];
+    const allowed = ['full_name', 'phone', 'role', 'preferred_language', 'email', 'is_verified', 'manually_added', 'is_subscribed', 'is_active', 'subscription_expiry'];
     const updates = {};
     allowed.forEach(f => { if (req.body[f] !== undefined) updates[f] = req.body[f]; });
     if (updates.phone) updates.phone = normalizePhone(updates.phone);
+
+    if (req.body.extendDays !== undefined) {
+      const days = Number(req.body.extendDays);
+      if (Number.isFinite(days) && days !== 0) {
+        const u = await User.findById(req.params.id).select('subscription_expiry');
+        if (!u) return res.status(404).json({ error: 'User not found.' });
+        const base =
+          u.subscription_expiry && u.subscription_expiry > new Date()
+            ? new Date(u.subscription_expiry)
+            : new Date();
+        updates.subscription_expiry = new Date(base.getTime() + days * 86400000);
+      }
+    }
+
     const user = await User.findByIdAndUpdate(req.params.id, updates, { new: true, runValidators: true });
     if (!user) return res.status(404).json({ error: 'User not found.' });
     res.json({ user });

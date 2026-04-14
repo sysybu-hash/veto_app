@@ -20,6 +20,7 @@ const {
   getEventById,
   addEvidence,
   rateEvent,
+  createDocumentationSession,
 } = require('../controllers/event.controller');
 
 // ── Multer storage: Cloudinary if configured, local disk fallback ─
@@ -63,8 +64,9 @@ if (
 // ── All event routes require authentication ────────────────
 router.use(protect);
 
-router.get('/history',                         getHistory);
-router.get('/:eventId',                        getEventById);
+router.get('/history', getHistory);
+router.post('/documentation-session', createDocumentationSession);
+router.get('/:eventId', getEventById);
 router.post('/:eventId/evidence',              addEvidence);
 router.post('/:eventId/rate',                  rateEvent);
 
@@ -75,8 +77,16 @@ router.post('/:eventId/evidence/upload', upload.single('file'), async (req, res,
   try {
     if (!req.file) return res.status(400).json({ error: 'No file uploaded.' });
 
+    const { userId } = req.user;
     const { eventId } = req.params;
     const { type = 'photo', lat, lng, client_timestamp } = req.body;
+
+    const EmergencyEvent = require('../models/EmergencyEvent');
+    const existing = await EmergencyEvent.findById(eventId).select('user_id evidence');
+    if (!existing) return res.status(404).json({ error: 'Event not found.' });
+    if (existing.user_id.toString() !== userId.toString()) {
+      return res.status(403).json({ error: 'Only the event owner may upload evidence.' });
+    }
 
     // Cloudinary returns req.file.path as the secure URL
     // Local disk returns req.file.filename → build URL from host
@@ -84,26 +94,24 @@ router.post('/:eventId/evidence/upload', upload.single('file'), async (req, res,
       ? req.file.path
       : `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
 
-    const EmergencyEvent = require('../models/EmergencyEvent');
+    const evidencePush = {
+      type,
+      cloud_url: cloudUrl,
+      timestamp: client_timestamp ? new Date(client_timestamp) : new Date(),
+      file_size_bytes: req.file.size,
+    };
+    if (lat != null && lng != null && lat !== '' && lng !== '') {
+      evidencePush.gps_location = {
+        type: 'Point',
+        coordinates: [parseFloat(lng), parseFloat(lat)],
+      };
+    }
+
     const event = await EmergencyEvent.findByIdAndUpdate(
       eventId,
-      {
-        $push: {
-          evidence: {
-            type,
-            cloud_url: cloudUrl,
-            location: lat && lng
-              ? { type: 'Point', coordinates: [parseFloat(lng), parseFloat(lat)] }
-              : undefined,
-            timestamp: client_timestamp ? new Date(client_timestamp) : new Date(),
-            file_size: req.file.size,
-          },
-        },
-      },
+      { $push: { evidence: evidencePush } },
       { new: true, select: 'evidence' },
     );
-
-    if (!event) return res.status(404).json({ error: 'Event not found.' });
 
     const saved = event.evidence[event.evidence.length - 1];
     return res.status(201).json({ success: true, cloudUrl, evidence: saved });
