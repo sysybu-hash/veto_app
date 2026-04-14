@@ -14,7 +14,6 @@ import '../core/theme/future_surface.dart';
 import '../core/theme/veto_theme.dart';
 import '../platform/browser_bridge.dart' as browser_bridge;
 import '../services/auth_service.dart';
-import '../services/payment_service.dart';
 import '../widgets/app_language_menu.dart';
 
 // ?? Google Sign-In singleton ??????????????????????????????????
@@ -277,24 +276,8 @@ class _LoginScreenState extends State<LoginScreen> {
     if (isLawyerRoute) {
       Navigator.of(context).pushReplacementNamed('/lawyer_dashboard');
     } else {
-      final isPaymentExempt = data['user']?['is_payment_exempt'] == true || isAdmin;
-      final isSubscribed    = data['user']?['is_subscribed'] == true;
-      if (isPaymentExempt || isSubscribed) {
-        Navigator.of(context).pushReplacementNamed('/veto_screen');
-      } else {
-        final subscribed = await showDialog<bool>(
-          context: context,
-          barrierDismissible: false,
-          builder: (_) => _SubscriptionGateDialog(code: preferredLanguage),
-        );
-        if (!mounted) return;
-        if (subscribed == true) {
-          Navigator.of(context).pushReplacementNamed('/veto_screen');
-        } else {
-          // No subscription — logout and return to login
-          await AuthService().logout(context);
-        }
-      }
+      // תמיד מסך VETO אחרי התחברות/רישום — שער מנוי רץ ב־VetoScreen (לא חוסם כאן)
+      Navigator.of(context).pushReplacementNamed('/veto_screen');
     }
   }
 
@@ -1299,158 +1282,3 @@ class _PendingApprovalDialog extends StatelessWidget {
   }
 }
 
-// ?????????????????????????????????????????????????????????????
-//  Subscription Gate Dialog
-// ?????????????????????????????????????????????????????????????
-
-class _SubscriptionGateDialog extends StatefulWidget {
-  final String code;
-  const _SubscriptionGateDialog({required this.code});
-
-  @override
-  State<_SubscriptionGateDialog> createState() => _SubscriptionGateDialogState();
-}
-
-class _SubscriptionGateDialogState extends State<_SubscriptionGateDialog> {
-  bool _loading = false;
-  String? _error;
-  String? _orderId;
-
-  Future<void> _openPayPal() async {
-    setState(() { _loading = true; _error = null; });
-    final orderId = await PaymentService.createAndOpenOrder(PaymentType.subscription);
-    if (!mounted) return;
-    if (orderId == null) {
-      setState(() { _loading = false; _error = _t(widget.code, 'paymentOpenFailed'); });
-      return;
-    }
-    setState(() { _loading = false; _orderId = orderId; });
-  }
-
-  Future<void> _confirmPayment() async {
-    if (_orderId == null) return;
-    setState(() { _loading = true; _error = null; });
-    final phone  = await AuthService().getStoredPhone();
-    final result = await PaymentService.captureOrder(
-      orderId: _orderId!, type: PaymentType.subscription, userId: phone,
-    );
-    if (!mounted) return;
-    if (result.success) {
-      await AuthService().setSubscribed(true);
-      if (!mounted) return;
-      Navigator.of(context).pop(true);
-      return;
-    }
-    setState(() {
-      _loading = false;
-      _error = result.error ?? _t(widget.code, 'paymentConfirmFailed');
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final c = widget.code;
-    return Directionality(
-      textDirection: AppLanguage.directionOf(c),
-      child: AlertDialog(
-        backgroundColor: VetoPalette.surface,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
-        title: Row(children: [
-          const Icon(Icons.lock_open_rounded, color: VetoPalette.primary),
-          const SizedBox(width: 10),
-          Expanded(child: Text(_t(c, 'subscriptionTitle'),
-              style: const TextStyle(color: VetoPalette.text, fontWeight: FontWeight.w800))),
-        ]),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(_t(c, 'subscriptionBody'),
-                style: const TextStyle(color: VetoPalette.textMuted, fontSize: 14, height: 1.6)),
-            const SizedBox(height: 6),
-            const Text('ללא מנוי פעיל לא ניתן להשתמש במערכת.',
-                style: TextStyle(color: VetoPalette.emergency, fontSize: 12, fontWeight: FontWeight.w600)),
-            const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: VetoPalette.bg,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: VetoPalette.primary.withValues(alpha: 0.28)),
-              ),
-              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text(_t(c, 'subscriptionPlan'),
-                    style: const TextStyle(color: VetoPalette.text, fontWeight: FontWeight.w800)),
-                const SizedBox(height: 4),
-                Text(_t(c, 'subscriptionPrice'),
-                    style: const TextStyle(color: VetoPalette.success, fontSize: 18, fontWeight: FontWeight.w800)),
-                const SizedBox(height: 10),
-                _PlanLine(text: _t(c, 'subscriptionLine1')),
-                _PlanLine(text: _t(c, 'subscriptionLine2')),
-                _PlanLine(text: _t(c, 'subscriptionLine3')),
-              ]),
-            ),
-            if (_orderId != null) ...[
-              const SizedBox(height: 12),
-              Text(_t(c, 'paymentOpened'),
-                  style: const TextStyle(color: VetoPalette.warning)),
-            ],
-            if (_error != null) ...[
-              const SizedBox(height: 12),
-              Text(_error!, style: const TextStyle(color: VetoPalette.emergency)),
-            ],
-          ],
-        ),
-        actions: _orderId == null
-            ? [
-                TextButton(
-                  onPressed: _loading ? null : () => Navigator.of(context).pop(false),
-                  child: const Text('התנתק',
-                      style: TextStyle(color: VetoPalette.emergency)),
-                ),
-                FilledButton(
-                  onPressed: _loading ? null : _openPayPal,
-                  style: FilledButton.styleFrom(backgroundColor: const Color(0xFF009CDE)),
-                  child: _loading
-                      ? const SizedBox(width: 18, height: 18,
-                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                      : Text(_t(c, 'paypal')),
-                ),
-              ]
-            : [
-                TextButton(
-                  onPressed: _loading ? null : () => Navigator.of(context).pop(false),
-                  child: const Text('התנתק',
-                      style: TextStyle(color: VetoPalette.emergency)),
-                ),
-                FilledButton(
-                  onPressed: _loading ? null : _confirmPayment,
-                  style: FilledButton.styleFrom(backgroundColor: VetoPalette.success),
-                  child: _loading
-                      ? const SizedBox(width: 18, height: 18,
-                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                      : Text(_t(c, 'paymentConfirm')),
-                ),
-              ],
-      ),
-    );
-  }
-}
-
-class _PlanLine extends StatelessWidget {
-  final String text;
-  const _PlanLine({required this.text});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Row(children: [
-        const Icon(Icons.check_circle_outline_rounded, color: VetoPalette.success, size: 18),
-        const SizedBox(width: 8),
-        Expanded(child: Text(text,
-            style: const TextStyle(color: VetoPalette.textMuted, fontSize: 13))),
-      ]),
-    );
-  }
-}

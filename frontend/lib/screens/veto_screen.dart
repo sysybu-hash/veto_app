@@ -662,9 +662,13 @@ class _VetoScreenState extends State<VetoScreen> {
 
   // ── AppBar ────────────────────────────────────────────────
   PreferredSizeWidget _buildAppBar(bool isAdmin) => AppBar(
-    backgroundColor: VetoColors.background,
+    backgroundColor: VetoColors.surface,
+    surfaceTintColor: Colors.transparent,
     automaticallyImplyLeading: false,
-    elevation: 0,
+    elevation: 1,
+    shadowColor: Colors.black12,
+    iconTheme: const IconThemeData(color: VetoColors.white, size: 24),
+    actionsIconTheme: const IconThemeData(color: VetoColors.accentDark, size: 24),
     title: Row(children: [
       // Gold shield icon
       Container(
@@ -755,32 +759,32 @@ class _VetoScreenState extends State<VetoScreen> {
         ),
       IconButton(
           icon: const Icon(Icons.home_outlined),
-          color: VetoColors.silverDim,
+          color: VetoColors.accentDark,
           onPressed: () => Navigator.pushNamed(context, '/landing'),
           tooltip: _langKey == 'he' ? 'דף הבית' : _langKey == 'ru' ? 'Главная' : 'Home'),
       IconButton(
           icon: const Icon(Icons.folder_special_outlined),
-          color: VetoColors.silverDim,
+          color: VetoColors.accentDark,
           onPressed: () => Navigator.pushNamed(context, '/files_vault'),
           tooltip: _langKey == 'he' ? 'כספת קבצים' : _langKey == 'ru' ? 'Хранилище' : 'File Vault'),
       IconButton(
           icon: const Icon(Icons.map_outlined),
-          color: VetoColors.silverDim,
+          color: VetoColors.accentDark,
           onPressed: () => Navigator.pushNamed(context, '/waze_map'),
           tooltip: _langKey == 'he' ? 'ניווט Waze' : _langKey == 'ru' ? 'Навигация Waze' : 'Waze Navigation'),
       IconButton(
           icon: const Icon(Icons.settings_outlined),
-          color: VetoColors.silverDim,
+          color: VetoColors.accentDark,
           onPressed: () => Navigator.pushNamed(context, '/settings'),
           tooltip: _langKey == 'he' ? 'הגדרות' : _langKey == 'ru' ? 'Настройки' : 'Settings'),
       IconButton(
           icon: const Icon(Icons.person_outline),
-          color: VetoColors.silverDim,
+          color: VetoColors.accentDark,
           onPressed: () => Navigator.pushNamed(context, '/profile'),
           tooltip: _langKey == 'he' ? 'פרופיל' : _langKey == 'ru' ? 'Профиль' : 'Profile'),
       IconButton(
           icon: const Icon(Icons.logout_rounded),
-          color: VetoColors.textMuted,
+          color: VetoColors.silver,
           tooltip: _langKey == 'he' ? 'התנתקות' : _langKey == 'ru' ? 'Выход' : 'Log out',
           onPressed: () => AuthService().logout(context)),
     ],
@@ -801,12 +805,12 @@ class _VetoScreenState extends State<VetoScreen> {
       onDestinationSelected: (i) => setState(() => _tab = i),
       destinations: [
         NavigationDestination(
-          icon: const Icon(Icons.shield_outlined, color: VetoColors.textMuted),
+          icon: const Icon(Icons.shield_outlined, color: VetoColors.accentDark),
           selectedIcon: const Icon(Icons.shield, color: VetoColors.accent),
           label: isRtl ? 'VETO מגן' : 'VETO Shield',
         ),
         NavigationDestination(
-          icon: const Icon(Icons.smart_toy_outlined, color: VetoColors.textMuted),
+          icon: const Icon(Icons.smart_toy_outlined, color: VetoColors.accentDark),
           selectedIcon: const Icon(Icons.smart_toy, color: VetoColors.accent),
           label: isRtl ? 'AI עוזר' : 'AI Assistant',
         ),
