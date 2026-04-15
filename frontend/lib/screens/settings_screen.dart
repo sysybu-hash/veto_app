@@ -504,35 +504,44 @@ class _SettingsScreenState extends State<SettingsScreen>
     return Directionality(
       textDirection: isRtl ? TextDirection.rtl : TextDirection.ltr,
       child: Scaffold(
-        backgroundColor: VetoPalette.bg,
+        backgroundColor: const Color(0xFFF0F4FF),
         appBar: AppBar(
+          backgroundColor: Colors.white,
+          elevation: 0,
+          shadowColor: Colors.transparent,
+          surfaceTintColor: Colors.transparent,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Color(0xFF334155), size: 20),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
           title: Text(
             _t(code, 'title'),
-            style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 18),
+            style: const TextStyle(color: Color(0xFF0F172A), fontWeight: FontWeight.w800, fontSize: 18),
           ),
+          centerTitle: true,
           actions: [
-            IconButton(
-              tooltip: _t(code, 'save'),
-              onPressed: _saving ? null : () => _save(code),
-              icon: _saving
-                  ? const SizedBox(
-                      width: 22,
-                      height: 22,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: VetoPalette.primary,
-                      ),
-                    )
-                  : const Icon(Icons.save_rounded),
+            Padding(
+              padding: const EdgeInsets.only(right: 12),
+              child: TextButton(
+                onPressed: _saving ? null : () => _save(code),
+                style: TextButton.styleFrom(
+                  backgroundColor: const Color(0xFF5B8FFF),
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                ),
+                child: _saving
+                    ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                    : Text(_t(code, 'save'), style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700)),
+              ),
             ),
           ],
           bottom: TabBar(
             controller: _wizardTab,
-            indicatorColor: VetoPalette.primary,
-            labelColor: VetoPalette.text,
-            unselectedLabelColor: VetoPalette.textMuted,
-            labelStyle: const TextStyle(
-                fontWeight: FontWeight.w700, fontSize: 12),
+            indicatorColor: const Color(0xFF5B8FFF),
+            labelColor: const Color(0xFF0F172A),
+            unselectedLabelColor: const Color(0xFF64748B),
+            labelStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
             isScrollable: true,
             tabs: [
               Tab(text: _t(code, 'wiz1Title')),
@@ -542,7 +551,7 @@ class _SettingsScreenState extends State<SettingsScreen>
           ),
         ),
         body: _loading
-            ? const Center(child: CircularProgressIndicator())
+            ? const Center(child: CircularProgressIndicator(color: Color(0xFF5B8FFF)))
             : TabBarView(
                 controller: _wizardTab,
                 children: [
@@ -551,6 +560,66 @@ class _SettingsScreenState extends State<SettingsScreen>
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
+                  // ── Avatar header (per mockup) ────────────
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: const Color(0xFFE2E8F8)),
+                      boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 12, offset: const Offset(0,4))],
+                    ),
+                    child: Column(children: [
+                      // Avatar circle
+                      Container(
+                        width: 72, height: 72,
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(colors: [Color(0xFF5B8FFF), Color(0xFF00C9B1)], begin: Alignment.topLeft, end: Alignment.bottomRight),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Center(
+                          child: Text(
+                            (_nameCtrl.text.isNotEmpty ? _nameCtrl.text[0] : 'W').toUpperCase(),
+                            style: const TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.w900),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        _nameCtrl.text.isNotEmpty ? _nameCtrl.text : (isRtl ? 'שם מלא' : 'Full name'),
+                        style: const TextStyle(color: Color(0xFF0F172A), fontSize: 18, fontWeight: FontWeight.w900),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        _role == 'lawyer' ? (isRtl ? 'עורך דין' : 'Lawyer') : _role == 'admin' ? (isRtl ? 'מנהל' : 'Admin') : (isRtl ? 'אזרח' : 'Citizen'),
+                        style: const TextStyle(color: Color(0xFF64748B), fontSize: 13),
+                      ),
+                      const SizedBox(height: 4),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFDCFCE7),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(isRtl ? 'חשבון פעיל' : 'Active account',
+                          style: const TextStyle(color: Color(0xFF16A34A), fontSize: 11, fontWeight: FontWeight.w700)),
+                      ),
+                      const SizedBox(height: 14),
+                      OutlinedButton.icon(
+                        onPressed: () {},
+                        icon: const Icon(Icons.edit_outlined, size: 14),
+                        label: Text(isRtl ? 'ערוך פרופיל' : 'Edit profile', style: const TextStyle(fontSize: 13)),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: const Color(0xFF5B8FFF),
+                          side: const BorderSide(color: Color(0xFF5B8FFF), width: 1),
+                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                        ),
+                      ),
+                    ]),
+                  ),
+                  const SizedBox(height: 16),
                   // ── Profile section ─────────────────────
                   _Section(
                     icon: Icons.person_rounded,
@@ -1096,15 +1165,15 @@ class _Section extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final ic = iconColor ?? VetoPalette.primary;
+    final ic = iconColor ?? const Color(0xFF5B8FFF);
     return Container(
       decoration: BoxDecoration(
-        color: VetoPalette.surface,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: borderColor ?? VetoPalette.border),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: borderColor ?? const Color(0xFFE2E8F8)),
         boxShadow: [BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 6, offset: const Offset(0, 2))],
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 8, offset: const Offset(0, 2))],
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Padding(

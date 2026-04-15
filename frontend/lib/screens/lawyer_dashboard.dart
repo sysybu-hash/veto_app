@@ -8,7 +8,7 @@ import '../core/theme/veto_theme.dart';
 import '../services/auth_service.dart';
 import '../services/push_service.dart';
 import '../services/socket_service.dart';
-import '../widgets/app_language_menu.dart';
+
 
 class LawyerDashboard extends StatefulWidget {
   const LawyerDashboard({super.key});
@@ -311,314 +311,391 @@ class _LawyerDashboardState extends State<LawyerDashboard> {
   Widget build(BuildContext context) {
     final language = context.watch<AppLanguageController>();
     final code = language.code;
+    final isRtl = AppLanguage.directionOf(code) == TextDirection.rtl;
 
     return Directionality(
       textDirection: AppLanguage.directionOf(code),
       child: Scaffold(
-        backgroundColor: VetoPalette.bg,
+        backgroundColor: const Color(0xFFF0F4FF),
         body: _isBooting
-            ? const Center(
-                child: CircularProgressIndicator(color: VetoPalette.primary),
-              )
-            : SafeArea(
-                child: CustomScrollView(
-                  slivers: [
-                    SliverToBoxAdapter(
-                      child: Padding(
-                        padding: const EdgeInsets.fromLTRB(20, 18, 20, 12),
-                        child: _HeroHeader(
-                          eyebrow: _t(code, 'eyebrow'),
-                          title: _t(code, 'title'),
-                          subtitle: _t(code, 'subtitle'),
-                          name: _lawyerName,
-                          phone: _phone,
-                          isAvailable: _isAvailable,
-                          profileLabel: _t(code, 'profile'),
-                          logoutLabel: _t(code, 'logout'),
-                          settingsLabel: code == 'he' ? 'הגדרות' : code == 'ru' ? 'Настройки' : 'Settings',
-                          homeLabel: code == 'he' ? 'דף הבית' : code == 'ru' ? 'Главная' : 'Home',
-                          onProfile: () => Navigator.pushNamed(context, '/profile'),
-                          onLogout: () => AuthService().logout(context),
-                          onSettings: () => Navigator.pushNamed(context, '/lawyer_settings'),
-                          onHome: () => Navigator.pushNamed(context, '/landing'),
+            ? const Center(child: CircularProgressIndicator(color: Color(0xFF5B8FFF)))
+            : Stack(children: [
+                Positioned.fill(child: CustomPaint(painter: _LawyerAuroraPainter())),
+                SafeArea(
+                  child: Column(children: [
+                    // ── Top bar ─────────────────────────────────
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                      child: Row(children: [
+                        // Bell
+                        Stack(children: [
+                          IconButton(
+                            icon: const Icon(Icons.notifications_outlined, color: Color(0xFF334155)),
+                            onPressed: () {},
+                            constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
+                          ),
+                          if (_alerts.isNotEmpty)
+                            Positioned(right: 8, top: 8, child: Container(
+                              width: 8, height: 8,
+                              decoration: const BoxDecoration(color: Color(0xFFFF3B3B), shape: BoxShape.circle),
+                            )),
+                        ]),
+                        const Spacer(),
+                        // Title
+                        Text(
+                          isRtl ? 'לוח בקרה — עורך דין' : 'Lawyer Dashboard',
+                          style: const TextStyle(color: Color(0xFF0F172A), fontSize: 18, fontWeight: FontWeight.w900),
                         ),
-                      ),
-                    ),
-                    SliverToBoxAdapter(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: _MetricCard(
-                                label: _t(code, 'status'),
-                                value: _isAvailable
-                                    ? _t(code, 'statusOnline')
-                                    : _t(code, 'statusOffline'),
-                                icon: Icons.toggle_on_rounded,
-                                color: _isAvailable
-                                    ? VetoPalette.success
-                                    : VetoPalette.textMuted,
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: _MetricCard(
-                                label: _t(code, 'queue'),
-                                value: '${_alerts.length}',
-                                icon: Icons.mark_email_unread_outlined,
-                                color: _alerts.isEmpty
-                                    ? VetoPalette.info
-                                    : VetoPalette.emergency,
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: _MetricCard(
-                                label: _t(code, 'response'),
-                                value: _t(code, 'responseValue'),
-                                icon: Icons.timer_outlined,
-                                color: VetoPalette.primary,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    SliverToBoxAdapter(
-                      child: Padding(
-                        padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
-                        child: Container(
-                          padding: const EdgeInsets.all(18),
+                        const Spacer(),
+                        // Available badge
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                           decoration: BoxDecoration(
-                            color: VetoPalette.surface,
-                            borderRadius: BorderRadius.circular(22),
-                            border: Border.all(color: VetoPalette.border),
+                            color: _isAvailable ? const Color(0xFFDCFCE7) : const Color(0xFFFEF3C7),
+                            borderRadius: BorderRadius.circular(20),
                           ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          _t(code, 'shift').toUpperCase(),
-                                          style: const TextStyle(
-                                            color: VetoPalette.primary,
-                                            fontSize: 10,
-                                            fontWeight: FontWeight.w800,
-                                            letterSpacing: 2.5,
-                                          ),
-                                        ),
-                                        const SizedBox(height: 4),
-                                        Text(
-                                          _t(code, 'shiftTitle'),
-                                          style: const TextStyle(
-                                            color: VetoPalette.text,
-                                            fontSize: 22,
-                                            fontWeight: FontWeight.w800,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  const AppLanguageMenu(compact: true),
-                                ],
+                          child: Row(mainAxisSize: MainAxisSize.min, children: [
+                            Container(
+                              width: 8, height: 8,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: _isAvailable ? const Color(0xFF22C55E) : const Color(0xFFF59E0B),
                               ),
-                              const SizedBox(height: 10),
-                              Text(
-                                _t(code, 'shiftBody'),
-                                style: const TextStyle(
-                                  color: VetoPalette.textMuted,
-                                  fontSize: 14,
-                                  height: 1.6,
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              _isAvailable ? (isRtl ? 'מחובר' : 'Online') : (isRtl ? 'לא זמין' : 'Offline'),
+                              style: TextStyle(
+                                color: _isAvailable ? const Color(0xFF16A34A) : const Color(0xFFB45309),
+                                fontSize: 12, fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ]),
+                        ),
+                      ]),
+                    ),
+
+                    // ── Scrollable content ───────────────────────
+                    Expanded(
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: Column(children: [
+                          // Greeting card
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(20),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(color: const Color(0xFFE2E8F8)),
+                              boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 12, offset: const Offset(0,4))],
+                            ),
+                            child: Row(children: [
+                              Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                                Text(
+                                  isRtl ? 'שלום, עו"ד $_lawyerName' : 'Hello, Adv. $_lawyerName',
+                                  style: const TextStyle(color: Color(0xFF0F172A), fontSize: 20, fontWeight: FontWeight.w900),
                                 ),
-                              ),
-                              const SizedBox(height: 18),
+                                const SizedBox(height: 4),
+                                Text(
+                                  isRtl
+                                    ? 'יש לך ${_activeCases.length} תיקים פעילים'
+                                    : 'You have ${_activeCases.length} active cases',
+                                  style: const TextStyle(color: Color(0xFF64748B), fontSize: 14),
+                                ),
+                              ])),
+                              // Avatar
                               Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 16, vertical: 14),
+                                width: 52, height: 52,
                                 decoration: BoxDecoration(
-                                  color: VetoPalette.bg,
-                                  borderRadius: BorderRadius.circular(16),
-                                  border: Border.all(
-                                    color: (_isAvailable
-                                            ? VetoPalette.success
-                                            : VetoPalette.border)
-                                        .withValues(alpha: 0.45),
-                                  ),
+                                  color: const Color(0xFFE2E8F8),
+                                  shape: BoxShape.circle,
+                                  border: Border.all(color: const Color(0xFF5B8FFF).withValues(alpha: 0.3), width: 2),
                                 ),
-                                child: Row(
-                                  children: [
-                                    Container(
-                                      width: 12,
-                                      height: 12,
-                                      decoration: BoxDecoration(
-                                        shape: BoxShape.circle,
-                                        color: _isAvailable
-                                            ? VetoPalette.success
-                                            : VetoPalette.textSubtle,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 10),
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            _isAvailable
-                                                ? _t(code, 'statusOnline')
-                                                : _t(code, 'statusOffline'),
-                                            style: TextStyle(
-                                              color: _isAvailable
-                                                  ? VetoPalette.success
-                                                  : VetoPalette.textMuted,
-                                              fontSize: 15,
-                                              fontWeight: FontWeight.w700,
-                                            ),
-                                          ),
-                                          const SizedBox(height: 4),
-                                          Text(
-                                            _t(code, 'statusHelp'),
-                                            style: const TextStyle(
-                                              color: VetoPalette.textSubtle,
-                                              fontSize: 12,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                    Switch(
-                                      value: _isAvailable,
-                                      onChanged: _toggleAvailability,
-                                    ),
-                                  ],
-                                ),
+                                child: const Icon(Icons.person_rounded, color: Color(0xFF334155), size: 28),
                               ),
-                            ],
+                            ]),
                           ),
-                        ),
-                      ),
-                    ),
-                    SliverToBoxAdapter(
-                      child: Padding(
-                        padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              _t(code, 'activity').toUpperCase(),
-                              style: const TextStyle(
-                                color: VetoPalette.primary,
-                                fontSize: 10,
-                                fontWeight: FontWeight.w800,
-                                letterSpacing: 2.5,
-                              ),
+                          const SizedBox(height: 14),
+
+                          // Stats row: 3 cards
+                          Row(children: [
+                            _LawyerStat(value: '${_activeCases.length}', label: isRtl ? 'תיקים פעילים' : 'Active cases', color: const Color(0xFF5B8FFF)),
+                            const SizedBox(width: 10),
+                            _LawyerStat(value: '${_alerts.length}', label: isRtl ? 'שיחות היום' : 'Today calls', color: const Color(0xFF334155)),
+                            const SizedBox(width: 10),
+                            _LawyerStat(
+                              value: '4.8',
+                              label: isRtl ? 'דירוג' : 'Rating',
+                              color: const Color(0xFFF59E0B),
+                              icon: Icons.star_rounded,
                             ),
-                            const SizedBox(height: 6),
-                            Text(
-                              _t(code, 'activityTitle'),
-                              style: const TextStyle(
-                                color: VetoPalette.text,
-                                fontSize: 24,
-                                fontWeight: FontWeight.w800,
-                              ),
+                          ]),
+                          const SizedBox(height: 14),
+
+                          // Availability toggle
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(color: const Color(0xFFE2E8F8)),
                             ),
-                            const SizedBox(height: 6),
-                            Text(
-                              _t(code, 'activitySubtitle'),
-                              style: const TextStyle(
-                                color: VetoPalette.textMuted,
-                                fontSize: 14,
-                                height: 1.6,
+                            child: Row(children: [
+                              const Icon(Icons.toggle_on_rounded, color: Color(0xFF5B8FFF), size: 22),
+                              const SizedBox(width: 10),
+                              Expanded(child: Text(
+                                _isAvailable ? (isRtl ? 'זמין לקריאות' : 'Available') : (isRtl ? 'לא זמין' : 'Unavailable'),
+                                style: TextStyle(color: _isAvailable ? const Color(0xFF22C55E) : const Color(0xFF64748B), fontWeight: FontWeight.w700, fontSize: 15),
+                              )),
+                              Switch(
+                                value: _isAvailable,
+                                onChanged: _toggleAvailability,
+                                activeThumbColor: const Color(0xFF5B8FFF),
                               ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    if (_alerts.isEmpty)
-                      SliverToBoxAdapter(
-                        child: Padding(
-                          padding: const EdgeInsets.fromLTRB(20, 0, 20, 28),
-                          child: _EmptyQueue(
-                            title: _t(code, 'emptyTitle'),
-                            body: _t(code, 'emptyBody'),
-                            hint: _t(code, 'emptyHint'),
+                            ]),
                           ),
-                        ),
-                      )
-                    else
-                      SliverPadding(
-                        padding: const EdgeInsets.fromLTRB(20, 0, 20, 28),
-                        sliver: SliverList.separated(
-                          itemCount: _alerts.length,
-                          itemBuilder: (context, index) {
-                            final alert = _alerts[index];
-                            return _RequestCard(
-                              code: code,
-                              title: _t(code, 'request'),
-                              requestFrom: _t(code, 'requestFrom'),
-                              requestDetails: _t(code, 'requestDetails'),
-                              fallbackText: _t(code, 'requestUnknown'),
+                          const SizedBox(height: 20),
+
+                          // Active cases section
+                          Align(
+                            alignment: AlignmentDirectional.centerStart,
+                            child: Text(
+                              isRtl ? 'תיקים פעילים' : 'Active Cases',
+                              style: const TextStyle(color: Color(0xFF0F172A), fontSize: 17, fontWeight: FontWeight.w800),
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+
+                          if (_alerts.isEmpty && _activeCases.isEmpty)
+                            Container(
+                              padding: const EdgeInsets.all(24),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(color: const Color(0xFFE2E8F8)),
+                              ),
+                              child: Center(child: Text(
+                                _t(code, 'emptyTitle'),
+                                style: const TextStyle(color: Color(0xFF64748B), fontSize: 14),
+                                textAlign: TextAlign.center,
+                              )),
+                            ),
+
+                          // Alerts (incoming)
+                          for (final alert in _alerts)
+                            _LawyerCaseCard(
+                              data: alert, isRtl: isRtl,
                               acceptLabel: _t(code, 'accept'),
                               rejectLabel: _t(code, 'reject'),
-                              data: alert,
                               onAccept: () => _acceptCase(alert),
                               onReject: () => _rejectCase(alert),
-                            );
-                          },
-                          separatorBuilder: (_, __) => const SizedBox(height: 12),
-                        ),
-                      ),
-                    if (_activeCases.isNotEmpty) ...[
-                      SliverToBoxAdapter(
-                        child: Padding(
-                          padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
-                          child: Text(
-                            code == 'he' ? 'תיקים פעילים' : 'ACTIVE CASES',
-                            style: const TextStyle(
-                              color: VetoPalette.primary,
-                              fontSize: 10,
-                              fontWeight: FontWeight.w800,
-                              letterSpacing: 2.5,
+                              urgency: 'urgent',
                             ),
-                          ),
-                        ),
-                      ),
-                      SliverPadding(
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                        sliver: SliverList.separated(
-                          itemCount: _activeCases.length,
-                          itemBuilder: (context, index) {
-                            final c = _activeCases[index];
-                            return _ActiveCaseCard(
-                              data: c,
-                              onViewVault: () {
+
+                          // Active cases
+                          for (int i = 0; i < _activeCases.length; i++)
+                            _LawyerCaseCard(
+                              data: _activeCases[i], isRtl: isRtl,
+                              acceptLabel: isRtl ? 'קבל תיק' : 'View case',
+                              rejectLabel: isRtl ? 'סגור' : 'Close',
+                              onAccept: () {
+                                final c = _activeCases[i];
                                 final uid = c['userId'];
                                 if (uid != null) {
                                   Navigator.pushNamed(context, '/shared_vault', arguments: {
-                                    'userId': uid,
-                                    'userName': c['userName'] ?? 'User',
+                                    'userId': uid, 'userName': c['userName'] ?? 'User',
                                   });
                                 }
                               },
-                              onComplete: () {
-                                setState(() => _activeCases.removeAt(index));
-                              },
-                            );
-                          },
-                          separatorBuilder: (_, __) => const SizedBox(height: 12),
-                        ),
+                              onReject: () => setState(() => _activeCases.removeAt(i)),
+                              urgency: 'moderate',
+                            ),
+
+                          const SizedBox(height: 32),
+                        ]),
                       ),
-                    ],
-                  ],
+                    ),
+
+                    // ── Bottom nav bar ──────────────────────────
+                    Container(
+                      decoration: const BoxDecoration(
+                        color: Colors.white,
+                        border: Border(top: BorderSide(color: Color(0xFFE2E8F8))),
+                      ),
+                      child: SafeArea(
+                        top: false,
+                        child: Row(mainAxisAlignment: MainAxisAlignment.spaceAround, children: [
+                          _BottomNavItem(icon: Icons.home_rounded, label: isRtl ? 'בית' : 'Home', selected: true, onTap: () {}),
+                          _BottomNavItem(icon: Icons.folder_outlined, label: isRtl ? 'תיקים' : 'Cases', selected: false,
+                            onTap: () => Navigator.pushNamed(context, '/shared_vault', arguments: {'userId': '', 'userName': ''})),
+                          _BottomNavItem(icon: Icons.chat_bubble_outline_rounded, label: isRtl ? 'צ׳אט' : 'Chat', selected: false, onTap: () {}),
+                          _BottomNavItem(icon: Icons.person_outline_rounded, label: isRtl ? 'פרופיל' : 'Profile', selected: false,
+                            onTap: () => Navigator.pushNamed(context, '/lawyer_settings')),
+                        ]),
+                      ),
+                    ),
+                  ]),
                 ),
-              ),
+              ]),
+      ),
+    );
+  }
+}
+
+// ── Lawyer Aurora painter ─────────────────────────────────
+class _LawyerAuroraPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final w = size.width; final h = size.height;
+    canvas.drawRect(Rect.fromLTWH(0,0,w,h), Paint()..color = const Color(0xFFF0F4FF));
+    _b(canvas, Offset(w*0.85, h*0.05), w*0.55, const Color(0xFF38BDF8), 0.18);
+    _b(canvas, Offset(w*0.10, h*0.92), w*0.55, const Color(0xFF00C9B1), 0.16);
+  }
+  void _b(Canvas c, Offset center, double r, Color color, double a) {
+    c.drawCircle(center, r, Paint()..shader = RadialGradient(
+      colors: [color.withValues(alpha: a), color.withValues(alpha: 0)],
+    ).createShader(Rect.fromCircle(center: center, radius: r)));
+  }
+  @override bool shouldRepaint(_) => false;
+}
+
+// ── Lawyer stat tile ──────────────────────────────────────
+class _LawyerStat extends StatelessWidget {
+  final String value, label;
+  final Color color;
+  final IconData? icon;
+  const _LawyerStat({required this.value, required this.label, required this.color, this.icon});
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(child: Container(
+      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0xFFE2E8F8)),
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 8, offset: const Offset(0,2))],
+      ),
+      child: Column(children: [
+        if (icon != null)
+          Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+            Icon(icon, color: color, size: 16),
+            const SizedBox(width: 4),
+            Text(value, style: TextStyle(color: color, fontSize: 22, fontWeight: FontWeight.w900)),
+          ])
+        else
+          Text(value, style: TextStyle(color: color, fontSize: 22, fontWeight: FontWeight.w900)),
+        const SizedBox(height: 4),
+        Text(label, style: const TextStyle(color: Color(0xFF64748B), fontSize: 11), textAlign: TextAlign.center),
+      ]),
+    ));
+  }
+}
+
+// ── Case card ─────────────────────────────────────────────
+class _LawyerCaseCard extends StatelessWidget {
+  final Map<String, dynamic> data;
+  final bool isRtl;
+  final String acceptLabel, rejectLabel, urgency;
+  final VoidCallback onAccept, onReject;
+  const _LawyerCaseCard({
+    required this.data, required this.isRtl,
+    required this.acceptLabel, required this.rejectLabel,
+    required this.onAccept, required this.onReject, required this.urgency,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isUrgent = urgency == 'urgent';
+    final chipColor = isUrgent ? const Color(0xFFFF3B3B) : const Color(0xFFF59E0B);
+    final chipLabel = isUrgent ? (isRtl ? 'דחוף' : 'Urgent') : (isRtl ? 'ממתין' : 'Pending');
+    final nameRaw = data['userName'] ?? data['name'] ?? (isRtl ? 'משתמש' : 'User');
+    final scenario = data['scenario'] ?? data['type'] ?? '';
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE2E8F8)),
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0,3))],
+      ),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Row(children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            decoration: BoxDecoration(
+              color: chipColor.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Text(chipLabel, style: TextStyle(color: chipColor, fontSize: 11, fontWeight: FontWeight.w800)),
+          ),
+        ]),
+        const SizedBox(height: 10),
+        Text(
+          isRtl ? 'אזרח: $nameRaw' : 'Client: $nameRaw',
+          style: const TextStyle(color: Color(0xFF0F172A), fontWeight: FontWeight.w800, fontSize: 15),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          scenario.isEmpty ? (isRtl ? 'אירוע חירום' : 'Emergency') : scenario,
+          style: const TextStyle(color: Color(0xFF64748B), fontSize: 13),
+        ),
+        const SizedBox(height: 14),
+        Row(children: [
+          Expanded(child: FilledButton(
+            onPressed: onAccept,
+            style: FilledButton.styleFrom(
+              backgroundColor: const Color(0xFF1A2340),
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              textStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+            child: Text(acceptLabel),
+          )),
+          const SizedBox(width: 8),
+          Expanded(child: OutlinedButton(
+            onPressed: onReject,
+            style: OutlinedButton.styleFrom(
+              foregroundColor: const Color(0xFF334155),
+              side: const BorderSide(color: Color(0xFFE2E8F8)),
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              textStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+            child: Text(rejectLabel),
+          )),
+        ]),
+      ]),
+    );
+  }
+}
+
+// ── Bottom nav item ───────────────────────────────────────
+class _BottomNavItem extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+  const _BottomNavItem({required this.icon, required this.label, required this.selected, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          Icon(icon, color: selected ? const Color(0xFF5B8FFF) : const Color(0xFF64748B), size: 24),
+          const SizedBox(height: 4),
+          Text(label, style: TextStyle(
+            color: selected ? const Color(0xFF5B8FFF) : const Color(0xFF64748B),
+            fontSize: 11, fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+          )),
+        ]),
       ),
     );
   }

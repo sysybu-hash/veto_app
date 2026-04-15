@@ -946,6 +946,7 @@ class _VetoScreenState extends State<VetoScreen> {
   Widget build(BuildContext context) {
     final bool isAdmin = _role == 'admin' || _phone.contains('525640021') || _phone.contains('506400030');
     final bool isRtl = _langKey == 'he';
+    // Tab indices: 0=home, 1=chat, 2=files, 3=profile
     return Directionality(
       textDirection: isRtl ? TextDirection.rtl : TextDirection.ltr,
       child: Scaffold(
@@ -953,19 +954,15 @@ class _VetoScreenState extends State<VetoScreen> {
         appBar: _buildAppBar(isAdmin),
         body: Stack(
           children: [
-            // ── Aurora background blobs ──────────────────────
-            Positioned.fill(
-              child: CustomPaint(painter: _AuroraPainter()),
-            ),
-            // ── Content ──────────────────────────────────────
+            Positioned.fill(child: CustomPaint(painter: _AuroraPainter())),
             SafeArea(
-              child: IndexedStack(
-                index: _tab,
-                children: [
-                  _buildWizardTab(isAdmin, isRtl),
-                  _buildChatTab(isRtl),
-                ],
-              ),
+              child: _tab == 0
+                  ? _buildWizardTab(isAdmin, isRtl)
+                  : _tab == 1
+                      ? _buildChatTab(isRtl)
+                      : _tab == 2
+                          ? _buildFilesTab(isRtl)
+                          : _buildProfileTab(isRtl),
             ),
           ],
         ),
@@ -974,203 +971,185 @@ class _VetoScreenState extends State<VetoScreen> {
     );
   }
 
-  // ── AppBar (balanced: langs | brand | tools) ──────────────
-  PreferredSizeWidget _buildAppBar(bool isAdmin) => AppBar(
-    backgroundColor: const Color(0xEEFFFFFF),
-    surfaceTintColor: Colors.transparent,
-    automaticallyImplyLeading: false,
-    elevation: 0,
-    scrolledUnderElevation: 0,
-    shadowColor: Colors.transparent,
-    shape: Border(
-      bottom: BorderSide(color: const Color(0xFF5B8FFF).withValues(alpha: 0.18), width: 1),
-    ),
-    centerTitle: false,
-    titleSpacing: 0,
-    toolbarHeight: 56,
-    iconTheme: const IconThemeData(color: VetoColors.inkDark, size: 24),
-    actionsIconTheme: const IconThemeData(color: VetoColors.inkDark, size: 24),
-    title: Row(
-      children: [
-        Expanded(
-          flex: 1,
-          child: Align(
-            alignment: AlignmentDirectional.centerStart,
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: AppLanguageMenu(
-                compact: true,
-                tooltip: _langKey == 'he'
-                    ? 'שפה'
-                    : _langKey == 'ru'
-                        ? 'Язык'
-                        : 'Language',
-                onLanguageChanged: (k) {
-                  if (!mounted) return;
-                  setState(() {
-                    _langKey = k;
-                    _messages.clear();
-                    _geminiHistory.clear();
-                    _messages.add(_Msg(text: _langs[k]!.greeting, isUser: false));
-                  });
-                },
+  // ── AppBar: accessibility+flag left | centered title | hamburger right ──
+  PreferredSizeWidget _buildAppBar(bool isAdmin) {
+    return AppBar(
+      backgroundColor: const Color(0xEEFFFFFF),
+      surfaceTintColor: Colors.transparent,
+      automaticallyImplyLeading: false,
+      elevation: 0,
+      scrolledUnderElevation: 0,
+      shadowColor: Colors.transparent,
+      toolbarHeight: 56,
+      iconTheme: const IconThemeData(color: Color(0xFF0F172A), size: 24),
+      // Left side: accessibility + flag (language)
+      leading: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const SizedBox(width: 4),
+          IconButton(
+            visualDensity: VisualDensity.compact,
+            constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
+            icon: const Icon(Icons.accessibility_new_rounded, size: 22),
+            color: const Color(0xFF64748B),
+            onPressed: () => showAccessibilitySheet(context),
+            tooltip: _langKey == 'he' ? 'נגישות' : _langKey == 'ru' ? 'Доступность' : 'Accessibility',
+          ),
+          AppLanguageMenu(
+            compact: true,
+            tooltip: _langKey == 'he' ? 'שפה' : _langKey == 'ru' ? 'Язык' : 'Language',
+            onLanguageChanged: (k) {
+              if (!mounted) return;
+              setState(() {
+                _langKey = k;
+                _messages.clear();
+                _geminiHistory.clear();
+                _messages.add(_Msg(text: _langs[k]!.greeting, isUser: false));
+              });
+            },
+          ),
+        ],
+      ),
+      leadingWidth: 96,
+      // Centered brand title
+      title: Row(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.shield_rounded, color: Color(0xFF5B8FFF), size: 20),
+          const SizedBox(width: 8),
+          Text(
+            'VETO — הגנה משפטית',
+            style: TextStyle(
+              fontWeight: FontWeight.w900,
+              fontSize: 15,
+              color: const Color(0xFF0F172A),
+              letterSpacing: 0.5,
+              shadows: [Shadow(color: const Color(0xFF5B8FFF).withValues(alpha: 0.15), blurRadius: 6)],
+            ),
+          ),
+          if (_isDispatching) ...[
+            const SizedBox(width: 6),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFF3B3B).withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(6),
+                border: Border.all(color: const Color(0xFFFF3B3B).withValues(alpha: 0.3)),
               ),
+              child: const Text('LIVE',
+                  style: TextStyle(color: Color(0xFFFF3B3B), fontSize: 9,
+                      fontWeight: FontWeight.w800, letterSpacing: 1.5)),
             ),
+          ],
+        ],
+      ),
+      centerTitle: true,
+      // Right side: hamburger menu
+      actions: [
+        Builder(
+          builder: (ctx) => IconButton(
+            visualDensity: VisualDensity.compact,
+            constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
+            icon: const Icon(Icons.menu_rounded, size: 26),
+            color: const Color(0xFF0F172A),
+            onPressed: () => _showHamburgerMenu(ctx, isAdmin),
+            tooltip: _langKey == 'he' ? 'תפריט' : _langKey == 'ru' ? 'Меню' : 'Menu',
           ),
         ),
-        Flexible(
-          fit: FlexFit.loose,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 6),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(6),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF5B8FFF).withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: const Color(0xFF5B8FFF).withValues(alpha: 0.3), width: 1),
-                  ),
-                  child: const Icon(Icons.shield_rounded, color: Color(0xFF5B8FFF), size: 20),
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  'VETO',
-                  style: TextStyle(
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 4,
-                    fontSize: 17,
-                    color: VetoColors.inkDark,
-                    shadows: [Shadow(color: const Color(0xFF5B8FFF).withValues(alpha: 0.2), blurRadius: 6)],
-                  ),
-                ),
-                const SizedBox(width: 4),
-                if (_isDispatching)
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: VetoPalette.emergency.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(6),
-                      border: Border.all(color: VetoPalette.emergency.withValues(alpha: 0.3)),
-                    ),
-                    child: const Text(
-                      'LIVE',
-                      style: TextStyle(
-                        color: VetoPalette.emergency,
-                        fontSize: 9,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 1.5,
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-        ),
-        Expanded(
-          flex: 1,
-          child: Align(
-            alignment: AlignmentDirectional.centerEnd,
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (isAdmin)
-                    IconButton(
-                      visualDensity: VisualDensity.compact,
-                      constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
-                      icon: const Icon(Icons.admin_panel_settings_outlined, size: 24),
-                      color: VetoColors.accent,
-                      onPressed: () => Navigator.pushNamed(context, '/admin_settings'),
-                      tooltip: 'פאנל ניהול',
-                    ),
-                  IconButton(
-                    visualDensity: VisualDensity.compact,
-                    constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
-                    icon: const Icon(Icons.home_outlined, size: 24),
-                    color: VetoColors.inkMedium,
-                    onPressed: () => Navigator.pushNamed(context, '/landing'),
-                    tooltip: _langKey == 'he' ? 'דף הבית' : _langKey == 'ru' ? 'Главная' : 'Home',
-                  ),
-                  IconButton(
-                    visualDensity: VisualDensity.compact,
-                    constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
-                    icon: const Icon(Icons.folder_special_outlined, size: 24),
-                    color: VetoColors.inkMedium,
-                    onPressed: () => Navigator.pushNamed(context, '/files_vault'),
-                    tooltip: _langKey == 'he' ? 'כספת קבצים' : _langKey == 'ru' ? 'Хранилище' : 'File Vault',
-                  ),
-                  IconButton(
-                    visualDensity: VisualDensity.compact,
-                    constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
-                    icon: const Icon(Icons.map_outlined, size: 24),
-                    color: VetoColors.inkMedium,
-                    onPressed: () => Navigator.pushNamed(context, '/maps'),
-                    tooltip: _langKey == 'he'
-                        ? 'מפת Google'
-                        : _langKey == 'ru'
-                            ? 'Google Карты'
-                            : 'Google Maps',
-                  ),
-                  IconButton(
-                    visualDensity: VisualDensity.compact,
-                    constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
-                    icon: const Icon(Icons.accessibility_new_rounded, size: 24),
-                    color: VetoColors.inkMedium,
-                    onPressed: () => showAccessibilitySheet(context),
-                    tooltip: _langKey == 'he' ? 'נגישות' : _langKey == 'ru' ? 'Доступность' : 'Accessibility',
-                  ),
-                  IconButton(
-                    visualDensity: VisualDensity.compact,
-                    constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
-                    icon: const Icon(Icons.settings_outlined, size: 24),
-                    color: VetoColors.inkMedium,
-                    onPressed: () => Navigator.pushNamed(context, '/settings'),
-                    tooltip: _langKey == 'he' ? 'הגדרות' : _langKey == 'ru' ? 'Настройки' : 'Settings',
-                  ),
-                  IconButton(
-                    visualDensity: VisualDensity.compact,
-                    constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
-                    icon: const Icon(Icons.person_outline, size: 24),
-                    color: VetoColors.inkMedium,
-                    onPressed: () => Navigator.pushNamed(context, '/profile'),
-                    tooltip: _langKey == 'he' ? 'פרופיל' : _langKey == 'ru' ? 'Профиль' : 'Profile',
-                  ),
-                  IconButton(
-                    visualDensity: VisualDensity.compact,
-                    constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
-                    icon: const Icon(Icons.logout_rounded, size: 24),
-                    color: VetoColors.inkLight,
-                    tooltip: _langKey == 'he' ? 'התנתקות' : _langKey == 'ru' ? 'Выход' : 'Log out',
-                    onPressed: () => AuthService().logout(context),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
+        const SizedBox(width: 4),
       ],
-    ),
-    bottom: PreferredSize(
-      preferredSize: const Size.fromHeight(1),
-      child: Container(height: 1, color: const Color(0xFF5B8FFF).withValues(alpha: 0.15)),
-    ),
-  );
+      bottom: PreferredSize(
+        preferredSize: const Size.fromHeight(1),
+        child: Container(height: 1, color: const Color(0xFF5B8FFF).withValues(alpha: 0.15)),
+      ),
+    );
+  }
 
-  // ── Bottom Nav ────────────────────────────────────────────
+  void _showHamburgerMenu(BuildContext ctx, bool isAdmin) {
+    showModalBottomSheet(
+      context: ctx,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => Directionality(
+        textDirection: _langKey == 'he' ? TextDirection.rtl : TextDirection.ltr,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 20, 16, 32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(width: 40, height: 4,
+                  margin: const EdgeInsets.only(bottom: 16),
+                  decoration: BoxDecoration(
+                      color: const Color(0xFFE2E8F8),
+                      borderRadius: BorderRadius.circular(2))),
+              if (isAdmin)
+                _menuItem(Icons.admin_panel_settings_outlined,
+                    _langKey == 'he' ? 'פאנל ניהול' : 'Admin Panel',
+                    const Color(0xFF5B8FFF),
+                    () { Navigator.pop(ctx); Navigator.pushNamed(context, '/admin_settings'); }),
+              _menuItem(Icons.home_outlined,
+                  _langKey == 'he' ? 'דף הבית' : _langKey == 'ru' ? 'Главная' : 'Home',
+                  const Color(0xFF5B8FFF),
+                  () { Navigator.pop(ctx); Navigator.pushNamed(context, '/landing'); }),
+              _menuItem(Icons.folder_special_outlined,
+                  _langKey == 'he' ? 'כספת קבצים' : _langKey == 'ru' ? 'Хранилище' : 'File Vault',
+                  const Color(0xFF5B8FFF),
+                  () { Navigator.pop(ctx); Navigator.pushNamed(context, '/files_vault'); }),
+              _menuItem(Icons.map_outlined,
+                  _langKey == 'he' ? 'מפה' : _langKey == 'ru' ? 'Карта' : 'Map',
+                  const Color(0xFF5B8FFF),
+                  () { Navigator.pop(ctx); Navigator.pushNamed(context, '/maps'); }),
+              _menuItem(Icons.settings_outlined,
+                  _langKey == 'he' ? 'הגדרות' : _langKey == 'ru' ? 'Настройки' : 'Settings',
+                  const Color(0xFF64748B),
+                  () { Navigator.pop(ctx); Navigator.pushNamed(context, '/settings'); }),
+              _menuItem(Icons.person_outline,
+                  _langKey == 'he' ? 'פרופיל' : _langKey == 'ru' ? 'Профиль' : 'Profile',
+                  const Color(0xFF64748B),
+                  () { Navigator.pop(ctx); Navigator.pushNamed(context, '/profile'); }),
+              const Divider(height: 20, color: Color(0xFFE2E8F8)),
+              _menuItem(Icons.logout_rounded,
+                  _langKey == 'he' ? 'התנתקות' : _langKey == 'ru' ? 'Выход' : 'Log out',
+                  const Color(0xFFFF3B3B),
+                  () { Navigator.pop(ctx); AuthService().logout(context); }),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _menuItem(IconData icon, String label, Color color, VoidCallback onTap) =>
+      InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(10),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+          child: Row(children: [
+            Icon(icon, color: color, size: 22),
+            const SizedBox(width: 14),
+            Text(label, style: TextStyle(
+                color: const Color(0xFF0F172A), fontSize: 15, fontWeight: FontWeight.w600)),
+          ]),
+        ),
+      );
+
+  // ── Bottom Nav: 4 tabs ─────────────────────────────────────
   Widget _buildNavBar(bool isRtl) => Container(
     decoration: BoxDecoration(
-      color: const Color(0xEEFFFFFF),
-      border: Border(top: BorderSide(color: const Color(0xFF5B8FFF).withValues(alpha: 0.18), width: 1)),
+      color: const Color(0xFFFFFFFF),
+      border: Border(top: BorderSide(
+          color: const Color(0xFF5B8FFF).withValues(alpha: 0.18), width: 1)),
       boxShadow: [
-        BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 8, offset: const Offset(0, -2)),
+        BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10,
+            offset: const Offset(0, -2)),
       ],
     ),
     child: NavigationBar(
-      height: 72,
+      height: 68,
       selectedIndex: _tab,
       backgroundColor: Colors.transparent,
       surfaceTintColor: Colors.transparent,
@@ -1179,46 +1158,125 @@ class _VetoScreenState extends State<VetoScreen> {
       onDestinationSelected: (i) => setState(() => _tab = i),
       destinations: [
         NavigationDestination(
-          icon: const Icon(Icons.shield_outlined, color: VetoColors.inkFaint, size: 26),
-          selectedIcon: const Icon(Icons.shield, color: Color(0xFF5B8FFF), size: 26),
-          label: isRtl ? 'VETO מגן' : 'VETO Shield',
+          icon: const Icon(Icons.home_outlined, color: Color(0xFF94A3B8), size: 24),
+          selectedIcon: const Icon(Icons.home_rounded, color: Color(0xFF5B8FFF), size: 24),
+          label: isRtl ? 'בית' : 'Home',
         ),
         NavigationDestination(
-          icon: const Icon(Icons.chat_bubble_outline_rounded, color: VetoColors.inkFaint, size: 26),
-          selectedIcon: const Icon(Icons.chat_bubble_rounded, color: Color(0xFF5B8FFF), size: 26),
-          label: isRtl ? 'AI עוזר' : 'AI Assistant',
+          icon: const Icon(Icons.chat_bubble_outline_rounded, color: Color(0xFF94A3B8), size: 24),
+          selectedIcon: const Icon(Icons.chat_bubble_rounded, color: Color(0xFF5B8FFF), size: 24),
+          label: isRtl ? "צ'אט" : 'Chat',
+        ),
+        NavigationDestination(
+          icon: const Icon(Icons.folder_outlined, color: Color(0xFF94A3B8), size: 24),
+          selectedIcon: const Icon(Icons.folder_rounded, color: Color(0xFF5B8FFF), size: 24),
+          label: isRtl ? 'קבצים' : 'Files',
+        ),
+        NavigationDestination(
+          icon: const Icon(Icons.person_outline_rounded, color: Color(0xFF94A3B8), size: 24),
+          selectedIcon: const Icon(Icons.person_rounded, color: Color(0xFF5B8FFF), size: 24),
+          label: isRtl ? 'פרופיל' : 'Profile',
         ),
       ],
     ),
   );
 
+  // ── Files tab placeholder (routes to file vault) ───────────
+  Widget _buildFilesTab(bool isRtl) => Center(
+    child: Column(mainAxisSize: MainAxisSize.min, children: [
+      const Icon(Icons.folder_special_outlined, size: 64, color: Color(0xFF5B8FFF)),
+      const SizedBox(height: 16),
+      Text(
+        isRtl ? 'כספת קבצים' : _langKey == 'ru' ? 'Хранилище файлов' : 'File Vault',
+        style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800,
+            color: Color(0xFF0F172A)),
+      ),
+      const SizedBox(height: 8),
+      Text(
+        isRtl ? 'שמור ונהל את כל קבצי הראיות שלך'
+            : _langKey == 'ru' ? 'Сохраняйте и управляйте доказательствами'
+            : 'Store and manage all your evidence files',
+        style: const TextStyle(color: Color(0xFF64748B), fontSize: 14),
+        textAlign: TextAlign.center,
+      ),
+      const SizedBox(height: 24),
+      FilledButton.icon(
+        onPressed: () => Navigator.pushNamed(context, '/files_vault'),
+        icon: const Icon(Icons.open_in_new),
+        label: Text(isRtl ? 'פתח כספת קבצים'
+            : _langKey == 'ru' ? 'Открыть хранилище' : 'Open File Vault'),
+        style: FilledButton.styleFrom(backgroundColor: const Color(0xFF5B8FFF)),
+      ),
+    ]),
+  );
+
+  // ── Profile tab placeholder ────────────────────────────────
+  Widget _buildProfileTab(bool isRtl) => Center(
+    child: Column(mainAxisSize: MainAxisSize.min, children: [
+      Container(
+        width: 80, height: 80,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: const Color(0xFF5B8FFF).withValues(alpha: 0.12),
+          border: Border.all(color: const Color(0xFF5B8FFF).withValues(alpha: 0.3), width: 2),
+        ),
+        child: const Icon(Icons.person_rounded, size: 44, color: Color(0xFF5B8FFF)),
+      ),
+      const SizedBox(height: 16),
+      Text(
+        _phone.isNotEmpty ? _phone : (isRtl ? 'המשתמש שלי' : 'My Profile'),
+        style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800,
+            color: Color(0xFF0F172A)),
+        textDirection: TextDirection.ltr,
+      ),
+      const SizedBox(height: 24),
+      FilledButton.icon(
+        onPressed: () => Navigator.pushNamed(context, '/profile'),
+        icon: const Icon(Icons.manage_accounts_rounded),
+        label: Text(isRtl ? 'נהל פרופיל'
+            : _langKey == 'ru' ? 'Управлять профилем' : 'Manage Profile'),
+        style: FilledButton.styleFrom(backgroundColor: const Color(0xFF5B8FFF)),
+      ),
+      const SizedBox(height: 12),
+      OutlinedButton.icon(
+        onPressed: () => AuthService().logout(context),
+        icon: const Icon(Icons.logout_rounded, color: Color(0xFFFF3B3B)),
+        label: Text(
+          isRtl ? 'התנתקות' : _langKey == 'ru' ? 'Выход' : 'Log out',
+          style: const TextStyle(color: Color(0xFFFF3B3B)),
+        ),
+        style: OutlinedButton.styleFrom(
+          side: const BorderSide(color: Color(0xFFFF3B3B)),
+        ),
+      ),
+    ]),
+  );
+
   // ══════════════════════════════════════════════════════════
-  // WIZARD TAB
+  // WIZARD TAB (Home)
   // ══════════════════════════════════════════════════════════
   Widget _buildWizardTab(bool isAdmin, bool isRtl) => LayoutBuilder(
         builder: (context, constraints) {
           final compact = constraints.maxWidth < 600;
-          final hPad = compact ? 12.0 : 18.0;
+          final hPad = compact ? 14.0 : 20.0;
           return SingleChildScrollView(
-            padding: EdgeInsets.fromLTRB(hPad, 10, hPad, compact ? 28 : 44),
+            padding: EdgeInsets.fromLTRB(hPad, 12, hPad, compact ? 28 : 44),
             child: Align(
               alignment: Alignment.topCenter,
               child: ConstrainedBox(
-                constraints: BoxConstraints(
-                  maxWidth: compact ? double.infinity : 720,
-                ),
+                constraints: BoxConstraints(maxWidth: compact ? double.infinity : 720),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     _statusBadge(),
-                    SizedBox(height: compact ? 12 : 14),
+                    SizedBox(height: compact ? 14 : 18),
                     _sosButton(compact),
-                    SizedBox(height: compact ? 16 : 20),
+                    SizedBox(height: compact ? 14 : 18),
+                    _securityBar(),
+                    SizedBox(height: compact ? 14 : 18),
                     _secLabel(isRtl
                         ? 'מה קורה עכשיו?'
-                        : _langKey == 'ru'
-                            ? 'Что происходит?'
-                            : "What's happening?"),
+                        : _langKey == 'ru' ? 'Что происходит?' : "What's happening?"),
                     const SizedBox(height: 8),
                     _buildScenarioSelector(isRtl, compact),
                     SizedBox(height: compact ? 12 : 14),
@@ -1226,17 +1284,13 @@ class _VetoScreenState extends State<VetoScreen> {
                     SizedBox(height: compact ? 14 : 16),
                     _secLabel(isRtl
                         ? 'צור קשר מיידי'
-                        : _langKey == 'ru'
-                            ? 'Быстрая связь'
-                            : 'Quick Contact'),
+                        : _langKey == 'ru' ? 'Быстрая связь' : 'Quick Contact'),
                     const SizedBox(height: 8),
                     _liveContactGrid(isRtl, compact),
                     SizedBox(height: compact ? 14 : 16),
                     _secLabel(isRtl
                         ? 'כלים מהירים'
-                        : _langKey == 'ru'
-                            ? 'Инструменты'
-                            : 'Quick Tools'),
+                        : _langKey == 'ru' ? 'Инструменты' : 'Quick Tools'),
                     const SizedBox(height: 8),
                     _toolsGrid(isRtl, compact),
                     if (isAdmin) ...[
@@ -1251,182 +1305,238 @@ class _VetoScreenState extends State<VetoScreen> {
         },
       );
 
+  // ── Status badge pill ─────────────────────────────────────
   Widget _statusBadge() => Center(
     child: Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
       decoration: BoxDecoration(
         color: const Color(0xFFFFFFFF),
         borderRadius: BorderRadius.circular(999),
         border: Border.all(
             color: (_isDispatching ? const Color(0xFFFF3B3B) : const Color(0xFF5B8FFF))
-                .withValues(alpha: 0.4)),
+                .withValues(alpha: 0.35),
+            width: 1.5),
         boxShadow: [
           BoxShadow(
             color: (_isDispatching ? const Color(0xFFFF3B3B) : const Color(0xFF5B8FFF))
                 .withValues(alpha: 0.10),
-            blurRadius: 12,
+            blurRadius: 14,
           ),
           BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 6),
         ],
       ),
       child: Row(mainAxisSize: MainAxisSize.min, children: [
-        Container(
-            width: 8, height: 8,
-            decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: _isDispatching ? const Color(0xFFFF3B3B) : const Color(0xFF22C55E),
-                boxShadow: [
-                  BoxShadow(
-                    color: (_isDispatching ? const Color(0xFFFF3B3B) : const Color(0xFF22C55E))
-                        .withValues(alpha: 0.6),
-                    blurRadius: 6,
-                  ),
-                ])),
+        Icon(
+          Icons.shield_rounded,
+          size: 16,
+          color: _isDispatching ? const Color(0xFFFF3B3B) : const Color(0xFF5B8FFF),
+        ),
         const SizedBox(width: 8),
+        Container(
+          width: 7, height: 7,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: _isDispatching ? const Color(0xFFFF3B3B) : const Color(0xFF22C55E),
+            boxShadow: [
+              BoxShadow(
+                color: (_isDispatching ? const Color(0xFFFF3B3B) : const Color(0xFF22C55E))
+                    .withValues(alpha: 0.7),
+                blurRadius: 5,
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(width: 7),
         Text(
-          _isDispatching ? _l.broadcasting : _l.protected,
+          _isDispatching
+              ? (_langKey == 'he' ? 'מחובר | שיגור פעיל'
+                  : _langKey == 'ru' ? 'Активно | Диспетчеризация'
+                  : 'Connected | Dispatching')
+              : (_langKey == 'he' ? 'מחובר | ממתין לאירוע'
+                  : _langKey == 'ru' ? 'Подключено | Ожидание'
+                  : 'Connected | Standby'),
           style: TextStyle(
-              color: _isDispatching ? const Color(0xFFFF3B3B) : VetoColors.inkDark,
-              fontWeight: FontWeight.w800,
-              fontSize: 14),
+            color: _isDispatching ? const Color(0xFFFF3B3B) : const Color(0xFF0F172A),
+            fontWeight: FontWeight.w700,
+            fontSize: 13,
+          ),
         ),
         if (_phone.isNotEmpty) ...[
           const SizedBox(width: 10),
           Text(_phone,
-              style: const TextStyle(color: VetoColors.inkFaint, fontSize: 11),
+              style: const TextStyle(color: Color(0xFF94A3B8), fontSize: 11),
               textDirection: TextDirection.ltr),
         ],
       ]),
     ),
   );
 
+  // ── SOS Button with concentric rings ──────────────────────
   Widget _sosButton(bool compact) {
-    final orbSize = compact ? 140.0 : 160.0;
+    final orbSize = compact ? 148.0 : 168.0;
+    final ringOuter = orbSize + 36;
+    final ringMid = orbSize + 20;
     return Semantics(
       button: true,
-      label: _langKey == 'he'
-          ? 'לחץ להפעלת מצוקה ושיגור עורך דין'
-          : _langKey == 'ru'
-              ? 'Нажмите для вызова адвоката'
-              : 'Tap to dispatch a lawyer',
+      label: _langKey == 'he' ? 'לחץ להפעלת מצוקה ושיגור עורך דין'
+          : _langKey == 'ru' ? 'Нажмите для вызова адвоката'
+          : 'Tap to dispatch a lawyer',
       child: Column(
         children: [
-          // ── Glowing orb ─────────────────────────────────
           GestureDetector(
             onTap: _isDispatching ? null : () {
               HapticFeedback.heavyImpact();
               _dispatchSOS();
             },
-            child: Container(
-              width: orbSize,
-              height: orbSize,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                boxShadow: _isDispatching
-                    ? [
-                        BoxShadow(
-                          color: const Color(0xFFFF4B4B).withValues(alpha: 0.25),
-                          blurRadius: 40,
-                          spreadRadius: 8,
-                        ),
-                      ]
-                    : [
-                        // Outer diffuse glow
-                        BoxShadow(
-                          color: const Color(0xFFFF4B4B).withValues(alpha: 0.20),
-                          blurRadius: 60,
-                          spreadRadius: 20,
-                        ),
-                        // Mid glow
-                        BoxShadow(
-                          color: const Color(0xFFFF4B4B).withValues(alpha: 0.40),
-                          blurRadius: 30,
-                          spreadRadius: 8,
-                        ),
-                        // Inner tight glow
-                        BoxShadow(
-                          color: const Color(0xFFFF4B4B).withValues(alpha: 0.60),
-                          blurRadius: 14,
-                          spreadRadius: 2,
-                        ),
-                      ],
-              ),
-              child: Container(
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: RadialGradient(
-                    colors: _isDispatching
-                        ? [
-                            const Color(0xFFFF6B6B).withValues(alpha: 0.5),
-                            const Color(0xFFCC2222).withValues(alpha: 0.3),
-                          ]
-                        : [
-                            const Color(0xFFFF7777),
-                            const Color(0xFFFF3333),
-                            const Color(0xFFCC1111),
-                          ],
-                    stops: _isDispatching ? const [0.0, 1.0] : const [0.0, 0.5, 1.0],
-                  ),
-                  border: Border.all(
-                    color: Colors.white.withValues(alpha: _isDispatching ? 0.2 : 0.35),
-                    width: 2.5,
-                  ),
-                ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    if (_isDispatching)
-                      const SizedBox(
-                        width: 28, height: 28,
-                        child: CircularProgressIndicator(
-                          color: Colors.white, strokeWidth: 2.5,
-                        ),
-                      )
-                    else
-                      const Text(
-                        'SOS',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 32,
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: 3,
-                          shadows: [Shadow(color: Colors.white54, blurRadius: 12)],
-                        ),
-                      ),
-                    const SizedBox(height: 4),
-                    Text(
-                      _isDispatching
-                          ? (_langKey == 'he' ? 'מחפש...' : _langKey == 'ru' ? 'Поиск...' : 'Searching...')
-                          : (_langKey == 'he' ? 'עזרה מיידית' : _langKey == 'ru' ? 'ПОМОЩЬ' : 'EMERGENCY'),
-                      style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.9),
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 1.5,
+            child: SizedBox(
+              width: ringOuter + 12,
+              height: ringOuter + 12,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  // Outermost ring
+                  Container(
+                    width: ringOuter + 10,
+                    height: ringOuter + 10,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: const Color(0xFFFF3B3B).withValues(alpha: 0.08),
+                        width: 8,
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                  // Middle ring
+                  Container(
+                    width: ringMid + 8,
+                    height: ringMid + 8,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: const Color(0xFFFF3B3B).withValues(alpha: 0.16),
+                        width: 6,
+                      ),
+                    ),
+                  ),
+                  // Inner ring
+                  Container(
+                    width: orbSize + 10,
+                    height: orbSize + 10,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: const Color(0xFFFF3B3B).withValues(alpha: 0.28),
+                        width: 4,
+                      ),
+                    ),
+                  ),
+                  // Core orb
+                  Container(
+                    width: orbSize,
+                    height: orbSize,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      boxShadow: _isDispatching
+                          ? [
+                              BoxShadow(
+                                color: const Color(0xFFFF4B4B).withValues(alpha: 0.30),
+                                blurRadius: 40,
+                                spreadRadius: 6,
+                              ),
+                            ]
+                          : [
+                              BoxShadow(
+                                color: const Color(0xFFFF4B4B).withValues(alpha: 0.22),
+                                blurRadius: 60,
+                                spreadRadius: 18,
+                              ),
+                              BoxShadow(
+                                color: const Color(0xFFFF4B4B).withValues(alpha: 0.45),
+                                blurRadius: 28,
+                                spreadRadius: 6,
+                              ),
+                              BoxShadow(
+                                color: const Color(0xFFFF4B4B).withValues(alpha: 0.65),
+                                blurRadius: 12,
+                                spreadRadius: 1,
+                              ),
+                            ],
+                    ),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: RadialGradient(
+                          colors: _isDispatching
+                              ? [
+                                  const Color(0xFFFF6B6B).withValues(alpha: 0.6),
+                                  const Color(0xFFCC2222).withValues(alpha: 0.4),
+                                ]
+                              : const [
+                                  Color(0xFFFF7777),
+                                  Color(0xFFFF3333),
+                                  Color(0xFFBB1111),
+                                ],
+                          stops: _isDispatching ? const [0.0, 1.0] : const [0.0, 0.55, 1.0],
+                        ),
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: _isDispatching ? 0.2 : 0.38),
+                          width: 2.5,
+                        ),
+                      ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          if (_isDispatching)
+                            const SizedBox(
+                              width: 30, height: 30,
+                              child: CircularProgressIndicator(
+                                  color: Colors.white, strokeWidth: 2.5),
+                            )
+                          else
+                            const Text(
+                              'SOS',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 36,
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: 3,
+                                shadows: [Shadow(color: Colors.white54, blurRadius: 14)],
+                              ),
+                            ),
+                          const SizedBox(height: 4),
+                          Text(
+                            _isDispatching
+                                ? (_langKey == 'he' ? 'מחפש...'
+                                    : _langKey == 'ru' ? 'Поиск...' : 'Searching...')
+                                : (_langKey == 'he' ? 'עזרה מיידית'
+                                    : _langKey == 'ru' ? 'ПОМОЩЬ' : 'EMERGENCY'),
+                            style: TextStyle(
+                              color: Colors.white.withValues(alpha: 0.9),
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 1.5,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
-          const SizedBox(height: 12),
-          // ── Sub-label ────────────────────────────────────
+          const SizedBox(height: 10),
           Text(
             _isDispatching
-                ? (_langKey == 'he'
-                    ? 'עורך דין בדרך אליך...'
-                    : _langKey == 'ru'
-                        ? 'Адвокат уже едет...'
-                        : 'A lawyer is on the way...')
-                : (_langKey == 'he'
-                    ? 'לחץ לשגר עורך דין לעמדתך מיידית'
-                    : _langKey == 'ru'
-                        ? 'Нажмите для вызова адвоката'
-                        : 'Tap to instantly dispatch a lawyer'),
+                ? (_langKey == 'he' ? 'עורך דין בדרך אליך...'
+                    : _langKey == 'ru' ? 'Адвокат уже едет...'
+                    : 'A lawyer is on the way...')
+                : (_langKey == 'he' ? 'לחץ לקבלת עזרה מידית'
+                    : _langKey == 'ru' ? 'Нажмите для немедленной помощи'
+                    : 'Tap for immediate help'),
             textAlign: TextAlign.center,
             style: const TextStyle(
-              color: VetoColors.inkLight,
+              color: Color(0xFF64748B),
               fontSize: 13,
               fontWeight: FontWeight.w500,
               height: 1.3,
@@ -1437,50 +1547,113 @@ class _VetoScreenState extends State<VetoScreen> {
     );
   }
 
-  Widget _secLabel(String txt) => Padding(
-        padding: const EdgeInsets.only(bottom: 4),
-        child: Row(
+  // ── Security level bar card ───────────────────────────────
+  Widget _securityBar() => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+    decoration: BoxDecoration(
+      color: const Color(0xFFFFFFFF),
+      borderRadius: BorderRadius.circular(14),
+      border: Border.all(color: const Color(0xFFE2E8F8)),
+      boxShadow: [
+        BoxShadow(color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 10, offset: const Offset(0, 3)),
+      ],
+    ),
+    child: Row(children: [
+      Container(
+        width: 36, height: 36,
+        decoration: BoxDecoration(
+          color: const Color(0xFF5B8FFF).withValues(alpha: 0.10),
+          shape: BoxShape.circle,
+        ),
+        child: const Icon(Icons.shield_rounded, color: Color(0xFF5B8FFF), size: 20),
+      ),
+      const SizedBox(width: 12),
+      Expanded(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Container(
-              width: 3,
-              height: 14,
-              decoration: BoxDecoration(
-                color: const Color(0xFF5B8FFF),
-                borderRadius: BorderRadius.circular(2),
-              ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  _langKey == 'he' ? 'רמת אבטחה: גבוהה'
+                      : _langKey == 'ru' ? 'Уровень защиты: высокий'
+                      : 'Security Level: High',
+                  style: const TextStyle(
+                    color: Color(0xFF0F172A),
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                Text(
+                  _isDispatching ? '100%' : '85%',
+                  style: const TextStyle(
+                    color: Color(0xFF5B8FFF),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(width: 8),
-            Text(
-              txt.toUpperCase(),
-              style: const TextStyle(
-                color: VetoColors.inkMedium,
-                fontSize: 11,
-                fontWeight: FontWeight.w900,
-                letterSpacing: 2.0,
+            const SizedBox(height: 6),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(4),
+              child: LinearProgressIndicator(
+                value: _isDispatching ? 1.0 : 0.85,
+                minHeight: 6,
+                backgroundColor: const Color(0xFFE2E8F8),
+                valueColor: const AlwaysStoppedAnimation(Color(0xFF5B8FFF)),
               ),
             ),
           ],
         ),
+      ),
+    ]),
+  );
+
+  Widget _secLabel(String txt) => Padding(
+        padding: const EdgeInsets.only(bottom: 4),
+        child: Row(children: [
+          Container(
+            width: 3, height: 14,
+            decoration: BoxDecoration(
+              color: const Color(0xFF5B8FFF),
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            txt.toUpperCase(),
+            style: const TextStyle(
+              color: Color(0xFF334155),
+              fontSize: 11,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 2.0,
+            ),
+          ),
+        ]),
       );
 
+  // ── Scenario tile (single) ────────────────────────────────
   Widget _scenarioTile(MapEntry<_Scenario, _SD> e, bool compact) {
     final sel = e.key == _scenario;
-    final lbl = _langKey == 'ru'
-        ? e.value.ru
-        : _langKey == 'en'
-            ? e.value.en
-            : e.value.he;
-    final iconSize = compact ? 26.0 : 32.0;
+    final lbl = _langKey == 'ru' ? e.value.ru : _langKey == 'en' ? e.value.en : e.value.he;
+    final iconSize = compact ? 26.0 : 30.0;
     final circlePad = compact ? 8.0 : 10.0;
+    // Arrest scenario uses red icon per mockup
+    final isRed = e.key == _Scenario.arrest;
+    final iconColor = sel
+        ? const Color(0xFF5B8FFF)
+        : isRed
+            ? const Color(0xFFFF3B3B)
+            : const Color(0xFF5B8FFF);
     return Material(
       color: Colors.transparent,
       child: InkWell(
         onTap: () {
           HapticFeedback.selectionClick();
-          setState(() {
-            _scenario = e.key;
-            _rightsExpanded = true;
-          });
+          setState(() { _scenario = e.key; _rightsExpanded = true; });
         },
         borderRadius: BorderRadius.circular(14),
         child: AnimatedContainer(
@@ -1495,26 +1668,17 @@ class _VetoScreenState extends State<VetoScreen> {
                 : const Color(0xFFFFFFFF),
             borderRadius: BorderRadius.circular(14),
             border: Border.all(
-              color: sel
-                  ? const Color(0xFF5B8FFF).withValues(alpha: 0.7)
+              color: sel ? const Color(0xFF5B8FFF).withValues(alpha: 0.7)
                   : const Color(0xFFE2E8F8),
               width: sel ? 1.5 : 1,
             ),
             boxShadow: sel
-                ? [
-                    BoxShadow(
-                      color: const Color(0xFF5B8FFF).withValues(alpha: 0.15),
-                      blurRadius: 16,
-                      spreadRadius: 0,
-                    ),
-                  ]
-                : [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.05),
-                      blurRadius: 8,
-                      offset: const Offset(0, 3),
-                    ),
-                  ],
+                ? [BoxShadow(
+                    color: const Color(0xFF5B8FFF).withValues(alpha: 0.15),
+                    blurRadius: 16)]
+                : [BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.05),
+                    blurRadius: 8, offset: const Offset(0, 3))],
           ),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -1534,18 +1698,14 @@ class _VetoScreenState extends State<VetoScreen> {
                     width: 1,
                   ),
                 ),
-                child: Icon(
-                  _scenarioIcon(e.key),
-                  size: iconSize,
-                  color: sel ? const Color(0xFF5B8FFF) : VetoColors.inkMedium,
-                ),
+                child: Icon(_scenarioIcon(e.key), size: iconSize, color: iconColor),
               ),
               SizedBox(height: compact ? 6 : 8),
               Text(
                 lbl,
                 style: TextStyle(
-                  color: sel ? const Color(0xFF5B8FFF) : VetoColors.inkDark,
-                  fontSize: compact ? 12.5 : 12.5,
+                  color: sel ? const Color(0xFF5B8FFF) : const Color(0xFF0F172A),
+                  fontSize: 12.5,
                   fontWeight: sel ? FontWeight.w900 : FontWeight.w600,
                   height: 1.2,
                 ),
@@ -1561,150 +1721,128 @@ class _VetoScreenState extends State<VetoScreen> {
   }
 
   Widget _buildScenarioSelector(bool isRtl, bool compact) {
-    final entries = _sdMap.entries.toList();
-    if (compact) {
-      return GridView.builder(
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        itemCount: entries.length,
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
-          crossAxisSpacing: 10,
-          mainAxisSpacing: 10,
-          childAspectRatio: 1.55,
-        ),
-        itemBuilder: (_, i) => _scenarioTile(entries[i], true),
-      );
-    }
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        const spacing = 12.0;
-        const minTile = 108.0;
-        const maxTile = 132.0;
-        final n = entries.length;
-        final raw = (constraints.maxWidth - spacing * (n - 1)) / n;
-        final tileW = raw.clamp(minTile, maxTile);
-        return Padding(
-          padding: const EdgeInsets.symmetric(vertical: 6),
-          child: Wrap(
-            alignment: WrapAlignment.center,
-            spacing: spacing,
-            runSpacing: spacing,
-            children: [
-              for (final e in entries)
-                SizedBox(
-                  width: tileW,
-                  height: 128,
-                  child: _scenarioTile(e, false),
-                ),
-            ],
-          ),
-        );
-      },
+    // Show only 3 featured scenarios per mockup: traffic, accident, arrest
+    final featured = [_Scenario.traffic, _Scenario.accident, _Scenario.arrest];
+    final entries = _sdMap.entries
+        .where((e) => featured.contains(e.key))
+        .toList();
+    return Row(
+      children: [
+        for (int i = 0; i < entries.length; i++) ...[
+          if (i > 0) const SizedBox(width: 10),
+          Expanded(child: SizedBox(
+            height: compact ? 100 : 116,
+            child: _scenarioTile(entries[i], compact),
+          )),
+        ],
+      ],
     );
   }
 
+  // ── Rights card ───────────────────────────────────────────
   Widget _rightsCard() => Container(
         decoration: BoxDecoration(
           color: const Color(0xFFFFFFFF),
           borderRadius: BorderRadius.circular(16),
           border: const BorderDirectional(
-            top: BorderSide(color: VetoColors.border),
-            end: BorderSide(color: VetoColors.border),
-            bottom: BorderSide(color: VetoColors.border),
+            top: BorderSide(color: Color(0xFFE2E8F8)),
+            end: BorderSide(color: Color(0xFFE2E8F8)),
+            bottom: BorderSide(color: Color(0xFFE2E8F8)),
             start: BorderSide(color: Color(0xFF5B8FFF), width: 3),
           ),
           boxShadow: [
             BoxShadow(
               color: const Color(0xFF5B8FFF).withValues(alpha: 0.07),
-              blurRadius: 16,
-              offset: const Offset(0, 6),
+              blurRadius: 16, offset: const Offset(0, 6),
             ),
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.04),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
+              blurRadius: 8, offset: const Offset(0, 2),
             ),
           ],
         ),
-        child: Column(
-          children: [
-            InkWell(
-              onTap: () => setState(() => _rightsExpanded = !_rightsExpanded),
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                child: Row(
-                  children: [
-                    const Icon(Icons.verified_user_rounded,
-                        color: Color(0xFF5B8FFF), size: 22),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        _langKey == 'he'
-                            ? 'הזכויות שלך — $_sLabel'
-                            : _langKey == 'ru'
-                                ? 'Ваши права — $_sLabel'
-                                : 'Your Rights — $_sLabel',
-                        style: const TextStyle(
-                          color: VetoColors.inkDark,
-                          fontWeight: FontWeight.w900,
-                          fontSize: 16,
-                          height: 1.25,
+        child: Column(children: [
+          InkWell(
+            onTap: () => setState(() => _rightsExpanded = !_rightsExpanded),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              child: Row(children: [
+                const Icon(Icons.verified_user_rounded,
+                    color: Color(0xFF5B8FFF), size: 22),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    _langKey == 'he' ? 'הזכויות שלך — $_sLabel'
+                        : _langKey == 'ru' ? 'Ваши права — $_sLabel'
+                        : 'Your Rights — $_sLabel',
+                    style: const TextStyle(
+                      color: Color(0xFF0F172A),
+                      fontWeight: FontWeight.w900,
+                      fontSize: 16,
+                      height: 1.25,
+                    ),
+                  ),
+                ),
+                TextButton(
+                  onPressed: () => setState(() => _rightsExpanded = !_rightsExpanded),
+                  style: TextButton.styleFrom(
+                    foregroundColor: const Color(0xFF5B8FFF),
+                    padding: EdgeInsets.zero,
+                    minimumSize: Size.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                  child: Text(
+                    _langKey == 'he' ? 'קרא עוד'
+                        : _langKey == 'ru' ? 'Подробнее' : 'Read more',
+                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+                  ),
+                ),
+                const SizedBox(width: 4),
+                Icon(
+                  _rightsExpanded
+                      ? Icons.keyboard_arrow_up_rounded
+                      : Icons.keyboard_arrow_down_rounded,
+                  color: const Color(0xFF5B8FFF),
+                  size: 26,
+                ),
+              ]),
+            ),
+          ),
+          if (_rightsExpanded)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              child: Column(
+                children: _rights.take(3).map((r) => Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 6),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        margin: const EdgeInsetsDirectional.only(top: 7, start: 2, end: 2),
+                        width: 7, height: 7,
+                        decoration: const BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Color(0xFF5B8FFF),
                         ),
                       ),
-                    ),
-                    const Icon(
-                      Icons.keyboard_arrow_down_rounded,
-                      color: Color(0xFF5B8FFF),
-                      size: 28,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            if (_rightsExpanded)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                child: Column(
-                  children: _rights
-                      .map(
-                        (r) => Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 6),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Container(
-                                margin: const EdgeInsetsDirectional.only(
-                                    top: 7, start: 2, end: 2),
-                                width: 7,
-                                height: 7,
-                                decoration: const BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  color: Color(0xFF5B8FFF),
-                                ),
-                              ),
-                              const SizedBox(width: 10),
-                              Expanded(
-                                child: Text(
-                                  r,
-                                  style: const TextStyle(
-                                    color: VetoColors.inkMedium,
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.w600,
-                                    height: 1.45,
-                                  ),
-                                ),
-                              ),
-                            ],
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(r,
+                          style: const TextStyle(
+                            color: Color(0xFF334155),
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                            height: 1.45,
                           ),
                         ),
-                      )
-                      .toList(),
-                ),
+                      ),
+                    ],
+                  ),
+                )).toList(),
               ),
-          ],
-        ),
+            ),
+        ]),
       );
 
   Widget _liveContactGrid(bool isRtl, bool compact) => GridView.count(

@@ -10,7 +10,6 @@ import 'package:pinput/pinput.dart';
 import 'package:provider/provider.dart';
 
 import '../core/i18n/app_language.dart';
-import '../core/theme/future_surface.dart';
 import '../core/theme/veto_theme.dart';
 import '../platform/browser_bridge.dart' as browser_bridge;
 import '../services/auth_service.dart';
@@ -397,80 +396,95 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     final lang = context.watch<AppLanguageController>().code;
     final dir  = AppLanguage.directionOf(lang);
-    final wide = MediaQuery.of(context).size.width > 980;
+    // wide layout removed – always centered card
 
     return Directionality(
       textDirection: dir,
       child: Scaffold(
-        backgroundColor: VetoPalette.bg,
-        body: SafeArea(
-          child: LayoutBuilder(builder: (_, constraints) {
-            return Row(children: [
-              if (wide)
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.all(24),
-                    child: _AuthHero(lang: lang),
+        backgroundColor: const Color(0xFFF0F4FF),
+        body: Stack(children: [
+          // Aurora background
+          Positioned.fill(child: CustomPaint(painter: _LoginAuroraPainter())),
+          SafeArea(
+            child: Center(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 32),
+                child: Column(children: [
+                  // Language selector top right
+                  Align(
+                    alignment: AlignmentDirectional.centerEnd,
+                    child: AppLanguageMenu(compact: true),
                   ),
-                ),
-              Expanded(
-                child: Center(
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 520),
-                    child: SingleChildScrollView(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: wide ? 32 : 24,
-                        vertical: 24,
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          if (!wide) ...[
-                            _AuthHero(lang: lang, compact: true),
-                            const SizedBox(height: 20),
-                          ],
-                          const Align(
-                            alignment: AlignmentDirectional.centerEnd,
-                            child: AppLanguageMenu(compact: true),
-                          ),
-                          const SizedBox(height: 14),
-                          GlassPanel(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                _BrandRow(tagline: _t(lang, 'tagline')),
-                                const SizedBox(height: 20),
-                                _StepIndicator(
-                                  step: _step.index,
-                                  labels: [
-                                    _t(lang, 'stepRole'),
-                                    _t(lang, 'stepProfile'),
-                                    _t(lang, 'stepOtp'),
-                                  ],
-                                ),
-                                const SizedBox(height: 24),
-                                AnimatedSwitcher(
-                                  duration: const Duration(milliseconds: 260),
-                                  switchInCurve: Curves.easeOutCubic,
-                                  switchOutCurve: Curves.easeInCubic,
-                                  child: _buildStep(lang),
-                                ),
-                              ],
-                            ),
-                          ),
-                          if (_error.isNotEmpty) ...[
-                            const SizedBox(height: 12),
-                            _ErrorBanner(message: _error),
-                          ],
+                  const SizedBox(height: 24),
+                  // White glass card — matches mockup
+                  ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 420),
+                    child: Container(
+                      padding: const EdgeInsets.all(32),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFAFFFFFF),
+                        borderRadius: BorderRadius.circular(24),
+                        border: Border.all(color: const Color(0xFFE2E8F8), width: 1),
+                        boxShadow: [
+                          BoxShadow(color: const Color(0xFF5B8FFF).withValues(alpha: 0.10), blurRadius: 32, spreadRadius: 2),
+                          BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 16, offset: const Offset(0, 4)),
                         ],
                       ),
+                      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+                        // Shield icon + title
+                        Column(children: [
+                          Container(
+                            width: 64, height: 64,
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF5B8FFF).withValues(alpha: 0.10),
+                              shape: BoxShape.circle,
+                              border: Border.all(color: const Color(0xFF5B8FFF).withValues(alpha: 0.25), width: 1.5),
+                            ),
+                            child: const Icon(Icons.shield_rounded, color: Color(0xFF5B8FFF), size: 32),
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            lang == 'he' ? 'ברוך הבא ל-VETO' : lang == 'ru' ? 'Добро пожаловать в VETO' : 'Welcome to VETO',
+                            style: const TextStyle(color: Color(0xFF0F172A), fontSize: 22, fontWeight: FontWeight.w900),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            lang == 'he' ? 'הגנה משפטית בהישג יד' : lang == 'ru' ? 'Юридическая защита рядом' : 'Legal protection within reach',
+                            style: const TextStyle(color: Color(0xFF64748B), fontSize: 14),
+                            textAlign: TextAlign.center,
+                          ),
+                        ]),
+                        const SizedBox(height: 28),
+                        _StepIndicator(
+                          step: _step.index,
+                          labels: [_t(lang,'stepRole'), _t(lang,'stepProfile'), _t(lang,'stepOtp')],
+                        ),
+                        const SizedBox(height: 24),
+                        AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 260),
+                          switchInCurve: Curves.easeOutCubic,
+                          switchOutCurve: Curves.easeInCubic,
+                          child: _buildStep(lang),
+                        ),
+                        if (_error.isNotEmpty) ...[
+                          const SizedBox(height: 12),
+                          _ErrorBanner(message: _error),
+                        ],
+                      ]),
                     ),
                   ),
-                ),
+                  const SizedBox(height: 20),
+                  Text(
+                    lang == 'he' ? '🔒 מאובטח עם הצפנה מקצה לקצה' : lang == 'ru' ? '🔒 Защищено сквозным шифрованием' : '🔒 Secured with end-to-end encryption',
+                    style: const TextStyle(color: Color(0xFF64748B), fontSize: 12),
+                    textAlign: TextAlign.center,
+                  ),
+                ]),
               ),
-            ]);
-          }),
-        ),
+            ),
+          ),
+        ]),
       ),
     );
   }
@@ -1278,5 +1292,23 @@ class _PendingApprovalDialog extends StatelessWidget {
       ),
     );
   }
+}
+
+// ── Login Aurora background ───────────────────────────────
+class _LoginAuroraPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final w = size.width; final h = size.height;
+    canvas.drawRect(Rect.fromLTWH(0,0,w,h), Paint()..color = const Color(0xFFF0F4FF));
+    _blob(canvas, Offset(w*0.85, h*0.08), w*0.55, const Color(0xFF38BDF8), 0.22);
+    _blob(canvas, Offset(w*0.10, h*0.75), w*0.50, const Color(0xFFA78BFA), 0.18);
+    _blob(canvas, Offset(w*0.90, h*0.90), w*0.45, const Color(0xFF5B8FFF), 0.12);
+  }
+  void _blob(Canvas c, Offset center, double r, Color color, double a) {
+    c.drawCircle(center, r, Paint()..shader = RadialGradient(
+      colors: [color.withValues(alpha: a), color.withValues(alpha: 0)],
+    ).createShader(Rect.fromCircle(center: center, radius: r)));
+  }
+  @override bool shouldRepaint(_) => false;
 }
 
