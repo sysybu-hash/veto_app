@@ -15,6 +15,7 @@
     "tunnel": "npm run tunnel --prefix backend",
     "tunnel:any": "npm run tunnel:any --prefix backend",
     "tunnel:help": "npm run tunnel:help --prefix backend",
-    "dev:urls": "npm run dev:urls --prefix backend"
+    "dev:urls": "npm run dev:urls --prefix backend",
+    "build:web": "cd frontend && flutter build web --release --no-wasm-dry-run --no-tree-shake-icons --pwa-strategy=none --dart-define=VETO_API_BASE=https://veto-app-new.onrender.com"
   }
 }

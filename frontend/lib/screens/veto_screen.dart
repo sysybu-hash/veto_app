@@ -1604,8 +1604,10 @@ class _VetoScreenState extends State<VetoScreen> {
   Widget _liveContactGrid(bool isRtl, bool compact) => GridView.count(
     shrinkWrap: true,
     physics: const NeverScrollableScrollPhysics(),
+    clipBehavior: Clip.none,
     crossAxisCount: compact ? 1 : 2,
-    childAspectRatio: compact ? 2.85 : 2.05,
+    // Taller cells on narrow screens so label + subtitle + icons are not clipped.
+    childAspectRatio: compact ? 2.05 : 2.05,
     crossAxisSpacing: 10,
     mainAxisSpacing: 10,
     children: [
@@ -1687,7 +1689,6 @@ class _VetoScreenState extends State<VetoScreen> {
           onTap: onTap,
           borderRadius: BorderRadius.circular(14),
           child: Container(
-            constraints: const BoxConstraints(minHeight: 64),
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(14),
@@ -1718,6 +1719,7 @@ class _VetoScreenState extends State<VetoScreen> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
                         label,
@@ -1731,7 +1733,7 @@ class _VetoScreenState extends State<VetoScreen> {
                       const SizedBox(height: 3),
                       Text(
                         subtitle,
-                        maxLines: 2,
+                        maxLines: 3,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
                           color: VetoPalette.text.withValues(alpha: 0.62),
