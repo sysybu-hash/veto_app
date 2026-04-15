@@ -1,4 +1,6 @@
 // Killer Service Worker
+// This replaces the old flutter_service_worker.js and forces it to self-destruct.
+
 self.addEventListener('install', (e) => {
   self.skipWaiting();
 });
