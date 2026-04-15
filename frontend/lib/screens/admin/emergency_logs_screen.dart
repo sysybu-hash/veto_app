@@ -8,6 +8,18 @@ import '../../services/admin_service.dart';
 import '../../widgets/app_language_menu.dart';
 import 'admin_i18n.dart';
 
+String? _mongoEventId(dynamic ev) {
+  final id = ev['_id'];
+  if (id == null) return null;
+  if (id is String) return id.isEmpty ? null : id;
+  if (id is Map) {
+    final o = id[r'$oid'] ?? id['oid'];
+    if (o != null) return o.toString();
+  }
+  final t = id.toString();
+  return (t.isEmpty || t == 'null') ? null : t;
+}
+
 class EmergencyLogsScreen extends StatefulWidget {
   const EmergencyLogsScreen({super.key});
   @override
@@ -32,10 +44,25 @@ class _EmergencyLogsScreenState extends State<EmergencyLogsScreen> {
 
   Color _sc(String? s) {
     switch (s) {
-      case 'active':   return VetoPalette.emergency;
-      case 'resolved': return VetoPalette.success;
-      case 'pending':  return VetoPalette.warning;
-      default:         return VetoPalette.textMuted;
+      case 'completed':
+      case 'resolved':
+        return VetoPalette.success;
+      case 'cancelled':
+        return VetoPalette.textMuted;
+      case 'failed':
+        return VetoPalette.emergency;
+      case 'accepted':
+        return VetoPalette.success;
+      case 'in_progress':
+      case 'pending':
+        return VetoPalette.warning;
+      case 'documentation':
+        return VetoPalette.primary;
+      case 'dispatching':
+      case 'active':
+        return VetoPalette.emergency;
+      default:
+        return VetoPalette.textMuted;
     }
   }
 
@@ -52,9 +79,15 @@ class _EmergencyLogsScreenState extends State<EmergencyLogsScreen> {
     } catch (_) { return iso; }
   }
 
-  Future<void> _changeStatus(String id, String current) async {
+  Future<void> _changeStatus(String id, String currentRaw) async {
+    if (id.isEmpty) return;
     final code = context.read<AppLanguageController>().code;
-    String selected = current;
+    var initial = currentRaw;
+    if (!AdminStrings.emergencyEventStatuses.contains(initial)) {
+      initial = 'documentation';
+    }
+    var selected = initial;
+
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => Directionality(
@@ -63,19 +96,23 @@ class _EmergencyLogsScreenState extends State<EmergencyLogsScreen> {
           backgroundColor: VetoPalette.surface,
           title: Text(_t(code, 'changeStatus'), style: const TextStyle(color: VetoPalette.text)),
           content: StatefulBuilder(
-            builder: (_, ss) => Align(
-              alignment: AlignmentDirectional.centerStart,
-              child: SegmentedButton<String>(
-                segments: [
-                  ButtonSegment(value: 'active', label: Text(_sl('active'))),
-                  ButtonSegment(value: 'pending', label: Text(_sl('pending'))),
-                  ButtonSegment(value: 'resolved', label: Text(_sl('resolved'))),
-                ],
-                selected: {selected},
-                onSelectionChanged: (Set<String> next) {
-                  if (next.isNotEmpty) ss(() => selected = next.first);
-                },
-              ),
+            builder: (_, ss) => DropdownButton<String>(
+              isExpanded: true,
+              value: selected,
+              dropdownColor: VetoPalette.surface,
+              style: const TextStyle(color: VetoPalette.text, fontSize: 14),
+              underline: Container(height: 1, color: VetoPalette.border),
+              items: AdminStrings.emergencyEventStatuses
+                  .map(
+                    (v) => DropdownMenuItem<String>(
+                      value: v,
+                      child: Text(AdminStrings.eventStatus(code, v)),
+                    ),
+                  )
+                  .toList(),
+              onChanged: (v) {
+                if (v != null) ss(() => selected = v);
+              },
             ),
           ),
           actions: [
@@ -85,13 +122,27 @@ class _EmergencyLogsScreenState extends State<EmergencyLogsScreen> {
         ),
       ),
     );
-    if (ok == true && selected != current) {
-      await _svc.updateEmergencyLog(id, {'status': selected});
-      _load();
+    if (ok != true || selected == initial) return;
+    final success = await _svc.updateEmergencyLog(id, {'status': selected});
+    if (!mounted) return;
+    if (!success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            code == 'he'
+                ? 'עדכון הסטטוס נכשל'
+                : code == 'ru'
+                    ? 'Не удалось обновить статус'
+                    : 'Could not update status',
+          ),
+        ),
+      );
     }
+    _load();
   }
 
   Future<void> _confirmDelete(String id) async {
+    if (id.isEmpty) return;
     final code = context.read<AppLanguageController>().code;
     final ok = await showDialog<bool>(
       context: context,
@@ -152,7 +203,7 @@ class _EmergencyLogsScreenState extends State<EmergencyLogsScreen> {
                     itemBuilder: (context, i) {
                       final e = _events[i];
                       final status = e['status']?.toString();
-                      final eid    = e['_id']?.toString() ?? '';
+                      final eid = _mongoEventId(e) ?? '';
                       final user   = e['user_id'];
                       final lawyer = e['assigned_lawyer_id'];
                       return Container(
@@ -179,7 +230,7 @@ class _EmergencyLogsScreenState extends State<EmergencyLogsScreen> {
                             )),
                             // Status badge — tap to change
                             GestureDetector(
-                              onTap: () => _changeStatus(eid, status ?? ''),
+                              onTap: eid.isEmpty ? null : () => _changeStatus(eid, status ?? ''),
                               child: Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                                 decoration: BoxDecoration(
@@ -196,7 +247,7 @@ class _EmergencyLogsScreenState extends State<EmergencyLogsScreen> {
                             ),
                             IconButton(
                               icon: const Icon(Icons.delete_outline, size: 20, color: VetoPalette.emergency),
-                              onPressed: () => _confirmDelete(eid),
+                              onPressed: eid.isEmpty ? null : () => _confirmDelete(eid),
                             ),
                           ]),
                           const SizedBox(height: 6),

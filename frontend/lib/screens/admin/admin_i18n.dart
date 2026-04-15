@@ -77,6 +77,13 @@ class AdminStrings {
       'experienceYears': 'ניסיון',
       'specializationsLabel': 'התמחויות',
       'changeStatus': 'שנה סטטוס',
+      'statusDispatching': 'בשיגור',
+      'statusAccepted': 'התקבל',
+      'statusInProgress': 'בתהליך',
+      'statusCompleted': 'הושלם',
+      'statusCancelled': 'בוטל',
+      'statusFailed': 'נכשל',
+      'statusDocumentation': 'תיעוד',
       'active': 'פעיל',
       'resolved': 'סגור',
       'pendingStatus': 'ממתין',
@@ -164,6 +171,13 @@ class AdminStrings {
       'experienceYears': 'Experience',
       'specializationsLabel': 'Specializations',
       'changeStatus': 'Change status',
+      'statusDispatching': 'Dispatching',
+      'statusAccepted': 'Accepted',
+      'statusInProgress': 'In progress',
+      'statusCompleted': 'Completed',
+      'statusCancelled': 'Cancelled',
+      'statusFailed': 'Failed',
+      'statusDocumentation': 'Documentation',
       'active': 'Active',
       'resolved': 'Resolved',
       'pendingStatus': 'Pending',
@@ -251,6 +265,13 @@ class AdminStrings {
       'experienceYears': 'Опыт',
       'specializationsLabel': 'Специализации',
       'changeStatus': 'Изменить статус',
+      'statusDispatching': 'Диспетчеризация',
+      'statusAccepted': 'Принято',
+      'statusInProgress': 'В процессе',
+      'statusCompleted': 'Завершено',
+      'statusCancelled': 'Отменено',
+      'statusFailed': 'Сбой',
+      'statusDocumentation': 'Документирование',
       'active': 'Активно',
       'resolved': 'Закрыто',
       'pendingStatus': 'Ожидает',
@@ -291,8 +312,33 @@ class AdminStrings {
     }
   }
 
+  /// Values accepted by `PUT /admin/emergency-logs/:id` (EmergencyEvent.status).
+  static const List<String> emergencyEventStatuses = [
+    'dispatching',
+    'accepted',
+    'in_progress',
+    'completed',
+    'cancelled',
+    'failed',
+    'documentation',
+  ];
+
   static String eventStatus(String code, String? status) {
     switch (status) {
+      case 'dispatching':
+        return t(code, 'statusDispatching');
+      case 'accepted':
+        return t(code, 'statusAccepted');
+      case 'in_progress':
+        return t(code, 'statusInProgress');
+      case 'completed':
+        return t(code, 'statusCompleted');
+      case 'cancelled':
+        return t(code, 'statusCancelled');
+      case 'failed':
+        return t(code, 'statusFailed');
+      case 'documentation':
+        return t(code, 'statusDocumentation');
       case 'active':
         return t(code, 'active');
       case 'resolved':
@@ -300,7 +346,8 @@ class AdminStrings {
       case 'pending':
         return t(code, 'pendingStatus');
       default:
-        return status ?? t(code, 'unknown');
+        if (status != null && status.isNotEmpty) return status;
+        return t(code, 'unknown');
     }
   }
 }

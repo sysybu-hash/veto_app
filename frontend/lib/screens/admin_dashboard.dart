@@ -299,28 +299,41 @@ class _AdminDashboardState extends State<AdminDashboard> {
   }
 
   Widget _buildUserLawyerRow(String code) {
-    return Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Expanded(child: _KpiCard(
-        icon: Icons.people_alt_rounded, color: VetoPalette.success,
-        label: _t(code, 'users'), value: _totalUsers.toString(),
-        sublabel: _t(code, 'active'),
-        large: true,
-      )),
-      const SizedBox(width: 10),
-      Expanded(child: Column(children: [
-        _KpiCard(
-          icon: Icons.balance_rounded, color: VetoPalette.accentSky,
-          label: _t(code, 'active'), value: _activeLawyers.toString(),
-          sublabel: _t(code, 'lawyers'),
+    // Single row (same rhythm as [_buildKpiGrid]): active lawyers | users | pending lawyers
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          child: _KpiCard(
+            icon: Icons.balance_rounded,
+            color: VetoPalette.accentSky,
+            label: _t(code, 'active'),
+            value: _activeLawyers.toString(),
+            sublabel: _t(code, 'lawyers'),
+          ),
         ),
-        const SizedBox(height: 10),
-        _KpiCard(
-          icon: Icons.pending_actions_rounded, color: VetoPalette.warning,
-          label: _t(code, 'pending'), value: _pendingLawyers.toString(),
-          sublabel: _t(code, 'lawyers'),
+        const SizedBox(width: 10),
+        Expanded(
+          child: _KpiCard(
+            icon: Icons.people_alt_rounded,
+            color: VetoPalette.success,
+            label: _t(code, 'users'),
+            value: _totalUsers.toString(),
+            sublabel: _t(code, 'active'),
+          ),
         ),
-      ])),
-    ]);
+        const SizedBox(width: 10),
+        Expanded(
+          child: _KpiCard(
+            icon: Icons.pending_actions_rounded,
+            color: VetoPalette.warning,
+            label: _t(code, 'pending'),
+            value: _pendingLawyers.toString(),
+            sublabel: _t(code, 'lawyers'),
+          ),
+        ),
+      ],
+    );
   }
 
   Widget _buildHealthCard(String code) {
@@ -551,18 +564,17 @@ class _KpiCard extends StatelessWidget {
   final Color color;
   final String label, value;
   final String? sublabel;
-  final bool large;
 
   const _KpiCard({
     required this.icon, required this.color,
     required this.label, required this.value,
-    this.sublabel, this.large = false,
+    this.sublabel,
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.all(large ? 18 : 14),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: VetoPalette.surface,
         borderRadius: BorderRadius.circular(14),
@@ -595,7 +607,7 @@ class _KpiCard extends StatelessWidget {
               style: TextStyle(
                   color: VetoPalette.text,
                   fontWeight: FontWeight.w900,
-                  fontSize: large ? 26 : 22)),
+                  fontSize: 22)),
           const SizedBox(height: 2),
           Text(label,
               style: const TextStyle(

@@ -17,12 +17,26 @@ import '../config/app_config.dart';
 import '../core/i18n/app_language.dart';
 import '../platform/browser_bridge.dart' as browser_bridge;
 import '../core/theme/veto_theme.dart';
+import '../widgets/app_language_menu.dart';
 import '../services/auth_service.dart';
 import '../services/socket_service.dart';
 import '../services/ai_service.dart';
 import '../services/payment_service.dart';
 import '../services/admin_service.dart';
+import 'admin/admin_i18n.dart';
 import 'evidence_screen.dart';
+
+String? _mongoEventId(dynamic ev) {
+  final id = ev['_id'];
+  if (id == null) return null;
+  if (id is String) return id.isEmpty ? null : id;
+  if (id is Map) {
+    final o = id[r'$oid'] ?? id['oid'];
+    if (o != null) return o.toString();
+  }
+  final t = id.toString();
+  return (t.isEmpty || t == 'null') ? null : t;
+}
 
 // ── Scenarios ─────────────────────────────────────────────
 enum _Scenario { traffic, interrogation, arrest, accident, other }
@@ -374,6 +388,231 @@ class _VetoScreenState extends State<VetoScreen> {
     setState(() => _adminFilesLoading = true);
     final data = await AdminService().getEmergencyLogs();
     if (mounted) setState(() { _adminFiles = data; _adminFilesLoading = false; });
+  }
+
+  Color _adminStatusColor(String? s) {
+    switch (s) {
+      case 'completed':
+      case 'resolved':
+        return VetoPalette.success;
+      case 'cancelled':
+        return VetoPalette.textMuted;
+      case 'failed':
+        return VetoPalette.emergency;
+      case 'accepted':
+        return VetoPalette.success;
+      case 'in_progress':
+      case 'pending':
+        return VetoPalette.warning;
+      case 'documentation':
+        return VetoPalette.primary;
+      case 'dispatching':
+      case 'active':
+        return VetoPalette.emergency;
+      default:
+        return VetoPalette.textMuted;
+    }
+  }
+
+  Future<void> _adminEditEmergencyEvent(BuildContext navContext, dynamic ev, bool isRtl) async {
+    final id = _mongoEventId(ev);
+    if (id == null) return;
+    var current = ev['status']?.toString() ?? 'documentation';
+    if (!AdminStrings.emergencyEventStatuses.contains(current)) current = 'documentation';
+    var selected = current;
+
+    final ok = await showDialog<bool>(
+      context: navContext,
+      builder: (ctx) => Directionality(
+        textDirection: isRtl ? TextDirection.rtl : TextDirection.ltr,
+        child: AlertDialog(
+          backgroundColor: VetoPalette.surface,
+          title: Text(
+            AdminStrings.t(_langKey, 'changeStatus'),
+            style: const TextStyle(color: VetoPalette.text),
+          ),
+          content: StatefulBuilder(
+            builder: (_, ss) => DropdownButton<String>(
+              isExpanded: true,
+              value: selected,
+              dropdownColor: VetoPalette.surface,
+              style: const TextStyle(color: VetoPalette.text, fontSize: 14),
+              underline: Container(height: 1, color: VetoPalette.border),
+              items: AdminStrings.emergencyEventStatuses
+                  .map(
+                    (v) => DropdownMenuItem<String>(
+                      value: v,
+                      child: Text(AdminStrings.eventStatus(_langKey, v)),
+                    ),
+                  )
+                  .toList(),
+              onChanged: (v) {
+                if (v != null) ss(() => selected = v);
+              },
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: Text(AdminStrings.t(_langKey, 'cancel')),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: Text(AdminStrings.t(_langKey, 'save')),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (ok != true || selected == current) return;
+    final success = await AdminService().updateEmergencyLog(id, {'status': selected});
+    if (!mounted) return;
+    if (success) {
+      await _loadAdminFiles();
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            _langKey == 'he'
+                ? 'עדכון נכשל'
+                : _langKey == 'ru'
+                    ? 'Не удалось обновить'
+                    : 'Update failed',
+          ),
+        ),
+      );
+    }
+  }
+
+  Future<void> _adminCleanEmergencyEvent(BuildContext navContext, dynamic ev, bool isRtl) async {
+    final id = _mongoEventId(ev);
+    if (id == null) return;
+    final evidence = (ev['evidence'] as List?) ?? [];
+    final hasEvidence = evidence.isNotEmpty;
+
+    final title = _langKey == 'he'
+        ? 'ניקוי'
+        : _langKey == 'ru'
+            ? 'Очистка'
+            : 'Cleaning';
+    final clearLabel = _langKey == 'he'
+        ? 'הסר ראיות מצורפות בלבד'
+        : _langKey == 'ru'
+            ? 'Удалить только вложения'
+            : 'Remove attached evidence only';
+    final clearedMsg = _langKey == 'he'
+        ? 'הראיות הוסרו'
+        : _langKey == 'ru'
+            ? 'Вложения удалены'
+            : 'Evidence cleared';
+
+    final action = await showDialog<String>(
+      context: navContext,
+      builder: (ctx) => Directionality(
+        textDirection: isRtl ? TextDirection.rtl : TextDirection.ltr,
+        child: AlertDialog(
+          backgroundColor: VetoPalette.surface,
+          title: Text(title, style: const TextStyle(color: VetoPalette.text)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (hasEvidence)
+                OutlinedButton.icon(
+                  onPressed: () => Navigator.pop(ctx, 'clear'),
+                  icon: const Icon(Icons.layers_clear_outlined, color: VetoPalette.primary),
+                  label: Text(clearLabel, style: const TextStyle(color: VetoPalette.text)),
+                ),
+              if (hasEvidence) const SizedBox(height: 10),
+              FilledButton.icon(
+                style: FilledButton.styleFrom(backgroundColor: VetoPalette.emergency),
+                onPressed: () => Navigator.pop(ctx, 'delete'),
+                icon: const Icon(Icons.delete_outline, color: Colors.white),
+                label: Text(AdminStrings.t(_langKey, 'deleteEvent')),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, null),
+              child: Text(AdminStrings.t(_langKey, 'cancel')),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (action == 'clear') {
+      final success = await AdminService().updateEmergencyLog(id, {'clearEvidence': true});
+      if (!mounted) return;
+      if (success) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(clearedMsg)));
+        await _loadAdminFiles();
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              _langKey == 'he'
+                  ? 'ניקוי נכשל'
+                  : _langKey == 'ru'
+                      ? 'Ошибка очистки'
+                      : 'Clear failed',
+            ),
+          ),
+        );
+      }
+      return;
+    }
+
+    if (action != 'delete') return;
+
+    if (!mounted || !navContext.mounted) return;
+    final confirm = await showDialog<bool>(
+      context: navContext,
+      builder: (ctx) => Directionality(
+        textDirection: isRtl ? TextDirection.rtl : TextDirection.ltr,
+        child: AlertDialog(
+          backgroundColor: VetoPalette.surface,
+          title: Text(
+            AdminStrings.t(_langKey, 'deleteEvent'),
+            style: const TextStyle(color: VetoPalette.text),
+          ),
+          content: Text(
+            AdminStrings.t(_langKey, 'deleteEventConfirm'),
+            style: const TextStyle(color: VetoPalette.textMuted),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: Text(AdminStrings.t(_langKey, 'cancel')),
+            ),
+            FilledButton(
+              style: FilledButton.styleFrom(backgroundColor: VetoPalette.emergency),
+              onPressed: () => Navigator.pop(ctx, true),
+              child: Text(AdminStrings.t(_langKey, 'delete')),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (confirm != true) return;
+    final ok = await AdminService().deleteEmergencyLog(id);
+    if (!mounted) return;
+    if (ok) {
+      await _loadAdminFiles();
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            _langKey == 'he'
+                ? 'מחיקה נכשלה'
+                : _langKey == 'ru'
+                    ? 'Не удалось удалить'
+                    : 'Delete failed',
+          ),
+        ),
+      );
+    }
   }
 
   // ── AI send ──────────────────────────────────────────────
@@ -750,52 +989,22 @@ class _VetoScreenState extends State<VetoScreen> {
             alignment: AlignmentDirectional.centerStart,
             child: SingleChildScrollView(
               scrollDirection: Axis.horizontal,
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  for (final k in ['he', 'ru', 'en'])
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 4),
-                      child: Material(
-                        color: k == _langKey
-                            ? VetoColors.accent.withValues(alpha: 0.14)
-                            : VetoColors.surfaceHigh.withValues(alpha: 0.6),
-                        borderRadius: BorderRadius.circular(8),
-                        child: InkWell(
-                          borderRadius: BorderRadius.circular(8),
-                          onTap: () async {
-                            await context.read<AppLanguageController>().setLanguage(k);
-                            if (!mounted) return;
-                            setState(() {
-                              _langKey = k;
-                              _messages.clear();
-                              _geminiHistory.clear();
-                              _messages.add(_Msg(text: _langs[k]!.greeting, isUser: false));
-                            });
-                          },
-                          child: AnimatedContainer(
-                            duration: const Duration(milliseconds: 150),
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(8),
-                              border: Border.all(
-                                color: k == _langKey ? VetoColors.accent : VetoColors.border,
-                                width: k == _langKey ? 1.5 : 1,
-                              ),
-                            ),
-                            child: Text(
-                              _langs[k]!.label,
-                              style: TextStyle(
-                                color: k == _langKey ? VetoColors.accent : VetoColors.white,
-                                fontSize: 12,
-                                fontWeight: k == _langKey ? FontWeight.w900 : FontWeight.w700,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                ],
+              child: AppLanguageMenu(
+                compact: true,
+                tooltip: _langKey == 'he'
+                    ? 'שפה'
+                    : _langKey == 'ru'
+                        ? 'Язык'
+                        : 'Language',
+                onLanguageChanged: (k) {
+                  if (!mounted) return;
+                  setState(() {
+                    _langKey = k;
+                    _messages.clear();
+                    _geminiHistory.clear();
+                    _messages.add(_Msg(text: _langs[k]!.greeting, isUser: false));
+                  });
+                },
               ),
             ),
           ),
@@ -1665,11 +1874,12 @@ class _VetoScreenState extends State<VetoScreen> {
             physics: const NeverScrollableScrollPhysics(),
             itemCount: _adminFiles.length > 25 ? 25 : _adminFiles.length,
             separatorBuilder: (_, __) => const Divider(height: 1, color: VetoPalette.border),
-            itemBuilder: (_, i) {
+            itemBuilder: (ctx, i) {
               final ev = _adminFiles[i];
               final user = ev['user_id'];
               final status = ev['status'] as String? ?? '?';
               final evidence = (ev['evidence'] as List?) ?? [];
+              final eid = _mongoEventId(ev);
               String dateStr = '';
               try {
                 final d = DateTime.parse(ev['triggered_at']).toLocal();
@@ -1683,9 +1893,7 @@ class _VetoScreenState extends State<VetoScreen> {
                         width: 8, height: 8,
                         decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color: status == 'active' ? VetoPalette.emergency
-                                : status == 'resolved' ? VetoPalette.success
-                                : VetoPalette.warning)),
+                            color: _adminStatusColor(status))),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
@@ -1693,6 +1901,26 @@ class _VetoScreenState extends State<VetoScreen> {
                         style: const TextStyle(color: VetoPalette.text, fontSize: 13, fontWeight: FontWeight.w600),
                       ),
                     ),
+                    if (eid != null) ...[
+                      IconButton(
+                        constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                        padding: EdgeInsets.zero,
+                        tooltip: AdminStrings.t(_langKey, 'edit'),
+                        icon: const Icon(Icons.edit_outlined, size: 18, color: VetoPalette.primary),
+                        onPressed: () => _adminEditEmergencyEvent(ctx, ev, isRtl),
+                      ),
+                      IconButton(
+                        constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                        padding: EdgeInsets.zero,
+                        tooltip: _langKey == 'he'
+                            ? 'ניקוי'
+                            : _langKey == 'ru'
+                                ? 'Очистка'
+                                : 'Cleaning',
+                        icon: const Icon(Icons.cleaning_services_outlined, size: 18, color: VetoPalette.textMuted),
+                        onPressed: () => _adminCleanEmergencyEvent(ctx, ev, isRtl),
+                      ),
+                    ],
                     Text(dateStr,
                         style: const TextStyle(color: VetoPalette.textSubtle, fontSize: 11)),
                   ]),

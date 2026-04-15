@@ -6,8 +6,16 @@ import '../core/theme/veto_theme.dart';
 
 class AppLanguageMenu extends StatelessWidget {
   final bool compact;
+  /// Runs after [AppLanguageController.setLanguage] completes (e.g. reset chat on Veto).
+  final ValueChanged<String>? onLanguageChanged;
+  final String? tooltip;
 
-  const AppLanguageMenu({super.key, this.compact = false});
+  const AppLanguageMenu({
+    super.key,
+    this.compact = false,
+    this.onLanguageChanged,
+    this.tooltip,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -15,12 +23,13 @@ class AppLanguageMenu extends StatelessWidget {
     final code = controller.code;
 
     return PopupMenuButton<String>(
-      tooltip: 'Language',
+      tooltip: tooltip ?? 'Language',
       initialValue: code,
       color: VetoPalette.surface2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-      onSelected: (value) {
-        context.read<AppLanguageController>().setLanguage(value);
+      onSelected: (value) async {
+        await context.read<AppLanguageController>().setLanguage(value);
+        onLanguageChanged?.call(value);
       },
       itemBuilder: (context) {
         return AppLanguage.supportedCodes.map((languageCode) {

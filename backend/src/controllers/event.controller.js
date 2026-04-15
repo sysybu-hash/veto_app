@@ -183,6 +183,18 @@ const addEvidence = async (req, res, next) => {
     event.evidence.push(evidenceItem);
     await event.save();
 
+    const { mirrorDocumentationToVault } = require('../services/documentationVaultMirror.service');
+    await mirrorDocumentationToVault({
+      userId,
+      eventId,
+      eventStatus: event.status,
+      cloudUrl: cloud_url,
+      mimeType: null,
+      sizeBytes: file_size_bytes,
+      originalName: null,
+      type,
+    });
+
     return res.status(201).json({
       message:  'Evidence added.',
       evidence: evidenceItem,

@@ -271,9 +271,37 @@ const getEmergencyLogs = async (req, res, next) => {
 const updateEmergencyLog = async (req, res, next) => {
   try {
     const Event = require('../models/EmergencyEvent');
-    const allowed = ['status', 'assigned_lawyer_id'];
+    const STATUS_ENUM = new Set([
+      'dispatching',
+      'accepted',
+      'in_progress',
+      'completed',
+      'cancelled',
+      'failed',
+      'documentation',
+    ]);
     const updates = {};
-    allowed.forEach(f => { if (req.body[f] !== undefined) updates[f] = req.body[f]; });
+
+    if (req.body.status !== undefined) {
+      const s = String(req.body.status);
+      if (!STATUS_ENUM.has(s)) {
+        return res.status(400).json({ error: 'Invalid status.' });
+      }
+      updates.status = s;
+    }
+
+    if (req.body.assigned_lawyer_id !== undefined) {
+      updates.assigned_lawyer_id = req.body.assigned_lawyer_id || null;
+    }
+
+    if (req.body.clearEvidence === true || req.body.clear_evidence === true) {
+      updates.evidence = [];
+    }
+
+    if (Object.keys(updates).length === 0) {
+      return res.status(400).json({ error: 'No valid fields to update.' });
+    }
+
     const event = await Event.findByIdAndUpdate(req.params.id, updates, { new: true });
     if (!event) return res.status(404).json({ error: 'Event not found.' });
     res.json({ event });

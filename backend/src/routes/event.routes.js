@@ -82,7 +82,8 @@ router.post('/:eventId/evidence/upload', upload.single('file'), async (req, res,
     const { type = 'photo', lat, lng, client_timestamp } = req.body;
 
     const EmergencyEvent = require('../models/EmergencyEvent');
-    const existing = await EmergencyEvent.findById(eventId).select('user_id evidence');
+    const { mirrorDocumentationToVault } = require('../services/documentationVaultMirror.service');
+    const existing = await EmergencyEvent.findById(eventId).select('user_id evidence status');
     if (!existing) return res.status(404).json({ error: 'Event not found.' });
     if (existing.user_id.toString() !== userId.toString()) {
       return res.status(403).json({ error: 'Only the event owner may upload evidence.' });
@@ -114,6 +115,19 @@ router.post('/:eventId/evidence/upload', upload.single('file'), async (req, res,
     );
 
     const saved = event.evidence[event.evidence.length - 1];
+
+    // Member documentation → also list in personal file vault (כספת).
+    await mirrorDocumentationToVault({
+      userId,
+      eventId,
+      eventStatus: existing.status,
+      cloudUrl,
+      mimeType: req.file.mimetype,
+      sizeBytes: req.file.size,
+      originalName: req.file.originalname,
+      type,
+    });
+
     return res.status(201).json({ success: true, cloudUrl, evidence: saved });
   } catch (err) {
     next(err);

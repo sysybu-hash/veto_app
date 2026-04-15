@@ -10,6 +10,8 @@ const VaultFileSchema = new mongoose.Schema({
   lawyerAccess: { type: Boolean, default: false },
   aiSummary: { type: String },
   caseId: { type: mongoose.Schema.Types.ObjectId, ref: 'VaultCase' },
+  /** EmergencyEvent created via POST /events/documentation-session (optional). */
+  sourceEventId: { type: mongoose.Schema.Types.ObjectId, ref: 'EmergencyEvent', index: true },
   uploadedAt: { type: Date, default: Date.now },
 });
 
