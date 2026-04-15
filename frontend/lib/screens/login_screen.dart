@@ -410,12 +410,24 @@ class _LoginScreenState extends State<LoginScreen> {
               child: SingleChildScrollView(
                 padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 32),
                 child: Column(children: [
-                  // Language selector top right
-                  Align(
-                    alignment: AlignmentDirectional.centerEnd,
-                    child: AppLanguageMenu(compact: true),
+                  // Top row: back home (start) + language (end)
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      // Back to landing
+                      TextButton.icon(
+                        onPressed: () => Navigator.of(context).pushReplacementNamed('/landing'),
+                        icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 14, color: Color(0xFF5B8FFF)),
+                        label: Text(
+                          lang == 'he' ? 'דף הבית' : lang == 'ru' ? 'Главная' : 'Home',
+                          style: const TextStyle(color: Color(0xFF5B8FFF), fontSize: 13, fontWeight: FontWeight.w600),
+                        ),
+                        style: TextButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6)),
+                      ),
+                      AppLanguageMenu(compact: true),
+                    ],
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 16),
                   // White glass card — matches mockup
                   ConstrainedBox(
                     constraints: const BoxConstraints(maxWidth: 420),
