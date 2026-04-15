@@ -45,6 +45,12 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
   late final CallRecordingService _recordingService;
   final CallApiService _callApiService = CallApiService();
 
+  // Timeout: if no peer joins within 75 seconds, show cancel option
+  Timer? _waitTimeout;
+  bool _timedOut = false;
+  int _waitSeconds = 0;
+  Timer? _waitTick;
+
   @override
   void initState() {
     super.initState();
@@ -69,7 +75,13 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
 
   Future<void> _init() async {
     final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
-    if (args == null) return;
+    if (args == null) {
+      // Navigated directly to /call without arguments — go back
+      if (mounted) {
+        Navigator.of(context).pushReplacementNamed('/veto_screen');
+      }
+      return;
+    }
 
     setState(() {
       _roomId    = args['roomId']?.toString() ?? '';
@@ -89,6 +101,19 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
     );
 
     _webrtc.addListener(_onWebRTCUpdate);
+
+    // Start waiting countdown — 75 seconds max
+    _waitTick = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (!mounted) return;
+      setState(() => _waitSeconds++);
+    });
+    _waitTimeout = Timer(const Duration(seconds: 75), () {
+      if (!mounted) return;
+      if (_webrtc.state != CallState.connected) {
+        setState(() => _timedOut = true);
+        _waitTick?.cancel();
+      }
+    });
   }
 
   void _onWebRTCUpdate() {
@@ -96,6 +121,10 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
     setState(() {});
 
     if (_webrtc.state == CallState.connected && !_recordingStarted) {
+      // Cancel waiting timeout — call connected
+      _waitTimeout?.cancel();
+      _waitTick?.cancel();
+      if (mounted) setState(() { _timedOut = false; _waitSeconds = 0; });
       _recordingStarted = true;
       _recordingService.start(
         localStream: _webrtc.localStream,
@@ -166,6 +195,8 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
 
   @override
   void dispose() {
+    _waitTimeout?.cancel();
+    _waitTick?.cancel();
     _pulseCtrl.dispose();
     _fadeCtrl.dispose();
     _webrtc.removeListener(_onWebRTCUpdate);
@@ -328,7 +359,124 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
 
         // Status
         _buildStatusText(),
+
+        const SizedBox(height: 20),
+
+        // Waiting countdown + cancel
+        if (_webrtc.state == CallState.joining || _webrtc.state == CallState.ringing) ...[
+          _timedOut
+              ? _buildTimeoutPanel()
+              : _buildWaitingPanel(),
+        ],
       ],
+    );
+  }
+
+  Widget _buildWaitingPanel() {
+    final remaining = 75 - _waitSeconds;
+    final label = _language == 'he'
+        ? 'מחכה לחיבור... ($remaining שניות)'
+        : _language == 'ru'
+            ? 'Ожидание подключения... ($remaining сек)'
+            : 'Waiting for connection... ($remaining s)';
+    return Column(mainAxisSize: MainAxisSize.min, children: [
+      // Progress bar
+      SizedBox(
+        width: 180,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(4),
+          child: LinearProgressIndicator(
+            value: _waitSeconds / 75,
+            backgroundColor: Colors.white.withValues(alpha: 0.2),
+            valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF5B8FFF)),
+            minHeight: 4,
+          ),
+        ),
+      ),
+      const SizedBox(height: 8),
+      Text(label, style: const TextStyle(color: Colors.white70, fontSize: 12, fontFamily: 'Heebo')),
+      const SizedBox(height: 12),
+      // Cancel button
+      TextButton.icon(
+        onPressed: _endCall,
+        icon: const Icon(Icons.close_rounded, size: 15, color: Colors.white54),
+        label: Text(
+          _language == 'he' ? 'בטל' : _language == 'ru' ? 'Отмена' : 'Cancel',
+          style: const TextStyle(color: Colors.white54, fontSize: 13),
+        ),
+      ),
+    ]);
+  }
+
+  Widget _buildTimeoutPanel() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 32),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+      ),
+      child: Column(mainAxisSize: MainAxisSize.min, children: [
+        const Icon(Icons.access_time_rounded, color: Colors.white70, size: 32),
+        const SizedBox(height: 10),
+        Text(
+          _language == 'he'
+              ? 'לא נמצא עורך דין זמין'
+              : _language == 'ru'
+                  ? 'Нет доступных адвокатов'
+                  : 'No lawyer available right now',
+          style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w700, fontFamily: 'Heebo'),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 6),
+        Text(
+          _language == 'he'
+              ? 'ניתן לנסות שוב או לחזור לאפליקציה'
+              : _language == 'ru'
+                  ? 'Попробуйте позже или вернитесь в приложение'
+                  : 'Try again or go back to the app',
+          style: const TextStyle(color: Colors.white60, fontSize: 12, fontFamily: 'Heebo'),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 16),
+        Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+          OutlinedButton(
+            onPressed: _endCall,
+            style: OutlinedButton.styleFrom(
+              foregroundColor: Colors.white,
+              side: const BorderSide(color: Colors.white38),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            ),
+            child: Text(_language == 'he' ? 'חזרה' : _language == 'ru' ? 'Назад' : 'Go back'),
+          ),
+          const SizedBox(width: 12),
+          FilledButton(
+            onPressed: () async {
+              setState(() { _timedOut = false; _waitSeconds = 0; });
+              // Restart waiting
+              _waitTick = Timer.periodic(const Duration(seconds: 1), (_) {
+                if (!mounted) return;
+                setState(() => _waitSeconds++);
+              });
+              _waitTimeout = Timer(const Duration(seconds: 75), () {
+                if (!mounted) return;
+                if (_webrtc.state != CallState.connected) {
+                  setState(() => _timedOut = true);
+                  _waitTick?.cancel();
+                }
+              });
+            },
+            style: FilledButton.styleFrom(
+              backgroundColor: const Color(0xFF5B8FFF),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            ),
+            child: Text(_language == 'he' ? 'נסה שוב' : _language == 'ru' ? 'Повторить' : 'Try again'),
+          ),
+        ]),
+      ]),
     );
   }
 

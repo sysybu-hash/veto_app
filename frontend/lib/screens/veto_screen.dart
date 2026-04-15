@@ -771,6 +771,109 @@ class _VetoScreenState extends State<VetoScreen> {
     _dispatchSOS();
   }
 
+  Future<void> _showCallTypeSheet() async {
+    final lang = _langKey;
+    final chosen = await showModalBottomSheet<String>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (ctx) => Container(
+        margin: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(24),
+          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.10), blurRadius: 24)],
+        ),
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          // Handle
+          Container(width: 36, height: 4,
+            decoration: BoxDecoration(color: const Color(0xFFE2E8F8), borderRadius: BorderRadius.circular(2))),
+          const SizedBox(height: 20),
+          Text(
+            lang == 'he' ? 'בחר סוג שיחה' : lang == 'ru' ? 'Выберите тип звонка' : 'Choose call type',
+            style: const TextStyle(color: Color(0xFF0F172A), fontSize: 18, fontWeight: FontWeight.w800),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            lang == 'he' ? 'כיצד תרצה לדבר עם עורך הדין?' : lang == 'ru' ? 'Как вы хотите связаться с адвокатом?' : 'How would you like to speak with the lawyer?',
+            style: const TextStyle(color: Color(0xFF64748B), fontSize: 13),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 24),
+          Row(children: [
+            // Audio option
+            Expanded(child: GestureDetector(
+              onTap: () => Navigator.pop(ctx, 'audio'),
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 20),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF0F4FF),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: const Color(0xFF5B8FFF).withValues(alpha: 0.4), width: 1.5),
+                ),
+                child: Column(children: [
+                  Container(
+                    width: 52, height: 52,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF5B8FFF).withValues(alpha: 0.12),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.phone_rounded, color: Color(0xFF5B8FFF), size: 26),
+                  ),
+                  const SizedBox(height: 10),
+                  Text(lang == 'he' ? 'שיחת קול' : lang == 'ru' ? 'Аудио' : 'Audio call',
+                    style: const TextStyle(color: Color(0xFF0F172A), fontSize: 14, fontWeight: FontWeight.w700)),
+                  const SizedBox(height: 4),
+                  Text(lang == 'he' ? 'ללא מצלמה' : lang == 'ru' ? 'Без камеры' : 'No camera',
+                    style: const TextStyle(color: Color(0xFF64748B), fontSize: 11)),
+                ]),
+              ),
+            )),
+            const SizedBox(width: 12),
+            // Video option
+            Expanded(child: GestureDetector(
+              onTap: () => Navigator.pop(ctx, 'video'),
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 20),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF0FFF9),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: const Color(0xFF00C9B1).withValues(alpha: 0.4), width: 1.5),
+                ),
+                child: Column(children: [
+                  Container(
+                    width: 52, height: 52,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF00C9B1).withValues(alpha: 0.12),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.videocam_rounded, color: Color(0xFF00C9B1), size: 26),
+                  ),
+                  const SizedBox(height: 10),
+                  Text(lang == 'he' ? 'שיחת וידאו' : lang == 'ru' ? 'Видео' : 'Video call',
+                    style: const TextStyle(color: Color(0xFF0F172A), fontSize: 14, fontWeight: FontWeight.w700)),
+                  const SizedBox(height: 4),
+                  Text(lang == 'he' ? 'עם מצלמה' : lang == 'ru' ? 'С камерой' : 'With camera',
+                    style: const TextStyle(color: Color(0xFF64748B), fontSize: 11)),
+                ]),
+              ),
+            )),
+          ]),
+          const SizedBox(height: 16),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, null),
+            child: Text(lang == 'he' ? 'ביטול' : lang == 'ru' ? 'Отмена' : 'Cancel',
+              style: const TextStyle(color: Color(0xFF94A3B8))),
+          ),
+        ]),
+      ),
+    );
+    if (chosen != null && mounted) {
+      _openContact(chosen);
+    }
+  }
+
   void _handleLawyerFound(Map<String, dynamic> data) {
     final roomId = data['roomId']?.toString();
     if (!mounted || roomId == null || roomId.isEmpty) return;
@@ -1868,7 +1971,7 @@ class _VetoScreenState extends State<VetoScreen> {
                 ? 'Соединение с живым адвокатом'
                 : 'Connect with a live representative',
         VetoPalette.primary,
-        () => _openContact('audio'),
+        _showCallTypeSheet,
       ),
       _ctCard(
         Icons.bolt_rounded,
@@ -1883,7 +1986,7 @@ class _VetoScreenState extends State<VetoScreen> {
                 ? 'Экстренный сигнал в систему'
                 : 'Emergency signal to VETO',
         VetoPalette.emergency,
-        _dispatchSOS,
+        _showCallTypeSheet,
       ),
     ],
   );
