@@ -25,7 +25,14 @@ const fs = require('fs');
     }
   }
   require('dotenv').config();
-  console.warn('⚠️  No .env file found. Tried:', candidates.join(' | '));
+  // Render / Fly / etc. inject secrets via the platform — no repo .env file (and that is OK).
+  if (process.env.RENDER === 'true' || process.env.NODE_ENV === 'production') {
+    console.log(
+      '📋 No local .env file — using process.env (e.g. Render Environment / hosting dashboard).',
+    );
+  } else {
+    console.warn('⚠️  No .env file found. Tried:', candidates.join(' | '));
+  }
 })();
 
 // Prefer IPv4 DNS — helps some Windows setups when Atlas SRV lookup fails
