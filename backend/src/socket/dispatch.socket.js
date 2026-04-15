@@ -5,6 +5,7 @@
 // ============================================================
 
 const Lawyer         = require('../models/Lawyer');
+const User           = require('../models/User');
 const EmergencyEvent = require('../models/EmergencyEvent');
 const push           = require('../services/push.service');
 
@@ -278,8 +279,17 @@ module.exports = function initDispatch(io) {
           new: true,
         });
 
-        // 2. Mark lawyer as busy ───────────────────────────────
-        await Lawyer.findByIdAndUpdate(userId, { is_available: false });
+        // 2. Mark lawyer as busy + add event to their case history ─
+        await Lawyer.findByIdAndUpdate(userId, {
+          is_available: false,
+          $addToSet: { emergency_events: eventId },
+          $inc:       { total_cases_handled: 1 },
+        });
+
+        // 2b. Add event to user's history too ─────────────────────
+        await User.findByIdAndUpdate(event.user_id, {
+          $addToSet: { emergency_events: eventId },
+        });
 
         // 3. Notify the User: lawyer found — navigate to call room ─
         io.to(`user:${event.user_id}`).emit('lawyer_found', {
