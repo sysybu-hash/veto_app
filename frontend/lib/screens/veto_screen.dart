@@ -27,6 +27,21 @@ import 'evidence_screen.dart';
 // ── Scenarios ─────────────────────────────────────────────
 enum _Scenario { traffic, interrogation, arrest, accident, other }
 
+IconData _scenarioIcon(_Scenario s) {
+  switch (s) {
+    case _Scenario.traffic:
+      return Icons.directions_car_filled_rounded;
+    case _Scenario.interrogation:
+      return Icons.local_police_rounded;
+    case _Scenario.arrest:
+      return Icons.gavel_rounded;
+    case _Scenario.accident:
+      return Icons.medical_services_rounded;
+    case _Scenario.other:
+      return Icons.balance;
+  }
+}
+
 class _SD {
   final String emoji, he, ru, en;
   final List<String> rHe, rRu, rEn;
@@ -723,12 +738,14 @@ class _VetoScreenState extends State<VetoScreen> {
     ),
     centerTitle: false,
     titleSpacing: 0,
-    toolbarHeight: 52,
-    iconTheme: const IconThemeData(color: VetoColors.white, size: 24),
+    toolbarHeight: 56,
+    // Must stay visible on light AppBar surface (white icons disappear on web).
+    iconTheme: const IconThemeData(color: VetoColors.accentDark, size: 24),
     actionsIconTheme: const IconThemeData(color: VetoColors.accentDark, size: 24),
     title: Row(
       children: [
         Expanded(
+          flex: 1,
           child: Align(
             alignment: AlignmentDirectional.centerStart,
             child: SingleChildScrollView(
@@ -783,51 +800,59 @@ class _VetoScreenState extends State<VetoScreen> {
             ),
           ),
         ),
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(5),
-              decoration: BoxDecoration(
-                color: VetoColors.accent.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: VetoColors.accent.withValues(alpha: 0.3), width: 1),
-              ),
-              child: const Icon(Icons.shield, color: VetoColors.accent, size: 18),
-            ),
-            const SizedBox(width: 10),
-            Text(
-              'VETO',
-              style: TextStyle(
-                fontWeight: FontWeight.w900,
-                letterSpacing: 5,
-                fontSize: 18,
-                color: VetoColors.accent,
-                shadows: [Shadow(color: VetoColors.accent.withValues(alpha: 0.3), blurRadius: 8)],
-              ),
-            ),
-            const SizedBox(width: 4),
-            if (_isDispatching)
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: BoxDecoration(
-                  color: VetoPalette.emergency.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(6),
-                  border: Border.all(color: VetoPalette.emergency.withValues(alpha: 0.3)),
+        Flexible(
+          fit: FlexFit.loose,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 6),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: VetoColors.accent.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: VetoColors.accent.withValues(alpha: 0.3), width: 1),
+                  ),
+                  child: const Icon(Icons.shield_rounded, color: VetoColors.accent, size: 20),
                 ),
-                child: const Text(
-                  'LIVE',
+                const SizedBox(width: 8),
+                Text(
+                  'VETO',
                   style: TextStyle(
-                    color: VetoPalette.emergency,
-                    fontSize: 9,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 1.5,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 4,
+                    fontSize: 17,
+                    color: VetoColors.accent,
+                    shadows: [Shadow(color: VetoColors.accent.withValues(alpha: 0.3), blurRadius: 8)],
                   ),
                 ),
-              ),
-          ],
+                const SizedBox(width: 4),
+                if (_isDispatching)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: VetoPalette.emergency.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(color: VetoPalette.emergency.withValues(alpha: 0.3)),
+                    ),
+                    child: const Text(
+                      'LIVE',
+                      style: TextStyle(
+                        color: VetoPalette.emergency,
+                        fontSize: 9,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 1.5,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
         ),
         Expanded(
+          flex: 1,
           child: Align(
             alignment: AlignmentDirectional.centerEnd,
             child: SingleChildScrollView(
@@ -838,32 +863,32 @@ class _VetoScreenState extends State<VetoScreen> {
                   if (isAdmin)
                     IconButton(
                       visualDensity: VisualDensity.compact,
-                      constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
-                      icon: const Icon(Icons.admin_panel_settings_outlined),
+                      constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
+                      icon: const Icon(Icons.admin_panel_settings_outlined, size: 24),
                       color: VetoColors.accent,
                       onPressed: () => Navigator.pushNamed(context, '/admin_settings'),
                       tooltip: 'פאנל ניהול',
                     ),
                   IconButton(
                     visualDensity: VisualDensity.compact,
-                    constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
-                    icon: const Icon(Icons.home_outlined),
+                    constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
+                    icon: const Icon(Icons.home_outlined, size: 24),
                     color: VetoColors.accentDark,
                     onPressed: () => Navigator.pushNamed(context, '/landing'),
                     tooltip: _langKey == 'he' ? 'דף הבית' : _langKey == 'ru' ? 'Главная' : 'Home',
                   ),
                   IconButton(
                     visualDensity: VisualDensity.compact,
-                    constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
-                    icon: const Icon(Icons.folder_special_outlined),
+                    constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
+                    icon: const Icon(Icons.folder_special_outlined, size: 24),
                     color: VetoColors.accentDark,
                     onPressed: () => Navigator.pushNamed(context, '/files_vault'),
                     tooltip: _langKey == 'he' ? 'כספת קבצים' : _langKey == 'ru' ? 'Хранилище' : 'File Vault',
                   ),
                   IconButton(
                     visualDensity: VisualDensity.compact,
-                    constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
-                    icon: const Icon(Icons.map_outlined),
+                    constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
+                    icon: const Icon(Icons.map_outlined, size: 24),
                     color: VetoColors.accentDark,
                     onPressed: () => Navigator.pushNamed(context, '/maps'),
                     tooltip: _langKey == 'he'
@@ -874,24 +899,24 @@ class _VetoScreenState extends State<VetoScreen> {
                   ),
                   IconButton(
                     visualDensity: VisualDensity.compact,
-                    constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
-                    icon: const Icon(Icons.settings_outlined),
+                    constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
+                    icon: const Icon(Icons.settings_outlined, size: 24),
                     color: VetoColors.accentDark,
                     onPressed: () => Navigator.pushNamed(context, '/settings'),
                     tooltip: _langKey == 'he' ? 'הגדרות' : _langKey == 'ru' ? 'Настройки' : 'Settings',
                   ),
                   IconButton(
                     visualDensity: VisualDensity.compact,
-                    constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
-                    icon: const Icon(Icons.person_outline),
+                    constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
+                    icon: const Icon(Icons.person_outline, size: 24),
                     color: VetoColors.accentDark,
                     onPressed: () => Navigator.pushNamed(context, '/profile'),
                     tooltip: _langKey == 'he' ? 'פרופיל' : _langKey == 'ru' ? 'Профиль' : 'Profile',
                   ),
                   IconButton(
                     visualDensity: VisualDensity.compact,
-                    constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
-                    icon: const Icon(Icons.logout_rounded),
+                    constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
+                    icon: const Icon(Icons.logout_rounded, size: 24),
                     color: VetoColors.silver,
                     tooltip: _langKey == 'he' ? 'התנתקות' : _langKey == 'ru' ? 'Выход' : 'Log out',
                     onPressed: () => AuthService().logout(context),
@@ -916,6 +941,7 @@ class _VetoScreenState extends State<VetoScreen> {
       border: Border(top: BorderSide(color: VetoColors.accent.withValues(alpha:0.25), width: 1)),
     ),
     child: NavigationBar(
+      height: 72,
       selectedIndex: _tab,
       backgroundColor: Colors.transparent,
       surfaceTintColor: Colors.transparent,
@@ -924,13 +950,13 @@ class _VetoScreenState extends State<VetoScreen> {
       onDestinationSelected: (i) => setState(() => _tab = i),
       destinations: [
         NavigationDestination(
-          icon: const Icon(Icons.shield_outlined, color: VetoColors.accentDark),
-          selectedIcon: const Icon(Icons.shield, color: VetoColors.accent),
+          icon: const Icon(Icons.shield_outlined, color: VetoColors.accentDark, size: 26),
+          selectedIcon: const Icon(Icons.shield, color: VetoColors.accent, size: 26),
           label: isRtl ? 'VETO מגן' : 'VETO Shield',
         ),
         NavigationDestination(
-          icon: const Icon(Icons.smart_toy_outlined, color: VetoColors.accentDark),
-          selectedIcon: const Icon(Icons.smart_toy, color: VetoColors.accent),
+          icon: const Icon(Icons.chat_bubble_outline_rounded, color: VetoColors.accentDark, size: 26),
+          selectedIcon: const Icon(Icons.chat_bubble_rounded, color: VetoColors.accent, size: 26),
           label: isRtl ? 'AI עוזר' : 'AI Assistant',
         ),
       ],
@@ -1159,6 +1185,8 @@ class _VetoScreenState extends State<VetoScreen> {
         : _langKey == 'en'
             ? e.value.en
             : e.value.he;
+    final iconSize = compact ? 26.0 : 32.0;
+    final circlePad = compact ? 8.0 : 10.0;
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -1169,7 +1197,10 @@ class _VetoScreenState extends State<VetoScreen> {
         borderRadius: BorderRadius.circular(14),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+          padding: EdgeInsets.symmetric(
+            horizontal: compact ? 8 : 10,
+            vertical: compact ? 10 : 12,
+          ),
           decoration: BoxDecoration(
             color: sel
                 ? VetoPalette.primary.withValues(alpha: 0.14)
@@ -1182,14 +1213,27 @@ class _VetoScreenState extends State<VetoScreen> {
           ),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
             children: [
-              Text(e.value.emoji, style: TextStyle(fontSize: compact ? 26 : 28)),
-              const SizedBox(height: 6),
+              Container(
+                padding: EdgeInsets.all(circlePad),
+                decoration: BoxDecoration(
+                  color: (sel ? VetoPalette.primary : VetoPalette.textMuted)
+                      .withValues(alpha: 0.12),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  _scenarioIcon(e.key),
+                  size: iconSize,
+                  color: sel ? VetoPalette.primary : VetoPalette.textMuted,
+                ),
+              ),
+              SizedBox(height: compact ? 6 : 8),
               Text(
                 lbl,
                 style: TextStyle(
                   color: sel ? VetoPalette.primary : VetoPalette.text,
-                  fontSize: compact ? 12.5 : 11,
+                  fontSize: compact ? 12.5 : 12.5,
                   fontWeight: sel ? FontWeight.w900 : FontWeight.w700,
                   height: 1.2,
                 ),
@@ -1215,23 +1259,36 @@ class _VetoScreenState extends State<VetoScreen> {
           crossAxisCount: 2,
           crossAxisSpacing: 10,
           mainAxisSpacing: 10,
-          childAspectRatio: 1.78,
+          childAspectRatio: 1.55,
         ),
         itemBuilder: (_, i) => _scenarioTile(entries[i], true),
       );
     }
-    return SizedBox(
-      height: 102,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        reverse: isRtl,
-        itemCount: entries.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 8),
-        itemBuilder: (_, i) => SizedBox(
-          width: 112,
-          child: _scenarioTile(entries[i], false),
-        ),
-      ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        const spacing = 12.0;
+        const minTile = 108.0;
+        const maxTile = 132.0;
+        final n = entries.length;
+        final raw = (constraints.maxWidth - spacing * (n - 1)) / n;
+        final tileW = raw.clamp(minTile, maxTile);
+        return Padding(
+          padding: const EdgeInsets.symmetric(vertical: 6),
+          child: Wrap(
+            alignment: WrapAlignment.center,
+            spacing: spacing,
+            runSpacing: spacing,
+            children: [
+              for (final e in entries)
+                SizedBox(
+                  width: tileW,
+                  height: 128,
+                  child: _scenarioTile(e, false),
+                ),
+            ],
+          ),
+        );
+      },
     );
   }
 
@@ -1858,9 +1915,9 @@ class _VetoScreenState extends State<VetoScreen> {
                       ),
                     ),
                     child: Icon(
-                      _isListening ? Icons.mic : Icons.mic_none_rounded,
+                      _isListening ? Icons.mic : Icons.mic_none,
                       color: _isListening ? Colors.white : VetoPalette.textMuted,
-                      size: 20,
+                      size: 22,
                     ),
                   ),
                 ),
@@ -1883,8 +1940,8 @@ class _VetoScreenState extends State<VetoScreen> {
                       color: VetoPalette.surface,
                       border: Border.all(color: VetoPalette.border),
                     ),
-                    child: const Icon(Icons.content_paste_rounded,
-                        color: VetoPalette.textMuted, size: 20),
+                    child: const Icon(Icons.content_paste,
+                        color: VetoPalette.textMuted, size: 22),
                   ),
                 ),
                 ],
@@ -1933,7 +1990,7 @@ class _VetoScreenState extends State<VetoScreen> {
                         ? VetoPalette.border
                         : VetoPalette.success,
                   ),
-                  child: const Icon(Icons.send_rounded, color: Colors.white, size: 20),
+                  child: const Icon(Icons.send, color: Colors.white, size: 22),
                 ),
               ),
             ),

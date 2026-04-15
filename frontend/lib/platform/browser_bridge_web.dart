@@ -103,14 +103,31 @@ void triggerCameraCapture(void Function(dynamic file) onFile) {
   });
 }
 
+/// `capture=environment` helps rear camera on phones but breaks many desktop browsers
+/// (blank/black picker). Only set on likely mobile/tablet user agents.
+bool shouldUseCaptureAttributeOnFileInput() {
+  final ua = window.navigator.userAgent;
+  if (ua.isEmpty) return false;
+  final re = RegExp(
+    r'Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobile',
+    caseSensitive: false,
+  );
+  return re.hasMatch(ua);
+}
+
 /// Opens the system file / camera picker (mobile web uses [capture] when supported).
 /// Returns the first selected [File], or `null` if cancelled / empty.
-Future<File?> pickEvidenceMedia() async {
+///
+/// [preferCameraCapture] — when true, adds `capture=environment` only on mobile UAs
+/// (see [shouldUseCaptureAttributeOnFileInput]).
+Future<dynamic> pickEvidenceMedia({bool preferCameraCapture = true}) async {
   final input = HTMLInputElement()
     ..type = 'file'
     ..accept = 'image/*'
     ..multiple = false;
-  input.setAttribute('capture', 'environment');
+  if (preferCameraCapture && shouldUseCaptureAttributeOnFileInput()) {
+    input.setAttribute('capture', 'environment');
+  }
   input.style.setProperty('position', 'fixed');
   input.style.setProperty('left', '-9999px');
   input.style.setProperty('top', '0');

@@ -31,4 +31,6 @@ String getFileType(dynamic htmlFile) => '';
 
 void triggerCameraCapture(void Function(dynamic file) onFile) {}
 
-Future<dynamic> pickEvidenceMedia() async => null;
+bool shouldUseCaptureAttributeOnFileInput() => false;
+
+Future<dynamic> pickEvidenceMedia({bool preferCameraCapture = true}) async => null;

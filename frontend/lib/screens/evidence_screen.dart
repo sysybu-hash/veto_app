@@ -43,6 +43,8 @@ class _L {
       'camError':   'Camera unavailable',
       'empty':      'No evidence captured yet',
       'webHint':    'Tap capture to take a photo or choose a file',
+      'fromFiles':  'Choose from device',
+      'retryCam':   'Retry camera',
     },
     EvidenceLanguage.he: {
       'capture':    'צלם',
@@ -54,6 +56,8 @@ class _L {
       'camError':   'המצלמה אינה זמינה',
       'empty':      'טרם נלכדו ראיות',
       'webHint':    'לחץ על ״צלם״ לצילום או לבחירת קובץ מהמכשיר',
+      'fromFiles':  'בחר מהמכשיר',
+      'retryCam':   'נסה שוב מצלמה',
     },
     EvidenceLanguage.ru: {
       'capture':    'Снять',
@@ -65,6 +69,8 @@ class _L {
       'camError':   'Камера недоступна',
       'empty':      'Доказательства еще не записаны',
       'webHint':    'Нажмите «Снять», чтобы сделать фото или выбрать файл',
+      'fromFiles':  'Выбрать файл',
+      'retryCam':   'Повторить камеру',
     },
   };
 
@@ -117,6 +123,8 @@ class _EvidenceScreenState extends State<EvidenceScreen>
   CameraController?        _camCtrl;
   bool                     _camReady   = false;
   bool                     _camError   = false;
+  /// Web: live [CameraController] failed — use file picker / upload only.
+  bool                     _webPickerFallback = false;
   int                      _camIndex   = 0; // 0 = rear
 
   // ── GPS ────────────────────────────────────────────────────
@@ -190,36 +198,72 @@ class _EvidenceScreenState extends State<EvidenceScreen>
   //  INIT
   // ══════════════════════════════════════════════════════════
   Future<void> _initCamera() async {
-    if (kIsWeb) {
-      setState(() {
-        _camReady = true;
-        _camError = false;
-      });
-      return;
-    }
     try {
-      final camPerm = await Permission.camera.request();
-      if (!camPerm.isGranted) {
-        if (mounted) setState(() => _camError = true);
-        return;
+      if (!kIsWeb) {
+        final camPerm = await Permission.camera.request();
+        if (!camPerm.isGranted) {
+          if (mounted) setState(() => _camError = true);
+          return;
+        }
       }
+
       _cameras = await availableCameras();
       if (_cameras.isEmpty) {
-        if (mounted) setState(() => _camError = true);
+        if (!mounted) return;
+        setState(() {
+          if (kIsWeb) {
+            _camError = false;
+            _webPickerFallback = true;
+            _camReady = true;
+            _camCtrl = null;
+          } else {
+            _camError = true;
+          }
+        });
         return;
+      }
+
+      if (mounted) {
+        setState(() {
+          _webPickerFallback = false;
+          _camError = false;
+        });
       }
       await _initCameraController(_cameras[_camIndex]);
     } catch (_) {
-      if (mounted) setState(() => _camError = true);
+      if (!mounted) return;
+      if (kIsWeb) {
+        setState(() {
+          _camError = false;
+          _webPickerFallback = true;
+          _camReady = true;
+          _camCtrl = null;
+        });
+      } else {
+        setState(() => _camError = true);
+      }
     }
+  }
+
+  Future<void> _retryLiveCamera() async {
+    if (!kIsWeb) return;
+    await _camCtrl?.dispose();
+    if (!mounted) return;
+    setState(() {
+      _camCtrl = null;
+      _camReady = false;
+      _webPickerFallback = false;
+      _camError = false;
+    });
+    await _initCamera();
   }
 
   Future<void> _initCameraController(CameraDescription cam) async {
     final ctrl = CameraController(
       cam,
-      ResolutionPreset.high,
+      kIsWeb ? ResolutionPreset.medium : ResolutionPreset.high,
       enableAudio: false,
-      imageFormatGroup: ImageFormatGroup.jpeg,
+      imageFormatGroup: kIsWeb ? ImageFormatGroup.unknown : ImageFormatGroup.jpeg,
     );
     _camCtrl = ctrl;
     try {
@@ -256,6 +300,10 @@ class _EvidenceScreenState extends State<EvidenceScreen>
   // ══════════════════════════════════════════════════════════
   Future<void> _capture() async {
     if (kIsWeb) {
+      if (_camCtrl != null && _camCtrl!.value.isInitialized) {
+        await _captureFromControllerBytes();
+        return;
+      }
       await _captureWeb();
       return;
     }
@@ -299,13 +347,54 @@ class _EvidenceScreenState extends State<EvidenceScreen>
     }
   }
 
-  Future<void> _captureWeb() async {
+  /// Web (and any platform) when preview comes from [CameraController]: JPEG bytes, no dart:io.
+  Future<void> _captureFromControllerBytes() async {
+    if (_capturing || _uploading) return;
+    if (_camCtrl == null || !_camCtrl!.value.isInitialized) return;
+    HapticFeedback.mediumImpact();
+    setState(() => _capturing = true);
+    _flashCtrl.forward().then((_) => _flashCtrl.reverse());
+    try {
+      final xFile = await _camCtrl!.takePicture();
+      final bytes = await xFile.readAsBytes();
+      if (bytes.isEmpty) return;
+
+      if (_gpsReady) {
+        try {
+          _position = await Geolocator.getCurrentPosition(
+            locationSettings: const LocationSettings(
+              accuracy: LocationAccuracy.high,
+              timeLimit: Duration(seconds: 3),
+            ),
+          );
+        } catch (_) {}
+      }
+      final lat = _position?.latitude ?? 0.0;
+      final lng = _position?.longitude ?? 0.0;
+
+      await _uploadBytes(
+        bytes: bytes,
+        fileName: 'evidence.jpg',
+        mimeType: 'image/jpeg',
+        type: 'photo',
+        lat: lat,
+        lng: lng,
+      );
+    } catch (_) {
+      _setStatus('error');
+    } finally {
+      if (mounted) setState(() => _capturing = false);
+    }
+  }
+
+  Future<void> _captureWeb({bool preferCameraCapture = true}) async {
     if (_capturing || _uploading) return;
     HapticFeedback.mediumImpact();
     setState(() => _capturing = true);
     _flashCtrl.forward().then((_) => _flashCtrl.reverse());
     try {
-      final picked = await browser_bridge.pickEvidenceMedia();
+      final picked = await browser_bridge.pickEvidenceMedia(
+          preferCameraCapture: preferCameraCapture);
       if (picked == null) {
         return;
       }
@@ -452,8 +541,14 @@ class _EvidenceScreenState extends State<EvidenceScreen>
 
   // ── Flip camera ────────────────────────────────────────────
   Future<void> _flipCamera() async {
-    if (kIsWeb || _cameras.length < 2) return;
-    setState(() { _camReady = false; _camIndex = (_camIndex + 1) % _cameras.length; });
+    if (_cameras.length < 2) return;
+    await _camCtrl?.dispose();
+    if (!mounted) return;
+    setState(() {
+      _camReady = false;
+      _camCtrl = null;
+      _camIndex = (_camIndex + 1) % _cameras.length;
+    });
     await _initCameraController(_cameras[_camIndex]);
   }
 
@@ -513,7 +608,7 @@ class _EvidenceScreenState extends State<EvidenceScreen>
 
   // ── Camera layer ───────────────────────────────────────────
   Widget _buildCameraLayer() {
-    if (_camError) {
+    if (_camError && !(_webPickerFallback && kIsWeb)) {
       return Container(
         color: Colors.black,
         child: Center(
@@ -526,39 +621,27 @@ class _EvidenceScreenState extends State<EvidenceScreen>
         ),
       );
     }
-    if (kIsWeb && _camReady) {
-      return Container(
-        width: double.infinity,
-        height: double.infinity,
-        color: Colors.black,
-        child: Center(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 32),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.photo_camera_outlined,
-                    color: _C.silver.withValues(alpha: 0.85), size: 72),
-                const SizedBox(height: 24),
-                Text(
-                  _t('webHint'),
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    color: _C.silverDim,
-                    fontSize: 15,
-                    height: 1.35,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      );
+    if (kIsWeb && _webPickerFallback && _camReady) {
+      return _buildWebPickerFallbackLayer();
     }
     if (!_camReady || _camCtrl == null) {
       return const Center(
         child: CircularProgressIndicator(
             strokeWidth: 1.5, color: _C.silverDim),
+      );
+    }
+    if (!_camCtrl!.value.isInitialized) {
+      return const Center(
+        child: CircularProgressIndicator(
+            strokeWidth: 1.5, color: _C.silverDim),
+      );
+    }
+    if (kIsWeb) {
+      return ColoredBox(
+        color: Colors.black,
+        child: Center(
+          child: CameraPreview(_camCtrl!),
+        ),
       );
     }
     return SizedBox.expand(
@@ -568,6 +651,68 @@ class _EvidenceScreenState extends State<EvidenceScreen>
           width:  _camCtrl!.value.previewSize!.height,
           height: _camCtrl!.value.previewSize!.width,
           child:  CameraPreview(_camCtrl!),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildWebPickerFallbackLayer() {
+    return Container(
+      width: double.infinity,
+      height: double.infinity,
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            Color(0xFF0F172A),
+            Color(0xFF020617),
+          ],
+        ),
+      ),
+      child: SafeArea(
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 28),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.photo_camera_outlined,
+                    color: _C.silver.withValues(alpha: 0.95), size: 64),
+                const SizedBox(height: 20),
+                Text(
+                  _t('webHint'),
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: Color(0xFFE2E8F0),
+                    fontSize: 16,
+                    height: 1.4,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 28),
+                FilledButton.icon(
+                  onPressed: _retryLiveCamera,
+                  icon: const Icon(Icons.videocam_outlined, size: 22),
+                  label: Text(_t('retryCam')),
+                  style: FilledButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 14),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                OutlinedButton.icon(
+                  onPressed: () => _captureWeb(preferCameraCapture: false),
+                  icon: const Icon(Icons.folder_open_outlined, size: 22),
+                  label: Text(_t('fromFiles')),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: const Color(0xFFE2E8F0),
+                    side: const BorderSide(color: Color(0xFF64748B)),
+                    padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 14),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );
@@ -776,7 +921,7 @@ class _EvidenceScreenState extends State<EvidenceScreen>
                   SizedBox(
                     width: 80,
                     child: Center(
-                      child: !kIsWeb && _cameras.length >= 2
+                      child: _cameras.length >= 2
                           ? _HUDButton(
                               icon: Icons.flip_camera_ios_outlined,
                               onTap: _flipCamera,
