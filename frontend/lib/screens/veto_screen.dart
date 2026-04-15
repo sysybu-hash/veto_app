@@ -270,6 +270,8 @@ class _VetoScreenState extends State<VetoScreen> {
   StreamSubscription<Map<String, dynamic>>? _lawyerFoundSub;
   StreamSubscription<Map<String, dynamic>>? _noLawyersSub;
   StreamSubscription<Map<String, dynamic>>? _vetoDispatchedSub;
+  StreamSubscription<Map<String, dynamic>>? _vetoErrorSub;
+  StreamSubscription<Map<String, dynamic>>? _caseAlreadyTakenSub;
   final List<_Msg> _messages = [];
   final List<Map<String, dynamic>> _geminiHistory = [];
   final _inputCtrl = TextEditingController();
@@ -302,6 +304,9 @@ class _VetoScreenState extends State<VetoScreen> {
         SocketService().onNoLawyersAvailable.listen(_handleNoLawyersAvailable);
     _vetoDispatchedSub =
         SocketService().onVetoDispatched.listen(_handleVetoDispatched);
+    _vetoErrorSub = SocketService().onVetoError.listen(_handleVetoError);
+    _caseAlreadyTakenSub =
+        SocketService().onCaseAlreadyTaken.listen(_handleCaseAlreadyTaken);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Future<void>.delayed(const Duration(milliseconds: 350), () {
         if (mounted) _checkSubscription();
@@ -340,6 +345,8 @@ class _VetoScreenState extends State<VetoScreen> {
     _lawyerFoundSub?.cancel();
     _noLawyersSub?.cancel();
     _vetoDispatchedSub?.cancel();
+    _vetoErrorSub?.cancel();
+    _caseAlreadyTakenSub?.cancel();
     super.dispose();
   }
 
@@ -935,6 +942,42 @@ class _VetoScreenState extends State<VetoScreen> {
         content: Text(message),
         backgroundColor: VetoPalette.warning,
       ),
+    );
+  }
+
+  void _handleVetoError(Map<String, dynamic> data) {
+    if (!mounted) return;
+    setState(() => _isDispatching = false);
+    final message = data['message']?.toString() ??
+        (_langKey == 'he'
+            ? 'שליחת החירום נכשלה. נסה שוב.'
+            : _langKey == 'ru'
+                ? 'Не удалось отправить сигнал. Попробуйте ещё раз.'
+                : 'Dispatch failed. Please try again.');
+    setState(() {
+      _messages.add(_Msg(text: message, isUser: false, isSystem: true));
+    });
+    _scrollToBottom();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), backgroundColor: VetoPalette.emergency),
+    );
+  }
+
+  void _handleCaseAlreadyTaken(Map<String, dynamic> data) {
+    if (!mounted) return;
+    setState(() => _isDispatching = false);
+    final message = data['message']?.toString() ??
+        (_langKey == 'he'
+            ? 'עורך דין אחר כבר קיבל את הקריאה.'
+            : _langKey == 'ru'
+                ? 'Другой адвокат уже принял вызов.'
+                : 'Another lawyer has already taken this case.');
+    setState(() {
+      _messages.add(_Msg(text: message, isUser: false, isSystem: true));
+    });
+    _scrollToBottom();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), backgroundColor: const Color(0xFF64748B)),
     );
   }
 

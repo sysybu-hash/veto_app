@@ -109,10 +109,13 @@ router.post('/messages', async (req, res, next) => {
       attachments:  attachments || [],
     });
 
-    // Real-time push via Socket.io
+    // Real-time push via Socket.io (rooms match dispatch.socket.js joins)
     const io = req.app.get('io');
     if (io) {
-      io.to(`user_${receiver_id}`).emit('new_message', {
+      const rRole = String(receiver_role || 'user').toLowerCase();
+      const room =
+        rRole === 'lawyer' ? `lawyer:${receiver_id}` : `user:${receiver_id}`;
+      io.to(room).emit('new_message', {
         message:     msg,
         sender_name: req.user.full_name || 'User',
       });

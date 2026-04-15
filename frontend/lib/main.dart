@@ -33,6 +33,7 @@ import 'screens/lawyer_settings_screen.dart';
 import 'screens/chat_screen.dart';
 import 'screens/call_screen.dart';
 import 'screens/maps_screen.dart';
+import 'screens/shared_vault_screen.dart';
 import 'services/socket_service.dart';
 
 Future<void> main() async {
@@ -179,6 +180,7 @@ class VetoApp extends StatelessWidget {
         '/chat': (context) => const ChatScreen(),
         '/call': (context) => const CallScreen(),
         '/maps': (context) => const MapsScreen(),
+        '/shared_vault': (context) => const SharedVaultScreen(),
       },
     );
   }

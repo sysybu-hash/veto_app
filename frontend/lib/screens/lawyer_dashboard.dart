@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../core/i18n/app_language.dart';
@@ -237,6 +238,78 @@ class _LawyerDashboardState extends State<LawyerDashboard> {
     _showSnack(_t(context.read<AppLanguageController>().code, 'rejected'));
   }
 
+  void _showNotificationsPanel() {
+    final code = context.read<AppLanguageController>().code;
+    final isRtl = AppLanguage.directionOf(code) == TextDirection.rtl;
+    if (_alerts.isEmpty) {
+      _showSnack(
+        isRtl ? 'אין קריאות ממתינות' : 'No pending emergency alerts',
+        background: VetoPalette.surface2,
+      );
+      return;
+    }
+    showModalBottomSheet<void>(
+      context: context,
+      builder: (ctx) => SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                _t(code, 'queue'),
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w900,
+                  color: Color(0xFF0F172A),
+                ),
+              ),
+              const SizedBox(height: 12),
+              for (final a in _alerts)
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(Icons.emergency_rounded, color: Color(0xFFFF3B3B)),
+                  title: Text(a['userName']?.toString() ?? 'User'),
+                  subtitle: Text(
+                    a['eventId']?.toString() ?? '',
+                    style: const TextStyle(fontSize: 12, color: Color(0xFF64748B)),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _openSharedVaultFromCases(bool isRtl) {
+    for (final c in _activeCases) {
+      final uid = c['userId'];
+      if (uid != null && uid.toString().isNotEmpty) {
+        Navigator.pushNamed(context, '/shared_vault', arguments: {
+          'userId': uid.toString(),
+          'userName': c['userName'] ?? 'User',
+        });
+        return;
+      }
+    }
+    for (final a in _alerts) {
+      final uid = a['userId'];
+      if (uid != null && uid.toString().isNotEmpty) {
+        Navigator.pushNamed(context, '/shared_vault', arguments: {
+          'userId': uid.toString(),
+          'userName': a['userName'] ?? 'User',
+        });
+        return;
+      }
+    }
+    _showSnack(
+      isRtl ? 'קבל תיק או בחר תיק פעיל לפני צפיית קבצים' : 'Accept a case or pick an active case to view files',
+      background: VetoPalette.surface2,
+    );
+  }
+
   void _showSnack(String message, {Color background = VetoPalette.surface2}) {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
@@ -331,7 +404,10 @@ class _LawyerDashboardState extends State<LawyerDashboard> {
                         Stack(children: [
                           IconButton(
                             icon: const Icon(Icons.notifications_outlined, color: Color(0xFF334155)),
-                            onPressed: () {},
+                            onPressed: () {
+                              HapticFeedback.lightImpact();
+                              _showNotificationsPanel();
+                            },
                             constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
                           ),
                           if (_alerts.isNotEmpty)
@@ -526,10 +602,24 @@ class _LawyerDashboardState extends State<LawyerDashboard> {
                       child: SafeArea(
                         top: false,
                         child: Row(mainAxisAlignment: MainAxisAlignment.spaceAround, children: [
-                          _BottomNavItem(icon: Icons.home_rounded, label: isRtl ? 'בית' : 'Home', selected: true, onTap: () {}),
-                          _BottomNavItem(icon: Icons.folder_outlined, label: isRtl ? 'תיקים' : 'Cases', selected: false,
-                            onTap: () => Navigator.pushNamed(context, '/shared_vault', arguments: {'userId': '', 'userName': ''})),
-                          _BottomNavItem(icon: Icons.chat_bubble_outline_rounded, label: isRtl ? 'צ׳אט' : 'Chat', selected: false, onTap: () {}),
+                          _BottomNavItem(
+                            icon: Icons.home_rounded,
+                            label: isRtl ? 'בית' : 'Home',
+                            selected: true,
+                            onTap: () => Navigator.pushReplacementNamed(context, '/lawyer_dashboard'),
+                          ),
+                          _BottomNavItem(
+                            icon: Icons.folder_outlined,
+                            label: isRtl ? 'תיקים' : 'Cases',
+                            selected: false,
+                            onTap: () => _openSharedVaultFromCases(isRtl),
+                          ),
+                          _BottomNavItem(
+                            icon: Icons.chat_bubble_outline_rounded,
+                            label: isRtl ? 'צ׳אט' : 'Chat',
+                            selected: false,
+                            onTap: () => Navigator.pushNamed(context, '/chat'),
+                          ),
                           _BottomNavItem(icon: Icons.person_outline_rounded, label: isRtl ? 'פרופיל' : 'Profile', selected: false,
                             onTap: () => Navigator.pushNamed(context, '/lawyer_settings')),
                         ]),

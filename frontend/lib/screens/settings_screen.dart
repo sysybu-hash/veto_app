@@ -607,7 +607,7 @@ class _SettingsScreenState extends State<SettingsScreen>
                       ),
                       const SizedBox(height: 14),
                       OutlinedButton.icon(
-                        onPressed: () {},
+                        onPressed: () => Navigator.pushNamed(context, '/profile'),
                         icon: const Icon(Icons.edit_outlined, size: 14),
                         label: Text(isRtl ? 'ערוך פרופיל' : 'Edit profile', style: const TextStyle(fontSize: 13)),
                         style: OutlinedButton.styleFrom(

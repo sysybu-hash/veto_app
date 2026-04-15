@@ -201,12 +201,15 @@ class AuthService {
       ).timeout(const Duration(seconds: 15));
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body) as Map<String, dynamic>;
-        final user = data['user'] ?? data;
+        // /users/me → { user }, /lawyers/me → { lawyer }
+        final raw = data['user'] ?? data['lawyer'] ?? data;
+        if (raw is! Map) return null;
+        final user = Map<String, dynamic>.from(raw);
         final name = user['full_name'] as String?;
         final phone = user['phone'] as String?;
         if (name != null) await _storage.write(key: 'veto_name', value: name);
         if (phone != null) await _storage.write(key: 'veto_phone', value: phone);
-        return user as Map<String, dynamic>;
+        return user;
       }
     } catch (e) {
       debugPrint('fetchProfile error: $e');

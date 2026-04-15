@@ -187,6 +187,17 @@ const EmergencyEventSchema = new mongoose.Schema(
       default: null, // Cloudinary URL of the call recording
     },
 
+    // Cloudinary upload metadata (persisted; was dropped before schema existed)
+    recording_duration_seconds: {
+      type: Number,
+      default: null,
+    },
+
+    recording_size_bytes: {
+      type: Number,
+      default: null,
+    },
+
     call_transcript: {
       type: String,
       maxlength: 50000,

@@ -48,7 +48,7 @@ const getAdminStats = async (req, res, next) => {
     ] = await Promise.all([
       User.countDocuments({}),
       Lawyer.countDocuments({ is_active: true }),
-      Lawyer.countDocuments({ is_verified: false }),
+      Lawyer.countDocuments({ is_approved: false, is_active: true }),
       Event.countDocuments({ triggered_at: { $gte: startOfToday } }),
       Event.countDocuments({ triggered_at: { $gte: startOfWeek } }),
       Event.countDocuments({ triggered_at: { $gte: startOfMonth } }),

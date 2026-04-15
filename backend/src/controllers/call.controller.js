@@ -89,9 +89,9 @@ exports.uploadRecording = async (req, res, next) => {
 
     // Save recording URL to event
     await EmergencyEvent.findByIdAndUpdate(eventId, {
-      recording_url:      uploadResult.secure_url,
-      recording_duration: uploadResult.duration,
-      recording_size:     uploadResult.bytes,
+      recording_url:               uploadResult.secure_url,
+      recording_duration_seconds:  uploadResult.duration != null ? Number(uploadResult.duration) : null,
+      recording_size_bytes:        uploadResult.bytes != null ? Number(uploadResult.bytes) : null,
     });
 
     res.json({
@@ -210,7 +210,7 @@ exports.getCallDetails = async (req, res, next) => {
     const { userId }  = req.user;
 
     const event = await EmergencyEvent.findById(eventId)
-      .select('user_id assigned_lawyer_id status call_type call_started_at call_duration_seconds recording_url call_transcript transcript_language')
+      .select('user_id assigned_lawyer_id status call_type call_started_at call_duration_seconds recording_url recording_duration_seconds recording_size_bytes call_transcript transcript_language')
       .lean();
 
     if (!event) return res.status(404).json({ error: 'Event not found' });
