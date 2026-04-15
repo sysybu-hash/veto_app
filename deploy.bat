@@ -26,7 +26,7 @@ echo.
 echo [2/4] Building Flutter Web...
 echo   This may take 2-5 minutes...
 cd frontend
-call flutter build web --release --no-wasm-dry-run --pwa-strategy=none --dart-define=VETO_API_BASE=https://veto-app-new.onrender.com
+call flutter build web --release --no-wasm-dry-run --no-tree-shake-icons --pwa-strategy=none --dart-define=VETO_API_BASE=https://veto-app-new.onrender.com
 if %errorlevel% neq 0 (
   echo.
   echo   ERROR: Flutter build failed! See error above.
