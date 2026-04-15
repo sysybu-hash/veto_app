@@ -759,30 +759,36 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
     return Directionality(
       textDirection: isRtl ? TextDirection.rtl : TextDirection.ltr,
       child: Scaffold(
-        backgroundColor: VetoPalette.bg,
+        backgroundColor: const Color(0xFFF0F4FF),
         appBar: AppBar(
-          title: Text(
-            _l.title,
-            style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 18),
+          backgroundColor: Colors.white,
+          elevation: 0,
+          shadowColor: Colors.transparent,
+          surfaceTintColor: Colors.transparent,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Color(0xFF334155), size: 20),
+            onPressed: () => Navigator.of(context).pop(),
           ),
+          title: Text(_l.title, style: const TextStyle(color: Color(0xFF0F172A), fontWeight: FontWeight.w800, fontSize: 18)),
+          centerTitle: true,
           actions: [
             if (kIsWeb)
               IconButton(
-                icon: const Icon(Icons.photo_camera_outlined),
+                icon: const Icon(Icons.photo_camera_outlined, color: Color(0xFF334155)),
                 onPressed: _uploading ? null : _captureFromCamera,
                 tooltip: 'Capture from camera',
               ),
             IconButton(
-              icon: const Icon(Icons.refresh_rounded),
+              icon: const Icon(Icons.refresh_rounded, color: Color(0xFF334155)),
               onPressed: _load,
               tooltip: 'Refresh',
             ),
           ],
           bottom: TabBar(
             controller: _tabController,
-            indicatorColor: VetoPalette.primary,
-            labelColor: VetoPalette.text,
-            unselectedLabelColor: VetoPalette.textMuted,
+            indicatorColor: const Color(0xFF5B8FFF),
+            labelColor: const Color(0xFF5B8FFF),
+            unselectedLabelColor: const Color(0xFF94A3B8),
             tabs: [
               Tab(text: _l.allFiles),
               Tab(text: _l.legalCase),
@@ -791,7 +797,7 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
         ),
         floatingActionButton: FloatingActionButton.extended(
           onPressed: _uploading ? null : _pickFile,
-          backgroundColor: _uploading ? VetoPalette.border : VetoPalette.primary,
+          backgroundColor: _uploading ? const Color(0xFFE2E8F8) : const Color(0xFF5B8FFF),
           icon: _uploading
               ? const SizedBox(width: 20, height: 20,
                   child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))

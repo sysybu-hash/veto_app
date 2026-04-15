@@ -398,27 +398,40 @@ class _LawyerSettingsScreenState extends State<LawyerSettingsScreen> {
     return Directionality(
       textDirection: isRtl ? TextDirection.rtl : TextDirection.ltr,
       child: Scaffold(
-        backgroundColor: VetoPalette.bg,
+        backgroundColor: const Color(0xFFF0F4FF),
         appBar: AppBar(
-          title: Text(
-            _t(code, 'title'),
-            style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 18),
+          backgroundColor: Colors.white,
+          elevation: 0,
+          shadowColor: Colors.transparent,
+          surfaceTintColor: Colors.transparent,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Color(0xFF334155), size: 20),
+            onPressed: () => Navigator.of(context).pop(),
           ),
+          title: Text(_t(code, 'title'), style: const TextStyle(color: Color(0xFF0F172A), fontWeight: FontWeight.w800, fontSize: 18)),
+          centerTitle: true,
           actions: [
-            TextButton(
-              onPressed: _saving ? null : () => _save(code),
-              child: Text(
-                _saving ? '...' : _t(code, 'save'),
-                style: const TextStyle(
-                  color: VetoPalette.primary,
-                  fontWeight: FontWeight.w800,
+            Padding(
+              padding: const EdgeInsets.only(right: 12),
+              child: FilledButton(
+                onPressed: _saving ? null : () => _save(code),
+                style: FilledButton.styleFrom(
+                  backgroundColor: const Color(0xFF5B8FFF),
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                 ),
+                child: Text(_saving ? '...' : _t(code, 'save'), style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
               ),
             ),
           ],
+          bottom: const PreferredSize(
+            preferredSize: Size.fromHeight(1),
+            child: Divider(height: 1, color: Color(0xFFE2E8F8)),
+          ),
         ),
         body: _loading
-            ? const Center(child: CircularProgressIndicator(color: VetoPalette.primary))
+            ? const Center(child: CircularProgressIndicator(color: Color(0xFF5B8FFF)))
             : ListView(
                 padding: const EdgeInsets.all(16),
                 children: [
@@ -663,9 +676,10 @@ class _Section extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: VetoPalette.surface,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: VetoPalette.border),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE2E8F8)),
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 8, offset: const Offset(0, 2))],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -673,13 +687,19 @@ class _Section extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
             child: Row(children: [
-              Icon(icon, color: VetoPalette.primary, size: 18),
-              const SizedBox(width: 8),
-              Text(title, style: const TextStyle(
-                  color: VetoPalette.text, fontSize: 15, fontWeight: FontWeight.w700)),
+              Container(
+                width: 32, height: 32,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF5B8FFF).withValues(alpha: 0.10),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(icon, color: const Color(0xFF5B8FFF), size: 16),
+              ),
+              const SizedBox(width: 10),
+              Text(title, style: const TextStyle(color: Color(0xFF0F172A), fontSize: 15, fontWeight: FontWeight.w700)),
             ]),
           ),
-          const Divider(height: 1, color: VetoPalette.border),
+          const Divider(height: 1, color: Color(0xFFE2E8F8)),
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 14),
             child: Column(children: children),

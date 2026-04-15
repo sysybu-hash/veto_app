@@ -501,9 +501,10 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
       constraints: const BoxConstraints(maxHeight: 200),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: VetoColors.surface.withValues(alpha:0.95),
+        color: Colors.white.withValues(alpha: 0.95),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: VetoColors.border),
+        border: Border.all(color: const Color(0xFFE2E8F8)),
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.10), blurRadius: 16)],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -511,7 +512,7 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
         children: [
           Row(
             children: [
-              const Icon(Icons.transcribe, color: VetoColors.accent, size: 16),
+              const Icon(Icons.transcribe, color: Color(0xFF5B8FFF), size: 16),
               const SizedBox(width: 8),
               const Text(
                 'תמלול חי',
@@ -519,26 +520,26 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
                   fontFamily: 'Heebo',
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
-                  color: VetoColors.accent,
+                  color: Color(0xFF5B8FFF),
                 ),
               ),
               const Spacer(),
               GestureDetector(
                 onTap: () => setState(() => _showTranscript = false),
-                child: const Icon(Icons.close, color: VetoColors.silver, size: 16),
+                child: const Icon(Icons.close, color: Color(0xFF64748B), size: 16),
               ),
             ],
           ),
           const SizedBox(height: 8),
           Text(
             _transcriptText ??
-                (_savingArtifacts
+                (            _savingArtifacts
                     ? 'שומר הקלטה ומכין תמלול...'
                     : 'התמלול יהיה זמין בסיום השיחה...'),
             style: const TextStyle(
               fontFamily: 'Heebo',
               fontSize: 13,
-              color: VetoColors.silver,
+              color: Color(0xFF334155),
             ),
           ),
         ],

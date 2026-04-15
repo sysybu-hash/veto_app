@@ -6,7 +6,6 @@ import 'package:provider/provider.dart';
 
 import '../core/i18n/app_language.dart';
 import '../services/auth_service.dart';
-import '../core/theme/veto_theme.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -61,6 +60,14 @@ class _SplashScreenState extends State<SplashScreen>
     super.dispose();
   }
 
+  Widget _blob(Color color, double size, double alpha) => Container(
+    width: size, height: size,
+    decoration: BoxDecoration(
+      shape: BoxShape.circle,
+      gradient: RadialGradient(colors: [color.withValues(alpha: alpha), Colors.transparent]),
+    ),
+  );
+
   @override
   Widget build(BuildContext context) {
     final code = context.watch<AppLanguageController>().code;
@@ -71,27 +78,13 @@ class _SplashScreenState extends State<SplashScreen>
     };
 
     return Scaffold(
-      backgroundColor: VetoPalette.bg,
+      backgroundColor: const Color(0xFFF0F4FF),
       body: Stack(
         children: [
-          // Radial glow blob
-          Positioned(
-            top: -120,
-            right: -120,
-            child: Container(
-              width: 500,
-              height: 500,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: RadialGradient(
-                  colors: [
-                    const Color(0xFF0D9488).withValues(alpha: 0.12),
-                    Colors.transparent,
-                  ],
-                ),
-              ),
-            ),
-          ),
+          // Aurora blobs
+          Positioned(top: -80, right: -80, child: _blob(const Color(0xFF38BDF8), 400, 0.20)),
+          Positioned(bottom: -100, left: -60, child: _blob(const Color(0xFFA78BFA), 380, 0.16)),
+          Positioned(top: 200, left: -60, child: _blob(const Color(0xFF5B8FFF), 300, 0.12)),
           Center(
             child: AnimatedBuilder(
               animation: _ac,
@@ -102,79 +95,53 @@ class _SplashScreenState extends State<SplashScreen>
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      // Logo mark
+                      // Shield logo — white card with blue gradient icon
                       Container(
-                        width: 96,
-                        height: 96,
+                        width: 96, height: 96,
                         decoration: BoxDecoration(
+                          color: Colors.white,
                           borderRadius: BorderRadius.circular(28),
-                          gradient: const LinearGradient(
-                            colors: [Color(0xFF0D9488), Color(0xFF0284C7)],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
+                          border: Border.all(color: const Color(0xFFE2E8F8), width: 1.5),
                           boxShadow: [
-                            BoxShadow(
-                              color: const Color(0xFF0D9488).withValues(alpha: 0.35),
-                              blurRadius: 40,
-                              spreadRadius: 0,
-                            ),
+                            BoxShadow(color: const Color(0xFF5B8FFF).withValues(alpha: 0.18), blurRadius: 32, spreadRadius: 0),
+                            BoxShadow(color: Colors.black.withValues(alpha: 0.06), blurRadius: 16, offset: const Offset(0, 4)),
                           ],
                         ),
-                        child: const Icon(
-                          Icons.shield_rounded,
-                          color: Colors.white,
-                          size: 48,
-                        ),
+                        child: const Icon(Icons.shield_rounded, color: Color(0xFF5B8FFF), size: 48),
                       ),
                       const SizedBox(height: 28),
-                      Text(
+                      const Text(
                         'VETO',
                         style: TextStyle(
-                          color: VetoColors.accent,
+                          color: Color(0xFF0F172A),
                           fontSize: 40,
                           fontWeight: FontWeight.w900,
                           letterSpacing: 12,
-                          shadows: [
-                            Shadow(
-                              color: VetoColors.accent.withValues(alpha:0.4),
-                              blurRadius: 16,
-                            ),
-                          ],
                         ),
                       ),
                       const SizedBox(height: 6),
-                      // Gold decorative line
+                      // Accent line
                       Container(
-                        width: 48, height: 1,
-                        decoration: const BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [
-                              Colors.transparent,
-                              VetoColors.accent,
-                              Colors.transparent,
-                            ],
-                          ),
+                        width: 48, height: 2,
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(colors: [Colors.transparent, Color(0xFF5B8FFF), Colors.transparent]),
+                          borderRadius: BorderRadius.circular(1),
                         ),
                       ),
-                      const SizedBox(height: 10),
+                      const SizedBox(height: 12),
                       Text(
                         tagline,
                         style: const TextStyle(
-                          color: VetoPalette.textMuted,
+                          color: Color(0xFF64748B),
                           fontSize: 13,
-                          letterSpacing: 1.5,
+                          letterSpacing: 1.2,
                           fontWeight: FontWeight.w500,
                         ),
                       ),
                       const SizedBox(height: 56),
-                      SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 1.5,
-                          color: VetoColors.accent.withValues(alpha: 0.6),
-                        ),
+                      const SizedBox(
+                        width: 22, height: 22,
+                        child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF5B8FFF)),
                       ),
                     ],
                   ),

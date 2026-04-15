@@ -174,19 +174,29 @@ class _EmergencyLogsScreenState extends State<EmergencyLogsScreen> {
     return Directionality(
       textDirection: AppLanguage.directionOf(code),
       child: Scaffold(
-        backgroundColor: VetoPalette.bg,
+        backgroundColor: const Color(0xFFF0F4FF),
         appBar: AppBar(
+          backgroundColor: Colors.white,
+          elevation: 0,
+          shadowColor: Colors.transparent,
+          surfaceTintColor: Colors.transparent,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Color(0xFF334155), size: 20),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
           title: Text(
             '${_t(code, 'emergencyLogs')} (${_loading ? _t(code, 'loading') : _events.length})',
-            style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 17),
+            style: const TextStyle(color: Color(0xFF0F172A), fontWeight: FontWeight.w800, fontSize: 17),
           ),
+          centerTitle: true,
           actions: [
             const Padding(
               padding: EdgeInsets.symmetric(horizontal: 8),
               child: Center(child: AppLanguageMenu(compact: true)),
             ),
-            IconButton(icon: const Icon(Icons.refresh), onPressed: _load, tooltip: _t(code, 'refresh')),
+            IconButton(icon: const Icon(Icons.refresh, color: Color(0xFF334155)), onPressed: _load, tooltip: _t(code, 'refresh')),
           ],
+          bottom: const PreferredSize(preferredSize: Size.fromHeight(1), child: Divider(height: 1, color: Color(0xFFE2E8F8))),
         ),
         body: _loading
             ? const Center(child: CircularProgressIndicator())
@@ -209,14 +219,15 @@ class _EmergencyLogsScreenState extends State<EmergencyLogsScreen> {
                       return Container(
                         padding: const EdgeInsets.all(14),
                         decoration: BoxDecoration(
-                          color: VetoPalette.surface,
+                          color: Colors.white,
                           borderRadius: BorderRadius.circular(12),
                           border: Border(
                             left: BorderSide(color: _sc(status), width: 3),
-                            top: const BorderSide(color: VetoPalette.border),
-                            right: const BorderSide(color: VetoPalette.border),
-                            bottom: const BorderSide(color: VetoPalette.border),
+                            top: const BorderSide(color: Color(0xFFE2E8F8)),
+                            right: const BorderSide(color: Color(0xFFE2E8F8)),
+                            bottom: const BorderSide(color: Color(0xFFE2E8F8)),
                           ),
+                          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 6, offset: const Offset(0, 2))],
                         ),
                         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                           Row(children: [

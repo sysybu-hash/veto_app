@@ -86,26 +86,30 @@ class _PendingLawyersScreenState extends State<PendingLawyersScreen> {
     return Directionality(
       textDirection: AppLanguage.directionOf(code),
       child: Scaffold(
-        backgroundColor: VetoPalette.bg,
+        backgroundColor: const Color(0xFFF0F4FF),
         appBar: AppBar(
-          title: Text(
-            _t(code, 'pendingLawyersTitle'),
-            style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 18),
+          backgroundColor: Colors.white,
+          elevation: 0,
+          shadowColor: Colors.transparent,
+          surfaceTintColor: Colors.transparent,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Color(0xFF334155), size: 20),
+            onPressed: () => Navigator.of(context).pop(),
           ),
+          title: Text(_t(code, 'pendingLawyersTitle'),
+              style: const TextStyle(color: Color(0xFF0F172A), fontWeight: FontWeight.w800, fontSize: 18)),
+          centerTitle: true,
           actions: [
             const Padding(
               padding: EdgeInsets.symmetric(horizontal: 8),
               child: Center(child: AppLanguageMenu(compact: true)),
             ),
-            IconButton(
-              icon: const Icon(Icons.refresh_rounded),
-              onPressed: _load,
-              tooltip: _t(code, 'refresh'),
-            ),
+            IconButton(icon: const Icon(Icons.refresh_rounded, color: Color(0xFF334155)), onPressed: _load, tooltip: _t(code, 'refresh')),
           ],
+          bottom: const PreferredSize(preferredSize: Size.fromHeight(1), child: Divider(height: 1, color: Color(0xFFE2E8F8))),
         ),
         body: _loading
-            ? const Center(child: CircularProgressIndicator(color: VetoPalette.primary))
+            ? const Center(child: CircularProgressIndicator(color: Color(0xFF5B8FFF)))
             : _lawyers.isEmpty
                 ? Center(
                     child: Column(

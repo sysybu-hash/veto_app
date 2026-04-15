@@ -73,11 +73,21 @@ class _MapsScreenState extends State<MapsScreen> {
     final title = isHe ? 'מפת Google' : 'Google Maps';
 
     return Scaffold(
-      backgroundColor: VetoPalette.bg,
+      backgroundColor: const Color(0xFFF0F4FF),
       appBar: AppBar(
-        title: Text(
-          title,
-          style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 18),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        shadowColor: Colors.transparent,
+        surfaceTintColor: Colors.transparent,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Color(0xFF334155), size: 20),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        title: Text(title, style: const TextStyle(color: Color(0xFF0F172A), fontWeight: FontWeight.w800, fontSize: 18)),
+        centerTitle: true,
+        bottom: const PreferredSize(
+          preferredSize: Size.fromHeight(1),
+          child: Divider(height: 1, color: Color(0xFFE2E8F8)),
         ),
       ),
       body: _error != null

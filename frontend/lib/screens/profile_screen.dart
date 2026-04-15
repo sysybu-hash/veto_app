@@ -126,23 +126,31 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Directionality(
       textDirection: AppLanguage.directionOf(code),
       child: Scaffold(
-        backgroundColor: VetoPalette.bg,
+        backgroundColor: const Color(0xFFF0F4FF),
         appBar: AppBar(
+          backgroundColor: Colors.white,
+          elevation: 0,
+          shadowColor: Colors.transparent,
+          surfaceTintColor: Colors.transparent,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Color(0xFF334155), size: 20),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
           title: Text(
             _t(code, 'title'),
-            style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 18),
+            style: const TextStyle(color: Color(0xFF0F172A), fontWeight: FontWeight.w800, fontSize: 18),
           ),
+          centerTitle: true,
           actions: [
-            IconButton(
-              icon: const Icon(Icons.home_outlined),
-              onPressed: () => Navigator.of(context).pushNamed('/landing'),
-              tooltip: code == 'he' ? 'דף הבית' : code == 'ru' ? 'Главная' : 'Home',
-            ),
             const Padding(
               padding: EdgeInsets.symmetric(horizontal: 12),
               child: Center(child: AppLanguageMenu(compact: true)),
             ),
           ],
+          bottom: const PreferredSize(
+            preferredSize: Size.fromHeight(1),
+            child: Divider(height: 1, color: Color(0xFFE2E8F8)),
+          ),
         ),
         body: _loading
             ? const Center(
@@ -162,14 +170,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           child: Container(
                             width: 80, height: 80,
                             decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(24),
                               gradient: const LinearGradient(
-                                colors: [Color(0xFF0D9488), Color(0xFF0284C7)],
+                                colors: [Color(0xFF5B8FFF), Color(0xFF00C9B1)],
                                 begin: Alignment.topLeft, end: Alignment.bottomRight,
                               ),
+                              shape: BoxShape.circle,
                               boxShadow: [BoxShadow(
-                                  color: VetoPalette.primary.withValues(alpha: 0.25),
-                                  blurRadius: 24, spreadRadius: 0)],
+                                  color: const Color(0xFF5B8FFF).withValues(alpha: 0.25),
+                                  blurRadius: 20, spreadRadius: 0)],
                             ),
                             child: Center(
                               child: Text(
@@ -376,9 +384,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: VetoPalette.surface,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: VetoPalette.border),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE2E8F8)),
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, 3))],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,

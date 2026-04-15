@@ -335,7 +335,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
     await showModalBottomSheet<void>(
       context: context,
-      backgroundColor: VetoPalette.surface,
+      backgroundColor: Colors.white,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
@@ -438,7 +438,7 @@ class _ChatScreenState extends State<ChatScreen> {
     return Directionality(
       textDirection: isRtl ? TextDirection.rtl : TextDirection.ltr,
       child: Scaffold(
-        backgroundColor: VetoPalette.bg,
+        backgroundColor: const Color(0xFFF0F4FF),
         body: LayoutBuilder(builder: (_, constraints) {
           final isWide = constraints.maxWidth > 720;
           if (isWide) {
@@ -463,36 +463,32 @@ class _ChatScreenState extends State<ChatScreen> {
   // ── Conversation list panel ────────────────────────────────────
   Widget _buildConversationList({bool showAppBar = false}) {
     return Scaffold(
-      backgroundColor: VetoPalette.bg,
-      appBar: showAppBar
-          ? AppBar(
-              title: Text(
-                _t('title'),
-                style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 18),
-              ),
-              actions: [
-                IconButton(
-                  icon: const Icon(Icons.edit_outlined),
-                  onPressed: _showNewChatPicker,
-                  tooltip: _t('newChat'),
-                ),
-              ],
-            )
-          : AppBar(
-              title: Text(
-                _t('title'),
-                style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 18),
-              ),
-              leading: BackButton(
-                  onPressed: () => Navigator.of(context).pop()),
-              actions: [
-                IconButton(
-                  icon: const Icon(Icons.edit_outlined),
-                  onPressed: _showNewChatPicker,
-                  tooltip: _t('newChat'),
-                ),
-              ],
-            ),
+      backgroundColor: const Color(0xFFF0F4FF),
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        shadowColor: Colors.transparent,
+        surfaceTintColor: Colors.transparent,
+        leading: showAppBar ? null : BackButton(
+          color: const Color(0xFF334155),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        title: Text(
+          _t('title'),
+          style: const TextStyle(color: Color(0xFF0F172A), fontWeight: FontWeight.w800, fontSize: 18),
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.edit_outlined, color: Color(0xFF5B8FFF)),
+            onPressed: _showNewChatPicker,
+            tooltip: _t('newChat'),
+          ),
+        ],
+        bottom: const PreferredSize(
+          preferredSize: Size.fromHeight(1),
+          child: Divider(height: 1, color: Color(0xFFE2E8F8)),
+        ),
+      ),
       body: _loadingConvs
           ? const Center(child: CircularProgressIndicator())
           : _conversations.isEmpty
@@ -618,11 +614,15 @@ class _ChatScreenState extends State<ChatScreen> {
   // ── Message thread panel ───────────────────────────────────────
   Widget _buildThread({bool showBackButton = false}) {
     return Scaffold(
-      backgroundColor: VetoPalette.bg,
+      backgroundColor: const Color(0xFFF0F4FF),
       appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        shadowColor: Colors.transparent,
+        surfaceTintColor: Colors.transparent,
         leading: showBackButton
             ? IconButton(
-                icon: const Icon(Icons.arrow_back_rounded),
+                icon: const Icon(Icons.arrow_back_rounded, color: Color(0xFF334155)),
                 onPressed: () => setState(() {
                   _activePartnerId = null;
                   _activePartnerName = null;
@@ -632,30 +632,32 @@ class _ChatScreenState extends State<ChatScreen> {
         title: Row(children: [
           CircleAvatar(
             radius: 16,
-            backgroundColor: VetoPalette.primary.withValues(alpha: 0.2),
+            backgroundColor: const Color(0xFF5B8FFF).withValues(alpha: 0.15),
             child: Text(
               (_activePartnerName?.isNotEmpty == true)
                   ? _activePartnerName![0].toUpperCase()
                   : '?',
-              style: const TextStyle(
-                  color: VetoPalette.primary, fontWeight: FontWeight.w700, fontSize: 14),
+              style: const TextStyle(color: Color(0xFF5B8FFF), fontWeight: FontWeight.w700, fontSize: 14),
             ),
           ),
           const SizedBox(width: 10),
           Expanded(
             child: Text(_activePartnerName ?? '',
-                style: const TextStyle(
-                    color: VetoPalette.text, fontWeight: FontWeight.w700, fontSize: 15),
+                style: const TextStyle(color: Color(0xFF0F172A), fontWeight: FontWeight.w700, fontSize: 15),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis),
           ),
         ]),
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh_rounded),
+            icon: const Icon(Icons.refresh_rounded, color: Color(0xFF334155)),
             onPressed: () => _loadMessages(reset: true),
           ),
         ],
+        bottom: const PreferredSize(
+          preferredSize: Size.fromHeight(1),
+          child: Divider(height: 1, color: Color(0xFFE2E8F8)),
+        ),
       ),
       body: Column(children: [
         // Loading more indicator

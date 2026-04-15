@@ -108,12 +108,19 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
     return Directionality(
       textDirection: AppLanguage.directionOf(code),
       child: Scaffold(
-        backgroundColor: VetoPalette.bg,
+        backgroundColor: const Color(0xFFF0F4FF),
         appBar: AppBar(
-          title: Text(
-            _t(code, 'adminPanel'),
-            style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 18),
+          backgroundColor: Colors.white,
+          elevation: 0,
+          shadowColor: Colors.transparent,
+          surfaceTintColor: Colors.transparent,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Color(0xFF334155), size: 20),
+            onPressed: () => Navigator.of(context).pop(),
           ),
+          title: Text(_t(code, 'adminPanel'),
+              style: const TextStyle(color: Color(0xFF0F172A), fontWeight: FontWeight.w800, fontSize: 18)),
+          centerTitle: true,
           actions: [
             const Padding(
               padding: EdgeInsets.symmetric(horizontal: 8),
@@ -124,36 +131,30 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                 padding: EdgeInsets.all(14),
                 child: SizedBox(
                   width: 18, height: 18,
-                  child: CircularProgressIndicator(
-                      strokeWidth: 2, color: VetoPalette.accent),
+                  child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF5B8FFF)),
                 ),
               ),
             IconButton(
-              icon: const Icon(Icons.home_outlined),
-              tooltip: code == 'he' ? 'דף הבית' : code == 'ru' ? 'Главная' : 'Home',
-              onPressed: () => Navigator.of(context).pushNamed('/landing'),
-            ),
-            IconButton(
-              icon: const Icon(Icons.apps_rounded),
+              icon: const Icon(Icons.apps_rounded, color: Color(0xFF334155)),
               tooltip: _t(code, 'openApp'),
-              onPressed: () =>
-                  Navigator.of(context).pushNamed('/veto_screen'),
+              onPressed: () => Navigator.of(context).pushNamed('/veto_screen'),
             ),
             IconButton(
-              icon: const Icon(Icons.refresh_rounded),
+              icon: const Icon(Icons.refresh_rounded, color: Color(0xFF334155)),
               tooltip: _t(code, 'refresh'),
               onPressed: _loadAll,
             ),
             IconButton(
-              icon: const Icon(Icons.logout, color: VetoPalette.emergency),
+              icon: const Icon(Icons.logout, color: Color(0xFFFF3B3B)),
               tooltip: _t(code, 'logout'),
               onPressed: () => AuthService().logout(context),
             ),
           ],
+          bottom: const PreferredSize(preferredSize: Size.fromHeight(1), child: Divider(height: 1, color: Color(0xFFE2E8F8))),
         ),
         body: RefreshIndicator(
           onRefresh: _loadAll,
-          color: VetoPalette.primary,
+          color: const Color(0xFF5B8FFF),
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
             padding: const EdgeInsets.all(24),
@@ -308,14 +309,13 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
   Widget _sectionHeader(String title) => Padding(
     padding: const EdgeInsets.only(bottom: 12),
     child: Row(children: [
-      Container(width: 20, height: 1.5, color: VetoPalette.primary),
+      Container(width: 20, height: 2, decoration: BoxDecoration(
+        gradient: const LinearGradient(colors: [Color(0xFF5B8FFF), Color(0xFF00C9B1)]),
+        borderRadius: BorderRadius.circular(1),
+      )),
       const SizedBox(width: 8),
-      Text(title.toUpperCase(),
-          style: const TextStyle(
-              color: VetoPalette.primary,
-              fontSize: 10,
-              fontWeight: FontWeight.w800,
-              letterSpacing: 2.5)),
+      Text(title.toUpperCase(), style: const TextStyle(
+          color: Color(0xFF5B8FFF), fontSize: 10, fontWeight: FontWeight.w800, letterSpacing: 2.5)),
     ]),
   );
 
@@ -323,25 +323,22 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
       Container(
         padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 12),
         decoration: BoxDecoration(
-          color: VetoPalette.surface,
-          borderRadius: BorderRadius.circular(18),
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
           border: Border(
             left: BorderSide(color: color, width: 3),
-            top: const BorderSide(color: VetoPalette.border),
-            right: const BorderSide(color: VetoPalette.border),
-            bottom: const BorderSide(color: VetoPalette.border),
+            top: const BorderSide(color: Color(0xFFE2E8F8)),
+            right: const BorderSide(color: Color(0xFFE2E8F8)),
+            bottom: const BorderSide(color: Color(0xFFE2E8F8)),
           ),
+          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 8, offset: const Offset(0, 2))],
         ),
         child: Column(children: [
           Icon(icon, color: color, size: 22),
           const SizedBox(height: 8),
-          Text(value,
-              style: TextStyle(
-                  color: color, fontSize: 26, fontWeight: FontWeight.w900)),
+          Text(value, style: TextStyle(color: color, fontSize: 26, fontWeight: FontWeight.w900)),
           const SizedBox(height: 3),
-          Text(label,
-              style: const TextStyle(
-                  color: VetoPalette.textMuted, fontSize: 11)),
+          Text(label, style: const TextStyle(color: Color(0xFF64748B), fontSize: 11)),
         ]),
       );
 
@@ -350,106 +347,84 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
         margin: const EdgeInsets.only(bottom: 8),
         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
         decoration: BoxDecoration(
-          color: VetoPalette.surface,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: VetoPalette.border),
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: const Color(0xFFE2E8F8)),
+          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 6, offset: const Offset(0, 2))],
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(label,
-                style:
-                    const TextStyle(color: VetoPalette.textMuted, fontSize: 13)),
+            Text(label, style: const TextStyle(color: Color(0xFF64748B), fontSize: 13)),
             Row(children: [
               if (statusColor != null)
                 Container(
                   width: 7, height: 7,
                   margin: const EdgeInsets.only(left: 8, right: 6),
-                  decoration: BoxDecoration(
-                      shape: BoxShape.circle, color: statusColor),
+                  decoration: BoxDecoration(shape: BoxShape.circle, color: statusColor),
                 ),
-              Text(value,
-                  style: TextStyle(
-                    color: statusColor ?? VetoPalette.text,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                  )),
+              Text(value, style: TextStyle(
+                  color: statusColor ?? const Color(0xFF0F172A),
+                  fontSize: 13, fontWeight: FontWeight.w700)),
             ]),
           ],
         ),
       );
 
-  Widget _switchCard(String title, bool value, String subtitle,
-          ValueChanged<bool> onChange) =>
+  Widget _switchCard(String title, bool value, String subtitle, ValueChanged<bool> onChange) =>
       Container(
         margin: const EdgeInsets.only(bottom: 8),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
-          color: VetoPalette.surface,
+          color: Colors.white,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: VetoPalette.border),
+          border: Border.all(color: const Color(0xFFE2E8F8)),
+          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 6, offset: const Offset(0, 2))],
         ),
         child: Row(children: [
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(title,
-                    style: const TextStyle(
-                        fontSize: 14, fontWeight: FontWeight.w500)),
-                const SizedBox(height: 2),
-                Text(subtitle,
-                    style: const TextStyle(
-                        color: VetoPalette.textMuted, fontSize: 12)),
-              ],
-            ),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text(title, style: const TextStyle(color: Color(0xFF0F172A), fontSize: 14, fontWeight: FontWeight.w500)),
+              const SizedBox(height: 2),
+              Text(subtitle, style: const TextStyle(color: Color(0xFF64748B), fontSize: 12)),
+            ]),
           ),
-          Switch(
-              value: value, onChanged: onChange, activeThumbColor: VetoPalette.primary),
+          Switch(value: value, onChanged: onChange, activeThumbColor: const Color(0xFF5B8FFF)),
         ]),
       );
 
-  Widget _actionCard(
-    String title,
-    IconData icon, {
-    required VoidCallback onTap,
-    Color? color,
-    int? badge,
-  }) =>
+  Widget _actionCard(String title, IconData icon, {required VoidCallback onTap, Color? color, int? badge}) =>
       GestureDetector(
         onTap: onTap,
         child: Container(
           margin: const EdgeInsets.only(bottom: 8),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           decoration: BoxDecoration(
-            color: VetoPalette.surface,
+            color: Colors.white,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-                color: color?.withValues(alpha: 0.4) ?? VetoPalette.border),
+            border: Border.all(color: color?.withValues(alpha: 0.3) ?? const Color(0xFFE2E8F8)),
+            boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 6, offset: const Offset(0, 2))],
           ),
           child: Row(children: [
-            Icon(icon, color: color ?? VetoPalette.primary, size: 18),
+            Container(
+              width: 34, height: 34,
+              decoration: BoxDecoration(
+                color: (color ?? const Color(0xFF5B8FFF)).withValues(alpha: 0.10),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(icon, color: color ?? const Color(0xFF5B8FFF), size: 16),
+            ),
             const SizedBox(width: 12),
-            Expanded(
-                child: Text(title, style: const TextStyle(fontSize: 14))),
+            Expanded(child: Text(title, style: const TextStyle(color: Color(0xFF0F172A), fontSize: 14, fontWeight: FontWeight.w500))),
             if (badge != null && badge > 0) ...[
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                decoration: BoxDecoration(
-                  color: VetoPalette.emergency,
-                  borderRadius: BorderRadius.circular(99),
-                ),
-                child: Text('$badge',
-                    style: const TextStyle(
-                        color: VetoColors.white,
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold)),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(color: const Color(0xFFFF3B3B), borderRadius: BorderRadius.circular(99)),
+                child: Text('$badge', style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
               ),
               const SizedBox(width: 4),
             ],
-            Icon(Icons.arrow_forward_ios_rounded,
-                color: color ?? VetoPalette.textSubtle, size: 14),
+            Icon(Icons.arrow_forward_ios_rounded, color: color ?? const Color(0xFF94A3B8), size: 14),
           ]),
         ),
       );

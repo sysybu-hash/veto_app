@@ -684,21 +684,28 @@ class _SubscriptionAdminScreenState
     return Directionality(
       textDirection: isRtl ? TextDirection.rtl : TextDirection.ltr,
       child: Scaffold(
-        backgroundColor: VetoPalette.bg,
+        backgroundColor: const Color(0xFFF0F4FF),
         appBar: AppBar(
-          title: Text(
-            _t(code, 'title'),
-            style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 18),
+          backgroundColor: Colors.white,
+          elevation: 0,
+          shadowColor: Colors.transparent,
+          surfaceTintColor: Colors.transparent,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Color(0xFF334155), size: 20),
+            onPressed: () => Navigator.of(context).pop(),
           ),
+          title: Text(_t(code, 'title'),
+              style: const TextStyle(color: Color(0xFF0F172A), fontWeight: FontWeight.w800, fontSize: 18)),
+          centerTitle: true,
           actions: [
-            IconButton(icon: const Icon(Icons.refresh_rounded), onPressed: _load,
+            IconButton(icon: const Icon(Icons.refresh_rounded, color: Color(0xFF334155)), onPressed: _load,
                 tooltip: _t(code, 'refresh')),
           ],
           bottom: TabBar(
             controller: _tabController,
-            labelColor: VetoPalette.text,
-            unselectedLabelColor: VetoPalette.textMuted,
-            indicatorColor: VetoPalette.primary,
+            labelColor: const Color(0xFF5B8FFF),
+            unselectedLabelColor: const Color(0xFF94A3B8),
+            indicatorColor: const Color(0xFF5B8FFF),
             tabs: [
               Tab(text: _t(code, 'tabUsers'), icon: const Icon(Icons.people_rounded, size: 18)),
               Tab(text: _t(code, 'tabLogs'), icon: const Icon(Icons.history_rounded, size: 18)),
@@ -744,22 +751,22 @@ class _SubscriptionAdminScreenState
       // ── Summary bar ─────────────────────────────────────────
       Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        color: VetoPalette.surface,
+        color: Colors.white,
         child: Column(children: [
           Row(children: [
             _StatChip(icon: Icons.trending_up_rounded, color: VetoPalette.success,
                 label: _t(code, 'monthly'), value: '\$${_monthlyRevenue.toStringAsFixed(0)}'),
             const SizedBox(width: 10),
-            _StatChip(icon: Icons.account_balance_wallet_rounded, color: VetoPalette.accentSky,
+            _StatChip(icon: Icons.account_balance_wallet_rounded, color: const Color(0xFF5B8FFF),
                 label: _t(code, 'allTime'), value: '\$${_totalRevenue.toStringAsFixed(0)}'),
           ]),
           const SizedBox(height: 8),
           Row(children: [
-            _CountBadge(_t(code, 'total'), _subs.length, VetoPalette.textMuted),
+            _CountBadge(_t(code, 'total'), _subs.length, const Color(0xFF64748B)),
             const SizedBox(width: 8),
             _CountBadge(_t(code, 'active'), activeCount, VetoPalette.success),
             const SizedBox(width: 8),
-            _CountBadge('Free', freeCount, VetoPalette.accentSky),
+            _CountBadge('Free', freeCount, const Color(0xFF5B8FFF)),
             const SizedBox(width: 8),
             _CountBadge(_t(code, 'expired'), expiredCount, VetoPalette.warning),
           ]),
@@ -767,27 +774,27 @@ class _SubscriptionAdminScreenState
       ),
       // ── Search ──────────────────────────────────────────────
       Container(
-        color: VetoPalette.surface,
+        color: Colors.white,
         padding: const EdgeInsets.fromLTRB(14, 0, 14, 10),
         child: TextField(
           controller: _searchCtrl,
-          style: const TextStyle(color: VetoPalette.text, fontSize: 14),
+          style: const TextStyle(color: Color(0xFF0F172A), fontSize: 14),
           decoration: InputDecoration(
             hintText: _t(code, 'search'),
-            hintStyle: const TextStyle(color: VetoPalette.textMuted),
-            prefixIcon: const Icon(Icons.search_rounded, color: VetoPalette.textMuted, size: 20),
-            filled: true, fillColor: VetoPalette.bg,
+            hintStyle: const TextStyle(color: Color(0xFF94A3B8)),
+            prefixIcon: const Icon(Icons.search_rounded, color: Color(0xFF94A3B8), size: 20),
+            filled: true, fillColor: const Color(0xFFF0F4FF),
             contentPadding: const EdgeInsets.symmetric(vertical: 10),
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(10),
-                borderSide: const BorderSide(color: VetoPalette.border)),
+                borderSide: const BorderSide(color: Color(0xFFE2E8F8))),
             enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10),
-                borderSide: const BorderSide(color: VetoPalette.border)),
+                borderSide: const BorderSide(color: Color(0xFFE2E8F8))),
             focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10),
-                borderSide: const BorderSide(color: VetoPalette.primary, width: 1.5)),
+                borderSide: const BorderSide(color: Color(0xFF5B8FFF), width: 1.5)),
           ),
         ),
       ),
-      const Divider(height: 1, color: VetoPalette.border),
+      const Divider(height: 1, color: Color(0xFFE2E8F8)),
       Expanded(
         child: _filtered.isEmpty
             ? Center(child: Text(_t(code, 'noSubs'),
@@ -861,9 +868,10 @@ class _LogCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
-        color: VetoPalette.surface,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(10),
         border: Border.all(color: color.withValues(alpha: 0.25)),
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 6, offset: const Offset(0, 2))],
       ),
       child: Row(children: [
         Icon(log.success ? Icons.check_circle_outline_rounded : Icons.cancel_outlined,
@@ -921,12 +929,12 @@ class _SubCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: VetoPalette.surface,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: VetoPalette.border),
+        border: Border.all(color: const Color(0xFFE2E8F8)),
         boxShadow: [BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 6, offset: const Offset(0, 2))],
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 8, offset: const Offset(0, 2))],
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         // User + status

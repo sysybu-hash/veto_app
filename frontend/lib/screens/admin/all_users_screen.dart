@@ -159,23 +159,33 @@ class _AllUsersScreenState extends State<AllUsersScreen> {
     return Directionality(
       textDirection: AppLanguage.directionOf(code),
       child: Scaffold(
-        backgroundColor: VetoPalette.bg,
+        backgroundColor: const Color(0xFFF0F4FF),
         appBar: AppBar(
+          backgroundColor: Colors.white,
+          elevation: 0,
+          shadowColor: Colors.transparent,
+          surfaceTintColor: Colors.transparent,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Color(0xFF334155), size: 20),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
           title: Text(
             '${_t(code, 'users')} (${_loading ? _t(code, 'loading') : _users.length})',
-            style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 17),
+            style: const TextStyle(color: Color(0xFF0F172A), fontWeight: FontWeight.w800, fontSize: 17),
           ),
+          centerTitle: true,
           actions: [
             const Padding(
               padding: EdgeInsets.symmetric(horizontal: 8),
               child: Center(child: AppLanguageMenu(compact: true)),
             ),
-            IconButton(icon: const Icon(Icons.refresh), onPressed: _load, tooltip: _t(code, 'refresh')),
+            IconButton(icon: const Icon(Icons.refresh, color: Color(0xFF334155)), onPressed: _load, tooltip: _t(code, 'refresh')),
           ],
+          bottom: const PreferredSize(preferredSize: Size.fromHeight(1), child: Divider(height: 1, color: Color(0xFFE2E8F8))),
         ),
         floatingActionButton: FloatingActionButton.extended(
           onPressed: () => _showForm(),
-          backgroundColor: VetoPalette.primary,
+          backgroundColor: const Color(0xFF5B8FFF),
           icon: const Icon(Icons.person_add_rounded),
           label: Text(_t(code, 'addUser')),
         ),
@@ -194,23 +204,24 @@ class _AllUsersScreenState extends State<AllUsersScreen> {
                       return Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                         decoration: BoxDecoration(
-                          color: VetoPalette.surface,
+                          color: Colors.white,
                           borderRadius: BorderRadius.circular(12),
                           border: const Border(
-                            left: BorderSide(color: VetoPalette.primary, width: 3),
-                            top: BorderSide(color: VetoPalette.border),
-                            right: BorderSide(color: VetoPalette.border),
-                            bottom: BorderSide(color: VetoPalette.border),
+                            left: BorderSide(color: Color(0xFF5B8FFF), width: 3),
+                            top: BorderSide(color: Color(0xFFE2E8F8)),
+                            right: BorderSide(color: Color(0xFFE2E8F8)),
+                            bottom: BorderSide(color: Color(0xFFE2E8F8)),
                           ),
+                          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 6, offset: const Offset(0, 2))],
                         ),
                         child: Row(children: [
                           CircleAvatar(
                             radius: 20,
-                            backgroundColor: VetoPalette.primary.withValues(alpha: 0.15),
+                            backgroundColor: const Color(0xFF5B8FFF).withValues(alpha: 0.15),
                             child: Text(
                               ((u['full_name'] as String?) ?? '?').isNotEmpty
                                   ? (u['full_name'] as String).characters.first : '?',
-                              style: const TextStyle(color: VetoPalette.primary, fontWeight: FontWeight.bold),
+                              style: const TextStyle(color: Color(0xFF5B8FFF), fontWeight: FontWeight.bold),
                             ),
                           ),
                           const SizedBox(width: 12),
