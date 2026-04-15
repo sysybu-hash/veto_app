@@ -6,7 +6,8 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:http/http.dart' as http;
-import 'package:provider/provider.dart';
+import 'package:provider/provider.dart' as provider;
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'config/app_config.dart';
 import 'core/accessibility/accessibility_settings.dart';
@@ -36,6 +37,42 @@ import 'services/socket_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Global Error Boundary to prevent Red Screen of Death
+  ErrorWidget.builder = (FlutterErrorDetails details) {
+    return Material(
+      child: Container(
+        color: const Color(0xFFF8FAFC),
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.warning_amber_rounded, color: Color(0xFFDC2626), size: 64),
+            const SizedBox(height: 24),
+            const Text(
+              'משהו השתבש',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: Color(0xFF0F172A)),
+            ),
+            const SizedBox(height: 12),
+            const Text(
+              'אנחנו עובדים על זה. נסה לרענן את העמוד.',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 15, color: Color(0xFF64748B)),
+            ),
+            const SizedBox(height: 24),
+            Text(
+              details.exceptionAsString(),
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: Color(0xFF94A3B8), fontSize: 11),
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+        ),
+      ),
+    );
+  };
+
   final languageController = AppLanguageController();
   final accessibilitySettings = AccessibilitySettings();
   // Load language, accessibility prefs, and warm up the backend concurrently.
@@ -45,16 +82,18 @@ Future<void> main() async {
     _warmUpBackend(),
   ]);
   runApp(
-    MultiProvider(
-      providers: [
-        ChangeNotifierProvider.value(value: languageController),
-        ChangeNotifierProvider.value(value: accessibilitySettings),
-        Provider<SocketService>(
-          create: (_) => SocketService(),
-          lazy: true,
-        ),
-      ],
-      child: const VetoApp(),
+    ProviderScope(
+      child: provider.MultiProvider(
+        providers: [
+          provider.ChangeNotifierProvider.value(value: languageController),
+          provider.ChangeNotifierProvider.value(value: accessibilitySettings),
+          provider.Provider<SocketService>(
+            create: (_) => SocketService(),
+            lazy: true,
+          ),
+        ],
+        child: const VetoApp(),
+      ),
     ),
   );
 }
@@ -74,8 +113,8 @@ class VetoApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final language = context.watch<AppLanguageController>();
-    final a11y = context.watch<AccessibilitySettings>();
+    final language = provider.Provider.of<AppLanguageController>(context);
+    final a11y = provider.Provider.of<AccessibilitySettings>(context);
     final baseTheme = VetoTheme.luxuryLight();
 
     return MaterialApp(

@@ -18,6 +18,7 @@ import '../core/i18n/app_language.dart';
 import '../platform/browser_bridge.dart' as browser_bridge;
 import '../core/theme/veto_theme.dart';
 import '../widgets/app_language_menu.dart';
+import '../widgets/accessibility_toolbar.dart';
 import '../services/auth_service.dart';
 import '../services/socket_service.dart';
 import '../services/ai_service.dart';
@@ -948,15 +949,17 @@ class _VetoScreenState extends State<VetoScreen> {
     return Directionality(
       textDirection: isRtl ? TextDirection.rtl : TextDirection.ltr,
       child: Scaffold(
-        backgroundColor: VetoPalette.bg,
         appBar: _buildAppBar(isAdmin),
-        body: SafeArea(
-          child: IndexedStack(
-            index: _tab,
-            children: [
-              _buildWizardTab(isAdmin, isRtl),
-              _buildChatTab(isRtl),
-            ],
+        body: Container(
+          decoration: VetoDecorations.gradientBg(),
+          child: SafeArea(
+            child: IndexedStack(
+              index: _tab,
+              children: [
+                _buildWizardTab(isAdmin, isRtl),
+                _buildChatTab(isRtl),
+              ],
+            ),
           ),
         ),
         bottomNavigationBar: _buildNavBar(isRtl),
@@ -1105,6 +1108,14 @@ class _VetoScreenState extends State<VetoScreen> {
                         : _langKey == 'ru'
                             ? 'Google Карты'
                             : 'Google Maps',
+                  ),
+                  IconButton(
+                    visualDensity: VisualDensity.compact,
+                    constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
+                    icon: const Icon(Icons.accessibility_new_rounded, size: 24),
+                    color: VetoColors.accentDark,
+                    onPressed: () => showAccessibilitySheet(context),
+                    tooltip: _langKey == 'he' ? 'נגישות' : _langKey == 'ru' ? 'Доступность' : 'Accessibility',
                   ),
                   IconButton(
                     visualDensity: VisualDensity.compact,
@@ -1266,12 +1277,19 @@ class _VetoScreenState extends State<VetoScreen> {
     ),
   );
 
-  Widget _sosButton(bool compact) => Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: _isDispatching ? null : _dispatchSOS,
-          borderRadius: BorderRadius.circular(18),
-          child: Ink(
+  Widget _sosButton(bool compact) => Semantics(
+        button: true,
+        label: _langKey == 'he'
+            ? 'לחץ להפעלת מצוקה ושיגור עורך דין'
+            : _langKey == 'ru'
+                ? 'Нажмите для вызова адвоката'
+                : 'Tap to dispatch a lawyer',
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: _isDispatching ? null : _dispatchSOS,
+            borderRadius: BorderRadius.circular(24),
+            child: Ink(
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: _isDispatching
@@ -1279,35 +1297,50 @@ class _VetoScreenState extends State<VetoScreen> {
                         VetoPalette.emergency.withValues(alpha: 0.35),
                         VetoPalette.emergency.withValues(alpha: 0.15),
                       ]
-                    : [VetoPalette.emergency, const Color(0xFFB91C1C)],
+                    : [
+                        const Color(0xFFFF4B4B),
+                        const Color(0xFFDC2626),
+                      ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
-              borderRadius: BorderRadius.circular(18),
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.4),
+                width: 1.5,
+              ),
               boxShadow: _isDispatching
                   ? []
                   : [
                       BoxShadow(
-                        color: VetoPalette.emergency.withValues(alpha: 0.45),
-                        blurRadius: 18,
-                        offset: const Offset(0, 6),
+                        color: VetoPalette.emergency.withValues(alpha: 0.5),
+                        blurRadius: 24,
+                        spreadRadius: 2,
+                        offset: const Offset(0, 8),
                       ),
                     ],
             ),
             child: Padding(
               padding: EdgeInsets.symmetric(
-                vertical: compact ? 18 : 22,
-                horizontal: compact ? 16 : 20,
+                vertical: compact ? 20 : 24,
+                horizontal: compact ? 20 : 24,
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(
-                    Icons.crisis_alert_rounded,
-                    color: Colors.white,
-                    size: compact ? 34 : 38,
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.2),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.crisis_alert_rounded,
+                      color: Colors.white,
+                      size: compact ? 32 : 36,
+                    ),
                   ),
-                  SizedBox(width: compact ? 12 : 16),
+                  SizedBox(width: compact ? 14 : 18),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1326,12 +1359,13 @@ class _VetoScreenState extends State<VetoScreen> {
                                       : 'SOS — Send Legal Help Now'),
                           style: TextStyle(
                             color: Colors.white,
-                            fontSize: compact ? 17 : 19,
+                            fontSize: compact ? 18 : 20,
                             fontWeight: FontWeight.w900,
                             height: 1.15,
+                            letterSpacing: 0.5,
                           ),
                         ),
-                        const SizedBox(height: 4),
+                        const SizedBox(height: 6),
                         Text(
                           _isDispatching
                               ? (_langKey == 'he'
@@ -1347,7 +1381,7 @@ class _VetoScreenState extends State<VetoScreen> {
                           style: TextStyle(
                             color: Colors.white.withValues(alpha: 0.95),
                             fontSize: compact ? 13 : 14,
-                            fontWeight: FontWeight.w700,
+                            fontWeight: FontWeight.w600,
                             height: 1.25,
                           ),
                         ),
@@ -1359,7 +1393,8 @@ class _VetoScreenState extends State<VetoScreen> {
             ),
           ),
         ),
-      );
+      ),
+    );
 
   Widget _secLabel(String txt) => Padding(
         padding: const EdgeInsets.only(bottom: 4),
@@ -1399,10 +1434,13 @@ class _VetoScreenState extends State<VetoScreen> {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        onTap: () => setState(() {
-          _scenario = e.key;
-          _rightsExpanded = true;
-        }),
+        onTap: () {
+          HapticFeedback.selectionClick();
+          setState(() {
+            _scenario = e.key;
+            _rightsExpanded = true;
+          });
+        },
         borderRadius: BorderRadius.circular(14),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
@@ -1410,14 +1448,13 @@ class _VetoScreenState extends State<VetoScreen> {
             horizontal: compact ? 8 : 10,
             vertical: compact ? 10 : 12,
           ),
-          decoration: BoxDecoration(
-            color: sel
-                ? VetoPalette.primary.withValues(alpha: 0.14)
-                : VetoPalette.surface,
-            borderRadius: BorderRadius.circular(14),
+          decoration: VetoDecorations.glassCard(
+            radius: 14,
+            opacity: sel ? 0.8 : 0.4,
+          ).copyWith(
             border: Border.all(
-              color: sel ? VetoPalette.primary : VetoPalette.border,
-              width: sel ? 2.5 : 1,
+              color: sel ? VetoPalette.primary : Colors.white.withValues(alpha: 0.6),
+              width: sel ? 2.5 : 1.5,
             ),
           ),
           child: Column(
@@ -1502,22 +1539,13 @@ class _VetoScreenState extends State<VetoScreen> {
   }
 
   Widget _rightsCard() => Container(
-        decoration: BoxDecoration(
-          color: VetoPalette.surface,
-          borderRadius: BorderRadius.circular(16),
+        decoration: VetoDecorations.glassCard(radius: 16, opacity: 0.6).copyWith(
           border: BorderDirectional(
             top: BorderSide(color: VetoPalette.border.withValues(alpha: 0.9)),
             start: const BorderSide(color: VetoPalette.primary, width: 4),
             end: BorderSide(color: VetoPalette.border.withValues(alpha: 0.9)),
             bottom: BorderSide(color: VetoPalette.border.withValues(alpha: 0.9)),
           ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.04),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
-            ),
-          ],
         ),
         child: Column(
           children: [
@@ -1627,36 +1655,6 @@ class _VetoScreenState extends State<VetoScreen> {
         () => _openContact('audio'),
       ),
       _ctCard(
-        Icons.mic_rounded,
-        _langKey == 'he'
-            ? 'שיחת אודיו'
-            : _langKey == 'ru'
-                ? 'Аудиозвонок'
-                : 'Audio Call',
-        _langKey == 'he'
-            ? 'שיחה קולית מאובטחת'
-            : _langKey == 'ru'
-                ? 'Защищённый голосовой звонок'
-                : 'Encrypted voice session',
-        const Color(0xFF0EA5A4),
-        () => _openContact('audio'),
-      ),
-      _ctCard(
-        Icons.videocam_rounded,
-        _langKey == 'he'
-            ? 'שיחת וידאו'
-            : _langKey == 'ru'
-                ? 'Видеозвонок'
-                : 'Video Call',
-        _langKey == 'he'
-            ? 'וידאו מוצפן (WebRTC)'
-            : _langKey == 'ru'
-                ? 'Видео через WebRTC'
-                : 'Secure WebRTC video',
-        VetoPalette.accentSky,
-        () => _openContact('video'),
-      ),
-      _ctCard(
         Icons.bolt_rounded,
         _langKey == 'he'
             ? 'SOS מהיר'
@@ -1682,24 +1680,19 @@ class _VetoScreenState extends State<VetoScreen> {
     VoidCallback onTap,
   ) =>
       Material(
-        color: VetoPalette.surface,
+        color: Colors.transparent,
         elevation: 0,
         borderRadius: BorderRadius.circular(14),
         child: InkWell(
-          onTap: onTap,
+          onTap: () {
+            HapticFeedback.lightImpact();
+            onTap();
+          },
           borderRadius: BorderRadius.circular(14),
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(14),
+            decoration: VetoDecorations.glassCard(radius: 14, opacity: 0.6).copyWith(
               border: Border.all(color: color.withValues(alpha: 0.5), width: 2),
-              boxShadow: [
-                BoxShadow(
-                  color: color.withValues(alpha: 0.1),
-                  blurRadius: 8,
-                  offset: const Offset(0, 3),
-                ),
-              ],
             ),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.center,

@@ -11,6 +11,9 @@ import '../widgets/app_language_menu.dart';
 //  Dark, dramatic, high-contrast. No logic changes.
 // ═══════════════════════════════════════════════════════════════════
 
+import '../widgets/accessibility_toolbar.dart';
+import '../widgets/ai_chat_dialog.dart';
+
 class LandingScreen extends StatelessWidget {
   const LandingScreen({super.key});
 
@@ -243,11 +246,25 @@ class LandingScreen extends StatelessWidget {
     return Directionality(
       textDirection: dir,
       child: Scaffold(
-        backgroundColor: _Clr.bg,
-        body: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
+        backgroundColor: Colors.transparent,
+        floatingActionButton: FloatingActionButton.extended(
+          onPressed: () => showDialog(
+            context: context,
+            builder: (_) => AiChatDialog(code: code),
+          ),
+          backgroundColor: VetoPalette.primary,
+          icon: const Icon(Icons.auto_awesome, color: Colors.white),
+          label: Text(
+            code == 'he' ? 'שאל את VETO AI' : code == 'ru' ? 'Спросить VETO AI' : 'Ask VETO AI',
+            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          ),
+        ),
+        body: Container(
+          decoration: VetoDecorations.gradientBg(),
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
               // ── NAV ──────────────────────────────────────────────────
               _Nav(code: code, loginLabel: _t(code, 'navLogin'), ctaLabel: _t(code, 'navCta'), onTap: () => _goNext(context)),
 
@@ -334,20 +351,20 @@ class LandingScreen extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 }
 
 // ═══════════════════════════════════════════════════════════════════
 //  Color palette
 // ═══════════════════════════════════════════════════════════════════
 class _Clr {
-  static const bg         = Color(0xFFF8FAFC);
-  static const surface    = Color(0xFFFFFFFF);
-  static const card       = Color(0xFFF0F9FF);
+  static const surface    = Colors.transparent;
+  static const card       = Colors.transparent;
   static const border     = Color(0x330D9488);
-  static const heroBg     = Color(0xFFFFFFFF);
-  static const heroBg2    = Color(0xFFE8F4FC);
+  static const heroBg     = Colors.transparent;
+  static const heroBg2    = Colors.transparent;
   static const heroBorder = Color(0x440D9488);
   static const glow       = Color(0xFF0D9488);
   static const muted      = Color(0xFF64748B);
@@ -469,6 +486,11 @@ class _NavState extends State<_Nav> {
                 ),
             ],
             const Spacer(),
+            IconButton(
+              icon: const Icon(Icons.accessibility_new_rounded, size: 20, color: _Clr.navInk),
+              onPressed: () => showAccessibilitySheet(context),
+              tooltip: widget.code == 'he' ? 'נגישות' : widget.code == 'ru' ? 'Доступность' : 'Accessibility',
+            ),
             const AppLanguageMenu(compact: true),
             const SizedBox(width: 8),
             if (_loggedIn)
@@ -689,9 +711,7 @@ class _StackRail extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: BoxDecoration(
-        color: _Clr.surface,
-        borderRadius: BorderRadius.circular(24),
+      decoration: VetoDecorations.glassCard(radius: 24, opacity: 0.6).copyWith(
         border: Border.all(color: _Clr.border, width: 1.5),
       ),
       clipBehavior: Clip.antiAlias,
@@ -872,9 +892,7 @@ class _FeatureCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: _Clr.card,
-        borderRadius: BorderRadius.circular(20),
+      decoration: VetoDecorations.glassCard(radius: 20, opacity: 0.6).copyWith(
         border: Border(
           left:   BorderSide(color: data.accent, width: 3),
           top:    const BorderSide(color: _Clr.border),
@@ -948,9 +966,7 @@ class _FlowCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: _Clr.card,
-        borderRadius: BorderRadius.circular(20),
+      decoration: VetoDecorations.glassCard(radius: 20, opacity: 0.6).copyWith(
         border: Border.all(color: _Clr.border),
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -994,9 +1010,7 @@ class _PricingCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final inner = Container(
       padding: const EdgeInsets.all(32),
-      decoration: BoxDecoration(
-        color: _Clr.card,
-        borderRadius: BorderRadius.circular(24),
+      decoration: VetoDecorations.glassCard(radius: 24, opacity: 0.6).copyWith(
         border: Border.all(color: VetoPalette.primary.withValues(alpha: 0.4), width: 1.5),
         gradient: LinearGradient(
           colors: [

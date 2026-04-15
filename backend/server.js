@@ -47,6 +47,7 @@ const cors    = require('cors');
 const http    = require('http');
 const helmet  = require('helmet');
 const rateLimit = require('express-rate-limit');
+const mongoSanitize = require('express-mongo-sanitize');
 const { Server } = require('socket.io');
 const connectDB  = require('./src/config/db');
 
@@ -85,7 +86,22 @@ const authLimiter = rateLimit({
   legacyHeaders: false,
   message: { error: 'Too many requests from this IP. Please wait 15 minutes.' },
 });
+
+// ── Global API Rate limiting ──────────────────────────────────
+const apiLimiter = rateLimit({
+  windowMs: 1 * 60 * 1000, // 1 minute
+  max: 150,                // max 150 requests per IP per minute
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many requests, please try again later.' },
+});
+
 app.use(express.json());
+
+// ── Data Sanitization against NoSQL Injection ─────────────────
+app.use(mongoSanitize());
+
+app.use('/api/', apiLimiter);
 
 // ── Static uploads folder (evidence files) ─────────────────
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));

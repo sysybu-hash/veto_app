@@ -68,6 +68,198 @@ const Color _sheetMuted = Color(0xFF64748B);
 String _tx(String code, String k) =>
     (_copy[AppLanguage.normalize(code)] ?? _copy['en']!)[k] ?? k;
 
+void showAccessibilitySheet(BuildContext context) {
+  final a11y = context.read<AccessibilitySettings>();
+  final code = context.read<AppLanguageController>().code;
+
+  showModalBottomSheet<void>(
+    context: context,
+    isScrollControlled: true,
+    useRootNavigator: true,
+    isDismissible: true,
+    enableDrag: true,
+    barrierColor: const Color(0x66000000),
+    showDragHandle: true,
+    backgroundColor: _sheetBg,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+    ),
+    builder: (sheetContext) {
+      final viewInsets = MediaQuery.viewInsetsOf(sheetContext).bottom;
+      final maxH = MediaQuery.sizeOf(sheetContext).height * 0.92;
+
+      return SafeArea(
+        minimum: const EdgeInsets.only(top: 8),
+        child: Material(
+          color: _sheetBg,
+          child: ConstrainedBox(
+            constraints: BoxConstraints(maxHeight: maxH),
+            child: ListenableBuilder(
+              listenable: a11y,
+              builder: (context, _) {
+                return SingleChildScrollView(
+                  padding: EdgeInsets.fromLTRB(20, 4, 20, 20 + viewInsets),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Text(
+                        _tx(code, 'title'),
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontFamily: 'Heebo',
+                          fontSize: 22,
+                          fontWeight: FontWeight.w900,
+                          color: _sheetInk,
+                          height: 1.2,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        _tx(code, 'hint'),
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontFamily: 'Heebo',
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: _sheetMuted,
+                          height: 1.35,
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      Text(
+                        _tx(code, 'text'),
+                        style: const TextStyle(
+                          fontFamily: 'Heebo',
+                          fontSize: 15,
+                          fontWeight: FontWeight.w800,
+                          color: _sheetInk,
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              onPressed: a11y.textStep > 0
+                                  ? () => a11y.setTextStep(a11y.textStep - 1)
+                                  : null,
+                              icon: const Icon(Icons.text_decrease_rounded,
+                                  color: VetoColors.accentDark),
+                              label: Text(_tx(code, 'smaller'),
+                                  style: const TextStyle(color: _sheetInk)),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: FilledButton.tonalIcon(
+                              onPressed: a11y.textStep < 4
+                                  ? () => a11y.setTextStep(a11y.textStep + 1)
+                                  : null,
+                              icon: const Icon(Icons.text_increase_rounded,
+                                  color: VetoColors.accentDark),
+                              label: Text(_tx(code, 'larger'),
+                                  style: const TextStyle(color: _sheetInk)),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 24),
+                      SwitchListTile(
+                        value: a11y.highContrast,
+                        onChanged: a11y.setHighContrast,
+                        title: Text(_tx(code, 'highContrast'),
+                            style: const TextStyle(
+                                fontFamily: 'Heebo',
+                                color: _sheetInk,
+                                fontWeight: FontWeight.w600)),
+                        activeColor: VetoColors.accent,
+                        contentPadding: EdgeInsets.zero,
+                      ),
+                      SwitchListTile(
+                        value: a11y.boldBody,
+                        onChanged: a11y.setBoldBody,
+                        title: Text(_tx(code, 'bold'),
+                            style: const TextStyle(
+                                fontFamily: 'Heebo',
+                                color: _sheetInk,
+                                fontWeight: FontWeight.w600)),
+                        activeColor: VetoColors.accent,
+                        contentPadding: EdgeInsets.zero,
+                      ),
+                      SwitchListTile(
+                        value: a11y.reduceMotion,
+                        onChanged: a11y.setReduceMotion,
+                        title: Text(_tx(code, 'reduceMotion'),
+                            style: const TextStyle(
+                                fontFamily: 'Heebo',
+                                color: _sheetInk,
+                                fontWeight: FontWeight.w600)),
+                        activeColor: VetoColors.accent,
+                        contentPadding: EdgeInsets.zero,
+                      ),
+                      SwitchListTile(
+                        value: a11y.underlineLinks,
+                        onChanged: a11y.setUnderlineLinks,
+                        title: Text(_tx(code, 'underline'),
+                            style: const TextStyle(
+                                fontFamily: 'Heebo',
+                                color: _sheetInk,
+                                fontWeight: FontWeight.w600)),
+                        activeColor: VetoColors.accent,
+                        contentPadding: EdgeInsets.zero,
+                      ),
+                      SwitchListTile(
+                        value: a11y.strongerFocus,
+                        onChanged: a11y.setStrongerFocus,
+                        title: Text(_tx(code, 'focus'),
+                            style: const TextStyle(
+                                fontFamily: 'Heebo',
+                                color: _sheetInk,
+                                fontWeight: FontWeight.w600)),
+                        activeColor: VetoColors.accent,
+                        contentPadding: EdgeInsets.zero,
+                      ),
+                      const SizedBox(height: 24),
+                      Row(
+                        children: [
+                          TextButton(
+                            onPressed: a11y.resetAll,
+                            style: TextButton.styleFrom(
+                                foregroundColor: VetoColors.error),
+                            child: Text(_tx(code, 'reset'),
+                                style: const TextStyle(
+                                    fontFamily: 'Heebo',
+                                    fontWeight: FontWeight.w700)),
+                          ),
+                          const Spacer(),
+                          FilledButton(
+                            onPressed: () => Navigator.pop(sheetContext),
+                            style: FilledButton.styleFrom(
+                              backgroundColor: _sheetInk,
+                              foregroundColor: _sheetBg,
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12)),
+                            ),
+                            child: Text(_tx(code, 'close'),
+                                style: const TextStyle(
+                                    fontFamily: 'Heebo',
+                                    fontWeight: FontWeight.w700)),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+      );
+    },
+  );
+}
+
 /// Optional host — currently unused (see file header).
 class AccessibilityToolbarHost extends StatelessWidget {
   final GlobalKey<NavigatorState> navigatorKey;

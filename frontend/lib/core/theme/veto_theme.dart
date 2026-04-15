@@ -357,26 +357,41 @@ class VetoTheme {
 class VetoDecorations {
   VetoDecorations._();
 
-  static BoxDecoration glassCard({double radius = 16, double opacity = 0.12}) =>
+  static BoxDecoration glassCard({double radius = 16, double opacity = 0.6}) =>
       BoxDecoration(
-        color: Color.fromRGBO(13, 148, 136, opacity),
+        color: Colors.white.withValues(alpha: opacity),
         borderRadius: BorderRadius.circular(radius),
-        border: Border.all(color: VetoColors.border, width: 1),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.8), width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF0D9488).withValues(alpha: 0.05),
+            blurRadius: 20,
+            spreadRadius: 0,
+            offset: const Offset(0, 8),
+          ),
+        ],
       );
 
   static BoxDecoration surfaceCard({double radius = 16}) => BoxDecoration(
-        color: VetoColors.surface,
+        color: VetoColors.surface.withValues(alpha: 0.9),
         borderRadius: BorderRadius.circular(radius),
-        border: Border.all(color: VetoColors.border, width: 1),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.8), width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
       );
 
   static BoxDecoration goldCard({double radius = 12}) => BoxDecoration(
-        color: VetoColors.surface,
+        color: Colors.white.withValues(alpha: 0.85),
         borderRadius: BorderRadius.circular(radius),
         border: Border.all(color: VetoColors.accent.withValues(alpha: 0.35), width: 1.5),
         boxShadow: [
           BoxShadow(
-            color: VetoColors.accentGlow.withValues(alpha: 0.35),
+            color: VetoColors.accentGlow.withValues(alpha: 0.25),
             blurRadius: 14,
             spreadRadius: 0,
           ),
@@ -385,14 +400,14 @@ class VetoDecorations {
 
   static BoxDecoration gradientBg() => const BoxDecoration(
         gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
           colors: [
-            Color(0xFFE8F4FC),
-            Color(0xFFF8FAFC),
-            Color(0xFFFFFFFF),
+            Color(0xFFE0F2FE), // Light sky blue
+            Color(0xFFF0FDF4), // Light mint
+            Color(0xFFFFFFFF), // White
           ],
-          stops: [0.0, 0.45, 1.0],
+          stops: [0.0, 0.5, 1.0],
         ),
       );
 
