@@ -949,7 +949,7 @@ class _VetoScreenState extends State<VetoScreen> {
     return Directionality(
       textDirection: isRtl ? TextDirection.rtl : TextDirection.ltr,
       child: Scaffold(
-        backgroundColor: const Color(0xFF0A1628),
+        backgroundColor: const Color(0xFFF0F4FF),
         appBar: _buildAppBar(isAdmin),
         body: Stack(
           children: [
@@ -976,20 +976,20 @@ class _VetoScreenState extends State<VetoScreen> {
 
   // ── AppBar (balanced: langs | brand | tools) ──────────────
   PreferredSizeWidget _buildAppBar(bool isAdmin) => AppBar(
-    backgroundColor: const Color(0xCC0A1628),
+    backgroundColor: const Color(0xEEFFFFFF),
     surfaceTintColor: Colors.transparent,
     automaticallyImplyLeading: false,
     elevation: 0,
     scrolledUnderElevation: 0,
     shadowColor: Colors.transparent,
     shape: Border(
-      bottom: BorderSide(color: const Color(0xFF00E5CC).withValues(alpha: 0.3), width: 1),
+      bottom: BorderSide(color: const Color(0xFF5B8FFF).withValues(alpha: 0.18), width: 1),
     ),
     centerTitle: false,
     titleSpacing: 0,
     toolbarHeight: 56,
-    iconTheme: const IconThemeData(color: VetoColors.accent, size: 24),
-    actionsIconTheme: const IconThemeData(color: VetoColors.accent, size: 24),
+    iconTheme: const IconThemeData(color: VetoColors.inkDark, size: 24),
+    actionsIconTheme: const IconThemeData(color: VetoColors.inkDark, size: 24),
     title: Row(
       children: [
         Expanded(
@@ -1029,11 +1029,11 @@ class _VetoScreenState extends State<VetoScreen> {
                 Container(
                   padding: const EdgeInsets.all(6),
                   decoration: BoxDecoration(
-                    color: VetoColors.accent.withValues(alpha: 0.12),
+                    color: const Color(0xFF5B8FFF).withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: VetoColors.accent.withValues(alpha: 0.3), width: 1),
+                    border: Border.all(color: const Color(0xFF5B8FFF).withValues(alpha: 0.3), width: 1),
                   ),
-                  child: const Icon(Icons.shield_rounded, color: VetoColors.accent, size: 20),
+                  child: const Icon(Icons.shield_rounded, color: Color(0xFF5B8FFF), size: 20),
                 ),
                 const SizedBox(width: 8),
                 Text(
@@ -1042,8 +1042,8 @@ class _VetoScreenState extends State<VetoScreen> {
                     fontWeight: FontWeight.w900,
                     letterSpacing: 4,
                     fontSize: 17,
-                    color: VetoColors.accent,
-                    shadows: [Shadow(color: VetoColors.accent.withValues(alpha: 0.3), blurRadius: 8)],
+                    color: VetoColors.inkDark,
+                    shadows: [Shadow(color: const Color(0xFF5B8FFF).withValues(alpha: 0.2), blurRadius: 6)],
                   ),
                 ),
                 const SizedBox(width: 4),
@@ -1091,7 +1091,7 @@ class _VetoScreenState extends State<VetoScreen> {
                     visualDensity: VisualDensity.compact,
                     constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
                     icon: const Icon(Icons.home_outlined, size: 24),
-                    color: Colors.white70,
+                    color: VetoColors.inkMedium,
                     onPressed: () => Navigator.pushNamed(context, '/landing'),
                     tooltip: _langKey == 'he' ? 'דף הבית' : _langKey == 'ru' ? 'Главная' : 'Home',
                   ),
@@ -1099,7 +1099,7 @@ class _VetoScreenState extends State<VetoScreen> {
                     visualDensity: VisualDensity.compact,
                     constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
                     icon: const Icon(Icons.folder_special_outlined, size: 24),
-                    color: Colors.white70,
+                    color: VetoColors.inkMedium,
                     onPressed: () => Navigator.pushNamed(context, '/files_vault'),
                     tooltip: _langKey == 'he' ? 'כספת קבצים' : _langKey == 'ru' ? 'Хранилище' : 'File Vault',
                   ),
@@ -1107,7 +1107,7 @@ class _VetoScreenState extends State<VetoScreen> {
                     visualDensity: VisualDensity.compact,
                     constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
                     icon: const Icon(Icons.map_outlined, size: 24),
-                    color: Colors.white70,
+                    color: VetoColors.inkMedium,
                     onPressed: () => Navigator.pushNamed(context, '/maps'),
                     tooltip: _langKey == 'he'
                         ? 'מפת Google'
@@ -1119,7 +1119,7 @@ class _VetoScreenState extends State<VetoScreen> {
                     visualDensity: VisualDensity.compact,
                     constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
                     icon: const Icon(Icons.accessibility_new_rounded, size: 24),
-                    color: Colors.white70,
+                    color: VetoColors.inkMedium,
                     onPressed: () => showAccessibilitySheet(context),
                     tooltip: _langKey == 'he' ? 'נגישות' : _langKey == 'ru' ? 'Доступность' : 'Accessibility',
                   ),
@@ -1127,7 +1127,7 @@ class _VetoScreenState extends State<VetoScreen> {
                     visualDensity: VisualDensity.compact,
                     constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
                     icon: const Icon(Icons.settings_outlined, size: 24),
-                    color: Colors.white70,
+                    color: VetoColors.inkMedium,
                     onPressed: () => Navigator.pushNamed(context, '/settings'),
                     tooltip: _langKey == 'he' ? 'הגדרות' : _langKey == 'ru' ? 'Настройки' : 'Settings',
                   ),
@@ -1135,7 +1135,7 @@ class _VetoScreenState extends State<VetoScreen> {
                     visualDensity: VisualDensity.compact,
                     constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
                     icon: const Icon(Icons.person_outline, size: 24),
-                    color: Colors.white70,
+                    color: VetoColors.inkMedium,
                     onPressed: () => Navigator.pushNamed(context, '/profile'),
                     tooltip: _langKey == 'he' ? 'פרופיל' : _langKey == 'ru' ? 'Профиль' : 'Profile',
                   ),
@@ -1143,7 +1143,7 @@ class _VetoScreenState extends State<VetoScreen> {
                     visualDensity: VisualDensity.compact,
                     constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
                     icon: const Icon(Icons.logout_rounded, size: 24),
-                    color: VetoColors.silver,
+                    color: VetoColors.inkLight,
                     tooltip: _langKey == 'he' ? 'התנתקות' : _langKey == 'ru' ? 'Выход' : 'Log out',
                     onPressed: () => AuthService().logout(context),
                   ),
@@ -1156,33 +1156,36 @@ class _VetoScreenState extends State<VetoScreen> {
     ),
     bottom: PreferredSize(
       preferredSize: const Size.fromHeight(1),
-      child: Container(height: 1, color: VetoColors.accent.withValues(alpha: 0.2)),
+      child: Container(height: 1, color: const Color(0xFF5B8FFF).withValues(alpha: 0.15)),
     ),
   );
 
   // ── Bottom Nav ────────────────────────────────────────────
   Widget _buildNavBar(bool isRtl) => Container(
     decoration: BoxDecoration(
-      color: const Color(0xEE0A1628),
-      border: Border(top: BorderSide(color: const Color(0xFF00E5CC).withValues(alpha: 0.25), width: 1)),
+      color: const Color(0xEEFFFFFF),
+      border: Border(top: BorderSide(color: const Color(0xFF5B8FFF).withValues(alpha: 0.18), width: 1)),
+      boxShadow: [
+        BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 8, offset: const Offset(0, -2)),
+      ],
     ),
     child: NavigationBar(
       height: 72,
       selectedIndex: _tab,
       backgroundColor: Colors.transparent,
       surfaceTintColor: Colors.transparent,
-      indicatorColor: const Color(0xFF00E5CC).withValues(alpha: 0.2),
+      indicatorColor: const Color(0xFF5B8FFF).withValues(alpha: 0.12),
       labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
       onDestinationSelected: (i) => setState(() => _tab = i),
       destinations: [
         NavigationDestination(
-          icon: const Icon(Icons.shield_outlined, color: Colors.white38, size: 26),
-          selectedIcon: const Icon(Icons.shield, color: Color(0xFF00E5CC), size: 26),
+          icon: const Icon(Icons.shield_outlined, color: VetoColors.inkFaint, size: 26),
+          selectedIcon: const Icon(Icons.shield, color: Color(0xFF5B8FFF), size: 26),
           label: isRtl ? 'VETO מגן' : 'VETO Shield',
         ),
         NavigationDestination(
-          icon: const Icon(Icons.chat_bubble_outline_rounded, color: Colors.white38, size: 26),
-          selectedIcon: const Icon(Icons.chat_bubble_rounded, color: Color(0xFF00E5CC), size: 26),
+          icon: const Icon(Icons.chat_bubble_outline_rounded, color: VetoColors.inkFaint, size: 26),
+          selectedIcon: const Icon(Icons.chat_bubble_rounded, color: Color(0xFF5B8FFF), size: 26),
           label: isRtl ? 'AI עוזר' : 'AI Assistant',
         ),
       ],
@@ -1252,18 +1255,18 @@ class _VetoScreenState extends State<VetoScreen> {
     child: Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: (_isDispatching ? const Color(0xFFFF4B4B) : const Color(0xFF00E5CC))
-            .withValues(alpha: 0.12),
+        color: const Color(0xFFFFFFFF),
         borderRadius: BorderRadius.circular(999),
         border: Border.all(
-            color: (_isDispatching ? const Color(0xFFFF4B4B) : const Color(0xFF00E5CC))
+            color: (_isDispatching ? const Color(0xFFFF3B3B) : const Color(0xFF5B8FFF))
                 .withValues(alpha: 0.4)),
         boxShadow: [
           BoxShadow(
-            color: (_isDispatching ? const Color(0xFFFF4B4B) : const Color(0xFF00E5CC))
-                .withValues(alpha: 0.15),
+            color: (_isDispatching ? const Color(0xFFFF3B3B) : const Color(0xFF5B8FFF))
+                .withValues(alpha: 0.10),
             blurRadius: 12,
           ),
+          BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 6),
         ],
       ),
       child: Row(mainAxisSize: MainAxisSize.min, children: [
@@ -1271,11 +1274,11 @@ class _VetoScreenState extends State<VetoScreen> {
             width: 8, height: 8,
             decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: _isDispatching ? const Color(0xFFFF4B4B) : const Color(0xFF00E5CC),
+                color: _isDispatching ? const Color(0xFFFF3B3B) : const Color(0xFF22C55E),
                 boxShadow: [
                   BoxShadow(
-                    color: (_isDispatching ? const Color(0xFFFF4B4B) : const Color(0xFF00E5CC))
-                        .withValues(alpha: 0.8),
+                    color: (_isDispatching ? const Color(0xFFFF3B3B) : const Color(0xFF22C55E))
+                        .withValues(alpha: 0.6),
                     blurRadius: 6,
                   ),
                 ])),
@@ -1283,14 +1286,14 @@ class _VetoScreenState extends State<VetoScreen> {
         Text(
           _isDispatching ? _l.broadcasting : _l.protected,
           style: TextStyle(
-              color: _isDispatching ? const Color(0xFFFF4B4B) : const Color(0xFF00E5CC),
+              color: _isDispatching ? const Color(0xFFFF3B3B) : VetoColors.inkDark,
               fontWeight: FontWeight.w800,
               fontSize: 14),
         ),
         if (_phone.isNotEmpty) ...[
           const SizedBox(width: 10),
           Text(_phone,
-              style: const TextStyle(color: Colors.white38, fontSize: 11),
+              style: const TextStyle(color: VetoColors.inkFaint, fontSize: 11),
               textDirection: TextDirection.ltr),
         ],
       ]),
@@ -1422,8 +1425,8 @@ class _VetoScreenState extends State<VetoScreen> {
                         ? 'Нажмите для вызова адвоката'
                         : 'Tap to instantly dispatch a lawyer'),
             textAlign: TextAlign.center,
-            style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.6),
+            style: const TextStyle(
+              color: VetoColors.inkLight,
               fontSize: 13,
               fontWeight: FontWeight.w500,
               height: 1.3,
@@ -1442,22 +1445,18 @@ class _VetoScreenState extends State<VetoScreen> {
               width: 3,
               height: 14,
               decoration: BoxDecoration(
-                color: const Color(0xFF00E5CC),
+                color: const Color(0xFF5B8FFF),
                 borderRadius: BorderRadius.circular(2),
-                boxShadow: [
-                  BoxShadow(color: const Color(0xFF00E5CC).withValues(alpha: 0.6), blurRadius: 6),
-                ],
               ),
             ),
             const SizedBox(width: 8),
             Text(
               txt.toUpperCase(),
               style: const TextStyle(
-                color: Color(0xFF00E5CC),
+                color: VetoColors.inkMedium,
                 fontSize: 11,
                 fontWeight: FontWeight.w900,
                 letterSpacing: 2.0,
-                shadows: [Shadow(color: Color(0x6600E5CC), blurRadius: 8)],
               ),
             ),
           ],
@@ -1492,28 +1491,28 @@ class _VetoScreenState extends State<VetoScreen> {
           ),
           decoration: BoxDecoration(
             color: sel
-                ? const Color(0xFF00E5CC).withValues(alpha: 0.15)
-                : const Color(0xFF0D1F3C).withValues(alpha: 0.75),
+                ? const Color(0xFF5B8FFF).withValues(alpha: 0.10)
+                : const Color(0xFFFFFFFF),
             borderRadius: BorderRadius.circular(14),
             border: Border.all(
               color: sel
-                  ? const Color(0xFF00E5CC).withValues(alpha: 0.8)
-                  : Colors.white.withValues(alpha: 0.12),
+                  ? const Color(0xFF5B8FFF).withValues(alpha: 0.7)
+                  : const Color(0xFFE2E8F8),
               width: sel ? 1.5 : 1,
             ),
             boxShadow: sel
                 ? [
                     BoxShadow(
-                      color: const Color(0xFF00E5CC).withValues(alpha: 0.2),
+                      color: const Color(0xFF5B8FFF).withValues(alpha: 0.15),
                       blurRadius: 16,
                       spreadRadius: 0,
                     ),
                   ]
                 : [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.2),
+                      color: Colors.black.withValues(alpha: 0.05),
                       blurRadius: 8,
-                      offset: const Offset(0, 4),
+                      offset: const Offset(0, 3),
                     ),
                   ],
           ),
@@ -1525,33 +1524,30 @@ class _VetoScreenState extends State<VetoScreen> {
                 padding: EdgeInsets.all(circlePad),
                 decoration: BoxDecoration(
                   color: sel
-                      ? const Color(0xFF00E5CC).withValues(alpha: 0.2)
-                      : Colors.white.withValues(alpha: 0.07),
+                      ? const Color(0xFF5B8FFF).withValues(alpha: 0.15)
+                      : const Color(0xFFEEF2FF),
                   shape: BoxShape.circle,
                   border: Border.all(
                     color: sel
-                        ? const Color(0xFF00E5CC).withValues(alpha: 0.5)
-                        : Colors.white.withValues(alpha: 0.1),
+                        ? const Color(0xFF5B8FFF).withValues(alpha: 0.5)
+                        : const Color(0xFFE2E8F8),
                     width: 1,
                   ),
                 ),
                 child: Icon(
                   _scenarioIcon(e.key),
                   size: iconSize,
-                  color: sel ? const Color(0xFF00E5CC) : Colors.white70,
+                  color: sel ? const Color(0xFF5B8FFF) : VetoColors.inkMedium,
                 ),
               ),
               SizedBox(height: compact ? 6 : 8),
               Text(
                 lbl,
                 style: TextStyle(
-                  color: sel ? const Color(0xFF00E5CC) : Colors.white,
+                  color: sel ? const Color(0xFF5B8FFF) : VetoColors.inkDark,
                   fontSize: compact ? 12.5 : 12.5,
                   fontWeight: sel ? FontWeight.w900 : FontWeight.w600,
                   height: 1.2,
-                  shadows: sel
-                      ? [const Shadow(color: Color(0x5500E5CC), blurRadius: 6)]
-                      : null,
                 ),
                 textAlign: TextAlign.center,
                 maxLines: 2,
@@ -1610,19 +1606,24 @@ class _VetoScreenState extends State<VetoScreen> {
 
   Widget _rightsCard() => Container(
         decoration: BoxDecoration(
-          color: const Color(0xBB0D1F3C),
+          color: const Color(0xFFFFFFFF),
           borderRadius: BorderRadius.circular(16),
           border: const BorderDirectional(
-            top: BorderSide(color: Color(0x22FFFFFF)),
-            end: BorderSide(color: Color(0x22FFFFFF)),
-            bottom: BorderSide(color: Color(0x22FFFFFF)),
-            start: BorderSide(color: Color(0xFF00E5CC), width: 3),
+            top: BorderSide(color: VetoColors.border),
+            end: BorderSide(color: VetoColors.border),
+            bottom: BorderSide(color: VetoColors.border),
+            start: BorderSide(color: Color(0xFF5B8FFF), width: 3),
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.25),
+              color: const Color(0xFF5B8FFF).withValues(alpha: 0.07),
               blurRadius: 16,
               offset: const Offset(0, 6),
+            ),
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.04),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
             ),
           ],
         ),
@@ -1636,7 +1637,7 @@ class _VetoScreenState extends State<VetoScreen> {
                 child: Row(
                   children: [
                     const Icon(Icons.verified_user_rounded,
-                        color: Color(0xFF00E5CC), size: 22),
+                        color: Color(0xFF5B8FFF), size: 22),
                     const SizedBox(width: 10),
                     Expanded(
                       child: Text(
@@ -1646,7 +1647,7 @@ class _VetoScreenState extends State<VetoScreen> {
                                 ? 'Ваши права — $_sLabel'
                                 : 'Your Rights — $_sLabel',
                         style: const TextStyle(
-                          color: Colors.white,
+                          color: VetoColors.inkDark,
                           fontWeight: FontWeight.w900,
                           fontSize: 16,
                           height: 1.25,
@@ -1655,7 +1656,7 @@ class _VetoScreenState extends State<VetoScreen> {
                     ),
                     const Icon(
                       Icons.keyboard_arrow_down_rounded,
-                      color: Color(0xFF00E5CC),
+                      color: Color(0xFF5B8FFF),
                       size: 28,
                     ),
                   ],
@@ -1680,7 +1681,7 @@ class _VetoScreenState extends State<VetoScreen> {
                                 height: 7,
                                 decoration: const BoxDecoration(
                                   shape: BoxShape.circle,
-                                  color: Color(0xFF00E5CC),
+                                  color: Color(0xFF5B8FFF),
                                 ),
                               ),
                               const SizedBox(width: 10),
@@ -1688,7 +1689,7 @@ class _VetoScreenState extends State<VetoScreen> {
                                 child: Text(
                                   r,
                                   style: const TextStyle(
-                                    color: Colors.white,
+                                    color: VetoColors.inkMedium,
                                     fontSize: 15,
                                     fontWeight: FontWeight.w600,
                                     height: 1.45,
@@ -1769,19 +1770,19 @@ class _VetoScreenState extends State<VetoScreen> {
             child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             decoration: BoxDecoration(
-              color: const Color(0xBB0D1F3C),
+              color: const Color(0xFFFFFFFF),
               borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: color.withValues(alpha: 0.45), width: 1.5),
+              border: Border.all(color: color.withValues(alpha: 0.35), width: 1.5),
               boxShadow: [
                 BoxShadow(
-                  color: color.withValues(alpha: 0.12),
+                  color: color.withValues(alpha: 0.08),
                   blurRadius: 16,
                   spreadRadius: 0,
                 ),
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.2),
+                  color: Colors.black.withValues(alpha: 0.04),
                   blurRadius: 8,
-                  offset: const Offset(0, 4),
+                  offset: const Offset(0, 3),
                 ),
               ],
             ),
@@ -1793,12 +1794,9 @@ class _VetoScreenState extends State<VetoScreen> {
                   height: 48,
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
-                    color: color.withValues(alpha: 0.18),
+                    color: color.withValues(alpha: 0.12),
                     shape: BoxShape.circle,
-                    border: Border.all(color: color.withValues(alpha: 0.35), width: 1),
-                    boxShadow: [
-                      BoxShadow(color: color.withValues(alpha: 0.2), blurRadius: 10),
-                    ],
+                    border: Border.all(color: color.withValues(alpha: 0.25), width: 1),
                   ),
                   child: Icon(icon, color: color, size: 26),
                 ),
@@ -1812,7 +1810,7 @@ class _VetoScreenState extends State<VetoScreen> {
                       Text(
                         label,
                         style: const TextStyle(
-                          color: Colors.white,
+                          color: VetoColors.inkDark,
                           fontWeight: FontWeight.w800,
                           fontSize: 15,
                           height: 1.2,
@@ -1823,8 +1821,8 @@ class _VetoScreenState extends State<VetoScreen> {
                         subtitle,
                         maxLines: 3,
                         overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.55),
+                        style: const TextStyle(
+                          color: VetoColors.inkLight,
                           fontWeight: FontWeight.w500,
                           fontSize: 12,
                           height: 1.25,
@@ -1887,12 +1885,12 @@ class _VetoScreenState extends State<VetoScreen> {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
             decoration: BoxDecoration(
-              color: const Color(0xBB0D1F3C),
+              color: const Color(0xFFFFFFFF),
               borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: color.withValues(alpha: 0.3), width: 1.5),
+              border: Border.all(color: color.withValues(alpha: 0.25), width: 1.5),
               boxShadow: [
-                BoxShadow(color: color.withValues(alpha: 0.08), blurRadius: 12),
-                BoxShadow(color: Colors.black.withValues(alpha: 0.2), blurRadius: 8, offset: const Offset(0, 4)),
+                BoxShadow(color: color.withValues(alpha: 0.06), blurRadius: 12),
+                BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 8, offset: const Offset(0, 3)),
               ],
             ),
             child: Column(
@@ -1902,9 +1900,9 @@ class _VetoScreenState extends State<VetoScreen> {
                   width: 42,
                   height: 42,
                   decoration: BoxDecoration(
-                    color: color.withValues(alpha: 0.16),
+                    color: color.withValues(alpha: 0.10),
                     shape: BoxShape.circle,
-                    border: Border.all(color: color.withValues(alpha: 0.3), width: 1),
+                    border: Border.all(color: color.withValues(alpha: 0.2), width: 1),
                   ),
                   child: Icon(icon, color: color, size: 20),
                 ),
@@ -1912,7 +1910,7 @@ class _VetoScreenState extends State<VetoScreen> {
                 Text(
                   label,
                   style: const TextStyle(
-                    color: Colors.white,
+                    color: VetoColors.inkDark,
                     fontSize: 11.5,
                     fontWeight: FontWeight.w700,
                     height: 1.2,
@@ -2864,63 +2862,63 @@ class _AuroraPainter extends CustomPainter {
     final w = size.width;
     final h = size.height;
 
-    // Deep navy base
+    // Light white-blue base
     canvas.drawRect(
       Rect.fromLTWH(0, 0, w, h),
-      Paint()..color = const Color(0xFF0A1628),
+      Paint()..color = const Color(0xFFF0F4FF),
     );
 
-    // Blob 1: teal/cyan top-left
+    // Blob 1: teal top-left
     final paint1 = Paint()
       ..shader = RadialGradient(
         colors: [
-          const Color(0xFF00E5CC).withValues(alpha: 0.30),
-          const Color(0xFF00E5CC).withValues(alpha: 0.0),
+          const Color(0xFF00C9B1).withValues(alpha: 0.18),
+          const Color(0xFF00C9B1).withValues(alpha: 0.0),
         ],
       ).createShader(Rect.fromCircle(
-        center: Offset(w * 0.1, h * 0.15),
-        radius: w * 0.55,
+        center: Offset(w * 0.1, h * 0.12),
+        radius: w * 0.6,
       ));
-    canvas.drawCircle(Offset(w * 0.1, h * 0.15), w * 0.55, paint1);
+    canvas.drawCircle(Offset(w * 0.1, h * 0.12), w * 0.6, paint1);
 
     // Blob 2: sky blue top-right
     final paint2 = Paint()
       ..shader = RadialGradient(
         colors: [
-          const Color(0xFF38BDF8).withValues(alpha: 0.25),
+          const Color(0xFF38BDF8).withValues(alpha: 0.18),
           const Color(0xFF38BDF8).withValues(alpha: 0.0),
         ],
       ).createShader(Rect.fromCircle(
-        center: Offset(w * 0.88, h * 0.12),
-        radius: w * 0.5,
+        center: Offset(w * 0.92, h * 0.10),
+        radius: w * 0.55,
       ));
-    canvas.drawCircle(Offset(w * 0.88, h * 0.12), w * 0.5, paint2);
+    canvas.drawCircle(Offset(w * 0.92, h * 0.10), w * 0.55, paint2);
 
-    // Blob 3: violet/purple mid-bottom
+    // Blob 3: lavender bottom-center
     final paint3 = Paint()
       ..shader = RadialGradient(
         colors: [
-          const Color(0xFFA78BFA).withValues(alpha: 0.20),
+          const Color(0xFFA78BFA).withValues(alpha: 0.14),
           const Color(0xFFA78BFA).withValues(alpha: 0.0),
         ],
       ).createShader(Rect.fromCircle(
-        center: Offset(w * 0.55, h * 0.78),
-        radius: w * 0.55,
+        center: Offset(w * 0.5, h * 0.85),
+        radius: w * 0.6,
       ));
-    canvas.drawCircle(Offset(w * 0.55, h * 0.78), w * 0.55, paint3);
+    canvas.drawCircle(Offset(w * 0.5, h * 0.85), w * 0.6, paint3);
 
-    // Blob 4: teal bottom-left
+    // Blob 4: blue bottom-left
     final paint4 = Paint()
       ..shader = RadialGradient(
         colors: [
-          const Color(0xFF00E5CC).withValues(alpha: 0.15),
-          const Color(0xFF00E5CC).withValues(alpha: 0.0),
+          const Color(0xFF5B8FFF).withValues(alpha: 0.10),
+          const Color(0xFF5B8FFF).withValues(alpha: 0.0),
         ],
       ).createShader(Rect.fromCircle(
-        center: Offset(w * 0.05, h * 0.85),
-        radius: w * 0.4,
+        center: Offset(w * 0.05, h * 0.88),
+        radius: w * 0.45,
       ));
-    canvas.drawCircle(Offset(w * 0.05, h * 0.85), w * 0.4, paint4);
+    canvas.drawCircle(Offset(w * 0.05, h * 0.88), w * 0.45, paint4);
   }
 
   @override

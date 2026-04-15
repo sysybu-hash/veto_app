@@ -1,62 +1,67 @@
 // ============================================================
-//  veto_theme.dart — VETO Design System v2
-//  Aurora Glassmorphism — dark frosted glass, glowing orbs,
-//  teal/cyan/sky aurora background, luminous white typography
+//  veto_theme.dart — VETO Design System v3
+//  Light Aurora Glassmorphism — bright frosted glass, glowing orbs,
+//  soft teal/sky/lavender aurora on white, dark navy typography
 // ============================================================
 
 import 'package:flutter/material.dart';
 
-// ── Aurora palette ────────────────────────────────────────
+// ── Light Aurora palette ──────────────────────────────────
 class VetoColors {
   VetoColors._();
 
   // ── Background layers ─────────────────────────────────
-  static const Color background    = Color(0xFF0A1628);   // deep navy
-  static const Color surface       = Color(0xFF0D1F3C);   // dark navy card
-  static const Color surfaceHigh   = Color(0xFF112240);   // slightly lighter
-  static const Color surfaceGlass  = Color(0x1AFFFFFF);   // white 10%
+  static const Color background    = Color(0xFFF0F4FF);   // soft white-blue
+  static const Color surface       = Color(0xFFFFFFFF);   // pure white card
+  static const Color surfaceHigh   = Color(0xFFF8FAFF);   // slightly off-white
+  static const Color surfaceGlass  = Color(0xCCFFFFFF);   // white 80%
 
-  static const Color surfaceMint     = Color(0x1200E5CC);
-  static const Color surfaceSky      = Color(0x1238BDF8);
-  static const Color surfaceLavender = Color(0x12A78BFA);
+  static const Color surfaceMint     = Color(0x1500E5CC);
+  static const Color surfaceSky      = Color(0x1538BDF8);
+  static const Color surfaceLavender = Color(0x15A78BFA);
 
-  // ── Brand teal/cyan ───────────────────────────────────
-  static const Color accent        = Color(0xFF00E5CC);   // bright teal
-  static const Color accentDark    = Color(0xFF00B4A0);
-  static const Color accentGlow    = Color(0x4000E5CC);
+  // ── Brand blue ────────────────────────────────────────
+  static const Color accent        = Color(0xFF5B8FFF);   // light blue (primary)
+  static const Color accentDark    = Color(0xFF4A7FEF);
+  static const Color accentGlow    = Color(0x405B8FFF);
 
-  static const Color accentSky     = Color(0xFF38BDF8);   // sky blue
-  static const Color accentViolet  = Color(0xFFA78BFA);   // soft violet
-  static const Color accentCoral   = Color(0xFFFF6B6B);   // coral red
+  static const Color accentSky     = Color(0xFF38BDF8);
+  static const Color accentViolet  = Color(0xFFA78BFA);
+  static const Color accentCoral   = Color(0xFFFF6B6B);
+  static const Color accentTeal    = Color(0xFF00C9B1);
 
-  // ── Legacy "gold" names ───────────────────────────────
-  static const Color goldLight     = Color(0xFF00E5CC);
-  static const Color goldDim       = Color(0xFF0369A1);
-  static const Color goldSoft      = Color(0x1A00E5CC);
+  // ── Legacy "gold" names (remapped to blue) ───────────
+  static const Color goldLight     = Color(0xFF5B8FFF);
+  static const Color goldDim       = Color(0xFF4A7FEF);
+  static const Color goldSoft      = Color(0x1A5B8FFF);
 
   // ── Emergency red ─────────────────────────────────────
-  static const Color vetoRed       = Color(0xFFFF4B4B);
-  static const Color vetoRedDeep   = Color(0xFFE03030);
-  static const Color vetoRedGlow   = Color(0x66FF4B4B);
-  static const Color vetoRedSoft   = Color(0x22FF4B4B);
+  static const Color vetoRed       = Color(0xFFFF3B3B);
+  static const Color vetoRedDeep   = Color(0xFFE02020);
+  static const Color vetoRedGlow   = Color(0x55FF3B3B);
+  static const Color vetoRedSoft   = Color(0x15FF3B3B);
 
-  // ── Text — white on dark ───────────────────────────────
+  // ── Text — dark on light ───────────────────────────────
   static const Color white         = Color(0xFFFFFFFF);
-  static const Color silver        = Color(0xFFB0C4D8);
-  static const Color silverLight   = Color(0xFF8AA4BE);
-  static const Color silverDim     = Color(0xFF5E7A99);
-  static const Color textMuted     = Color(0xFF8AA4BE);
+  static const Color inkDark       = Color(0xFF1A2340);   // primary text
+  static const Color inkMedium     = Color(0xFF3A4A6B);   // secondary text
+  static const Color inkLight      = Color(0xFF5A6A88);   // muted text
+  static const Color inkFaint      = Color(0xFF8A9AB8);   // placeholder
+  static const Color silver        = Color(0xFF5A6A88);   // compat alias
+  static const Color silverLight   = Color(0xFF8A9AB8);
+  static const Color silverDim     = Color(0xFFAABAD8);
+  static const Color textMuted     = Color(0xFF5A6A88);
 
   // ── Status ────────────────────────────────────────────
-  static const Color success       = Color(0xFF00E5CC);
-  static const Color warning       = Color(0xFFFFBB33);
-  static const Color error         = Color(0xFFFF4B4B);
-  static const Color online        = Color(0xFF00E5CC);
+  static const Color success       = Color(0xFF22C55E);
+  static const Color warning       = Color(0xFFF59E0B);
+  static const Color error         = Color(0xFFFF3B3B);
+  static const Color online        = Color(0xFF22C55E);
 
   // ── Border / divider ──────────────────────────────────
-  static const Color border        = Color(0x33FFFFFF);
-  static const Color borderLight   = Color(0x55FFFFFF);
-  static const Color divider       = Color(0x1AFFFFFF);
+  static const Color border        = Color(0xFFE2E8F8);
+  static const Color borderLight   = Color(0xFFEEF2FF);
+  static const Color divider       = Color(0xFFE8EDF8);
 }
 
 // ══════════════════════════════════════════════════════════
@@ -91,10 +96,10 @@ class VetoPalette {
   static const Color error         = VetoColors.error;
 
   static const Color white         = VetoColors.white;
-  static const Color text          = VetoColors.white;
+  static const Color text          = VetoColors.inkDark;
   static const Color silver        = VetoColors.silver;
-  static const Color textMuted     = VetoColors.silver;
-  static const Color textSubtle    = VetoColors.silverDim;
+  static const Color textMuted     = VetoColors.textMuted;
+  static const Color textSubtle    = VetoColors.inkFaint;
 
   static const Color border        = VetoColors.border;
   static const Color darkBorder    = VetoColors.borderLight;
@@ -104,20 +109,20 @@ class VetoTheme {
   VetoTheme._();
 
   static ThemeData luxuryLight() {
-    const ink = VetoColors.white;
+    const ink = VetoColors.inkDark;
     const paper = VetoColors.background;
     return ThemeData(
       useMaterial3: true,
-      brightness: Brightness.dark,
+      brightness: Brightness.light,
       scaffoldBackgroundColor: paper,
       primaryIconTheme: const IconThemeData(color: ink, size: 24),
       iconTheme: const IconThemeData(color: ink, size: 24),
-      colorScheme: const ColorScheme.dark(
-        brightness: Brightness.dark,
+      colorScheme: const ColorScheme.light(
+        brightness: Brightness.light,
         primary: VetoColors.accent,
-        onPrimary: Color(0xFF0A1628),
+        onPrimary: Colors.white,
         secondary: VetoColors.accentSky,
-        onSecondary: Color(0xFF0A1628),
+        onSecondary: Colors.white,
         tertiary: VetoColors.accentViolet,
         onTertiary: Colors.white,
         surface: VetoColors.surface,
@@ -127,7 +132,7 @@ class VetoTheme {
       ),
 
       appBarTheme: AppBarTheme(
-        backgroundColor: const Color(0xCC0D1F3C),
+        backgroundColor: const Color(0xEEFFFFFF),
         foregroundColor: ink,
         elevation: 0,
         scrolledUnderElevation: 0,
@@ -135,7 +140,10 @@ class VetoTheme {
         surfaceTintColor: Colors.transparent,
         centerTitle: true,
         shape: Border(
-          bottom: BorderSide(color: VetoColors.accent.withValues(alpha: 0.3), width: 1),
+          bottom: BorderSide(
+            color: VetoColors.accent.withValues(alpha: 0.15),
+            width: 1,
+          ),
         ),
         titleTextStyle: const TextStyle(
           fontFamily: 'Heebo',
@@ -147,45 +155,45 @@ class VetoTheme {
         iconTheme: const IconThemeData(color: ink),
       ),
 
-      textTheme: TextTheme(
-        displayLarge:   const TextStyle(fontFamily: 'Heebo', fontSize: 57, fontWeight: FontWeight.w700, color: ink, letterSpacing: -0.5),
-        displayMedium:  const TextStyle(fontFamily: 'Heebo', fontSize: 45, fontWeight: FontWeight.w700, color: ink),
-        displaySmall:   const TextStyle(fontFamily: 'Heebo', fontSize: 36, fontWeight: FontWeight.w600, color: ink),
-        headlineLarge:  const TextStyle(fontFamily: 'Heebo', fontSize: 32, fontWeight: FontWeight.w800, color: ink, letterSpacing: 0.2),
-        headlineMedium: const TextStyle(fontFamily: 'Heebo', fontSize: 28, fontWeight: FontWeight.w600, color: ink),
-        headlineSmall:  const TextStyle(fontFamily: 'Heebo', fontSize: 24, fontWeight: FontWeight.w600, color: ink),
-        titleLarge:     const TextStyle(fontFamily: 'Heebo', fontSize: 20, fontWeight: FontWeight.w600, color: ink, letterSpacing: 0.2),
-        titleMedium:    const TextStyle(fontFamily: 'Heebo', fontSize: 16, fontWeight: FontWeight.w500, color: ink),
-        titleSmall:     TextStyle(fontFamily: 'Heebo', fontSize: 14, fontWeight: FontWeight.w600, color: VetoColors.silver),
-        bodyLarge:      const TextStyle(fontFamily: 'Heebo', fontSize: 16, fontWeight: FontWeight.w600, color: ink, height: 1.35),
-        bodyMedium:     const TextStyle(fontFamily: 'Heebo', fontSize: 14, fontWeight: FontWeight.w600, color: ink, height: 1.4),
-        bodySmall:      TextStyle(fontFamily: 'Heebo', fontSize: 12, fontWeight: FontWeight.w600, color: VetoColors.silver, height: 1.35),
-        labelLarge:     const TextStyle(fontFamily: 'Heebo', fontSize: 14, fontWeight: FontWeight.w700, color: ink, letterSpacing: 0.6),
-        labelMedium:    TextStyle(fontFamily: 'Heebo', fontSize: 12, fontWeight: FontWeight.w600, color: VetoColors.silver),
-        labelSmall:     TextStyle(fontFamily: 'Heebo', fontSize: 11, fontWeight: FontWeight.w600, color: VetoColors.silver),
+      textTheme: const TextTheme(
+        displayLarge:   TextStyle(fontFamily: 'Heebo', fontSize: 57, fontWeight: FontWeight.w700, color: ink, letterSpacing: -0.5),
+        displayMedium:  TextStyle(fontFamily: 'Heebo', fontSize: 45, fontWeight: FontWeight.w700, color: ink),
+        displaySmall:   TextStyle(fontFamily: 'Heebo', fontSize: 36, fontWeight: FontWeight.w600, color: ink),
+        headlineLarge:  TextStyle(fontFamily: 'Heebo', fontSize: 32, fontWeight: FontWeight.w800, color: ink, letterSpacing: 0.2),
+        headlineMedium: TextStyle(fontFamily: 'Heebo', fontSize: 28, fontWeight: FontWeight.w600, color: ink),
+        headlineSmall:  TextStyle(fontFamily: 'Heebo', fontSize: 24, fontWeight: FontWeight.w600, color: ink),
+        titleLarge:     TextStyle(fontFamily: 'Heebo', fontSize: 20, fontWeight: FontWeight.w600, color: ink, letterSpacing: 0.2),
+        titleMedium:    TextStyle(fontFamily: 'Heebo', fontSize: 16, fontWeight: FontWeight.w500, color: ink),
+        titleSmall:     TextStyle(fontFamily: 'Heebo', fontSize: 14, fontWeight: FontWeight.w600, color: VetoColors.inkMedium),
+        bodyLarge:      TextStyle(fontFamily: 'Heebo', fontSize: 16, fontWeight: FontWeight.w600, color: ink, height: 1.35),
+        bodyMedium:     TextStyle(fontFamily: 'Heebo', fontSize: 14, fontWeight: FontWeight.w500, color: ink, height: 1.4),
+        bodySmall:      TextStyle(fontFamily: 'Heebo', fontSize: 12, fontWeight: FontWeight.w500, color: VetoColors.inkLight, height: 1.35),
+        labelLarge:     TextStyle(fontFamily: 'Heebo', fontSize: 14, fontWeight: FontWeight.w700, color: ink, letterSpacing: 0.6),
+        labelMedium:    TextStyle(fontFamily: 'Heebo', fontSize: 12, fontWeight: FontWeight.w600, color: VetoColors.inkMedium),
+        labelSmall:     TextStyle(fontFamily: 'Heebo', fontSize: 11, fontWeight: FontWeight.w600, color: VetoColors.inkLight),
       ),
 
-      cardTheme: CardThemeData(
-        color: const Color(0xCC0D1F3C),
+      cardTheme: const CardThemeData(
+        color: Color(0xFFFFFFFF),
         elevation: 0,
         shadowColor: Colors.transparent,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-          side: BorderSide(color: Colors.white.withValues(alpha: 0.12), width: 1),
+          borderRadius: BorderRadius.all(Radius.circular(16)),
+          side: BorderSide(color: VetoColors.border, width: 1),
         ),
         margin: EdgeInsets.zero,
       ),
 
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: const Color(0x1AFFFFFF),
+        fillColor: const Color(0xFFFFFFFF),
         contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-        hintStyle: TextStyle(fontFamily: 'Heebo', color: VetoColors.silverDim, fontSize: 14),
-        labelStyle: TextStyle(fontFamily: 'Heebo', color: VetoColors.silver, fontSize: 14),
+        hintStyle: const TextStyle(fontFamily: 'Heebo', color: VetoColors.inkFaint, fontSize: 14),
+        labelStyle: const TextStyle(fontFamily: 'Heebo', color: VetoColors.inkLight, fontSize: 14),
         floatingLabelStyle: const TextStyle(fontFamily: 'Heebo', color: VetoColors.accent, fontSize: 12),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.2), width: 1),
+          borderSide: const BorderSide(color: VetoColors.border, width: 1),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
@@ -204,7 +212,7 @@ class VetoTheme {
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: VetoColors.accent,
-          foregroundColor: const Color(0xFF0A1628),
+          foregroundColor: Colors.white,
           elevation: 0,
           padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
           minimumSize: const Size(48, 48),
@@ -216,7 +224,7 @@ class VetoTheme {
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
           backgroundColor: VetoColors.accent,
-          foregroundColor: const Color(0xFF0A1628),
+          foregroundColor: Colors.white,
           elevation: 0,
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
           minimumSize: const Size(48, 48),
@@ -238,7 +246,7 @@ class VetoTheme {
       ),
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
-          foregroundColor: VetoColors.accentSky,
+          foregroundColor: VetoColors.accent,
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
           minimumSize: const Size(48, 40),
           iconSize: 22,
@@ -247,73 +255,77 @@ class VetoTheme {
       ),
       iconButtonTheme: IconButtonThemeData(
         style: IconButton.styleFrom(
-          foregroundColor: ink,
+          foregroundColor: VetoColors.inkDark,
           iconSize: 22,
           minimumSize: const Size(44, 44),
           padding: const EdgeInsets.all(10),
         ),
       ),
 
-      dialogTheme: DialogThemeData(
-        backgroundColor: const Color(0xF00D1F3C),
-        elevation: 24,
+      dialogTheme: const DialogThemeData(
+        backgroundColor: Color(0xFFFFFFFF),
+        elevation: 8,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-          side: BorderSide(color: Colors.white.withValues(alpha: 0.15), width: 1),
+          borderRadius: BorderRadius.all(Radius.circular(20)),
+          side: BorderSide(color: VetoColors.border, width: 1),
         ),
-        titleTextStyle: const TextStyle(fontFamily: 'Heebo', fontSize: 20, fontWeight: FontWeight.w700, color: ink),
-        contentTextStyle: TextStyle(fontFamily: 'Heebo', fontSize: 14, color: VetoColors.silver),
+        titleTextStyle: TextStyle(fontFamily: 'Heebo', fontSize: 20, fontWeight: FontWeight.w700, color: VetoColors.inkDark),
+        contentTextStyle: TextStyle(fontFamily: 'Heebo', fontSize: 14, color: VetoColors.inkLight),
       ),
 
       bottomSheetTheme: const BottomSheetThemeData(
-        backgroundColor: Color(0xF00D1F3C),
-        modalBarrierColor: Color(0x88000000),
+        backgroundColor: Color(0xFFFFFFFF),
+        modalBarrierColor: Color(0x44000000),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
         ),
       ),
 
       snackBarTheme: SnackBarThemeData(
-        backgroundColor: const Color(0xFF1A2F4E),
+        backgroundColor: const Color(0xFF1A2340),
         contentTextStyle: const TextStyle(fontFamily: 'Heebo', color: Colors.white, fontSize: 14),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         behavior: SnackBarBehavior.floating,
       ),
 
-      dividerTheme: DividerThemeData(color: Colors.white.withValues(alpha: 0.1), thickness: 1, space: 1),
+      dividerTheme: const DividerThemeData(color: VetoColors.divider, thickness: 1, space: 1),
+
       navigationBarTheme: NavigationBarThemeData(
-        backgroundColor: const Color(0xDD0D1F3C),
+        backgroundColor: const Color(0xEEFFFFFF),
         elevation: 0,
         shadowColor: Colors.transparent,
-        indicatorColor: VetoColors.accent.withValues(alpha: 0.2),
+        indicatorColor: VetoColors.accent.withValues(alpha: 0.12),
         labelTextStyle: WidgetStateProperty.all(
-          const TextStyle(fontFamily: 'Heebo', fontSize: 12, fontWeight: FontWeight.w700, color: Colors.white),
+          const TextStyle(fontFamily: 'Heebo', fontSize: 12, fontWeight: FontWeight.w700, color: VetoColors.inkDark),
         ),
         iconTheme: WidgetStateProperty.resolveWith((s) {
           final selected = s.contains(WidgetState.selected);
           return IconThemeData(
-            color: selected ? VetoColors.accent : VetoColors.silverDim,
+            color: selected ? VetoColors.accent : VetoColors.inkLight,
             size: 24,
           );
         }),
       ),
+
       chipTheme: ChipThemeData(
-        backgroundColor: const Color(0x1AFFFFFF),
-        selectedColor: VetoColors.accent.withValues(alpha: 0.25),
-        labelStyle: TextStyle(fontFamily: 'Heebo', color: VetoColors.silver, fontSize: 13),
-        side: BorderSide(color: Colors.white.withValues(alpha: 0.2), width: 1),
+        backgroundColor: const Color(0xFFEEF2FF),
+        selectedColor: VetoColors.accent.withValues(alpha: 0.15),
+        labelStyle: const TextStyle(fontFamily: 'Heebo', color: VetoColors.inkMedium, fontSize: 13),
+        side: const BorderSide(color: VetoColors.border, width: 1),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       ),
+
       switchTheme: SwitchThemeData(
         thumbColor: WidgetStateProperty.resolveWith((s) =>
-            s.contains(WidgetState.selected) ? VetoColors.accent : VetoColors.silverDim),
+            s.contains(WidgetState.selected) ? VetoColors.accent : const Color(0xFFCDD5E0)),
         trackColor: WidgetStateProperty.resolveWith((s) =>
-            s.contains(WidgetState.selected) ? VetoColors.accentGlow : const Color(0x1AFFFFFF)),
+            s.contains(WidgetState.selected) ? VetoColors.accentGlow : const Color(0xFFE8EDF8)),
       ),
+
       listTileTheme: const ListTileThemeData(
         tileColor: Colors.transparent,
-        textColor: Colors.white,
+        textColor: VetoColors.inkDark,
         iconColor: VetoColors.accent,
         contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       ),
@@ -328,82 +340,81 @@ class VetoTheme {
 class VetoDecorations {
   VetoDecorations._();
 
-  /// True dark glass card — semi-transparent dark with white border
-  static BoxDecoration glassCard({double radius = 16, double opacity = 0.6}) =>
+  /// Light glass card — white semi-transparent with light border and soft shadow
+  static BoxDecoration glassCard({double radius = 16, double opacity = 0.88}) =>
       BoxDecoration(
-        color: Color.fromRGBO(13, 31, 60, opacity * 0.85),
+        color: Color.fromRGBO(255, 255, 255, opacity),
         borderRadius: BorderRadius.circular(radius),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.18), width: 1.5),
+        border: Border.all(color: const Color(0xFFE2E8F8), width: 1.5),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.25),
-            blurRadius: 20,
+            color: const Color(0xFF5B8FFF).withValues(alpha: 0.07),
+            blurRadius: 24,
             spreadRadius: 0,
             offset: const Offset(0, 8),
           ),
           BoxShadow(
-            color: const Color(0xFF00E5CC).withValues(alpha: 0.04),
-            blurRadius: 40,
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 8,
             spreadRadius: 0,
+            offset: const Offset(0, 2),
           ),
         ],
       );
 
   static BoxDecoration surfaceCard({double radius = 16}) => BoxDecoration(
-        color: const Color(0xCC0D1F3C),
+        color: const Color(0xFFFFFFFF),
         borderRadius: BorderRadius.circular(radius),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.12), width: 1),
+        border: Border.all(color: const Color(0xFFE2E8F8), width: 1),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.2),
-            blurRadius: 16,
-            offset: const Offset(0, 6),
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
           ),
         ],
       );
 
   static BoxDecoration goldCard({double radius = 12}) => BoxDecoration(
-        color: const Color(0xCC0D1F3C),
+        color: const Color(0xFFFFFFFF),
         borderRadius: BorderRadius.circular(radius),
-        border: Border.all(color: const Color(0xFF00E5CC).withValues(alpha: 0.4), width: 1.5),
+        border: Border.all(
+          color: const Color(0xFF5B8FFF).withValues(alpha: 0.35),
+          width: 1.5,
+        ),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF00E5CC).withValues(alpha: 0.15),
+            color: const Color(0xFF5B8FFF).withValues(alpha: 0.10),
             blurRadius: 20,
             spreadRadius: 0,
           ),
         ],
       );
 
-  /// Aurora radial gradient background — blue/teal/purple blobs on deep navy
+  /// Light aurora background — solid soft white-blue base
   static BoxDecoration gradientBg() => const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Color(0xFF0A1628), // deep navy
-            Color(0xFF0D1F3C), // navy
-            Color(0xFF0A1628), // deep navy
-          ],
-          stops: [0.0, 0.5, 1.0],
-        ),
+        color: Color(0xFFF0F4FF),
       );
 
   static BoxDecoration legalHeaderBg() => BoxDecoration(
-        color: const Color(0xCC0D1F3C),
+        color: const Color(0xEEFFFFFF),
         border: Border(
-          bottom: BorderSide(color: const Color(0xFF00E5CC).withValues(alpha: 0.3), width: 1),
+          bottom: BorderSide(
+            color: const Color(0xFF5B8FFF).withValues(alpha: 0.15),
+            width: 1,
+          ),
         ),
       );
 
+  /// Red SOS glow — bright red on white background
   static List<BoxShadow> vetoGlow({double intensity = 1.0}) => [
         BoxShadow(
-          color: const Color(0xFFFF4B4B).withValues(alpha: 0.5 * intensity),
+          color: const Color(0xFFFF3B3B).withValues(alpha: 0.45 * intensity),
           blurRadius: 40 * intensity,
           spreadRadius: 4 * intensity,
         ),
         BoxShadow(
-          color: const Color(0xFFFF4B4B).withValues(alpha: 0.25 * intensity),
+          color: const Color(0xFFFF3B3B).withValues(alpha: 0.20 * intensity),
           blurRadius: 80 * intensity,
           spreadRadius: 12 * intensity,
         ),
@@ -411,21 +422,21 @@ class VetoDecorations {
 
   static List<BoxShadow> accentGlow({double intensity = 1.0}) => [
         BoxShadow(
-          color: const Color(0xFF00E5CC).withValues(alpha: 0.5 * intensity),
-          blurRadius: 30 * intensity,
+          color: const Color(0xFF5B8FFF).withValues(alpha: 0.35 * intensity),
+          blurRadius: 24 * intensity,
           spreadRadius: 2 * intensity,
         ),
       ];
 
   static List<BoxShadow> goldGlow({double intensity = 1.0}) => [
         BoxShadow(
-          color: const Color(0xFF00E5CC).withValues(alpha: 0.2 * intensity),
+          color: const Color(0xFF5B8FFF).withValues(alpha: 0.15 * intensity),
           blurRadius: 22 * intensity,
           spreadRadius: 0,
           offset: const Offset(0, 4),
         ),
         BoxShadow(
-          color: const Color(0xFF38BDF8).withValues(alpha: 0.12 * intensity),
+          color: const Color(0xFF38BDF8).withValues(alpha: 0.10 * intensity),
           blurRadius: 40 * intensity,
           spreadRadius: 2 * intensity,
         ),

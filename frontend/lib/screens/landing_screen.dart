@@ -7,8 +7,8 @@ import '../services/auth_service.dart';
 import '../widgets/app_language_menu.dart';
 
 // ═══════════════════════════════════════════════════════════════════
-//  VETO Landing Page — Attorney Shield aesthetic
-//  Dark, dramatic, high-contrast. No logic changes.
+//  VETO Landing Page — Light Aurora Glassmorphism
+//  Bright, airy, white frosted glass on soft aurora gradient.
 // ═══════════════════════════════════════════════════════════════════
 
 import '../widgets/accessibility_toolbar.dart';
@@ -246,14 +246,14 @@ class LandingScreen extends StatelessWidget {
     return Directionality(
       textDirection: dir,
       child: Scaffold(
-        backgroundColor: const Color(0xFF0A1628),
+        backgroundColor: const Color(0xFFF0F4FF),
         floatingActionButton: FloatingActionButton.extended(
           onPressed: () => showDialog(
             context: context,
             builder: (_) => AiChatDialog(code: code),
           ),
-          backgroundColor: const Color(0xFF00E5CC),
-          foregroundColor: const Color(0xFF0A1628),
+          backgroundColor: const Color(0xFF5B8FFF),
+          foregroundColor: Colors.white,
           icon: const Icon(Icons.auto_awesome),
           label: Text(
             code == 'he' ? 'שאל את VETO AI' : code == 'ru' ? 'Спросить VETO AI' : 'Ask VETO AI',
@@ -347,7 +347,7 @@ class LandingScreen extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(vertical: 36, horizontal: 24),
                 child: Text(_t(code, 'footer'),
                   textAlign: TextAlign.center,
-                  style: const TextStyle(color: _Clr.muted, fontSize: 12, height: 1.8)),
+                  style: const TextStyle(color: _Clr.inkLight, fontSize: 12, height: 1.8)),
               ),
             ],
           ),
@@ -360,19 +360,24 @@ class LandingScreen extends StatelessWidget {
 }
 
 // ═══════════════════════════════════════════════════════════════════
-//  Color palette
+//  Color palette — Light Aurora
 // ═══════════════════════════════════════════════════════════════════
 class _Clr {
-  static const surface    = Color(0xBB0D1F3C);
-  static const card       = Color(0xAA0D1F3C);
-  static const border     = Color(0x2AFFFFFF);
+  static const surface    = Color(0xEEFFFFFF);
+  static const card       = Color(0xF2FFFFFF);
+  static const border     = Color(0xFFE2E8F8);
   static const heroBg     = Colors.transparent;
   static const heroBg2    = Colors.transparent;
-  static const heroBorder = Color(0x4400E5CC);
-  static const glow       = Color(0xFF00E5CC);
-  static const muted      = Color(0xFF8AA4BE);
-  static const sub        = Color(0xFFFFFFFF);
-  static const navInk     = Color(0xFFFFFFFF);
+  static const heroBorder = Color(0x445B8FFF);
+  static const glow       = Color(0xFF5B8FFF);
+  static const muted      = Color(0xFF5A6A88);
+  static const sub        = Color(0xFF1A2340);
+  static const navInk     = Color(0xFF1A2340);
+  static const inkDark    = Color(0xFF1A2340);
+  static const inkMid     = Color(0xFF3A4A6B);
+  static const inkLight   = Color(0xFF5A6A88);
+  static const accent     = Color(0xFF5B8FFF);
+  static const red        = Color(0xFFFF3B3B);
 }
 
 // ═══════════════════════════════════════════════════════════════════
@@ -451,8 +456,11 @@ class _NavState extends State<_Nav> {
 
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xCC0A1628),
-        border: Border(bottom: BorderSide(color: const Color(0xFF00E5CC).withValues(alpha: 0.2), width: 1)),
+        color: const Color(0xEEFFFFFF),
+        border: Border(bottom: BorderSide(color: const Color(0xFF5B8FFF).withValues(alpha: 0.15), width: 1)),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 12, offset: const Offset(0, 2)),
+        ],
       ),
       padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
       child: Center(
@@ -464,17 +472,17 @@ class _NavState extends State<_Nav> {
               width: 34, height: 34,
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
-                  colors: [Color(0xFF00E5CC), Color(0xFF38BDF8)],
+                  colors: [Color(0xFF5B8FFF), Color(0xFF38BDF8)],
                   begin: Alignment.topLeft, end: Alignment.bottomRight,
                 ),
                 borderRadius: BorderRadius.circular(9),
-                boxShadow: [BoxShadow(color: const Color(0xFF00E5CC).withValues(alpha: 0.4), blurRadius: 12)],
+                boxShadow: [BoxShadow(color: const Color(0xFF5B8FFF).withValues(alpha: 0.35), blurRadius: 10)],
               ),
-              child: const Icon(Icons.shield_rounded, color: Color(0xFF0A1628), size: 17),
+              child: const Icon(Icons.shield_rounded, color: Colors.white, size: 17),
             ),
             const SizedBox(width: 10),
-            const Text('VETO', style: TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.w900, letterSpacing: 5)),
-            const Text(' LEGAL', style: TextStyle(color: Color(0xFF00E5CC), fontSize: 17, fontWeight: FontWeight.w900, letterSpacing: 2)),
+            const Text('VETO', style: TextStyle(color: _Clr.inkDark, fontSize: 17, fontWeight: FontWeight.w900, letterSpacing: 5)),
+            const Text(' LEGAL', style: TextStyle(color: _Clr.accent, fontSize: 17, fontWeight: FontWeight.w900, letterSpacing: 2)),
             if (wide) ...[
               const SizedBox(width: 28),
               for (final item in menuItems)
@@ -503,8 +511,8 @@ class _NavState extends State<_Nav> {
                 icon: const Icon(Icons.apps_rounded, size: 15),
                 label: Text(enterLabel),
                 style: FilledButton.styleFrom(
-                  backgroundColor: const Color(0xFF00E5CC),
-                  foregroundColor: const Color(0xFF0A1628),
+                  backgroundColor: const Color(0xFF5B8FFF),
+                  foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 11),
                   textStyle: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
@@ -555,7 +563,7 @@ class _HeroSection extends StatelessWidget {
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        border: Border(bottom: BorderSide(color: const Color(0xFF00E5CC).withValues(alpha: 0.15))),
+        border: Border(bottom: BorderSide(color: const Color(0xFF5B8FFF).withValues(alpha: 0.12))),
       ),
       child: Stack(
         children: [
@@ -617,29 +625,27 @@ class _HeroContent extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(999),
-          color: const Color(0xFF00E5CC).withValues(alpha: 0.12),
-          border: Border.all(color: const Color(0xFF00E5CC).withValues(alpha: 0.4)),
-          boxShadow: [BoxShadow(color: const Color(0xFF00E5CC).withValues(alpha: 0.15), blurRadius: 12)],
+          color: const Color(0xFF5B8FFF).withValues(alpha: 0.10),
+          border: Border.all(color: const Color(0xFF5B8FFF).withValues(alpha: 0.35)),
         ),
         child: Row(mainAxisSize: MainAxisSize.min, children: [
           Container(width: 5, height: 5,
-              decoration: BoxDecoration(
-                color: const Color(0xFF00E5CC),
+              decoration: const BoxDecoration(
+                color: Color(0xFF5B8FFF),
                 shape: BoxShape.circle,
-                boxShadow: [BoxShadow(color: const Color(0xFF00E5CC).withValues(alpha: 0.8), blurRadius: 6)],
               )),
           const SizedBox(width: 7),
           Text(badge, style: const TextStyle(
-            color: Color(0xFF00E5CC), fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 0.3,
+            color: Color(0xFF5B8FFF), fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 0.3,
           )),
         ]),
       ),
       SizedBox(height: compact ? 20 : 24),
 
-      // Title — massive, dramatic, white on dark
+      // Title — dark on light
       Text(title,
         style: TextStyle(
-          color: Colors.white,
+          color: _Clr.inkDark,
           fontSize: compact ? 38 : 64,
           fontWeight: FontWeight.w900,
           height: 1.04,
@@ -652,14 +658,14 @@ class _HeroContent extends StatelessWidget {
       Container(
         height: 3, width: 56,
         decoration: BoxDecoration(
-          gradient: const LinearGradient(colors: [VetoPalette.primary, Colors.transparent]),
+          gradient: const LinearGradient(colors: [Color(0xFF5B8FFF), Colors.transparent]),
           borderRadius: BorderRadius.circular(2),
         ),
       ),
       const SizedBox(height: 20),
 
       // Body
-      Text(body, style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 16, height: 1.8)),
+      Text(body, style: const TextStyle(color: _Clr.inkLight, fontSize: 16, height: 1.8)),
       const SizedBox(height: 32),
 
       // CTAs
@@ -667,11 +673,11 @@ class _HeroContent extends StatelessWidget {
         _PrimaryBtn(label: primaryLabel, onTap: onTap, large: true),
         OutlinedButton.icon(
           onPressed: onTap,
-          icon: const Icon(Icons.login_rounded, size: 16, color: Colors.white70),
+          icon: const Icon(Icons.login_rounded, size: 16, color: _Clr.accent),
           label: Text(secondaryLabel),
           style: OutlinedButton.styleFrom(
-            foregroundColor: Colors.white,
-            side: BorderSide(color: Colors.white.withValues(alpha: 0.3), width: 1.5),
+            foregroundColor: _Clr.accent,
+            side: const BorderSide(color: _Clr.accent, width: 1.5),
             padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 16),
             textStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -681,7 +687,7 @@ class _HeroContent extends StatelessWidget {
       const SizedBox(height: 32),
 
       // Divider
-      Divider(color: Colors.white.withValues(alpha: 0.1), height: 1),
+      const Divider(color: _Clr.border, height: 1),
       const SizedBox(height: 20),
 
       // Proof pills
@@ -703,11 +709,12 @@ class _StackRail extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xBB0D1F3C),
+        color: const Color(0xF2FFFFFF),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.12), width: 1.5),
+        border: Border.all(color: const Color(0xFFE2E8F8), width: 1.5),
         boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: 0.3), blurRadius: 24, offset: const Offset(0, 8)),
+          BoxShadow(color: const Color(0xFF5B8FFF).withValues(alpha: 0.08), blurRadius: 24, offset: const Offset(0, 8)),
+          BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 8, offset: const Offset(0, 2)),
         ],
       ),
       clipBehavior: Clip.antiAlias,
@@ -716,22 +723,21 @@ class _StackRail extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
           child: Row(children: [
-            Container(width: 3, height: 18, color: const Color(0xFF00E5CC),
+            Container(width: 3, height: 18,
               decoration: BoxDecoration(
-                color: const Color(0xFF00E5CC),
+                color: const Color(0xFF5B8FFF),
                 borderRadius: BorderRadius.circular(2),
-                boxShadow: [BoxShadow(color: const Color(0xFF00E5CC).withValues(alpha: 0.6), blurRadius: 6)],
               ),
             ),
             const SizedBox(width: 10),
             Text(title, style: const TextStyle(
-              color: Colors.white, fontSize: 16, fontWeight: FontWeight.w800,
+              color: _Clr.inkDark, fontSize: 16, fontWeight: FontWeight.w800,
             )),
           ]),
         ),
         // Items
         for (var i = 0; i < items.length; i++) ...[
-          if (i > 0) Divider(height: 1, color: Colors.white.withValues(alpha: 0.08), indent: 0, endIndent: 0),
+          if (i > 0) const Divider(height: 1, color: _Clr.border, indent: 0, endIndent: 0),
           _StackItem(data: items[i]),
         ],
         const SizedBox(height: 4),
@@ -761,11 +767,11 @@ class _StackItem extends StatelessWidget {
         const SizedBox(width: 14),
         Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Text(data.title, style: const TextStyle(
-            color: Colors.white, fontSize: 14, fontWeight: FontWeight.w700,
+            color: _Clr.inkDark, fontSize: 14, fontWeight: FontWeight.w700,
           )),
           const SizedBox(height: 4),
-          Text(data.body, style: TextStyle(
-            color: Colors.white.withValues(alpha: 0.55), fontSize: 12, height: 1.65,
+          Text(data.body, style: const TextStyle(
+            color: _Clr.inkLight, fontSize: 12, height: 1.65,
           )),
         ])),
       ]),
@@ -787,9 +793,9 @@ class _StatBar extends StatelessWidget {
     ];
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xBB0D1F3C),
-        border: Border.symmetric(
-          horizontal: BorderSide(color: const Color(0xFF00E5CC).withValues(alpha: 0.15)),
+        color: const Color(0xF2FFFFFF),
+        border: const Border.symmetric(
+          horizontal: BorderSide(color: _Clr.border),
         ),
       ),
       padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 28),
@@ -802,11 +808,10 @@ class _StatBar extends StatelessWidget {
               for (var (num, label) in stats) ...[
                 Column(children: [
                   Text(num, style: const TextStyle(
-                    color: Color(0xFF00E5CC), fontSize: 32, fontWeight: FontWeight.w900, letterSpacing: -1,
-                    shadows: [Shadow(color: Color(0x5500E5CC), blurRadius: 12)],
+                    color: Color(0xFF5B8FFF), fontSize: 32, fontWeight: FontWeight.w900, letterSpacing: -1,
                   )),
                   const SizedBox(height: 4),
-                  Text(label, style: const TextStyle(color: Color(0xFF8AA4BE), fontSize: 11, fontWeight: FontWeight.w600, letterSpacing: 0.5)),
+                  Text(label, style: const TextStyle(color: _Clr.inkLight, fontSize: 11, fontWeight: FontWeight.w600, letterSpacing: 0.5)),
                 ]),
               ],
             ],
@@ -837,25 +842,22 @@ class _ContentSection extends StatelessWidget {
             // Eyebrow
             Row(mainAxisSize: MainAxisSize.min, children: [
               Container(width: 28, height: 1.5,
-                decoration: BoxDecoration(
-                  color: const Color(0xFF00E5CC),
-                  boxShadow: [BoxShadow(color: const Color(0xFF00E5CC).withValues(alpha: 0.5), blurRadius: 4)],
-                ),
+                decoration: const BoxDecoration(color: Color(0xFF5B8FFF)),
               ),
               const SizedBox(width: 10),
               Text(eyebrow.toUpperCase(), style: const TextStyle(
-                color: Color(0xFF00E5CC), fontSize: 10,
+                color: Color(0xFF5B8FFF), fontSize: 10,
                 fontWeight: FontWeight.w800, letterSpacing: 3,
               )),
             ]),
             const SizedBox(height: 14),
             Text(title, style: const TextStyle(
-              color: Colors.white, fontSize: 36, fontWeight: FontWeight.w900, height: 1.1,
+              color: _Clr.inkDark, fontSize: 36, fontWeight: FontWeight.w900, height: 1.1,
             )),
             if (subtitle != null) ...[
               const SizedBox(height: 12),
-              Text(subtitle!, style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.55), fontSize: 15, height: 1.8, fontWeight: FontWeight.w400,
+              Text(subtitle!, style: const TextStyle(
+                color: _Clr.inkLight, fontSize: 15, height: 1.8, fontWeight: FontWeight.w400,
               )),
             ],
             const SizedBox(height: 36),
@@ -921,20 +923,19 @@ class _FeatureCard extends StatelessWidget {
         Container(
           width: 44, height: 44,
           decoration: BoxDecoration(
-            color: data.accent.withValues(alpha: 0.18),
+            color: data.accent.withValues(alpha: 0.12),
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: data.accent.withValues(alpha: 0.35), width: 1),
-            boxShadow: [BoxShadow(color: data.accent.withValues(alpha: 0.2), blurRadius: 10)],
+            border: Border.all(color: data.accent.withValues(alpha: 0.30), width: 1),
           ),
           child: Icon(data.icon, color: data.accent, size: 22),
         ),
         const SizedBox(height: 16),
         Text(data.title, style: const TextStyle(
-          color: Colors.white, fontSize: 16, fontWeight: FontWeight.w800,
+          color: _Clr.inkDark, fontSize: 16, fontWeight: FontWeight.w800,
         )),
         const SizedBox(height: 8),
-        Text(data.body, style: TextStyle(
-          color: Colors.white.withValues(alpha: 0.55), fontSize: 13, height: 1.75,
+        Text(data.body, style: const TextStyle(
+          color: _Clr.inkLight, fontSize: 13, height: 1.75,
         )),
       ]),
     );
@@ -967,7 +968,7 @@ class _FlowGrid extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.only(top: 22),
             child: Container(width: 32, height: 1.5,
-                color: _Clr.border.withValues(alpha: 0.6)),
+                color: _Clr.border),
           ),
           const SizedBox(width: 0),
         ],
@@ -986,11 +987,12 @@ class _FlowCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: const Color(0xBB0D1F3C),
+        color: const Color(0xF2FFFFFF),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
+        border: Border.all(color: _Clr.border),
         boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: 0.25), blurRadius: 12, offset: const Offset(0, 6)),
+          BoxShadow(color: const Color(0xFF5B8FFF).withValues(alpha: 0.06), blurRadius: 16, offset: const Offset(0, 6)),
+          BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 8, offset: const Offset(0, 2)),
         ],
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -998,19 +1000,18 @@ class _FlowCard extends StatelessWidget {
         Text(data.step ?? '', style: TextStyle(
           color: data.accent, fontSize: 36, fontWeight: FontWeight.w900,
           letterSpacing: -2, height: 1,
-          shadows: [Shadow(color: data.accent.withValues(alpha: 0.5), blurRadius: 12)],
         )),
         const SizedBox(height: 14),
         Row(children: [
           Icon(data.icon, color: data.accent, size: 18),
           const SizedBox(width: 8),
           Expanded(child: Text(data.title, style: const TextStyle(
-            color: Colors.white, fontSize: 15, fontWeight: FontWeight.w800,
+            color: _Clr.inkDark, fontSize: 15, fontWeight: FontWeight.w800,
           ))),
         ]),
         const SizedBox(height: 8),
-        Text(data.body, style: TextStyle(
-          color: Colors.white.withValues(alpha: 0.55), fontSize: 13, height: 1.75,
+        Text(data.body, style: const TextStyle(
+          color: _Clr.inkLight, fontSize: 13, height: 1.75,
         )),
       ]),
     );
@@ -1036,12 +1037,12 @@ class _PricingCard extends StatelessWidget {
     final inner = Container(
       padding: const EdgeInsets.all(32),
       decoration: BoxDecoration(
-        color: const Color(0xBB0D1F3C),
+        color: const Color(0xF2FFFFFF),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: const Color(0xFF00E5CC).withValues(alpha: 0.4), width: 1.5),
+        border: Border.all(color: const Color(0xFF5B8FFF).withValues(alpha: 0.35), width: 1.5),
         boxShadow: [
-          BoxShadow(color: const Color(0xFF00E5CC).withValues(alpha: 0.1), blurRadius: 24),
-          BoxShadow(color: Colors.black.withValues(alpha: 0.3), blurRadius: 16, offset: const Offset(0, 8)),
+          BoxShadow(color: const Color(0xFF5B8FFF).withValues(alpha: 0.08), blurRadius: 24),
+          BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 12, offset: const Offset(0, 4)),
         ],
       ),
       child: compact
@@ -1067,21 +1068,24 @@ class _PricingCard extends StatelessWidget {
   Widget _priceBlock() {
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       Text(planName.toUpperCase(), style: const TextStyle(
-        color: Color(0xFF00E5CC), fontSize: 10, fontWeight: FontWeight.w800, letterSpacing: 3,
+        color: Color(0xFF5B8FFF), fontSize: 10, fontWeight: FontWeight.w800, letterSpacing: 3,
       )),
       const SizedBox(height: 10),
       Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
         Text(price, style: const TextStyle(
-          color: Colors.white, fontSize: 58, fontWeight: FontWeight.w900, height: 1,
+          color: _Clr.inkDark, fontSize: 58, fontWeight: FontWeight.w900, height: 1,
         )),
         const SizedBox(width: 8),
         Padding(padding: const EdgeInsets.only(bottom: 10),
-          child: Text(period, style: TextStyle(color: Colors.white.withValues(alpha: 0.5), fontSize: 14))),
+          child: const Text('', style: TextStyle(fontSize: 14)),
+        ),
+        Padding(padding: const EdgeInsets.only(bottom: 10),
+          child: Text(period, style: const TextStyle(color: _Clr.inkLight, fontSize: 14))),
       ]),
       const SizedBox(height: 6),
       Container(height: 2, width: 48,
         decoration: BoxDecoration(
-          gradient: const LinearGradient(colors: [Color(0xFF00E5CC), Colors.transparent]),
+          gradient: const LinearGradient(colors: [Color(0xFF5B8FFF), Colors.transparent]),
           borderRadius: BorderRadius.circular(1),
         ),
       ),
@@ -1089,7 +1093,7 @@ class _PricingCard extends StatelessWidget {
   }
 
   List<Widget> _featureLines() {
-    final colors = [VetoPalette.success, VetoPalette.info, VetoPalette.warning];
+    final colors = [VetoColors.success, VetoColors.accentSky, VetoColors.warning];
     return [
       for (var i = 0; i < lines.length; i++) ...[
         Padding(
@@ -1097,7 +1101,7 @@ class _PricingCard extends StatelessWidget {
           child: Row(children: [
             Icon(Icons.check_rounded, color: colors[i], size: 16),
             const SizedBox(width: 10),
-            Expanded(child: Text(lines[i], style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 14))),
+            Expanded(child: Text(lines[i], style: const TextStyle(color: _Clr.inkMid, fontSize: 14))),
           ]),
         ),
       ],
@@ -1125,52 +1129,50 @@ class _CtaSection extends StatelessWidget {
       width: double.infinity,
       margin: const EdgeInsets.only(top: 80),
       decoration: BoxDecoration(
-        color: const Color(0xBB0D1F3C),
-        border: Border(top: BorderSide(color: const Color(0xFF00E5CC).withValues(alpha: 0.2))),
+        color: const Color(0xF2FFFFFF),
+        border: Border(top: BorderSide(color: const Color(0xFF5B8FFF).withValues(alpha: 0.15))),
       ),
-      child: Stack(children: [
-        Padding(
-          padding: EdgeInsets.symmetric(horizontal: 28, vertical: compact ? 56 : 80),
-          child: Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 760),
-              child: Column(children: [
-                // Badge
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(999),
-                    color: const Color(0xFF00E5CC).withValues(alpha: 0.12),
-                    border: Border.all(color: const Color(0xFF00E5CC).withValues(alpha: 0.4)),
-                  ),
-                  child: Text(badge.toUpperCase(), style: const TextStyle(
-                    color: Color(0xFF00E5CC), fontSize: 10,
-                    fontWeight: FontWeight.w800, letterSpacing: 2.5,
-                  )),
+      child: Padding(
+        padding: EdgeInsets.symmetric(horizontal: 28, vertical: compact ? 56 : 80),
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 760),
+            child: Column(children: [
+              // Badge
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(999),
+                  color: const Color(0xFF5B8FFF).withValues(alpha: 0.10),
+                  border: Border.all(color: const Color(0xFF5B8FFF).withValues(alpha: 0.35)),
                 ),
-                const SizedBox(height: 28),
-                Text(title,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: compact ? 28 : 50,
-                    fontWeight: FontWeight.w900,
-                    height: 1.1,
-                    letterSpacing: -0.5,
-                  ),
+                child: Text(badge.toUpperCase(), style: const TextStyle(
+                  color: Color(0xFF5B8FFF), fontSize: 10,
+                  fontWeight: FontWeight.w800, letterSpacing: 2.5,
+                )),
+              ),
+              const SizedBox(height: 28),
+              Text(title,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: _Clr.inkDark,
+                  fontSize: compact ? 28 : 50,
+                  fontWeight: FontWeight.w900,
+                  height: 1.1,
+                  letterSpacing: -0.5,
                 ),
-                const SizedBox(height: 18),
-                Text(body,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 16, height: 1.75),
-                ),
-                const SizedBox(height: 36),
-                _PrimaryBtn(label: buttonLabel, onTap: onTap, large: true),
-              ]),
-            ),
+              ),
+              const SizedBox(height: 18),
+              Text(body,
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: _Clr.inkLight, fontSize: 16, height: 1.75),
+              ),
+              const SizedBox(height: 36),
+              _PrimaryBtn(label: buttonLabel, onTap: onTap, large: true),
+            ]),
           ),
         ),
-      ]),
+      ),
     );
   }
 }
@@ -1247,18 +1249,18 @@ class _IncidentsSection extends StatelessWidget {
           constraints: const BoxConstraints(maxWidth: 1200),
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Row(mainAxisSize: MainAxisSize.min, children: [
-              Container(width: 28, height: 1.5, color: const Color(0xFF00E5CC)),
+              Container(width: 28, height: 1.5, color: const Color(0xFF5B8FFF)),
               const SizedBox(width: 10),
               Text(t['eyebrow']!.toUpperCase(), style: const TextStyle(
-                color: Color(0xFF00E5CC), fontSize: 10, fontWeight: FontWeight.w800, letterSpacing: 3,
+                color: Color(0xFF5B8FFF), fontSize: 10, fontWeight: FontWeight.w800, letterSpacing: 3,
               )),
             ]),
             const SizedBox(height: 14),
             Text(t['title']!, style: const TextStyle(
-              color: Colors.white, fontSize: 36, fontWeight: FontWeight.w900, height: 1.1,
+              color: _Clr.inkDark, fontSize: 36, fontWeight: FontWeight.w900, height: 1.1,
             )),
             const SizedBox(height: 12),
-            Text(t['subtitle']!, style: TextStyle(color: Colors.white.withValues(alpha: 0.55), fontSize: 15, height: 1.8)),
+            Text(t['subtitle']!, style: const TextStyle(color: _Clr.inkLight, fontSize: 15, height: 1.8)),
             const SizedBox(height: 36),
             compact
                 ? Column(children: [
@@ -1289,12 +1291,12 @@ class _IncidentCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: const Color(0xBB0D1F3C),
+        color: const Color(0xF2FFFFFF),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+        border: Border.all(color: _Clr.border),
         boxShadow: [
-          BoxShadow(color: data.accent.withValues(alpha: 0.08), blurRadius: 16),
-          BoxShadow(color: Colors.black.withValues(alpha: 0.25), blurRadius: 12, offset: const Offset(0, 6)),
+          BoxShadow(color: data.accent.withValues(alpha: 0.06), blurRadius: 16),
+          BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 8, offset: const Offset(0, 4)),
         ],
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -1302,10 +1304,9 @@ class _IncidentCard extends StatelessWidget {
         const SizedBox(height: 14),
         Text(data.title, style: TextStyle(
           color: data.accent, fontSize: 15, fontWeight: FontWeight.w800,
-          shadows: [Shadow(color: data.accent.withValues(alpha: 0.4), blurRadius: 8)],
         )),
         const SizedBox(height: 8),
-        Text(data.body, style: TextStyle(color: Colors.white.withValues(alpha: 0.55), fontSize: 13, height: 1.7)),
+        Text(data.body, style: const TextStyle(color: _Clr.inkLight, fontSize: 13, height: 1.7)),
       ]),
     );
   }
@@ -1348,14 +1349,14 @@ class _TestimonialsSection extends StatelessWidget {
           constraints: const BoxConstraints(maxWidth: 1200),
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Row(mainAxisSize: MainAxisSize.min, children: [
-              Container(width: 28, height: 1.5, color: const Color(0xFF00E5CC)),
+              Container(width: 28, height: 1.5, color: const Color(0xFF5B8FFF)),
               const SizedBox(width: 10),
               Text(label.toUpperCase(), style: const TextStyle(
-                color: Color(0xFF00E5CC), fontSize: 10, fontWeight: FontWeight.w800, letterSpacing: 3,
+                color: Color(0xFF5B8FFF), fontSize: 10, fontWeight: FontWeight.w800, letterSpacing: 3,
               )),
             ]),
             const SizedBox(height: 14),
-            Text(subtitle, style: TextStyle(color: Colors.white.withValues(alpha: 0.55), fontSize: 14, height: 1.6)),
+            Text(subtitle, style: const TextStyle(color: _Clr.inkLight, fontSize: 14, height: 1.6)),
             const SizedBox(height: 32),
             compact
                 ? Column(children: [
@@ -1386,24 +1387,24 @@ class _ReviewCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(22),
       decoration: BoxDecoration(
-        color: const Color(0xBB0D1F3C),
+        color: const Color(0xF2FFFFFF),
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+        border: Border.all(color: _Clr.border),
         boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: 0.25), blurRadius: 10, offset: const Offset(0, 4)),
+          BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, 4)),
         ],
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Row(children: [
           for (int i = 0; i < review.rating; i++)
-            const Icon(Icons.star_rounded, color: Color(0xFF00E5CC), size: 14),
+            const Icon(Icons.star_rounded, color: Color(0xFFF59E0B), size: 14),
           const Spacer(),
-          Text(review.date, style: TextStyle(color: Colors.white.withValues(alpha: 0.4), fontSize: 11)),
+          Text(review.date, style: const TextStyle(color: _Clr.inkLight, fontSize: 11)),
         ]),
         const SizedBox(height: 12),
-        Text('"${review.text}"', style: TextStyle(color: Colors.white.withValues(alpha: 0.65), fontSize: 13, height: 1.65, fontStyle: FontStyle.italic)),
+        Text('"${review.text}"', style: const TextStyle(color: _Clr.inkMid, fontSize: 13, height: 1.65, fontStyle: FontStyle.italic)),
         const SizedBox(height: 14),
-        Text(review.name, style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w700)),
+        Text(review.name, style: const TextStyle(color: _Clr.inkDark, fontSize: 12, fontWeight: FontWeight.w700)),
       ]),
     );
   }
@@ -1421,8 +1422,8 @@ class _PrimaryBtn extends StatelessWidget {  final String label;
       icon: Icon(Icons.bolt_rounded, size: large ? 18 : 16),
       label: Text(label),
       style: FilledButton.styleFrom(
-        backgroundColor: const Color(0xFF00E5CC),
-        foregroundColor: const Color(0xFF0A1628),
+        backgroundColor: const Color(0xFF5B8FFF),
+        foregroundColor: Colors.white,
         padding: EdgeInsets.symmetric(
           horizontal: large ? 28 : 20,
           vertical: large ? 18 : 13,
@@ -1447,15 +1448,15 @@ class _ProofChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 7),
       decoration: BoxDecoration(
-        color: const Color(0xFF00E5CC).withValues(alpha: 0.1),
+        color: const Color(0xFF5B8FFF).withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: const Color(0xFF00E5CC).withValues(alpha: 0.3)),
+        border: Border.all(color: const Color(0xFF5B8FFF).withValues(alpha: 0.25)),
       ),
       child: Row(mainAxisSize: MainAxisSize.min, children: [
-        const Icon(Icons.check_circle_outline_rounded, color: Color(0xFF00E5CC), size: 13),
+        const Icon(Icons.check_circle_outline_rounded, color: Color(0xFF5B8FFF), size: 13),
         const SizedBox(width: 6),
         Text(label, style: const TextStyle(
-          color: Colors.white,
+          color: _Clr.inkMid,
           fontSize: 11,
           fontWeight: FontWeight.w600,
         )),
@@ -1464,52 +1465,53 @@ class _ProofChip extends StatelessWidget {
   }
 }
 
-// ── Aurora Background Painter (Landing) ──────────────────
+// ── Light Aurora Background Painter (Landing) ────────────
 class _LandingAuroraPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final w = size.width;
     final h = size.height;
 
+    // White-blue base
     canvas.drawRect(
       Rect.fromLTWH(0, 0, w, h),
-      Paint()..color = const Color(0xFF0A1628),
+      Paint()..color = const Color(0xFFF0F4FF),
     );
 
     // Blob 1: teal top-center
     canvas.drawCircle(
-      Offset(w * 0.5, h * 0.08),
-      w * 0.55,
+      Offset(w * 0.5, h * 0.06),
+      w * 0.6,
       Paint()..shader = RadialGradient(
-        colors: [const Color(0xFF00E5CC).withValues(alpha: 0.22), const Color(0xFF00E5CC).withValues(alpha: 0.0)],
-      ).createShader(Rect.fromCircle(center: Offset(w * 0.5, h * 0.08), radius: w * 0.55)),
+        colors: [const Color(0xFF00C9B1).withValues(alpha: 0.18), const Color(0xFF00C9B1).withValues(alpha: 0.0)],
+      ).createShader(Rect.fromCircle(center: Offset(w * 0.5, h * 0.06), radius: w * 0.6)),
     );
 
-    // Blob 2: sky blue right
+    // Blob 2: sky blue top-right
     canvas.drawCircle(
-      Offset(w * 0.92, h * 0.3),
-      w * 0.45,
-      Paint()..shader = RadialGradient(
-        colors: [const Color(0xFF38BDF8).withValues(alpha: 0.22), const Color(0xFF38BDF8).withValues(alpha: 0.0)],
-      ).createShader(Rect.fromCircle(center: Offset(w * 0.92, h * 0.3), radius: w * 0.45)),
-    );
-
-    // Blob 3: violet bottom-left
-    canvas.drawCircle(
-      Offset(w * 0.08, h * 0.65),
+      Offset(w * 0.95, h * 0.15),
       w * 0.5,
       Paint()..shader = RadialGradient(
-        colors: [const Color(0xFFA78BFA).withValues(alpha: 0.18), const Color(0xFFA78BFA).withValues(alpha: 0.0)],
-      ).createShader(Rect.fromCircle(center: Offset(w * 0.08, h * 0.65), radius: w * 0.5)),
+        colors: [const Color(0xFF38BDF8).withValues(alpha: 0.20), const Color(0xFF38BDF8).withValues(alpha: 0.0)],
+      ).createShader(Rect.fromCircle(center: Offset(w * 0.95, h * 0.15), radius: w * 0.5)),
     );
 
-    // Blob 4: teal bottom-right
+    // Blob 3: lavender bottom-left
     canvas.drawCircle(
-      Offset(w * 0.85, h * 0.85),
-      w * 0.4,
+      Offset(w * 0.05, h * 0.7),
+      w * 0.55,
       Paint()..shader = RadialGradient(
-        colors: [const Color(0xFF00E5CC).withValues(alpha: 0.15), const Color(0xFF00E5CC).withValues(alpha: 0.0)],
-      ).createShader(Rect.fromCircle(center: Offset(w * 0.85, h * 0.85), radius: w * 0.4)),
+        colors: [const Color(0xFFA78BFA).withValues(alpha: 0.16), const Color(0xFFA78BFA).withValues(alpha: 0.0)],
+      ).createShader(Rect.fromCircle(center: Offset(w * 0.05, h * 0.7), radius: w * 0.55)),
+    );
+
+    // Blob 4: blue bottom-right
+    canvas.drawCircle(
+      Offset(w * 0.88, h * 0.88),
+      w * 0.45,
+      Paint()..shader = RadialGradient(
+        colors: [const Color(0xFF5B8FFF).withValues(alpha: 0.12), const Color(0xFF5B8FFF).withValues(alpha: 0.0)],
+      ).createShader(Rect.fromCircle(center: Offset(w * 0.88, h * 0.88), radius: w * 0.45)),
     );
   }
 

@@ -1,35 +1,31 @@
-// Killer Service Worker
-// This replaces the old flutter_service_worker.js and forces it to self-destruct.
+'use strict';
 
-self.addEventListener('install', (e) => {
+self.addEventListener('install', () => {
   self.skipWaiting();
 });
 
-self.addEventListener('activate', (e) => {
-  e.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames.map((cacheName) => {
-          console.log('[ServiceWorker] Deleting old cache:', cacheName);
-          return caches.delete(cacheName);
-        })
-      );
-    }).then(() => {
-      console.log('[ServiceWorker] Unregistering self...');
-      return self.registration.unregister();
-    }).then(() => {
-      console.log('[ServiceWorker] Claiming clients and reloading...');
-      return self.clients.claim();
-    }).then(() => {
-      return self.clients.matchAll({ type: 'window' }).then((clients) => {
-        clients.forEach((client) => {
-          client.navigate(client.url);
-        });
-      });
-    })
-  );
-});
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    (async () => {
+      try {
+        await self.registration.unregister();
+      } catch (e) {
+        console.warn('Failed to unregister the service worker:', e);
+      }
 
-self.addEventListener('fetch', (e) => {
-  // Do nothing, let the network handle it
+      try {
+        const clients = await self.clients.matchAll({
+          type: 'window',
+        });
+        // Reload clients to ensure they are not using the old service worker.
+        clients.forEach((client) => {
+          if (client.url && 'navigate' in client) {
+            client.navigate(client.url);
+          }
+        });
+      } catch (e) {
+        console.warn('Failed to navigate some service worker clients:', e);
+      }
+    })()
+  );
 });
