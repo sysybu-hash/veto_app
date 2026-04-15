@@ -262,16 +262,22 @@ class _NavBar extends StatefulWidget {
 class _NavBarState extends State<_NavBar> {
   bool _loggedIn = false;
   String? _role;
+  String? _name;
 
   @override
   void initState() {
     super.initState();
-    AuthService().getToken().then((t) async {
-      if (t != null && t.isNotEmpty) {
-        final r = await AuthService().getStoredRole();
-        if (mounted) setState(() { _loggedIn = true; _role = r; });
-      }
-    });
+    _checkAuth();
+  }
+
+  Future<void> _checkAuth() async {
+    final auth = AuthService();
+    final t = await auth.getToken();
+    if (t != null && t.isNotEmpty) {
+      final r = await auth.getStoredRole();
+      final n = await auth.getStoredName();
+      if (mounted) setState(() { _loggedIn = true; _role = r; _name = n; });
+    }
   }
 
   void _enterApp(BuildContext ctx) {
@@ -302,10 +308,7 @@ class _NavBarState extends State<_NavBar> {
               Row(mainAxisSize: MainAxisSize.min, children: [
                 Container(
                   width: 36, height: 36,
-                  decoration: BoxDecoration(
-                    color: _C.inkDark,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
+                  decoration: BoxDecoration(color: _C.inkDark, borderRadius: BorderRadius.circular(10)),
                   child: const Icon(Icons.shield_rounded, color: Colors.white, size: 20),
                 ),
                 const SizedBox(width: 10),
@@ -340,12 +343,13 @@ class _NavBarState extends State<_NavBar> {
               const AppLanguageMenu(compact: true),
               const SizedBox(width: 8),
 
-              // ── Auth buttons ──
+              // ── Auth: user bubble or login buttons ──
               if (_loggedIn)
-                _NavBtn(
-                  label: c == 'he' ? 'כניסה לאפליקציה' : c == 'ru' ? 'Войти в приложение' : 'Enter App',
-                  filled: true,
-                  onTap: () => _enterApp(context),
+                _UserBubble(
+                  name: _name,
+                  role: _role,
+                  code: c,
+                  onEnterApp: () => _enterApp(context),
                 )
               else ...[
                 _NavBtn(label: t(c, 'navLogin'), filled: false, onTap: widget.onTap),
@@ -393,6 +397,128 @@ class _NavBtn extends StatelessWidget {
         minimumSize: const Size(48, 40),
       ),
       child: Text(label),
+    );
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════
+//  USER BUBBLE — shown in NavBar when user is logged in
+// ══════════════════════════════════════════════════════════════════
+class _UserBubble extends StatelessWidget {
+  final String? name;
+  final String? role;
+  final String code;
+  final VoidCallback onEnterApp;
+
+  const _UserBubble({
+    required this.name,
+    required this.role,
+    required this.code,
+    required this.onEnterApp,
+  });
+
+  String get _initial => (name != null && name!.isNotEmpty) ? name![0].toUpperCase() : '?';
+
+  String _roleLabel(String? r) {
+    switch (r) {
+      case 'lawyer': return code == 'he' ? 'עו"ד' : code == 'ru' ? 'Адвокат' : 'Lawyer';
+      case 'admin':  return code == 'he' ? 'מנהל' : code == 'ru' ? 'Админ'  : 'Admin';
+      default:       return code == 'he' ? 'משתמש' : code == 'ru' ? 'Польз.' : 'User';
+    }
+  }
+
+  Color get _roleColor {
+    switch (role) {
+      case 'lawyer': return const Color(0xFF00C9B1);
+      case 'admin':  return const Color(0xFFFF8A00);
+      default:       return const Color(0xFF5B8FFF);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onEnterApp,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: const Color(0xFFE2E8F8), width: 1.5),
+          boxShadow: [
+            BoxShadow(color: const Color(0xFF5B8FFF).withValues(alpha: 0.10), blurRadius: 12),
+            BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 6, offset: const Offset(0, 2)),
+          ],
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Avatar circle
+            Container(
+              width: 30, height: 30,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: _roleColor.withValues(alpha: 0.15),
+                border: Border.all(color: _roleColor.withValues(alpha: 0.4), width: 1.5),
+              ),
+              child: Center(
+                child: Text(
+                  _initial,
+                  style: TextStyle(color: _roleColor, fontSize: 13, fontWeight: FontWeight.w800),
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            // Name + role
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  name ?? (code == 'he' ? 'משתמש' : 'User'),
+                  style: const TextStyle(
+                    color: Color(0xFF0F172A),
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    height: 1.2,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                Container(
+                  margin: const EdgeInsets.only(top: 2),
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                  decoration: BoxDecoration(
+                    color: _roleColor.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
+                    _roleLabel(role),
+                    style: TextStyle(color: _roleColor, fontSize: 9, fontWeight: FontWeight.w700, letterSpacing: 0.5),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(width: 10),
+            // Enter arrow
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+              decoration: BoxDecoration(
+                color: const Color(0xFF5B8FFF),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(mainAxisSize: MainAxisSize.min, children: [
+                Text(
+                  code == 'he' ? 'כניסה' : code == 'ru' ? 'Войти' : 'Enter',
+                  style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w700),
+                ),
+                const SizedBox(width: 4),
+                const Icon(Icons.arrow_forward_ios_rounded, color: Colors.white, size: 11),
+              ]),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

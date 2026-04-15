@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../core/i18n/app_language.dart';
-import '../services/auth_service.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -33,24 +32,10 @@ class _SplashScreenState extends State<SplashScreen>
   }
 
   Future<void> _navigate() async {
-    final auth   = AuthService();
-    final token  = await auth.getToken();
     if (!mounted) return;
-    if (token != null && token.isNotEmpty) {
-      final role = await auth.getStoredRole() ?? 'user';
-      if (!mounted) return;
-      if (role == 'lawyer') {
-        Navigator.pushReplacementNamed(context, '/lawyer_dashboard');
-      } else if (role == 'admin') {
-        Navigator.pushReplacementNamed(context, '/admin_settings');
-      } else {
-        // For regular users, always land on veto_screen
-        // (subscription gate will handle unsubscribed users there)
-        Navigator.pushReplacementNamed(context, '/veto_screen');
-      }
-    } else {
-      Navigator.pushReplacementNamed(context, '/landing');
-    }
+    // Always show the landing page — the NavBar detects auth state
+    // and shows the appropriate "Enter App" / user bubble for logged-in users.
+    Navigator.pushReplacementNamed(context, '/landing');
   }
 
   @override
