@@ -132,8 +132,9 @@ class VetoTheme {
       useMaterial3: true,
       brightness: Brightness.light,
       scaffoldBackgroundColor: paper,
-      // Default icon color/size for non-AppBar contexts (matches ink text).
+      // Default icon color/size (AppBar uses appBarTheme.iconTheme).
       primaryIconTheme: const IconThemeData(color: ink, size: 24),
+      iconTheme: const IconThemeData(color: ink, size: 24),
       colorScheme: const ColorScheme.light(
         brightness: Brightness.light,
         primary: VetoColors.accent,
@@ -147,15 +148,10 @@ class VetoTheme {
         error: VetoColors.error,
         onError: Colors.white,
       ),
-      fontFamily: 'Heebo',
-      // Web + Heebo: some glyphs (e.g. rare punctuation / mixed scripts) need a
-      // broad Hebrew-capable fallback — avoids "Could not find Noto" warnings.
-      fontFamilyFallback: const [
-        'Noto Sans Hebrew',
-        'Noto Sans',
-        'Arial',
-        'sans-serif',
-      ],
+      // Never set ThemeData.fontFamily / fontFamilyFallback here. On Flutter Web
+      // those values merge into Icon's TextStyle and replace MaterialIcons with
+      // Heebo → blank squares site-wide. Hebrew uses explicit fontFamily on each
+      // entry in [textTheme] and in input/button themes below.
 
       appBarTheme: AppBarTheme(
         backgroundColor: VetoColors.surface,

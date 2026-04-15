@@ -1,4 +1,5 @@
 @echo off
+setlocal EnableDelayedExpansion
 chcp 65001 >nul
 echo ================================================
 echo  VETO-LEGAL - Deploy to Render + Vercel
@@ -7,8 +8,8 @@ echo  Vercel:  https://web-nine-gamma-76.vercel.app
 echo ================================================
 echo.
 
-:: Make sure we are in the right folder
-cd /d "C:\Users\User\Desktop\VETO_App"
+:: Repo root = folder containing this script (works for any clone path)
+cd /d "%~dp0"
 echo Working in: %CD%
 echo.
 
@@ -26,7 +27,9 @@ echo.
 echo [2/4] Building Flutter Web...
 echo   This may take 2-5 minutes...
 cd frontend
-call flutter build web --release --no-wasm-dry-run --no-tree-shake-icons --pwa-strategy=none --dart-define=VETO_API_BASE=https://veto-app-new.onrender.com
+for /f "delims=" %%i in ('git -C .. rev-parse --short HEAD 2^>nul') do set "VETO_SHA=%%i"
+if not defined VETO_SHA set "VETO_SHA=local"
+call flutter build web --release --no-wasm-dry-run --no-tree-shake-icons --pwa-strategy=none --dart-define=VETO_API_BASE=https://veto-app-new.onrender.com --dart-define=VETO_BUILD_ID=!VETO_SHA!
 if %errorlevel% neq 0 (
   echo.
   echo   ERROR: Flutter build failed! See error above.
@@ -46,7 +49,7 @@ echo.
 
 :: Step 4 - Commit + Push
 echo [4/4] Committing and pushing to GitHub...
-git -c user.email="sysybu@gmail.com" -c user.name="VETO" commit -m "feat: professional legal redesign - gold theme, navy, cream"
+git -c user.email="sysybu@gmail.com" -c user.name="VETO" commit -m "chore: deploy web (icons + build flags)"
 echo   Pushing... (may ask for GitHub password)
 git push origin main
 if %errorlevel% neq 0 (
