@@ -103,6 +103,25 @@ app.use(mongoSanitize());
 
 app.use('/api/', apiLimiter);
 
+// Browser / tools often open exactly http://localhost:5001/api — give JSON, not 404.
+const apiDiscovery = (_, res) =>
+  res.json({
+    ok: true,
+    app: 'VETO API',
+    hint: 'Sub-routes are under /api/* (auth, users, vault, …). This URL is only for discovery.',
+    get: {
+      health: '/health',
+      apiRoot: '/api',
+      pushVapidKey: '/api/push/vapid-key',
+    },
+    postExamples: {
+      requestOtp: '/api/auth/request-otp',
+      verifyOtp: '/api/auth/verify-otp',
+    },
+  });
+app.get('/api', apiDiscovery);
+app.get('/api/', apiDiscovery);
+
 // ── Static uploads folder (evidence files) ─────────────────
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
@@ -195,7 +214,7 @@ function start() {
   // Render / cloud: חייבים להאזין מיד על 0.0.0.0 — אחרת "Application loading" נתקע אם Mongo איטי או נכשל
   server.listen(PORT, '0.0.0.0', () => {
     console.log(`🚀 VETO Server listening on 0.0.0.0:${PORT}`);
-    console.log(`   REST  → http://localhost:${PORT}/api`);
+    console.log(`   REST  → GET http://localhost:${PORT}/api (JSON discovery) · routes under /api/*`);
     console.log(`   Auth  → POST http://localhost:${PORT}/api/auth/register`);
     console.log(`   WS    → ws://localhost:${PORT}`);
     console.log(`   Health → GET /health (mongo: pending → connected | error)`);

@@ -22,6 +22,7 @@ import '../core/theme/veto_glass_system.dart';
 import '../core/theme/veto_theme.dart';
 import '../widgets/app_language_menu.dart';
 import '../widgets/accessibility_toolbar.dart';
+import '../widgets/dispatch_sheets.dart';
 import '../services/auth_service.dart';
 import '../services/socket_service.dart';
 import '../services/ai_service.dart';
@@ -48,7 +49,6 @@ class _VetoScreenState extends State<VetoScreen> {
   bool _isDispatching = false;
   bool _isLoading = false;
   bool _isListening = false;
-  String _pendingCallType = 'audio';
   String? _activeEventId;
   String? _token;
   StreamSubscription<Map<String, dynamic>>? _emergencyCreatedSub;
@@ -57,6 +57,7 @@ class _VetoScreenState extends State<VetoScreen> {
   StreamSubscription<Map<String, dynamic>>? _vetoDispatchedSub;
   StreamSubscription<Map<String, dynamic>>? _vetoErrorSub;
   StreamSubscription<Map<String, dynamic>>? _caseAlreadyTakenSub;
+  StreamSubscription<Map<String, dynamic>>? _sessionReadySub;
   final List<_Msg> _messages = [];
   final List<Map<String, dynamic>> _geminiHistory = [];
   final _inputCtrl = TextEditingController();
@@ -92,6 +93,8 @@ class _VetoScreenState extends State<VetoScreen> {
     _vetoErrorSub = SocketService().onVetoError.listen(_handleVetoError);
     _caseAlreadyTakenSub =
         SocketService().onCaseAlreadyTaken.listen(_handleCaseAlreadyTaken);
+    _sessionReadySub =
+        SocketService().onSessionReady.listen(_handleSessionReady);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Future<void>.delayed(const Duration(milliseconds: 350), () {
         if (mounted) _checkSubscription();
@@ -132,6 +135,7 @@ class _VetoScreenState extends State<VetoScreen> {
     _vetoDispatchedSub?.cancel();
     _vetoErrorSub?.cancel();
     _caseAlreadyTakenSub?.cancel();
+    _sessionReadySub?.cancel();
     super.dispose();
   }
 
@@ -457,52 +461,6 @@ class _VetoScreenState extends State<VetoScreen> {
   }
 
   // ── Dispatch ─────────────────────────────────────────────
-  Future<void> _dispatchSOS() async {
-    if (_isDispatching) return;
-    HapticFeedback.heavyImpact();
-    setState(() => _isDispatching = true);
-    final socketRole = _role == 'admin' ? 'admin' : 'user';
-    final connected = await SocketService().ensureConnected(role: socketRole);
-    if (!mounted) return;
-    if (!connected) {
-      setState(() => _isDispatching = false);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(_langKey == 'he'
-            ? 'אין חיבור לשרת. בדוק רשת והתחבר מחדש.'
-            : _langKey == 'ru'
-                ? 'Нет связи с сервером. Проверьте сеть.'
-                : 'Cannot reach the server. Check your connection.'),
-        backgroundColor: VetoPalette.emergency,
-      ));
-      return;
-    }
-    Position? pos;
-    try {
-      pos = await Geolocator.getCurrentPosition(
-        locationSettings: const LocationSettings(
-          accuracy: LocationAccuracy.high,
-        ),
-      );
-    } catch (_) {}
-    SocketService().emitStartVeto(
-      lat: pos?.latitude ?? 32.08, lng: pos?.longitude ?? 34.78,
-      preferredLanguage: _langKey,
-      specialization: _s.he,
-      callType: _pendingCallType,
-    );
-    final msg = _langKey == 'ru' ? '🚨 SOS отправлен! Поиск адвоката...'
-        : _langKey == 'en' ? '🚨 SOS sent! Searching for a lawyer...'
-        : '🚨 SOS נשלח! מחפש עורך דין...';
-    if (mounted) {
-      setState(() { _messages.add(_Msg(text: msg, isUser: false, isSystem: true)); _tab = 1; });
-      _speak(msg);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(msg), backgroundColor: VetoPalette.emergency,
-        duration: const Duration(seconds: 4),
-      ));
-    }
-  }
-
   Future<void> _dispatch(String? spec, String? lawyerName) async {
     if (_isDispatching) return;
     setState(() => _isDispatching = true);
@@ -534,7 +492,6 @@ class _VetoScreenState extends State<VetoScreen> {
       lat: pos?.latitude ?? 32.08, lng: pos?.longitude ?? 34.78,
       preferredLanguage: _langKey,
       specialization: spec,
-      callType: _pendingCallType,
     );
     final specLabel = spec ?? '';
     final msg = lawyerName != null
@@ -587,113 +544,35 @@ class _VetoScreenState extends State<VetoScreen> {
     });
   }
 
-  // ── Contact / Tools ───────────────────────────────────────
-  void _openContact(String type) {
-    _pendingCallType = type == 'video' ? 'video' : 'audio';
-    _dispatchSOS();
+  Future<void> _onSosOrbTapped() async {
+    if (_isDispatching) return;
+    final spec = await showDispatchSpecialtySheet(context, langKey: _langKey);
+    if (spec == null || !mounted) return;
+    await _payAndDispatch(spec, null);
   }
 
-  Future<void> _showCallTypeSheet() async {
-    final lang = _langKey;
-    final chosen = await showModalBottomSheet<String>(
-      context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      builder: (ctx) => Container(
-        margin: const EdgeInsets.all(16),
-        padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(24),
-          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.10), blurRadius: 24)],
-        ),
-        child: Column(mainAxisSize: MainAxisSize.min, children: [
-          // Handle
-          Container(width: 36, height: 4,
-            decoration: BoxDecoration(color: const Color(0xFFE2E8F8), borderRadius: BorderRadius.circular(2))),
-          const SizedBox(height: 20),
-          Text(
-            lang == 'he' ? 'בחר סוג שיחה' : lang == 'ru' ? 'Выберите тип звонка' : 'Choose call type',
-            style: const TextStyle(color: VetoGlassTokens.textPrimary, fontSize: 18, fontWeight: FontWeight.w800),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            lang == 'he' ? 'כיצד תרצה לדבר עם עורך הדין?' : lang == 'ru' ? 'Как вы хотите связаться с адвокатом?' : 'How would you like to speak with the lawyer?',
-            style: const TextStyle(color: Color(0xFF64748B), fontSize: 13),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 24),
-          Row(children: [
-            // Audio option
-            Expanded(child: GestureDetector(
-              onTap: () => Navigator.pop(ctx, 'audio'),
-              child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 20),
-                decoration: BoxDecoration(
-                  color: VetoGlassTokens.glassFillStrong,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: VetoGlassTokens.neonCyan.withValues(alpha: 0.4), width: 1.5),
-                ),
-                child: Column(children: [
-                  Container(
-                    width: 52, height: 52,
-                    decoration: BoxDecoration(
-                      color: VetoGlassTokens.neonCyan.withValues(alpha: 0.12),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(Icons.phone_rounded, color: VetoGlassTokens.neonCyan, size: 26),
-                  ),
-                  const SizedBox(height: 10),
-                  Text(lang == 'he' ? 'שיחת קול' : lang == 'ru' ? 'Аудио' : 'Audio call',
-                    style: const TextStyle(color: VetoGlassTokens.textPrimary, fontSize: 14, fontWeight: FontWeight.w700)),
-                  const SizedBox(height: 4),
-                  Text(lang == 'he' ? 'ללא מצלמה' : lang == 'ru' ? 'Без камеры' : 'No camera',
-                    style: const TextStyle(color: Color(0xFF64748B), fontSize: 11)),
-                ]),
-              ),
-            )),
-            const SizedBox(width: 12),
-            // Video option
-            Expanded(child: GestureDetector(
-              onTap: () => Navigator.pop(ctx, 'video'),
-              child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 20),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF0FFF9),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: const Color(0xFF00C9B1).withValues(alpha: 0.4), width: 1.5),
-                ),
-                child: Column(children: [
-                  Container(
-                    width: 52, height: 52,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF00C9B1).withValues(alpha: 0.12),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(Icons.videocam_rounded, color: Color(0xFF00C9B1), size: 26),
-                  ),
-                  const SizedBox(height: 10),
-                  Text(lang == 'he' ? 'שיחת וידאו' : lang == 'ru' ? 'Видео' : 'Video call',
-                    style: const TextStyle(color: VetoGlassTokens.textPrimary, fontSize: 14, fontWeight: FontWeight.w700)),
-                  const SizedBox(height: 4),
-                  Text(lang == 'he' ? 'עם מצלמה' : lang == 'ru' ? 'С камерой' : 'With camera',
-                    style: const TextStyle(color: Color(0xFF64748B), fontSize: 11)),
-                ]),
-              ),
-            )),
-          ]),
-          const SizedBox(height: 16),
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, null),
-            child: Text(lang == 'he' ? 'ביטול' : lang == 'ru' ? 'Отмена' : 'Cancel',
-              style: const TextStyle(color: Color(0xFF94A3B8))),
-          ),
-        ]),
-      ),
+  void _handleSessionReady(Map<String, dynamic> data) {
+    final roomId = data['roomId']?.toString();
+    if (!mounted || roomId == null || roomId.isEmpty) return;
+
+    setState(() {
+      _isDispatching = false;
+      _activeEventId = data['eventId']?.toString() ?? roomId;
+    });
+
+    final socketRole = _role == 'admin' ? 'admin' : 'user';
+    Navigator.of(context).pushNamed(
+      '/call',
+      arguments: {
+        'roomId': roomId,
+        'callType': data['callType']?.toString() ?? 'audio',
+        'peerName': data['peerName']?.toString() ??
+            (_langKey == 'he' ? 'עורך דין' : 'Lawyer'),
+        'role': socketRole,
+        'eventId': data['eventId']?.toString() ?? roomId,
+        'language': _langKey,
+      },
     );
-    if (chosen != null && mounted) {
-      _openContact(chosen);
-    }
   }
 
   void _handleLawyerFound(Map<String, dynamic> data) {
@@ -705,18 +584,23 @@ class _VetoScreenState extends State<VetoScreen> {
       _activeEventId = data['eventId']?.toString() ?? roomId;
     });
 
-    Navigator.of(context).pushNamed(
-      '/call',
-      arguments: {
-        'roomId': roomId,
-        'callType': data['callType']?.toString() ?? _pendingCallType,
-        'peerName': data['lawyerName']?.toString() ??
-            (_langKey == 'he' ? 'עורך דין' : 'Lawyer'),
-        'role': 'user',
-        'eventId': data['eventId']?.toString() ?? roomId,
-        'language': _langKey,
-      },
-    );
+    final awaiting = data['awaitingCitizenChoice'] == true;
+    if (awaiting) {
+      final eid = data['eventId']?.toString() ?? roomId;
+      unawaited(() async {
+        final chosen = await showCitizenSessionModeSheet(
+          context,
+          langKey: _langKey,
+          lawyerName: data['lawyerName']?.toString(),
+        );
+        if (chosen != null && mounted) {
+          SocketService().emitCitizenChoseSession(eventId: eid, callType: chosen);
+        }
+      }());
+      return;
+    }
+
+    _handleSessionReady(data);
   }
 
   void _handleVetoDispatched(Map<String, dynamic> data) {
@@ -1264,18 +1148,6 @@ class _VetoScreenState extends State<VetoScreen> {
                     _buildScenarioSelector(isRtl, compact),
                     SizedBox(height: compact ? 12 : 14),
                     _rightsCard(),
-                    SizedBox(height: compact ? 14 : 16),
-                    _secLabel(isRtl
-                        ? 'צור קשר מיידי'
-                        : _langKey == 'ru' ? 'Быстрая связь' : 'Quick Contact'),
-                    const SizedBox(height: 8),
-                    _liveContactGrid(isRtl, compact),
-                    SizedBox(height: compact ? 14 : 16),
-                    _secLabel(isRtl
-                        ? 'כלים מהירים'
-                        : _langKey == 'ru' ? 'Инструменты' : 'Quick Tools'),
-                    const SizedBox(height: 8),
-                    _toolsGrid(isRtl, compact),
                     if (isAdmin) ...[
                       const SizedBox(height: 20),
                       _adminSection(isRtl),
@@ -1367,11 +1239,7 @@ class _VetoScreenState extends State<VetoScreen> {
       child: Column(
         children: [
           GestureDetector(
-            onTap: _isDispatching ? null : () {
-              HapticFeedback.heavyImpact();
-              // Same as contact cards: pick audio vs video before dispatch.
-              _showCallTypeSheet();
-            },
+            onTap: _isDispatching ? null : _onSosOrbTapped,
             child: SizedBox(
               width: ringOuter + 12,
               height: ringOuter + 12,
@@ -1827,222 +1695,6 @@ class _VetoScreenState extends State<VetoScreen> {
               ),
             ),
         ]),
-      );
-
-  Widget _liveContactGrid(bool isRtl, bool compact) => GridView.count(
-    shrinkWrap: true,
-    physics: const NeverScrollableScrollPhysics(),
-    clipBehavior: Clip.none,
-    crossAxisCount: compact ? 1 : 2,
-    // Taller cells on narrow screens so label + subtitle + icons are not clipped.
-    childAspectRatio: compact ? 2.05 : 2.05,
-    crossAxisSpacing: 10,
-    mainAxisSpacing: 10,
-    children: [
-      _ctCard(
-        Icons.phone_in_talk_rounded,
-        _langKey == 'he'
-            ? 'עורך דין אנושי'
-            : _langKey == 'ru'
-                ? 'Адвокат עכשיו'
-                : 'Human Lawyer',
-        _langKey == 'he'
-            ? 'חיבור מיידי לנציג אנושי'
-            : _langKey == 'ru'
-                ? 'Соединение с живым адвокатом'
-                : 'Connect with a live representative',
-        VetoPalette.primary,
-        _showCallTypeSheet,
-      ),
-      _ctCard(
-        Icons.bolt_rounded,
-        _langKey == 'he'
-            ? 'SOS מהיר'
-            : _langKey == 'ru'
-                ? 'Быстрый SOS'
-                : 'Quick SOS',
-        _langKey == 'he'
-            ? 'שיגור חירום למערכת'
-            : _langKey == 'ru'
-                ? 'Экстренный сигнал в систему'
-                : 'Emergency signal to VETO',
-        VetoPalette.emergency,
-        _showCallTypeSheet,
-      ),
-    ],
-  );
-
-  Widget _ctCard(
-    IconData icon,
-    String label,
-    String subtitle,
-    Color color,
-    VoidCallback onTap,
-  ) =>
-      Material(
-        color: Colors.transparent,
-        elevation: 0,
-        borderRadius: BorderRadius.circular(14),
-        child: InkWell(
-          onTap: () {
-            HapticFeedback.lightImpact();
-            onTap();
-          },
-          borderRadius: BorderRadius.circular(14),
-            child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-            decoration: BoxDecoration(
-              color: const Color(0xFFFFFFFF),
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: color.withValues(alpha: 0.35), width: 1.5),
-              boxShadow: [
-                BoxShadow(
-                  color: color.withValues(alpha: 0.08),
-                  blurRadius: 16,
-                  spreadRadius: 0,
-                ),
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.04),
-                  blurRadius: 8,
-                  offset: const Offset(0, 3),
-                ),
-              ],
-            ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Container(
-                  width: 48,
-                  height: 48,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    color: color.withValues(alpha: 0.12),
-                    shape: BoxShape.circle,
-                    border: Border.all(color: color.withValues(alpha: 0.25), width: 1),
-                  ),
-                  child: Icon(icon, color: color, size: 26),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        label,
-                        style: const TextStyle(
-                          color: VetoColors.inkDark,
-                          fontWeight: FontWeight.w800,
-                          fontSize: 15,
-                          height: 1.2,
-                        ),
-                      ),
-                      const SizedBox(height: 3),
-                      Text(
-                        subtitle,
-                        maxLines: 3,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          color: VetoColors.inkLight,
-                          fontWeight: FontWeight.w500,
-                          fontSize: 12,
-                          height: 1.25,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Icon(
-                  Directionality.of(context) == TextDirection.rtl
-                      ? Icons.chevron_left_rounded
-                      : Icons.chevron_right_rounded,
-                  size: 22,
-                  color: color.withValues(alpha: 0.7),
-                ),
-              ],
-            ),
-          ),
-        ),
-      );
-
-  Widget _toolsGrid(bool isRtl, bool compact) => GridView.count(
-    shrinkWrap: true,
-    physics: const NeverScrollableScrollPhysics(),
-    crossAxisCount: compact ? 2 : 4,
-    childAspectRatio: compact ? 1.35 : 0.88,
-    crossAxisSpacing: 10,
-    mainAxisSpacing: 10,
-    children: [
-      _toolBtn(Icons.camera_alt_outlined,
-          _langKey == 'he' ? 'תיעוד\nראיות'
-              : _langKey == 'ru' ? 'Запись\nдоказ.'
-              : 'Evidence\nRecord',
-          VetoPalette.warning, _openCamera),
-      _toolBtn(Icons.location_on_outlined,
-          _langKey == 'he' ? 'שתף\nמיקום'
-              : _langKey == 'ru' ? 'Копировать\nгео'
-              : 'Copy\nLocation',
-          VetoPalette.success, _shareLocation),
-      _toolBtn(Icons.volume_off_rounded,
-          _langKey == 'he' ? 'השתק\nקריינות'
-              : _langKey == 'ru' ? 'Стоп\nзвук'
-              : 'Mute\nVoice',
-          VetoPalette.textMuted, _stopSpeaking),
-      _toolBtn(Icons.refresh_rounded,
-          _langKey == 'he' ? 'חדש\nשיחה'
-              : _langKey == 'ru' ? 'Новый\nсеанс'
-              : 'New\nSession',
-          VetoPalette.info, _resetSession),
-    ],
-  );
-
-  Widget _toolBtn(IconData icon, String label, Color color, VoidCallback onTap) =>
-      Material(
-        color: Colors.transparent,
-        borderRadius: BorderRadius.circular(14),
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(14),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
-            decoration: BoxDecoration(
-              color: const Color(0xFFFFFFFF),
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: color.withValues(alpha: 0.25), width: 1.5),
-              boxShadow: [
-                BoxShadow(color: color.withValues(alpha: 0.06), blurRadius: 12),
-                BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 8, offset: const Offset(0, 3)),
-              ],
-            ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  width: 42,
-                  height: 42,
-                  decoration: BoxDecoration(
-                    color: color.withValues(alpha: 0.10),
-                    shape: BoxShape.circle,
-                    border: Border.all(color: color.withValues(alpha: 0.2), width: 1),
-                  ),
-                  child: Icon(icon, color: color, size: 20),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  label,
-                  style: const TextStyle(
-                    color: VetoColors.inkDark,
-                    fontSize: 11.5,
-                    fontWeight: FontWeight.w700,
-                    height: 1.2,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ],
-            ),
-          ),
-        ),
       );
 
   // ── Admin Evidence Files ──────────────────────────────────

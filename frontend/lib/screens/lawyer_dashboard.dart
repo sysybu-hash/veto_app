@@ -28,6 +28,7 @@ class _LawyerDashboardState extends State<LawyerDashboard> {
   StreamSubscription<Map<String, dynamic>>? _alertSub;
   StreamSubscription<Map<String, dynamic>>? _caseAcceptedSub;
   StreamSubscription<Map<String, dynamic>>? _caseTakenSub;
+  StreamSubscription<Map<String, dynamic>>? _sessionReadySub;
 
   static const Map<String, Map<String, String>> _copy = {
     'he': {
@@ -191,6 +192,40 @@ class _LawyerDashboardState extends State<LawyerDashboard> {
     });
 
     _caseAcceptedSub = SocketService().onCaseAccepted.listen((data) {
+      final awaiting = data['awaitingCitizenChoice'] == true;
+      if (awaiting) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              preferredLanguage == 'he'
+                  ? 'ממתין שהלקוח יבחר סוג שיחה…'
+                  : preferredLanguage == 'ru'
+                      ? 'Ожидаем выбор клиента…'
+                      : 'Waiting for the client to choose session type…',
+            ),
+            duration: const Duration(seconds: 5),
+            backgroundColor: VetoPalette.info,
+          ),
+        );
+        return;
+      }
+      final roomId = data['roomId']?.toString();
+      if (!mounted || roomId == null || roomId.isEmpty) return;
+      Navigator.of(context).pushNamed(
+        '/call',
+        arguments: {
+          'roomId': roomId,
+          'callType': data['callType']?.toString() ?? 'audio',
+          'peerName': data['peerName']?.toString() ?? 'Client',
+          'role': 'lawyer',
+          'eventId': data['eventId']?.toString() ?? roomId,
+          'language': data['language']?.toString() ?? preferredLanguage,
+        },
+      );
+    });
+
+    _sessionReadySub = SocketService().onSessionReady.listen((data) {
       final roomId = data['roomId']?.toString();
       if (!mounted || roomId == null || roomId.isEmpty) return;
       Navigator.of(context).pushNamed(
@@ -221,6 +256,7 @@ class _LawyerDashboardState extends State<LawyerDashboard> {
     _alertSub?.cancel();
     _caseAcceptedSub?.cancel();
     _caseTakenSub?.cancel();
+    _sessionReadySub?.cancel();
     super.dispose();
   }
 

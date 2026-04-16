@@ -35,6 +35,8 @@ class SocketService {
       StreamController<Map<String, dynamic>>.broadcast();
   final _caseAlreadyTakenController =
       StreamController<Map<String, dynamic>>.broadcast();
+  final _sessionReadyController =
+      StreamController<Map<String, dynamic>>.broadcast();
 
   Stream<Map<String, dynamic>> get onEmergencyCreated =>
       _emergencyCreatedController.stream;
@@ -56,6 +58,8 @@ class SocketService {
       _vetoErrorController.stream;
   Stream<Map<String, dynamic>> get onCaseAlreadyTaken =>
       _caseAlreadyTakenController.stream;
+  Stream<Map<String, dynamic>> get onSessionReady =>
+      _sessionReadyController.stream;
 
   SocketService._internal();
 
@@ -146,6 +150,7 @@ class SocketService {
       'case_already_taken',
       (d) => _emit(_caseAlreadyTakenController, d),
     );
+    _socket?.on('session_ready', (d) => _emit(_sessionReadyController, d));
 
     _socket?.onDisconnect((_) {
       debugPrint('Socket disconnected');
@@ -204,6 +209,17 @@ class SocketService {
     _socket?.off(event);
   }
 
+  /// Remove one handler without dropping other listeners for the same event (e.g. WebRTC + CallScreen).
+  void removeHandler(String event, Function(dynamic) handler) {
+    final list = _dynamicHandlers[event];
+    if (list == null) return;
+    list.remove(handler);
+    if (list.isEmpty) {
+      _dynamicHandlers.remove(event);
+      _socket?.off(event);
+    }
+  }
+
   /// Whether the socket is currently connected.
   bool get isConnected => _socket?.connected ?? false;
 
@@ -222,6 +238,16 @@ class SocketService {
     if (specialization != null) payload['specialization'] = specialization;
     if (callType != null && callType.isNotEmpty) payload['callType'] = callType;
     emit('start_veto', payload);
+  }
+
+  void emitCitizenChoseSession({
+    required String eventId,
+    required String callType,
+  }) {
+    emit('citizen_chose_session', {
+      'eventId': eventId,
+      'callType': callType,
+    });
   }
 
   void disconnect() {

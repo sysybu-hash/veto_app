@@ -98,7 +98,8 @@ module.exports = function initDispatch(io) {
           user_id:        userId,
           status:         'dispatching',
           language:       preferredLanguage || 'en',
-          call_type:      callType || 'audio',
+          // Session mode (audio / video / chat) is chosen by the citizen after a lawyer accepts.
+          call_type:      'pending',
           event_location: {
             type:        'Point',
             coordinates: [location.lng, location.lat],
@@ -295,26 +296,28 @@ module.exports = function initDispatch(io) {
           $addToSet: { emergency_events: eventId },
         });
 
-        // 3. Notify the User: lawyer found — navigate to call room ─
+        // 3. Notify the User: lawyer accepted — citizen chooses audio / video / chat next.
         io.to(`user:${event.user_id}`).emit('lawyer_found', {
           eventId,
           roomId,
-          callType:     event.call_type || 'audio',
-          lawyerName:   lawyer.full_name,
-          lawyerPhone:  lawyer.phone,
-          language:     lawyer.preferred_language,
-          message:      'A lawyer has accepted your request!',
+          callType:               'pending',
+          awaitingCitizenChoice:  true,
+          lawyerName:             lawyer.full_name,
+          lawyerPhone:            lawyer.phone,
+          language:               lawyer.preferred_language,
+          message:                'A lawyer has accepted your request!',
         });
 
-        // 4. Confirm to the winning lawyer — navigate to call room ─
+        // 4. Confirm to the winning lawyer — wait for citizen session mode (session_ready).
         socket.emit('case_accepted_confirmed', {
           eventId,
           roomId,
-          callType:     event.call_type || 'audio',
-          peerName:     'Client',
-          language:     event.language || 'he',
-          userLocation: event.event_location?.coordinates,
-          userId:       event.user_id?.toString(),
+          callType:               'pending',
+          awaitingCitizenChoice:  true,
+          peerName:               'Client',
+          language:               event.language || 'he',
+          userLocation:           event.event_location?.coordinates,
+          userId:                 event.user_id?.toString(),
         });
 
         // 5. Notify ALL other lawyers: case is gone ────────────
@@ -344,6 +347,76 @@ module.exports = function initDispatch(io) {
       } catch (err) {
         console.error('accept_case error:', err);
         socket.emit('veto_error', { message: 'Could not accept case. Please try again.' });
+      }
+    });
+
+    // ════════════════════════════════════════════════════════
+    //  EVENT: citizen_chose_session
+    //  Emitted by: User / admin (testing) after lawyer accepted
+    //  Payload:    { eventId, callType: 'audio' | 'video' | 'chat' }
+    // ════════════════════════════════════════════════════════
+    socket.on('citizen_chose_session', async ({ eventId, callType }) => {
+      if (role !== 'user' && role !== 'admin') {
+        socket.emit('veto_error', {
+          message: 'Only citizens can choose session mode.',
+        });
+        return;
+      }
+
+      const allowed = ['audio', 'video', 'chat'];
+      if (!eventId || !callType || !allowed.includes(callType)) {
+        socket.emit('veto_error', { message: 'Invalid session type.' });
+        return;
+      }
+
+      try {
+        const ev = await EmergencyEvent.findById(eventId);
+        if (!ev) {
+          socket.emit('veto_error', { message: 'Event not found.' });
+          return;
+        }
+        if (ev.user_id.toString() !== userId) {
+          socket.emit('veto_error', { message: 'Not your event.' });
+          return;
+        }
+        if (ev.status !== 'accepted') {
+          socket.emit('veto_error', { message: 'Case is not ready for session.' });
+          return;
+        }
+
+        await EmergencyEvent.findByIdAndUpdate(eventId, { call_type: callType });
+
+        const roomId = buildRoomId(eventId);
+        const lawyer = await Lawyer.findById(ev.assigned_lawyer_id).select(
+          'full_name phone preferred_language',
+        );
+        const userDoc = await User.findById(ev.user_id).select('full_name phone');
+
+        const clientLabel = userDoc?.full_name?.trim() || 'Client';
+
+        const basePayload = {
+          eventId,
+          roomId,
+          callType,
+          language: ev.language || 'he',
+        };
+
+        io.to(`user:${ev.user_id}`).emit('session_ready', {
+          ...basePayload,
+          lawyerName: lawyer?.full_name || 'Lawyer',
+          peerName:   lawyer?.full_name || 'Lawyer',
+        });
+
+        if (ev.assigned_lawyer_id) {
+          io.to(`lawyer:${ev.assigned_lawyer_id}`).emit('session_ready', {
+            ...basePayload,
+            peerName:   clientLabel,
+            lawyerName: lawyer?.full_name,
+          });
+        }
+      } catch (err) {
+        console.error('citizen_chose_session error:', err);
+        socket.emit('veto_error', { message: 'Could not start session.' });
       }
     });
 

@@ -35,6 +35,7 @@ class _WizardShellScreenState extends State<WizardShellScreen> {
   StreamSubscription<Map<String, dynamic>>? _lawyerFoundSub;
   StreamSubscription<Map<String, dynamic>>? _noLawyersSub;
   StreamSubscription<Map<String, dynamic>>? _caseTakenSub;
+  StreamSubscription<Map<String, dynamic>>? _sessionReadySub;
 
   @override
   void initState() {
@@ -83,6 +84,11 @@ class _WizardShellScreenState extends State<WizardShellScreen> {
 
     _lawyerFoundSub = _socket.onLawyerFound.listen((data) {
       if (!mounted) return;
+      final awaiting = data['awaitingCitizenChoice'] == true;
+      if (awaiting) {
+        unawaited(_showWizardSessionPicker(data));
+        return;
+      }
       setState(() {
         _isBusy = false;
         _wizardIndex = 2;
@@ -101,6 +107,27 @@ class _WizardShellScreenState extends State<WizardShellScreen> {
                   ? 'Lawyer connected: $foundName'
                   : 'עורך דין התחבר: $foundName'),
         ),
+      );
+    });
+
+    _sessionReadySub = _socket.onSessionReady.listen((data) {
+      final roomId = data['roomId']?.toString();
+      if (!mounted || roomId == null || roomId.isEmpty) return;
+      setState(() {
+        _isBusy = false;
+        _wizardIndex = 2;
+      });
+      Navigator.of(context).pushNamed(
+        '/call',
+        arguments: {
+          'roomId': roomId,
+          'callType': data['callType']?.toString() ?? 'audio',
+          'peerName': data['peerName']?.toString() ??
+              (_langCode == 'he' ? 'עורך דין' : 'Lawyer'),
+          'role': _role == 'admin' ? 'admin' : 'user',
+          'eventId': data['eventId']?.toString() ?? roomId,
+          'language': _langCode,
+        },
       );
     });
 
@@ -137,7 +164,70 @@ class _WizardShellScreenState extends State<WizardShellScreen> {
     _lawyerFoundSub?.cancel();
     _noLawyersSub?.cancel();
     _caseTakenSub?.cancel();
+    _sessionReadySub?.cancel();
     super.dispose();
+  }
+
+  Future<void> _showWizardSessionPicker(Map<String, dynamic> data) async {
+    final eventId = data['eventId']?.toString();
+    final lawyerName = data['lawyerName']?.toString() ??
+        (_langCode == 'ru' ? 'Адвокат' : _langCode == 'en' ? 'Lawyer' : 'עורך דין');
+    if (eventId == null || eventId.isEmpty) return;
+
+    final lang = _langCode;
+    final chosen = await showModalBottomSheet<String>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Padding(
+        padding: const EdgeInsets.all(16),
+        child: Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                lang == 'he'
+                    ? '$lawyerName קיבל את הקריאה'
+                    : '$lawyerName accepted',
+                style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.pop(ctx, 'audio'),
+                      child: Text(lang == 'he' ? 'אודיו' : 'Audio'),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.pop(ctx, 'video'),
+                      child: Text(lang == 'he' ? 'וידאו' : 'Video'),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.pop(ctx, 'chat'),
+                      child: Text(lang == 'he' ? 'צ\'ט' : 'Chat'),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    if (chosen != null && mounted) {
+      _socket.emitCitizenChoseSession(eventId: eventId, callType: chosen);
+    }
   }
 
   Future<void> _triggerEmergency() async {

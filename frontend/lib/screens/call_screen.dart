@@ -7,10 +7,16 @@
 // ============================================================
 
 import 'dart:async';
+import 'dart:convert';
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
+import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
+import '../config/app_config.dart';
 import '../core/theme/veto_theme.dart';
+import '../services/auth_service.dart';
 import '../services/call_api_service.dart';
 import '../services/call_recording_service.dart';
 import '../services/webrtc_service.dart';
@@ -23,8 +29,14 @@ class CallScreen extends StatefulWidget {
   State<CallScreen> createState() => _CallScreenState();
 }
 
+class _ChatLine {
+  _ChatLine({required this.text, required this.mine});
+  final String text;
+  final bool mine;
+}
+
 class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
-  late WebRTCService  _webrtc;
+  WebRTCService? _webrtc;
   late AnimationController _pulseCtrl;
   late Animation<double>   _pulseAnim;
   late AnimationController _fadeCtrl;
@@ -45,6 +57,20 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
   String? _callErrorText;
   late final CallRecordingService _recordingService;
   final CallApiService _callApiService = CallApiService();
+
+  /// Subscriber-only: user must opt in before we capture media.
+  bool _isSubscriber = false;
+  bool _userOptedRecord = false;
+  bool _liveRecording = false;
+
+  // Text session (same room, no WebRTC media)
+  bool get _isChat => _callType == 'chat';
+  bool _chatReady = false;
+  final List<_ChatLine> _chatLines = [];
+  final TextEditingController _chatInput = TextEditingController();
+  final ScrollController _chatScroll = ScrollController();
+  Timer? _chatDurationTimer;
+  int _chatSeconds = 0;
 
   // Timeout: if no peer joins within 75 seconds, show cancel option
   Timer? _waitTimeout;
@@ -85,9 +111,12 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
     }
 
     final myRole = args['role']?.toString() ?? 'user';
+    var ct = args['callType']?.toString() ?? 'video';
+    if (ct == 'webrtc') ct = 'video';
+
     setState(() {
       _roomId    = args['roomId']?.toString() ?? '';
-      _callType  = args['callType']?.toString() ?? 'video';
+      _callType  = ct;
       _peerName  = args['peerName']?.toString() ?? 'Legal Counsel';
       _myRole    = myRole;
       _eventId   = args['eventId']?.toString() ?? '';
@@ -95,7 +124,9 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
     });
 
     final socketService = context.read<SocketService>();
-    // WebRTC registers listeners on the underlying socket — it must exist first.
+    _isSubscriber = await AuthService().getStoredIsSubscribed();
+    if (!mounted) return;
+
     final online = await socketService.ensureConnected(role: myRole);
     if (!mounted) return;
     if (!online) {
@@ -109,40 +140,130 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
       return;
     }
 
-    _webrtc = WebRTCService(socketService);
+    if (_isChat) {
+      await _initChatSession(socketService);
+      return;
+    }
 
-    await _webrtc.joinRoom(
+    final w = WebRTCService(socketService);
+    _webrtc = w;
+
+    await w.joinRoom(
       _roomId,
       _callType == 'video' ? CallType.video : CallType.audio,
       socketRole: myRole,
     );
 
-    _webrtc.addListener(_onWebRTCUpdate);
+    w.addListener(_onWebRTCUpdate);
 
-    // Start waiting countdown — 75 seconds max
     _waitTick = Timer.periodic(const Duration(seconds: 1), (_) {
       if (!mounted) return;
       setState(() => _waitSeconds++);
     });
     _waitTimeout = Timer(const Duration(seconds: 75), () {
       if (!mounted) return;
-      if (_webrtc.state != CallState.connected) {
+      if (w.state != CallState.connected) {
         setState(() => _timedOut = true);
         _waitTick?.cancel();
       }
     });
   }
 
+  void _onChatReadyEvent(dynamic raw) {
+    if (!mounted) return;
+    final m = _socketMap(raw);
+    if (m['roomId']?.toString() != _roomId) return;
+    setState(() => _chatReady = true);
+    _waitTimeout?.cancel();
+    _waitTick?.cancel();
+    _startChatDurationTimer();
+  }
+
+  void _onChatMessageEvent(dynamic raw) {
+    if (!mounted) return;
+    final m = _socketMap(raw);
+    final t = m['text']?.toString() ?? '';
+    if (t.isEmpty) return;
+    final from = m['fromRole']?.toString() ?? '';
+    final mine = (_myRole == 'user' || _myRole == 'admin')
+        ? (from == 'user' || from == 'admin')
+        : from == 'lawyer';
+    setState(() {
+      _chatLines.add(_ChatLine(text: t, mine: mine));
+    });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_chatScroll.hasClients) {
+        _chatScroll.jumpTo(_chatScroll.position.maxScrollExtent);
+      }
+    });
+  }
+
+  void _onCallEndedEvent(dynamic raw) {
+    if (!_isChat || !mounted || _finalizedCall) return;
+    final m = _socketMap(raw);
+    final rid = m['roomId']?.toString();
+    if (rid != null && rid.isNotEmpty && rid != _roomId) return;
+    _finalizedCall = true;
+    unawaited(_finalizeAndNavigate());
+  }
+
+  Future<void> _initChatSession(SocketService socketService) async {
+    socketService.on('chat-ready', _onChatReadyEvent);
+    socketService.on('call-chat-message', _onChatMessageEvent);
+    socketService.on('call-ended', _onCallEndedEvent);
+
+    socketService.emit('join-call-room', {
+      'roomId': _roomId,
+      'callType': 'chat',
+    });
+
+    _waitTick = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (!mounted) return;
+      setState(() => _waitSeconds++);
+    });
+    _waitTimeout = Timer(const Duration(seconds: 75), () {
+      if (!mounted) return;
+      if (!_chatReady) {
+        setState(() => _timedOut = true);
+        _waitTick?.cancel();
+      }
+    });
+  }
+
+  Map<String, dynamic> _socketMap(dynamic raw) {
+    if (raw is Map) return Map<String, dynamic>.from(raw);
+    if (raw is List && raw.isNotEmpty && raw.first is Map) {
+      return Map<String, dynamic>.from(raw.first as Map);
+    }
+    return {};
+  }
+
+  void _startChatDurationTimer() {
+    _chatDurationTimer?.cancel();
+    _chatSeconds = 0;
+    _chatDurationTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (!mounted) return;
+      setState(() => _chatSeconds++);
+    });
+  }
+
+  String get _formattedChatDuration {
+    final m = (_chatSeconds ~/ 60).toString().padLeft(2, '0');
+    final s = (_chatSeconds % 60).toString().padLeft(2, '0');
+    return '$m:$s';
+  }
+
   void _onWebRTCUpdate() {
+    final w = _webrtc;
+    if (w == null) return;
     if (!mounted) return;
     setState(() {});
 
-    if (_webrtc.errorMessage != null && _webrtc.errorMessage!.trim().isNotEmpty) {
-      _callErrorText = _webrtc.errorMessage;
+    if (w.errorMessage != null && w.errorMessage!.trim().isNotEmpty) {
+      _callErrorText = w.errorMessage;
     }
 
-    if (_webrtc.state == CallState.connected && !_recordingStarted) {
-      // Cancel waiting timeout — call connected
+    if (w.state == CallState.connected && !_recordingStarted) {
       _waitTimeout?.cancel();
       _waitTick?.cancel();
       if (mounted) {
@@ -152,17 +273,38 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
           _callErrorText = null;
         });
       }
-      _recordingStarted = true;
-      _recordingService.start(
-        localStream: _webrtc.localStream,
-        remoteStream: _webrtc.remoteStream,
-        video: _callType == 'video',
-      );
+      _maybeStartRecording(w);
     }
 
-    if (_webrtc.state == CallState.ended && !_finalizedCall) {
+    if (w.state == CallState.ended && !_finalizedCall) {
       _finalizedCall = true;
       unawaited(_finalizeAndNavigate());
+    }
+  }
+
+  void _maybeStartRecording(WebRTCService w) {
+    if (_recordingStarted) return;
+    if (!_isSubscriber || !_userOptedRecord) return;
+    _recordingStarted = true;
+    _liveRecording = true;
+    _recordingService.start(
+      localStream: w.localStream,
+      remoteStream: w.remoteStream,
+      video: _callType == 'video',
+    );
+  }
+
+  Future<void> _toggleRecordingOptIn() async {
+    if (!_isSubscriber) return;
+    setState(() => _userOptedRecord = !_userOptedRecord);
+    final w = _webrtc;
+    if (_userOptedRecord && w != null && w.state == CallState.connected && !_recordingStarted) {
+      _maybeStartRecording(w);
+    }
+    if (!_userOptedRecord && _liveRecording) {
+      await _recordingService.stop();
+      _recordingStarted = false;
+      _liveRecording = false;
     }
   }
 
@@ -175,10 +317,31 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
       _callErrorText = null;
       _finalizedCall = false;
       _recordingStarted = false;
+      _liveRecording = false;
     });
 
-    _webrtc.dispose();
+    if (_isChat) {
+      setState(() {
+        _chatReady = false;
+        _chatLines.clear();
+      });
+      final socketService = context.read<SocketService>();
+      socketService.removeHandler('chat-ready', _onChatReadyEvent);
+      socketService.removeHandler('call-chat-message', _onChatMessageEvent);
+      socketService.removeHandler('call-ended', _onCallEndedEvent);
+      await Future<void>.delayed(const Duration(milliseconds: 150));
+      await _initChatSession(socketService);
+      return;
+    }
+
+    _webrtc?.removeListener(_onWebRTCUpdate);
+    _webrtc?.dispose();
+    _webrtc = null;
+
     final socketService = context.read<SocketService>();
+    await Future<void>.delayed(const Duration(milliseconds: 200));
+    if (!mounted) return;
+
     final online = await socketService.ensureConnected(role: _myRole);
     if (!mounted) return;
     if (!online) {
@@ -191,9 +354,10 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
       });
       return;
     }
-    _webrtc = WebRTCService(socketService);
-    _webrtc.addListener(_onWebRTCUpdate);
-    await _webrtc.joinRoom(
+    final w = WebRTCService(socketService);
+    _webrtc = w;
+    w.addListener(_onWebRTCUpdate);
+    await w.joinRoom(
       _roomId,
       _callType == 'video' ? CallType.video : CallType.audio,
       socketRole: _myRole,
@@ -205,7 +369,7 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
     });
     _waitTimeout = Timer(const Duration(seconds: 75), () {
       if (!mounted) return;
-      if (_webrtc.state != CallState.connected) {
+      if (w.state != CallState.connected) {
         setState(() => _timedOut = true);
         _waitTick?.cancel();
       }
@@ -221,7 +385,19 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
   }
 
   Future<void> _endCall() async {
-    await _webrtc.endCall();
+    if (_isChat) {
+      context.read<SocketService>().emit('call-ended', {
+        'roomId': _roomId,
+        'duration': _chatSeconds,
+      });
+      _chatDurationTimer?.cancel();
+      if (!_finalizedCall) {
+        _finalizedCall = true;
+        unawaited(_finalizeAndNavigate());
+      }
+      return;
+    }
+    await _webrtc?.endCall();
   }
 
   Future<void> _finalizeArtifacts() async {
@@ -232,25 +408,50 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
     }
 
     try {
+      if (_isChat) {
+        final buf = StringBuffer();
+        for (final line in _chatLines) {
+          buf.writeln(line.mine ? '[Me] ${line.text}' : '[$_peerName] ${line.text}');
+        }
+        final transcript = buf.toString().trim();
+        if (mounted) setState(() => _transcriptText = transcript);
+        if (transcript.isNotEmpty && mounted) {
+          await _maybeOfferVaultSave(transcript: transcript, audioBytes: null);
+        }
+        return;
+      }
+
       final recording = await _recordingService.stop();
-      if (recording == null || recording.bytes.isEmpty) return;
+      _liveRecording = false;
 
-      await _callApiService.uploadRecording(
-        eventId: _eventId,
-        bytes: recording.bytes,
-        mimeType: recording.mimeType,
-        fileName: recording.fileName,
-      );
+      String? transcript;
+      if (recording != null && recording.bytes.isNotEmpty) {
+        await _callApiService.uploadRecording(
+          eventId: _eventId,
+          bytes: recording.bytes,
+          mimeType: recording.mimeType,
+          fileName: recording.fileName,
+        );
 
-      final transcript = await _callApiService.transcribeRecording(
-        eventId: _eventId,
-        bytes: recording.bytes,
-        mimeType: recording.mimeType,
-        language: _language,
-      );
+        transcript = await _callApiService.transcribeRecording(
+          eventId: _eventId,
+          bytes: recording.bytes,
+          mimeType: recording.mimeType,
+          language: _language,
+        );
+      }
 
       if (mounted) {
         setState(() => _transcriptText = transcript);
+      }
+
+      if (mounted && transcript != null && transcript.isNotEmpty) {
+        await _maybeOfferVaultSave(
+          transcript: transcript,
+          audioBytes: recording?.bytes,
+          audioMime: recording?.mimeType,
+          audioName: recording?.fileName,
+        );
       }
     } catch (_) {
       if (mounted) {
@@ -265,14 +466,121 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
     }
   }
 
+  Future<void> _maybeOfferVaultSave({
+    required String transcript,
+    Uint8List? audioBytes,
+    String? audioMime,
+    String? audioName,
+  }) async {
+    if (!mounted) return;
+    final go = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(_language == 'he'
+            ? 'שמירה לכספת'
+            : _language == 'ru'
+                ? 'Сохранить в хранилище'
+                : 'Save to vault'),
+        content: Text(_language == 'he'
+            ? 'לשמור את התמלול (וההקלטה אם קיימת) לתיק המסמכים?'
+            : _language == 'ru'
+                ? 'Сохранить расшифровку (и запись) в хранилище?'
+                : 'Save transcript (and recording if any) to your file vault?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(_language == 'he' ? 'לא' : _language == 'ru' ? 'Нет' : 'No'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(_language == 'he' ? 'שמור' : _language == 'ru' ? 'Сохранить' : 'Save'),
+          ),
+        ],
+      ),
+    );
+    if (go != true || !mounted) return;
+
+    final token = await AuthService().getToken();
+    if (token == null) return;
+
+    try {
+      final tReq = http.MultipartRequest(
+        'POST',
+        Uri.parse('${AppConfig.baseUrl}/vault/files/upload'),
+      );
+      tReq.headers.addAll(
+        AppConfig.httpHeadersBinary({'Authorization': 'Bearer $token'}),
+      );
+      tReq.fields['name'] = 'veto-transcript-$_eventId.txt';
+      tReq.fields['mimeType'] = 'text/plain';
+      tReq.files.add(http.MultipartFile.fromBytes(
+        'file',
+        utf8.encode(transcript),
+        filename: 'veto-transcript-$_eventId.txt',
+      ));
+      final tRes = await tReq.send();
+      if (tRes.statusCode < 200 || tRes.statusCode >= 300) {
+        throw Exception('transcript vault ${tRes.statusCode}');
+      }
+
+      if (audioBytes != null && audioBytes.isNotEmpty) {
+        final aReq = http.MultipartRequest(
+          'POST',
+          Uri.parse('${AppConfig.baseUrl}/vault/files/upload'),
+        );
+        aReq.headers.addAll(
+          AppConfig.httpHeadersBinary({'Authorization': 'Bearer $token'}),
+        );
+        aReq.fields['name'] = audioName ?? 'veto-call-$_eventId.webm';
+        aReq.fields['mimeType'] = audioMime ?? 'audio/webm';
+        aReq.files.add(http.MultipartFile.fromBytes(
+          'file',
+          audioBytes,
+          filename: audioName ?? 'recording.webm',
+        ));
+        await aReq.send();
+      }
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(_language == 'he'
+                ? 'נשמר בכספת'
+                : _language == 'ru'
+                    ? 'Сохранено'
+                    : 'Saved to vault'),
+          ),
+        );
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(_language == 'he'
+                ? 'שמירה לכספת נכשלה'
+                : 'Vault save failed'),
+            backgroundColor: VetoColors.error,
+          ),
+        );
+      }
+    }
+  }
+
   @override
   void dispose() {
     _waitTimeout?.cancel();
     _waitTick?.cancel();
+    _chatDurationTimer?.cancel();
     _pulseCtrl.dispose();
     _fadeCtrl.dispose();
-    _webrtc.removeListener(_onWebRTCUpdate);
-    _webrtc.dispose();
+    _chatInput.dispose();
+    _chatScroll.dispose();
+    final svc = SocketService();
+    svc.removeHandler('chat-ready', _onChatReadyEvent);
+    svc.removeHandler('call-chat-message', _onChatMessageEvent);
+    svc.removeHandler('call-ended', _onCallEndedEvent);
+    _webrtc?.removeListener(_onWebRTCUpdate);
+    _webrtc?.dispose();
     super.dispose();
   }
 
@@ -287,26 +595,17 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
         opacity: _fadeAnim,
         child: Stack(
           children: [
-            // ── Video layer ─────────────────────────────────
-            _buildVideoLayer(),
-
-            // ── Gradient overlay ────────────────────────────
-            _buildGradientOverlay(),
-
-            // ── Top bar ─────────────────────────────────────
+            if (_isChat) _buildChatLayer() else _buildVideoLayer(),
+            if (!_isChat) _buildGradientOverlay(),
             Positioned(
               top: 0, left: 0, right: 0,
               child: SafeArea(child: _buildTopBar()),
             ),
-
-            // ── Transcript drawer ───────────────────────────
             if (_showTranscript)
               Positioned(
                 bottom: 120, left: 16, right: 16,
                 child: _buildTranscriptPanel(),
               ),
-
-            // ── Controls ────────────────────────────────────
             Positioned(
               bottom: 0, left: 0, right: 0,
               child: SafeArea(child: _buildControls()),
@@ -318,33 +617,165 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
   }
 
   // ─────────────────────────────────────────────────────────
+  //  Text session layer
+  // ─────────────────────────────────────────────────────────
+  Widget _buildChatLayer() {
+    return Container(
+      width: double.infinity,
+      height: double.infinity,
+      decoration: VetoDecorations.gradientBg(),
+      child: Column(
+        children: [
+          Expanded(
+            child: !_chatReady
+                ? Center(child: _buildChatWaitingBody())
+                : ListView.builder(
+                    controller: _chatScroll,
+                    padding: const EdgeInsets.all(16),
+                    itemCount: _chatLines.length,
+                    itemBuilder: (_, i) {
+                      final line = _chatLines[i];
+                      return Align(
+                        alignment:
+                            line.mine ? Alignment.centerRight : Alignment.centerLeft,
+                        child: Container(
+                          margin: const EdgeInsets.symmetric(vertical: 4),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 8,
+                          ),
+                          constraints: const BoxConstraints(maxWidth: 280),
+                          decoration: BoxDecoration(
+                            color: line.mine
+                                ? const Color(0xFF5B8FFF).withValues(alpha: 0.45)
+                                : Colors.white.withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            line.text,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontFamily: 'Heebo',
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+          ),
+          if (_chatReady)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _chatInput,
+                      style: const TextStyle(color: Colors.white),
+                      decoration: InputDecoration(
+                        hintText: _language == 'he'
+                            ? 'הקלד הודעה…'
+                            : _language == 'ru'
+                                ? 'Сообщение…'
+                                : 'Type a message…',
+                        hintStyle:
+                            TextStyle(color: Colors.white.withValues(alpha: 0.5)),
+                        filled: true,
+                        fillColor: Colors.white.withValues(alpha: 0.08),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      onSubmitted: (_) => _sendChatLine(),
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: _sendChatLine,
+                    icon: const Icon(Icons.send_rounded, color: Color(0xFF5B8FFF)),
+                  ),
+                ],
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  void _sendChatLine() {
+    final t = _chatInput.text.trim();
+    if (t.isEmpty || !_chatReady) return;
+    context.read<SocketService>().emit('call-chat-message', {
+      'roomId': _roomId,
+      'text': t,
+    });
+    setState(() {
+      _chatLines.add(_ChatLine(text: t, mine: true));
+      _chatInput.clear();
+    });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_chatScroll.hasClients) {
+        _chatScroll.jumpTo(_chatScroll.position.maxScrollExtent);
+      }
+    });
+  }
+
+  Widget _buildChatWaitingBody() {
+    if (_callErrorText != null) return _buildErrorPanel();
+    if (_timedOut) return _buildTimeoutPanel();
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          _peerName,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 22,
+            fontFamily: 'Heebo',
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        const SizedBox(height: 16),
+        _buildWaitingPanel(),
+      ],
+    );
+  }
+
+  // ─────────────────────────────────────────────────────────
   //  Video layer
   // ─────────────────────────────────────────────────────────
   Widget _buildVideoLayer() {
-    final isVideo = _callType == 'video';
-    final isConnected = _webrtc.state == CallState.connected;
-
-    if (!isVideo || !isConnected) {
-      // Audio call or connecting — show avatar
+    final w = _webrtc;
+    if (w == null) {
       return Container(
         width: double.infinity,
         height: double.infinity,
         decoration: VetoDecorations.gradientBg(),
-        child: Center(child: _buildAvatar()),
+        child: const Center(
+          child: CircularProgressIndicator(color: Colors.white54),
+        ),
+      );
+    }
+
+    final isVideo = _callType == 'video';
+    final isConnected = w.state == CallState.connected;
+
+    if (!isVideo || !isConnected) {
+      return Container(
+        width: double.infinity,
+        height: double.infinity,
+        decoration: VetoDecorations.gradientBg(),
+        child: Center(child: _buildAvatar(w)),
       );
     }
 
     return Stack(
       children: [
-        // Remote video (full screen)
         Positioned.fill(
           child: RTCVideoView(
-            _webrtc.remoteRenderer,
+            w.remoteRenderer,
             objectFit: RTCVideoViewObjectFit.RTCVideoViewObjectFitCover,
           ),
         ),
-
-        // Local video (picture-in-picture)
         Positioned(
           top: 100,
           right: 16,
@@ -357,12 +788,12 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
                 color: VetoColors.surface,
                 border: Border.all(color: VetoColors.border, width: 1),
               ),
-              child: _webrtc.cameraOff
+              child: w.cameraOff
                   ? const Center(
                       child: Icon(Icons.videocam_off, color: VetoColors.silver, size: 28),
                     )
                   : RTCVideoView(
-                      _webrtc.localRenderer,
+                      w.localRenderer,
                       mirror: true,
                       objectFit: RTCVideoViewObjectFit.RTCVideoViewObjectFitCover,
                     ),
@@ -376,13 +807,12 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
   // ─────────────────────────────────────────────────────────
   //  Avatar (audio mode / connecting)
   // ─────────────────────────────────────────────────────────
-  Widget _buildAvatar() {
-    final isConnecting = _webrtc.state != CallState.connected;
+  Widget _buildAvatar(WebRTCService w) {
+    final isConnecting = w.state != CallState.connected;
 
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        // Avatar circle
         AnimatedBuilder(
           animation: _pulseAnim,
           builder: (_, child) => Transform.scale(
@@ -414,9 +844,7 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
             ),
           ),
         ),
-
         const SizedBox(height: 24),
-
         Text(
           _peerName,
           style: const TextStyle(
@@ -426,21 +854,13 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
             color: VetoColors.white,
           ),
         ),
-
         const SizedBox(height: 8),
-
-        // Status
-        _buildStatusText(),
-
+        _buildStatusText(w),
         const SizedBox(height: 20),
-
-        // Waiting countdown + cancel
-        if (_webrtc.state == CallState.error) ...[
+        if (w.state == CallState.error) ...[
           _buildErrorPanel(),
-        ] else if (_webrtc.state == CallState.joining || _webrtc.state == CallState.ringing) ...[
-          _timedOut
-              ? _buildTimeoutPanel()
-              : _buildWaitingPanel(),
+        ] else if (w.state == CallState.joining || w.state == CallState.ringing) ...[
+          _timedOut ? _buildTimeoutPanel() : _buildWaitingPanel(),
         ],
       ],
     );
@@ -638,11 +1058,11 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildStatusText() {
+  Widget _buildStatusText(WebRTCService w) {
     String text;
     Color  color;
 
-    switch (_webrtc.state) {
+    switch (w.state) {
       case CallState.joining:
         text  = 'מתחבר לחדר...';
         color = VetoColors.accent;
@@ -650,7 +1070,7 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
         text  = 'מחכה לצד השני...';
         color = VetoColors.warning;
       case CallState.connected:
-        text  = _webrtc.formattedDuration;
+        text  = w.formattedDuration;
         color = VetoColors.success;
       case CallState.ended:
         text  = 'השיחה הסתיימה';
@@ -666,7 +1086,7 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        if (_webrtc.state == CallState.connected)
+        if (w.state == CallState.connected)
           Container(
             width: 8,
             height: 8,
@@ -711,11 +1131,15 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
   //  Top bar
   // ─────────────────────────────────────────────────────────
   Widget _buildTopBar() {
+    final w = _webrtc;
+    final webrtcConnected = w != null && w.state == CallState.connected;
+    final showDur = _isChat ? _chatReady : webrtcConnected;
+    final durText = _isChat ? _formattedChatDuration : (w?.formattedDuration ?? '00:00');
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Row(
         children: [
-          // VETO logo / badge
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
@@ -744,7 +1168,35 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
 
           const Spacer(),
 
-          // Call type indicator
+          if (_liveRecording)
+            Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                decoration: BoxDecoration(
+                  color: Colors.red.withValues(alpha: 0.35),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: Colors.redAccent.withValues(alpha: 0.6)),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.fiber_manual_record, color: Colors.red.shade200, size: 12),
+                    const SizedBox(width: 6),
+                    Text(
+                      _language == 'he' ? 'מוקלט' : 'REC',
+                      style: TextStyle(
+                        fontFamily: 'Heebo',
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.red.shade100,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
@@ -756,13 +1208,21 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(
-                  _callType == 'video' ? Icons.videocam : Icons.mic,
+                  _callType == 'video'
+                      ? Icons.videocam
+                      : _callType == 'chat'
+                          ? Icons.chat
+                          : Icons.mic,
                   color: Colors.white.withValues(alpha: 0.85),
                   size: 14,
                 ),
                 const SizedBox(width: 6),
                 Text(
-                  _callType == 'video' ? 'וידאו' : 'אודיו',
+                  _callType == 'video'
+                      ? 'וידאו'
+                      : _callType == 'chat'
+                          ? (_language == 'he' ? 'צ\'ט' : 'Chat')
+                          : 'אודיו',
                   style: TextStyle(
                     fontFamily: 'Heebo',
                     fontSize: 12,
@@ -775,8 +1235,7 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
 
           const SizedBox(width: 8),
 
-          // Duration when connected
-          if (_webrtc.state == CallState.connected)
+          if (showDur)
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
@@ -785,7 +1244,7 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
                 border: Border.all(color: VetoColors.success.withValues(alpha:0.3)),
               ),
               child: Text(
-                _webrtc.formattedDuration,
+                durText,
                 style: const TextStyle(
                   fontFamily: 'Heebo',
                   fontSize: 13,
@@ -857,38 +1316,88 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
   //  Controls
   // ─────────────────────────────────────────────────────────
   Widget _buildControls() {
+    final w = _webrtc;
+
+    if (_isChat) {
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            GestureDetector(
+              onTap: _endCall,
+              child: Container(
+                width: 72,
+                height: 72,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: VetoColors.vetoRed,
+                  boxShadow: VetoDecorations.vetoGlow(intensity: 0.8),
+                ),
+                child: const Icon(
+                  Icons.call_end,
+                  color: VetoColors.white,
+                  size: 32,
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              _language == 'he' ? 'סיום שיחה' : 'End',
+              style: const TextStyle(
+                fontFamily: 'Heebo',
+                fontSize: 12,
+                color: VetoColors.silverDim,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (w == null) {
+      return const SizedBox.shrink();
+    }
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Secondary controls row
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               _buildControlBtn(
-                icon: _webrtc.micMuted ? Icons.mic_off : Icons.mic,
-                label: _webrtc.micMuted ? 'הפעל' : 'השתק',
-                color: _webrtc.micMuted ? VetoColors.error : VetoColors.silver,
-                onTap: _webrtc.toggleMic,
+                icon: w.micMuted ? Icons.mic_off : Icons.mic,
+                label: w.micMuted ? 'הפעל' : 'השתק',
+                color: w.micMuted ? VetoColors.error : VetoColors.silver,
+                onTap: w.toggleMic,
               ),
               const SizedBox(width: 16),
               if (_callType == 'video') ...[
                 _buildControlBtn(
-                  icon: _webrtc.cameraOff ? Icons.videocam_off : Icons.videocam,
-                  label: _webrtc.cameraOff ? 'הפעל' : 'כבה',
-                  color: _webrtc.cameraOff ? VetoColors.error : VetoColors.silver,
-                  onTap: _webrtc.toggleCamera,
+                  icon: w.cameraOff ? Icons.videocam_off : Icons.videocam,
+                  label: w.cameraOff ? 'הפעל' : 'כבה',
+                  color: w.cameraOff ? VetoColors.error : VetoColors.silver,
+                  onTap: w.toggleCamera,
                 ),
                 const SizedBox(width: 16),
                 _buildControlBtn(
                   icon: Icons.flip_camera_ios,
                   label: 'הפוך',
                   color: VetoColors.silver,
-                  onTap: _webrtc.switchCamera,
+                  onTap: w.switchCamera,
                 ),
                 const SizedBox(width: 16),
               ],
+              if (_isSubscriber)
+                _buildControlBtn(
+                  icon: _userOptedRecord ? Icons.radio_button_checked : Icons.radio_button_off,
+                  label: _language == 'he' ? 'הקלטה' : 'Rec',
+                  color: _userOptedRecord ? Colors.redAccent : VetoColors.silver,
+                  onTap: () => unawaited(_toggleRecordingOptIn()),
+                ),
+              if (_isSubscriber) const SizedBox(width: 16),
               _buildControlBtn(
                 icon: Icons.transcribe,
                 label: 'תמלול',
@@ -897,10 +1406,7 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
               ),
             ],
           ),
-
           const SizedBox(height: 24),
-
-          // End call button
           GestureDetector(
             onTap: _endCall,
             child: Container(
@@ -918,7 +1424,6 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
               ),
             ),
           ),
-
           const SizedBox(height: 8),
           const Text(
             'סיום שיחה',

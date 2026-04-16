@@ -155,8 +155,8 @@ const EmergencyEventSchema = new mongoose.Schema(
     // ── Call Info ─────────────────────────────────────────────
     call_type: {
       type: String,
-      enum: ['video', 'audio', 'webrtc'],
-      default: 'video',
+      enum: ['video', 'audio', 'webrtc', 'chat', 'pending'],
+      default: 'pending',
     },
 
     // WebRTC room identifier — equals the eventId for simplicity

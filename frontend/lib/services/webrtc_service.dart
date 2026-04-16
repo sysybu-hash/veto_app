@@ -142,6 +142,7 @@ class WebRTCService extends ChangeNotifier {
         rtcCfg['iceServers'] = serverIce;
       }
     }
+    rtcCfg['sdpSemantics'] = 'unified-plan';
     _pc = await createPeerConnection(rtcCfg);
 
     // Add local tracks

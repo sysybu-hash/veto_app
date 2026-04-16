@@ -46,6 +46,8 @@ module.exports = function initWebRTC(io) {
           return socket.emit('call-error', { message: 'Not authorized for this call.' });
         }
 
+        const normalizedType = callType === 'chat' ? 'chat' : callType === 'audio' ? 'audio' : 'video';
+
         const roomKey = `call:${roomId}`;
         socket.join(roomKey);
 
@@ -53,13 +55,13 @@ module.exports = function initWebRTC(io) {
         if (!callRooms.has(roomId)) {
           callRooms.set(roomId, {
             participants: new Set(),
-            callType: callType || 'video',
+            callType: normalizedType,
             startedAt: new Date(),
           });
-          // Update event status to in-progress once a real call room is created
+          // Update event status to in-progress once a real session room is created
           await EmergencyEvent.findByIdAndUpdate(roomId, {
             status: 'in_progress',
-            call_type: callType || 'video',
+            call_type: normalizedType,
             call_started_at: new Date(),
           });
         }
@@ -67,13 +69,15 @@ module.exports = function initWebRTC(io) {
         const room = callRooms.get(roomId);
         room.participants.add(socket.id);
 
-        // Tell others someone joined (triggers offer creation)
-        socket.to(roomKey).emit('peer-joined', {
-          userId,
-          role,
-          socketId: socket.id,
-          callType: room.callType,
-        });
+        // WebRTC signaling — text-only sessions skip offer/answer
+        if (normalizedType !== 'chat') {
+          socket.to(roomKey).emit('peer-joined', {
+            userId,
+            role,
+            socketId: socket.id,
+            callType: room.callType,
+          });
+        }
 
         // Count active sockets in room
         const roomSockets = await io.in(roomKey).allSockets();
@@ -85,10 +89,43 @@ module.exports = function initWebRTC(io) {
           isCaller: roomSockets.size === 1, // first to join = caller (creates offer)
         });
 
-        console.log(`📞 [WebRTC] ${role} ${userId} joined room:${roomId} | participants: ${roomSockets.size}`);
+        if (normalizedType === 'chat' && roomSockets.size === 2) {
+          io.in(roomKey).emit('chat-ready', { roomId });
+        }
+
+        console.log(`📞 [WebRTC] ${role} ${userId} joined room:${roomId} | participants: ${roomSockets.size} | mode=${normalizedType}`);
       } catch (err) {
         console.error('[WebRTC] join-call-room error:', err);
         socket.emit('call-error', { message: 'Failed to join call room.' });
+      }
+    });
+
+    // ════════════════════════════════════════════════════════════
+    //  call-chat-message — text session in same call room
+    // ════════════════════════════════════════════════════════════
+    socket.on('call-chat-message', async ({ roomId, text }) => {
+      try {
+        const event = await EmergencyEvent.findById(roomId);
+        if (!event) return;
+
+        const uid = userId?.toString();
+        const isUser =
+          (role === 'user' || role === 'admin') &&
+          event.user_id?.toString() === uid;
+        const isLawyer =
+          role === 'lawyer' && event.assigned_lawyer_id?.toString() === uid;
+        if (!isUser && !isLawyer) return;
+
+        const t = typeof text === 'string' ? text.trim() : '';
+        if (!t || t.length > 4000) return;
+
+        socket.to(`call:${roomId}`).emit('call-chat-message', {
+          text: t,
+          fromRole: role,
+          userId: uid,
+        });
+      } catch (err) {
+        console.error('[WebRTC] call-chat-message error:', err);
       }
     });
 
