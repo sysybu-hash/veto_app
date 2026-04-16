@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../config/app_config.dart';
 import 'auth_service.dart';
+import 'package:flutter/foundation.dart' show debugPrint;
 
 class AiService {
   static final AiService _instance = AiService._internal();
@@ -87,8 +88,12 @@ class AiService {
         }
       } catch (_) {}
       return _fallbackReply('שגיאה בחיבור לשירות ה-AI (קוד ${resp.statusCode})');
-    } catch (_) {
-      return _fallbackReply('שגיאה בחיבור לשירות ה-AI. נסה שוב בעוד כמה שניות.');
+    } catch (e) {
+      debugPrint('AiService.chat failed: $e');
+      debugPrint('AiService.chat baseUrl=${AppConfig.baseUrl} health=${AppConfig.healthCheckUrl}');
+      // On Flutter web this commonly surfaces as "XMLHttpRequest error." (CORS / network / blocked).
+      final msg = 'שגיאה בחיבור לשירות ה-AI. (${e.toString()})';
+      return _fallbackReply(msg);
     }
   }
 }
