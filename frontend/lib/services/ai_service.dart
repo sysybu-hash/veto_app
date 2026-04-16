@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../config/app_config.dart';
@@ -8,6 +9,9 @@ class AiService {
   static final AiService _instance = AiService._internal();
   factory AiService() => _instance;
   AiService._internal();
+
+  /// Gemini (esp. Pro) + cold Render can exceed short client timeouts.
+  static const Duration _chatTimeout = Duration(seconds: 120);
 
   Future<void> _warmUpBackend() async {
     try {
@@ -48,7 +52,7 @@ class AiService {
             }),
             body: jsonEncode({'message': message, 'history': history, 'lang': lang}),
           )
-          .timeout(const Duration(seconds: 45));
+          .timeout(_chatTimeout);
 
       if (resp.statusCode == 200) {
         return jsonDecode(resp.body) as Map<String, dynamic>;
@@ -88,6 +92,11 @@ class AiService {
         }
       } catch (_) {}
       return _fallbackReply('שגיאה בחיבור לשירות ה-AI (קוד ${resp.statusCode})');
+    } on TimeoutException catch (e, st) {
+      debugPrint('AiService.chat timeout: $e\n$st');
+      return _fallbackReply(
+        'התשובה מהשרת ארכה יותר מדי. נסה שוב בעוד רגע — אם זה חוזר, בדוק חיבור לאינטרנט.',
+      );
     } catch (e) {
       debugPrint('AiService.chat failed: $e');
       debugPrint('AiService.chat baseUrl=${AppConfig.baseUrl} health=${AppConfig.healthCheckUrl}');
