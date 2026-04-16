@@ -35,11 +35,14 @@ module.exports = function initWebRTC(io) {
           return socket.emit('call-error', { message: 'Emergency event not found.' });
         }
 
-        // Authorization check
-        const isUser   = role === 'user'   && event.user_id?.toString() === userId;
-        const isLawyer = role === 'lawyer' && event.assigned_lawyer_id?.toString() === userId;
-        const isAdmin  = role === 'admin';
-        if (!isUser && !isLawyer && !isAdmin) {
+        // Authorization: citizen (user or admin account) or assigned lawyer only.
+        const uid = userId?.toString();
+        const isUser =
+          (role === 'user' || role === 'admin') &&
+          event.user_id?.toString() === uid;
+        const isLawyer =
+          role === 'lawyer' && event.assigned_lawyer_id?.toString() === uid;
+        if (!isUser && !isLawyer) {
           return socket.emit('call-error', { message: 'Not authorized for this call.' });
         }
 

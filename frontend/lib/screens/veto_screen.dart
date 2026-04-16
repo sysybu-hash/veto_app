@@ -1557,7 +1557,8 @@ class _VetoScreenState extends State<VetoScreen> {
           GestureDetector(
             onTap: _isDispatching ? null : () {
               HapticFeedback.heavyImpact();
-              _dispatchSOS();
+              // Same as contact cards: pick audio vs video before dispatch.
+              _showCallTypeSheet();
             },
             child: SizedBox(
               width: ringOuter + 12,

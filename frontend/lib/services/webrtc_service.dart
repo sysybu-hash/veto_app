@@ -33,6 +33,9 @@ class WebRTCService extends ChangeNotifier {
   int  _callDuration    = 0;
   Timer? _durationTimer;
 
+  /// Set by `room-joined`: first peer creates the offer only after `peer-joined`.
+  bool _isCaller = false;
+
   // ── WebRTC objects ────────────────────────────────────────
   RTCPeerConnection? _pc;
   MediaStream?       _localStream;
@@ -177,22 +180,21 @@ class WebRTCService extends ChangeNotifier {
     _socket.on('room-joined', (data) async {
       final isCaller = data['isCaller'] == true;
       debugPrint('[WebRTC] Room joined | isCaller=$isCaller');
+      _isCaller = isCaller;
       _setState(CallState.ringing);
-      if (isCaller) {
-        // Wait a moment for peer to join
-        await Future.delayed(const Duration(milliseconds: 500));
-        await _initCall(true, null);
-      }
+      // Caller must NOT create an offer here — the room has no peer yet, so the
+      // offer would be broadcast to nobody. Callee waits for `webrtc-offer`.
     });
 
-    // Peer joined — if we're callee, init and wait for offer
+    // Second peer joined: only the caller creates the offer, now that we have a target.
     _socket.on('peer-joined', (data) async {
       final peerSocketId = data['socketId'] as String?;
       debugPrint('[WebRTC] Peer joined: $peerSocketId');
-      if (_state == CallState.joining || _state == CallState.ringing) {
-        await _initCall(false, peerSocketId);
-        _peerSocketId = peerSocketId;
-      }
+      if (!_isCaller || peerSocketId == null || peerSocketId.isEmpty) return;
+      if (_pc != null) return;
+      if (_state != CallState.joining && _state != CallState.ringing) return;
+      await Future.delayed(const Duration(milliseconds: 200));
+      await _initCall(true, peerSocketId);
     });
 
     // Received offer (callee side)
