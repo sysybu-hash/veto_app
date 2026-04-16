@@ -65,8 +65,8 @@ module.exports = function initDispatch(io) {
       });
     }
 
-    // ── User joins their private room ──────────────────────
-    if (role === 'user') {
+    // ── User + admin (testing as citizen) get the client notification room ─
+    if (role === 'user' || role === 'admin') {
       socket.join(`user:${userId}`);
     }
 
@@ -76,7 +76,13 @@ module.exports = function initDispatch(io) {
     //  Payload:    { location: { lat, lng }, preferredLanguage }
     // ════════════════════════════════════════════════════════
     socket.on('start_veto', async (payload) => {
-      if (role !== 'user') return; // lawyers can't trigger VETO
+      // Only citizen accounts (user / admin testing on veto screen) may dispatch.
+      if (role !== 'user' && role !== 'admin') {
+        socket.emit('veto_error', {
+          message: 'Dispatch is only available from a citizen account.',
+        });
+        return;
+      }
 
       const { location, preferredLanguage, specialization, callType } = payload;
 
@@ -373,7 +379,7 @@ module.exports = function initDispatch(io) {
     //  Payload:    { eventId }
     // ════════════════════════════════════════════════════════
     socket.on('cancel_veto', async ({ eventId }) => {
-      if (role !== 'user') return;
+      if (role !== 'user' && role !== 'admin') return;
 
       await EmergencyEvent.findByIdAndUpdate(eventId, {
         status:       'cancelled',
