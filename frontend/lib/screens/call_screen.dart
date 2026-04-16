@@ -83,16 +83,20 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
       return;
     }
 
+    final myRole = args['role']?.toString() ?? 'user';
     setState(() {
       _roomId    = args['roomId']?.toString() ?? '';
       _callType  = args['callType']?.toString() ?? 'video';
       _peerName  = args['peerName']?.toString() ?? 'Legal Counsel';
-      _myRole    = args['role']?.toString() ?? 'user';
+      _myRole    = myRole;
       _eventId   = args['eventId']?.toString() ?? '';
       _language  = args['language']?.toString() ?? 'he';
     });
 
     final socketService = context.read<SocketService>();
+    // WebRTC registers listeners on the underlying socket — it must exist first.
+    await socketService.connect(role: myRole);
+
     _webrtc = WebRTCService(socketService);
 
     await _webrtc.joinRoom(

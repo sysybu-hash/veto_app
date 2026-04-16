@@ -178,7 +178,8 @@ class WebRTCService extends ChangeNotifier {
   void _registerSocketHandlers() {
     // Room joined — now we know if we're caller or callee
     _socket.on('room-joined', (data) async {
-      final isCaller = data['isCaller'] == true;
+      final raw = data['isCaller'];
+      final isCaller = raw == true || raw == 'true';
       debugPrint('[WebRTC] Room joined | isCaller=$isCaller');
       _isCaller = isCaller;
       _setState(CallState.ringing);
@@ -188,23 +189,29 @@ class WebRTCService extends ChangeNotifier {
 
     // Second peer joined: only the caller creates the offer, now that we have a target.
     _socket.on('peer-joined', (data) async {
-      final peerSocketId = data['socketId'] as String?;
+      final peerSocketId = data['socketId']?.toString();
       debugPrint('[WebRTC] Peer joined: $peerSocketId');
       if (!_isCaller || peerSocketId == null || peerSocketId.isEmpty) return;
       if (_pc != null) return;
       if (_state != CallState.joining && _state != CallState.ringing) return;
       await Future.delayed(const Duration(milliseconds: 200));
-      await _initCall(true, peerSocketId);
+      try {
+        await _initCall(true, peerSocketId);
+      } catch (e, st) {
+        debugPrint('[WebRTC] Caller init failed: $e\n$st');
+        _setState(CallState.error);
+      }
     });
 
     // Received offer (callee side)
     _socket.on('webrtc-offer', (data) async {
       try {
+        final fromSid = data['fromSocketId']?.toString();
         if (_pc == null) {
           // Init without creating offer (we're callee)
-          await _initCall(false, data['fromSocketId'] as String?);
+          await _initCall(false, fromSid);
         }
-        _peerSocketId = data['fromSocketId'];
+        _peerSocketId = fromSid;
         final offerMap = Map<String, dynamic>.from(data['offer']);
         await _pc!.setRemoteDescription(
           RTCSessionDescription(offerMap['sdp'], offerMap['type']),

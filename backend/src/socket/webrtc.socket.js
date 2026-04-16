@@ -97,14 +97,20 @@ module.exports = function initWebRTC(io) {
     //  Emitted by: Caller (first peer) → to Callee
     //  Payload:    { roomId, offer: RTCSessionDescription, targetSocketId }
     // ════════════════════════════════════════════════════════════
+    // Use io.to(socketId) for targeted relay — socket.to(otherId) is unreliable in some
+    // Socket.io setups; delivery to a specific peer must go through the server io instance.
     socket.on('webrtc-offer', ({ roomId, offer, targetSocketId }) => {
-      const to = targetSocketId ? socket.to(targetSocketId) : socket.to(`call:${roomId}`);
-      to.emit('webrtc-offer', {
+      const payload = {
         offer,
         fromSocketId: socket.id,
         fromUserId: userId,
         fromRole: role,
-      });
+      };
+      if (targetSocketId) {
+        io.to(String(targetSocketId)).emit('webrtc-offer', payload);
+      } else {
+        socket.to(`call:${roomId}`).emit('webrtc-offer', payload);
+      }
     });
 
     // ════════════════════════════════════════════════════════════
@@ -113,11 +119,15 @@ module.exports = function initWebRTC(io) {
     //  Payload:    { roomId, answer: RTCSessionDescription, targetSocketId }
     // ════════════════════════════════════════════════════════════
     socket.on('webrtc-answer', ({ roomId, answer, targetSocketId }) => {
-      const to = targetSocketId ? socket.to(targetSocketId) : socket.to(`call:${roomId}`);
-      to.emit('webrtc-answer', {
+      const payload = {
         answer,
         fromSocketId: socket.id,
-      });
+      };
+      if (targetSocketId) {
+        io.to(String(targetSocketId)).emit('webrtc-answer', payload);
+      } else {
+        socket.to(`call:${roomId}`).emit('webrtc-answer', payload);
+      }
     });
 
     // ════════════════════════════════════════════════════════════
@@ -126,11 +136,15 @@ module.exports = function initWebRTC(io) {
     //  Payload:    { roomId, candidate: RTCIceCandidate, targetSocketId }
     // ════════════════════════════════════════════════════════════
     socket.on('ice-candidate', ({ roomId, candidate, targetSocketId }) => {
-      const to = targetSocketId ? socket.to(targetSocketId) : socket.to(`call:${roomId}`);
-      to.emit('ice-candidate', {
+      const payload = {
         candidate,
         fromSocketId: socket.id,
-      });
+      };
+      if (targetSocketId) {
+        io.to(String(targetSocketId)).emit('ice-candidate', payload);
+      } else {
+        socket.to(`call:${roomId}`).emit('ice-candidate', payload);
+      }
     });
 
     // ════════════════════════════════════════════════════════════
