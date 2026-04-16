@@ -8,6 +8,24 @@ class AiService {
   factory AiService() => _instance;
   AiService._internal();
 
+  Future<void> _warmUpBackend() async {
+    try {
+      await http
+          .get(
+            Uri.parse(AppConfig.healthCheckUrl),
+            headers: AppConfig.httpGetHeaders,
+          )
+          .timeout(const Duration(seconds: 6));
+    } catch (_) {
+      // Best-effort warmup — ignore failures.
+    }
+  }
+
+  Map<String, dynamic> _fallbackReply(String msg) => {
+        'classified': false,
+        'reply': msg,
+      };
+
   /// Send a chat message to the AI backend.
   /// [history] — list of previous exchanges in Gemini format:
   ///   [{ 'role': 'user'|'model', 'parts': [{'text': '...'}] }, ...]
@@ -17,6 +35,9 @@ class AiService {
     String lang = 'he',
   }) async {
     try {
+      // Render free instances may be asleep; wake the backend first.
+      await _warmUpBackend();
+
       final token = await AuthService().getToken();
       final resp = await http
           .post(
@@ -26,7 +47,7 @@ class AiService {
             }),
             body: jsonEncode({'message': message, 'history': history, 'lang': lang}),
           )
-          .timeout(const Duration(seconds: 30));
+          .timeout(const Duration(seconds: 45));
 
       if (resp.statusCode == 200) {
         return jsonDecode(resp.body) as Map<String, dynamic>;
@@ -54,12 +75,20 @@ class AiService {
             'reply': msg ?? 'שירות ה-AI לא הוגדר בשרת.',
           };
         } catch (_) {
-          return {'classified': false, 'reply': 'שירות ה-AI לא זמין כרגע.'};
+          return _fallbackReply('שירות ה-AI לא זמין כרגע.');
         }
       }
-      return {'classified': false, 'reply': 'שגיאה בחיבור לשירות ה-AI'};
+      // Try to surface backend error details for easier debugging.
+      try {
+        final body = jsonDecode(resp.body) as Map<String, dynamic>;
+        final detail = (body['detail'] ?? body['error'] ?? '').toString().trim();
+        if (detail.isNotEmpty) {
+          return _fallbackReply(detail);
+        }
+      } catch (_) {}
+      return _fallbackReply('שגיאה בחיבור לשירות ה-AI (קוד ${resp.statusCode})');
     } catch (_) {
-      return {'classified': false, 'reply': 'שגיאה בחיבור לשירות ה-AI'};
+      return _fallbackReply('שגיאה בחיבור לשירות ה-AI. נסה שוב בעוד כמה שניות.');
     }
   }
 }
