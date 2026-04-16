@@ -12,6 +12,7 @@ import 'package:provider/provider.dart';
 
 import '../config/app_config.dart';
 import '../core/i18n/app_language.dart';
+import '../core/theme/veto_glass_system.dart';
 import '../core/theme/veto_theme.dart';
 import '../services/auth_service.dart';
 import '../services/webrtc_settings_store.dart';
@@ -504,19 +505,19 @@ class _SettingsScreenState extends State<SettingsScreen>
     return Directionality(
       textDirection: isRtl ? TextDirection.rtl : TextDirection.ltr,
       child: Scaffold(
-        backgroundColor: const Color(0xFFF0F4FF),
+        backgroundColor: VetoGlassTokens.bgBase,
         appBar: AppBar(
-          backgroundColor: Colors.white,
+          backgroundColor: const Color(0x18FFFFFF),
           elevation: 0,
           shadowColor: Colors.transparent,
           surfaceTintColor: Colors.transparent,
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Color(0xFF334155), size: 20),
+            icon: const Icon(Icons.arrow_back_ios_new_rounded, color: VetoGlassTokens.textPrimary, size: 20),
             onPressed: () => Navigator.of(context).pop(),
           ),
           title: Text(
             _t(code, 'title'),
-            style: const TextStyle(color: Color(0xFF0F172A), fontWeight: FontWeight.w800, fontSize: 18),
+            style: const TextStyle(color: VetoGlassTokens.textPrimary, fontWeight: FontWeight.w800, fontSize: 18),
           ),
           centerTitle: true,
           actions: [
@@ -525,7 +526,7 @@ class _SettingsScreenState extends State<SettingsScreen>
               child: TextButton(
                 onPressed: _saving ? null : () => _save(code),
                 style: TextButton.styleFrom(
-                  backgroundColor: const Color(0xFF5B8FFF),
+                  backgroundColor: VetoGlassTokens.neonBlue,
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
@@ -538,9 +539,9 @@ class _SettingsScreenState extends State<SettingsScreen>
           ],
           bottom: TabBar(
             controller: _wizardTab,
-            indicatorColor: const Color(0xFF5B8FFF),
-            labelColor: const Color(0xFF0F172A),
-            unselectedLabelColor: const Color(0xFF64748B),
+            indicatorColor: VetoGlassTokens.neonCyan,
+            labelColor: VetoGlassTokens.textPrimary,
+            unselectedLabelColor: VetoGlassTokens.textMuted,
             labelStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
             isScrollable: true,
             tabs: [
@@ -550,9 +551,10 @@ class _SettingsScreenState extends State<SettingsScreen>
             ],
           ),
         ),
-        body: _loading
-            ? const Center(child: CircularProgressIndicator(color: Color(0xFF5B8FFF)))
-            : TabBarView(
+        body: VetoGlassAuroraBackground(
+          child: _loading
+              ? const Center(child: CircularProgressIndicator(color: VetoGlassTokens.neonCyan))
+              : TabBarView(
                 controller: _wizardTab,
                 children: [
                   SingleChildScrollView(
@@ -1144,6 +1146,7 @@ class _SettingsScreenState extends State<SettingsScreen>
                 ),
                 ],
               ),
+        ),
       ),
     );
   }

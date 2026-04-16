@@ -7,7 +7,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 
-import '../core/theme/veto_theme.dart';
+import '../core/theme/veto_glass_system.dart';
 import '../platform/maps_embed_stub.dart';
 import '../platform/maps_embed_web.dart' as maps_web;
 
@@ -73,37 +73,39 @@ class _MapsScreenState extends State<MapsScreen> {
     final title = isHe ? 'מפת Google' : 'Google Maps';
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF0F4FF),
+      backgroundColor: VetoGlassTokens.bgBase,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: const Color(0x18FFFFFF),
         elevation: 0,
         shadowColor: Colors.transparent,
         surfaceTintColor: Colors.transparent,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Color(0xFF334155), size: 20),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: VetoGlassTokens.textPrimary, size: 20),
           onPressed: () => Navigator.of(context).pop(),
         ),
-        title: Text(title, style: const TextStyle(color: Color(0xFF0F172A), fontWeight: FontWeight.w800, fontSize: 18)),
+        title: Text(title, style: const TextStyle(color: VetoGlassTokens.textPrimary, fontWeight: FontWeight.w800, fontSize: 18)),
         centerTitle: true,
         bottom: const PreferredSize(
           preferredSize: Size.fromHeight(1),
-          child: Divider(height: 1, color: Color(0xFFE2E8F8)),
+          child: Divider(height: 1, color: VetoGlassTokens.glassBorder),
         ),
       ),
-      body: _error != null
-          ? Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Text(_error!,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(color: VetoPalette.text)),
-              ),
-            )
-          : _embedUrl == null
-              ? const Center(child: CircularProgressIndicator())
-              : kIsWeb
-                  ? maps_web.buildMapsEmbed(_webViewId!, _embedUrl!)
-                  : MapsEmbed(embedUrl: _embedUrl!),
+      body: VetoGlassAuroraBackground(
+        child: _error != null
+            ? Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Text(_error!,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(color: VetoGlassTokens.textPrimary)),
+                ),
+              )
+            : _embedUrl == null
+                ? const Center(child: CircularProgressIndicator(color: VetoGlassTokens.neonCyan))
+                : kIsWeb
+                    ? maps_web.buildMapsEmbed(_webViewId!, _embedUrl!)
+                    : MapsEmbed(embedUrl: _embedUrl!),
+      ),
     );
   }
 }

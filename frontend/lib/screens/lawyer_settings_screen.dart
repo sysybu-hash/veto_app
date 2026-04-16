@@ -11,6 +11,7 @@ import 'package:provider/provider.dart';
 
 import '../config/app_config.dart';
 import '../core/i18n/app_language.dart';
+import '../core/theme/veto_glass_system.dart';
 import '../core/theme/veto_theme.dart';
 import '../services/auth_service.dart';
 
@@ -398,17 +399,17 @@ class _LawyerSettingsScreenState extends State<LawyerSettingsScreen> {
     return Directionality(
       textDirection: isRtl ? TextDirection.rtl : TextDirection.ltr,
       child: Scaffold(
-        backgroundColor: const Color(0xFFF0F4FF),
+        backgroundColor: VetoGlassTokens.bgBase,
         appBar: AppBar(
-          backgroundColor: Colors.white,
+          backgroundColor: const Color(0x18FFFFFF),
           elevation: 0,
           shadowColor: Colors.transparent,
           surfaceTintColor: Colors.transparent,
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Color(0xFF334155), size: 20),
+            icon: const Icon(Icons.arrow_back_ios_new_rounded, color: VetoGlassTokens.textPrimary, size: 20),
             onPressed: () => Navigator.of(context).pop(),
           ),
-          title: Text(_t(code, 'title'), style: const TextStyle(color: Color(0xFF0F172A), fontWeight: FontWeight.w800, fontSize: 18)),
+          title: Text(_t(code, 'title'), style: const TextStyle(color: VetoGlassTokens.textPrimary, fontWeight: FontWeight.w800, fontSize: 18)),
           centerTitle: true,
           actions: [
             Padding(
@@ -416,7 +417,7 @@ class _LawyerSettingsScreenState extends State<LawyerSettingsScreen> {
               child: FilledButton(
                 onPressed: _saving ? null : () => _save(code),
                 style: FilledButton.styleFrom(
-                  backgroundColor: const Color(0xFF5B8FFF),
+                  backgroundColor: VetoGlassTokens.neonBlue,
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -427,11 +428,12 @@ class _LawyerSettingsScreenState extends State<LawyerSettingsScreen> {
           ],
           bottom: const PreferredSize(
             preferredSize: Size.fromHeight(1),
-            child: Divider(height: 1, color: Color(0xFFE2E8F8)),
+            child: Divider(height: 1, color: VetoGlassTokens.glassBorder),
           ),
         ),
-        body: _loading
-            ? const Center(child: CircularProgressIndicator(color: Color(0xFF5B8FFF)))
+        body: VetoGlassAuroraBackground(
+          child: _loading
+            ? const Center(child: CircularProgressIndicator(color: VetoGlassTokens.neonCyan))
             : ListView(
                 padding: const EdgeInsets.all(16),
                 children: [
@@ -659,6 +661,7 @@ class _LawyerSettingsScreenState extends State<LawyerSettingsScreen> {
                   const SizedBox(height: 32),
                 ],
               ),
+        ),
       ),
     );
   }

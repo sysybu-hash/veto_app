@@ -10,6 +10,7 @@ import 'package:provider/provider.dart';
 
 import '../config/app_config.dart';
 import '../core/i18n/app_language.dart';
+import '../core/theme/veto_glass_system.dart';
 import '../core/theme/veto_theme.dart';
 import '../services/auth_service.dart';
 
@@ -684,36 +685,37 @@ class _SubscriptionAdminScreenState
     return Directionality(
       textDirection: isRtl ? TextDirection.rtl : TextDirection.ltr,
       child: Scaffold(
-        backgroundColor: const Color(0xFFF0F4FF),
+        backgroundColor: VetoGlassTokens.bgBase,
         appBar: AppBar(
-          backgroundColor: Colors.white,
+          backgroundColor: const Color(0x18FFFFFF),
           elevation: 0,
           shadowColor: Colors.transparent,
           surfaceTintColor: Colors.transparent,
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Color(0xFF334155), size: 20),
+            icon: const Icon(Icons.arrow_back_ios_new_rounded, color: VetoGlassTokens.textPrimary, size: 20),
             onPressed: () => Navigator.of(context).pop(),
           ),
           title: Text(_t(code, 'title'),
-              style: const TextStyle(color: Color(0xFF0F172A), fontWeight: FontWeight.w800, fontSize: 18)),
+              style: const TextStyle(color: VetoGlassTokens.textPrimary, fontWeight: FontWeight.w800, fontSize: 18)),
           centerTitle: true,
           actions: [
-            IconButton(icon: const Icon(Icons.refresh_rounded, color: Color(0xFF334155)), onPressed: _load,
+            IconButton(icon: const Icon(Icons.refresh_rounded, color: VetoGlassTokens.textPrimary), onPressed: _load,
                 tooltip: _t(code, 'refresh')),
           ],
           bottom: TabBar(
             controller: _tabController,
-            labelColor: const Color(0xFF5B8FFF),
-            unselectedLabelColor: const Color(0xFF94A3B8),
-            indicatorColor: const Color(0xFF5B8FFF),
+            labelColor: VetoGlassTokens.neonCyan,
+            unselectedLabelColor: VetoGlassTokens.textMuted,
+            indicatorColor: VetoGlassTokens.neonCyan,
             tabs: [
               Tab(text: _t(code, 'tabUsers'), icon: const Icon(Icons.people_rounded, size: 18)),
               Tab(text: _t(code, 'tabLogs'), icon: const Icon(Icons.history_rounded, size: 18)),
             ],
           ),
         ),
-        body: _loading
-            ? const Center(child: CircularProgressIndicator())
+        body: VetoGlassAuroraBackground(
+          child: _loading
+            ? const Center(child: CircularProgressIndicator(color: VetoGlassTokens.neonCyan))
             : _loadError != null
                 ? Center(child: Padding(
                     padding: const EdgeInsets.all(24),
@@ -742,6 +744,7 @@ class _SubscriptionAdminScreenState
                   _buildLogsTab(code),
                 ],
               ),
+        ),
       ),
     );
   }
@@ -783,7 +786,7 @@ class _SubscriptionAdminScreenState
             hintText: _t(code, 'search'),
             hintStyle: const TextStyle(color: Color(0xFF94A3B8)),
             prefixIcon: const Icon(Icons.search_rounded, color: Color(0xFF94A3B8), size: 20),
-            filled: true, fillColor: const Color(0xFFF0F4FF),
+            filled: true, fillColor: VetoGlassTokens.glassFillStrong,
             contentPadding: const EdgeInsets.symmetric(vertical: 10),
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(10),
                 borderSide: const BorderSide(color: Color(0xFFE2E8F8))),

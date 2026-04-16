@@ -11,6 +11,7 @@ import 'package:provider/provider.dart';
 
 import '../config/app_config.dart';
 import '../core/i18n/app_language.dart';
+import '../core/theme/veto_glass_system.dart';
 import '../core/theme/veto_theme.dart';
 import '../services/auth_service.dart';
 
@@ -438,24 +439,25 @@ class _ChatScreenState extends State<ChatScreen> {
     return Directionality(
       textDirection: isRtl ? TextDirection.rtl : TextDirection.ltr,
       child: Scaffold(
-        backgroundColor: const Color(0xFFF0F4FF),
-        body: LayoutBuilder(builder: (_, constraints) {
-          final isWide = constraints.maxWidth > 720;
-          if (isWide) {
-            return Row(children: [
-              SizedBox(width: 320, child: _buildConversationList()),
-              const VerticalDivider(width: 1, color: VetoPalette.border),
-              Expanded(child: _activePartnerId == null
-                  ? _buildEmptyThread()
-                  : _buildThread()),
-            ]);
-          }
-          // Narrow: show thread if active, else show list
-          if (_activePartnerId != null) {
-            return _buildThread(showBackButton: true);
-          }
-          return _buildConversationList(showAppBar: true);
-        }),
+        backgroundColor: VetoGlassTokens.bgBase,
+        body: VetoGlassAuroraBackground(
+          child: LayoutBuilder(builder: (_, constraints) {
+            final isWide = constraints.maxWidth > 720;
+            if (isWide) {
+              return Row(children: [
+                SizedBox(width: 320, child: _buildConversationList()),
+                const VerticalDivider(width: 1, color: VetoGlassTokens.glassBorder),
+                Expanded(child: _activePartnerId == null
+                    ? _buildEmptyThread()
+                    : _buildThread()),
+              ]);
+            }
+            if (_activePartnerId != null) {
+              return _buildThread(showBackButton: true);
+            }
+            return _buildConversationList(showAppBar: true);
+          }),
+        ),
       ),
     );
   }
@@ -463,34 +465,34 @@ class _ChatScreenState extends State<ChatScreen> {
   // ── Conversation list panel ────────────────────────────────────
   Widget _buildConversationList({bool showAppBar = false}) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF0F4FF),
+      backgroundColor: VetoGlassTokens.bgBase,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: const Color(0x18FFFFFF),
         elevation: 0,
         shadowColor: Colors.transparent,
         surfaceTintColor: Colors.transparent,
         leading: showAppBar ? null : BackButton(
-          color: const Color(0xFF334155),
+          color: VetoGlassTokens.textPrimary,
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: Text(
           _t('title'),
-          style: const TextStyle(color: Color(0xFF0F172A), fontWeight: FontWeight.w800, fontSize: 18),
+          style: const TextStyle(color: VetoGlassTokens.textPrimary, fontWeight: FontWeight.w800, fontSize: 18),
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.edit_outlined, color: Color(0xFF5B8FFF)),
+            icon: const Icon(Icons.edit_outlined, color: VetoGlassTokens.neonCyan),
             onPressed: _showNewChatPicker,
             tooltip: _t('newChat'),
           ),
         ],
         bottom: const PreferredSize(
           preferredSize: Size.fromHeight(1),
-          child: Divider(height: 1, color: Color(0xFFE2E8F8)),
+          child: Divider(height: 1, color: VetoGlassTokens.glassBorder),
         ),
       ),
       body: _loadingConvs
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(child: CircularProgressIndicator(color: VetoGlassTokens.neonCyan))
           : _conversations.isEmpty
               ? Center(
                   child: Column(mainAxisSize: MainAxisSize.min, children: [
@@ -614,15 +616,15 @@ class _ChatScreenState extends State<ChatScreen> {
   // ── Message thread panel ───────────────────────────────────────
   Widget _buildThread({bool showBackButton = false}) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF0F4FF),
+      backgroundColor: VetoGlassTokens.bgBase,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: const Color(0x18FFFFFF),
         elevation: 0,
         shadowColor: Colors.transparent,
         surfaceTintColor: Colors.transparent,
         leading: showBackButton
             ? IconButton(
-                icon: const Icon(Icons.arrow_back_rounded, color: Color(0xFF334155)),
+                icon: const Icon(Icons.arrow_back_rounded, color: VetoGlassTokens.textPrimary),
                 onPressed: () => setState(() {
                   _activePartnerId = null;
                   _activePartnerName = null;
@@ -632,42 +634,42 @@ class _ChatScreenState extends State<ChatScreen> {
         title: Row(children: [
           CircleAvatar(
             radius: 16,
-            backgroundColor: const Color(0xFF5B8FFF).withValues(alpha: 0.15),
+            backgroundColor: VetoGlassTokens.neonBlue.withValues(alpha: 0.2),
             child: Text(
               (_activePartnerName?.isNotEmpty == true)
                   ? _activePartnerName![0].toUpperCase()
                   : '?',
-              style: const TextStyle(color: Color(0xFF5B8FFF), fontWeight: FontWeight.w700, fontSize: 14),
+              style: const TextStyle(color: VetoGlassTokens.neonCyan, fontWeight: FontWeight.w700, fontSize: 14),
             ),
           ),
           const SizedBox(width: 10),
           Expanded(
             child: Text(_activePartnerName ?? '',
-                style: const TextStyle(color: Color(0xFF0F172A), fontWeight: FontWeight.w700, fontSize: 15),
+                style: const TextStyle(color: VetoGlassTokens.textPrimary, fontWeight: FontWeight.w700, fontSize: 15),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis),
           ),
         ]),
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh_rounded, color: Color(0xFF334155)),
+            icon: const Icon(Icons.refresh_rounded, color: VetoGlassTokens.textPrimary),
             onPressed: () => _loadMessages(reset: true),
           ),
         ],
         bottom: const PreferredSize(
           preferredSize: Size.fromHeight(1),
-          child: Divider(height: 1, color: Color(0xFFE2E8F8)),
+          child: Divider(height: 1, color: VetoGlassTokens.glassBorder),
         ),
       ),
       body: Column(children: [
         // Loading more indicator
         if (_loadingMsgs && _messages.isNotEmpty)
           const LinearProgressIndicator(
-              color: VetoPalette.primary, minHeight: 2),
+              color: VetoGlassTokens.neonCyan, minHeight: 2),
         // Messages list
         Expanded(
           child: _loadingMsgs && _messages.isEmpty
-              ? const Center(child: CircularProgressIndicator())
+              ? const Center(child: CircularProgressIndicator(color: VetoGlassTokens.neonCyan))
               : ListView.builder(
                   controller: _scrollCtrl,
                   padding: const EdgeInsets.symmetric(

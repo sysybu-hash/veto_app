@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../core/i18n/app_language.dart';
+import '../core/theme/veto_glass_system.dart';
 import '../core/theme/veto_theme.dart';
 import '../services/admin_service.dart';
 import '../services/auth_service.dart';
@@ -108,18 +109,18 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
     return Directionality(
       textDirection: AppLanguage.directionOf(code),
       child: Scaffold(
-        backgroundColor: const Color(0xFFF0F4FF),
+        backgroundColor: VetoGlassTokens.bgBase,
         appBar: AppBar(
-          backgroundColor: Colors.white,
+          backgroundColor: const Color(0x18FFFFFF),
           elevation: 0,
           shadowColor: Colors.transparent,
           surfaceTintColor: Colors.transparent,
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Color(0xFF334155), size: 20),
+            icon: const Icon(Icons.arrow_back_ios_new_rounded, color: VetoGlassTokens.textPrimary, size: 20),
             onPressed: () => Navigator.of(context).pop(),
           ),
           title: Text(_t(code, 'adminPanel'),
-              style: const TextStyle(color: Color(0xFF0F172A), fontWeight: FontWeight.w800, fontSize: 18)),
+              style: const TextStyle(color: VetoGlassTokens.textPrimary, fontWeight: FontWeight.w800, fontSize: 18)),
           centerTitle: true,
           actions: [
             const Padding(
@@ -131,16 +132,16 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                 padding: EdgeInsets.all(14),
                 child: SizedBox(
                   width: 18, height: 18,
-                  child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF5B8FFF)),
+                  child: CircularProgressIndicator(strokeWidth: 2, color: VetoGlassTokens.neonCyan),
                 ),
               ),
             IconButton(
-              icon: const Icon(Icons.apps_rounded, color: Color(0xFF334155)),
+              icon: const Icon(Icons.apps_rounded, color: VetoGlassTokens.textPrimary),
               tooltip: _t(code, 'openApp'),
               onPressed: () => Navigator.of(context).pushNamed('/veto_screen'),
             ),
             IconButton(
-              icon: const Icon(Icons.refresh_rounded, color: Color(0xFF334155)),
+              icon: const Icon(Icons.refresh_rounded, color: VetoGlassTokens.textPrimary),
               tooltip: _t(code, 'refresh'),
               onPressed: _loadAll,
             ),
@@ -150,11 +151,12 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
               onPressed: () => AuthService().logout(context),
             ),
           ],
-          bottom: const PreferredSize(preferredSize: Size.fromHeight(1), child: Divider(height: 1, color: Color(0xFFE2E8F8))),
+          bottom: const PreferredSize(preferredSize: Size.fromHeight(1), child: Divider(height: 1, color: VetoGlassTokens.glassBorder)),
         ),
-        body: RefreshIndicator(
+        body: VetoGlassAuroraBackground(
+          child: RefreshIndicator(
           onRefresh: _loadAll,
-          color: const Color(0xFF5B8FFF),
+          color: VetoGlassTokens.neonCyan,
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
             padding: const EdgeInsets.all(24),
@@ -301,6 +303,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
               ),
             ),
           ),
+        ),
         ),
       ),
     );

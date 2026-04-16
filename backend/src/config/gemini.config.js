@@ -4,11 +4,11 @@
 // ============================================================
 
 /**
- * Default: Gemini 3 Flash (preview) — latest Flash-class model in the
+ * Default: Gemini 3.1 Pro (preview) — highest quality model for the
  * Developer API. Override with env `GEMINI_MODEL` (e.g. `gemini-2.5-flash`
- * for stable GA only, or `gemini-3.1-flash-lite-preview` for lowest cost).
+ * for stable GA only, or `gemini-3-flash-preview` for lower latency/cost).
  */
-const DEFAULT_GEMINI_MODEL = 'gemini-3-flash-preview';
+const DEFAULT_GEMINI_MODEL = 'gemini-3.1-pro-preview';
 
 function getGeminiModelId() {
   const fromEnv = (process.env.GEMINI_MODEL || '').trim();

@@ -54,7 +54,7 @@ git push origin main
 | `JWT_SECRET` | מחרוזת אקראית ארוכה (מינימום 64 תווים) |
 | `GOOGLE_CLIENT_SECRET` | מ-Google Cloud Console |
 | `GEMINI_API_KEY` | מ-Google AI Studio |
-| `GEMINI_MODEL` | אופציונלי — ברירת מחדל בקוד: `gemini-3-flash-preview`; ליציבות מלאה: `gemini-2.5-flash` |
+| `GEMINI_MODEL` | אופציונלי — ברירת מחדל בקוד: `gemini-3.1-pro-preview`; ליציבות מלאה: `gemini-2.5-flash` |
 | `CLOUDINARY_CLOUD_NAME` | מ-Cloudinary Dashboard |
 | `CLOUDINARY_API_KEY` | מ-Cloudinary Dashboard |
 | `CLOUDINARY_API_SECRET` | מ-Cloudinary Dashboard |

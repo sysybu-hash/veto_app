@@ -4,12 +4,15 @@
 // ============================================================
 
 import 'dart:convert';
+import 'dart:ui' show ImageFilter;
+
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 
 import '../config/app_config.dart';
 import '../core/i18n/app_language.dart';
+import '../core/theme/veto_glass_system.dart';
 import '../core/theme/veto_theme.dart';
 import '../services/auth_service.dart';
 
@@ -221,40 +224,51 @@ class _AdminDashboardState extends State<AdminDashboard> {
     return Directionality(
       textDirection: isRtl ? TextDirection.rtl : TextDirection.ltr,
       child: Scaffold(
-        backgroundColor: const Color(0xFFF0F4FF),
-        body: Row(
+        backgroundColor: VetoGlassTokens.bgBase,
+        body: Stack(
           children: [
+            const Positioned.fill(child: CustomPaint(painter: VetoFluidBackgroundPainter())),
+            Row(
+              children: [
             // ── RIGHT SIDEBAR (matches mockup) ─────────────────
-            Container(
-              width: 220,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                border: Border(
-                  left: isRtl ? BorderSide.none : const BorderSide(color: Color(0xFFE2E8F8)),
-                  right: isRtl ? const BorderSide(color: Color(0xFFE2E8F8)) : BorderSide.none,
-                ),
-                boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 8)],
-              ),
+            ClipRect(
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
+                child: Container(
+                  width: 220,
+                  decoration: BoxDecoration(
+                    color: VetoGlassTokens.glassFillStrong,
+                    border: Border(
+                      left: isRtl ? BorderSide.none : BorderSide(color: Colors.white.withValues(alpha: 0.12)),
+                      right: isRtl ? BorderSide(color: Colors.white.withValues(alpha: 0.12)) : BorderSide.none,
+                    ),
+                    boxShadow: [
+                      BoxShadow(color: VetoGlassTokens.neonBlue.withValues(alpha: 0.12), blurRadius: 16),
+                    ],
+                  ),
               child: Column(children: [
                 // Logo header
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-                  decoration: const BoxDecoration(
-                    border: Border(bottom: BorderSide(color: Color(0xFFE2E8F8))),
+                  decoration: BoxDecoration(
+                    border: Border(bottom: BorderSide(color: Colors.white.withValues(alpha: 0.1))),
                   ),
                   child: Row(children: [
                     Container(
                       width: 34, height: 34,
                       decoration: BoxDecoration(
-                        color: const Color(0xFF0F172A),
+                        gradient: VetoGlassTokens.neonButton,
                         borderRadius: BorderRadius.circular(8),
+                        boxShadow: [
+                          BoxShadow(color: VetoGlassTokens.neonCyan.withValues(alpha: 0.35), blurRadius: 10),
+                        ],
                       ),
-                      child: const Icon(Icons.shield_rounded, color: Colors.white, size: 18),
+                      child: const Icon(Icons.shield_rounded, color: Color(0xFF06101C), size: 18),
                     ),
                     const SizedBox(width: 10),
                     Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                      const Text('VETO', style: TextStyle(color: Color(0xFF0F172A), fontSize: 15, fontWeight: FontWeight.w900, letterSpacing: 2)),
-                      Text(isRtl ? 'פאנל ניהול' : 'Admin Panel', style: const TextStyle(color: Color(0xFF64748B), fontSize: 11)),
+                      const Text('VETO', style: TextStyle(color: VetoGlassTokens.textPrimary, fontSize: 15, fontWeight: FontWeight.w900, letterSpacing: 2)),
+                      Text(isRtl ? 'פאנל ניהול' : 'Admin Panel', style: const TextStyle(color: VetoGlassTokens.textMuted, fontSize: 11)),
                     ]),
                   ]),
                 ),
@@ -263,7 +277,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                   padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
                   child: Align(
                     alignment: AlignmentDirectional.centerStart,
-                    child: Text(isRtl ? 'ניהול' : 'ADMIN', style: const TextStyle(color: Color(0xFF64748B), fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 1.5)),
+                    child: Text(isRtl ? 'ניהול' : 'ADMIN', style: const TextStyle(color: VetoGlassTokens.textMuted, fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 1.5)),
                   ),
                 ),
                 // Nav items
@@ -275,14 +289,14 @@ class _AdminDashboardState extends State<AdminDashboard> {
                       return Container(
                         margin: const EdgeInsets.only(bottom: 2),
                         decoration: BoxDecoration(
-                          color: isDashboard ? const Color(0xFFEEF2FF) : Colors.transparent,
+                          color: isDashboard ? VetoGlassTokens.neonCyan.withValues(alpha: 0.12) : Colors.transparent,
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: ListTile(
                           dense: true,
-                          leading: Icon(item.$1, color: isDashboard ? const Color(0xFF5B8FFF) : const Color(0xFF334155), size: 20),
+                          leading: Icon(item.$1, color: isDashboard ? VetoGlassTokens.neonCyan : VetoGlassTokens.textSecondary, size: 20),
                           title: Text(item.$2, style: TextStyle(
-                            color: isDashboard ? const Color(0xFF5B8FFF) : const Color(0xFF334155),
+                            color: isDashboard ? VetoGlassTokens.neonCyan : VetoGlassTokens.textSecondary,
                             fontSize: 14, fontWeight: isDashboard ? FontWeight.w700 : FontWeight.w500,
                           )),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -293,30 +307,35 @@ class _AdminDashboardState extends State<AdminDashboard> {
                   ),
                 ),
               ]),
+                ),
+              ),
             ),
 
             // ── MAIN CONTENT ───────────────────────────────────
             Expanded(
               child: Column(children: [
                 // Top bar
-                Container(
+                ClipRect(
+                  child: BackdropFilter(
+                    filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+                    child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
                   decoration: BoxDecoration(
-                    color: Colors.white,
-                    border: const Border(bottom: BorderSide(color: Color(0xFFE2E8F8))),
-                    boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 4)],
+                    color: VetoGlassTokens.glassFillStrong,
+                    border: Border(bottom: BorderSide(color: Colors.white.withValues(alpha: 0.1))),
+                    boxShadow: [BoxShadow(color: VetoGlassTokens.neonBlue.withValues(alpha: 0.1), blurRadius: 12)],
                   ),
                   child: Row(children: [
                     // Bell + Admin info
-                    const Icon(Icons.notifications_outlined, color: Color(0xFF334155), size: 22),
+                    const Icon(Icons.notifications_outlined, color: VetoGlassTokens.textMuted, size: 22),
                     const SizedBox(width: 8),
                     Container(
                       width: 32, height: 32,
-                      decoration: BoxDecoration(color: const Color(0xFFE2E8F8), shape: BoxShape.circle),
-                      child: const Icon(Icons.person_outline, color: Color(0xFF334155), size: 18),
+                      decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.1), shape: BoxShape.circle),
+                      child: const Icon(Icons.person_outline, color: VetoGlassTokens.textPrimary, size: 18),
                     ),
                     const SizedBox(width: 8),
-                    Text(isRtl ? 'מנהל' : 'Admin', style: const TextStyle(color: Color(0xFF0F172A), fontWeight: FontWeight.w600, fontSize: 14)),
+                    Text(isRtl ? 'מנהל' : 'Admin', style: const TextStyle(color: VetoGlassTokens.textPrimary, fontWeight: FontWeight.w600, fontSize: 14)),
                     const Spacer(),
                     // Search bar
                     SizedBox(
@@ -327,20 +346,22 @@ class _AdminDashboardState extends State<AdminDashboard> {
                           prefixIcon: const Icon(Icons.search, size: 18),
                           isDense: true,
                           contentPadding: const EdgeInsets.symmetric(vertical: 10),
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFE2E8F8))),
-                          filled: true, fillColor: const Color(0xFFF8FAFF),
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.14))),
+                          filled: true, fillColor: Colors.white.withValues(alpha: 0.08),
                         ),
                       ),
                     ),
                     const SizedBox(width: 12),
-                    IconButton(icon: const Icon(Icons.refresh_rounded, color: Color(0xFF334155)), onPressed: _loadAll, tooltip: _t(code,'refresh')),
+                    IconButton(icon: const Icon(Icons.refresh_rounded, color: VetoGlassTokens.textMuted), onPressed: _loadAll, tooltip: _t(code,'refresh')),
                   ]),
+                    ),
+                  ),
                 ),
 
                 // Body
                 Expanded(
                   child: _loading
-                      ? const Center(child: CircularProgressIndicator())
+                      ? const Center(child: CircularProgressIndicator(color: VetoGlassTokens.neonCyan))
                       : RefreshIndicator(
                           onRefresh: _loadAll,
                           child: SingleChildScrollView(
@@ -361,7 +382,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                                     _KpiCard(icon: Icons.trending_up_rounded, color: const Color(0xFF22C55E),
                                       label: isRtl ? 'הכנסות החודש' : 'Monthly Revenue', value: '₪45,230',
                                       badge: '+12%', badgeColor: const Color(0xFF22C55E)),
-                                    _KpiCard(icon: Icons.people_alt_rounded, color: const Color(0xFF5B8FFF),
+                                    _KpiCard(icon: Icons.people_alt_rounded, color: VetoGlassTokens.neonCyan,
                                       label: isRtl ? 'משתמשים רשומים' : 'Registered Users', value: _totalUsers.toString()),
                                     _KpiCard(icon: Icons.balance_rounded, color: const Color(0xFF38BDF8),
                                       label: isRtl ? 'עורכי דין פעילים' : 'Active Lawyers', value: _activeLawyers.toString()),
@@ -393,6 +414,8 @@ class _AdminDashboardState extends State<AdminDashboard> {
                 ),
               ]),
             ),
+              ],
+            ),
           ],
         ),
       ),
@@ -401,7 +424,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
 
   Widget _sectionLabel(String text) => Text(text,
       style: const TextStyle(
-          color: Color(0xFF64748B),
+          color: VetoGlassTokens.textMuted,
           fontSize: 12, fontWeight: FontWeight.w700,
           letterSpacing: 0.8));
 
@@ -409,14 +432,16 @@ class _AdminDashboardState extends State<AdminDashboard> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE2E8F8)),
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 8, offset: const Offset(0,3))],
+        color: VetoGlassTokens.glassFillStrong,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: VetoGlassTokens.glassBorder),
+        boxShadow: [
+          BoxShadow(color: VetoGlassTokens.neonBlue.withValues(alpha: 0.1), blurRadius: 16, offset: const Offset(0, 6)),
+        ],
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Text(isRtl ? 'פעילות אחרונה' : 'Recent Activity',
-          style: const TextStyle(color: Color(0xFF0F172A), fontSize: 16, fontWeight: FontWeight.w800)),
+          style: const TextStyle(color: VetoGlassTokens.textPrimary, fontSize: 16, fontWeight: FontWeight.w800)),
         const SizedBox(height: 16),
         _buildActivityFeed(code),
       ]),
@@ -427,14 +452,16 @@ class _AdminDashboardState extends State<AdminDashboard> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE2E8F8)),
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 8, offset: const Offset(0,3))],
+        color: VetoGlassTokens.glassFillStrong,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: VetoGlassTokens.glassBorder),
+        boxShadow: [
+          BoxShadow(color: VetoGlassTokens.neonBlue.withValues(alpha: 0.1), blurRadius: 16, offset: const Offset(0, 6)),
+        ],
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Text(isRtl ? 'בריאות המערכת' : 'System Health',
-          style: const TextStyle(color: Color(0xFF0F172A), fontSize: 16, fontWeight: FontWeight.w800)),
+          style: const TextStyle(color: VetoGlassTokens.textPrimary, fontSize: 16, fontWeight: FontWeight.w800)),
         const SizedBox(height: 16),
         _buildHealthBar('API', _backendStatus),
         const SizedBox(height: 10),
@@ -766,12 +793,16 @@ class _KpiCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFE2E8F8)),
-        boxShadow: [BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 8, offset: const Offset(0, 2))],
+        color: VetoGlassTokens.glassFillStrong,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: VetoGlassTokens.glassBorder),
+        boxShadow: [
+          BoxShadow(
+            color: color.withValues(alpha: 0.15),
+            blurRadius: 14,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -804,13 +835,13 @@ class _KpiCard extends StatelessWidget {
           const SizedBox(height: 10),
           Text(value,
               style: const TextStyle(
-                  color: Color(0xFF0F172A),
+                  color: VetoGlassTokens.textPrimary,
                   fontWeight: FontWeight.w900,
                   fontSize: 22)),
           const SizedBox(height: 2),
           Text(label,
               style: const TextStyle(
-                  color: Color(0xFF64748B), fontSize: 12)),
+                  color: VetoGlassTokens.textMuted, fontSize: 12)),
         ],
       ),
     );

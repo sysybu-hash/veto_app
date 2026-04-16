@@ -42,29 +42,30 @@ Future<void> main() async {
   // Global Error Boundary to prevent Red Screen of Death
   ErrorWidget.builder = (FlutterErrorDetails details) {
     return Material(
+      color: const Color(0xFF06101C),
       child: Container(
-        color: const Color(0xFFF8FAFC),
+        color: const Color(0xFF06101C),
         padding: const EdgeInsets.all(24),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.warning_amber_rounded, color: Color(0xFFDC2626), size: 64),
+            const Icon(Icons.warning_amber_rounded, color: Color(0xFFFF4B4B), size: 64),
             const SizedBox(height: 24),
             const Text(
               'משהו השתבש',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: Color(0xFF0F172A)),
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: Color(0xFFF8FAFC)),
             ),
             const SizedBox(height: 12),
             const Text(
               'אנחנו עובדים על זה. נסה לרענן את העמוד.',
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 15, color: Color(0xFF64748B)),
+              style: TextStyle(fontSize: 15, color: Color(0xFF94A3B8)),
             ),
             const SizedBox(height: 24),
             Text(
               details.exceptionAsString(),
               textAlign: TextAlign.center,
-              style: const TextStyle(color: Color(0xFF94A3B8), fontSize: 11),
+              style: const TextStyle(color: Color(0xFF64748B), fontSize: 11),
               maxLines: 3,
               overflow: TextOverflow.ellipsis,
             ),
@@ -116,7 +117,7 @@ class VetoApp extends StatelessWidget {
   Widget build(BuildContext context) {
     final language = provider.Provider.of<AppLanguageController>(context);
     final a11y = provider.Provider.of<AccessibilitySettings>(context);
-    final baseTheme = VetoTheme.luxuryLight();
+    final baseTheme = VetoTheme.glassDark();
 
     return MaterialApp(
       debugShowCheckedModeBanner: false,

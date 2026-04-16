@@ -6,6 +6,8 @@
 
 import 'dart:async';
 import 'dart:convert';
+import 'dart:ui' show ImageFilter;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:geolocator/geolocator.dart';
@@ -16,6 +18,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../config/app_config.dart';
 import '../core/i18n/app_language.dart';
 import '../platform/browser_bridge.dart' as browser_bridge;
+import '../core/theme/veto_glass_system.dart';
 import '../core/theme/veto_theme.dart';
 import '../widgets/app_language_menu.dart';
 import '../widgets/accessibility_toolbar.dart';
@@ -799,7 +802,7 @@ class _VetoScreenState extends State<VetoScreen> {
           const SizedBox(height: 20),
           Text(
             lang == 'he' ? 'בחר סוג שיחה' : lang == 'ru' ? 'Выберите тип звонка' : 'Choose call type',
-            style: const TextStyle(color: Color(0xFF0F172A), fontSize: 18, fontWeight: FontWeight.w800),
+            style: const TextStyle(color: VetoGlassTokens.textPrimary, fontSize: 18, fontWeight: FontWeight.w800),
           ),
           const SizedBox(height: 8),
           Text(
@@ -815,22 +818,22 @@ class _VetoScreenState extends State<VetoScreen> {
               child: Container(
                 padding: const EdgeInsets.symmetric(vertical: 20),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF0F4FF),
+                  color: VetoGlassTokens.glassFillStrong,
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: const Color(0xFF5B8FFF).withValues(alpha: 0.4), width: 1.5),
+                  border: Border.all(color: VetoGlassTokens.neonCyan.withValues(alpha: 0.4), width: 1.5),
                 ),
                 child: Column(children: [
                   Container(
                     width: 52, height: 52,
                     decoration: BoxDecoration(
-                      color: const Color(0xFF5B8FFF).withValues(alpha: 0.12),
+                      color: VetoGlassTokens.neonCyan.withValues(alpha: 0.12),
                       shape: BoxShape.circle,
                     ),
-                    child: const Icon(Icons.phone_rounded, color: Color(0xFF5B8FFF), size: 26),
+                    child: const Icon(Icons.phone_rounded, color: VetoGlassTokens.neonCyan, size: 26),
                   ),
                   const SizedBox(height: 10),
                   Text(lang == 'he' ? 'שיחת קול' : lang == 'ru' ? 'Аудио' : 'Audio call',
-                    style: const TextStyle(color: Color(0xFF0F172A), fontSize: 14, fontWeight: FontWeight.w700)),
+                    style: const TextStyle(color: VetoGlassTokens.textPrimary, fontSize: 14, fontWeight: FontWeight.w700)),
                   const SizedBox(height: 4),
                   Text(lang == 'he' ? 'ללא מצלמה' : lang == 'ru' ? 'Без камеры' : 'No camera',
                     style: const TextStyle(color: Color(0xFF64748B), fontSize: 11)),
@@ -859,7 +862,7 @@ class _VetoScreenState extends State<VetoScreen> {
                   ),
                   const SizedBox(height: 10),
                   Text(lang == 'he' ? 'שיחת וידאו' : lang == 'ru' ? 'Видео' : 'Video call',
-                    style: const TextStyle(color: Color(0xFF0F172A), fontSize: 14, fontWeight: FontWeight.w700)),
+                    style: const TextStyle(color: VetoGlassTokens.textPrimary, fontSize: 14, fontWeight: FontWeight.w700)),
                   const SizedBox(height: 4),
                   Text(lang == 'he' ? 'עם מצלמה' : lang == 'ru' ? 'С камерой' : 'With camera',
                     style: const TextStyle(color: Color(0xFF64748B), fontSize: 11)),
@@ -1096,11 +1099,12 @@ class _VetoScreenState extends State<VetoScreen> {
     return Directionality(
       textDirection: isRtl ? TextDirection.rtl : TextDirection.ltr,
       child: Scaffold(
-        backgroundColor: const Color(0xFFF0F4FF),
+        backgroundColor: VetoGlassTokens.bgBase,
+        extendBodyBehindAppBar: true,
         appBar: _buildAppBar(isAdmin),
         body: Stack(
           children: [
-            Positioned.fill(child: CustomPaint(painter: _AuroraPainter())),
+            Positioned.fill(child: CustomPaint(painter: VetoFluidBackgroundPainter())),
             SafeArea(
               child: _tab == 0
                   ? _buildWizardTab(isAdmin, isRtl)
@@ -1120,14 +1124,27 @@ class _VetoScreenState extends State<VetoScreen> {
   // ── AppBar: accessibility+flag left | centered title | hamburger right ──
   PreferredSizeWidget _buildAppBar(bool isAdmin) {
     return AppBar(
-      backgroundColor: const Color(0xEEFFFFFF),
+      backgroundColor: VetoGlassTokens.glassFill,
       surfaceTintColor: Colors.transparent,
       automaticallyImplyLeading: false,
       elevation: 0,
       scrolledUnderElevation: 0,
       shadowColor: Colors.transparent,
       toolbarHeight: 56,
-      iconTheme: const IconThemeData(color: Color(0xFF0F172A), size: 24),
+      flexibleSpace: ClipRect(
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+          child: Container(
+            decoration: BoxDecoration(
+              color: VetoGlassTokens.glassFill,
+              border: Border(
+                bottom: BorderSide(color: Colors.white.withValues(alpha: 0.1), width: 1),
+              ),
+            ),
+          ),
+        ),
+      ),
+      iconTheme: const IconThemeData(color: VetoGlassTokens.textPrimary, size: 24),
       // Left side: accessibility + flag (language)
       leading: Row(
         mainAxisSize: MainAxisSize.min,
@@ -1137,7 +1154,7 @@ class _VetoScreenState extends State<VetoScreen> {
             visualDensity: VisualDensity.compact,
             constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
             icon: const Icon(Icons.accessibility_new_rounded, size: 22),
-            color: const Color(0xFF64748B),
+            color: VetoGlassTokens.textMuted,
             onPressed: () => showAccessibilitySheet(context),
             tooltip: _langKey == 'he' ? 'נגישות' : _langKey == 'ru' ? 'Доступность' : 'Accessibility',
           ),
@@ -1162,16 +1179,16 @@ class _VetoScreenState extends State<VetoScreen> {
         mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.shield_rounded, color: Color(0xFF5B8FFF), size: 20),
+          const Icon(Icons.shield_rounded, color: VetoGlassTokens.neonCyan, size: 20),
           const SizedBox(width: 8),
           Text(
             'VETO — הגנה משפטית',
             style: TextStyle(
               fontWeight: FontWeight.w900,
               fontSize: 15,
-              color: const Color(0xFF0F172A),
+              color: VetoGlassTokens.textPrimary,
               letterSpacing: 0.5,
-              shadows: [Shadow(color: const Color(0xFF5B8FFF).withValues(alpha: 0.15), blurRadius: 6)],
+              shadows: [Shadow(color: VetoGlassTokens.neonCyan.withValues(alpha: 0.35), blurRadius: 10)],
             ),
           ),
           if (_isDispatching) ...[
@@ -1198,7 +1215,7 @@ class _VetoScreenState extends State<VetoScreen> {
             visualDensity: VisualDensity.compact,
             constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
             icon: const Icon(Icons.menu_rounded, size: 26),
-            color: const Color(0xFF0F172A),
+            color: VetoGlassTokens.textPrimary,
             onPressed: () => _showHamburgerMenu(ctx, isAdmin),
             tooltip: _langKey == 'he' ? 'תפריט' : _langKey == 'ru' ? 'Меню' : 'Menu',
           ),
@@ -1207,7 +1224,7 @@ class _VetoScreenState extends State<VetoScreen> {
       ],
       bottom: PreferredSize(
         preferredSize: const Size.fromHeight(1),
-        child: Container(height: 1, color: const Color(0xFF5B8FFF).withValues(alpha: 0.15)),
+        child: Container(height: 1, color: Colors.white.withValues(alpha: 0.12)),
       ),
     );
   }
@@ -1215,7 +1232,7 @@ class _VetoScreenState extends State<VetoScreen> {
   void _showHamburgerMenu(BuildContext ctx, bool isAdmin) {
     showModalBottomSheet(
       context: ctx,
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(0xE6121824),
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -1229,24 +1246,24 @@ class _VetoScreenState extends State<VetoScreen> {
               Container(width: 40, height: 4,
                   margin: const EdgeInsets.only(bottom: 16),
                   decoration: BoxDecoration(
-                      color: const Color(0xFFE2E8F8),
+                      color: Colors.white.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(2))),
               if (isAdmin)
                 _menuItem(Icons.admin_panel_settings_outlined,
                     _langKey == 'he' ? 'פאנל ניהול' : 'Admin Panel',
-                    const Color(0xFF5B8FFF),
+                    VetoGlassTokens.neonCyan,
                     () { Navigator.pop(ctx); Navigator.pushNamed(context, '/admin_settings'); }),
               _menuItem(Icons.home_outlined,
                   _langKey == 'he' ? 'דף הבית' : _langKey == 'ru' ? 'Главная' : 'Home',
-                  const Color(0xFF5B8FFF),
+                  VetoGlassTokens.neonCyan,
                   () { Navigator.pop(ctx); Navigator.pushNamed(context, '/landing'); }),
               _menuItem(Icons.folder_special_outlined,
                   _langKey == 'he' ? 'כספת קבצים' : _langKey == 'ru' ? 'Хранилище' : 'File Vault',
-                  const Color(0xFF5B8FFF),
+                  VetoGlassTokens.neonCyan,
                   () { Navigator.pop(ctx); Navigator.pushNamed(context, '/files_vault'); }),
               _menuItem(Icons.map_outlined,
                   _langKey == 'he' ? 'מפה' : _langKey == 'ru' ? 'Карта' : 'Map',
-                  const Color(0xFF5B8FFF),
+                  VetoGlassTokens.neonCyan,
                   () { Navigator.pop(ctx); Navigator.pushNamed(context, '/maps'); }),
               _menuItem(Icons.settings_outlined,
                   _langKey == 'he' ? 'הגדרות' : _langKey == 'ru' ? 'Настройки' : 'Settings',
@@ -1278,64 +1295,72 @@ class _VetoScreenState extends State<VetoScreen> {
             Icon(icon, color: color, size: 22),
             const SizedBox(width: 14),
             Text(label, style: TextStyle(
-                color: const Color(0xFF0F172A), fontSize: 15, fontWeight: FontWeight.w600)),
+                color: VetoGlassTokens.textPrimary, fontSize: 15, fontWeight: FontWeight.w600)),
           ]),
         ),
       );
 
   // ── Bottom Nav: 4 tabs ─────────────────────────────────────
-  Widget _buildNavBar(bool isRtl) => Container(
-    decoration: BoxDecoration(
-      color: const Color(0xFFFFFFFF),
-      border: Border(top: BorderSide(
-          color: const Color(0xFF5B8FFF).withValues(alpha: 0.18), width: 1)),
-      boxShadow: [
-        BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10,
-            offset: const Offset(0, -2)),
-      ],
-    ),
-    child: NavigationBar(
+  Widget _buildNavBar(bool isRtl) => ClipRect(
+    child: BackdropFilter(
+      filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+      child: Container(
+        decoration: BoxDecoration(
+          color: VetoGlassTokens.glassFillStrong,
+          border: Border(top: BorderSide(
+              color: Colors.white.withValues(alpha: 0.12), width: 1)),
+          boxShadow: [
+            BoxShadow(
+              color: VetoGlassTokens.neonBlue.withValues(alpha: 0.15),
+              blurRadius: 18,
+              offset: const Offset(0, -4),
+            ),
+          ],
+        ),
+        child: NavigationBar(
       height: 68,
       selectedIndex: _tab,
       backgroundColor: Colors.transparent,
       surfaceTintColor: Colors.transparent,
-      indicatorColor: const Color(0xFF5B8FFF).withValues(alpha: 0.12),
+      indicatorColor: VetoGlassTokens.neonCyan.withValues(alpha: 0.12),
       labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
       onDestinationSelected: (i) => setState(() => _tab = i),
       destinations: [
         NavigationDestination(
-          icon: const Icon(Icons.home_outlined, color: Color(0xFF94A3B8), size: 24),
-          selectedIcon: const Icon(Icons.home_rounded, color: Color(0xFF5B8FFF), size: 24),
+          icon: const Icon(Icons.home_outlined, color: VetoGlassTokens.textMuted, size: 24),
+          selectedIcon: const Icon(Icons.home_rounded, color: VetoGlassTokens.neonCyan, size: 24),
           label: isRtl ? 'בית' : 'Home',
         ),
         NavigationDestination(
-          icon: const Icon(Icons.chat_bubble_outline_rounded, color: Color(0xFF94A3B8), size: 24),
-          selectedIcon: const Icon(Icons.chat_bubble_rounded, color: Color(0xFF5B8FFF), size: 24),
+          icon: const Icon(Icons.chat_bubble_outline_rounded, color: VetoGlassTokens.textMuted, size: 24),
+          selectedIcon: const Icon(Icons.chat_bubble_rounded, color: VetoGlassTokens.neonCyan, size: 24),
           label: isRtl ? "צ'אט" : 'Chat',
         ),
         NavigationDestination(
-          icon: const Icon(Icons.folder_outlined, color: Color(0xFF94A3B8), size: 24),
-          selectedIcon: const Icon(Icons.folder_rounded, color: Color(0xFF5B8FFF), size: 24),
+          icon: const Icon(Icons.folder_outlined, color: VetoGlassTokens.textMuted, size: 24),
+          selectedIcon: const Icon(Icons.folder_rounded, color: VetoGlassTokens.neonCyan, size: 24),
           label: isRtl ? 'קבצים' : 'Files',
         ),
         NavigationDestination(
-          icon: const Icon(Icons.person_outline_rounded, color: Color(0xFF94A3B8), size: 24),
-          selectedIcon: const Icon(Icons.person_rounded, color: Color(0xFF5B8FFF), size: 24),
+          icon: const Icon(Icons.person_outline_rounded, color: VetoGlassTokens.textMuted, size: 24),
+          selectedIcon: const Icon(Icons.person_rounded, color: VetoGlassTokens.neonCyan, size: 24),
           label: isRtl ? 'פרופיל' : 'Profile',
         ),
       ],
+        ),
+      ),
     ),
   );
 
   // ── Files tab placeholder (routes to file vault) ───────────
   Widget _buildFilesTab(bool isRtl) => Center(
     child: Column(mainAxisSize: MainAxisSize.min, children: [
-      const Icon(Icons.folder_special_outlined, size: 64, color: Color(0xFF5B8FFF)),
+      const Icon(Icons.folder_special_outlined, size: 64, color: VetoGlassTokens.neonCyan),
       const SizedBox(height: 16),
       Text(
         isRtl ? 'כספת קבצים' : _langKey == 'ru' ? 'Хранилище файлов' : 'File Vault',
         style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800,
-            color: Color(0xFF0F172A)),
+            color: VetoGlassTokens.textPrimary),
       ),
       const SizedBox(height: 8),
       Text(
@@ -1351,7 +1376,7 @@ class _VetoScreenState extends State<VetoScreen> {
         icon: const Icon(Icons.open_in_new),
         label: Text(isRtl ? 'פתח כספת קבצים'
             : _langKey == 'ru' ? 'Открыть хранилище' : 'Open File Vault'),
-        style: FilledButton.styleFrom(backgroundColor: const Color(0xFF5B8FFF)),
+        style: FilledButton.styleFrom(backgroundColor: VetoGlassTokens.neonCyan),
       ),
     ]),
   );
@@ -1363,16 +1388,16 @@ class _VetoScreenState extends State<VetoScreen> {
         width: 80, height: 80,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          color: const Color(0xFF5B8FFF).withValues(alpha: 0.12),
-          border: Border.all(color: const Color(0xFF5B8FFF).withValues(alpha: 0.3), width: 2),
+          color: VetoGlassTokens.neonCyan.withValues(alpha: 0.12),
+          border: Border.all(color: VetoGlassTokens.neonCyan.withValues(alpha: 0.3), width: 2),
         ),
-        child: const Icon(Icons.person_rounded, size: 44, color: Color(0xFF5B8FFF)),
+        child: const Icon(Icons.person_rounded, size: 44, color: VetoGlassTokens.neonCyan),
       ),
       const SizedBox(height: 16),
       Text(
         _phone.isNotEmpty ? _phone : (isRtl ? 'המשתמש שלי' : 'My Profile'),
         style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800,
-            color: Color(0xFF0F172A)),
+            color: VetoGlassTokens.textPrimary),
         textDirection: TextDirection.ltr,
       ),
       const SizedBox(height: 24),
@@ -1381,7 +1406,7 @@ class _VetoScreenState extends State<VetoScreen> {
         icon: const Icon(Icons.manage_accounts_rounded),
         label: Text(isRtl ? 'נהל פרופיל'
             : _langKey == 'ru' ? 'Управлять профилем' : 'Manage Profile'),
-        style: FilledButton.styleFrom(backgroundColor: const Color(0xFF5B8FFF)),
+        style: FilledButton.styleFrom(backgroundColor: VetoGlassTokens.neonCyan),
       ),
       const SizedBox(height: 12),
       OutlinedButton.icon(
@@ -1456,26 +1481,26 @@ class _VetoScreenState extends State<VetoScreen> {
     child: Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
       decoration: BoxDecoration(
-        color: const Color(0xFFFFFFFF),
+        color: VetoGlassTokens.glassFillStrong,
         borderRadius: BorderRadius.circular(999),
         border: Border.all(
-            color: (_isDispatching ? const Color(0xFFFF3B3B) : const Color(0xFF5B8FFF))
-                .withValues(alpha: 0.35),
+            color: (_isDispatching ? const Color(0xFFFF3B3B) : VetoGlassTokens.neonCyan)
+                .withValues(alpha: 0.45),
             width: 1.5),
         boxShadow: [
           BoxShadow(
-            color: (_isDispatching ? const Color(0xFFFF3B3B) : const Color(0xFF5B8FFF))
-                .withValues(alpha: 0.10),
-            blurRadius: 14,
+            color: (_isDispatching ? const Color(0xFFFF3B3B) : VetoGlassTokens.neonCyan)
+                .withValues(alpha: 0.22),
+            blurRadius: 18,
           ),
-          BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 6),
+          BoxShadow(color: Colors.black.withValues(alpha: 0.35), blurRadius: 12),
         ],
       ),
       child: Row(mainAxisSize: MainAxisSize.min, children: [
         Icon(
           Icons.shield_rounded,
           size: 16,
-          color: _isDispatching ? const Color(0xFFFF3B3B) : const Color(0xFF5B8FFF),
+          color: _isDispatching ? const Color(0xFFFF3B3B) : VetoGlassTokens.neonCyan,
         ),
         const SizedBox(width: 8),
         Container(
@@ -1502,7 +1527,7 @@ class _VetoScreenState extends State<VetoScreen> {
                   : _langKey == 'ru' ? 'Подключено | Ожидание'
                   : 'Connected | Standby'),
           style: TextStyle(
-            color: _isDispatching ? const Color(0xFFFF3B3B) : const Color(0xFF0F172A),
+            color: _isDispatching ? const Color(0xFFFF3B3B) : VetoGlassTokens.textPrimary,
             fontWeight: FontWeight.w700,
             fontSize: 13,
           ),
@@ -1709,10 +1734,10 @@ class _VetoScreenState extends State<VetoScreen> {
       Container(
         width: 36, height: 36,
         decoration: BoxDecoration(
-          color: const Color(0xFF5B8FFF).withValues(alpha: 0.10),
+          color: VetoGlassTokens.neonCyan.withValues(alpha: 0.10),
           shape: BoxShape.circle,
         ),
-        child: const Icon(Icons.shield_rounded, color: Color(0xFF5B8FFF), size: 20),
+        child: const Icon(Icons.shield_rounded, color: VetoGlassTokens.neonCyan, size: 20),
       ),
       const SizedBox(width: 12),
       Expanded(
@@ -1727,7 +1752,7 @@ class _VetoScreenState extends State<VetoScreen> {
                       : _langKey == 'ru' ? 'Уровень защиты: высокий'
                       : 'Security Level: High',
                   style: const TextStyle(
-                    color: Color(0xFF0F172A),
+                    color: VetoGlassTokens.textPrimary,
                     fontSize: 13,
                     fontWeight: FontWeight.w700,
                   ),
@@ -1735,7 +1760,7 @@ class _VetoScreenState extends State<VetoScreen> {
                 Text(
                   _isDispatching ? '100%' : '85%',
                   style: const TextStyle(
-                    color: Color(0xFF5B8FFF),
+                    color: VetoGlassTokens.neonCyan,
                     fontSize: 12,
                     fontWeight: FontWeight.w800,
                   ),
@@ -1749,7 +1774,7 @@ class _VetoScreenState extends State<VetoScreen> {
                 value: _isDispatching ? 1.0 : 0.85,
                 minHeight: 6,
                 backgroundColor: const Color(0xFFE2E8F8),
-                valueColor: const AlwaysStoppedAnimation(Color(0xFF5B8FFF)),
+                valueColor: const AlwaysStoppedAnimation(VetoGlassTokens.neonCyan),
               ),
             ),
           ],
@@ -1764,7 +1789,7 @@ class _VetoScreenState extends State<VetoScreen> {
           Container(
             width: 3, height: 14,
             decoration: BoxDecoration(
-              color: const Color(0xFF5B8FFF),
+              color: VetoGlassTokens.neonCyan,
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -1790,10 +1815,10 @@ class _VetoScreenState extends State<VetoScreen> {
     // Arrest scenario uses red icon per mockup
     final isRed = e.key == _Scenario.arrest;
     final iconColor = sel
-        ? const Color(0xFF5B8FFF)
+        ? VetoGlassTokens.neonCyan
         : isRed
             ? const Color(0xFFFF3B3B)
-            : const Color(0xFF5B8FFF);
+            : VetoGlassTokens.neonCyan;
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -1810,17 +1835,17 @@ class _VetoScreenState extends State<VetoScreen> {
           ),
           decoration: BoxDecoration(
             color: sel
-                ? const Color(0xFF5B8FFF).withValues(alpha: 0.10)
+                ? VetoGlassTokens.neonCyan.withValues(alpha: 0.10)
                 : const Color(0xFFFFFFFF),
             borderRadius: BorderRadius.circular(14),
             border: Border.all(
-              color: sel ? const Color(0xFF5B8FFF).withValues(alpha: 0.7)
+              color: sel ? VetoGlassTokens.neonCyan.withValues(alpha: 0.7)
                   : const Color(0xFFE2E8F8),
               width: sel ? 1.5 : 1,
             ),
             boxShadow: sel
                 ? [BoxShadow(
-                    color: const Color(0xFF5B8FFF).withValues(alpha: 0.15),
+                    color: VetoGlassTokens.neonCyan.withValues(alpha: 0.15),
                     blurRadius: 16)]
                 : [BoxShadow(
                     color: Colors.black.withValues(alpha: 0.05),
@@ -1834,12 +1859,12 @@ class _VetoScreenState extends State<VetoScreen> {
                 padding: EdgeInsets.all(circlePad),
                 decoration: BoxDecoration(
                   color: sel
-                      ? const Color(0xFF5B8FFF).withValues(alpha: 0.15)
+                      ? VetoGlassTokens.neonCyan.withValues(alpha: 0.15)
                       : const Color(0xFFEEF2FF),
                   shape: BoxShape.circle,
                   border: Border.all(
                     color: sel
-                        ? const Color(0xFF5B8FFF).withValues(alpha: 0.5)
+                        ? VetoGlassTokens.neonCyan.withValues(alpha: 0.5)
                         : const Color(0xFFE2E8F8),
                     width: 1,
                   ),
@@ -1850,7 +1875,7 @@ class _VetoScreenState extends State<VetoScreen> {
               Text(
                 lbl,
                 style: TextStyle(
-                  color: sel ? const Color(0xFF5B8FFF) : const Color(0xFF0F172A),
+                  color: sel ? VetoGlassTokens.neonCyan : VetoGlassTokens.textPrimary,
                   fontSize: 12.5,
                   fontWeight: sel ? FontWeight.w900 : FontWeight.w600,
                   height: 1.2,
@@ -1894,11 +1919,11 @@ class _VetoScreenState extends State<VetoScreen> {
             top: BorderSide(color: Color(0xFFE2E8F8)),
             end: BorderSide(color: Color(0xFFE2E8F8)),
             bottom: BorderSide(color: Color(0xFFE2E8F8)),
-            start: BorderSide(color: Color(0xFF5B8FFF), width: 3),
+            start: BorderSide(color: VetoGlassTokens.neonCyan, width: 3),
           ),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFF5B8FFF).withValues(alpha: 0.07),
+              color: VetoGlassTokens.neonCyan.withValues(alpha: 0.07),
               blurRadius: 16, offset: const Offset(0, 6),
             ),
             BoxShadow(
@@ -1915,7 +1940,7 @@ class _VetoScreenState extends State<VetoScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               child: Row(children: [
                 const Icon(Icons.verified_user_rounded,
-                    color: Color(0xFF5B8FFF), size: 22),
+                    color: VetoGlassTokens.neonCyan, size: 22),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
@@ -1923,7 +1948,7 @@ class _VetoScreenState extends State<VetoScreen> {
                         : _langKey == 'ru' ? 'Ваши права — $_sLabel'
                         : 'Your Rights — $_sLabel',
                     style: const TextStyle(
-                      color: Color(0xFF0F172A),
+                      color: VetoGlassTokens.textPrimary,
                       fontWeight: FontWeight.w900,
                       fontSize: 16,
                       height: 1.25,
@@ -1933,7 +1958,7 @@ class _VetoScreenState extends State<VetoScreen> {
                 TextButton(
                   onPressed: () => setState(() => _rightsExpanded = !_rightsExpanded),
                   style: TextButton.styleFrom(
-                    foregroundColor: const Color(0xFF5B8FFF),
+                    foregroundColor: VetoGlassTokens.neonCyan,
                     padding: EdgeInsets.zero,
                     minimumSize: Size.zero,
                     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -1949,7 +1974,7 @@ class _VetoScreenState extends State<VetoScreen> {
                   _rightsExpanded
                       ? Icons.keyboard_arrow_up_rounded
                       : Icons.keyboard_arrow_down_rounded,
-                  color: const Color(0xFF5B8FFF),
+                  color: VetoGlassTokens.neonCyan,
                   size: 26,
                 ),
               ]),
@@ -1969,7 +1994,7 @@ class _VetoScreenState extends State<VetoScreen> {
                         width: 7, height: 7,
                         decoration: const BoxDecoration(
                           shape: BoxShape.circle,
-                          color: Color(0xFF5B8FFF),
+                          color: VetoGlassTokens.neonCyan,
                         ),
                       ),
                       const SizedBox(width: 10),
@@ -3139,72 +3164,3 @@ class _SubscriptionGateDialogState extends State<_SubscriptionGateDialog> {
   }
 }
 
-// ── Aurora Background Painter ─────────────────────────────
-class _AuroraPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final w = size.width;
-    final h = size.height;
-
-    // Light white-blue base
-    canvas.drawRect(
-      Rect.fromLTWH(0, 0, w, h),
-      Paint()..color = const Color(0xFFF0F4FF),
-    );
-
-    // Blob 1: teal top-left
-    final paint1 = Paint()
-      ..shader = RadialGradient(
-        colors: [
-          const Color(0xFF00C9B1).withValues(alpha: 0.18),
-          const Color(0xFF00C9B1).withValues(alpha: 0.0),
-        ],
-      ).createShader(Rect.fromCircle(
-        center: Offset(w * 0.1, h * 0.12),
-        radius: w * 0.6,
-      ));
-    canvas.drawCircle(Offset(w * 0.1, h * 0.12), w * 0.6, paint1);
-
-    // Blob 2: sky blue top-right
-    final paint2 = Paint()
-      ..shader = RadialGradient(
-        colors: [
-          const Color(0xFF38BDF8).withValues(alpha: 0.18),
-          const Color(0xFF38BDF8).withValues(alpha: 0.0),
-        ],
-      ).createShader(Rect.fromCircle(
-        center: Offset(w * 0.92, h * 0.10),
-        radius: w * 0.55,
-      ));
-    canvas.drawCircle(Offset(w * 0.92, h * 0.10), w * 0.55, paint2);
-
-    // Blob 3: lavender bottom-center
-    final paint3 = Paint()
-      ..shader = RadialGradient(
-        colors: [
-          const Color(0xFFA78BFA).withValues(alpha: 0.14),
-          const Color(0xFFA78BFA).withValues(alpha: 0.0),
-        ],
-      ).createShader(Rect.fromCircle(
-        center: Offset(w * 0.5, h * 0.85),
-        radius: w * 0.6,
-      ));
-    canvas.drawCircle(Offset(w * 0.5, h * 0.85), w * 0.6, paint3);
-
-    // Blob 4: blue bottom-left
-    final paint4 = Paint()
-      ..shader = RadialGradient(
-        colors: [
-          const Color(0xFF5B8FFF).withValues(alpha: 0.10),
-          const Color(0xFF5B8FFF).withValues(alpha: 0.0),
-        ],
-      ).createShader(Rect.fromCircle(
-        center: Offset(w * 0.05, h * 0.88),
-        radius: w * 0.45,
-      ));
-    canvas.drawCircle(Offset(w * 0.05, h * 0.88), w * 0.45, paint4);
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
-}

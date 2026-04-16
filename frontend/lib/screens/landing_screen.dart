@@ -3,28 +3,30 @@
 //  Light Aurora Glassmorphism: centred hero, red SOS orb, white cards
 // ═══════════════════════════════════════════════════════════════════
 
+import 'dart:ui' show ImageFilter;
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../core/i18n/app_language.dart';
-import '../core/theme/veto_theme.dart';
+import '../core/theme/veto_glass_system.dart';
 import '../services/auth_service.dart';
 import '../widgets/app_language_menu.dart';
 import '../widgets/accessibility_toolbar.dart';
 import '../widgets/ai_chat_dialog.dart';
 
-// ── Palette (matches mockup exactly) ─────────────────────────────
+// ── Palette — dark glassmorphism (fluid aurora + white type) ─────
 class _C {
-  static const bg         = Color(0xFFF0F4FF);   // soft white-blue base
+  static const bg         = VetoGlassTokens.bgBase;
   static const white      = Color(0xFFFFFFFF);
-  static const navBg      = Color(0xFAFFFFFF);   // near-white frosted nav
-  static const inkDark    = Color(0xFF0F172A);   // near-black title
-  static const inkMid     = Color(0xFF334155);   // body text
-  static const inkLight   = Color(0xFF64748B);   // muted
-  static const accent     = Color(0xFF5B8FFF);   // blue accent
-  static const red        = Color(0xFFFF3B3B);   // SOS red
-  static const border     = Color(0xFFE2E8F8);
-  static const cardBg     = Color(0xFFFFFFFF);
+  static const navBg      = VetoGlassTokens.glassFill;
+  static const inkDark    = VetoGlassTokens.textPrimary;
+  static const inkMid     = VetoGlassTokens.textSecondary;
+  static const inkLight   = VetoGlassTokens.textMuted;
+  static const accent     = VetoGlassTokens.neonCyan;
+  static const red        = Color(0xFFFF3B3B);
+  static const border     = VetoGlassTokens.glassBorder;
+  static const cardBg     = VetoGlassTokens.glassFillStrong;
 }
 
 // ── i18n ──────────────────────────────────────────────────────────
@@ -208,8 +210,8 @@ class LandingScreen extends StatelessWidget {
             context: context,
             builder: (_) => AiChatDialog(code: code),
           ),
-          backgroundColor: _C.accent,
-          foregroundColor: Colors.white,
+          backgroundColor: const Color(0xFF00B4D4),
+          foregroundColor: const Color(0xFF06101C),
           icon: const Icon(Icons.auto_awesome_rounded),
           label: Text(
             code == 'he' ? 'שאל את VETO AI'
@@ -221,7 +223,7 @@ class LandingScreen extends StatelessWidget {
         body: Stack(
           children: [
             // ── Aurora background ────────────────────────────
-            Positioned.fill(child: CustomPaint(painter: _AuroraPainter())),
+            Positioned.fill(child: CustomPaint(painter: VetoFluidBackgroundPainter())),
             // ── Scrollable content ───────────────────────────
             SingleChildScrollView(
               child: Column(
@@ -292,24 +294,35 @@ class _NavBarState extends State<_NavBar> {
     final c = widget.code;
     final navItems = [t(c,'navHome'), t(c,'navFeatures'), t(c,'navPricing'), t(c,'navContact')];
 
-    return Container(
-      decoration: BoxDecoration(
-        color: _C.navBg,
-        border: Border(bottom: BorderSide(color: _C.border)),
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 8, offset: const Offset(0, 2))],
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 12),
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 1100),
-          child: Row(
-            children: [
+    return ClipRect(
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: VetoGlassTokens.blurSigma, sigmaY: VetoGlassTokens.blurSigma),
+        child: Container(
+          decoration: BoxDecoration(
+            color: _C.navBg,
+            border: Border(bottom: BorderSide(color: Colors.white.withValues(alpha: 0.12))),
+            boxShadow: [
+              BoxShadow(color: VetoGlassTokens.neonBlue.withValues(alpha: 0.12), blurRadius: 20, offset: const Offset(0, 4)),
+            ],
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 12),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 1100),
+              child: Row(
+                children: [
               // ── Logo ──
               Row(mainAxisSize: MainAxisSize.min, children: [
                 Container(
                   width: 36, height: 36,
-                  decoration: BoxDecoration(color: _C.inkDark, borderRadius: BorderRadius.circular(10)),
-                  child: const Icon(Icons.shield_rounded, color: Colors.white, size: 20),
+                  decoration: BoxDecoration(
+                    gradient: VetoGlassTokens.neonButton,
+                    borderRadius: BorderRadius.circular(10),
+                    boxShadow: [
+                      BoxShadow(color: VetoGlassTokens.neonCyan.withValues(alpha: 0.35), blurRadius: 12),
+                    ],
+                  ),
+                  child: const Icon(Icons.shield_rounded, color: Color(0xFF06101C), size: 20),
                 ),
                 const SizedBox(width: 10),
                 const Text('VETO', style: TextStyle(
@@ -356,7 +369,9 @@ class _NavBarState extends State<_NavBar> {
                 const SizedBox(width: 8),
                 _NavBtn(label: t(c, 'navRegister'), filled: true, onTap: widget.onTap),
               ],
-            ],
+                ],
+              ),
+            ),
           ),
         ),
       ),
@@ -373,27 +388,43 @@ class _NavBtn extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (filled) {
-      return FilledButton(
-        onPressed: onTap,
-        style: FilledButton.styleFrom(
-          backgroundColor: _C.accent,
-          foregroundColor: Colors.white,
-          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
-          textStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-          minimumSize: const Size(48, 40),
+      return DecoratedBox(
+        decoration: BoxDecoration(
+          gradient: VetoGlassTokens.neonButton,
+          borderRadius: BorderRadius.circular(10),
+          boxShadow: [
+            BoxShadow(color: VetoGlassTokens.neonCyan.withValues(alpha: 0.4), blurRadius: 14, spreadRadius: 0),
+          ],
         ),
-        child: Text(label),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(10),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+              child: Text(
+                label,
+                style: const TextStyle(
+                  fontWeight: FontWeight.w800,
+                  fontSize: 14,
+                  color: Color(0xFF06101C),
+                  letterSpacing: 0.3,
+                ),
+              ),
+            ),
+          ),
+        ),
       );
     }
     return OutlinedButton(
       onPressed: onTap,
       style: OutlinedButton.styleFrom(
         foregroundColor: _C.inkDark,
-        side: const BorderSide(color: _C.border, width: 1.5),
+        side: BorderSide(color: Colors.white.withValues(alpha: 0.22), width: 1.2),
         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
         textStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         minimumSize: const Size(48, 40),
       ),
       child: Text(label),
@@ -442,12 +473,11 @@ class _UserBubble extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: VetoGlassTokens.glassFillStrong,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: const Color(0xFFE2E8F8), width: 1.5),
+          border: Border.all(color: VetoGlassTokens.glassBorderBright, width: 1),
           boxShadow: [
-            BoxShadow(color: const Color(0xFF5B8FFF).withValues(alpha: 0.10), blurRadius: 12),
-            BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 6, offset: const Offset(0, 2)),
+            BoxShadow(color: VetoGlassTokens.neonBlue.withValues(alpha: 0.15), blurRadius: 14),
           ],
         ),
         child: Row(
@@ -477,7 +507,7 @@ class _UserBubble extends StatelessWidget {
                 Text(
                   name ?? (code == 'he' ? 'משתמש' : 'User'),
                   style: const TextStyle(
-                    color: Color(0xFF0F172A),
+                    color: VetoGlassTokens.textPrimary,
                     fontSize: 13,
                     fontWeight: FontWeight.w700,
                     height: 1.2,
@@ -504,13 +534,13 @@ class _UserBubble extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
               decoration: BoxDecoration(
-                color: const Color(0xFF5B8FFF),
+                gradient: VetoGlassTokens.neonButton,
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Row(mainAxisSize: MainAxisSize.min, children: [
                 Text(
                   code == 'he' ? 'כניסה' : code == 'ru' ? 'Войти' : 'Enter',
-                  style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w700),
+                  style: const TextStyle(color: Color(0xFF06101C), fontSize: 11, fontWeight: FontWeight.w800),
                 ),
                 const SizedBox(width: 4),
                 const Icon(Icons.arrow_forward_ios_rounded, color: Colors.white, size: 11),
@@ -1125,32 +1155,3 @@ class _Section extends StatelessWidget {
   }
 }
 
-// ══════════════════════════════════════════════════════════════════
-//  LIGHT AURORA PAINTER
-// ══════════════════════════════════════════════════════════════════
-class _AuroraPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final w = size.width;
-    final h = size.height;
-
-    canvas.drawRect(Rect.fromLTWH(0, 0, w, h), Paint()..color = const Color(0xFFF0F4FF));
-
-    _blob(canvas, Offset(w * 0.85, h * 0.04), w * 0.45, const Color(0xFF38BDF8), 0.22);
-    _blob(canvas, Offset(w * 0.15, h * 0.08), w * 0.50, const Color(0xFF00C9B1), 0.16);
-    _blob(canvas, Offset(w * 0.05, h * 0.55), w * 0.50, const Color(0xFFA78BFA), 0.14);
-    _blob(canvas, Offset(w * 0.90, h * 0.70), w * 0.40, const Color(0xFF5B8FFF), 0.12);
-  }
-
-  void _blob(Canvas canvas, Offset center, double radius, Color color, double alpha) {
-    canvas.drawCircle(
-      center, radius,
-      Paint()..shader = RadialGradient(
-        colors: [color.withValues(alpha: alpha), color.withValues(alpha: 0)],
-      ).createShader(Rect.fromCircle(center: center, radius: radius)),
-    );
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter old) => false;
-}

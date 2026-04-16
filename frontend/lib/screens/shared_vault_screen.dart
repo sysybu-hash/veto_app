@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:url_launcher/url_launcher.dart';
 
 import '../config/app_config.dart';
+import '../core/theme/veto_glass_system.dart';
 import '../services/auth_service.dart';
 
 class SharedVaultScreen extends StatefulWidget {
@@ -57,45 +58,47 @@ class _SharedVaultScreenState extends State<SharedVaultScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF0F4FF),
+      backgroundColor: VetoGlassTokens.bgBase,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: const Color(0x18FFFFFF),
         elevation: 0,
         shadowColor: Colors.transparent,
         surfaceTintColor: Colors.transparent,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Color(0xFF334155), size: 20),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: VetoGlassTokens.textPrimary, size: 20),
           onPressed: () => Navigator.of(context).pop(),
         ),
           title: Text(
           _userName != null ? _userName! : 'Vault',
-          style: const TextStyle(color: Color(0xFF0F172A), fontWeight: FontWeight.w800, fontSize: 18),
+          style: const TextStyle(color: VetoGlassTokens.textPrimary, fontWeight: FontWeight.w800, fontSize: 18),
         ),
         centerTitle: true,
         bottom: const PreferredSize(
           preferredSize: Size.fromHeight(1),
-          child: Divider(height: 1, color: Color(0xFFE2E8F8)),
+          child: Divider(height: 1, color: VetoGlassTokens.glassBorder),
         ),
       ),
-      body: _loading
-          ? const Center(child: CircularProgressIndicator(color: Color(0xFF5B8FFF)))
-          : _files.isEmpty
-              ? Center(
-                  child: Column(mainAxisSize: MainAxisSize.min, children: [
-                    const Icon(Icons.folder_open_outlined, size: 56, color: Color(0xFF94A3B8)),
-                    const SizedBox(height: 12),
-                    const Text('No documents shared.', style: TextStyle(color: Color(0xFF64748B), fontSize: 15)),
-                  ]),
-                )
-              : ListView.separated(
-                  padding: const EdgeInsets.all(20),
-                  itemCount: _files.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 10),
-                  itemBuilder: (context, i) {
-                    final f = _files[i];
-                    return _SharedFileCard(file: f);
-                  },
-                ),
+      body: VetoGlassAuroraBackground(
+        child: _loading
+            ? const Center(child: CircularProgressIndicator(color: VetoGlassTokens.neonCyan))
+            : _files.isEmpty
+                ? Center(
+                    child: Column(mainAxisSize: MainAxisSize.min, children: [
+                      const Icon(Icons.folder_open_outlined, size: 56, color: VetoGlassTokens.textMuted),
+                      const SizedBox(height: 12),
+                      const Text('No documents shared.', style: TextStyle(color: VetoGlassTokens.textMuted, fontSize: 15)),
+                    ]),
+                  )
+                : ListView.separated(
+                    padding: const EdgeInsets.all(20),
+                    itemCount: _files.length,
+                    separatorBuilder: (_, __) => const SizedBox(height: 10),
+                    itemBuilder: (context, i) {
+                      final f = _files[i];
+                      return _SharedFileCard(file: f);
+                    },
+                  ),
+      ),
     );
   }
 }

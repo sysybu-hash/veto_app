@@ -332,7 +332,192 @@ class VetoTheme {
     );
   }
 
-  static ThemeData dark() => luxuryLight();
+  /// Dark glassmorphism — white typography on deep aurora base (mockup-aligned).
+  static ThemeData glassDark() {
+    const on = Color(0xFFF8FAFC);
+    const surface = Color(0x14FFFFFF);
+    return ThemeData(
+      useMaterial3: true,
+      brightness: Brightness.dark,
+      scaffoldBackgroundColor: const Color(0xFF06101C),
+      primaryIconTheme: const IconThemeData(color: on, size: 24),
+      iconTheme: const IconThemeData(color: on, size: 24),
+      colorScheme: ColorScheme.dark(
+        brightness: Brightness.dark,
+        primary: const Color(0xFF00E5FF),
+        onPrimary: const Color(0xFF06101C),
+        secondary: const Color(0xFF007BFF),
+        onSecondary: Colors.white,
+        surface: surface,
+        onSurface: on,
+        error: const Color(0xFFFF4B4B),
+        onError: Colors.white,
+      ),
+      appBarTheme: const AppBarTheme(
+        backgroundColor: Color(0x18FFFFFF),
+        foregroundColor: on,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        shadowColor: Colors.transparent,
+        surfaceTintColor: Colors.transparent,
+        centerTitle: true,
+        titleTextStyle: TextStyle(
+          fontFamily: 'Heebo',
+          fontSize: 17,
+          fontWeight: FontWeight.w800,
+          color: on,
+          letterSpacing: 0.4,
+        ),
+        iconTheme: IconThemeData(color: on),
+      ),
+      textTheme: const TextTheme(
+        displayLarge:   TextStyle(fontFamily: 'Heebo', fontSize: 57, fontWeight: FontWeight.w700, color: on, letterSpacing: -0.5),
+        displayMedium:  TextStyle(fontFamily: 'Heebo', fontSize: 45, fontWeight: FontWeight.w700, color: on),
+        displaySmall:   TextStyle(fontFamily: 'Heebo', fontSize: 36, fontWeight: FontWeight.w600, color: on),
+        headlineLarge:  TextStyle(fontFamily: 'Heebo', fontSize: 32, fontWeight: FontWeight.w800, color: on, letterSpacing: 0.3),
+        headlineMedium: TextStyle(fontFamily: 'Heebo', fontSize: 28, fontWeight: FontWeight.w600, color: on),
+        headlineSmall:  TextStyle(fontFamily: 'Heebo', fontSize: 24, fontWeight: FontWeight.w600, color: on),
+        titleLarge:     TextStyle(fontFamily: 'Heebo', fontSize: 20, fontWeight: FontWeight.w600, color: on, letterSpacing: 0.2),
+        titleMedium:    TextStyle(fontFamily: 'Heebo', fontSize: 16, fontWeight: FontWeight.w500, color: on),
+        titleSmall:     TextStyle(fontFamily: 'Heebo', fontSize: 14, fontWeight: FontWeight.w600, color: Color(0xFFE2E8F0)),
+        bodyLarge:      TextStyle(fontFamily: 'Heebo', fontSize: 16, fontWeight: FontWeight.w500, color: on, height: 1.35),
+        bodyMedium:     TextStyle(fontFamily: 'Heebo', fontSize: 14, fontWeight: FontWeight.w500, color: Color(0xFFE2E8F0), height: 1.4),
+        bodySmall:      TextStyle(fontFamily: 'Heebo', fontSize: 12, fontWeight: FontWeight.w500, color: Color(0xFF94A3B8), height: 1.35),
+        labelLarge:     TextStyle(fontFamily: 'Heebo', fontSize: 14, fontWeight: FontWeight.w700, color: on, letterSpacing: 0.6),
+        labelMedium:    TextStyle(fontFamily: 'Heebo', fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFFCBD5E1)),
+        labelSmall:     TextStyle(fontFamily: 'Heebo', fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF94A3B8)),
+      ),
+      cardTheme: CardThemeData(
+        color: surface,
+        elevation: 0,
+        shadowColor: Colors.transparent,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(24),
+          side: BorderSide(color: Colors.white.withValues(alpha: 0.14), width: 1),
+        ),
+        margin: EdgeInsets.zero,
+      ),
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: const Color(0x18FFFFFF),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        hintStyle: const TextStyle(fontFamily: 'Heebo', color: Color(0xFF64748B), fontSize: 14),
+        labelStyle: const TextStyle(fontFamily: 'Heebo', color: Color(0xFF94A3B8), fontSize: 14),
+        floatingLabelStyle: const TextStyle(fontFamily: 'Heebo', color: Color(0xFF00E5FF), fontSize: 12),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.14), width: 1),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: Color(0xFF00E5FF), width: 1.5),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: Color(0xFFFF4B4B), width: 1),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: Color(0xFFFF4B4B), width: 1.5),
+        ),
+      ),
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: const Color(0xFF00B4D4),
+          foregroundColor: const Color(0xFF06101C),
+          disabledBackgroundColor: const Color(0xFF334155),
+          disabledForegroundColor: const Color(0xFF94A3B8),
+          elevation: 0,
+          padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
+          minimumSize: const Size(48, 48),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          textStyle: const TextStyle(fontFamily: 'Heebo', fontSize: 15, fontWeight: FontWeight.w800, letterSpacing: 0.5),
+        ),
+      ),
+      filledButtonTheme: FilledButtonThemeData(
+        style: FilledButton.styleFrom(
+          backgroundColor: const Color(0xFF00E5FF),
+          foregroundColor: const Color(0xFF06101C),
+          elevation: 0,
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+          minimumSize: const Size(48, 48),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          textStyle: const TextStyle(fontFamily: 'Heebo', fontSize: 15, fontWeight: FontWeight.w800),
+        ),
+      ),
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: OutlinedButton.styleFrom(
+          foregroundColor: on,
+          side: BorderSide(color: Colors.white.withValues(alpha: 0.22), width: 1.2),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+          minimumSize: const Size(48, 48),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          textStyle: const TextStyle(fontFamily: 'Heebo', fontSize: 15, fontWeight: FontWeight.w700),
+        ),
+      ),
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(
+          foregroundColor: const Color(0xFF00E5FF),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          textStyle: const TextStyle(fontFamily: 'Heebo', fontSize: 14, fontWeight: FontWeight.w600),
+        ),
+      ),
+      dialogTheme: DialogThemeData(
+        backgroundColor: const Color(0xE6121824),
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(26),
+          side: BorderSide(color: Colors.white.withValues(alpha: 0.16), width: 1),
+        ),
+        titleTextStyle: const TextStyle(fontFamily: 'Heebo', fontSize: 20, fontWeight: FontWeight.w800, color: on),
+        contentTextStyle: const TextStyle(fontFamily: 'Heebo', fontSize: 14, color: Color(0xFFCBD5E1)),
+      ),
+      bottomSheetTheme: BottomSheetThemeData(
+        backgroundColor: const Color(0xE6121824),
+        modalBarrierColor: Colors.black.withValues(alpha: 0.55),
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(26)),
+        ),
+      ),
+      snackBarTheme: SnackBarThemeData(
+        backgroundColor: const Color(0xFF0F172A),
+        contentTextStyle: const TextStyle(fontFamily: 'Heebo', color: on, fontSize: 14),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        behavior: SnackBarBehavior.floating,
+      ),
+      dividerTheme: DividerThemeData(color: Colors.white.withValues(alpha: 0.08), thickness: 1),
+      navigationBarTheme: NavigationBarThemeData(
+        backgroundColor: const Color(0x18FFFFFF),
+        elevation: 0,
+        shadowColor: Colors.transparent,
+        indicatorColor: const Color(0xFF00E5FF).withValues(alpha: 0.18),
+        labelTextStyle: WidgetStateProperty.all(
+          const TextStyle(fontFamily: 'Heebo', fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFFCBD5E1)),
+        ),
+        iconTheme: WidgetStateProperty.resolveWith((s) {
+          final selected = s.contains(WidgetState.selected);
+          return IconThemeData(
+            color: selected ? const Color(0xFF00E5FF) : const Color(0xFF64748B),
+            size: 24,
+          );
+        }),
+      ),
+      switchTheme: SwitchThemeData(
+        thumbColor: WidgetStateProperty.resolveWith((s) =>
+            s.contains(WidgetState.selected) ? const Color(0xFF00E5FF) : const Color(0xFF475569)),
+        trackColor: WidgetStateProperty.resolveWith((s) =>
+            s.contains(WidgetState.selected) ? const Color(0xFF00E5FF).withValues(alpha: 0.35) : const Color(0xFF1E293B)),
+      ),
+      listTileTheme: ListTileThemeData(
+        tileColor: Colors.transparent,
+        textColor: on,
+        iconColor: const Color(0xFF00E5FF),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      ),
+    );
+  }
+
+  static ThemeData dark() => glassDark();
 }
 
 // ── Decoration Helpers ──────────────────────────────────────

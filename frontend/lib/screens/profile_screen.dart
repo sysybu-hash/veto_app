@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../core/i18n/app_language.dart';
+import '../core/theme/veto_glass_system.dart';
 import '../core/theme/veto_theme.dart';
 import '../services/auth_service.dart';
 import '../widgets/app_language_menu.dart';
@@ -126,19 +127,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Directionality(
       textDirection: AppLanguage.directionOf(code),
       child: Scaffold(
-        backgroundColor: const Color(0xFFF0F4FF),
+        backgroundColor: VetoGlassTokens.bgBase,
         appBar: AppBar(
-          backgroundColor: Colors.white,
+          backgroundColor: const Color(0x18FFFFFF),
           elevation: 0,
           shadowColor: Colors.transparent,
           surfaceTintColor: Colors.transparent,
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Color(0xFF334155), size: 20),
+            icon: const Icon(Icons.arrow_back_ios_new_rounded, color: VetoGlassTokens.textPrimary, size: 20),
             onPressed: () => Navigator.of(context).pop(),
           ),
           title: Text(
             _t(code, 'title'),
-            style: const TextStyle(color: Color(0xFF0F172A), fontWeight: FontWeight.w800, fontSize: 18),
+            style: const TextStyle(color: VetoGlassTokens.textPrimary, fontWeight: FontWeight.w800, fontSize: 18),
           ),
           centerTitle: true,
           actions: [
@@ -149,13 +150,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ],
           bottom: const PreferredSize(
             preferredSize: Size.fromHeight(1),
-            child: Divider(height: 1, color: Color(0xFFE2E8F8)),
+            child: Divider(height: 1, color: VetoGlassTokens.glassBorder),
           ),
         ),
-        body: _loading
+        body: VetoGlassAuroraBackground(
+          child: _loading
             ? const Center(
                 child: CircularProgressIndicator(
-                    color: VetoPalette.primary))
+                    color: VetoGlassTokens.neonCyan))
             : SingleChildScrollView(
                 padding: const EdgeInsets.all(24),
                 child: Center(
@@ -338,6 +340,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                 ),
               ),
+        ),
       ),
     );
   }

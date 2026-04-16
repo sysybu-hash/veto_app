@@ -3,6 +3,7 @@
 import 'package:provider/provider.dart';
 
 import '../../core/i18n/app_language.dart';
+import '../../core/theme/veto_glass_system.dart';
 import '../../core/theme/veto_theme.dart';
 import '../../services/admin_service.dart';
 import '../../widgets/app_language_menu.dart';
@@ -86,30 +87,31 @@ class _PendingLawyersScreenState extends State<PendingLawyersScreen> {
     return Directionality(
       textDirection: AppLanguage.directionOf(code),
       child: Scaffold(
-        backgroundColor: const Color(0xFFF0F4FF),
+        backgroundColor: VetoGlassTokens.bgBase,
         appBar: AppBar(
-          backgroundColor: Colors.white,
+          backgroundColor: const Color(0x18FFFFFF),
           elevation: 0,
           shadowColor: Colors.transparent,
           surfaceTintColor: Colors.transparent,
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Color(0xFF334155), size: 20),
+            icon: const Icon(Icons.arrow_back_ios_new_rounded, color: VetoGlassTokens.textPrimary, size: 20),
             onPressed: () => Navigator.of(context).pop(),
           ),
           title: Text(_t(code, 'pendingLawyersTitle'),
-              style: const TextStyle(color: Color(0xFF0F172A), fontWeight: FontWeight.w800, fontSize: 18)),
+              style: const TextStyle(color: VetoGlassTokens.textPrimary, fontWeight: FontWeight.w800, fontSize: 18)),
           centerTitle: true,
           actions: [
             const Padding(
               padding: EdgeInsets.symmetric(horizontal: 8),
               child: Center(child: AppLanguageMenu(compact: true)),
             ),
-            IconButton(icon: const Icon(Icons.refresh_rounded, color: Color(0xFF334155)), onPressed: _load, tooltip: _t(code, 'refresh')),
+            IconButton(icon: const Icon(Icons.refresh_rounded, color: VetoGlassTokens.textPrimary), onPressed: _load, tooltip: _t(code, 'refresh')),
           ],
-          bottom: const PreferredSize(preferredSize: Size.fromHeight(1), child: Divider(height: 1, color: Color(0xFFE2E8F8))),
+          bottom: const PreferredSize(preferredSize: Size.fromHeight(1), child: Divider(height: 1, color: VetoGlassTokens.glassBorder)),
         ),
-        body: _loading
-            ? const Center(child: CircularProgressIndicator(color: Color(0xFF5B8FFF)))
+        body: VetoGlassAuroraBackground(
+          child: _loading
+            ? const Center(child: CircularProgressIndicator(color: VetoGlassTokens.neonCyan))
             : _lawyers.isEmpty
                 ? Center(
                     child: Column(
@@ -209,6 +211,7 @@ class _PendingLawyersScreenState extends State<PendingLawyersScreen> {
                       );
                     },
                   ),
+        ),
       ),
     );
   }

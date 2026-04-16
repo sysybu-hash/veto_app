@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../core/i18n/app_language.dart';
+import '../core/theme/veto_glass_system.dart';
 import '../core/theme/veto_theme.dart';
 import '../services/auth_service.dart';
 import '../services/push_service.dart';
@@ -389,11 +390,13 @@ class _LawyerDashboardState extends State<LawyerDashboard> {
     return Directionality(
       textDirection: AppLanguage.directionOf(code),
       child: Scaffold(
-        backgroundColor: const Color(0xFFF0F4FF),
+        backgroundColor: VetoGlassTokens.bgBase,
         body: _isBooting
-            ? const Center(child: CircularProgressIndicator(color: Color(0xFF5B8FFF)))
+            ? VetoGlassAuroraBackground(
+                child: const Center(child: CircularProgressIndicator(color: VetoGlassTokens.neonCyan)),
+              )
             : Stack(children: [
-                Positioned.fill(child: CustomPaint(painter: _LawyerAuroraPainter())),
+                Positioned.fill(child: CustomPaint(painter: const VetoFluidBackgroundPainter())),
                 SafeArea(
                   child: Column(children: [
                     // ── Top bar ─────────────────────────────────
@@ -403,7 +406,7 @@ class _LawyerDashboardState extends State<LawyerDashboard> {
                         // Bell
                         Stack(children: [
                           IconButton(
-                            icon: const Icon(Icons.notifications_outlined, color: Color(0xFF334155)),
+                            icon: const Icon(Icons.notifications_outlined, color: VetoGlassTokens.textPrimary),
                             onPressed: () {
                               HapticFeedback.lightImpact();
                               _showNotificationsPanel();
@@ -420,7 +423,7 @@ class _LawyerDashboardState extends State<LawyerDashboard> {
                         // Title
                         Text(
                           isRtl ? 'לוח בקרה — עורך דין' : 'Lawyer Dashboard',
-                          style: const TextStyle(color: Color(0xFF0F172A), fontSize: 18, fontWeight: FontWeight.w900),
+                          style: const TextStyle(color: VetoGlassTokens.textPrimary, fontSize: 18, fontWeight: FontWeight.w900),
                         ),
                         const Spacer(),
                         // Available badge
@@ -631,23 +634,6 @@ class _LawyerDashboardState extends State<LawyerDashboard> {
       ),
     );
   }
-}
-
-// ── Lawyer Aurora painter ─────────────────────────────────
-class _LawyerAuroraPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final w = size.width; final h = size.height;
-    canvas.drawRect(Rect.fromLTWH(0,0,w,h), Paint()..color = const Color(0xFFF0F4FF));
-    _b(canvas, Offset(w*0.85, h*0.05), w*0.55, const Color(0xFF38BDF8), 0.18);
-    _b(canvas, Offset(w*0.10, h*0.92), w*0.55, const Color(0xFF00C9B1), 0.16);
-  }
-  void _b(Canvas c, Offset center, double r, Color color, double a) {
-    c.drawCircle(center, r, Paint()..shader = RadialGradient(
-      colors: [color.withValues(alpha: a), color.withValues(alpha: 0)],
-    ).createShader(Rect.fromCircle(center: center, radius: r)));
-  }
-  @override bool shouldRepaint(_) => false;
 }
 
 // ── Lawyer stat tile ──────────────────────────────────────
