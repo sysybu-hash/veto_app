@@ -2474,19 +2474,24 @@ class _VetoScreenState extends State<VetoScreen> {
       ),
     ),
     // ── Input row ────────────────────────────────────────────
-    Container(
-      decoration: const BoxDecoration(
-        color: VetoPalette.surface,
-        border: Border(top: BorderSide(color: VetoPalette.border)),
-        boxShadow: [
-          BoxShadow(color: Color(0x0A000000), blurRadius: 8),
-        ],
+    ClipRect(
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: VetoGlassTokens.blurSigma, sigmaY: VetoGlassTokens.blurSigma),
+        child: Container(
+          decoration: BoxDecoration(
+            color: VetoGlassTokens.glassFillStrong,
+            border: Border(top: BorderSide(color: VetoGlassTokens.glassBorder.withValues(alpha: 0.9))),
+            boxShadow: [
+              BoxShadow(color: Colors.black.withValues(alpha: 0.35), blurRadius: 18, offset: const Offset(0, -6)),
+            ],
+          ),
+          child: Column(mainAxisSize: MainAxisSize.min, children: [
+            _chatInput(isRtl),
+            _chatActBar(),
+            const SizedBox(height: 4),
+          ]),
+        ),
       ),
-      child: Column(mainAxisSize: MainAxisSize.min, children: [
-        _chatInput(isRtl),
-        _chatActBar(),
-        const SizedBox(height: 4),
-      ]),
     ),
   ]);
 
@@ -2540,14 +2545,27 @@ class _VetoScreenState extends State<VetoScreen> {
                     height: 44,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: _isListening ? VetoPalette.emergency : VetoPalette.surface,
+                      color: _isListening ? const Color(0xFFFF3B3B) : VetoGlassTokens.glassFillStrong,
                       border: Border.all(
-                        color: _isListening ? VetoPalette.emergency : VetoPalette.border,
+                        color: _isListening ? const Color(0xFFFF3B3B).withValues(alpha: 0.7) : VetoGlassTokens.glassBorder,
                       ),
+                      boxShadow: _isListening
+                          ? [
+                              BoxShadow(
+                                color: const Color(0xFFFF3B3B).withValues(alpha: 0.35),
+                                blurRadius: 18,
+                              ),
+                            ]
+                          : [
+                              BoxShadow(
+                                color: VetoGlassTokens.neonBlue.withValues(alpha: 0.12),
+                                blurRadius: 16,
+                              ),
+                            ],
                     ),
                     child: Icon(
                       _isListening ? Icons.mic : Icons.mic_none,
-                      color: _isListening ? Colors.white : VetoPalette.textMuted,
+                      color: _isListening ? Colors.white : VetoGlassTokens.textPrimary,
                       size: 22,
                     ),
                   ),
@@ -2568,11 +2586,11 @@ class _VetoScreenState extends State<VetoScreen> {
                     height: 44,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: VetoPalette.surface,
-                      border: Border.all(color: VetoPalette.border),
+                      color: VetoGlassTokens.glassFillStrong,
+                      border: Border.all(color: VetoGlassTokens.glassBorder),
                     ),
                     child: const Icon(Icons.content_paste,
-                        color: VetoPalette.textMuted, size: 22),
+                        color: VetoGlassTokens.textPrimary, size: 22),
                   ),
                 ),
                 ],
@@ -2584,23 +2602,23 @@ class _VetoScreenState extends State<VetoScreen> {
               controller: _inputCtrl,
               enabled: !_isDispatching,
               textDirection: isRtl ? TextDirection.rtl : TextDirection.ltr,
-              style: const TextStyle(color: VetoPalette.text, fontSize: 14),
+              style: const TextStyle(color: VetoGlassTokens.textPrimary, fontSize: 14),
               decoration: InputDecoration(
                 hintText: _isDispatching ? _l.dispatching : _l.hint,
-                hintStyle: const TextStyle(color: VetoPalette.textMuted),
+                hintStyle: const TextStyle(color: VetoGlassTokens.textMuted),
                 filled: true,
-                fillColor: VetoPalette.surface,
+                fillColor: VetoGlassTokens.glassFill,
                 contentPadding:
                     const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(24),
-                    borderSide: const BorderSide(color: VetoPalette.border)),
+                    borderSide: const BorderSide(color: VetoGlassTokens.glassBorder)),
                 enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(24),
-                    borderSide: const BorderSide(color: VetoPalette.border)),
+                    borderSide: const BorderSide(color: VetoGlassTokens.glassBorder)),
                 focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(24),
-                    borderSide: const BorderSide(color: VetoPalette.success)),
+                    borderSide: BorderSide(color: VetoGlassTokens.neonCyan.withValues(alpha: 0.85), width: 1.2)),
               ),
               onSubmitted: _send,
               textInputAction: TextInputAction.send,
@@ -2617,9 +2635,17 @@ class _VetoScreenState extends State<VetoScreen> {
                   height: 44,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
+                    gradient: (_isLoading || _isDispatching) ? null : VetoGlassTokens.neonButton,
                     color: (_isLoading || _isDispatching)
-                        ? VetoPalette.border
-                        : VetoPalette.success,
+                        ? VetoGlassTokens.glassFill
+                        : null,
+                    boxShadow: [
+                      if (!(_isLoading || _isDispatching))
+                        BoxShadow(
+                          color: VetoGlassTokens.neonCyan.withValues(alpha: 0.25),
+                          blurRadius: 18,
+                        ),
+                    ],
                   ),
                   child: const Icon(Icons.send, color: Colors.white, size: 22),
                 ),
