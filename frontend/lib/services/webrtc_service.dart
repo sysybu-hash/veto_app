@@ -32,6 +32,7 @@ class WebRTCService extends ChangeNotifier {
   final bool _isRecording = false;
   int  _callDuration    = 0;
   Timer? _durationTimer;
+  String? _errorMessage;
 
   /// Set by `room-joined`: first peer creates the offer only after `peer-joined`.
   bool _isCaller = false;
@@ -53,6 +54,7 @@ class WebRTCService extends ChangeNotifier {
   bool      get isRecording  => _isRecording;
   int       get callDuration => _callDuration;
   bool      get hasVideo     => _callType == CallType.video && !_cameraOff;
+  String?   get errorMessage => _errorMessage;
   MediaStream? get localStream  => _localStream;
   MediaStream? get remoteStream => _remoteStream;
 
@@ -74,6 +76,7 @@ class WebRTCService extends ChangeNotifier {
   Future<void> joinRoom(String roomId, CallType callType) async {
     _roomId    = roomId;
     _callType  = callType;
+    _errorMessage = null;
     _setState(CallState.joining);
 
     try {
@@ -84,7 +87,7 @@ class WebRTCService extends ChangeNotifier {
       });
     } catch (e) {
       debugPrint('[WebRTC] joinRoom error: $e');
-      _setState(CallState.error);
+      _setError('Failed to join the call room.');
     }
   }
 
@@ -102,7 +105,17 @@ class WebRTCService extends ChangeNotifier {
       wantVideo: _callType == CallType.video,
     );
 
-    _localStream = await navigator.mediaDevices.getUserMedia(constraints);
+    try {
+      _localStream = await navigator.mediaDevices.getUserMedia(constraints);
+    } catch (e) {
+      debugPrint('[WebRTC] getUserMedia failed: $e');
+      _setError(
+        _callType == CallType.video
+            ? 'Camera or microphone permission was denied.'
+            : 'Microphone permission was denied.',
+      );
+      rethrow;
+    }
     localRenderer.srcObject = _localStream;
 
     // ── Create peer connection (local STUN + optional server TURN) ─
@@ -149,11 +162,12 @@ class WebRTCService extends ChangeNotifier {
     _pc!.onConnectionState = (state) {
       debugPrint('[WebRTC] Connection state: $state');
       if (state == RTCPeerConnectionState.RTCPeerConnectionStateConnected) {
+        _errorMessage = null;
         _setState(CallState.connected);
         _startDurationTimer();
       } else if (state == RTCPeerConnectionState.RTCPeerConnectionStateFailed ||
                  state == RTCPeerConnectionState.RTCPeerConnectionStateDisconnected) {
-        _setState(CallState.error);
+        _setError('Peer connection failed.');
       }
     };
 
@@ -199,7 +213,7 @@ class WebRTCService extends ChangeNotifier {
         await _initCall(true, peerSocketId);
       } catch (e, st) {
         debugPrint('[WebRTC] Caller init failed: $e\n$st');
-        _setState(CallState.error);
+        _setError('Could not start the call.');
       }
     });
 
@@ -229,6 +243,7 @@ class WebRTCService extends ChangeNotifier {
         });
       } catch (e) {
         debugPrint('[WebRTC] Handle offer error: $e');
+        _setError('Could not process the incoming call offer.');
       }
     });
 
@@ -241,6 +256,7 @@ class WebRTCService extends ChangeNotifier {
         );
       } catch (e) {
         debugPrint('[WebRTC] Handle answer error: $e');
+        _setError('Could not process the call answer.');
       }
     });
 
@@ -259,6 +275,15 @@ class WebRTCService extends ChangeNotifier {
       } catch (e) {
         debugPrint('[WebRTC] ICE candidate error: $e');
       }
+    });
+
+    _socket.on('call-error', (data) {
+      String? message;
+      if (data is Map) {
+        final map = Map<String, dynamic>.from(data);
+        message = map['message']?.toString();
+      }
+      _setError(message ?? 'Failed to join the call.');
     });
 
     // Peer toggled media
@@ -358,6 +383,12 @@ class WebRTCService extends ChangeNotifier {
     notifyListeners();
   }
 
+  void _setError(String message) {
+    _errorMessage = message;
+    _state = CallState.error;
+    notifyListeners();
+  }
+
   // ═══════════════════════════════════════════════════════════
   //  Dispose
   // ═══════════════════════════════════════════════════════════
@@ -369,6 +400,7 @@ class WebRTCService extends ChangeNotifier {
     _socket.off('webrtc-offer');
     _socket.off('webrtc-answer');
     _socket.off('ice-candidate');
+    _socket.off('call-error');
     _socket.off('peer-media-toggle');
     _socket.off('call-ended');
     _socket.off('peer-left');

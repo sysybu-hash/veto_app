@@ -9,6 +9,11 @@ class SocketService {
   factory SocketService() => _instance;
 
   socket_io.Socket? _socket;
+  String? _connectedRole;
+  Completer<void>? _connectCompleter;
+  final List<Map<String, dynamic>> _pendingEmits = <Map<String, dynamic>>[];
+  final Map<String, List<Function(dynamic)>> _dynamicHandlers =
+      <String, List<Function(dynamic)>>{};
 
   final _emergencyCreatedController =
       StreamController<Map<String, dynamic>>.broadcast();
@@ -61,8 +66,27 @@ class SocketService {
       return;
     }
 
-    if (_socket?.connected ?? false) {
-      debugPrint('SocketService: Already connected.');
+    if ((_socket?.connected ?? false) && _connectedRole == role) {
+      debugPrint('SocketService: Already connected as $role.');
+      return;
+    }
+
+    if (_socket != null && _connectedRole != role) {
+      debugPrint(
+        'SocketService: Reconnecting with new role. old=$_connectedRole new=$role',
+      );
+      disconnect();
+    }
+
+    if (_socket != null &&
+        !(_socket?.connected ?? false) &&
+        _connectCompleter != null &&
+        !(_connectCompleter?.isCompleted ?? true)) {
+      try {
+        await _connectCompleter!.future.timeout(const Duration(seconds: 20));
+      } catch (e) {
+        debugPrint('SocketService: Existing connect attempt failed: $e');
+      }
       return;
     }
 
@@ -80,56 +104,91 @@ class SocketService {
       'reconnectionDelayMax': 10000,
       'timeout': 20000,
     });
-
-    _socket?.connect();
+    _connectedRole = role;
+    _connectCompleter = Completer<void>();
 
     _socket?.onConnect((_) {
       debugPrint('Socket connected (Role: $role) - Socket ID: ${_socket?.id}');
+      if (!(_connectCompleter?.isCompleted ?? true)) {
+        _connectCompleter?.complete();
+      }
+      _flushPendingEmits();
     });
 
-    _socket?.on('emergency_created',     (d) => _emit(_emergencyCreatedController, d));
+    _socket?.onConnectError((err) {
+      debugPrint('Socket connect error: $err');
+      if (!(_connectCompleter?.isCompleted ?? true)) {
+        _connectCompleter?.completeError(err ?? 'connect_error');
+      }
+    });
+
+    _socket?.on('emergency_created', (d) => _emit(_emergencyCreatedController, d));
     // Backend emits `new_emergency_alert`; also fan-in to onEmergencyAlert for legacy listeners.
     _socket?.on('new_emergency_alert', (d) {
       _emit(_newEmergencyAlertController, d);
       _emit(_emergencyAlertController, d);
     });
-    _socket?.on('emergency_alert',        (d) => _emit(_emergencyAlertController, d));
-    _socket?.on('case_accepted',          (d) => _emit(_caseAcceptedController, d));
-    _socket?.on('case_accepted_confirmed',(d) => _emit(_caseAcceptedController, d));
-    _socket?.on('veto_dispatched',        (d) => _emit(_vetoDispatchedController, d));
-    _socket?.on('lawyer_found',           (d) => _emit(_lawyerFoundController, d));
-    _socket?.on('no_lawyers_available',   (d) => _emit(_noLawyersController, d));
-    _socket?.on('case_taken',             (d) => _emit(_caseTakenController, d));
-    _socket?.on('veto_error',            (d) => _emit(_vetoErrorController, d));
-    _socket?.on('case_already_taken',    (d) => _emit(_caseAlreadyTakenController, d));
+    _socket?.on('emergency_alert', (d) => _emit(_emergencyAlertController, d));
+    _socket?.on('case_accepted', (d) => _emit(_caseAcceptedController, d));
+    _socket?.on(
+      'case_accepted_confirmed',
+      (d) => _emit(_caseAcceptedController, d),
+    );
+    _socket?.on('veto_dispatched', (d) => _emit(_vetoDispatchedController, d));
+    _socket?.on('lawyer_found', (d) => _emit(_lawyerFoundController, d));
+    _socket?.on(
+      'no_lawyers_available',
+      (d) => _emit(_noLawyersController, d),
+    );
+    _socket?.on('case_taken', (d) => _emit(_caseTakenController, d));
+    _socket?.on('veto_error', (d) => _emit(_vetoErrorController, d));
+    _socket?.on(
+      'case_already_taken',
+      (d) => _emit(_caseAlreadyTakenController, d),
+    );
 
     _socket?.onDisconnect((_) {
       debugPrint('Socket disconnected');
+      if (_connectCompleter != null && !(_connectCompleter?.isCompleted ?? true)) {
+        _connectCompleter?.completeError('disconnect');
+      }
     });
 
     _socket?.onError((err) {
       debugPrint('Socket Error: $err');
     });
+
+    _attachDynamicHandlers();
+    _socket?.connect();
+
+    try {
+      await _connectCompleter!.future.timeout(const Duration(seconds: 20));
+    } catch (e) {
+      debugPrint('SocketService: connect() did not complete successfully: $e');
+    }
   }
 
   void emit(String event, dynamic data) {
     debugPrint('SocketService: Emitting event "$event" with data: $data');
-    _socket?.emit(event, data);
+    final socket = _socket;
+    if (socket == null || !socket.connected) {
+      _pendingEmits.add({'event': event, 'data': data});
+      socket?.connect();
+      return;
+    }
+    socket.emit(event, data);
   }
 
   /// Register a dynamic listener for any socket event.
   /// Used by WebRTCService and call screens for WebRTC signaling events.
   void on(String event, Function(dynamic) handler) {
-    _socket?.on(event, (data) {
-      dynamic parsed = data;
-      if (data is List && data.isNotEmpty) parsed = data.first;
-      if (parsed is Map) parsed = Map<String, dynamic>.from(parsed);
-      handler(parsed);
-    });
+    _dynamicHandlers.putIfAbsent(event, () => <Function(dynamic)>[]).add(handler);
+    _socket?.on(event, (data) => _handleDynamicEvent(event, data));
   }
 
   /// Remove a dynamic listener.
   void off(String event) {
+    _dynamicHandlers.remove(event);
     _socket?.off(event);
   }
 
@@ -157,6 +216,36 @@ class SocketService {
     _socket?.disconnect();
     _socket?.dispose();
     _socket = null;
+    _connectedRole = null;
+    _connectCompleter = null;
+  }
+
+  void _flushPendingEmits() {
+    final socket = _socket;
+    if (socket == null || !socket.connected || _pendingEmits.isEmpty) return;
+    final pending = List<Map<String, dynamic>>.from(_pendingEmits);
+    _pendingEmits.clear();
+    for (final item in pending) {
+      socket.emit(item['event'] as String, item['data']);
+    }
+  }
+
+  void _attachDynamicHandlers() {
+    if (_socket == null) return;
+    for (final entry in _dynamicHandlers.entries) {
+      _socket!.on(entry.key, (data) => _handleDynamicEvent(entry.key, data));
+    }
+  }
+
+  void _handleDynamicEvent(String event, dynamic data) {
+    final handlers = _dynamicHandlers[event];
+    if (handlers == null || handlers.isEmpty) return;
+    dynamic parsed = data;
+    if (data is List && data.isNotEmpty) parsed = data.first;
+    if (parsed is Map) parsed = Map<String, dynamic>.from(parsed);
+    for (final handler in List<Function(dynamic)>.from(handlers)) {
+      handler(parsed);
+    }
   }
 
   /// socket.io-client for Dart may deliver payloads as:

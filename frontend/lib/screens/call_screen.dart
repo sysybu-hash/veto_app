@@ -42,6 +42,7 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
   bool _finalizedCall = false;
   bool _savingArtifacts = false;
   String? _transcriptText;
+  String? _callErrorText;
   late final CallRecordingService _recordingService;
   final CallApiService _callApiService = CallApiService();
 
@@ -124,11 +125,21 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
     if (!mounted) return;
     setState(() {});
 
+    if (_webrtc.errorMessage != null && _webrtc.errorMessage!.trim().isNotEmpty) {
+      _callErrorText = _webrtc.errorMessage;
+    }
+
     if (_webrtc.state == CallState.connected && !_recordingStarted) {
       // Cancel waiting timeout — call connected
       _waitTimeout?.cancel();
       _waitTick?.cancel();
-      if (mounted) setState(() { _timedOut = false; _waitSeconds = 0; });
+      if (mounted) {
+        setState(() {
+          _timedOut = false;
+          _waitSeconds = 0;
+          _callErrorText = null;
+        });
+      }
       _recordingStarted = true;
       _recordingService.start(
         localStream: _webrtc.localStream,
@@ -137,11 +148,44 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
       );
     }
 
-    if ((_webrtc.state == CallState.ended || _webrtc.state == CallState.error) &&
-        !_finalizedCall) {
+    if (_webrtc.state == CallState.ended && !_finalizedCall) {
       _finalizedCall = true;
       unawaited(_finalizeAndNavigate());
     }
+  }
+
+  Future<void> _retryJoin() async {
+    _waitTimeout?.cancel();
+    _waitTick?.cancel();
+    setState(() {
+      _timedOut = false;
+      _waitSeconds = 0;
+      _callErrorText = null;
+      _finalizedCall = false;
+      _recordingStarted = false;
+    });
+
+    _webrtc.dispose();
+    final socketService = context.read<SocketService>();
+    await socketService.connect(role: _myRole);
+    _webrtc = WebRTCService(socketService);
+    _webrtc.addListener(_onWebRTCUpdate);
+    await _webrtc.joinRoom(
+      _roomId,
+      _callType == 'video' ? CallType.video : CallType.audio,
+    );
+
+    _waitTick = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (!mounted) return;
+      setState(() => _waitSeconds++);
+    });
+    _waitTimeout = Timer(const Duration(seconds: 75), () {
+      if (!mounted) return;
+      if (_webrtc.state != CallState.connected) {
+        setState(() => _timedOut = true);
+        _waitTick?.cancel();
+      }
+    });
   }
 
   Future<void> _finalizeAndNavigate() async {
@@ -367,7 +411,9 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
         const SizedBox(height: 20),
 
         // Waiting countdown + cancel
-        if (_webrtc.state == CallState.joining || _webrtc.state == CallState.ringing) ...[
+        if (_webrtc.state == CallState.error) ...[
+          _buildErrorPanel(),
+        ] else if (_webrtc.state == CallState.joining || _webrtc.state == CallState.ringing) ...[
           _timedOut
               ? _buildTimeoutPanel()
               : _buildWaitingPanel(),
@@ -457,21 +503,7 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
           ),
           const SizedBox(width: 12),
           FilledButton(
-            onPressed: () async {
-              setState(() { _timedOut = false; _waitSeconds = 0; });
-              // Restart waiting
-              _waitTick = Timer.periodic(const Duration(seconds: 1), (_) {
-                if (!mounted) return;
-                setState(() => _waitSeconds++);
-              });
-              _waitTimeout = Timer(const Duration(seconds: 75), () {
-                if (!mounted) return;
-                if (_webrtc.state != CallState.connected) {
-                  setState(() => _timedOut = true);
-                  _waitTick?.cancel();
-                }
-              });
-            },
+            onPressed: _retryJoin,
             style: FilledButton.styleFrom(
               backgroundColor: const Color(0xFF5B8FFF),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -481,6 +513,104 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
           ),
         ]),
       ]),
+    );
+  }
+
+  Widget _buildErrorPanel() {
+    final msg = _callErrorText ??
+        (_language == 'he'
+            ? 'שגיאה בחיבור לשיחה.'
+            : _language == 'ru'
+                ? 'Ошибка подключения к звонку.'
+                : 'Call connection failed.');
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 32),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: VetoColors.error.withValues(alpha: 0.45)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.error_outline_rounded, color: VetoColors.error, size: 32),
+          const SizedBox(height: 10),
+          Text(
+            _language == 'he'
+                ? 'השיחה לא הצליחה להתחיל'
+                : _language == 'ru'
+                    ? 'Не удалось начать звонок'
+                    : 'The call could not start',
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 15,
+              fontWeight: FontWeight.w700,
+              fontFamily: 'Heebo',
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            msg,
+            style: const TextStyle(
+              color: Colors.white70,
+              fontSize: 12,
+              fontFamily: 'Heebo',
+              height: 1.4,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              OutlinedButton(
+                onPressed: _endCall,
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: Colors.white,
+                  side: const BorderSide(color: Colors.white38),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 10,
+                  ),
+                ),
+                child: Text(
+                  _language == 'he'
+                      ? 'חזרה'
+                      : _language == 'ru'
+                          ? 'Назад'
+                          : 'Go back',
+                ),
+              ),
+              const SizedBox(width: 12),
+              FilledButton(
+                onPressed: _retryJoin,
+                style: FilledButton.styleFrom(
+                  backgroundColor: const Color(0xFF5B8FFF),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 10,
+                  ),
+                ),
+                child: Text(
+                  _language == 'he'
+                      ? 'נסה שוב'
+                      : _language == 'ru'
+                          ? 'Повторить'
+                          : 'Try again',
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 
