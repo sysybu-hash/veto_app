@@ -15,6 +15,34 @@ const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
+function sanitizeTranscript(raw) {
+  if (!raw || typeof raw !== 'string') return '';
+  let t = raw.trim();
+
+  // Remove markdown/code fences sometimes added by models.
+  t = t.replace(/```[\s\S]*?```/g, (m) => m.replace(/```/g, '')).trim();
+
+  // Remove unicode emoji characters.
+  try {
+    // Extended pictographic covers most emoji glyphs.
+    t = t.replace(/\p{Extended_Pictographic}/gu, '');
+  } catch {
+    // Fallback: strip common surrogate-pair emoji ranges.
+    t = t.replace(/[\uD83C-\uDBFF][\uDC00-\uDFFF]/g, '');
+  }
+
+  // Remove common "emoji descriptions" / stage directions.
+  t = t
+    .replace(/\b(emoji|emojis|smiley|smileys|emoticon|emoticons)\b/gi, '')
+    .replace(/\b(סמיילי|אימוג'?י|אימוג'ים)\b/gi, '')
+    .replace(/\[(?:inaudible|applause|music|laughter|laughs|crying|sighs|coughs|background noise|noise)[^\]]*\]/gi, '')
+    .replace(/\((?:inaudible|applause|music|laughter|laughs|crying|sighs|coughs|background noise|noise)[^)]*\)/gi, '');
+
+  // Collapse whitespace.
+  t = t.replace(/[ \t]+\n/g, '\n').replace(/\n{3,}/g, '\n\n').replace(/[ \t]{2,}/g, ' ').trim();
+  return t;
+}
+
 /**
  * Build extra ICE servers from env (TURN credentials never ship in the Flutter bundle).
  * Priority:
@@ -144,14 +172,14 @@ exports.transcribeRecording = async (req, res, next) => {
     if (hasInlineAudio) {
       // Inline audio transcription (base64)
       const prompt = `
-You are a professional legal call transcription service.
-Transcribe this audio recording of a legal consultation call in ${lang}.
-- Format as a clean conversation transcript
-- Label each speaker as "Client" or "Lawyer"
-- Include timestamps if possible
-- Note any important legal terms mentioned
-- If audio quality is poor, note [inaudible] where needed
-Return only the transcript text, no additional commentary.
+You are a verbatim speech-to-text transcription engine.
+Transcribe the audio recording in ${lang} as plain text only.
+
+Rules:
+- Output ONLY the transcript text. No JSON, no markdown, no headings.
+- Do NOT add emojis and do NOT describe emojis (no "smiley", no "emoji", no "(laughs)", no "[applause]").
+- Do NOT add speaker labels ("Client:", "Lawyer:") and do NOT add timestamps.
+- If something is unclear, leave it out rather than describing non-speech sounds.
       `.trim();
 
       const result = await model.generateContent([
@@ -164,7 +192,7 @@ Return only the transcript text, no additional commentary.
         },
       ]);
 
-      transcript = result.response.text();
+      transcript = sanitizeTranscript(result.response.text());
     } else if (event.recording_url) {
       // Text-only transcription request (recording is on Cloudinary)
       const prompt = `
@@ -175,7 +203,7 @@ Return a brief note that the full transcript will be available once the audio is
       `.trim();
 
       const result = await model.generateContent(prompt);
-      transcript = result.response.text();
+      transcript = sanitizeTranscript(result.response.text());
     } else {
       return res.status(400).json({ error: 'No audio data or recording URL available' });
     }
