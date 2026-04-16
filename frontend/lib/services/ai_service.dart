@@ -77,7 +77,15 @@ class AiService {
           .timeout(_chatTimeout);
 
       if (resp.statusCode == 200) {
-        return jsonDecode(resp.body) as Map<String, dynamic>;
+        final map = jsonDecode(resp.body) as Map<String, dynamic>;
+        final reply = map['reply'];
+        if (reply is String) {
+          final sanitized = _friendlyServerDetail(reply);
+          if (sanitized != reply) {
+            map['reply'] = sanitized;
+          }
+        }
+        return map;
       }
       if (resp.statusCode == 429) {
         try {

@@ -97,6 +97,25 @@ function isTransientGeminiFailure(err) {
   return false;
 }
 
+/**
+ * The @google/genai client sometimes returns API error JSON as response.text instead of throwing.
+ * Detect that so we retry / map to a user-safe message.
+ */
+function isApiErrorPayloadText(text) {
+  if (typeof text !== 'string' || !text.trim().startsWith('{')) return false;
+  try {
+    const j = JSON.parse(text);
+    const e = j?.error;
+    if (!e || typeof e !== 'object') return false;
+    if (e.code === 503 || e.code === 429 || e.status === 'UNAVAILABLE') return true;
+    const msg = String(e.message || '');
+    if (/high demand/i.test(msg) || /overloaded/i.test(msg)) return true;
+    return false;
+  } catch (_) {
+    return false;
+  }
+}
+
 const MAX_GEMINI_ATTEMPTS = 5;
 
 /**
@@ -127,7 +146,16 @@ async function geminiChat(history, userMessage, lang = 'he') {
             SYSTEM_INSTRUCTIONS[lang] || SYSTEM_INSTRUCTIONS.he,
         },
       });
-      return response.text;
+      const text =
+        typeof response.text === 'string'
+          ? response.text
+          : response.text != null
+            ? String(response.text)
+            : '';
+      if (isApiErrorPayloadText(text)) {
+        throw new Error(text);
+      }
+      return text;
     } catch (err) {
       if (isTransientGeminiFailure(err) && attempt < MAX_GEMINI_ATTEMPTS - 1) {
         const delayMs = Math.min(2000 * (attempt + 1), 8000);
@@ -139,4 +167,4 @@ async function geminiChat(history, userMessage, lang = 'he') {
   }
 }
 
-module.exports = { geminiChat, isTransientGeminiFailure };
+module.exports = { geminiChat, isTransientGeminiFailure, isApiErrorPayloadText };

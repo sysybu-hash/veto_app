@@ -3,7 +3,11 @@
 //  VETO Legal Emergency App
 // ============================================================
 
-const { geminiChat, isTransientGeminiFailure } = require('../services/gemini.service');
+const {
+  geminiChat,
+  isTransientGeminiFailure,
+  isApiErrorPayloadText,
+} = require('../services/gemini.service');
 const Lawyer = require('../models/Lawyer');
 
 // Hebrew / Arabic / English specialization → DB terms mapping
@@ -57,6 +61,13 @@ exports.aiChat = async (req, res) => {
     }
 
     const rawReply = await geminiChat(history || [], message.trim(), safeLang);
+
+    if (isApiErrorPayloadText(rawReply)) {
+      return res.json({
+        classified: false,
+        reply: AI_FALLBACK_REPLIES[safeLang] || AI_FALLBACK_REPLIES.he,
+      });
+    }
 
     // Parse JSON from Gemini response
     let parsed;
