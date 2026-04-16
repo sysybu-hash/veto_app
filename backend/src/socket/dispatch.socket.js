@@ -9,10 +9,6 @@ const User           = require('../models/User');
 const EmergencyEvent = require('../models/EmergencyEvent');
 const push           = require('../services/push.service');
 
-// ── In-memory lock to prevent double-acceptance ────────────
-// eventId → lawyerId (settled races)
-const settledEvents = new Map();
-
 // ── Build WebRTC room link (replaces WhatsApp/Telegram) ───────
 // The room ID is the eventId. Both parties join /call?roomId=eventId
 function buildRoomId(eventId) {
@@ -238,52 +234,54 @@ module.exports = function initDispatch(io) {
     socket.on('accept_case', async ({ eventId }) => {
       if (role !== 'lawyer') return;
 
-      // ── Atomic lock: only the FIRST lawyer wins ──────────
-      if (settledEvents.has(eventId)) {
-        socket.emit('case_already_taken', { eventId });
-        return;
-      }
-      settledEvents.set(eventId, userId); // lock immediately
-
-      // Auto-release lock after 30 min (GC)
-      setTimeout(() => settledEvents.delete(eventId), 30 * 60 * 1000);
-
       try {
-        // Check the event is still open
-        const event = await EmergencyEvent.findById(eventId);
-        if (!event || event.status !== 'dispatching') {
-          settledEvents.delete(eventId);
-          socket.emit('case_already_taken', { eventId });
-          return;
-        }
-
         const lawyer = await Lawyer.findById(userId).select(
           'full_name phone preferred_language'
         );
+        if (!lawyer) {
+          socket.emit('veto_error', { message: 'Lawyer profile not found.' });
+          return;
+        }
 
         const roomId = buildRoomId(eventId);
         const now    = new Date();
 
-        // 1. Update EmergencyEvent ────────────────────────────
-        const timeToAccept = Math.round(
-          (now - event.triggered_at) / 1000
+        // 1. Atomic transition: only one lawyer wins (Mongo is source of truth).
+        const updatedEvent = await EmergencyEvent.findOneAndUpdate(
+          { _id: eventId, status: 'dispatching' },
+          {
+            $set: {
+              status:             'accepted',
+              assigned_lawyer_id: userId,
+              accepted_at:        now,
+              room_id:            roomId,
+            },
+          },
+          { new: true },
         );
 
-        await EmergencyEvent.findByIdAndUpdate(eventId, {
-          status:               'accepted',
-          assigned_lawyer_id:   userId,
-          accepted_at:          now,
-          room_id:              roomId,
-          time_to_accept_seconds: timeToAccept,
-          // Mark this lawyer's dispatch entry as accepted
-          $set: {
-            'dispatch_attempts.$[elem].response':     'accepted',
-            'dispatch_attempts.$[elem].responded_at': now,
+        if (!updatedEvent) {
+          socket.emit('case_already_taken', { eventId });
+          return;
+        }
+
+        const timeToAccept = Math.round(
+          (updatedEvent.accepted_at.getTime() - updatedEvent.triggered_at.getTime()) / 1000,
+        );
+
+        await EmergencyEvent.updateOne(
+          { _id: eventId },
+          {
+            $set: {
+              time_to_accept_seconds:                 timeToAccept,
+              'dispatch_attempts.$[elem].response':     'accepted',
+              'dispatch_attempts.$[elem].responded_at': now,
+            },
           },
-        }, {
-          arrayFilters: [{ 'elem.lawyer_id': userId }],
-          new: true,
-        });
+          { arrayFilters: [{ 'elem.lawyer_id': userId }] },
+        ).catch(console.error);
+
+        const event = updatedEvent;
 
         // 2. Mark lawyer as busy + add event to their case history ─
         await Lawyer.findByIdAndUpdate(userId, {
@@ -344,7 +342,6 @@ module.exports = function initDispatch(io) {
         );
 
       } catch (err) {
-        settledEvents.delete(eventId); // release lock on error
         console.error('accept_case error:', err);
         socket.emit('veto_error', { message: 'Could not accept case. Please try again.' });
       }

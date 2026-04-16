@@ -26,7 +26,6 @@ class _C {
   static const accent     = VetoGlassTokens.neonCyan;
   static const red        = Color(0xFFFF3B3B);
   static const border     = VetoGlassTokens.glassBorder;
-  static const cardBg     = VetoGlassTokens.glassFillStrong;
 }
 
 // ── i18n ──────────────────────────────────────────────────────────
@@ -223,7 +222,7 @@ class LandingScreen extends StatelessWidget {
         body: Stack(
           children: [
             // ── Aurora background ────────────────────────────
-            Positioned.fill(child: CustomPaint(painter: VetoFluidBackgroundPainter())),
+            const Positioned.fill(child: CustomPaint(painter: VetoFluidBackgroundPainter())),
             // ── Scrollable content ───────────────────────────
             SingleChildScrollView(
               child: Column(
@@ -283,16 +282,25 @@ class _NavBarState extends State<_NavBar> {
   }
 
   void _enterApp(BuildContext ctx) {
-    if (_role == 'lawyer')     Navigator.pushNamed(ctx, '/lawyer_dashboard');
-    else if (_role == 'admin') Navigator.pushNamed(ctx, '/admin_settings');
-    else                       Navigator.pushNamed(ctx, '/veto_screen');
+    if (_role == 'lawyer') {
+      Navigator.pushNamed(ctx, '/lawyer_dashboard');
+    } else if (_role == 'admin') {
+      Navigator.pushNamed(ctx, '/admin_settings');
+    } else {
+      Navigator.pushNamed(ctx, '/veto_screen');
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final t = _T.get;
+    const t = _T.get;
     final c = widget.code;
-    final navItems = [t(c,'navHome'), t(c,'navFeatures'), t(c,'navPricing'), t(c,'navContact')];
+    final navItems = <String>[
+      t(c, 'navHome'),
+      t(c, 'navFeatures'),
+      t(c, 'navPricing'),
+      t(c, 'navContact'),
+    ];
 
     return ClipRect(
       child: BackdropFilter(
@@ -564,7 +572,7 @@ class _HeroSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final t = _T.get;
+    const t = _T.get;
     return Container(
       width: double.infinity,
       padding: EdgeInsets.fromLTRB(24, compact ? 64 : 96, 24, compact ? 64 : 80),
@@ -693,7 +701,7 @@ class _StatsBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final t = _T.get;
+    const t = _T.get;
     final stats = [
       (t(code,'stat1num'), t(code,'stat1lbl')),
       (t(code,'stat2num'), t(code,'stat2lbl')),
@@ -701,9 +709,9 @@ class _StatsBar extends StatelessWidget {
       (t(code,'stat4num'), t(code,'stat4lbl')),
     ];
     return Container(
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: _C.white,
-        border: const Border.symmetric(horizontal: BorderSide(color: _C.border)),
+        border: Border.symmetric(horizontal: BorderSide(color: _C.border)),
       ),
       padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 24),
       child: Center(
@@ -738,7 +746,7 @@ class _StackSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final t = _T.get;
+    const t = _T.get;
     final steps = [
       (Icons.explore_outlined, t(code,'stack1Title'), t(code,'stack1Body')),
       (Icons.auto_awesome_outlined, t(code,'stack2Title'), t(code,'stack2Body')),
@@ -808,7 +816,7 @@ class _FeaturesSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final t = _T.get;
+    const t = _T.get;
     final features = [
       (Icons.shield_rounded,       _C.accent,                    t(code,'feat3Title'), t(code,'feat3Body')),
       (Icons.phone_in_talk_rounded, const Color(0xFF5B8FFF),     t(code,'feat2Title'), t(code,'feat2Body')),
@@ -884,9 +892,9 @@ class _PricingSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final t = _T.get;
-    final lines = [t(code,'pricingLine1'), t(code,'pricingLine2'), t(code,'pricingLine3')];
-    final lineColors = [_C.accent, const Color(0xFF22C55E), const Color(0xFFF59E0B)];
+    const t = _T.get;
+    final lines = <String>[t(code,'pricingLine1'), t(code,'pricingLine2'), t(code,'pricingLine3')];
+    const lineColors = [_C.accent, Color(0xFF22C55E), Color(0xFFF59E0B)];
     return _Section(
       eyebrow: code == 'he' ? 'תמחור' : code == 'ru' ? 'Тарифы' : 'Pricing',
       title: code == 'he' ? 'מנוי פשוט. ברור. משתלם.'
@@ -1036,14 +1044,14 @@ class _CtaSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final t = _T.get;
+    const t = _T.get;
     return Container(
       width: double.infinity,
       margin: const EdgeInsets.only(top: 0),
       padding: EdgeInsets.symmetric(horizontal: 24, vertical: compact ? 60 : 80),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: _C.white,
-        border: const Border(top: BorderSide(color: _C.border)),
+        border: Border(top: BorderSide(color: _C.border)),
       ),
       child: Center(
         child: ConstrainedBox(
@@ -1121,9 +1129,8 @@ class _Footer extends StatelessWidget {
 // ══════════════════════════════════════════════════════════════════
 class _Section extends StatelessWidget {
   final String eyebrow, title;
-  final String? subtitle;
   final Widget child;
-  const _Section({required this.eyebrow, required this.title, this.subtitle, required this.child});
+  const _Section({required this.eyebrow, required this.title, required this.child});
 
   @override
   Widget build(BuildContext context) {
@@ -1141,10 +1148,6 @@ class _Section extends StatelessWidget {
             ]),
             const SizedBox(height: 12),
             Text(title, style: const TextStyle(color: _C.inkDark, fontSize: 30, fontWeight: FontWeight.w900, height: 1.15)),
-            if (subtitle != null) ...[
-              const SizedBox(height: 10),
-              Text(subtitle!, style: const TextStyle(color: _C.inkLight, fontSize: 15, height: 1.7)),
-            ],
             const SizedBox(height: 32),
             child,
             const SizedBox(height: 16),

@@ -4,7 +4,7 @@
 // ============================================================
 
 // !! Sentry MUST be first — before any other require !!
-require('./instrument');
+const Sentry = require('./instrument');
 
 const path = require('path');
 const fs = require('fs');
@@ -168,10 +168,15 @@ app.get('/health', (_, res) =>
   }),
 );
 
-app.use(require('./src/middleware/error.middleware'));
 require('./src/socket/dispatch.socket')(io);
 require('./src/socket/webrtc.socket')(io);
 ioReady = true;
+
+// Sentry + global error handler (must be after routes; must run before listen())
+if (Sentry.__vetoInstrumented) {
+  app.use(Sentry.expressErrorHandler());
+}
+app.use(require('./src/middleware/error.middleware'));
 
 const PORT = Number(process.env.PORT) || 5001;
 
@@ -222,21 +227,3 @@ function start() {
 }
 
 start();
-
-// ── Sentry error handler (must be LAST middleware) ────────────
-{
-  const Sentry = require('./instrument');
-  if (Sentry.__vetoInstrumented) {
-    app.use(Sentry.expressErrorHandler());
-  }
-}
-
-// Custom error logger
-app.use((err, req, res, _next) => {
-  console.error(' [Backend Error]:', err.message);
-  if (err.stack) console.error(err.stack);
-  res.status(err.status || 500).json({
-    error: err.message || 'Internal Server Error',
-    status: err.status || 500,
-  });
-});

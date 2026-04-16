@@ -173,10 +173,22 @@ class SocketService {
     final socket = _socket;
     if (socket == null || !socket.connected) {
       _pendingEmits.add({'event': event, 'data': data});
-      socket?.connect();
+      if (socket != null && !socket.connected) {
+        socket.connect();
+      } else if (socket == null) {
+        debugPrint(
+          'SocketService.emit: no socket — call connect(role:) before emitting "$event".',
+        );
+      }
       return;
     }
     socket.emit(event, data);
+  }
+
+  /// Returns whether the socket is connected after [connect] completes (same role).
+  Future<bool> ensureConnected({required String role}) async {
+    await connect(role: role);
+    return isConnected;
   }
 
   /// Register a dynamic listener for any socket event.

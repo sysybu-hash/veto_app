@@ -173,7 +173,7 @@ void showAccessibilitySheet(BuildContext context) {
                                 fontFamily: 'Heebo',
                                 color: _sheetInk,
                                 fontWeight: FontWeight.w600)),
-                        activeColor: VetoColors.accent,
+                        activeThumbColor: VetoColors.accent,
                         contentPadding: EdgeInsets.zero,
                       ),
                       SwitchListTile(
@@ -184,7 +184,7 @@ void showAccessibilitySheet(BuildContext context) {
                                 fontFamily: 'Heebo',
                                 color: _sheetInk,
                                 fontWeight: FontWeight.w600)),
-                        activeColor: VetoColors.accent,
+                        activeThumbColor: VetoColors.accent,
                         contentPadding: EdgeInsets.zero,
                       ),
                       SwitchListTile(
@@ -195,7 +195,7 @@ void showAccessibilitySheet(BuildContext context) {
                                 fontFamily: 'Heebo',
                                 color: _sheetInk,
                                 fontWeight: FontWeight.w600)),
-                        activeColor: VetoColors.accent,
+                        activeThumbColor: VetoColors.accent,
                         contentPadding: EdgeInsets.zero,
                       ),
                       SwitchListTile(
@@ -206,7 +206,7 @@ void showAccessibilitySheet(BuildContext context) {
                                 fontFamily: 'Heebo',
                                 color: _sheetInk,
                                 fontWeight: FontWeight.w600)),
-                        activeColor: VetoColors.accent,
+                        activeThumbColor: VetoColors.accent,
                         contentPadding: EdgeInsets.zero,
                       ),
                       SwitchListTile(
@@ -217,7 +217,7 @@ void showAccessibilitySheet(BuildContext context) {
                                 fontFamily: 'Heebo',
                                 color: _sheetInk,
                                 fontWeight: FontWeight.w600)),
-                        activeColor: VetoColors.accent,
+                        activeThumbColor: VetoColors.accent,
                         contentPadding: EdgeInsets.zero,
                       ),
                       const SizedBox(height: 24),
@@ -350,7 +350,7 @@ class AccessibilityToolbarHost extends StatelessWidget {
                                 onPressed: a11y.textStep > 0
                                     ? () => a11y.setTextStep(a11y.textStep - 1)
                                     : null,
-                                icon: Icon(Icons.text_decrease_rounded,
+                                icon: const Icon(Icons.text_decrease_rounded,
                                     color: VetoColors.accentDark),
                                 label: Text(_tx(code, 'smaller'),
                                     style: const TextStyle(color: _sheetInk)),
@@ -362,7 +362,7 @@ class AccessibilityToolbarHost extends StatelessWidget {
                                 onPressed: a11y.textStep < 4
                                     ? () => a11y.setTextStep(a11y.textStep + 1)
                                     : null,
-                                icon: Icon(Icons.text_increase_rounded,
+                                icon: const Icon(Icons.text_increase_rounded,
                                     color: VetoColors.accentDark),
                                 label: Text(_tx(code, 'larger'),
                                     style: const TextStyle(color: _sheetInk)),
@@ -469,7 +469,7 @@ class AccessibilityToolbarHost extends StatelessWidget {
                               Navigator.pop(sheetContext);
                             }
                           },
-                          icon: Icon(Icons.restart_alt_rounded,
+                          icon: const Icon(Icons.restart_alt_rounded,
                               color: VetoColors.accentDark),
                           label: Text(_tx(code, 'reset'),
                               style: const TextStyle(color: _sheetInk)),

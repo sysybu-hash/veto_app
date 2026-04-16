@@ -134,8 +134,8 @@ class VetoGlassAuroraBackground extends StatelessWidget {
     return Stack(
       fit: StackFit.expand,
       children: [
-        Positioned.fill(
-          child: CustomPaint(painter: const VetoFluidBackgroundPainter()),
+        const Positioned.fill(
+          child: CustomPaint(painter: VetoFluidBackgroundPainter()),
         ),
         child,
       ],

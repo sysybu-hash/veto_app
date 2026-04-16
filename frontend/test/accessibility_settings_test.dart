@@ -10,7 +10,7 @@ void main() {
   group('AccessibilitySettings', () {
     test('initializes with default values', () {
       final a11y = AccessibilitySettings();
-      expect(a11y.textStep, 0);
+      expect(a11y.textStep, 2);
       expect(a11y.highContrast, false);
       expect(a11y.boldBody, false);
       expect(a11y.reduceMotion, false);
@@ -38,7 +38,7 @@ void main() {
       
       await a11y.resetAll();
       
-      expect(a11y.textStep, 0);
+      expect(a11y.textStep, 2);
       expect(a11y.highContrast, false);
       expect(a11y.boldBody, false);
     });

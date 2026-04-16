@@ -8,6 +8,7 @@
 //    GET  /api/calls/:eventId             → Get call details
 // ============================================================
 
+const axios = require('axios');
 const EmergencyEvent = require('../models/EmergencyEvent');
 const cloudinary     = require('../config/cloudinary');
 const { getGeminiModelId } = require('../config/gemini.config');
@@ -194,15 +195,46 @@ Rules:
 
       transcript = sanitizeTranscript(result.response.text());
     } else if (event.recording_url) {
-      // Text-only transcription request (recording is on Cloudinary)
+      // Fetch stored recording (e.g. Cloudinary) and transcribe like inline audio.
+      const audioResp = await axios.get(event.recording_url, {
+        responseType: 'arraybuffer',
+        maxContentLength: 40 * 1024 * 1024,
+        timeout: 120000,
+      });
+      const buf = Buffer.from(audioResp.data);
+      const audioBase64FromUrl = buf.toString('base64');
+      const ct = (audioResp.headers['content-type'] || '').split(';')[0].trim();
+      const urlLower = String(event.recording_url).toLowerCase();
+      const mimeFromUrl = urlLower.endsWith('.mp3')
+        ? 'audio/mpeg'
+        : urlLower.endsWith('.m4a')
+          ? 'audio/mp4'
+          : urlLower.endsWith('.wav')
+            ? 'audio/wav'
+            : 'audio/webm';
+      const mimeType = ct && ct.startsWith('audio/') ? ct : mimeFromUrl;
+
       const prompt = `
-A legal emergency call was recorded. The recording URL is: ${event.recording_url}
-Please generate a summary placeholder noting the recording is available at the URL above.
-Language of the call: ${lang}.
-Return a brief note that the full transcript will be available once the audio is processed.
+You are a verbatim speech-to-text transcription engine.
+Transcribe the audio recording in ${lang} as plain text only.
+
+Rules:
+- Output ONLY the transcript text. No JSON, no markdown, no headings.
+- Do NOT add emojis and do NOT describe emojis (no "smiley", no "emoji", no "(laughs)", no "[applause]").
+- Do NOT add speaker labels ("Client:", "Lawyer:") and do NOT add timestamps.
+- If something is unclear, leave it out rather than describing non-speech sounds.
       `.trim();
 
-      const result = await model.generateContent(prompt);
+      const result = await model.generateContent([
+        { text: prompt },
+        {
+          inlineData: {
+            mimeType,
+            data: audioBase64FromUrl,
+          },
+        },
+      ]);
+
       transcript = sanitizeTranscript(result.response.text());
     } else {
       return res.status(400).json({ error: 'No audio data or recording URL available' });

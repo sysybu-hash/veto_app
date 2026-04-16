@@ -62,7 +62,7 @@ class _AiChatDialogState extends State<AiChatDialog> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-        child: Container(
+        child: SizedBox(
           width: 400,
           height: 500,
           child: VetoGlassBlur(

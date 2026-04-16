@@ -73,13 +73,24 @@ class WebRTCService extends ChangeNotifier {
   // ═══════════════════════════════════════════════════════════
   //  Start a call (join room)
   // ═══════════════════════════════════════════════════════════
-  Future<void> joinRoom(String roomId, CallType callType) async {
+  Future<void> joinRoom(
+    String roomId,
+    CallType callType, {
+    required String socketRole,
+  }) async {
     _roomId    = roomId;
     _callType  = callType;
     _errorMessage = null;
     _setState(CallState.joining);
 
     try {
+      final online = await _socket.ensureConnected(role: socketRole);
+      if (!online) {
+        _setError(
+          'Could not connect to the server. Check your network and try again.',
+        );
+        return;
+      }
       await initRenderers();
       _socket.emit('join-call-room', {
         'roomId':   roomId,

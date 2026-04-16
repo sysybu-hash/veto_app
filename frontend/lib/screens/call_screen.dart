@@ -96,13 +96,25 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
 
     final socketService = context.read<SocketService>();
     // WebRTC registers listeners on the underlying socket — it must exist first.
-    await socketService.connect(role: myRole);
+    final online = await socketService.ensureConnected(role: myRole);
+    if (!mounted) return;
+    if (!online) {
+      setState(() {
+        _callErrorText = _language == 'he'
+            ? 'אין חיבור לשרת. בדוק רשת ונסה שוב.'
+            : _language == 'ru'
+                ? 'Нет связи с сервером. Проверьте сеть и повторите.'
+                : 'Cannot reach the server. Check your connection and try again.';
+      });
+      return;
+    }
 
     _webrtc = WebRTCService(socketService);
 
     await _webrtc.joinRoom(
       _roomId,
       _callType == 'video' ? CallType.video : CallType.audio,
+      socketRole: myRole,
     );
 
     _webrtc.addListener(_onWebRTCUpdate);
@@ -167,12 +179,24 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
 
     _webrtc.dispose();
     final socketService = context.read<SocketService>();
-    await socketService.connect(role: _myRole);
+    final online = await socketService.ensureConnected(role: _myRole);
+    if (!mounted) return;
+    if (!online) {
+      setState(() {
+        _callErrorText = _language == 'he'
+            ? 'אין חיבור לשרת. בדוק רשת ונסה שוב.'
+            : _language == 'ru'
+                ? 'Нет связи с сервером. Проверьте сеть и повторите.'
+                : 'Cannot reach the server. Check your connection and try again.';
+      });
+      return;
+    }
     _webrtc = WebRTCService(socketService);
     _webrtc.addListener(_onWebRTCUpdate);
     await _webrtc.joinRoom(
       _roomId,
       _callType == 'video' ? CallType.video : CallType.audio,
+      socketRole: _myRole,
     );
 
     _waitTick = Timer.periodic(const Duration(seconds: 1), (_) {

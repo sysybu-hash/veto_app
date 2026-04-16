@@ -423,7 +423,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                         style: TextButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6)),
                       ),
-                      AppLanguageMenu(compact: true),
+                      const AppLanguageMenu(compact: true),
                     ],
                   ),
                   const SizedBox(height: 16),
@@ -692,39 +692,7 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 }
 
-// ?????????????????????????????????????????????????????????????
-//  Reusable widgets
-// ?????????????????????????????????????????????????????????????
-
-class _BrandRow extends StatelessWidget {
-  final String tagline;
-  const _BrandRow({required this.tagline});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(children: [
-      Container(
-        width: 52, height: 52,
-        decoration: BoxDecoration(
-          color: VetoPalette.primary.withValues(alpha: 0.12),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: VetoPalette.primary.withValues(alpha: 0.3)),
-        ),
-        child: const Icon(Icons.shield_rounded, color: VetoPalette.primary, size: 28),
-      ),
-      const SizedBox(width: 12),
-      Expanded(child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text('VETO', style: TextStyle(
-              color: VetoPalette.text, fontSize: 22,
-              fontWeight: FontWeight.w900, letterSpacing: 4)),
-          Text(tagline, style: const TextStyle(color: VetoPalette.textMuted, fontSize: 12)),
-        ],
-      )),
-    ]);
-  }
-}
+// ── Reusable widgets ───────────────────────────────────────
 
 class _StepIndicator extends StatelessWidget {
   final int step;
@@ -1061,136 +1029,7 @@ class _ErrorBanner extends StatelessWidget {
   }
 }
 
-// ?????????????????????????????????????????????????????????????
-//  Auth Hero
-// ?????????????????????????????????????????????????????????????
-
-class _AuthHero extends StatelessWidget {
-  final String lang;
-  final bool compact;
-  const _AuthHero({required this.lang, this.compact = false});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.all(compact ? 20 : 36),
-      decoration: BoxDecoration(
-        color: VetoColors.surface,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: VetoColors.border),
-        boxShadow: [
-          BoxShadow(
-            color: VetoColors.accent.withValues(alpha: 0.08),
-            blurRadius: 32,
-            spreadRadius: 2,
-          ),
-        ],
-      ),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        // VETO LEGAL brand row
-        Row(children: [
-          Container(
-            width: compact ? 34 : 42,
-            height: compact ? 34 : 42,
-            decoration: BoxDecoration(
-              color: VetoPalette.primary,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(Icons.gavel_rounded, color: Colors.white, size: compact ? 18 : 22),
-          ),
-          const SizedBox(width: 10),
-          Text(
-            'VETO LEGAL',
-            style: TextStyle(
-              color: VetoPalette.primary,
-              fontSize: compact ? 14 : 17,
-              fontWeight: FontWeight.w900,
-              letterSpacing: 1.8,
-            ),
-          ),
-        ]),
-        SizedBox(height: compact ? 16 : 24),
-        Text(
-          lang == 'he'
-              ? 'כניסה ברורה.\nהצטרפות מהירה.\nשפה אחת שנשארת איתך.'
-              : lang == 'ru'
-                  ? 'Чёткий вход.\nБыстрая регистрация.\nОдин язык, который остаётся с тобой.'
-                  : 'Clear sign-in.\nFast onboarding.\nOne language that stays with you.',
-          style: TextStyle(
-              color: VetoPalette.text,
-              fontSize: compact ? 22 : 36,
-              fontWeight: FontWeight.w900,
-              height: 1.12),
-        ),
-        SizedBox(height: compact ? 14 : 20),
-        _HeroLine(icon: Icons.account_tree_outlined,
-            label: lang == 'he' ? 'אזרח, עורך דין או מנהל'
-                : lang == 'ru' ? 'Гражданин, адвокат или администратор'
-                : 'Citizen, lawyer, or admin flow'),
-        const SizedBox(height: 10),
-        _HeroLine(icon: Icons.translate_rounded,
-            label: lang == 'he' ? 'עברית, English ורוסית'
-                : lang == 'ru' ? 'Иврит, English и русский'
-                : 'Hebrew, English, and Russian'),
-        const SizedBox(height: 10),
-        _HeroLine(icon: Icons.auto_awesome_rounded,
-            label: lang == 'he' ? 'OTP ומנוי אחד — פשוט ומהיר'
-                : lang == 'ru' ? 'OTP и подписка — просто и быстро'
-                : 'OTP and subscription in one wizard'),
-        if (!compact) ...[
-          const SizedBox(height: 28),
-          Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: VetoPalette.surfaceSkyTint,
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: VetoPalette.primary.withValues(alpha: 0.28)),
-            ),
-            child: Row(children: [
-              const Icon(Icons.verified_user_rounded, color: VetoPalette.success, size: 18),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  lang == 'he'
-                      ? 'מאובטח, מוצפן ובתאימות לתקנות הגנת הפרטיות.'
-                      : lang == 'ru'
-                          ? 'Защищено, зашифровано, соответствует законам о конфиденциальности.'
-                          : 'Secured, encrypted, and privacy-law compliant.',
-                  style: const TextStyle(
-                    color: VetoPalette.textMuted,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ),
-            ]),
-          ),
-        ],
-      ]),
-    );
-  }
-}
-
-class _HeroLine extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  const _HeroLine({required this.icon, required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(children: [
-      Icon(icon, color: VetoPalette.primary, size: 16),
-      const SizedBox(width: 8),
-      Expanded(child: Text(label, style: const TextStyle(
-          color: VetoPalette.textMuted, fontSize: 13, fontWeight: FontWeight.w500))),
-    ]);
-  }
-}
-
-// ?????????????????????????????????????????????????????????????
-//  OTP Code Dialog � with copy button
-// ?????????????????????????????????????????????????????????????
+// ── OTP Code Dialog (with copy button) ───────────────────────
 
 class _OtpCodeDialog extends StatefulWidget {
   final String code;

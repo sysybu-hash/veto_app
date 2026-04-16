@@ -3,6 +3,8 @@
 //  VETO Legal Emergency App
 // ============================================================
 
+const Sentry = require('../../instrument');
+
 // eslint-disable-next-line no-unused-vars
 const errorHandler = (err, req, res, next) => {
   // Mongoose validation error (e.g. phone format)
@@ -20,8 +22,12 @@ const errorHandler = (err, req, res, next) => {
     return res.status(400).json({ error: `Invalid value for ${err.path}.` });
   }
 
-  const statusCode = err.statusCode || 500;
+  const statusCode = err.statusCode || err.status || 500;
   console.error(`❌ [${req.method}] ${req.path} → ${err.message}`);
+
+  if (statusCode >= 500 && Sentry.__vetoInstrumented) {
+    Sentry.captureException(err);
+  }
 
   res.status(statusCode).json({
     error:   err.message || 'Internal Server Error',

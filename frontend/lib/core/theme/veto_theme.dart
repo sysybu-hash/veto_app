@@ -342,15 +342,15 @@ class VetoTheme {
       scaffoldBackgroundColor: const Color(0xFF06101C),
       primaryIconTheme: const IconThemeData(color: on, size: 24),
       iconTheme: const IconThemeData(color: on, size: 24),
-      colorScheme: ColorScheme.dark(
+      colorScheme: const ColorScheme.dark(
         brightness: Brightness.dark,
-        primary: const Color(0xFF00E5FF),
-        onPrimary: const Color(0xFF06101C),
-        secondary: const Color(0xFF007BFF),
+        primary: Color(0xFF00E5FF),
+        onPrimary: Color(0xFF06101C),
+        secondary: Color(0xFF007BFF),
         onSecondary: Colors.white,
         surface: surface,
         onSurface: on,
-        error: const Color(0xFFFF4B4B),
+        error: Color(0xFFFF4B4B),
         onError: Colors.white,
       ),
       appBarTheme: const AppBarTheme(
@@ -508,11 +508,11 @@ class VetoTheme {
         trackColor: WidgetStateProperty.resolveWith((s) =>
             s.contains(WidgetState.selected) ? const Color(0xFF00E5FF).withValues(alpha: 0.35) : const Color(0xFF1E293B)),
       ),
-      listTileTheme: ListTileThemeData(
+      listTileTheme: const ListTileThemeData(
         tileColor: Colors.transparent,
         textColor: on,
-        iconColor: const Color(0xFF00E5FF),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        iconColor: Color(0xFF00E5FF),
+        contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       ),
     );
   }

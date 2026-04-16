@@ -129,7 +129,6 @@ class _AdminDashboardState extends State<AdminDashboard> {
 
   // KPI data
   int _totalUsers = 0, _activeLawyers = 0, _pendingLawyers = 0;
-  int _eventsToday = 0, _eventsWeek = 0, _eventsMonth = 0;
   List<Map<String, dynamic>> _recentEvents = [];
 
   // System health
@@ -172,9 +171,6 @@ class _AdminDashboardState extends State<AdminDashboard> {
         _totalUsers = (d['totalUsers'] ?? d['users'] ?? 0) as int;
         _activeLawyers = (d['activeLawyers'] ?? d['lawyers'] ?? 0) as int;
         _pendingLawyers = (d['pendingLawyers'] ?? 0) as int;
-        _eventsToday = (d['eventsToday'] ?? 0) as int;
-        _eventsWeek = (d['eventsWeek'] ?? 0) as int;
-        _eventsMonth = (d['eventsMonth'] ?? 0) as int;
       }
       if (eventsRes.statusCode == 200) {
         final data = jsonDecode(eventsRes.body);
@@ -422,12 +418,6 @@ class _AdminDashboardState extends State<AdminDashboard> {
     );
   }
 
-  Widget _sectionLabel(String text) => Text(text,
-      style: const TextStyle(
-          color: VetoGlassTokens.textMuted,
-          fontSize: 12, fontWeight: FontWeight.w700,
-          letterSpacing: 0.8));
-
   Widget _buildActivityPanel(String code, bool isRtl) {
     return Container(
       padding: const EdgeInsets.all(20),
@@ -492,114 +482,6 @@ class _AdminDashboardState extends State<AdminDashboard> {
         ),
       ),
     ]);
-  }
-
-  Widget _buildKpiGrid(String code) {
-    return Row(children: [
-      Expanded(child: _KpiCard(
-        icon: Icons.today_rounded, color: VetoPalette.primary,
-        label: _t(code, 'eventsToday'), value: _eventsToday.toString(),
-      )),
-      const SizedBox(width: 10),
-      Expanded(child: _KpiCard(
-        icon: Icons.date_range_rounded, color: VetoPalette.info,
-        label: _t(code, 'eventsWeek'), value: _eventsWeek.toString(),
-      )),
-      const SizedBox(width: 10),
-      Expanded(child: _KpiCard(
-        icon: Icons.calendar_month_rounded, color: VetoPalette.accentSky,
-        label: _t(code, 'eventsMonth'), value: _eventsMonth.toString(),
-      )),
-    ]);
-  }
-
-  Widget _buildUserLawyerRow(String code) {
-    // Single row (same rhythm as [_buildKpiGrid]): active lawyers | users | pending lawyers
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Expanded(
-          child: _KpiCard(
-            icon: Icons.balance_rounded,
-            color: VetoPalette.accentSky,
-            label: _t(code, 'active'),
-            value: _activeLawyers.toString(),
-            sublabel: _t(code, 'lawyers'),
-          ),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: _KpiCard(
-            icon: Icons.people_alt_rounded,
-            color: VetoPalette.success,
-            label: _t(code, 'users'),
-            value: _totalUsers.toString(),
-            sublabel: _t(code, 'active'),
-          ),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: _KpiCard(
-            icon: Icons.pending_actions_rounded,
-            color: VetoPalette.warning,
-            label: _t(code, 'pending'),
-            value: _pendingLawyers.toString(),
-            sublabel: _t(code, 'lawyers'),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildHealthCard(String code) {
-    Widget indicatorRow(String label, String status) {
-      final good = status == 'online';
-      final unknown = status == 'unknown';
-      final color = good ? VetoPalette.success
-          : unknown ? VetoPalette.warning
-          : VetoPalette.emergency;
-      final statusLabel = good ? _t(code, 'online')
-          : unknown ? _t(code, 'unknown')
-          : _t(code, 'offline');
-      return Row(children: [
-        Container(width: 8, height: 8,
-            decoration: BoxDecoration(shape: BoxShape.circle, color: color)),
-        const SizedBox(width: 8),
-        Expanded(child: Text(label,
-            style: const TextStyle(color: VetoPalette.text, fontSize: 14))),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-          decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.10),
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Text(statusLabel,
-              style: TextStyle(color: color, fontSize: 12,
-                  fontWeight: FontWeight.w600)),
-        ),
-      ]);
-    }
-
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: VetoPalette.surface,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: VetoPalette.border),
-        boxShadow: [BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 6, offset: const Offset(0, 2))],
-      ),
-      child: Column(children: [
-        indicatorRow(_t(code, 'backend'), _backendStatus),
-        const Padding(padding: EdgeInsets.symmetric(vertical: 8),
-            child: Divider(height: 1, color: VetoPalette.border)),
-        indicatorRow(_t(code, 'db'), _dbStatus),
-        const Padding(padding: EdgeInsets.symmetric(vertical: 8),
-            child: Divider(height: 1, color: VetoPalette.border)),
-        indicatorRow(_t(code, 'socket'), _socketStatus),
-      ]),
-    );
   }
 
   Widget _buildActivityFeed(String code) {
@@ -689,88 +571,6 @@ class _AdminDashboardState extends State<AdminDashboard> {
       ),
     );
   }
-
-  Widget _buildQuickLinks(String code, double maxWidth) {
-    final links = [
-      (Icons.people_rounded, VetoPalette.success, _t(code, 'allUsers'),
-          '/admin_users'),
-      (Icons.balance_rounded, VetoPalette.accentSky, _t(code, 'allLawyers'),
-          '/admin_lawyers'),
-      (Icons.pending_actions_rounded, VetoPalette.warning,
-          _t(code, 'pendingLawyers'), '/admin_pending'),
-      (Icons.warning_amber_rounded, VetoPalette.emergency,
-          _t(code, 'emergencyLogs'), '/admin_logs'),
-      (Icons.subscriptions_rounded, VetoPalette.accentSky,
-          _t(code, 'subscriptions'), '/admin_subscriptions'),
-      (Icons.settings_rounded, VetoPalette.textMuted,
-          'Settings', '/admin_settings'),
-    ];
-
-    final cols = maxWidth >= 720
-        ? 6
-        : maxWidth >= 520
-            ? 4
-            : maxWidth >= 380
-                ? 3
-                : 2;
-
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: cols,
-        childAspectRatio: 2.35,
-        crossAxisSpacing: 8,
-        mainAxisSpacing: 8,
-      ),
-      itemCount: links.length,
-      itemBuilder: (ctx, i) {
-        final (icon, color, label, route) = links[i];
-        return Material(
-          color: Colors.transparent,
-          child: InkWell(
-            borderRadius: BorderRadius.circular(12),
-            onTap: () => Navigator.pushNamed(ctx, route),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
-              decoration: BoxDecoration(
-                color: VetoPalette.surface,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: VetoPalette.border),
-                boxShadow: [
-                  BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.03),
-                      blurRadius: 4,
-                      offset: const Offset(0, 1))
-                ],
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(6),
-                    decoration: BoxDecoration(
-                        color: color.withValues(alpha: 0.10),
-                        borderRadius: BorderRadius.circular(8)),
-                    child: Icon(icon, color: color, size: 18),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(label,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                            color: VetoPalette.text,
-                            fontSize: 11.5,
-                            fontWeight: FontWeight.w600)),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
 }
 
 // ── KPI card ─────────────────────────────────────────────────
@@ -778,14 +578,13 @@ class _KpiCard extends StatelessWidget {
   final IconData icon;
   final Color color;
   final String label, value;
-  final String? sublabel;
   final String? badge;
   final Color? badgeColor;
 
   const _KpiCard({
     required this.icon, required this.color,
     required this.label, required this.value,
-    this.sublabel, this.badge, this.badgeColor,
+    this.badge, this.badgeColor,
   });
 
   @override
@@ -826,11 +625,6 @@ class _KpiCard extends StatelessWidget {
                 ),
                 child: Text(badge!, style: TextStyle(color: badgeColor ?? color, fontSize: 11, fontWeight: FontWeight.w700)),
               ),
-            if (sublabel != null)
-              Text(sublabel!,
-                  style: TextStyle(
-                      color: color, fontSize: 10,
-                      fontWeight: FontWeight.w600)),
           ]),
           const SizedBox(height: 10),
           Text(value,

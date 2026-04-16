@@ -1,9 +1,10 @@
 // ============================================================
 //  auth.controller.js � Authentication Controller
 //  VETO Legal Emergency App
-//  Flow: Register ? Request OTP ? Verify OTP ? JWT issued
+//  Flow: Register → Request OTP → Verify OTP → JWT issued
 // ============================================================
 
+const crypto = require('crypto');
 const User      = require('../models/User');
 const Lawyer    = require('../models/Lawyer');
 const LoginLog  = require('../models/LoginLog');
@@ -18,11 +19,11 @@ async function logEvent(data) {
   }
 }
 
-// ?? Helpers ????????????????????????????????????????????????
+// ── Helpers ─────────────────────────────────────────────────
 
 /** Generate a cryptographically-safe 6-digit OTP */
 function generateOTP() {
-  return String(Math.floor(100000 + Math.random() * 900000));
+  return String(crypto.randomInt(100000, 1000000));
 }
 
 /** OTP valid for 10 minutes */

@@ -576,8 +576,8 @@ class _SettingsScreenState extends State<SettingsScreen>
                       // Avatar circle
                       Container(
                         width: 72, height: 72,
-                        decoration: BoxDecoration(
-                          gradient: const LinearGradient(colors: [Color(0xFF5B8FFF), Color(0xFF00C9B1)], begin: Alignment.topLeft, end: Alignment.bottomRight),
+                        decoration: const BoxDecoration(
+                          gradient: LinearGradient(colors: [Color(0xFF5B8FFF), Color(0xFF00C9B1)], begin: Alignment.topLeft, end: Alignment.bottomRight),
                           shape: BoxShape.circle,
                         ),
                         child: Center(

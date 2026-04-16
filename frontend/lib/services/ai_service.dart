@@ -76,6 +76,9 @@ class AiService {
           )
           .timeout(_chatTimeout);
 
+      if (resp.statusCode == 401) {
+        return _fallbackReply('נדרש להתחבר מחדש כדי להשתמש בעוזר המשפטי.');
+      }
       if (resp.statusCode == 200) {
         final map = jsonDecode(resp.body) as Map<String, dynamic>;
         final reply = map['reply'];

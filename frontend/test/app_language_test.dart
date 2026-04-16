@@ -4,6 +4,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:veto/core/i18n/app_language.dart';
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
   setUp(() {
     SharedPreferences.setMockInitialValues({});
   });
@@ -17,21 +19,21 @@ void main() {
 
     test('can set language to English', () async {
       final controller = AppLanguageController();
-      await controller.setLanguage('en');
+      await controller.setLanguage('en', persist: false);
       expect(controller.code, 'en');
       expect(controller.locale.languageCode, 'en');
     });
 
     test('can set language to Russian', () async {
       final controller = AppLanguageController();
-      await controller.setLanguage('ru');
+      await controller.setLanguage('ru', persist: false);
       expect(controller.code, 'ru');
       expect(controller.locale.languageCode, 'ru');
     });
 
-    test('normalizes unsupported languages to English', () {
-      expect(AppLanguage.normalize('fr'), 'en');
-      expect(AppLanguage.normalize('es'), 'en');
+    test('normalizes unsupported languages to Hebrew default', () {
+      expect(AppLanguage.normalize('fr'), 'he');
+      expect(AppLanguage.normalize('es'), 'he');
       expect(AppLanguage.normalize('he'), 'he');
       expect(AppLanguage.normalize('ru'), 'ru');
     });

@@ -154,7 +154,7 @@ class _ChatScreenState extends State<ChatScreen> {
   String _myId = '';
   final TextEditingController _msgCtrl = TextEditingController();
   final ScrollController _scrollCtrl = ScrollController();
-  StreamSubscription<Map<String, dynamic>>? _socketSub;
+  Timer? _conversationPoll;
 
   String _t(String key) {
     final code = context.read<AppLanguageController>().code;
@@ -177,7 +177,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
   @override
   void dispose() {
-    _socketSub?.cancel();
+    _conversationPoll?.cancel();
     _msgCtrl.dispose();
     _scrollCtrl.dispose();
     super.dispose();
@@ -198,10 +198,13 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   void _listenToSocket() {
-    // Refresh conversations and active thread every 30s as a fallback
-    Timer.periodic(const Duration(seconds: 30), (_) {
+    // Refresh conversations and active thread every 30s as a fallback (not a socket stream).
+    _conversationPoll?.cancel();
+    _conversationPoll = Timer.periodic(const Duration(seconds: 30), (_) {
       if (mounted) _loadConversations(silent: true);
-      if (mounted && _activePartnerId != null) _loadMessages(reset: true, silent: true);
+      if (mounted && _activePartnerId != null) {
+        _loadMessages(reset: true, silent: true);
+      }
     });
   }
 

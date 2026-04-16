@@ -7,7 +7,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart' as provider;
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'config/app_config.dart';
 import 'core/accessibility/accessibility_settings.dart';
@@ -84,18 +83,16 @@ Future<void> main() async {
     _warmUpBackend(),
   ]);
   runApp(
-    ProviderScope(
-      child: provider.MultiProvider(
-        providers: [
-          provider.ChangeNotifierProvider.value(value: languageController),
-          provider.ChangeNotifierProvider.value(value: accessibilitySettings),
-          provider.Provider<SocketService>(
-            create: (_) => SocketService(),
-            lazy: true,
-          ),
-        ],
-        child: const VetoApp(),
-      ),
+    provider.MultiProvider(
+      providers: [
+        provider.ChangeNotifierProvider.value(value: languageController),
+        provider.ChangeNotifierProvider.value(value: accessibilitySettings),
+        provider.Provider<SocketService>(
+          create: (_) => SocketService(),
+          lazy: true,
+        ),
+      ],
+      child: const VetoApp(),
     ),
   );
 }

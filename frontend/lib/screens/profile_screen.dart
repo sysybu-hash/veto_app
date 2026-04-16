@@ -142,8 +142,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
             style: const TextStyle(color: VetoGlassTokens.textPrimary, fontWeight: FontWeight.w800, fontSize: 18),
           ),
           centerTitle: true,
-          actions: [
-            const Padding(
+          actions: const [
+            Padding(
               padding: EdgeInsets.symmetric(horizontal: 12),
               child: Center(child: AppLanguageMenu(compact: true)),
             ),

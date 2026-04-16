@@ -82,11 +82,11 @@ class _SharedVaultScreenState extends State<SharedVaultScreen> {
         child: _loading
             ? const Center(child: CircularProgressIndicator(color: VetoGlassTokens.neonCyan))
             : _files.isEmpty
-                ? Center(
+                ? const Center(
                     child: Column(mainAxisSize: MainAxisSize.min, children: [
-                      const Icon(Icons.folder_open_outlined, size: 56, color: VetoGlassTokens.textMuted),
-                      const SizedBox(height: 12),
-                      const Text('No documents shared.', style: TextStyle(color: VetoGlassTokens.textMuted, fontSize: 15)),
+                      Icon(Icons.folder_open_outlined, size: 56, color: VetoGlassTokens.textMuted),
+                      SizedBox(height: 12),
+                      Text('No documents shared.', style: TextStyle(color: VetoGlassTokens.textMuted, fontSize: 15)),
                     ]),
                   )
                 : ListView.separated(

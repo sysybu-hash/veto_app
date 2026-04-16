@@ -32,6 +32,12 @@ jobs:
           cd frontend
           flutter pub get
 
+      - name: Flutter analyze + test
+        run: |
+          cd frontend
+          flutter analyze
+          flutter test
+
       - name: Build Flutter Web
         run: |
           cd frontend

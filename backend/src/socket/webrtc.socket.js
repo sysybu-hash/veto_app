@@ -185,16 +185,21 @@ module.exports = function initWebRTC(io) {
           }
         }
 
-        // Update event in DB
+        const endedMeta = await EmergencyEvent.findById(roomId)
+          .select('assigned_lawyer_id')
+          .lean();
+
         await EmergencyEvent.findByIdAndUpdate(roomId, {
           status:                  'completed',
           completed_at:            new Date(),
           call_duration_seconds:   duration || 0,
         });
 
-        // Make lawyer available again
-        if (role === 'lawyer') {
-          await Lawyer.findByIdAndUpdate(userId, { is_available: true });
+        // Restore assigned lawyer availability whoever ends the call (citizen or lawyer).
+        if (endedMeta?.assigned_lawyer_id) {
+          await Lawyer.findByIdAndUpdate(endedMeta.assigned_lawyer_id, {
+            is_available: true,
+          }).catch(console.error);
         }
 
         console.log(`📞 [WebRTC] Call ended | room=${roomId} | by=${role} | ${duration}s`);
@@ -217,6 +222,30 @@ module.exports = function initWebRTC(io) {
           });
           if (room.participants.size === 0) {
             callRooms.delete(roomId);
+            // Both peers disconnected without a graceful `call-ended` — finalize DB state.
+            void (async () => {
+              try {
+                const meta = await EmergencyEvent.findById(roomId)
+                  .select('assigned_lawyer_id status')
+                  .lean();
+                await EmergencyEvent.findOneAndUpdate(
+                  { _id: roomId, status: { $in: ['accepted', 'in_progress'] } },
+                  {
+                    $set: {
+                      status:       'completed',
+                      completed_at: new Date(),
+                    },
+                  },
+                );
+                if (meta?.assigned_lawyer_id) {
+                  await Lawyer.findByIdAndUpdate(meta.assigned_lawyer_id, {
+                    is_available: true,
+                  }).catch(console.error);
+                }
+              } catch (e) {
+                console.error('[WebRTC] disconnect room cleanup:', e);
+              }
+            })();
           }
         }
       }

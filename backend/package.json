@@ -17,7 +17,8 @@
     "tunnel:any": "lt --port 5001",
     "tunnel:help": "node scripts/tunnel-help.js",
     "dev:urls": "node scripts/print-dev-urls.js",
-    "lint": "eslint src scripts server.js"
+    "lint": "eslint src scripts server.js",
+    "test": "node --test ./test/crypto_otp.test.js ./test/ai_routes_mount.test.js"
   },
   "dependencies": {
     "@google/genai": "^1.48.0",
