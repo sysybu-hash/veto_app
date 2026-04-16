@@ -31,6 +31,28 @@ class AiService {
         'reply': msg,
       };
 
+  /// Avoid showing raw Google API JSON blobs in the chat UI.
+  String _friendlyServerDetail(String detail) {
+    final t = detail.trim();
+    if (t.startsWith('{') && t.contains('"error"')) {
+      try {
+        final m = jsonDecode(t) as Map<String, dynamic>?;
+        final e = m?['error'];
+        if (e is Map) {
+          final code = e['code'];
+          final status = e['status'];
+          final em = (e['message'] ?? '').toString();
+          if (code == 503 ||
+              status == 'UNAVAILABLE' ||
+              em.toLowerCase().contains('high demand')) {
+            return 'המודל עמוס כרגע. נסה שוב בעוד רגע.';
+          }
+        }
+      } catch (_) {}
+    }
+    return detail;
+  }
+
   /// Send a chat message to the AI backend.
   /// [history] — list of previous exchanges in Gemini format:
   ///   [{ 'role': 'user'|'model', 'parts': [{'text': '...'}] }, ...]
@@ -86,9 +108,12 @@ class AiService {
       // Try to surface backend error details for easier debugging.
       try {
         final body = jsonDecode(resp.body) as Map<String, dynamic>;
-        final detail = (body['detail'] ?? body['error'] ?? '').toString().trim();
-        if (detail.isNotEmpty) {
-          return _fallbackReply(detail);
+        final err = body['detail'] ?? body['error'];
+        final raw = err is Map
+            ? jsonEncode(err)
+            : (err ?? '').toString().trim();
+        if (raw.isNotEmpty) {
+          return _fallbackReply(_friendlyServerDetail(raw));
         }
       } catch (_) {}
       return _fallbackReply('שגיאה בחיבור לשירות ה-AI (קוד ${resp.statusCode})');

@@ -76,6 +76,29 @@ function getGenAI() {
   return _genAI;
 }
 
+/** True when Google may succeed on retry (rate limit, capacity, model overload). */
+function isTransientGeminiFailure(err) {
+  const m = String(err?.message ?? err ?? '');
+  if (/\b429\b/.test(m)) return true;
+  if (/\b503\b/.test(m)) return true;
+  if (/UNAVAILABLE/i.test(m)) return true;
+  if (/RESOURCE_EXHAUSTED/i.test(m)) return true;
+  if (/high demand/i.test(m)) return true;
+  if (/overloaded/i.test(m)) return true;
+  try {
+    const j = JSON.parse(m);
+    const inner = j?.error;
+    if (inner && typeof inner === 'object') {
+      if (inner.code === 503 || inner.status === 'UNAVAILABLE') return true;
+      const msg = String(inner.message || '');
+      if (/high demand/i.test(msg) || /503/.test(String(inner.code))) return true;
+    }
+  } catch (_) {}
+  return false;
+}
+
+const MAX_GEMINI_ATTEMPTS = 5;
+
 /**
  * Send a message to Gemini with conversation history.
  * @param {Array}  history     - [{role, parts:[{text}]}]
@@ -94,8 +117,7 @@ async function geminiChat(history, userMessage, lang = 'he') {
     { role: 'user', parts: [{ text: userMessage }] },
   ];
 
-  // Retry up to 3 times on rate-limit (429) errors
-  for (let attempt = 0; attempt < 3; attempt++) {
+  for (let attempt = 0; attempt < MAX_GEMINI_ATTEMPTS; attempt++) {
     try {
       const response = await ai.models.generateContent({
         model: getGeminiModelId(),
@@ -107,9 +129,9 @@ async function geminiChat(history, userMessage, lang = 'he') {
       });
       return response.text;
     } catch (err) {
-      const is429 = err.message && err.message.includes('429');
-      if (is429 && attempt < 2) {
-        await new Promise(r => setTimeout(r, (attempt + 1) * 2000));
+      if (isTransientGeminiFailure(err) && attempt < MAX_GEMINI_ATTEMPTS - 1) {
+        const delayMs = Math.min(2000 * (attempt + 1), 8000);
+        await new Promise((r) => setTimeout(r, delayMs));
         continue;
       }
       throw err;
@@ -117,4 +139,4 @@ async function geminiChat(history, userMessage, lang = 'he') {
   }
 }
 
-module.exports = { geminiChat };
+module.exports = { geminiChat, isTransientGeminiFailure };

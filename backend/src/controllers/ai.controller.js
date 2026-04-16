@@ -3,7 +3,7 @@
 //  VETO Legal Emergency App
 // ============================================================
 
-const { geminiChat } = require('../services/gemini.service');
+const { geminiChat, isTransientGeminiFailure } = require('../services/gemini.service');
 const Lawyer = require('../models/Lawyer');
 
 // Hebrew / Arabic / English specialization → DB terms mapping
@@ -29,6 +29,13 @@ const SPEC_MAP = {
   'labor':       ['labor', 'Labor', 'employment', 'Employment', 'עבודה'],
   'commercial':  ['commercial', 'Commercial', 'civil', 'Civil', 'מסחרי'],
   'traffic':     ['traffic', 'Traffic', 'transportation', 'Transportation', 'תעבורה'],
+};
+
+const AI_FALLBACK_REPLIES = {
+  he: 'תאר לי את הבעיה המשפטית שלך — במה אני יכול לעזור?',
+  ar: 'صف لي مشكلتك القانونية — كيف يمكنني مساعدتك؟',
+  en: 'Describe your legal issue — how can I help you?',
+  ru: 'Опишите вашу юридическую проблему — чем я могу помочь?',
 };
 
 /**
@@ -87,21 +94,17 @@ exports.aiChat = async (req, res) => {
     });
   } catch (err) {
     console.error('AI chat error:', err.message);
-    const is429 = err.message && err.message.includes('429');
-    if (is429) {
-      // Return a fallback intake question so the user can keep chatting
-      const fallbacks = {
-        he: 'תאר לי את הבעיה המשפטית שלך — במה אני יכול לעזור?',
-        ar: 'صف لي مشكلتك القانونية — كيف يمكنني مساعدتك؟',
-        en: 'Describe your legal issue — how can I help you?',
-        ru: 'Опишите вашу юридическую проблему — чем я могу помочь?',
-      };
-      const lang =
-        req.body?.lang && ['he', 'ar', 'en', 'ru'].includes(req.body.lang)
-          ? req.body.lang
-          : 'he';
-      return res.json({ classified: false, reply: fallbacks[lang] });
+    const lang =
+      req.body?.lang && ['he', 'ar', 'en', 'ru'].includes(req.body.lang)
+        ? req.body.lang
+        : 'he';
+    // Rate limits, 503 UNAVAILABLE, model overload — graceful reply (never leak raw API JSON).
+    if (isTransientGeminiFailure(err)) {
+      return res.json({
+        classified: false,
+        reply: AI_FALLBACK_REPLIES[lang] || AI_FALLBACK_REPLIES.he,
+      });
     }
-    return res.status(500).json({ error: 'AI service unavailable', detail: err.message });
+    return res.status(500).json({ error: 'AI service unavailable' });
   }
 };
