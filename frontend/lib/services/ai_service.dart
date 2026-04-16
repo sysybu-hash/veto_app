@@ -10,8 +10,8 @@ class AiService {
   factory AiService() => _instance;
   AiService._internal();
 
-  /// Gemini (esp. Pro) + cold Render can exceed short client timeouts.
-  static const Duration _chatTimeout = Duration(seconds: 120);
+  /// Gemini Pro + server retries can run long; keep above worst-case backend wait.
+  static const Duration _chatTimeout = Duration(seconds: 180);
 
   Future<void> _warmUpBackend() async {
     try {
@@ -125,12 +125,17 @@ class AiService {
         }
       } catch (_) {}
       return _fallbackReply('שגיאה בחיבור לשירות ה-AI (קוד ${resp.statusCode})');
-    } on TimeoutException catch (e, st) {
-      debugPrint('AiService.chat timeout: $e\n$st');
-      return _fallbackReply(
-        'התשובה מהשרת ארכה יותר מדי. נסה שוב בעוד רגע — אם זה חוזר, בדוק חיבור לאינטרנט.',
-      );
-    } catch (e) {
+    } catch (e, st) {
+      // Flutter web sometimes does not match `on TimeoutException` — check message too.
+      final isTimeout = e is TimeoutException ||
+          e.toString().contains('TimeoutException') ||
+          e.toString().contains('Future not completed');
+      if (isTimeout) {
+        debugPrint('AiService.chat timeout: $e\n$st');
+        return _fallbackReply(
+          'התשובה מהשרת ארכה יותר מדי. נסה שוב בעוד רגע — אם זה חוזר, בדוק חיבור לאינטרנט.',
+        );
+      }
       debugPrint('AiService.chat failed: $e');
       debugPrint('AiService.chat baseUrl=${AppConfig.baseUrl} health=${AppConfig.healthCheckUrl}');
       // On Flutter web this commonly surfaces as "XMLHttpRequest error." (CORS / network / blocked).
