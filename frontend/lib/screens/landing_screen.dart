@@ -634,12 +634,12 @@ class _HeroSection extends StatelessWidget {
                       ),
                     ),
                   ),
-                  // Secondary outline button
+                  // Secondary outline — dark text on white pill (inkDark in glass theme = near-white, wrong here)
                   OutlinedButton(
                     onPressed: onTap,
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: _C.inkDark,
-                      side: const BorderSide(color: _C.border, width: 1.5),
+                      foregroundColor: const Color(0xFF1A2340),
+                      side: const BorderSide(color: Color(0xFF1A2340), width: 1.2),
                       padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 16),
                       textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(50)),
@@ -659,7 +659,12 @@ class _HeroSection extends StatelessWidget {
                 children: [
                   _ProofChip(icon: Icons.star_rounded, iconColor: const Color(0xFFF59E0B), label: t(code, 'proof1'), sublabel: code == 'he' ? 'דירוג' : 'Rating'),
                   _ProofChip(icon: Icons.bolt_rounded, iconColor: _C.accent, label: t(code, 'proof2'), sublabel: code == 'he' ? 'תגובה' : code == 'ru' ? 'Ответ' : 'Response'),
-                  _ProofChip(icon: Icons.lock_rounded, iconColor: const Color(0xFF22C55E), label: t(code, 'proof3'), sublabel: code == 'he' ? 'מאובטח' : code == 'ru' ? 'Безопасно' : 'Secure'),
+                  _ProofChip(
+                    icon: Icons.lock_rounded,
+                    iconColor: const Color(0xFF22C55E),
+                    label: t(code, 'proof3'),
+                    sublabel: code == 'he' ? 'הצפנה' : code == 'ru' ? 'Защита' : 'Encrypted',
+                  ),
                 ],
               ),
             ],
