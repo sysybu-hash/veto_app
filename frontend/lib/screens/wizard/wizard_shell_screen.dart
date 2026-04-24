@@ -285,31 +285,33 @@ class _WizardShellScreenState extends State<WizardShellScreen> {
     return Directionality(
       textDirection: AppLanguage.directionOf(_langCode),
       child: Scaffold(
-        backgroundColor: VetoPalette.bg,
-        body: SafeArea(
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              final compact = constraints.maxWidth < 820;
-              return Padding(
-                padding: const EdgeInsets.fromLTRB(14, 8, 14, 10),
-                child: Column(
-                  children: [
-                    _topBar(compact),
-                    const SizedBox(height: 10),
-                    _wizardHeader(),
-                    const SizedBox(height: 12),
-                    Expanded(
-                      child: AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 260),
-                        child: _role == 'lawyer'
-                            ? _lawyerWizard(compact)
-                            : _userWizard(compact),
+        backgroundColor: VetoGlassTokens.bgBase,
+        body: VetoGlassAuroraBackground(
+          child: SafeArea(
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final compact = constraints.maxWidth < 820;
+                return Padding(
+                  padding: const EdgeInsets.fromLTRB(14, 8, 14, 10),
+                  child: Column(
+                    children: [
+                      _topBar(compact),
+                      const SizedBox(height: 10),
+                      _wizardHeader(),
+                      const SizedBox(height: 12),
+                      Expanded(
+                        child: AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 260),
+                          child: _role == 'lawyer'
+                              ? _lawyerWizard(compact)
+                              : _userWizard(compact),
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-              );
-            },
+                    ],
+                  ),
+                );
+              },
+            ),
           ),
         ),
       ),
@@ -340,13 +342,13 @@ class _WizardShellScreenState extends State<WizardShellScreen> {
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: VetoPalette.primary.withValues(alpha: 0.12),
+              color: VetoGlassTokens.neonCyan.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(10),
               border: Border.all(
-                  color: VetoPalette.primary.withValues(alpha: 0.3)),
+                  color: VetoGlassTokens.neonCyan.withValues(alpha: 0.35)),
             ),
             child: const Icon(Icons.gavel_rounded,
-                color: VetoPalette.primary, size: 20),
+                color: VetoGlassTokens.neonCyan, size: 20),
           ),
           const SizedBox(width: 10),
           Expanded(
@@ -358,12 +360,12 @@ class _WizardShellScreenState extends State<WizardShellScreen> {
                   style: TextStyle(
                       fontWeight: FontWeight.w900,
                       letterSpacing: 4,
-                      color: VetoPalette.text),
+                      color: VetoGlassTokens.textPrimary),
                 ),
                 Text(
                   _phone.isEmpty ? displayName : '$displayName | $_phone',
                   style: const TextStyle(
-                      color: VetoPalette.textMuted, fontSize: 12),
+                      color: VetoGlassTokens.textMuted, fontSize: 12),
                   overflow: TextOverflow.ellipsis,
                 ),
               ],
@@ -376,18 +378,18 @@ class _WizardShellScreenState extends State<WizardShellScreen> {
           IconButton(
             tooltip: 'פרופיל',
             onPressed: () => Navigator.pushNamed(context, '/profile'),
-            icon: const Icon(Icons.account_circle_outlined),
+            icon: const Icon(Icons.account_circle_outlined, color: VetoGlassTokens.textPrimary),
           ),
           if (_role == 'admin')
             IconButton(
               tooltip: 'ניהול',
               onPressed: () => Navigator.pushNamed(context, '/admin_settings'),
-              icon: const Icon(Icons.admin_panel_settings_outlined),
+              icon: const Icon(Icons.admin_panel_settings_outlined, color: VetoGlassTokens.textPrimary),
             ),
           IconButton(
             tooltip: 'התנתק',
             onPressed: () => AuthService().logout(context),
-            icon: const Icon(Icons.logout_rounded),
+            icon: const Icon(Icons.logout_rounded, color: VetoGlassTokens.textMuted),
           ),
         ],
       ),
@@ -418,9 +420,9 @@ class _WizardShellScreenState extends State<WizardShellScreen> {
                     decoration: BoxDecoration(
                       color: active
                           ? (isCurrent
-                              ? VetoPalette.primary
-                              : VetoPalette.info)
-                          : VetoPalette.border,
+                              ? VetoGlassTokens.neonCyan
+                              : VetoGlassTokens.accentSoft)
+                          : VetoGlassTokens.glassBorder,
                       borderRadius: BorderRadius.circular(999),
                     ),
                   ),
@@ -430,8 +432,8 @@ class _WizardShellScreenState extends State<WizardShellScreen> {
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       color: active
-                          ? VetoPalette.text
-                          : VetoPalette.textSubtle,
+                          ? VetoGlassTokens.textPrimary
+                          : VetoGlassTokens.textSubtle,
                       fontSize: 11,
                       fontWeight: active
                           ? FontWeight.w600
@@ -566,11 +568,11 @@ class _WizardShellScreenState extends State<WizardShellScreen> {
                             border: const Border(
                               left: BorderSide(
                                   color: VetoPalette.warning, width: 3),
-                              top: BorderSide(color: VetoPalette.border),
-                              right: BorderSide(color: VetoPalette.border),
-                              bottom: BorderSide(color: VetoPalette.border),
+                              top: BorderSide(color: VetoGlassTokens.glassBorder),
+                              right: BorderSide(color: VetoGlassTokens.glassBorder),
+                              bottom: BorderSide(color: VetoGlassTokens.glassBorder),
                             ),
-                            color: VetoPalette.surface2,
+                            color: VetoGlassTokens.glassFillStrong,
                           ),
                           child: Row(
                             children: [
@@ -579,7 +581,10 @@ class _WizardShellScreenState extends State<WizardShellScreen> {
                               const SizedBox(width: 10),
                               Expanded(
                                 child: Text(
-                                    'קריאה #${alert['eventId'] ?? 'N/A'}'),
+                                    'קריאה #${alert['eventId'] ?? 'N/A'}',
+                                    style: const TextStyle(
+                                        color: VetoGlassTokens.textPrimary,
+                                        fontWeight: FontWeight.w600)),
                               ),
                               IconButton(
                                 tooltip: 'דחה',
@@ -591,6 +596,7 @@ class _WizardShellScreenState extends State<WizardShellScreen> {
                                 onPressed: () => _acceptAlert(alert),
                                 style: FilledButton.styleFrom(
                                   backgroundColor: VetoPalette.success,
+                                  foregroundColor: Colors.white,
                                   padding: const EdgeInsets.symmetric(
                                       horizontal: 14, vertical: 8),
                                   minimumSize: Size.zero,
@@ -657,13 +663,13 @@ class _WizardShellScreenState extends State<WizardShellScreen> {
         children: [
           Text(title,
               style: const TextStyle(
-                  color: VetoPalette.text,
+                  color: VetoGlassTokens.textPrimary,
                   fontSize: 18,
                   fontWeight: FontWeight.w800)),
           const SizedBox(height: 4),
           Text(subtitle,
               style: const TextStyle(
-                  color: VetoPalette.textMuted, fontSize: 13)),
+                  color: VetoGlassTokens.textMuted, fontSize: 13)),
           const SizedBox(height: 14),
           child,
         ],

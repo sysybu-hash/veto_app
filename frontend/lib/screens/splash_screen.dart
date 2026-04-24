@@ -82,13 +82,27 @@ class _SplashScreenState extends State<SplashScreen>
                       ),
                     ),
                     const SizedBox(height: 28),
-                    const Text(
-                      'VETO',
-                      style: TextStyle(
-                        color: VetoGlassTokens.textPrimary,
-                        fontSize: 40,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 12,
+                    ShaderMask(
+                      blendMode: BlendMode.srcIn,
+                      shaderCallback: (bounds) => const LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          Color(0xFF5DF5FF),
+                          Color(0xFF00E5FF),
+                          Color(0xFF007BFF),
+                          Color(0xFFA78BFA),
+                        ],
+                        stops: [0.0, 0.35, 0.7, 1.0],
+                      ).createShader(bounds),
+                      child: const Text(
+                        'VETO',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 40,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 12,
+                        ),
                       ),
                     ),
                     const SizedBox(height: 6),

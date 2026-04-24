@@ -800,7 +800,16 @@ class _SubscriptionAdminScreenState
       // ── Summary bar ─────────────────────────────────────────
       Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        color: Colors.white,
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xFF0D1520), Color(0xFF121B2A)],
+          ),
+          border: Border(
+            bottom: BorderSide(color: VetoGlassTokens.glassBorder),
+          ),
+        ),
         child: Column(children: [
           Row(children: [
             _StatChip(icon: Icons.trending_up_rounded, color: VetoPalette.success,
@@ -823,27 +832,32 @@ class _SubscriptionAdminScreenState
       ),
       // ── Search ──────────────────────────────────────────────
       Container(
-        color: Colors.white,
+        color: VetoGlassTokens.glassFillStrong,
         padding: const EdgeInsets.fromLTRB(14, 0, 14, 10),
         child: TextField(
           controller: _searchCtrl,
-          style: const TextStyle(color: Color(0xFF0F172A), fontSize: 14),
+          style: const TextStyle(color: VetoGlassTokens.textPrimary, fontSize: 14),
+          cursorColor: VetoGlassTokens.neonCyan,
           decoration: InputDecoration(
             hintText: _t(code, 'search'),
-            hintStyle: const TextStyle(color: Color(0xFF94A3B8)),
-            prefixIcon: const Icon(Icons.search_rounded, color: Color(0xFF94A3B8), size: 20),
-            filled: true, fillColor: VetoGlassTokens.glassFillStrong,
+            hintStyle: const TextStyle(color: VetoGlassTokens.textMuted),
+            prefixIcon: const Icon(Icons.search_rounded, color: VetoGlassTokens.textMuted, size: 20),
+            filled: true,
+            fillColor: const Color(0xFF0F1A24),
             contentPadding: const EdgeInsets.symmetric(vertical: 10),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10),
-                borderSide: const BorderSide(color: Color(0xFFE2E8F8))),
-            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10),
-                borderSide: const BorderSide(color: Color(0xFFE2E8F8))),
-            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10),
-                borderSide: const BorderSide(color: Color(0xFF5B8FFF), width: 1.5)),
+            border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: const BorderSide(color: VetoGlassTokens.glassBorder)),
+            enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: const BorderSide(color: VetoGlassTokens.glassBorder)),
+            focusedBorder: const OutlineInputBorder(
+                borderRadius: BorderRadius.all(Radius.circular(10)),
+                borderSide: BorderSide(color: VetoGlassTokens.neonCyan, width: 1.5)),
           ),
         ),
       ),
-      const Divider(height: 1, color: Color(0xFFE2E8F8)),
+      const Divider(height: 1, color: VetoGlassTokens.glassBorder),
       Expanded(
         child: _filtered.isEmpty
             ? Center(child: Text(_t(code, 'noSubs'),
@@ -917,10 +931,10 @@ class _LogCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: VetoGlassTokens.glassFillStrong,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: color.withValues(alpha: 0.25)),
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 6, offset: const Offset(0, 2))],
+        border: Border.all(color: VetoGlassTokens.glassBorder),
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.2), blurRadius: 12, offset: const Offset(0, 4))],
       ),
       child: Row(children: [
         Icon(log.success ? Icons.check_circle_outline_rounded : Icons.cancel_outlined,
@@ -942,12 +956,12 @@ class _LogCard extends StatelessWidget {
                     color: VetoPalette.primary, fontSize: 10, fontWeight: FontWeight.w600)),
               ),
             const Spacer(),
-            Text(ts, style: const TextStyle(color: VetoPalette.textMuted, fontSize: 11)),
+            Text(ts, style: const TextStyle(color: VetoGlassTokens.textMuted, fontSize: 11)),
           ]),
           if (log.phone != null || log.email != null) ...[
             const SizedBox(height: 2),
             Text(log.phone ?? log.email ?? '',
-                style: const TextStyle(color: VetoPalette.textSubtle, fontSize: 12),
+                style: const TextStyle(color: VetoGlassTokens.textSubtle, fontSize: 12),
                 textDirection: TextDirection.ltr),
           ],
           if (log.errorMsg != null) ...[
@@ -978,12 +992,12 @@ class _SubCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: VetoGlassTokens.glassFillStrong,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE2E8F8)),
+        border: Border.all(color: VetoGlassTokens.glassBorder),
         boxShadow: [BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 8, offset: const Offset(0, 2))],
+            color: Colors.black.withValues(alpha: 0.22),
+            blurRadius: 20, offset: const Offset(0, 8))],
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         // User + status
@@ -1000,11 +1014,11 @@ class _SubCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text(sub.userName.isNotEmpty ? sub.userName : sub.userEmail,
                 style: const TextStyle(
-                    color: VetoPalette.text, fontWeight: FontWeight.w700,
+                    color: VetoGlassTokens.textPrimary, fontWeight: FontWeight.w700,
                     fontSize: 14)),
             Text(sub.userEmail,
                 style: const TextStyle(
-                    color: VetoPalette.textMuted, fontSize: 12)),
+                    color: VetoGlassTokens.textMuted, fontSize: 12)),
           ])),
           // Status badge
           Container(
@@ -1129,7 +1143,8 @@ class _StatChip extends StatelessWidget {
     decoration: BoxDecoration(
         color: color.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: color.withValues(alpha: 0.20))),
+        border: Border.all(color: color.withValues(alpha: 0.20)),
+    ),
     child: Row(children: [
       Icon(icon, color: color, size: 18),
       const SizedBox(width: 8),
@@ -1137,7 +1152,7 @@ class _StatChip extends StatelessWidget {
         Text(value, style: TextStyle(color: color,
             fontSize: 16, fontWeight: FontWeight.w900)),
         Text(label, style: const TextStyle(
-            color: VetoPalette.textMuted, fontSize: 11)),
+            color: VetoGlassTokens.textMuted, fontSize: 11)),
       ]),
     ]),
   ));

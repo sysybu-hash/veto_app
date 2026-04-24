@@ -53,14 +53,18 @@ class _PendingLawyersScreenState extends State<PendingLawyersScreen> {
       builder: (_) => Directionality(
         textDirection: AppLanguage.directionOf(code),
         child: AlertDialog(
-          backgroundColor: VetoPalette.surface,
-          title: Text(_t(code, 'rejectRequest'), style: const TextStyle(color: VetoPalette.text)),
+          backgroundColor: VetoGlassTokens.sheetPanel,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: const BorderSide(color: VetoGlassTokens.glassBorder),
+          ),
+          title: Text(_t(code, 'rejectRequest'), style: const TextStyle(color: VetoGlassTokens.textPrimary)),
           content: Text('${_t(code, 'rejectRequestConfirm')}\n$name',
-              style: const TextStyle(color: VetoPalette.textMuted)),
+              style: const TextStyle(color: VetoGlassTokens.textMuted)),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context, false),
-              child: Text(_t(code, 'cancel'), style: const TextStyle(color: VetoPalette.textMuted)),
+              child: Text(_t(code, 'cancel'), style: const TextStyle(color: VetoGlassTokens.textMuted)),
             ),
             TextButton(
               onPressed: () => Navigator.pop(context, true),
@@ -122,7 +126,7 @@ class _PendingLawyersScreenState extends State<PendingLawyersScreen> {
                         const SizedBox(height: 16),
                         Text(
                           _t(code, 'noPendingLawyers'),
-                          style: const TextStyle(color: VetoPalette.textMuted, fontSize: 16),
+                          style: const TextStyle(color: VetoGlassTokens.textMuted, fontSize: 16),
                         ),
                       ],
                     ),
@@ -144,13 +148,13 @@ class _PendingLawyersScreenState extends State<PendingLawyersScreen> {
 
                       return Container(
                         decoration: BoxDecoration(
-                          color: VetoPalette.surface,
+                          color: VetoGlassTokens.glassFillStrong,
                           borderRadius: BorderRadius.circular(12),
                           border: const Border(
                             left: BorderSide(color: VetoPalette.warning, width: 3),
-                            top: BorderSide(color: VetoPalette.border),
-                            right: BorderSide(color: VetoPalette.border),
-                            bottom: BorderSide(color: VetoPalette.border),
+                            top: BorderSide(color: VetoGlassTokens.glassBorder),
+                            right: BorderSide(color: VetoGlassTokens.glassBorder),
+                            bottom: BorderSide(color: VetoGlassTokens.glassBorder),
                           ),
                         ),
                         padding: const EdgeInsets.all(16),
@@ -159,13 +163,13 @@ class _PendingLawyersScreenState extends State<PendingLawyersScreen> {
                           children: [
                             Row(children: [
                               const Icon(Icons.gavel_rounded,
-                                  color: VetoPalette.primary, size: 20),
+                                  color: VetoGlassTokens.neonCyan, size: 20),
                               const SizedBox(width: 8),
                               Expanded(
                                 child: Text(
                                   name,
                                   style: const TextStyle(
-                                    color: VetoPalette.text,
+                                    color: VetoGlassTokens.textPrimary,
                                     fontSize: 16,
                                     fontWeight: FontWeight.w600,
                                   ),
@@ -220,12 +224,12 @@ class _PendingLawyersScreenState extends State<PendingLawyersScreen> {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 2),
       child: Row(children: [
-        Icon(icon, size: 14, color: VetoPalette.textMuted),
+        Icon(icon, size: 14, color: VetoGlassTokens.textMuted),
         const SizedBox(width: 6),
         Expanded(
           child: Text(
             text,
-            style: const TextStyle(color: VetoPalette.textMuted, fontSize: 13),
+            style: const TextStyle(color: VetoGlassTokens.textMuted, fontSize: 13),
             overflow: TextOverflow.ellipsis,
           ),
         ),

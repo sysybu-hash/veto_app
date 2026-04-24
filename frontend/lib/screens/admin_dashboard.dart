@@ -468,7 +468,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
     final color = good ? const Color(0xFF22C55E) : const Color(0xFFFF3B3B);
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       Row(children: [
-        Expanded(child: Text(label, style: const TextStyle(color: Color(0xFF334155), fontSize: 13, fontWeight: FontWeight.w600))),
+        Expanded(child: Text(label, style: const TextStyle(color: VetoGlassTokens.textMuted, fontSize: 13, fontWeight: FontWeight.w600))),
         Text(good ? 'Online' : 'Offline', style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.w600)),
       ]),
       const SizedBox(height: 6),
@@ -476,7 +476,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
         borderRadius: BorderRadius.circular(4),
         child: LinearProgressIndicator(
           value: pct,
-          backgroundColor: const Color(0xFFE2E8F8),
+          backgroundColor: const Color(0xFF0F1A24),
           color: color,
           minHeight: 7,
         ),
@@ -489,29 +489,29 @@ class _AdminDashboardState extends State<AdminDashboard> {
       return Container(
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
-            color: VetoPalette.surface,
+            color: VetoGlassTokens.glassFillStrong,
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: VetoPalette.border)),
+            border: Border.all(color: VetoGlassTokens.glassBorder)),
         child: Center(
           child: Text(_t(code, 'noActivity'),
-              style: const TextStyle(color: VetoPalette.textMuted, fontSize: 14)),
+              style: const TextStyle(color: VetoGlassTokens.textMuted, fontSize: 14)),
         ),
       );
     }
     return Container(
       decoration: BoxDecoration(
-        color: VetoPalette.surface,
+        color: VetoGlassTokens.glassFillStrong,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: VetoPalette.border),
+        border: Border.all(color: VetoGlassTokens.glassBorder),
         boxShadow: [BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 6, offset: const Offset(0, 2))],
+            color: Colors.black.withValues(alpha: 0.2),
+            blurRadius: 16, offset: const Offset(0, 6))],
       ),
       child: ListView.separated(
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
         itemCount: _recentEvents.length,
-        separatorBuilder: (_, __) => const Divider(height: 1, color: VetoPalette.border),
+        separatorBuilder: (_, __) => const Divider(height: 1, color: VetoGlassTokens.glassBorder),
         itemBuilder: (context, i) {
           final ev = _recentEvents[i];
           final status = ev['status'] ?? 'open';
@@ -545,13 +545,13 @@ class _AdminDashboardState extends State<AdminDashboard> {
                 crossAxisAlignment: CrossAxisAlignment.start, children: [
                   Text(ev['scenario'] ?? ev['type'] ?? 'Emergency',
                       style: const TextStyle(
-                          color: VetoPalette.text, fontWeight: FontWeight.w600,
+                          color: VetoGlassTokens.textPrimary, fontWeight: FontWeight.w600,
                           fontSize: 14)),
                   if (dt != null)
                     Text(
                       '${dt.day}/${dt.month}/${dt.year}  ${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}',
                       style: const TextStyle(
-                          color: VetoPalette.textMuted, fontSize: 11),
+                          color: VetoGlassTokens.textMuted, fontSize: 11),
                     ),
                 ],
               )),

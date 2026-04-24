@@ -3,6 +3,7 @@
 //  Fluid aurora background, blur panels, neon cyan/blue accents
 // ============================================================
 
+import 'dart:math' as math;
 import 'dart:ui' show ImageFilter;
 
 import 'package:flutter/material.dart';
@@ -103,15 +104,16 @@ class VetoFluidBackgroundPainter extends CustomPainter {
     _blob(canvas, Offset(w * 0.08, h * 0.58), w * 0.48, const Color(0xFF7C6FED), 0.18);
     _blob(canvas, Offset(w * 0.88, h * 0.72), w * 0.42, const Color(0xFF2196F3), 0.16);
     // Set 5 — extra aurora: violet + cyan low on canvas (deep "northern light" feel)
-    _blob(canvas, Offset(w * 0.48, h * 0.88), w * 0.55, const Color(0xFF7C3AED), 0.20);
-    _blob(canvas, Offset(w * 0.25, h * 0.42), w * 0.38, const Color(0xFF00E5FF), 0.14);
+    _blob(canvas, Offset(w * 0.48, h * 0.88), w * 0.55, const Color(0xFF7C3AED), 0.24);
+    _blob(canvas, Offset(w * 0.25, h * 0.42), w * 0.38, const Color(0xFF00E5FF), 0.18);
+    _blob(canvas, Offset(w * 0.62, h * 0.18), w * 0.32, const Color(0xFF22D3EE), 0.12);
 
     // Subtle bokeh specks
-    final rnd = Paint()..color = Colors.white.withValues(alpha: 0.04);
-    for (var i = 0; i < 28; i++) {
+    final rnd = Paint()..color = Colors.white.withValues(alpha: 0.055);
+    for (var i = 0; i < 40; i++) {
       final x = (i * 97.0 + w * 0.03) % w;
       final y = (i * 53.0 + h * 0.11) % h;
-      canvas.drawCircle(Offset(x, y), 1.2 + (i % 3) * 0.6, rnd);
+      canvas.drawCircle(Offset(x, y), 0.8 + (i % 4) * 0.7, rnd);
     }
   }
 
@@ -131,6 +133,44 @@ class VetoFluidBackgroundPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+/// Slow-moving cyan / violet wash for presentation “aurora” depth (on top of [VetoFluidBackgroundPainter]).
+class VetoAuroraMotionPainter extends CustomPainter {
+  final double phase;
+  const VetoAuroraMotionPainter({required this.phase});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final w = size.width;
+    final h = size.height;
+    final t = phase * 2 * math.pi;
+    final c1 = Offset(
+      w * (0.52 + 0.11 * math.sin(t * 0.65)),
+      h * (0.28 + 0.1 * math.cos(t * 0.48)),
+    );
+    final c2 = Offset(
+      w * (0.18 + 0.12 * math.cos(t * 0.82)),
+      h * (0.72 + 0.08 * math.sin(t * 0.55)),
+    );
+    _wash(canvas, c1, w * 0.62, const Color(0xFF00E5FF), 0.10);
+    _wash(canvas, c2, w * 0.48, const Color(0xFF8B5CF6), 0.085);
+  }
+
+  void _wash(Canvas canvas, Offset c, double r, Color col, double a) {
+    canvas.drawCircle(
+      c,
+      r,
+      Paint()
+        ..shader = RadialGradient(
+          colors: [col.withValues(alpha: a), col.withValues(alpha: 0)],
+        ).createShader(Rect.fromCircle(center: c, radius: r)),
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant VetoAuroraMotionPainter oldDelegate) =>
+      oldDelegate.phase != phase;
 }
 
 /// Abstract “tactical map” for lawyer dashboard: dark basemap + glowing cyan pins.
@@ -227,20 +267,55 @@ class VetoCommandMapPanel extends StatelessWidget {
 }
 
 /// Full-screen fluid aurora behind your content (matches app-wide glass shell).
-class VetoGlassAuroraBackground extends StatelessWidget {
+class VetoGlassAuroraBackground extends StatefulWidget {
   final Widget child;
 
   const VetoGlassAuroraBackground({super.key, required this.child});
 
   @override
+  State<VetoGlassAuroraBackground> createState() => _VetoGlassAuroraBackgroundState();
+}
+
+class _VetoGlassAuroraBackgroundState extends State<VetoGlassAuroraBackground>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _aurora;
+
+  @override
+  void initState() {
+    super.initState();
+    _aurora = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 20),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _aurora.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final reduceMotion = MediaQuery.of(context).disableAnimations;
     return Stack(
       fit: StackFit.expand,
       children: [
         const Positioned.fill(
           child: CustomPaint(painter: VetoFluidBackgroundPainter()),
         ),
-        child,
+        if (!reduceMotion)
+          Positioned.fill(
+            child: RepaintBoundary(
+              child: AnimatedBuilder(
+                animation: _aurora,
+                builder: (_, __) => CustomPaint(
+                  painter: VetoAuroraMotionPainter(phase: _aurora.value),
+                ),
+              ),
+            ),
+          ),
+        widget.child,
       ],
     );
   }

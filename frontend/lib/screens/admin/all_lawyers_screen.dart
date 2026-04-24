@@ -48,9 +48,13 @@ class _AllLawyersScreenState extends State<AllLawyersScreen> {
       builder: (ctx) => Directionality(
         textDirection: AppLanguage.directionOf(code),
         child: AlertDialog(
-          backgroundColor: VetoPalette.surface,
+          backgroundColor: VetoGlassTokens.sheetPanel,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: const BorderSide(color: VetoGlassTokens.glassBorder),
+          ),
           title: Text(id == null ? _t(code, 'addLawyer') : _t(code, 'editLawyer'),
-              style: const TextStyle(color: VetoPalette.text)),
+              style: const TextStyle(color: VetoGlassTokens.textPrimary)),
           content: SingleChildScrollView(
             child: Column(mainAxisSize: MainAxisSize.min, children: [
               _field(nameCtrl,  _t(code, 'fullName'),          Icons.badge_outlined),
@@ -70,13 +74,17 @@ class _AllLawyersScreenState extends State<AllLawyersScreen> {
                 value: available,
                 onChanged: (v) => ss(() => available = v),
                 contentPadding: EdgeInsets.zero,
-                title: Text(_t(code, 'availableForCalls'), style: const TextStyle(color: VetoPalette.text)),
+                title: Text(_t(code, 'availableForCalls'), style: const TextStyle(color: VetoGlassTokens.textPrimary)),
               )),
             ]),
           ),
           actions: [
             TextButton(onPressed: () => Navigator.pop(ctx), child: Text(_t(code, 'cancel'))),
             FilledButton(
+              style: FilledButton.styleFrom(
+                backgroundColor: VetoGlassTokens.neonCyan,
+                foregroundColor: VetoGlassTokens.onNeon,
+              ),
               onPressed: () async {
                 final specs = specsCtrl.text.trim().isEmpty ? <String>[]
                     : specsCtrl.text.split(',').map((s) => s.trim()).where((s) => s.isNotEmpty).toList();
@@ -118,13 +126,18 @@ class _AllLawyersScreenState extends State<AllLawyersScreen> {
       builder: (ctx) => Directionality(
         textDirection: AppLanguage.directionOf(code),
         child: AlertDialog(
-          backgroundColor: VetoPalette.surface,
-          title: Text(_t(code, 'deleteLawyer'), style: const TextStyle(color: VetoPalette.text)),
-          content: Text('${_t(code, 'deleteLawyerConfirm')}\n$name', style: const TextStyle(color: VetoPalette.textMuted)),
+          backgroundColor: VetoGlassTokens.sheetPanel,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: const BorderSide(color: VetoGlassTokens.glassBorder),
+          ),
+          title: Text(_t(code, 'deleteLawyer'), style: const TextStyle(color: VetoGlassTokens.textPrimary)),
+          content: Text('${_t(code, 'deleteLawyerConfirm')}\n$name', style: const TextStyle(color: VetoGlassTokens.textMuted)),
           actions: [
             TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(_t(code, 'cancel'))),
             FilledButton(
-              style: FilledButton.styleFrom(backgroundColor: VetoPalette.emergency),
+              style: FilledButton.styleFrom(
+                  backgroundColor: VetoPalette.emergency, foregroundColor: Colors.white),
               onPressed: () => Navigator.pop(ctx, true),
               child: Text(_t(code, 'delete')),
             ),
@@ -176,7 +189,7 @@ class _AllLawyersScreenState extends State<AllLawyersScreen> {
           child: _loading
             ? const Center(child: CircularProgressIndicator(color: VetoGlassTokens.neonCyan))
             : _lawyers.isEmpty
-                ? Center(child: Text(_t(code, 'noLawyers'), style: const TextStyle(color: VetoPalette.textMuted)))
+                ? Center(child: Text(_t(code, 'noLawyers'), style: const TextStyle(color: VetoGlassTokens.textMuted)))
                 : ListView.separated(
                     padding: const EdgeInsets.fromLTRB(16, 16, 16, 80),
                     itemCount: _lawyers.length,
@@ -189,30 +202,30 @@ class _AllLawyersScreenState extends State<AllLawyersScreen> {
                       return Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: VetoGlassTokens.glassFillStrong,
                           borderRadius: BorderRadius.circular(12),
                           border: const Border(
-                            left: BorderSide(color: Color(0xFF00C9B1), width: 3),
-                            top: BorderSide(color: Color(0xFFE2E8F8)),
-                            right: BorderSide(color: Color(0xFFE2E8F8)),
-                            bottom: BorderSide(color: Color(0xFFE2E8F8)),
+                            left: BorderSide(color: VetoGlassTokens.accentSoft, width: 3),
+                            top: BorderSide(color: VetoGlassTokens.glassBorder),
+                            right: BorderSide(color: VetoGlassTokens.glassBorder),
+                            bottom: BorderSide(color: VetoGlassTokens.glassBorder),
                           ),
-                          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 6, offset: const Offset(0, 2))],
+                          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.2), blurRadius: 16, offset: const Offset(0, 6))],
                         ),
                         child: Row(children: [
                           CircleAvatar(
                             radius: 20,
-                            backgroundColor: VetoPalette.primary.withValues(alpha: 0.15),
-                            child: const Icon(Icons.gavel_rounded, color: VetoPalette.primary, size: 18),
+                            backgroundColor: VetoGlassTokens.neonCyan.withValues(alpha: 0.12),
+                            child: const Icon(Icons.gavel_rounded, color: VetoGlassTokens.neonCyan, size: 18),
                           ),
                           const SizedBox(width: 12),
                           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                             Text(l['full_name'] ?? _t(code, 'noName'),
-                                style: const TextStyle(color: VetoPalette.text, fontWeight: FontWeight.w600)),
+                                style: const TextStyle(color: VetoGlassTokens.textPrimary, fontWeight: FontWeight.w600)),
                             Text(l['phone'] ?? '', textDirection: TextDirection.ltr,
-                                style: const TextStyle(color: VetoPalette.textMuted, fontSize: 12)),
+                                style: const TextStyle(color: VetoGlassTokens.textMuted, fontSize: 12)),
                             if (specs.isNotEmpty)
-                              Text(specs, style: const TextStyle(color: VetoPalette.textSubtle, fontSize: 11)),
+                              Text(specs, style: const TextStyle(color: VetoGlassTokens.textSubtle, fontSize: 11)),
                           ])),
                           Container(
                             margin: const EdgeInsets.only(left: 4),
@@ -236,7 +249,7 @@ class _AllLawyersScreenState extends State<AllLawyersScreen> {
                                   style: const TextStyle(color: VetoPalette.warning, fontSize: 10)),
                             ),
                           IconButton(
-                            icon: const Icon(Icons.edit_outlined, size: 20, color: VetoPalette.primary),
+                            icon: const Icon(Icons.edit_outlined, size: 20, color: VetoGlassTokens.neonCyan),
                             onPressed: () => _showForm(lawyer: Map<String, dynamic>.from(l as Map)),
                             tooltip: _t(code, 'edit'),
                           ),
@@ -258,14 +271,23 @@ class _AllLawyersScreenState extends State<AllLawyersScreen> {
       {TextDirection dir = TextDirection.rtl, TextInputType type = TextInputType.text}) =>
       TextField(
         controller: ctrl, textDirection: dir, keyboardType: type,
-        style: const TextStyle(color: VetoPalette.text),
+        style: const TextStyle(color: VetoGlassTokens.textPrimary),
+        cursorColor: VetoGlassTokens.neonCyan,
         decoration: InputDecoration(
           labelText: label,
-          labelStyle: const TextStyle(color: VetoPalette.textMuted),
-          prefixIcon: Icon(icon, color: VetoPalette.textMuted, size: 18),
-          filled: true, fillColor: VetoPalette.bg,
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: VetoPalette.border)),
-          enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: VetoPalette.border)),
+          labelStyle: const TextStyle(color: VetoGlassTokens.textMuted),
+          prefixIcon: Icon(icon, color: VetoGlassTokens.textMuted, size: 18),
+          filled: true,
+          fillColor: const Color(0xFF0F1A24),
+          border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: const BorderSide(color: VetoGlassTokens.glassBorder)),
+          enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: const BorderSide(color: VetoGlassTokens.glassBorder)),
+          focusedBorder: const OutlineInputBorder(
+              borderRadius: BorderRadius.all(Radius.circular(10)),
+              borderSide: BorderSide(color: VetoGlassTokens.neonCyan, width: 1.5)),
         ),
       );
 }

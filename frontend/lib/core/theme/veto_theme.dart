@@ -514,6 +514,11 @@ class VetoTheme {
         iconColor: Color(0xFF00E5FF),
         contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       ),
+      pageTransitionsTheme: PageTransitionsTheme(
+        builders: {
+          for (final p in TargetPlatform.values) p: const ZoomPageTransitionsBuilder(),
+        },
+      ),
     );
   }
 

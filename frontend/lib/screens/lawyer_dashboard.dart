@@ -293,12 +293,17 @@ class _LawyerDashboardState extends State<LawyerDashboard> {
     if (_alerts.isEmpty) {
       _showSnack(
         isRtl ? 'אין קריאות ממתינות' : 'No pending emergency alerts',
-        background: VetoPalette.surface2,
+        background: VetoGlassTokens.menuPanel,
       );
       return;
     }
     showModalBottomSheet<void>(
       context: context,
+      backgroundColor: VetoGlassTokens.sheetPanel,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
+        side: BorderSide(color: VetoGlassTokens.glassBorder),
+      ),
       builder: (ctx) => SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(20),
@@ -306,12 +311,23 @@ class _LawyerDashboardState extends State<LawyerDashboard> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             mainAxisSize: MainAxisSize.min,
             children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  margin: const EdgeInsets.only(bottom: 16),
+                  decoration: BoxDecoration(
+                    color: VetoGlassTokens.glassBorderBright,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
               Text(
                 _t(code, 'queue'),
                 style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w900,
-                  color: Color(0xFF0F172A),
+                  color: VetoGlassTokens.textPrimary,
                 ),
               ),
               const SizedBox(height: 12),
@@ -319,10 +335,13 @@ class _LawyerDashboardState extends State<LawyerDashboard> {
                 ListTile(
                   contentPadding: EdgeInsets.zero,
                   leading: const Icon(Icons.emergency_rounded, color: Color(0xFFFF3B3B)),
-                  title: Text(a['userName']?.toString() ?? 'User'),
+                  title: Text(
+                    a['userName']?.toString() ?? 'User',
+                    style: const TextStyle(color: VetoGlassTokens.textPrimary, fontWeight: FontWeight.w600),
+                  ),
                   subtitle: Text(
                     a['eventId']?.toString() ?? '',
-                    style: const TextStyle(fontSize: 12, color: Color(0xFF64748B)),
+                    style: const TextStyle(fontSize: 12, color: VetoGlassTokens.textMuted),
                   ),
                 ),
             ],
@@ -355,14 +374,22 @@ class _LawyerDashboardState extends State<LawyerDashboard> {
     }
     _showSnack(
       isRtl ? 'קבל תיק או בחר תיק פעיל לפני צפיית קבצים' : 'Accept a case or pick an active case to view files',
-      background: VetoPalette.surface2,
+      background: VetoGlassTokens.menuPanel,
     );
   }
 
-  void _showSnack(String message, {Color background = VetoPalette.surface2}) {
+  void _showSnack(String message, {Color background = VetoGlassTokens.menuPanel}) {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), backgroundColor: background),
+      SnackBar(
+        content: Text(message, style: const TextStyle(color: VetoGlassTokens.textPrimary)),
+        backgroundColor: background,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(14),
+          side: const BorderSide(color: VetoGlassTokens.glassBorder),
+        ),
+      ),
     );
   }
 
@@ -375,9 +402,10 @@ class _LawyerDashboardState extends State<LawyerDashboard> {
         return Directionality(
           textDirection: AppLanguage.directionOf(code),
           child: AlertDialog(
-            backgroundColor: VetoPalette.surface,
+            backgroundColor: VetoGlassTokens.sheetPanel,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(20),
+              side: const BorderSide(color: VetoGlassTokens.glassBorder),
             ),
             title: Row(
               children: [
@@ -388,7 +416,7 @@ class _LawyerDashboardState extends State<LawyerDashboard> {
                   child: Text(
                     _t(code, 'liveDialog'),
                     style: const TextStyle(
-                      color: VetoPalette.text,
+                      color: VetoGlassTokens.textPrimary,
                       fontWeight: FontWeight.w800,
                     ),
                   ),
@@ -409,7 +437,7 @@ class _LawyerDashboardState extends State<LawyerDashboard> {
                 },
                 child: Text(
                   _t(code, 'reject'),
-                  style: const TextStyle(color: VetoPalette.textMuted),
+                  style: const TextStyle(color: VetoGlassTokens.textMuted),
                 ),
               ),
               FilledButton(
@@ -419,6 +447,7 @@ class _LawyerDashboardState extends State<LawyerDashboard> {
                 },
                 style: FilledButton.styleFrom(
                   backgroundColor: VetoPalette.success,
+                  foregroundColor: Colors.white,
                 ),
                 child: Text(_t(code, 'accept')),
               ),
@@ -443,9 +472,8 @@ class _LawyerDashboardState extends State<LawyerDashboard> {
             ? const VetoGlassAuroraBackground(
                 child: Center(child: CircularProgressIndicator(color: VetoGlassTokens.neonCyan)),
               )
-            : Stack(children: [
-                const Positioned.fill(child: CustomPaint(painter: VetoFluidBackgroundPainter())),
-                SafeArea(
+            : VetoGlassAuroraBackground(
+                child: SafeArea(
                   child: Column(children: [
                     // ── Top bar ─────────────────────────────────
                     Container(
@@ -741,7 +769,7 @@ class _LawyerDashboardState extends State<LawyerDashboard> {
                     ),
                   ]),
                 ),
-              ]),
+              ),
       ),
     );
   }
@@ -991,7 +1019,7 @@ class _AlertSummary extends StatelessWidget {
         Text(
           '$fromLabel: $userId',
           style: const TextStyle(
-            color: VetoPalette.text,
+            color: VetoGlassTokens.textPrimary,
             fontSize: 13,
             fontWeight: FontWeight.w700,
           ),
@@ -1001,7 +1029,7 @@ class _AlertSummary extends StatelessWidget {
         Text(
           title,
           style: const TextStyle(
-            color: VetoPalette.textSubtle,
+            color: VetoGlassTokens.textSubtle,
             fontSize: 12,
             fontWeight: FontWeight.w600,
           ),
@@ -1010,7 +1038,7 @@ class _AlertSummary extends StatelessWidget {
         Text(
           (details == null || details.isEmpty) ? fallbackText : details,
           style: const TextStyle(
-            color: VetoPalette.textMuted,
+            color: VetoGlassTokens.textMuted,
             fontSize: 14,
             height: 1.6,
           ),
