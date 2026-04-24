@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 
 import '../../core/i18n/app_language.dart';
 import '../../core/theme/future_surface.dart';
+import '../../core/theme/veto_glass_system.dart';
 import '../../core/theme/veto_theme.dart';
 import '../../services/auth_service.dart';
 import '../../services/socket_service.dart';
@@ -180,20 +181,25 @@ class _WizardShellScreenState extends State<WizardShellScreen> {
       backgroundColor: Colors.transparent,
       builder: (ctx) => Padding(
         padding: const EdgeInsets.all(16),
-        child: Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Column(
+        child: VetoGlassBlur(
+          borderRadius: 20,
+          sigma: 20,
+          fill: VetoGlassTokens.glassFillStrong,
+          borderColor: VetoGlassTokens.glassBorderBright,
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
                 lang == 'he'
                     ? '$lawyerName קיבל את הקריאה'
                     : '$lawyerName accepted',
-                style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
+                style: const TextStyle(
+                  fontWeight: FontWeight.w800,
+                  fontSize: 16,
+                  color: VetoGlassTokens.textPrimary,
+                ),
               ),
               const SizedBox(height: 16),
               Row(
@@ -222,6 +228,7 @@ class _WizardShellScreenState extends State<WizardShellScreen> {
               ),
             ],
           ),
+        ),
         ),
       ),
     );

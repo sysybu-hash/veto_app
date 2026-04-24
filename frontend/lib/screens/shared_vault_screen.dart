@@ -121,23 +121,22 @@ class _SharedFileCard extends StatelessWidget {
       return Icons.insert_drive_file_outlined;
     }
 
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE2E8F8)),
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 8, offset: const Offset(0, 2))],
-      ),
-      child: Row(
+    return VetoGlassBlur(
+      borderRadius: 16,
+      sigma: 12,
+      fill: VetoGlassTokens.glassFillStrong,
+      borderColor: VetoGlassTokens.glassBorder,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
         children: [
           Container(
             width: 40, height: 40,
             decoration: BoxDecoration(
-              color: const Color(0xFF5B8FFF).withValues(alpha: 0.10),
+              color: VetoGlassTokens.neonCyan.withValues(alpha: 0.10),
               borderRadius: BorderRadius.circular(10),
             ),
-            child: Icon(getIcon(), color: const Color(0xFF5B8FFF), size: 20),
+            child: Icon(getIcon(), color: VetoGlassTokens.neonCyan, size: 20),
           ),
           const SizedBox(width: 14),
           Expanded(
@@ -145,15 +144,15 @@ class _SharedFileCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(name,
-                  style: const TextStyle(color: Color(0xFF0F172A), fontWeight: FontWeight.w700),
+                  style: const TextStyle(color: VetoGlassTokens.textPrimary, fontWeight: FontWeight.w700),
                   maxLines: 1, overflow: TextOverflow.ellipsis),
                 Text(type,
-                  style: const TextStyle(color: Color(0xFF94A3B8), fontSize: 11)),
+                  style: const TextStyle(color: VetoGlassTokens.textMuted, fontSize: 11)),
               ],
             ),
           ),
           IconButton(
-            icon: const Icon(Icons.download_rounded, color: Color(0xFF5B8FFF)),
+            icon: const Icon(Icons.download_rounded, color: VetoGlassTokens.neonCyan),
             onPressed: () async {
               if (await canLaunchUrl(Uri.parse(url))) {
                 await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
@@ -161,6 +160,7 @@ class _SharedFileCard extends StatelessWidget {
             },
           ),
         ],
+        ),
       ),
     );
   }
