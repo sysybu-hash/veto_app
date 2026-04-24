@@ -80,7 +80,7 @@ module.exports = function initDispatch(io) {
         return;
       }
 
-      const { location, preferredLanguage, specialization, callType } = payload;
+      const { location, preferredLanguage, specialization } = payload;
 
       // Specialization → English DB terms map (mirrors ai.controller.js)
       const SPEC_MAP = {
