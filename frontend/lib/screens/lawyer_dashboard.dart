@@ -478,22 +478,37 @@ class _LawyerDashboardState extends State<LawyerDashboard> {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                           decoration: BoxDecoration(
-                            color: _isAvailable ? const Color(0xFFDCFCE7) : const Color(0xFFFEF3C7),
+                            color: VetoGlassTokens.glassFillStrong,
                             borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: _isAvailable
+                                  ? VetoGlassTokens.neonCyan.withValues(alpha: 0.35)
+                                  : VetoGlassTokens.glassBorder,
+                            ),
                           ),
                           child: Row(mainAxisSize: MainAxisSize.min, children: [
                             Container(
                               width: 8, height: 8,
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                color: _isAvailable ? const Color(0xFF22C55E) : const Color(0xFFF59E0B),
+                                color: _isAvailable ? VetoGlassTokens.neonCyan : const Color(0xFFF59E0B),
+                                boxShadow: _isAvailable
+                                    ? [
+                                        BoxShadow(
+                                          color: VetoGlassTokens.neonCyan.withValues(alpha: 0.55),
+                                          blurRadius: 6,
+                                        ),
+                                      ]
+                                    : null,
                               ),
                             ),
                             const SizedBox(width: 6),
                             Text(
                               _isAvailable ? (isRtl ? 'מחובר' : 'Online') : (isRtl ? 'לא זמין' : 'Offline'),
                               style: TextStyle(
-                                color: _isAvailable ? const Color(0xFF16A34A) : const Color(0xFFB45309),
+                                color: _isAvailable
+                                    ? VetoGlassTokens.neonCyan
+                                    : VetoGlassTokens.textMuted,
                                 fontSize: 12, fontWeight: FontWeight.w700,
                               ),
                             ),
@@ -507,41 +522,60 @@ class _LawyerDashboardState extends State<LawyerDashboard> {
                       child: SingleChildScrollView(
                         padding: const EdgeInsets.symmetric(horizontal: 20),
                         child: Column(children: [
+                          const VetoCommandMapPanel(height: 176),
+                          const SizedBox(height: 14),
                           // Greeting card
-                          Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.all(20),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(20),
-                              border: Border.all(color: const Color(0xFFE2E8F8)),
-                              boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 12, offset: const Offset(0,4))],
+                          VetoGlassBlur(
+                            borderRadius: 20,
+                            sigma: 18,
+                            fill: VetoGlassTokens.glassFillStrong,
+                            borderColor: VetoGlassTokens.glassBorderBright,
+                            child: Padding(
+                              padding: const EdgeInsets.all(20),
+                              child: Row(children: [
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        isRtl ? 'שלום, עו"ד $_lawyerName' : 'Hello, Adv. $_lawyerName',
+                                        style: const TextStyle(
+                                          color: VetoGlassTokens.textPrimary,
+                                          fontSize: 20,
+                                          fontWeight: FontWeight.w900,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        isRtl
+                                            ? 'יש לך ${_activeCases.length} תיקים פעילים'
+                                            : 'You have ${_activeCases.length} active cases',
+                                        style: const TextStyle(
+                                          color: VetoGlassTokens.textMuted,
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Container(
+                                  width: 52, height: 52,
+                                  decoration: BoxDecoration(
+                                    color: VetoGlassTokens.glassFill,
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                      color: VetoGlassTokens.neonCyan.withValues(alpha: 0.4),
+                                      width: 2,
+                                    ),
+                                  ),
+                                  child: const Icon(
+                                    Icons.person_rounded,
+                                    color: VetoGlassTokens.textPrimary,
+                                    size: 28,
+                                  ),
+                                ),
+                              ]),
                             ),
-                            child: Row(children: [
-                              Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                                Text(
-                                  isRtl ? 'שלום, עו"ד $_lawyerName' : 'Hello, Adv. $_lawyerName',
-                                  style: const TextStyle(color: Color(0xFF0F172A), fontSize: 20, fontWeight: FontWeight.w900),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  isRtl
-                                    ? 'יש לך ${_activeCases.length} תיקים פעילים'
-                                    : 'You have ${_activeCases.length} active cases',
-                                  style: const TextStyle(color: Color(0xFF64748B), fontSize: 14),
-                                ),
-                              ])),
-                              // Avatar
-                              Container(
-                                width: 52, height: 52,
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFFE2E8F8),
-                                  shape: BoxShape.circle,
-                                  border: Border.all(color: const Color(0xFF5B8FFF).withValues(alpha: 0.3), width: 2),
-                                ),
-                                child: const Icon(Icons.person_rounded, color: Color(0xFF334155), size: 28),
-                              ),
-                            ]),
                           ),
                           const SizedBox(height: 14),
 
@@ -561,26 +595,43 @@ class _LawyerDashboardState extends State<LawyerDashboard> {
                           const SizedBox(height: 14),
 
                           // Availability toggle
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(16),
-                              border: Border.all(color: const Color(0xFFE2E8F8)),
+                          VetoGlassBlur(
+                            borderRadius: 16,
+                            sigma: 16,
+                            fill: VetoGlassTokens.glassFillStrong,
+                            borderColor: VetoGlassTokens.glassBorder,
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                              child: Row(children: [
+                                Icon(
+                                  Icons.toggle_on_rounded,
+                                  color: VetoGlassTokens.neonCyan,
+                                  size: 22,
+                                ),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: Text(
+                                    _isAvailable
+                                        ? (isRtl ? 'זמין לקריאות' : 'Available')
+                                        : (isRtl ? 'לא זמין' : 'Unavailable'),
+                                    style: TextStyle(
+                                      color: _isAvailable
+                                          ? VetoGlassTokens.neonCyan
+                                          : VetoGlassTokens.textMuted,
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: 15,
+                                    ),
+                                  ),
+                                ),
+                                Switch(
+                                  value: _isAvailable,
+                                  onChanged: _toggleAvailability,
+                                  activeThumbColor: VetoGlassTokens.neonCyan,
+                                  activeTrackColor: VetoGlassTokens.neonCyan
+                                      .withValues(alpha: 0.38),
+                                ),
+                              ]),
                             ),
-                            child: Row(children: [
-                              const Icon(Icons.toggle_on_rounded, color: Color(0xFF5B8FFF), size: 22),
-                              const SizedBox(width: 10),
-                              Expanded(child: Text(
-                                _isAvailable ? (isRtl ? 'זמין לקריאות' : 'Available') : (isRtl ? 'לא זמין' : 'Unavailable'),
-                                style: TextStyle(color: _isAvailable ? const Color(0xFF22C55E) : const Color(0xFF64748B), fontWeight: FontWeight.w700, fontSize: 15),
-                              )),
-                              Switch(
-                                value: _isAvailable,
-                                onChanged: _toggleAvailability,
-                                activeThumbColor: const Color(0xFF5B8FFF),
-                              ),
-                            ]),
                           ),
                           const SizedBox(height: 20),
 
@@ -589,24 +640,34 @@ class _LawyerDashboardState extends State<LawyerDashboard> {
                             alignment: AlignmentDirectional.centerStart,
                             child: Text(
                               isRtl ? 'תיקים פעילים' : 'Active Cases',
-                              style: const TextStyle(color: Color(0xFF0F172A), fontSize: 17, fontWeight: FontWeight.w800),
+                              style: const TextStyle(
+                                color: VetoGlassTokens.textPrimary,
+                                fontSize: 17,
+                                fontWeight: FontWeight.w800,
+                              ),
                             ),
                           ),
                           const SizedBox(height: 10),
 
                           if (_alerts.isEmpty && _activeCases.isEmpty)
-                            Container(
-                              padding: const EdgeInsets.all(24),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(16),
-                                border: Border.all(color: const Color(0xFFE2E8F8)),
+                            VetoGlassBlur(
+                              borderRadius: 16,
+                              sigma: 14,
+                              fill: VetoGlassTokens.glassFill,
+                              borderColor: VetoGlassTokens.glassBorder,
+                              child: Padding(
+                                padding: const EdgeInsets.all(24),
+                                child: Center(
+                                  child: Text(
+                                    _t(code, 'emptyTitle'),
+                                    style: const TextStyle(
+                                      color: VetoGlassTokens.textMuted,
+                                      fontSize: 14,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ),
                               ),
-                              child: Center(child: Text(
-                                _t(code, 'emptyTitle'),
-                                style: const TextStyle(color: Color(0xFF64748B), fontSize: 14),
-                                textAlign: TextAlign.center,
-                              )),
                             ),
 
                           // Alerts (incoming)
@@ -646,9 +707,11 @@ class _LawyerDashboardState extends State<LawyerDashboard> {
 
                     // ── Bottom nav bar ──────────────────────────
                     Container(
-                      decoration: const BoxDecoration(
-                        color: Colors.white,
-                        border: Border(top: BorderSide(color: Color(0xFFE2E8F8))),
+                      decoration: BoxDecoration(
+                        color: VetoGlassTokens.glassFillStrong,
+                        border: const Border(
+                          top: BorderSide(color: VetoGlassTokens.glassBorder),
+                        ),
                       ),
                       child: SafeArea(
                         top: false,
@@ -693,27 +756,53 @@ class _LawyerStat extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Expanded(child: Container(
-      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFE2E8F8)),
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 8, offset: const Offset(0,2))],
+    return Expanded(
+      child: VetoGlassBlur(
+        borderRadius: 14,
+        sigma: 12,
+        fill: VetoGlassTokens.glassFillStrong,
+        borderColor: VetoGlassTokens.glassBorder,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+          child: Column(children: [
+            if (icon != null)
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(icon, color: color, size: 16),
+                  const SizedBox(width: 4),
+                  Text(
+                    value,
+                    style: TextStyle(
+                      color: color,
+                      fontSize: 22,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                ],
+              )
+            else
+              Text(
+                value,
+                style: TextStyle(
+                  color: color,
+                  fontSize: 22,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: const TextStyle(
+                color: VetoGlassTokens.textMuted,
+                fontSize: 11,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ]),
+        ),
       ),
-      child: Column(children: [
-        if (icon != null)
-          Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-            Icon(icon, color: color, size: 16),
-            const SizedBox(width: 4),
-            Text(value, style: TextStyle(color: color, fontSize: 22, fontWeight: FontWeight.w900)),
-          ])
-        else
-          Text(value, style: TextStyle(color: color, fontSize: 22, fontWeight: FontWeight.w900)),
-        const SizedBox(height: 4),
-        Text(label, style: const TextStyle(color: Color(0xFF64748B), fontSize: 11), textAlign: TextAlign.center),
-      ]),
-    ));
+    );
   }
 }
 
@@ -737,63 +826,103 @@ class _LawyerCaseCard extends StatelessWidget {
     final nameRaw = data['userName'] ?? data['name'] ?? (isRtl ? 'משתמש' : 'User');
     final scenario = data['scenario'] ?? data['type'] ?? '';
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE2E8F8)),
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0,3))],
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: VetoGlassBlur(
+        borderRadius: 16,
+        sigma: 16,
+        fill: VetoGlassTokens.glassFillStrong,
+        borderColor: isUrgent
+            ? const Color(0xFFFF3B3B).withValues(alpha: 0.4)
+            : VetoGlassTokens.glassBorder,
+        child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: chipColor.withValues(alpha: 0.18),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: chipColor.withValues(alpha: 0.45)),
+                  ),
+                  child: Text(
+                    chipLabel,
+                    style: TextStyle(
+                      color: chipColor,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Text(
+              isRtl ? 'אזרח: $nameRaw' : 'Client: $nameRaw',
+              style: const TextStyle(
+                color: VetoGlassTokens.textPrimary,
+                fontWeight: FontWeight.w800,
+                fontSize: 15,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              scenario.isEmpty ? (isRtl ? 'אירוע חירום' : 'Emergency') : scenario,
+              style: const TextStyle(
+                color: VetoGlassTokens.textMuted,
+                fontSize: 13,
+              ),
+            ),
+            const SizedBox(height: 14),
+            Row(
+              children: [
+                Expanded(
+                  child: FilledButton(
+                    onPressed: onAccept,
+                    style: FilledButton.styleFrom(
+                      backgroundColor: VetoGlassTokens.neonBlue,
+                      foregroundColor: VetoGlassTokens.textPrimary,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      textStyle: const TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 13,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    child: Text(acceptLabel),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: onReject,
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: VetoGlassTokens.textSecondary,
+                      side: const BorderSide(color: VetoGlassTokens.glassBorderBright),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      textStyle: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 13,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    child: Text(rejectLabel),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+        ),
       ),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Row(children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-            decoration: BoxDecoration(
-              color: chipColor.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Text(chipLabel, style: TextStyle(color: chipColor, fontSize: 11, fontWeight: FontWeight.w800)),
-          ),
-        ]),
-        const SizedBox(height: 10),
-        Text(
-          isRtl ? 'אזרח: $nameRaw' : 'Client: $nameRaw',
-          style: const TextStyle(color: Color(0xFF0F172A), fontWeight: FontWeight.w800, fontSize: 15),
-        ),
-        const SizedBox(height: 2),
-        Text(
-          scenario.isEmpty ? (isRtl ? 'אירוע חירום' : 'Emergency') : scenario,
-          style: const TextStyle(color: Color(0xFF64748B), fontSize: 13),
-        ),
-        const SizedBox(height: 14),
-        Row(children: [
-          Expanded(child: FilledButton(
-            onPressed: onAccept,
-            style: FilledButton.styleFrom(
-              backgroundColor: const Color(0xFF1A2340),
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              textStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-            ),
-            child: Text(acceptLabel),
-          )),
-          const SizedBox(width: 8),
-          Expanded(child: OutlinedButton(
-            onPressed: onReject,
-            style: OutlinedButton.styleFrom(
-              foregroundColor: const Color(0xFF334155),
-              side: const BorderSide(color: Color(0xFFE2E8F8)),
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              textStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-            ),
-            child: Text(rejectLabel),
-          )),
-        ]),
-      ]),
     );
   }
 }
@@ -813,12 +942,24 @@ class _BottomNavItem extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
         child: Column(mainAxisSize: MainAxisSize.min, children: [
-          Icon(icon, color: selected ? const Color(0xFF5B8FFF) : const Color(0xFF64748B), size: 24),
+          Icon(
+            icon,
+            color: selected
+                ? VetoGlassTokens.neonCyan
+                : VetoGlassTokens.textMuted,
+            size: 24,
+          ),
           const SizedBox(height: 4),
-          Text(label, style: TextStyle(
-            color: selected ? const Color(0xFF5B8FFF) : const Color(0xFF64748B),
-            fontSize: 11, fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-          )),
+          Text(
+            label,
+            style: TextStyle(
+              color: selected
+                  ? VetoGlassTokens.neonCyan
+                  : VetoGlassTokens.textMuted,
+              fontSize: 11,
+              fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+            ),
+          ),
         ]),
       ),
     );

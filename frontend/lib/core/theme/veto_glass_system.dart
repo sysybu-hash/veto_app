@@ -95,6 +95,9 @@ class VetoFluidBackgroundPainter extends CustomPainter {
     _blob(canvas, Offset(w * 0.12, h * 0.12), w * 0.52, const Color(0xFF4DB6AC), 0.22);
     _blob(canvas, Offset(w * 0.08, h * 0.58), w * 0.48, const Color(0xFF7C6FED), 0.18);
     _blob(canvas, Offset(w * 0.88, h * 0.72), w * 0.42, const Color(0xFF2196F3), 0.16);
+    // Set 5 — extra aurora: violet + cyan low on canvas (deep "northern light" feel)
+    _blob(canvas, Offset(w * 0.48, h * 0.88), w * 0.55, const Color(0xFF7C3AED), 0.20);
+    _blob(canvas, Offset(w * 0.25, h * 0.42), w * 0.38, const Color(0xFF00E5FF), 0.14);
 
     // Subtle bokeh specks
     final rnd = Paint()..color = Colors.white.withValues(alpha: 0.04);
@@ -121,6 +124,99 @@ class VetoFluidBackgroundPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+/// Abstract “tactical map” for lawyer dashboard: dark basemap + glowing cyan pins.
+class VetoCommandMapPainter extends CustomPainter {
+  const VetoCommandMapPainter();
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final w = size.width;
+    final h = size.height;
+    final base = Paint()
+      ..shader = const LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [
+          Color(0xFF0B1628),
+          Color(0xFF06101C),
+          Color(0xFF0A1A2E),
+        ],
+      ).createShader(Rect.fromLTWH(0, 0, w, h));
+    canvas.drawRect(Rect.fromLTWH(0, 0, w, h), base);
+
+    final grid = Paint()
+      ..color = Colors.white.withValues(alpha: 0.04)
+      ..strokeWidth = 0.5;
+    for (var x = 0.0; x < w; x += 18) {
+      canvas.drawLine(Offset(x, 0), Offset(x, h), grid);
+    }
+    for (var y = 0.0; y < h; y += 18) {
+      canvas.drawLine(Offset(0, y), Offset(w, y), grid);
+    }
+
+    // “Routes”
+    final route = Paint()
+      ..color = VetoGlassTokens.neonCyan.withValues(alpha: 0.10)
+      ..strokeWidth = 1.2
+      ..style = PaintingStyle.stroke;
+    final path = Path()
+      ..moveTo(0, h * 0.62)
+      ..quadraticBezierTo(w * 0.35, h * 0.45, w * 0.72, h * 0.55)
+      ..quadraticBezierTo(w * 0.9, h * 0.62, w, h * 0.38);
+    canvas.drawPath(path, route);
+
+    void pin(Offset c) {
+      final g = Paint()
+        ..shader = RadialGradient(
+          colors: [
+            VetoGlassTokens.neonCyan.withValues(alpha: 0.45),
+            VetoGlassTokens.neonCyan.withValues(alpha: 0.0),
+          ],
+        ).createShader(Rect.fromCircle(center: c, radius: 22));
+      canvas.drawCircle(c, 22, g);
+      canvas.drawCircle(
+        c,
+        5,
+        Paint()..color = VetoGlassTokens.neonCyan,
+      );
+      canvas.drawCircle(
+        c,
+        8,
+        Paint()
+          ..color = VetoGlassTokens.neonCyan.withValues(alpha: 0.35)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1.5,
+      );
+    }
+
+    pin(Offset(w * 0.22, h * 0.38));
+    pin(Offset(w * 0.55, h * 0.52));
+    pin(Offset(w * 0.78, h * 0.32));
+    pin(Offset(w * 0.42, h * 0.72));
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+/// Rounded “command center” map strip for the lawyer console.
+class VetoCommandMapPanel extends StatelessWidget {
+  final double height;
+  const VetoCommandMapPanel({super.key, this.height = 170});
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(20),
+      child: SizedBox(
+        height: height,
+        width: double.infinity,
+        child: const CustomPaint(painter: VetoCommandMapPainter()),
+      ),
+    );
+  }
 }
 
 /// Full-screen fluid aurora behind your content (matches app-wide glass shell).

@@ -1,6 +1,6 @@
 ﻿// ═══════════════════════════════════════════════════════════════════
-//  VETO Landing Page — Pixel-perfect rebuild per approved mockup
-//  Light Aurora Glassmorphism: centred hero, red SOS orb, white cards
+//  VETO Landing — Set 5 "Dark Aurora Glassmorphism"
+//  Deep blue-black aurora, dark frosted hero card, gradient cyan→blue CTA + SOS
 // ═══════════════════════════════════════════════════════════════════
 
 import 'dart:ui' show ImageFilter;
@@ -18,14 +18,12 @@ import '../widgets/ai_chat_dialog.dart';
 // ── Palette — dark glassmorphism (fluid aurora + white type) ─────
 class _C {
   static const bg         = VetoGlassTokens.bgBase;
-  static const white      = Color(0xFFFFFFFF);
   static const navBg      = VetoGlassTokens.glassFill;
   static const inkDark    = VetoGlassTokens.textPrimary;
   static const inkMid     = VetoGlassTokens.textSecondary;
   static const inkLight   = VetoGlassTokens.textMuted;
   static const accent     = VetoGlassTokens.neonCyan;
   static const red        = Color(0xFFFF3B3B);
-  static const border     = VetoGlassTokens.glassBorder;
 }
 
 // ── i18n ──────────────────────────────────────────────────────────
@@ -579,95 +577,115 @@ class _HeroSection extends StatelessWidget {
       child: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 700),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              // ── Title ──
-              Text(
-                t(code, 'heroTitle'),
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: _C.inkDark,
-                  fontSize: compact ? 32 : 48,
-                  fontWeight: FontWeight.w900,
-                  height: 1.15,
-                  letterSpacing: -0.5,
-                ),
-              ),
-              const SizedBox(height: 16),
-
-              // ── Body ──
-              Text(
-                t(code, 'heroBody'),
-                textAlign: TextAlign.center,
-                style: const TextStyle(color: _C.inkLight, fontSize: 17, height: 1.65),
-              ),
-              const SizedBox(height: 40),
-
-              // ── CTA Buttons ──
-              Wrap(
-                alignment: WrapAlignment.center,
-                spacing: 14,
-                runSpacing: 14,
+          child: VetoGlassBlur(
+            borderRadius: 28,
+            sigma: 22,
+            fill: const Color(0x2AFFFFFF),
+            borderColor: VetoGlassTokens.glassBorderBright,
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: compact ? 20 : 32, vertical: compact ? 28 : 40),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  // SOS red button
-                  GestureDetector(
-                    onTap: onTap,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 36, vertical: 16),
-                      decoration: BoxDecoration(
-                        color: _C.red,
-                        borderRadius: BorderRadius.circular(50),
-                        boxShadow: [
-                          BoxShadow(color: _C.red.withValues(alpha: 0.35), blurRadius: 20, spreadRadius: 2, offset: const Offset(0, 6)),
-                          BoxShadow(color: _C.red.withValues(alpha: 0.15), blurRadius: 40, spreadRadius: 8),
-                        ],
-                      ),
-                      child: Text(
-                        t(code, 'heroCta'),
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 17,
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: 1.5,
+                  // ── Title ──
+                  Text(
+                    t(code, 'heroTitle'),
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: _C.inkDark,
+                      fontSize: compact ? 30 : 44,
+                      fontWeight: FontWeight.w900,
+                      height: 1.15,
+                      letterSpacing: -0.5,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // ── Body ──
+                  Text(
+                    t(code, 'heroBody'),
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(color: _C.inkLight, fontSize: 17, height: 1.65),
+                  ),
+                  const SizedBox(height: 32),
+
+                  // ── CTA: gradient primary, SOS secondary (high impact on dark) ──
+                  Wrap(
+                    alignment: WrapAlignment.center,
+                    spacing: 14,
+                    runSpacing: 14,
+                    children: [
+                      GestureDetector(
+                        onTap: onTap,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                          decoration: BoxDecoration(
+                            gradient: VetoGlassTokens.neonButton,
+                            borderRadius: BorderRadius.circular(50),
+                            boxShadow: [
+                              BoxShadow(
+                                color: VetoGlassTokens.neonCyan.withValues(alpha: 0.32),
+                                blurRadius: 22,
+                                offset: const Offset(0, 8),
+                              ),
+                            ],
+                          ),
+                          child: Text(
+                            t(code, 'heroSecondary'),
+                            style: const TextStyle(
+                              color: Color(0xFF041018),
+                              fontSize: 16,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
                         ),
                       ),
-                    ),
+                      GestureDetector(
+                        onTap: onTap,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                          decoration: BoxDecoration(
+                            color: _C.red,
+                            borderRadius: BorderRadius.circular(50),
+                            boxShadow: [
+                              BoxShadow(color: _C.red.withValues(alpha: 0.45), blurRadius: 20, spreadRadius: 0, offset: const Offset(0, 6)),
+                              BoxShadow(color: _C.red.withValues(alpha: 0.2), blurRadius: 40, spreadRadius: 4),
+                            ],
+                          ),
+                          child: Text(
+                            t(code, 'heroCta'),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: 1.2,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                  // Secondary outline — dark text on white pill (inkDark in glass theme = near-white, wrong here)
-                  OutlinedButton(
-                    onPressed: onTap,
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: const Color(0xFF1A2340),
-                      side: const BorderSide(color: Color(0xFF1A2340), width: 1.2),
-                      padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 16),
-                      textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(50)),
-                      backgroundColor: _C.white,
-                    ),
-                    child: Text(t(code, 'heroSecondary')),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 36),
+                  const SizedBox(height: 28),
 
-              // ── Proof chips row ──
-              Wrap(
-                alignment: WrapAlignment.center,
-                spacing: 20,
-                runSpacing: 8,
-                children: [
-                  _ProofChip(icon: Icons.star_rounded, iconColor: const Color(0xFFF59E0B), label: t(code, 'proof1'), sublabel: code == 'he' ? 'דירוג' : 'Rating'),
-                  _ProofChip(icon: Icons.bolt_rounded, iconColor: _C.accent, label: t(code, 'proof2'), sublabel: code == 'he' ? 'תגובה' : code == 'ru' ? 'Ответ' : 'Response'),
-                  _ProofChip(
-                    icon: Icons.lock_rounded,
-                    iconColor: const Color(0xFF22C55E),
-                    label: t(code, 'proof3'),
-                    sublabel: code == 'he' ? 'הצפנה' : code == 'ru' ? 'Защита' : 'Encrypted',
+                  // ── Proof chips row ──
+                  Wrap(
+                    alignment: WrapAlignment.center,
+                    spacing: 20,
+                    runSpacing: 8,
+                    children: [
+                      _ProofChip(icon: Icons.star_rounded, iconColor: const Color(0xFFF59E0B), label: t(code, 'proof1'), sublabel: code == 'he' ? 'דירוג' : 'Rating'),
+                      _ProofChip(icon: Icons.bolt_rounded, iconColor: _C.accent, label: t(code, 'proof2'), sublabel: code == 'he' ? 'תגובה' : code == 'ru' ? 'Ответ' : 'Response'),
+                      _ProofChip(
+                        icon: Icons.lock_rounded,
+                        iconColor: const Color(0xFF22C55E),
+                        label: t(code, 'proof3'),
+                        sublabel: code == 'he' ? 'הצפנה' : code == 'ru' ? 'Защита' : 'Encrypted',
+                      ),
+                    ],
                   ),
                 ],
               ),
-            ],
+            ),
           ),
         ),
       ),
@@ -714,9 +732,13 @@ class _StatsBar extends StatelessWidget {
       (t(code,'stat4num'), t(code,'stat4lbl')),
     ];
     return Container(
-      decoration: const BoxDecoration(
-        color: _C.white,
-        border: Border.symmetric(horizontal: BorderSide(color: _C.border)),
+      decoration: BoxDecoration(
+        color: VetoGlassTokens.glassFillStrong,
+        border: Border.symmetric(
+          horizontal: BorderSide(
+            color: VetoGlassTokens.neonCyan.withValues(alpha: 0.18),
+          ),
+        ),
       ),
       padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 24),
       child: Center(
@@ -760,18 +782,15 @@ class _StackSection extends StatelessWidget {
     return _Section(
       eyebrow: code == 'he' ? 'איך זה עובד' : code == 'ru' ? 'Как это работает' : 'How it works',
       title: t(code, 'stackTitle'),
-      child: Container(
-        decoration: BoxDecoration(
-          color: _C.white,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: _C.border),
-          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 16, offset: const Offset(0, 6))],
-        ),
-        clipBehavior: Clip.antiAlias,
+      child: VetoGlassBlur(
+        borderRadius: 20,
+        sigma: 16,
+        fill: VetoGlassTokens.glassFillStrong,
+        borderColor: VetoGlassTokens.glassBorderBright,
         child: Column(
           children: [
             for (var i = 0; i < steps.length; i++) ...[
-              if (i > 0) const Divider(height: 1, color: _C.border),
+              if (i > 0) const Divider(height: 1, color: VetoGlassTokens.glassBorder),
               _StackRow(icon: steps[i].$1, title: steps[i].$2, body: steps[i].$3, step: '0${i+1}'),
             ],
           ],
@@ -812,7 +831,7 @@ class _StackRow extends StatelessWidget {
 }
 
 // ══════════════════════════════════════════════════════════════════
-//  FEATURES — 3 white cards (matches mockup exactly)
+//  FEATURES — dark glass cards
 // ══════════════════════════════════════════════════════════════════
 class _FeaturesSection extends StatelessWidget {
   final String code;
@@ -857,31 +876,29 @@ class _FeatureCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(28),
-      decoration: BoxDecoration(
-        color: _C.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: _C.border),
-        boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 12, offset: const Offset(0, 4)),
-        ],
-      ),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Container(
-          width: 48, height: 48,
-          decoration: BoxDecoration(
-            color: iconColor.withValues(alpha: 0.10),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: iconColor.withValues(alpha: 0.20)),
+    return VetoGlassBlur(
+      borderRadius: 16,
+      sigma: 14,
+      fill: VetoGlassTokens.glassFillStrong,
+      borderColor: VetoGlassTokens.glassBorder,
+      child: Padding(
+        padding: const EdgeInsets.all(28),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Container(
+            width: 48, height: 48,
+            decoration: BoxDecoration(
+              color: iconColor.withValues(alpha: 0.10),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: iconColor.withValues(alpha: 0.20)),
+            ),
+            child: Icon(icon, color: iconColor, size: 24),
           ),
-          child: Icon(icon, color: iconColor, size: 24),
-        ),
-        const SizedBox(height: 18),
-        Text(title, style: const TextStyle(color: _C.inkDark, fontSize: 16, fontWeight: FontWeight.w800)),
-        const SizedBox(height: 8),
-        Text(body, style: const TextStyle(color: _C.inkLight, fontSize: 14, height: 1.65)),
-      ]),
+          const SizedBox(height: 18),
+          Text(title, style: const TextStyle(color: _C.inkDark, fontSize: 16, fontWeight: FontWeight.w800)),
+          const SizedBox(height: 8),
+          Text(body, style: const TextStyle(color: _C.inkLight, fontSize: 14, height: 1.65)),
+        ]),
+      ),
     );
   }
 }
@@ -908,59 +925,72 @@ class _PricingSection extends StatelessWidget {
       child: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 520),
-          child: Container(
-            padding: const EdgeInsets.all(32),
-            decoration: BoxDecoration(
-              color: _C.white,
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: _C.accent.withValues(alpha: 0.30), width: 1.5),
-              boxShadow: [
-                BoxShadow(color: _C.accent.withValues(alpha: 0.08), blurRadius: 24),
-                BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 12, offset: const Offset(0, 4)),
-              ],
-            ),
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(t(code,'pricingTitle').toUpperCase(), style: const TextStyle(color: _C.accent, fontSize: 11, fontWeight: FontWeight.w800, letterSpacing: 2)),
-              const SizedBox(height: 12),
-              Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
-                Text(t(code,'pricingPrice'), style: const TextStyle(color: _C.inkDark, fontSize: 52, fontWeight: FontWeight.w900, height: 1)),
-                const SizedBox(width: 8),
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: Text(t(code,'pricingPeriod'), style: const TextStyle(color: _C.inkLight, fontSize: 15)),
-                ),
-              ]),
-              const SizedBox(height: 8),
-              Container(height: 2, width: 44, decoration: BoxDecoration(
-                gradient: const LinearGradient(colors: [_C.accent, Colors.transparent]),
-                borderRadius: BorderRadius.circular(1),
-              )),
-              const SizedBox(height: 24),
-              for (var i = 0; i < lines.length; i++)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: Row(children: [
-                    Icon(Icons.check_circle_rounded, color: lineColors[i], size: 18),
-                    const SizedBox(width: 10),
-                    Expanded(child: Text(lines[i], style: const TextStyle(color: _C.inkMid, fontSize: 14))),
+          child: VetoGlassBlur(
+            borderRadius: 20,
+            sigma: 18,
+            fill: VetoGlassTokens.glassFillStrong,
+            borderColor: _C.accent.withValues(alpha: 0.35),
+            child: Padding(
+              padding: const EdgeInsets.all(32),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(t(code,'pricingTitle').toUpperCase(), style: const TextStyle(color: _C.accent, fontSize: 11, fontWeight: FontWeight.w800, letterSpacing: 2)),
+                  const SizedBox(height: 12),
+                  Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
+                    Text(t(code,'pricingPrice'), style: const TextStyle(color: _C.inkDark, fontSize: 52, fontWeight: FontWeight.w900, height: 1)),
+                    const SizedBox(width: 8),
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: Text(t(code,'pricingPeriod'), style: const TextStyle(color: _C.inkLight, fontSize: 15)),
+                    ),
                   ]),
-                ),
-              const SizedBox(height: 8),
-              SizedBox(
-                width: double.infinity,
-                child: FilledButton(
-                  onPressed: onTap,
-                  style: FilledButton.styleFrom(
-                    backgroundColor: _C.accent,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  const SizedBox(height: 8),
+                  Container(height: 2, width: 44, decoration: BoxDecoration(
+                    gradient: const LinearGradient(colors: [_C.accent, Colors.transparent]),
+                    borderRadius: BorderRadius.circular(1),
+                  )),
+                  const SizedBox(height: 24),
+                  for (var i = 0; i < lines.length; i++)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: Row(children: [
+                        Icon(Icons.check_circle_rounded, color: lineColors[i], size: 18),
+                        const SizedBox(width: 10),
+                        Expanded(child: Text(lines[i], style: const TextStyle(color: _C.inkMid, fontSize: 14))),
+                      ]),
+                    ),
+                  const SizedBox(height: 8),
+                  GestureDetector(
+                    onTap: onTap,
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      decoration: BoxDecoration(
+                        gradient: VetoGlassTokens.neonButton,
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: [
+                          BoxShadow(
+                            color: VetoGlassTokens.neonCyan.withValues(alpha: 0.25),
+                            blurRadius: 16,
+                            offset: const Offset(0, 6),
+                          ),
+                        ],
+                      ),
+                      alignment: Alignment.center,
+                      child: Text(
+                        code == 'he' ? 'התחל עכשיו' : code == 'ru' ? 'Начать' : 'Get started',
+                        style: const TextStyle(
+                          color: Color(0xFF041018),
+                          fontSize: 15,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ),
                   ),
-                  child: Text(code == 'he' ? 'התחל עכשיו' : code == 'ru' ? 'Начать' : 'Get started'),
-                ),
+                ],
               ),
-            ]),
+            ),
           ),
         ),
       ),
@@ -1014,26 +1044,26 @@ class _ReviewCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: _C.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: _C.border),
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 10, offset: const Offset(0, 4))],
-      ),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Row(children: [
-          for (int i = 0; i < r.rating; i++)
-            const Icon(Icons.star_rounded, color: Color(0xFFF59E0B), size: 14),
-          const Spacer(),
-          Text(r.date, style: const TextStyle(color: _C.inkLight, fontSize: 11)),
+    return VetoGlassBlur(
+      borderRadius: 16,
+      sigma: 12,
+      fill: VetoGlassTokens.glassFillStrong,
+      borderColor: VetoGlassTokens.glassBorder,
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Row(children: [
+            for (int i = 0; i < r.rating; i++)
+              const Icon(Icons.star_rounded, color: Color(0xFFF59E0B), size: 14),
+            const Spacer(),
+            Text(r.date, style: const TextStyle(color: _C.inkLight, fontSize: 11)),
+          ]),
+          const SizedBox(height: 12),
+          Text('"${r.text}"', style: const TextStyle(color: _C.inkMid, fontSize: 13, height: 1.65, fontStyle: FontStyle.italic)),
+          const SizedBox(height: 14),
+          Text(r.name, style: const TextStyle(color: _C.inkDark, fontSize: 13, fontWeight: FontWeight.w800)),
         ]),
-        const SizedBox(height: 12),
-        Text('"${r.text}"', style: const TextStyle(color: _C.inkMid, fontSize: 13, height: 1.65, fontStyle: FontStyle.italic)),
-        const SizedBox(height: 14),
-        Text(r.name, style: const TextStyle(color: _C.inkDark, fontSize: 13, fontWeight: FontWeight.w800)),
-      ]),
+      ),
     );
   }
 }
@@ -1054,9 +1084,11 @@ class _CtaSection extends StatelessWidget {
       width: double.infinity,
       margin: const EdgeInsets.only(top: 0),
       padding: EdgeInsets.symmetric(horizontal: 24, vertical: compact ? 60 : 80),
-      decoration: const BoxDecoration(
-        color: _C.white,
-        border: Border(top: BorderSide(color: _C.border)),
+      decoration: BoxDecoration(
+        color: VetoGlassTokens.glassFill,
+        border: Border(
+          top: BorderSide(color: VetoGlassTokens.neonCyan.withValues(alpha: 0.15)),
+        ),
       ),
       child: Center(
         child: ConstrainedBox(
@@ -1087,16 +1119,39 @@ class _CtaSection extends StatelessWidget {
               style: const TextStyle(color: _C.inkLight, fontSize: 15, height: 1.7),
             ),
             const SizedBox(height: 32),
-            FilledButton.icon(
-              onPressed: onTap,
-              icon: const Icon(Icons.bolt_rounded, size: 18),
-              label: Text(t(code, 'ctaBtn')),
-              style: FilledButton.styleFrom(
-                backgroundColor: _C.accent,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 18),
-                textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            Center(
+              child: GestureDetector(
+                onTap: onTap,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 16),
+                  decoration: BoxDecoration(
+                    gradient: VetoGlassTokens.neonButton,
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: VetoGlassTokens.neonCyan.withValues(alpha: 0.28),
+                        blurRadius: 20,
+                        offset: const Offset(0, 8),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.bolt_rounded, size: 18, color: Color(0xFF041018)),
+                      const SizedBox(width: 8),
+                      Text(
+                        t(code, 'ctaBtn'),
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w800,
+                          color: Color(0xFF041018),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ),
           ]),
@@ -1117,8 +1172,10 @@ class _Footer extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 24),
-      decoration: const BoxDecoration(
-        border: Border(top: BorderSide(color: _C.border)),
+      decoration: BoxDecoration(
+        border: Border(
+          top: BorderSide(color: VetoGlassTokens.glassBorder),
+        ),
       ),
       child: Text(
         _T.get(code, 'footer'),

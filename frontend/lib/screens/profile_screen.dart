@@ -171,15 +171,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         Center(
                           child: Container(
                             width: 80, height: 80,
-                            decoration: BoxDecoration(
-                              gradient: const LinearGradient(
-                                colors: [Color(0xFF5B8FFF), Color(0xFF00C9B1)],
-                                begin: Alignment.topLeft, end: Alignment.bottomRight,
-                              ),
+                            decoration: const BoxDecoration(
+                              gradient: VetoGlassTokens.neonButton,
                               shape: BoxShape.circle,
-                              boxShadow: [BoxShadow(
-                                  color: const Color(0xFF5B8FFF).withValues(alpha: 0.25),
-                                  blurRadius: 20, spreadRadius: 0)],
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Color(0x4000E5FF),
+                                  blurRadius: 20,
+                                  spreadRadius: 0,
+                                ),
+                              ],
                             ),
                             child: Center(
                               child: Text(
@@ -188,7 +189,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     : '?',
                                 style: const TextStyle(
                                   fontSize: 32, fontWeight: FontWeight.w900,
-                                  color: Colors.white,
+                                  color: Color(0xFF041018),
                                 ),
                               ),
                             ),
@@ -212,14 +213,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 16, vertical: 14),
                               decoration: BoxDecoration(
-                                color: VetoPalette.bg,
+                                color: const Color(0xFF0F1A24),
                                 borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: VetoPalette.border),
+                                border: Border.all(color: VetoGlassTokens.glassBorder),
                               ),
                               child: Text(
                                 _phone ?? '—',
                                 style: const TextStyle(
-                                    color: VetoPalette.textMuted),
+                                    color: VetoGlassTokens.textMuted),
                               ),
                             ),
                             const SizedBox(height: 20),
@@ -228,9 +229,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 16, vertical: 14),
                               decoration: BoxDecoration(
-                                color: VetoPalette.bg,
+                                color: const Color(0xFF0F1A24),
                                 borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: VetoPalette.border),
+                                border: Border.all(color: VetoGlassTokens.glassBorder),
                               ),
                               child: Row(
                                 children: [
@@ -241,13 +242,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                             ? Icons.admin_panel_settings_outlined
                                             : Icons.person_outline,
                                     size: 16,
-                                    color: VetoPalette.primary,
+                                    color: VetoGlassTokens.neonCyan,
                                   ),
                                   const SizedBox(width: 8),
                                   Text(
                                     _roleLabel(code, _role),
                                     style: const TextStyle(
-                                        color: VetoPalette.textMuted),
+                                        color: VetoGlassTokens.textMuted),
                                   ),
                                 ],
                               ),
@@ -258,9 +259,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 16, vertical: 14),
                               decoration: BoxDecoration(
-                                color: VetoPalette.bg,
+                                color: const Color(0xFF0F1A24),
                                 borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: VetoPalette.border),
+                                border: Border.all(color: VetoGlassTokens.glassBorder),
                               ),
                               child: const Align(
                                 alignment: Alignment.centerLeft,
@@ -280,8 +281,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               style: const TextStyle(fontSize: 13),
                             ),
                             style: OutlinedButton.styleFrom(
-                              foregroundColor: VetoPalette.primary,
-                              side: BorderSide(color: VetoPalette.primary.withValues(alpha: 0.4)),
+                              foregroundColor: VetoGlassTokens.neonCyan,
+                              side: BorderSide(color: VetoGlassTokens.neonCyan.withValues(alpha: 0.4)),
                               padding: const EdgeInsets.symmetric(vertical: 12),
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                             ),
@@ -295,8 +296,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               style: const TextStyle(fontSize: 13),
                             ),
                             style: OutlinedButton.styleFrom(
-                              foregroundColor: VetoPalette.primary,
-                              side: BorderSide(color: VetoPalette.primary.withValues(alpha: 0.4)),
+                              foregroundColor: VetoGlassTokens.neonCyan,
+                              side: BorderSide(color: VetoGlassTokens.neonCyan.withValues(alpha: 0.4)),
                               padding: const EdgeInsets.symmetric(vertical: 12),
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                             ),
@@ -308,12 +309,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           icon: _saving
                               ? const SizedBox(width: 16, height: 16,
                                   child: CircularProgressIndicator(
-                                      strokeWidth: 2, color: Colors.white))
-                              : const Icon(Icons.check_rounded, size: 18),
-                          label: Text(_t(code, 'save')),
+                                      strokeWidth: 2, color: Color(0xFF041018)))
+                              : const Icon(Icons.check_rounded, size: 18, color: Color(0xFF041018)),
+                          label: Text(_t(code, 'save'),
+                            style: const TextStyle(color: Color(0xFF041018)),
+                          ),
                           style: FilledButton.styleFrom(
-                            backgroundColor: VetoPalette.primary,
-                            foregroundColor: Colors.white,
+                            backgroundColor: VetoGlassTokens.neonCyan,
+                            foregroundColor: const Color(0xFF041018),
                             padding: const EdgeInsets.symmetric(vertical: 16),
                             textStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
                             shape: RoundedRectangleBorder(
@@ -374,7 +377,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       child: Text(
         text.toUpperCase(),
         style: const TextStyle(
-          color: VetoPalette.primary,
+          color: VetoGlassTokens.neonCyan,
           fontSize: 10,
           fontWeight: FontWeight.w800,
           letterSpacing: 2,
@@ -384,17 +387,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildCard({required List<Widget> children}) {
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE2E8F8)),
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, 3))],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: children,
+    return VetoGlassBlur(
+      borderRadius: 16,
+      sigma: 14,
+      fill: VetoGlassTokens.glassFillStrong,
+      borderColor: VetoGlassTokens.glassBorder,
+      child: Padding(
+        padding: const EdgeInsets.all(18),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: children,
+        ),
       ),
     );
   }

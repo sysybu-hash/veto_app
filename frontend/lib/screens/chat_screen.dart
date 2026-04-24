@@ -339,7 +339,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
     await showModalBottomSheet<void>(
       context: context,
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(0xE6121824),
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
@@ -366,7 +366,7 @@ class _ChatScreenState extends State<ChatScreen> {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
                 child: Text(_t('newChat'),
-                    style: const TextStyle(color: VetoPalette.text,
+                    style: const TextStyle(color: VetoGlassTokens.textPrimary,
                         fontWeight: FontWeight.w700, fontSize: 17)),
               ),
               Expanded(
@@ -374,7 +374,7 @@ class _ChatScreenState extends State<ChatScreen> {
                     ? const Center(child: CircularProgressIndicator())
                     : partners.isEmpty
                         ? Center(child: Text(_t('noPartners'),
-                            style: const TextStyle(color: VetoPalette.textMuted)))
+                            style: const TextStyle(color: VetoGlassTokens.textMuted)))
                         : ListView.builder(
                             controller: sc,
                             itemCount: partners.length,
@@ -390,10 +390,10 @@ class _ChatScreenState extends State<ChatScreen> {
                                           fontWeight: FontWeight.w700)),
                                 ),
                                 title: Text(p.name,
-                                    style: const TextStyle(color: VetoPalette.text)),
+                                    style: const TextStyle(color: VetoGlassTokens.textPrimary)),
                                 subtitle: Text(p.role,
                                     style: const TextStyle(
-                                        color: VetoPalette.textMuted, fontSize: 12)),
+                                        color: VetoGlassTokens.textMuted, fontSize: 12)),
                                 onTap: () {
                                   Navigator.pop(ctx);
                                   setState(() {
@@ -505,7 +505,7 @@ class _ChatScreenState extends State<ChatScreen> {
                     const SizedBox(height: 16),
                     Text(_t('noConversations'),
                         style: const TextStyle(
-                            color: VetoPalette.textMuted,
+                            color: VetoGlassTokens.textMuted,
                             fontSize: 16,
                             fontWeight: FontWeight.w500)),
                     const SizedBox(height: 12),
@@ -514,7 +514,9 @@ class _ChatScreenState extends State<ChatScreen> {
                       icon: const Icon(Icons.add_rounded),
                       label: Text(_t('newChat')),
                       style: FilledButton.styleFrom(
-                          backgroundColor: VetoPalette.primary),
+                          backgroundColor: VetoGlassTokens.neonCyan,
+                          foregroundColor: const Color(0xFF041018),
+                      ),
                     ),
                   ]),
                 )
@@ -523,7 +525,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   child: ListView.separated(
                     itemCount: _conversations.length,
                     separatorBuilder: (_, __) =>
-                        const Divider(height: 1, color: VetoPalette.border),
+                        const Divider(height: 1, color: VetoGlassTokens.glassBorder),
                     itemBuilder: (_, i) => _buildConvTile(_conversations[i]),
                   ),
                 ),
@@ -537,32 +539,32 @@ class _ChatScreenState extends State<ChatScreen> {
 
     return ListTile(
       selected: isActive,
-      selectedTileColor: VetoPalette.primary.withValues(alpha: 0.08),
+      selectedTileColor: VetoGlassTokens.neonCyan.withValues(alpha: 0.12),
       tileColor: Colors.transparent,
       leading: CircleAvatar(
-        backgroundColor: VetoPalette.primary.withValues(alpha: 0.15),
+        backgroundColor: VetoGlassTokens.neonCyan.withValues(alpha: 0.15),
         child: Text(initial,
             style: const TextStyle(
-                color: VetoPalette.primary, fontWeight: FontWeight.w700)),
+                color: VetoGlassTokens.neonCyan, fontWeight: FontWeight.w700)),
       ),
       title: Row(children: [
         Expanded(
           child: Text(c.partnerName,
               style: const TextStyle(
-                  color: VetoPalette.text,
+                  color: VetoGlassTokens.textPrimary,
                   fontWeight: FontWeight.w600,
                   fontSize: 14),
               maxLines: 1,
               overflow: TextOverflow.ellipsis),
         ),
-        Text(ts, style: const TextStyle(color: VetoPalette.textSubtle, fontSize: 11)),
+        Text(ts, style: const TextStyle(color: VetoGlassTokens.textSubtle, fontSize: 11)),
       ]),
       subtitle: c.lastMessage != null
           ? Text(c.lastMessage!,
               style: TextStyle(
                   color: c.unreadCount > 0
-                      ? VetoPalette.text
-                      : VetoPalette.textMuted,
+                      ? VetoGlassTokens.textPrimary
+                      : VetoGlassTokens.textMuted,
                   fontSize: 13,
                   fontWeight: c.unreadCount > 0
                       ? FontWeight.w600
@@ -574,11 +576,11 @@ class _ChatScreenState extends State<ChatScreen> {
           ? Container(
               padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
               decoration: BoxDecoration(
-                  color: VetoPalette.primary,
+                  color: VetoGlassTokens.neonCyan,
                   borderRadius: BorderRadius.circular(20)),
               child: Text('${c.unreadCount}',
                   style: const TextStyle(
-                      color: Colors.white,
+                      color: Color(0xFF041018),
                       fontSize: 11,
                       fontWeight: FontWeight.w700)),
             )
@@ -611,7 +613,10 @@ class _ChatScreenState extends State<ChatScreen> {
             onPressed: _showNewChatPicker,
             icon: const Icon(Icons.add_rounded),
             label: Text(_t('newChat')),
-            style: FilledButton.styleFrom(backgroundColor: VetoPalette.primary),
+            style: FilledButton.styleFrom(
+                backgroundColor: VetoGlassTokens.neonCyan,
+                foregroundColor: const Color(0xFF041018),
+            ),
           ),
         ]),
       );
@@ -711,14 +716,14 @@ class _ChatScreenState extends State<ChatScreen> {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 12),
       child: Row(children: [
-        const Expanded(child: Divider(color: VetoPalette.border)),
+        const Expanded(child: Divider(color: VetoGlassTokens.glassBorder)),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12),
           child: Text(label,
               style: const TextStyle(
-                  color: VetoPalette.textSubtle, fontSize: 11)),
+                  color: VetoGlassTokens.textMuted, fontSize: 11)),
         ),
-        const Expanded(child: Divider(color: VetoPalette.border)),
+        const Expanded(child: Divider(color: VetoGlassTokens.glassBorder)),
       ]),
     );
   }
@@ -734,14 +739,18 @@ class _ChatScreenState extends State<ChatScreen> {
             ? () => showDialog<void>(
                   context: context,
                   builder: (ctx) => AlertDialog(
-                    backgroundColor: VetoPalette.surface,
+                    backgroundColor: const Color(0xE6121824),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                      side: const BorderSide(color: VetoGlassTokens.glassBorder),
+                    ),
                     title: Text(_t('deleteMsg'),
-                        style: const TextStyle(color: VetoPalette.text)),
+                        style: const TextStyle(color: VetoGlassTokens.textPrimary)),
                     actions: [
                       TextButton(
                         onPressed: () => Navigator.pop(ctx),
                         child: const Text('Cancel',
-                            style: TextStyle(color: VetoPalette.textMuted)),
+                            style: TextStyle(color: VetoGlassTokens.textMuted)),
                       ),
                       FilledButton(
                         onPressed: () {
@@ -762,8 +771,8 @@ class _ChatScreenState extends State<ChatScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
           decoration: BoxDecoration(
             color: msg.isOwn
-                ? VetoPalette.primary
-                : VetoPalette.surface,
+                ? VetoGlassTokens.neonBlue
+                : VetoGlassTokens.glassFillStrong,
             borderRadius: BorderRadius.only(
               topLeft: const Radius.circular(16),
               topRight: const Radius.circular(16),
@@ -772,7 +781,15 @@ class _ChatScreenState extends State<ChatScreen> {
             ),
             border: msg.isOwn
                 ? null
-                : Border.all(color: VetoPalette.border),
+                : Border.all(color: VetoGlassTokens.glassBorder),
+            boxShadow: msg.isOwn
+                ? null
+                : [
+                    BoxShadow(
+                      color: VetoGlassTokens.neonCyan.withValues(alpha: 0.06),
+                      blurRadius: 12,
+                    ),
+                  ],
           ),
           child: Column(
             crossAxisAlignment: msg.isOwn
@@ -781,15 +798,17 @@ class _ChatScreenState extends State<ChatScreen> {
             children: [
               Text(msg.text,
                   style: TextStyle(
-                      color: msg.isOwn ? Colors.white : VetoPalette.text,
+                      color: msg.isOwn
+                          ? VetoGlassTokens.textPrimary
+                          : VetoGlassTokens.textPrimary,
                       fontSize: 14,
                       height: 1.45)),
               const SizedBox(height: 3),
               Text(time,
                   style: TextStyle(
                       color: msg.isOwn
-                          ? Colors.white.withValues(alpha: 0.65)
-                          : VetoPalette.textSubtle,
+                          ? VetoGlassTokens.textPrimary.withValues(alpha: 0.7)
+                          : VetoGlassTokens.textSubtle,
                       fontSize: 10)),
             ],
           ),
@@ -807,27 +826,28 @@ class _ChatScreenState extends State<ChatScreen> {
         bottom: MediaQuery.of(context).viewInsets.bottom + 12,
       ),
       decoration: const BoxDecoration(
-        color: VetoPalette.surface,
-        border: Border(top: BorderSide(color: VetoPalette.border)),
+        color: Color(0x18FFFFFF),
+        border: Border(top: BorderSide(color: VetoGlassTokens.glassBorder)),
       ),
       child: Row(children: [
         Expanded(
           child: TextField(
             controller: _msgCtrl,
-            style: const TextStyle(color: VetoPalette.text, fontSize: 14),
+            style: const TextStyle(color: VetoGlassTokens.textPrimary, fontSize: 14),
+            cursorColor: VetoGlassTokens.neonCyan,
             maxLines: 4,
             minLines: 1,
             textCapitalization: TextCapitalization.sentences,
             decoration: InputDecoration(
               hintText: _t('typeMessage'),
-              hintStyle: const TextStyle(color: VetoPalette.textMuted),
+              hintStyle: const TextStyle(color: VetoGlassTokens.textMuted),
               filled: true,
-              fillColor: VetoPalette.surface,
+              fillColor: VetoGlassTokens.glassFill,
               contentPadding:
                   const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(24),
-                borderSide: BorderSide.none,
+                borderSide: BorderSide(color: VetoGlassTokens.glassBorder),
               ),
             ),
             onSubmitted: (_) => _send(),
@@ -839,7 +859,8 @@ class _ChatScreenState extends State<ChatScreen> {
           child: FilledButton(
             onPressed: _sending ? null : _send,
             style: FilledButton.styleFrom(
-              backgroundColor: VetoPalette.primary,
+              backgroundColor: VetoGlassTokens.neonCyan,
+              foregroundColor: const Color(0xFF041018),
               shape: const CircleBorder(),
               padding: const EdgeInsets.all(14),
               minimumSize: const Size(48, 48),
@@ -849,8 +870,8 @@ class _ChatScreenState extends State<ChatScreen> {
                     width: 18,
                     height: 18,
                     child: CircularProgressIndicator(
-                        strokeWidth: 2, color: Colors.white))
-                : const Icon(Icons.send_rounded, size: 18, color: Colors.white),
+                        strokeWidth: 2, color: Color(0xFF041018)))
+                : const Icon(Icons.send_rounded, size: 18, color: Color(0xFF041018)),
           ),
         ),
       ]),

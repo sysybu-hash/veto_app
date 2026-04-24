@@ -1139,6 +1139,8 @@ class _VetoScreenState extends State<VetoScreen> {
                     SizedBox(height: compact ? 14 : 18),
                     _sosButton(compact),
                     SizedBox(height: compact ? 14 : 18),
+                    _availableLawyersStrip(isRtl, compact),
+                    SizedBox(height: compact ? 14 : 18),
                     _securityBar(),
                     SizedBox(height: compact ? 14 : 18),
                     _secLabel(isRtl
@@ -1226,7 +1228,7 @@ class _VetoScreenState extends State<VetoScreen> {
     ),
   );
 
-  // ── SOS Button with concentric rings ──────────────────────
+  // ── SOS Button with concentric rings (Set 5: dark glass stage) ──
   Widget _sosButton(bool compact) {
     final orbSize = compact ? 148.0 : 168.0;
     final ringOuter = orbSize + 36;
@@ -1236,233 +1238,376 @@ class _VetoScreenState extends State<VetoScreen> {
       label: _langKey == 'he' ? 'לחץ להפעלת מצוקה ושיגור עורך דין'
           : _langKey == 'ru' ? 'Нажмите для вызова адвоката'
           : 'Tap to dispatch a lawyer',
-      child: Column(
-        children: [
-          GestureDetector(
-            onTap: _isDispatching ? null : _onSosOrbTapped,
-            child: SizedBox(
-              width: ringOuter + 12,
-              height: ringOuter + 12,
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  // Outermost ring
-                  Container(
-                    width: ringOuter + 10,
-                    height: ringOuter + 10,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: const Color(0xFFFF3B3B).withValues(alpha: 0.08),
-                        width: 8,
+      child: VetoGlassBlur(
+        borderRadius: 32,
+        sigma: 20,
+        fill: const Color(0x2EFFFFFF),
+        borderColor: VetoGlassTokens.neonCyan.withValues(alpha: 0.22),
+        child: Padding(
+          padding: EdgeInsets.symmetric(vertical: compact ? 20 : 24, horizontal: 12),
+          child: Column(
+            children: [
+              GestureDetector(
+                onTap: _isDispatching ? null : _onSosOrbTapped,
+                child: SizedBox(
+                  width: ringOuter + 12,
+                  height: ringOuter + 12,
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      // Outermost ring
+                      Container(
+                        width: ringOuter + 10,
+                        height: ringOuter + 10,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: const Color(0xFFFF3B3B).withValues(alpha: 0.08),
+                            width: 8,
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
-                  // Middle ring
-                  Container(
-                    width: ringMid + 8,
-                    height: ringMid + 8,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: const Color(0xFFFF3B3B).withValues(alpha: 0.16),
-                        width: 6,
+                      // Middle ring
+                      Container(
+                        width: ringMid + 8,
+                        height: ringMid + 8,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: const Color(0xFFFF3B3B).withValues(alpha: 0.16),
+                            width: 6,
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
-                  // Inner ring
-                  Container(
-                    width: orbSize + 10,
-                    height: orbSize + 10,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: const Color(0xFFFF3B3B).withValues(alpha: 0.28),
-                        width: 4,
+                      // Inner ring
+                      Container(
+                        width: orbSize + 10,
+                        height: orbSize + 10,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: const Color(0xFFFF3B3B).withValues(alpha: 0.28),
+                            width: 4,
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
-                  // Core orb
-                  Container(
-                    width: orbSize,
-                    height: orbSize,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      boxShadow: _isDispatching
-                          ? [
-                              BoxShadow(
-                                color: const Color(0xFFFF4B4B).withValues(alpha: 0.30),
-                                blurRadius: 40,
-                                spreadRadius: 6,
-                              ),
-                            ]
-                          : [
-                              BoxShadow(
-                                color: const Color(0xFFFF4B4B).withValues(alpha: 0.22),
-                                blurRadius: 60,
-                                spreadRadius: 18,
-                              ),
-                              BoxShadow(
-                                color: const Color(0xFFFF4B4B).withValues(alpha: 0.45),
-                                blurRadius: 28,
-                                spreadRadius: 6,
-                              ),
-                              BoxShadow(
-                                color: const Color(0xFFFF4B4B).withValues(alpha: 0.65),
-                                blurRadius: 12,
-                                spreadRadius: 1,
-                              ),
-                            ],
-                    ),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        gradient: RadialGradient(
-                          colors: _isDispatching
+                      // Core orb
+                      Container(
+                        width: orbSize,
+                        height: orbSize,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          boxShadow: _isDispatching
                               ? [
-                                  const Color(0xFFFF6B6B).withValues(alpha: 0.6),
-                                  const Color(0xFFCC2222).withValues(alpha: 0.4),
+                                  BoxShadow(
+                                    color: const Color(0xFFFF4B4B).withValues(alpha: 0.30),
+                                    blurRadius: 40,
+                                    spreadRadius: 6,
+                                  ),
                                 ]
-                              : const [
-                                  Color(0xFFFF7777),
-                                  Color(0xFFFF3333),
-                                  Color(0xFFBB1111),
+                              : [
+                                  BoxShadow(
+                                    color: const Color(0xFFFF4B4B).withValues(alpha: 0.22),
+                                    blurRadius: 60,
+                                    spreadRadius: 18,
+                                  ),
+                                  BoxShadow(
+                                    color: const Color(0xFFFF4B4B).withValues(alpha: 0.45),
+                                    blurRadius: 28,
+                                    spreadRadius: 6,
+                                  ),
+                                  BoxShadow(
+                                    color: const Color(0xFFFF4B4B).withValues(alpha: 0.65),
+                                    blurRadius: 12,
+                                    spreadRadius: 1,
+                                  ),
                                 ],
-                          stops: _isDispatching ? const [0.0, 1.0] : const [0.0, 0.55, 1.0],
                         ),
-                        border: Border.all(
-                          color: Colors.white.withValues(alpha: _isDispatching ? 0.2 : 0.38),
-                          width: 2.5,
-                        ),
-                      ),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          if (_isDispatching)
-                            const SizedBox(
-                              width: 30, height: 30,
-                              child: CircularProgressIndicator(
-                                  color: Colors.white, strokeWidth: 2.5),
-                            )
-                          else
-                            const Text(
-                              'SOS',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 36,
-                                fontWeight: FontWeight.w900,
-                                letterSpacing: 3,
-                                shadows: [Shadow(color: Colors.white54, blurRadius: 14)],
-                              ),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            gradient: RadialGradient(
+                              colors: _isDispatching
+                                  ? [
+                                      const Color(0xFFFF6B6B).withValues(alpha: 0.6),
+                                      const Color(0xFFCC2222).withValues(alpha: 0.4),
+                                    ]
+                                  : const [
+                                      Color(0xFFFF7777),
+                                      Color(0xFFFF3333),
+                                      Color(0xFFBB1111),
+                                    ],
+                              stops: _isDispatching ? const [0.0, 1.0] : const [0.0, 0.55, 1.0],
                             ),
-                          const SizedBox(height: 4),
-                          Text(
-                            _isDispatching
-                                ? (_langKey == 'he' ? 'מחפש...'
-                                    : _langKey == 'ru' ? 'Поиск...' : 'Searching...')
-                                : (_langKey == 'he' ? 'עזרה מיידית'
-                                    : _langKey == 'ru' ? 'ПОМОЩЬ' : 'EMERGENCY'),
-                            style: TextStyle(
-                              color: Colors.white.withValues(alpha: 0.9),
-                              fontSize: 11,
-                              fontWeight: FontWeight.w700,
-                              letterSpacing: 1.5,
+                            border: Border.all(
+                              color: Colors.white.withValues(alpha: _isDispatching ? 0.2 : 0.38),
+                              width: 2.5,
                             ),
                           ),
-                        ],
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              if (_isDispatching)
+                                const SizedBox(
+                                  width: 30, height: 30,
+                                  child: CircularProgressIndicator(
+                                      color: Colors.white, strokeWidth: 2.5),
+                                )
+                              else
+                                const Text(
+                                  'SOS',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 36,
+                                    fontWeight: FontWeight.w900,
+                                    letterSpacing: 3,
+                                    shadows: [Shadow(color: Colors.white54, blurRadius: 14)],
+                                  ),
+                                ),
+                              const SizedBox(height: 4),
+                              Text(
+                                _isDispatching
+                                    ? (_langKey == 'he' ? 'מחפש...'
+                                        : _langKey == 'ru' ? 'Поиск...' : 'Searching...')
+                                    : (_langKey == 'he' ? 'עזרה מיידית'
+                                        : _langKey == 'ru' ? 'ПОМОЩЬ' : 'EMERGENCY'),
+                                style: TextStyle(
+                                  color: Colors.white.withValues(alpha: 0.9),
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w700,
+                                  letterSpacing: 1.5,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                _isDispatching
+                    ? (_langKey == 'he' ? 'עורך דין בדרך אליך...'
+                        : _langKey == 'ru' ? 'Адвокат уже едет...'
+                        : 'A lawyer is on the way...')
+                    : (_langKey == 'he' ? 'לחץ לקבלת עזרה מידית'
+                        : _langKey == 'ru' ? 'Нажмите для немедленной помощи'
+                        : 'Tap for immediate help'),
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: VetoGlassTokens.textMuted,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                  height: 1.3,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Set 5 — glass chips: nearby lawyers (illustrative; live matching happens on SOS).
+  Widget _availableLawyersStrip(bool isRtl, bool compact) {
+    final title = _langKey == 'he'
+        ? 'עורכי דין זמינים בקרבת מקום'
+        : _langKey == 'ru'
+            ? 'Доступные адвокаты рядом'
+            : 'Lawyers available nearby';
+    final rows = _langKey == 'he'
+        ? <(String, String, bool)>[
+            ('עו"ד פלילי', '2.1 ק"מ', true),
+            ('עו"ד תעבורה', '3.4 ק"מ', true),
+            ('עו"ד אזרחי', '4.8 ק"מ', false),
+          ]
+        : _langKey == 'ru'
+            ? <(String, String, bool)>[
+                ('Уголовный', '2.1 км', true),
+                ('Дорожный', '3.4 км', true),
+                ('Гражданский', '4.8 км', false),
+              ]
+            : <(String, String, bool)>[
+                ('Criminal', '2.1 km', true),
+                ('Traffic', '3.4 km', true),
+                ('Civil', '4.8 km', false),
+              ];
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          title,
+          textAlign: isRtl ? TextAlign.right : TextAlign.left,
+          style: const TextStyle(
+            color: VetoGlassTokens.textSecondary,
+            fontSize: 12.5,
+            fontWeight: FontWeight.w800,
+            letterSpacing: 0.4,
+          ),
+        ),
+        const SizedBox(height: 10),
+        SizedBox(
+          height: compact ? 86 : 92,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            itemCount: rows.length,
+            separatorBuilder: (_, __) => const SizedBox(width: 10),
+            itemBuilder: (context, i) {
+              final (spec, dist, on) = rows[i];
+              return VetoGlassBlur(
+                borderRadius: 16,
+                sigma: 16,
+                fill: VetoGlassTokens.glassFillStrong,
+                borderColor: on
+                    ? VetoGlassTokens.neonCyan.withValues(alpha: 0.45)
+                    : VetoGlassTokens.glassBorder,
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(minWidth: 150),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              width: 7,
+                              height: 7,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: on
+                                    ? VetoGlassTokens.neonCyan
+                                    : VetoGlassTokens.textSubtle,
+                                boxShadow: on
+                                    ? [
+                                        BoxShadow(
+                                          color: VetoGlassTokens.neonCyan.withValues(alpha: 0.55),
+                                          blurRadius: 8,
+                                        ),
+                                      ]
+                                    : null,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              on
+                                  ? (_langKey == 'he'
+                                      ? 'זמין'
+                                      : _langKey == 'ru'
+                                          ? 'Онлайн'
+                                          : 'Online')
+                                  : (_langKey == 'he'
+                                      ? 'עסוק'
+                                      : _langKey == 'ru'
+                                          ? 'Занят'
+                                          : 'Busy'),
+                              style: TextStyle(
+                                color: on ? VetoGlassTokens.neonCyan : VetoGlassTokens.textMuted,
+                                fontSize: 10,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          spec,
+                          style: const TextStyle(
+                            color: VetoGlassTokens.textPrimary,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w800,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          dist,
+                          style: const TextStyle(
+                            color: VetoGlassTokens.textMuted,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ── Security level bar card (dark frosted) ────────────────
+  Widget _securityBar() => VetoGlassBlur(
+        borderRadius: 16,
+        sigma: 18,
+        fill: VetoGlassTokens.glassFillStrong,
+        borderColor: VetoGlassTokens.glassBorderBright,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          child: Row(children: [
+            Container(
+              width: 36, height: 36,
+              decoration: BoxDecoration(
+                color: VetoGlassTokens.neonCyan.withValues(alpha: 0.10),
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: VetoGlassTokens.neonCyan.withValues(alpha: 0.32),
+                ),
+              ),
+              child: const Icon(Icons.shield_rounded, color: VetoGlassTokens.neonCyan, size: 20),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        _langKey == 'he' ? 'רמת אבטחה: גבוהה'
+                            : _langKey == 'ru' ? 'Уровень защиты: высокий'
+                            : 'Security Level: High',
+                        style: const TextStyle(
+                          color: VetoGlassTokens.textPrimary,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      Text(
+                        _isDispatching ? '100%' : '85%',
+                        style: const TextStyle(
+                          color: VetoGlassTokens.neonCyan,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(4),
+                    child: LinearProgressIndicator(
+                      value: _isDispatching ? 1.0 : 0.85,
+                      minHeight: 6,
+                      backgroundColor: const Color(0xFF1E293B),
+                      valueColor: const AlwaysStoppedAnimation(VetoGlassTokens.neonCyan),
                     ),
                   ),
                 ],
               ),
             ),
-          ),
-          const SizedBox(height: 10),
-          Text(
-            _isDispatching
-                ? (_langKey == 'he' ? 'עורך דין בדרך אליך...'
-                    : _langKey == 'ru' ? 'Адвокат уже едет...'
-                    : 'A lawyer is on the way...')
-                : (_langKey == 'he' ? 'לחץ לקבלת עזרה מידית'
-                    : _langKey == 'ru' ? 'Нажмите для немедленной помощи'
-                    : 'Tap for immediate help'),
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              color: Color(0xFF64748B),
-              fontSize: 13,
-              fontWeight: FontWeight.w500,
-              height: 1.3,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ── Security level bar card ───────────────────────────────
-  Widget _securityBar() => Container(
-    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-    decoration: BoxDecoration(
-      color: const Color(0xFFFFFFFF),
-      borderRadius: BorderRadius.circular(14),
-      border: Border.all(color: const Color(0xFFE2E8F8)),
-      boxShadow: [
-        BoxShadow(color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 10, offset: const Offset(0, 3)),
-      ],
-    ),
-    child: Row(children: [
-      Container(
-        width: 36, height: 36,
-        decoration: BoxDecoration(
-          color: VetoGlassTokens.neonCyan.withValues(alpha: 0.10),
-          shape: BoxShape.circle,
+          ]),
         ),
-        child: const Icon(Icons.shield_rounded, color: VetoGlassTokens.neonCyan, size: 20),
-      ),
-      const SizedBox(width: 12),
-      Expanded(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  _langKey == 'he' ? 'רמת אבטחה: גבוהה'
-                      : _langKey == 'ru' ? 'Уровень защиты: высокий'
-                      : 'Security Level: High',
-                  style: const TextStyle(
-                    color: VetoGlassTokens.textPrimary,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                Text(
-                  _isDispatching ? '100%' : '85%',
-                  style: const TextStyle(
-                    color: VetoGlassTokens.neonCyan,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 6),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(4),
-              child: LinearProgressIndicator(
-                value: _isDispatching ? 1.0 : 0.85,
-                minHeight: 6,
-                backgroundColor: const Color(0xFFE2E8F8),
-                valueColor: const AlwaysStoppedAnimation(VetoGlassTokens.neonCyan),
-              ),
-            ),
-          ],
-        ),
-      ),
-    ]),
-  );
+      );
 
   Widget _secLabel(String txt) => Padding(
         padding: const EdgeInsets.only(bottom: 4),
@@ -1478,7 +1623,7 @@ class _VetoScreenState extends State<VetoScreen> {
           Text(
             txt.toUpperCase(),
             style: const TextStyle(
-              color: Color(0xFF334155),
+              color: VetoGlassTokens.textMuted,
               fontSize: 11,
               fontWeight: FontWeight.w900,
               letterSpacing: 2.0,
@@ -1517,20 +1662,20 @@ class _VetoScreenState extends State<VetoScreen> {
           decoration: BoxDecoration(
             color: sel
                 ? VetoGlassTokens.neonCyan.withValues(alpha: 0.10)
-                : const Color(0xFFFFFFFF),
+                : VetoGlassTokens.glassFillStrong,
             borderRadius: BorderRadius.circular(14),
             border: Border.all(
               color: sel ? VetoGlassTokens.neonCyan.withValues(alpha: 0.7)
-                  : const Color(0xFFE2E8F8),
+                  : VetoGlassTokens.glassBorder,
               width: sel ? 1.5 : 1,
             ),
             boxShadow: sel
                 ? [BoxShadow(
-                    color: VetoGlassTokens.neonCyan.withValues(alpha: 0.15),
-                    blurRadius: 16)]
+                    color: VetoGlassTokens.neonCyan.withValues(alpha: 0.2),
+                    blurRadius: 18)]
                 : [BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.05),
-                    blurRadius: 8, offset: const Offset(0, 3))],
+                    color: Colors.black.withValues(alpha: 0.35),
+                    blurRadius: 12, offset: const Offset(0, 4))],
           ),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -1541,12 +1686,12 @@ class _VetoScreenState extends State<VetoScreen> {
                 decoration: BoxDecoration(
                   color: sel
                       ? VetoGlassTokens.neonCyan.withValues(alpha: 0.15)
-                      : const Color(0xFFEEF2FF),
+                      : VetoGlassTokens.glassFill,
                   shape: BoxShape.circle,
                   border: Border.all(
                     color: sel
                         ? VetoGlassTokens.neonCyan.withValues(alpha: 0.5)
-                        : const Color(0xFFE2E8F8),
+                        : VetoGlassTokens.glassBorder,
                     width: 1,
                   ),
                 ),
@@ -1591,25 +1736,25 @@ class _VetoScreenState extends State<VetoScreen> {
     );
   }
 
-  // ── Rights card ───────────────────────────────────────────
+  // ── Rights card (dark glass) ─────────────────────────────
   Widget _rightsCard() => Container(
         decoration: BoxDecoration(
-          color: const Color(0xFFFFFFFF),
+          color: VetoGlassTokens.glassFillStrong,
           borderRadius: BorderRadius.circular(16),
           border: const BorderDirectional(
-            top: BorderSide(color: Color(0xFFE2E8F8)),
-            end: BorderSide(color: Color(0xFFE2E8F8)),
-            bottom: BorderSide(color: Color(0xFFE2E8F8)),
+            top: BorderSide(color: VetoGlassTokens.glassBorder),
+            end: BorderSide(color: VetoGlassTokens.glassBorder),
+            bottom: BorderSide(color: VetoGlassTokens.glassBorder),
             start: BorderSide(color: VetoGlassTokens.neonCyan, width: 3),
           ),
           boxShadow: [
             BoxShadow(
-              color: VetoGlassTokens.neonCyan.withValues(alpha: 0.07),
-              blurRadius: 16, offset: const Offset(0, 6),
+              color: VetoGlassTokens.neonCyan.withValues(alpha: 0.12),
+              blurRadius: 20, offset: const Offset(0, 6),
             ),
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.04),
-              blurRadius: 8, offset: const Offset(0, 2),
+              color: Colors.black.withValues(alpha: 0.4),
+              blurRadius: 16, offset: const Offset(0, 4),
             ),
           ],
         ),
@@ -1682,7 +1827,7 @@ class _VetoScreenState extends State<VetoScreen> {
                       Expanded(
                         child: Text(r,
                           style: const TextStyle(
-                            color: Color(0xFF334155),
+                            color: VetoGlassTokens.textSecondary,
                             fontSize: 15,
                             fontWeight: FontWeight.w600,
                             height: 1.45,

@@ -433,7 +433,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     child: VetoGlassBlur(
                       borderRadius: 24,
                       sigma: VetoGlassTokens.blurSigma,
-                      fill: const Color(0xD9FFFFFF),
+                      fill: VetoGlassTokens.glassFillStrong,
                       borderColor: VetoGlassTokens.glassBorderBright,
                       child: Padding(
                         padding: const EdgeInsets.all(32),
@@ -452,13 +452,13 @@ class _LoginScreenState extends State<LoginScreen> {
                           const SizedBox(height: 16),
                           Text(
                             lang == 'he' ? 'ברוך הבא ל-VETO' : lang == 'ru' ? 'Добро пожаловать в VETO' : 'Welcome to VETO',
-                            style: const TextStyle(color: Color(0xFF0F172A), fontSize: 22, fontWeight: FontWeight.w900),
+                            style: const TextStyle(color: VetoGlassTokens.textPrimary, fontSize: 22, fontWeight: FontWeight.w900),
                             textAlign: TextAlign.center,
                           ),
                           const SizedBox(height: 6),
                           Text(
                             lang == 'he' ? 'הגנה משפטית בהישג יד' : lang == 'ru' ? 'Юридическая защита рядом' : 'Legal protection within reach',
-                            style: const TextStyle(color: Color(0xFF64748B), fontSize: 14),
+                            style: const TextStyle(color: VetoGlassTokens.textMuted, fontSize: 14),
                             textAlign: TextAlign.center,
                           ),
                         ]),
@@ -512,10 +512,10 @@ class _LoginScreenState extends State<LoginScreen> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(_t(lang, 'chooseRole'),
-            style: const TextStyle(color: VetoPalette.text, fontSize: 22, fontWeight: FontWeight.w800)),
+            style: const TextStyle(color: VetoGlassTokens.textPrimary, fontSize: 22, fontWeight: FontWeight.w800)),
         const SizedBox(height: 6),
         Text(_t(lang, 'chooseRoleBody'),
-            style: const TextStyle(color: VetoPalette.textMuted, fontSize: 13, height: 1.6)),
+            style: const TextStyle(color: VetoGlassTokens.textMuted, fontSize: 13, height: 1.6)),
         const SizedBox(height: 20),
         Row(children: [
           Expanded(child: _RoleCard(
@@ -557,7 +557,7 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
         const SizedBox(height: 20),
         Text(_t(lang, 'profileTitle'),
-            style: const TextStyle(color: VetoPalette.text, fontSize: 22, fontWeight: FontWeight.w800)),
+            style: const TextStyle(color: VetoGlassTokens.textPrimary, fontSize: 22, fontWeight: FontWeight.w800)),
         const SizedBox(height: 18),
         if (_registerMode) ...[
           _VetoField(
@@ -618,11 +618,11 @@ class _LoginScreenState extends State<LoginScreen> {
     final defaultTheme = PinTheme(
       width: 50,
       height: 58,
-      textStyle: const TextStyle(color: VetoPalette.text, fontSize: 24, fontWeight: FontWeight.w700),
+      textStyle: const TextStyle(color: VetoGlassTokens.textPrimary, fontSize: 24, fontWeight: FontWeight.w700),
       decoration: BoxDecoration(
-        color: VetoPalette.surface,
+        color: const Color(0xFF0F1A24),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: VetoPalette.border),
+        border: Border.all(color: VetoGlassTokens.glassBorder),
       ),
     );
 
@@ -631,14 +631,14 @@ class _LoginScreenState extends State<LoginScreen> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(_t(lang, 'otpTitle'),
-            style: const TextStyle(color: VetoPalette.text, fontSize: 22, fontWeight: FontWeight.w800)),
+            style: const TextStyle(color: VetoGlassTokens.textPrimary, fontSize: 22, fontWeight: FontWeight.w800)),
         const SizedBox(height: 6),
         Wrap(crossAxisAlignment: WrapCrossAlignment.center, children: [
           Text(_t(lang, 'otpSentTo'),
-              style: const TextStyle(color: VetoPalette.textMuted, fontSize: 14)),
+              style: const TextStyle(color: VetoGlassTokens.textMuted, fontSize: 14)),
           const SizedBox(width: 4),
           Text(_fullPhone, textDirection: TextDirection.ltr,
-              style: const TextStyle(color: VetoPalette.info, fontSize: 14, fontWeight: FontWeight.w600)),
+              style: const TextStyle(color: VetoGlassTokens.neonCyan, fontSize: 14, fontWeight: FontWeight.w600)),
         ]),
         const SizedBox(height: 22),
         Center(child: Directionality(
@@ -649,7 +649,7 @@ class _LoginScreenState extends State<LoginScreen> {
             defaultPinTheme: defaultTheme,
             focusedPinTheme: defaultTheme.copyWith(
               decoration: defaultTheme.decoration?.copyWith(
-                border: Border.all(color: VetoPalette.primary, width: 1.5),
+                border: Border.all(color: VetoGlassTokens.neonCyan, width: 1.5),
               ),
             ),
             onChanged: (_) { if (_error.isNotEmpty) setState(() => _error = ''); },
@@ -713,14 +713,14 @@ class _StepIndicator extends StatelessWidget {
                 height: 3,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(999),
-                  color: active ? VetoPalette.primary : VetoPalette.border,
+                  color: active ? VetoGlassTokens.neonCyan : VetoGlassTokens.glassBorder,
                 ),
               ),
               const SizedBox(height: 6),
               Text(labels[i],
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    color: active ? VetoPalette.primary : VetoPalette.textSubtle,
+                    color: active ? VetoGlassTokens.neonCyan : VetoGlassTokens.textSubtle,
                     fontSize: 11,
                     fontWeight: active ? FontWeight.w700 : FontWeight.w500,
                   )),
@@ -749,9 +749,9 @@ class _ModeTabs extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: VetoPalette.bg,
+        color: VetoGlassTokens.glassFill,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: VetoPalette.border),
+        border: Border.all(color: VetoGlassTokens.glassBorder),
       ),
       padding: const EdgeInsets.all(4),
       child: Row(children: [
@@ -777,13 +777,13 @@ class _Tab extends StatelessWidget {
         duration: const Duration(milliseconds: 180),
         padding: const EdgeInsets.symmetric(vertical: 11),
         decoration: BoxDecoration(
-          color: selected ? VetoPalette.primary : Colors.transparent,
+          color: selected ? VetoGlassTokens.neonCyan : Colors.transparent,
           borderRadius: BorderRadius.circular(10),
         ),
         child: Text(label,
             textAlign: TextAlign.center,
             style: TextStyle(
-              color: selected ? Colors.white : VetoPalette.textMuted,
+              color: selected ? const Color(0xFF041018) : VetoGlassTokens.textMuted,
               fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
               fontSize: 14,
             )),
@@ -812,26 +812,28 @@ class _RoleCard extends StatelessWidget {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: selected ? VetoPalette.primary.withValues(alpha: 0.10) : VetoPalette.surface,
+          color: selected
+              ? VetoGlassTokens.neonCyan.withValues(alpha: 0.10)
+              : VetoGlassTokens.glassFill,
           borderRadius: BorderRadius.circular(20),
           border: selected
               ? Border(
-                  left: const BorderSide(color: VetoPalette.primary, width: 3),
-                  top: BorderSide(color: VetoPalette.primary.withValues(alpha: 0.3)),
-                  right: BorderSide(color: VetoPalette.primary.withValues(alpha: 0.3)),
-                  bottom: BorderSide(color: VetoPalette.primary.withValues(alpha: 0.3)),
+                  left: const BorderSide(color: VetoGlassTokens.neonCyan, width: 3),
+                  top: BorderSide(color: VetoGlassTokens.neonCyan.withValues(alpha: 0.3)),
+                  right: BorderSide(color: VetoGlassTokens.neonCyan.withValues(alpha: 0.3)),
+                  bottom: BorderSide(color: VetoGlassTokens.neonCyan.withValues(alpha: 0.3)),
                 )
-              : Border.all(color: VetoPalette.border),
+              : Border.all(color: VetoGlassTokens.glassBorder),
         ),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Icon(icon, color: selected ? VetoPalette.primary : VetoPalette.textMuted, size: 24),
+          Icon(icon, color: selected ? VetoGlassTokens.neonCyan : VetoGlassTokens.textMuted, size: 24),
           const SizedBox(height: 12),
           Text(title, style: TextStyle(
-              color: selected ? VetoPalette.primary : VetoPalette.text,
+              color: selected ? VetoGlassTokens.neonCyan : VetoGlassTokens.textPrimary,
               fontSize: 16, fontWeight: FontWeight.w800)),
           const SizedBox(height: 6),
           Text(body, style: const TextStyle(
-              color: VetoPalette.textMuted, fontSize: 13, height: 1.5)),
+              color: VetoGlassTokens.textMuted, fontSize: 13, height: 1.5)),
         ]),
       ),
     );
@@ -859,10 +861,12 @@ class _VetoField extends StatelessWidget {
       textInputAction: action,
       keyboardType: keyboardType,
       onSubmitted: onSubmitted,
+      style: const TextStyle(color: VetoGlassTokens.textPrimary),
+      cursorColor: VetoGlassTokens.neonCyan,
       decoration: InputDecoration(
         labelText: label,
         hintText: hint,
-        prefixIcon: Icon(icon, size: 20),
+        prefixIcon: Icon(icon, size: 20, color: VetoGlassTokens.textMuted),
       ),
     );
   }
@@ -883,18 +887,18 @@ class _PhoneRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       Text(label, style: const TextStyle(
-          color: VetoPalette.textMuted, fontSize: 12, fontWeight: FontWeight.w600)),
+          color: VetoGlassTokens.textMuted, fontSize: 12, fontWeight: FontWeight.w600)),
       const SizedBox(height: 8),
       Row(children: [
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
           decoration: BoxDecoration(
-            color: VetoPalette.surface,
+            color: const Color(0xFF0F1A24),
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: VetoPalette.border),
+            border: Border.all(color: VetoGlassTokens.glassBorder),
           ),
           child: Text(countryCode, textDirection: TextDirection.ltr,
-              style: const TextStyle(color: VetoPalette.text, fontWeight: FontWeight.w700)),
+              style: const TextStyle(color: VetoGlassTokens.textPrimary, fontWeight: FontWeight.w700)),
         ),
         const SizedBox(width: 8),
         Expanded(child: TextField(
@@ -904,10 +908,12 @@ class _PhoneRow extends StatelessWidget {
           textDirection: TextDirection.ltr,
           maxLength: 10,
           onSubmitted: onSubmitted,
+          style: const TextStyle(color: VetoGlassTokens.textPrimary),
+          cursorColor: VetoGlassTokens.neonCyan,
           decoration: InputDecoration(
             hintText: hint,
             counterText: '',
-            prefixIcon: const Icon(Icons.phone_iphone_rounded, size: 18),
+            prefixIcon: const Icon(Icons.phone_iphone_rounded, size: 18, color: VetoGlassTokens.textMuted),
           ),
         )),
       ]),
@@ -922,13 +928,13 @@ class _OrDivider extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(children: [
-      const Expanded(child: Divider(color: VetoPalette.border)),
+      const Expanded(child: Divider(color: VetoGlassTokens.glassBorder)),
       Padding(
         padding: const EdgeInsets.symmetric(horizontal: 14),
         child: Text(label, style: const TextStyle(
-            color: VetoPalette.textSubtle, fontSize: 12, fontWeight: FontWeight.w600)),
+            color: VetoGlassTokens.textSubtle, fontSize: 12, fontWeight: FontWeight.w600)),
       ),
-      const Expanded(child: Divider(color: VetoPalette.border)),
+      const Expanded(child: Divider(color: VetoGlassTokens.glassBorder)),
     ]);
   }
 }
@@ -948,9 +954,9 @@ class _GoogleButton extends StatelessWidget {
         duration: const Duration(milliseconds: 180),
         padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
         decoration: BoxDecoration(
-          color: VetoPalette.surface,
+          color: VetoGlassTokens.glassFill,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: VetoPalette.border),
+          border: Border.all(color: VetoGlassTokens.glassBorder),
         ),
         child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
           SizedBox(
@@ -959,7 +965,7 @@ class _GoogleButton extends StatelessWidget {
           ),
           const SizedBox(width: 10),
           Text(label, style: const TextStyle(
-              color: VetoPalette.text, fontWeight: FontWeight.w600, fontSize: 14)),
+              color: VetoGlassTokens.textPrimary, fontWeight: FontWeight.w600, fontSize: 14)),
         ]),
       ),
     );
@@ -1055,24 +1061,27 @@ class _OtpCodeDialogState extends State<_OtpCodeDialog> {
     return Directionality(
       textDirection: AppLanguage.directionOf(widget.code),
       child: AlertDialog(
-        backgroundColor: VetoPalette.surface,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        backgroundColor: const Color(0xE6121824),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          side: const BorderSide(color: VetoGlassTokens.glassBorder),
+        ),
         title: Text(_t(widget.code, 'otpDialogTitle'),
-            style: const TextStyle(color: VetoPalette.text, fontWeight: FontWeight.w800)),
+            style: const TextStyle(color: VetoGlassTokens.textPrimary, fontWeight: FontWeight.w800)),
         content: Column(mainAxisSize: MainAxisSize.min, children: [
           Text(_t(widget.code, 'otpDialogBody'),
-              style: const TextStyle(color: VetoPalette.textMuted, height: 1.5)),
+              style: const TextStyle(color: VetoGlassTokens.textMuted, height: 1.5)),
           const SizedBox(height: 16),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
             decoration: BoxDecoration(
-              color: VetoPalette.bg,
+              color: VetoGlassTokens.glassFill,
               borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: VetoPalette.primary.withValues(alpha: 0.4)),
+              border: Border.all(color: VetoGlassTokens.neonCyan.withValues(alpha: 0.4)),
             ),
             child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
               Text(widget.otp, style: const TextStyle(
-                  color: VetoPalette.primary, fontSize: 34,
+                  color: VetoGlassTokens.neonCyan, fontSize: 34,
                   fontWeight: FontWeight.w900, letterSpacing: 8)),
               const SizedBox(width: 12),
               AnimatedSwitcher(
@@ -1083,7 +1092,7 @@ class _OtpCodeDialogState extends State<_OtpCodeDialog> {
                     : IconButton(
                         key: const ValueKey('copy'),
                         icon: const Icon(Icons.copy_rounded,
-                            color: VetoPalette.primary, size: 22),
+                            color: VetoGlassTokens.neonCyan, size: 22),
                         tooltip: _t(widget.code, 'copyCode'),
                         onPressed: _copy,
                       ),
@@ -1120,16 +1129,19 @@ class _PendingApprovalDialog extends StatelessWidget {
     return Directionality(
       textDirection: AppLanguage.directionOf(code),
       child: AlertDialog(
-        backgroundColor: VetoPalette.surface,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        backgroundColor: const Color(0xE6121824),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          side: const BorderSide(color: VetoGlassTokens.glassBorder),
+        ),
         title: Row(children: [
           const Icon(Icons.hourglass_empty_rounded, color: VetoPalette.warning, size: 22),
           const SizedBox(width: 10),
           Expanded(child: Text(_t(code, 'pendingTitle'),
-              style: const TextStyle(color: VetoPalette.text, fontWeight: FontWeight.w800))),
+              style: const TextStyle(color: VetoGlassTokens.textPrimary, fontWeight: FontWeight.w800))),
         ]),
         content: Text(_t(code, 'pendingBody'),
-            style: const TextStyle(color: VetoPalette.textMuted, height: 1.6)),
+            style: const TextStyle(color: VetoGlassTokens.textMuted, height: 1.6)),
         actions: [
           FilledButton(
             onPressed: () => Navigator.of(context).pop(),

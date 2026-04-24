@@ -526,14 +526,14 @@ class _SettingsScreenState extends State<SettingsScreen>
               child: TextButton(
                 onPressed: _saving ? null : () => _save(code),
                 style: TextButton.styleFrom(
-                  backgroundColor: VetoGlassTokens.neonBlue,
-                  foregroundColor: Colors.white,
+                  backgroundColor: VetoGlassTokens.neonCyan,
+                  foregroundColor: const Color(0xFF041018),
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                 ),
                 child: _saving
-                    ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                    : Text(_t(code, 'save'), style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700)),
+                    ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF041018)))
+                    : Text(_t(code, 'save'), style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF041018))),
               ),
             ),
           ],
@@ -562,50 +562,49 @@ class _SettingsScreenState extends State<SettingsScreen>
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                  // ── Avatar header (per mockup) ────────────
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(24),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: const Color(0xFFE2E8F8)),
-                      boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 12, offset: const Offset(0,4))],
-                    ),
-                    child: Column(children: [
+                  // ── Avatar header (dark glass) ────────────
+                  VetoGlassBlur(
+                    borderRadius: 20,
+                    sigma: 16,
+                    fill: VetoGlassTokens.glassFillStrong,
+                    borderColor: VetoGlassTokens.glassBorderBright,
+                    child: Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Column(children: [
                       // Avatar circle
                       Container(
                         width: 72, height: 72,
                         decoration: const BoxDecoration(
-                          gradient: LinearGradient(colors: [Color(0xFF5B8FFF), Color(0xFF00C9B1)], begin: Alignment.topLeft, end: Alignment.bottomRight),
+                          gradient: VetoGlassTokens.neonButton,
                           shape: BoxShape.circle,
                         ),
                         child: Center(
                           child: Text(
                             (_nameCtrl.text.isNotEmpty ? _nameCtrl.text[0] : 'W').toUpperCase(),
-                            style: const TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.w900),
+                            style: const TextStyle(color: Color(0xFF041018), fontSize: 28, fontWeight: FontWeight.w900),
                           ),
                         ),
                       ),
                       const SizedBox(height: 12),
                       Text(
                         _nameCtrl.text.isNotEmpty ? _nameCtrl.text : (isRtl ? 'שם מלא' : 'Full name'),
-                        style: const TextStyle(color: Color(0xFF0F172A), fontSize: 18, fontWeight: FontWeight.w900),
+                        style: const TextStyle(color: VetoGlassTokens.textPrimary, fontSize: 18, fontWeight: FontWeight.w900),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         _role == 'lawyer' ? (isRtl ? 'עורך דין' : 'Lawyer') : _role == 'admin' ? (isRtl ? 'מנהל' : 'Admin') : (isRtl ? 'אזרח' : 'Citizen'),
-                        style: const TextStyle(color: Color(0xFF64748B), fontSize: 13),
+                        style: const TextStyle(color: VetoGlassTokens.textMuted, fontSize: 13),
                       ),
                       const SizedBox(height: 4),
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFDCFCE7),
+                          color: VetoGlassTokens.neonCyan.withValues(alpha: 0.12),
                           borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: VetoGlassTokens.neonCyan.withValues(alpha: 0.35)),
                         ),
                         child: Text(isRtl ? 'חשבון פעיל' : 'Active account',
-                          style: const TextStyle(color: Color(0xFF16A34A), fontSize: 11, fontWeight: FontWeight.w700)),
+                          style: const TextStyle(color: VetoGlassTokens.neonCyan, fontSize: 11, fontWeight: FontWeight.w700)),
                       ),
                       const SizedBox(height: 14),
                       OutlinedButton.icon(
@@ -613,13 +612,14 @@ class _SettingsScreenState extends State<SettingsScreen>
                         icon: const Icon(Icons.edit_outlined, size: 14),
                         label: Text(isRtl ? 'ערוך פרופיל' : 'Edit profile', style: const TextStyle(fontSize: 13)),
                         style: OutlinedButton.styleFrom(
-                          foregroundColor: const Color(0xFF5B8FFF),
-                          side: const BorderSide(color: Color(0xFF5B8FFF), width: 1),
+                          foregroundColor: VetoGlassTokens.neonCyan,
+                          side: const BorderSide(color: VetoGlassTokens.neonCyan, width: 1),
                           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                         ),
                       ),
                     ]),
+                    ),
                   ),
                   const SizedBox(height: 16),
                   // ── Profile section ─────────────────────
@@ -1168,15 +1168,18 @@ class _Section extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final ic = iconColor ?? const Color(0xFF5B8FFF);
+    final ic = iconColor ?? VetoGlassTokens.neonCyan;
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: VetoGlassTokens.glassFillStrong,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: borderColor ?? const Color(0xFFE2E8F8)),
-        boxShadow: [BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 8, offset: const Offset(0, 2))],
+        border: Border.all(color: borderColor ?? VetoGlassTokens.glassBorder),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.4),
+            blurRadius: 12, offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Padding(
@@ -1189,7 +1192,7 @@ class _Section extends StatelessWidget {
                 letterSpacing: 0.5)),
           ]),
         ),
-        const Divider(height: 1, color: VetoPalette.border),
+        const Divider(height: 1, color: VetoGlassTokens.glassBorder),
         ...children,
       ]),
     );
@@ -1213,23 +1216,24 @@ class _FieldTile extends StatelessWidget {
     child: TextField(
       controller: controller,
       keyboardType: keyboardType,
-      style: const TextStyle(color: VetoPalette.text, fontSize: 14),
+      style: const TextStyle(color: VetoGlassTokens.textPrimary, fontSize: 14),
+      cursorColor: VetoGlassTokens.neonCyan,
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: const TextStyle(color: VetoPalette.textMuted, fontSize: 13),
-        prefixIcon: Icon(icon, color: VetoPalette.textMuted, size: 18),
+        labelStyle: const TextStyle(color: VetoGlassTokens.textMuted, fontSize: 13),
+        prefixIcon: Icon(icon, color: VetoGlassTokens.textMuted, size: 18),
         filled: true,
-        fillColor: VetoPalette.surface,
+        fillColor: const Color(0xFF0F1A24),
         border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(10),
-            borderSide: const BorderSide(color: VetoPalette.border)),
+            borderSide: const BorderSide(color: VetoGlassTokens.glassBorder)),
         enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(10),
-            borderSide: const BorderSide(color: VetoPalette.border)),
-        focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
-            borderSide: const BorderSide(
-                color: VetoPalette.primary, width: 1.5)),
+            borderSide: const BorderSide(color: VetoGlassTokens.glassBorder)),
+        focusedBorder: const OutlineInputBorder(
+            borderRadius: BorderRadius.all(Radius.circular(10)),
+            borderSide: BorderSide(
+                color: VetoGlassTokens.neonCyan, width: 1.5)),
         contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       ),
     ),
