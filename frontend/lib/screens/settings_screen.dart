@@ -449,23 +449,26 @@ class _SettingsScreenState extends State<SettingsScreen>
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: VetoPalette.surface,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        backgroundColor: VetoGlassTokens.sheetPanel,
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: const BorderSide(color: VetoGlassTokens.glassBorder)),
         title: Text(_t(code, 'deleteAccount'),
             style: const TextStyle(
                 color: VetoPalette.emergency, fontWeight: FontWeight.w700)),
         content: Text(_t(code, 'deleteConfirm'),
-            style: const TextStyle(color: VetoPalette.text)),
+            style: const TextStyle(color: VetoGlassTokens.textPrimary)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
             child: Text(_t(code, 'no'),
-                style: const TextStyle(color: VetoPalette.textMuted)),
+                style: const TextStyle(color: VetoGlassTokens.textMuted)),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: FilledButton.styleFrom(
-                backgroundColor: VetoPalette.emergency),
+                backgroundColor: VetoPalette.emergency,
+                foregroundColor: Colors.white),
             child: Text(_t(code, 'yes')),
           ),
         ],
@@ -703,7 +706,7 @@ class _SettingsScreenState extends State<SettingsScreen>
                           child: Text(
                             _t(code, 'webrtcHint'),
                             style: const TextStyle(
-                              color: VetoPalette.textMuted,
+                              color: VetoGlassTokens.textMuted,
                               fontSize: 12,
                               height: 1.45,
                             ),
@@ -717,16 +720,16 @@ class _SettingsScreenState extends State<SettingsScreen>
                               Text(
                                 _t(code, 'webrtcIce'),
                                 style: const TextStyle(
-                                    color: VetoPalette.textMuted, fontSize: 13),
+                                    color: VetoGlassTokens.textMuted, fontSize: 13),
                               ),
                               const SizedBox(height: 4),
                               DropdownButton<WebRtcIcePreset>(
                                 isExpanded: true,
                                 value: _webrtc.icePreset,
                                 borderRadius: BorderRadius.circular(10),
-                                dropdownColor: VetoPalette.surface,
+                                dropdownColor: VetoGlassTokens.menuPanel,
                                 style: const TextStyle(
-                                    color: VetoPalette.text, fontSize: 14),
+                                    color: VetoGlassTokens.textPrimary, fontSize: 14),
                                 items: [
                                   DropdownMenuItem(
                                     value: WebRtcIcePreset.minimal,
@@ -754,7 +757,7 @@ class _SettingsScreenState extends State<SettingsScreen>
                               Text(
                                 '${_t(code, 'webrtcPool')}: ${_webrtc.iceCandidatePoolSize}',
                                 style: const TextStyle(
-                                    color: VetoPalette.text,
+                                    color: VetoGlassTokens.textPrimary,
                                     fontSize: 13,
                                     fontWeight: FontWeight.w600),
                               ),
@@ -803,16 +806,16 @@ class _SettingsScreenState extends State<SettingsScreen>
                               Text(
                                 _t(code, 'webrtcRes'),
                                 style: const TextStyle(
-                                    color: VetoPalette.textMuted, fontSize: 13),
+                                    color: VetoGlassTokens.textMuted, fontSize: 13),
                               ),
                               const SizedBox(height: 4),
                               DropdownButton<String>(
                                 isExpanded: true,
                                 value: _webrtcVideoPreset(_webrtc),
                                 borderRadius: BorderRadius.circular(10),
-                                dropdownColor: VetoPalette.surface,
+                                dropdownColor: VetoGlassTokens.menuPanel,
                                 style: const TextStyle(
-                                    color: VetoPalette.text, fontSize: 14),
+                                    color: VetoGlassTokens.textPrimary, fontSize: 14),
                                 items: [
                                   DropdownMenuItem(
                                     value: 'sd',
@@ -858,16 +861,16 @@ class _SettingsScreenState extends State<SettingsScreen>
                               Text(
                                 _t(code, 'webrtcFacing'),
                                 style: const TextStyle(
-                                    color: VetoPalette.textMuted, fontSize: 13),
+                                    color: VetoGlassTokens.textMuted, fontSize: 13),
                               ),
                               const SizedBox(height: 4),
                               DropdownButton<String>(
                                 isExpanded: true,
                                 value: _webrtc.facingMode,
                                 borderRadius: BorderRadius.circular(10),
-                                dropdownColor: VetoPalette.surface,
+                                dropdownColor: VetoGlassTokens.menuPanel,
                                 style: const TextStyle(
-                                    color: VetoPalette.text, fontSize: 14),
+                                    color: VetoGlassTokens.textPrimary, fontSize: 14),
                                 items: [
                                   DropdownMenuItem(
                                     value: 'user',
@@ -895,16 +898,16 @@ class _SettingsScreenState extends State<SettingsScreen>
                               Text(
                                 _t(code, 'webrtcBundle'),
                                 style: const TextStyle(
-                                    color: VetoPalette.textMuted, fontSize: 13),
+                                    color: VetoGlassTokens.textMuted, fontSize: 13),
                               ),
                               const SizedBox(height: 4),
                               DropdownButton<String>(
                                 isExpanded: true,
                                 value: _webrtc.bundlePolicy,
                                 borderRadius: BorderRadius.circular(10),
-                                dropdownColor: VetoPalette.surface,
+                                dropdownColor: VetoGlassTokens.menuPanel,
                                 style: const TextStyle(
-                                    color: VetoPalette.text, fontSize: 14),
+                                    color: VetoGlassTokens.textPrimary, fontSize: 14),
                                 items: [
                                   DropdownMenuItem(
                                     value: 'balanced',
@@ -936,16 +939,16 @@ class _SettingsScreenState extends State<SettingsScreen>
                               Text(
                                 _t(code, 'webrtcMux'),
                                 style: const TextStyle(
-                                    color: VetoPalette.textMuted, fontSize: 13),
+                                    color: VetoGlassTokens.textMuted, fontSize: 13),
                               ),
                               const SizedBox(height: 4),
                               DropdownButton<String>(
                                 isExpanded: true,
                                 value: _webrtc.rtcpMuxPolicy,
                                 borderRadius: BorderRadius.circular(10),
-                                dropdownColor: VetoPalette.surface,
+                                dropdownColor: VetoGlassTokens.menuPanel,
                                 style: const TextStyle(
-                                    color: VetoPalette.text, fontSize: 14),
+                                    color: VetoGlassTokens.textPrimary, fontSize: 14),
                                 items: [
                                   DropdownMenuItem(
                                     value: 'require',
@@ -990,21 +993,21 @@ class _SettingsScreenState extends State<SettingsScreen>
                                   ? _t(code, 'planBasic')
                                   : _t(code, 'planFree'),
                           color: _plan == 'pro'
-                              ? VetoPalette.accentSky
+                              ? VetoGlassTokens.neonCyan
                               : _plan == 'basic'
-                                  ? VetoPalette.primary
-                                  : VetoPalette.textMuted,
+                                  ? VetoGlassTokens.accentSoft
+                                  : VetoGlassTokens.textMuted,
                         ),
                         ListTile(
                           dense: true,
                           leading: const Icon(Icons.upgrade_rounded,
-                              color: VetoPalette.primary, size: 20),
+                              color: VetoGlassTokens.neonCyan, size: 20),
                           title: Text(_t(code, 'upgrade'),
                               style: const TextStyle(
-                                  color: VetoPalette.primary,
+                                  color: VetoGlassTokens.neonCyan,
                                   fontWeight: FontWeight.w600)),
                           trailing: const Icon(Icons.chevron_right_rounded,
-                              color: VetoPalette.textMuted),
+                              color: VetoGlassTokens.textMuted),
                           onTap: () => Navigator.pushNamed(
                               context, '/profile'),
                         ),
@@ -1098,13 +1101,13 @@ class _SettingsScreenState extends State<SettingsScreen>
                       ListTile(
                         dense: true,
                         leading: const Icon(Icons.logout_rounded,
-                            color: VetoPalette.textMuted, size: 20),
+                            color: VetoGlassTokens.textMuted, size: 20),
                         title: Text(_t(code, 'logout'),
                             style: const TextStyle(
-                                color: VetoPalette.text,
+                                color: VetoGlassTokens.textPrimary,
                                 fontWeight: FontWeight.w600)),
                         trailing: const Icon(Icons.chevron_right_rounded,
-                            color: VetoPalette.textMuted),
+                            color: VetoGlassTokens.textMuted),
                         onTap: () async {
                           await _auth.logout(context);
                           if (!context.mounted) return;
@@ -1134,7 +1137,7 @@ class _SettingsScreenState extends State<SettingsScreen>
                         '${_t(code, 'deployBuild')}: ${AppConfig.deployBuildLabel}',
                         style: const TextStyle(
                           fontSize: 11,
-                          color: VetoPalette.textSubtle,
+                          color: VetoGlassTokens.textSubtle,
                           height: 1.3,
                         ),
                       ),
@@ -1257,7 +1260,7 @@ class _ToggleTile extends StatelessWidget {
     dense: true,
     secondary: Icon(icon, color: color, size: 20),
     title: Text(label, style: const TextStyle(
-        color: VetoPalette.text, fontSize: 14, fontWeight: FontWeight.w500)),
+        color: VetoGlassTokens.textPrimary, fontSize: 14, fontWeight: FontWeight.w500)),
     value: value,
     onChanged: onChanged,
     activeThumbColor: color,
@@ -1274,7 +1277,7 @@ class _InfoRow extends StatelessWidget {
     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
     child: Row(children: [
       Text(label, style: const TextStyle(
-          color: VetoPalette.textMuted, fontSize: 14)),
+          color: VetoGlassTokens.textMuted, fontSize: 14)),
       const Spacer(),
       Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
@@ -1311,17 +1314,17 @@ class _LanguagePicker extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
             decoration: BoxDecoration(
               color: selected
-                  ? VetoPalette.primary.withValues(alpha: 0.10)
-                  : VetoPalette.bg,
+                  ? VetoGlassTokens.neonCyan.withValues(alpha: 0.12)
+                  : VetoGlassTokens.glassFillStrong,
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
-                color: selected ? VetoPalette.primary : VetoPalette.border,
+                color: selected ? VetoGlassTokens.neonCyan : VetoGlassTokens.glassBorder,
                 width: selected ? 1.5 : 1,
               ),
             ),
             child: Text('$flag  $label',
                 style: TextStyle(
-                    color: selected ? VetoPalette.primary : VetoPalette.text,
+                    color: selected ? VetoGlassTokens.neonCyan : VetoGlassTokens.textPrimary,
                     fontWeight: selected ? FontWeight.w700 : FontWeight.w400,
                     fontSize: 13)),
           ),
@@ -1347,14 +1350,14 @@ class _SpecializationChips extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Text(label, style: const TextStyle(
-            color: VetoPalette.textMuted, fontSize: 13)),
+            color: VetoGlassTokens.textMuted, fontSize: 13)),
         const SizedBox(height: 6),
         Wrap(spacing: 6, runSpacing: 6, children: [
           ...items.map((s) => Chip(
             label: Text(s, style: const TextStyle(fontSize: 12)),
-            backgroundColor: VetoPalette.primary.withValues(alpha: 0.08),
-            side: BorderSide(color: VetoPalette.primary.withValues(alpha: 0.25)),
-            deleteIconColor: VetoPalette.textMuted,
+            backgroundColor: VetoGlassTokens.neonCyan.withValues(alpha: 0.08),
+            side: BorderSide(color: VetoGlassTokens.neonCyan.withValues(alpha: 0.25)),
+            deleteIconColor: VetoGlassTokens.textMuted,
             onDeleted: () {
               final updated = List<String>.from(items)..remove(s);
               onChanged(updated);
@@ -1362,40 +1365,50 @@ class _SpecializationChips extends StatelessWidget {
           )),
           ActionChip(
             label: Text(addLabel, style: const TextStyle(
-                color: VetoPalette.primary, fontSize: 12,
+                color: VetoGlassTokens.neonCyan, fontSize: 12,
                 fontWeight: FontWeight.w600)),
-            avatar: const Icon(Icons.add, size: 14, color: VetoPalette.primary),
-            backgroundColor: VetoPalette.primary.withValues(alpha: 0.08),
-            side: BorderSide(color: VetoPalette.primary.withValues(alpha: 0.25)),
+            avatar: const Icon(Icons.add, size: 14, color: VetoGlassTokens.neonCyan),
+            backgroundColor: VetoGlassTokens.neonCyan.withValues(alpha: 0.08),
+            side: BorderSide(color: VetoGlassTokens.neonCyan.withValues(alpha: 0.25)),
             onPressed: () async {
               final ctrl = TextEditingController();
               final result = await showDialog<String>(
                 context: context,
                 builder: (ctx) => AlertDialog(
-                  backgroundColor: VetoPalette.surface,
+                  backgroundColor: VetoGlassTokens.sheetPanel,
                   shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16)),
+                      borderRadius: BorderRadius.circular(16),
+                      side: const BorderSide(color: VetoGlassTokens.glassBorder)),
                   content: TextField(
                     controller: ctrl,
                     autofocus: true,
-                    style: const TextStyle(color: VetoPalette.text),
+                    style: const TextStyle(color: VetoGlassTokens.textPrimary),
                     decoration: InputDecoration(
                       hintText: label,
-                      hintStyle: const TextStyle(color: VetoPalette.textMuted),
+                      hintStyle: const TextStyle(color: VetoGlassTokens.textMuted),
+                      filled: true,
+                      fillColor: const Color(0xFF0F1A24),
                       border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10)),
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: const BorderSide(
+                              color: VetoGlassTokens.glassBorder)),
+                      enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: const BorderSide(
+                              color: VetoGlassTokens.glassBorder)),
                     ),
                   ),
                   actions: [
                     TextButton(
                       onPressed: () => Navigator.pop(ctx),
                       child: const Text('Cancel',
-                          style: TextStyle(color: VetoPalette.textMuted)),
+                          style: TextStyle(color: VetoGlassTokens.textMuted)),
                     ),
                     FilledButton(
                       onPressed: () => Navigator.pop(ctx, ctrl.text.trim()),
                       style: FilledButton.styleFrom(
-                          backgroundColor: VetoPalette.primary),
+                          backgroundColor: VetoGlassTokens.neonCyan,
+                          foregroundColor: VetoGlassTokens.onNeon),
                       child: const Text('Add'),
                     ),
                   ],

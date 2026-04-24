@@ -68,10 +68,11 @@ Future<String?> showDispatchSpecialtySheet(
       child: Container(
         padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: VetoGlassTokens.sheetPanel,
           borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: VetoGlassTokens.glassBorder),
           boxShadow: [
-            BoxShadow(color: Colors.black.withValues(alpha: 0.12), blurRadius: 24),
+            BoxShadow(color: Colors.black.withValues(alpha: 0.45), blurRadius: 24),
           ],
         ),
         child: Column(
@@ -81,7 +82,7 @@ Future<String?> showDispatchSpecialtySheet(
               width: 36,
               height: 4,
               decoration: BoxDecoration(
-                color: const Color(0xFFE2E8F8),
+                color: VetoGlassTokens.glassBorder,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -105,7 +106,7 @@ Future<String?> showDispatchSpecialtySheet(
                   : langKey == 'ru'
                       ? 'Мы найдём доступного адвоката'
                       : 'We will find an available lawyer in this field',
-              style: const TextStyle(color: Color(0xFF64748B), fontSize: 13),
+              style: const TextStyle(color: VetoGlassTokens.textMuted, fontSize: 13),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 18),
@@ -165,7 +166,7 @@ Future<String?> showDispatchSpecialtySheet(
               onPressed: () => Navigator.pop(ctx, null),
               child: Text(
                 langKey == 'he' ? 'ביטול' : langKey == 'ru' ? 'Отмена' : 'Cancel',
-                style: const TextStyle(color: Color(0xFF94A3B8)),
+                style: const TextStyle(color: VetoGlassTokens.textMuted),
               ),
             ),
           ],
@@ -195,10 +196,11 @@ Future<String?> showCitizenSessionModeSheet(
       child: Container(
         padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: VetoGlassTokens.sheetPanel,
           borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: VetoGlassTokens.glassBorder),
           boxShadow: [
-            BoxShadow(color: Colors.black.withValues(alpha: 0.12), blurRadius: 24),
+            BoxShadow(color: Colors.black.withValues(alpha: 0.45), blurRadius: 24),
           ],
         ),
         child: Column(
@@ -208,7 +210,7 @@ Future<String?> showCitizenSessionModeSheet(
               width: 36,
               height: 4,
               decoration: BoxDecoration(
-                color: const Color(0xFFE2E8F8),
+                color: VetoGlassTokens.glassBorder,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -233,7 +235,7 @@ Future<String?> showCitizenSessionModeSheet(
                   : langKey == 'ru'
                       ? 'Как связаться?'
                       : 'How would you like to connect?',
-              style: const TextStyle(color: Color(0xFF64748B), fontSize: 13),
+              style: const TextStyle(color: VetoGlassTokens.textMuted, fontSize: 13),
             ),
             const SizedBox(height: 18),
             Row(
@@ -286,7 +288,7 @@ Future<String?> showCitizenSessionModeSheet(
               onPressed: () => Navigator.pop(ctx, null),
               child: Text(
                 langKey == 'he' ? 'ביטול' : langKey == 'ru' ? 'Отмена' : 'Cancel',
-                style: const TextStyle(color: Color(0xFF94A3B8)),
+                style: const TextStyle(color: VetoGlassTokens.textMuted),
               ),
             ),
           ],

@@ -223,18 +223,22 @@ class _VetoScreenState extends State<VetoScreen> {
       builder: (ctx) => Directionality(
         textDirection: isRtl ? TextDirection.rtl : TextDirection.ltr,
         child: AlertDialog(
-          backgroundColor: VetoPalette.surface,
+          backgroundColor: VetoGlassTokens.sheetPanel,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+            side: const BorderSide(color: VetoGlassTokens.glassBorder),
+          ),
           title: Text(
             AdminStrings.t(_langKey, 'changeStatus'),
-            style: const TextStyle(color: VetoPalette.text),
+            style: const TextStyle(color: VetoGlassTokens.textPrimary),
           ),
           content: StatefulBuilder(
             builder: (_, ss) => DropdownButton<String>(
               isExpanded: true,
               value: selected,
-              dropdownColor: VetoPalette.surface,
-              style: const TextStyle(color: VetoPalette.text, fontSize: 14),
-              underline: Container(height: 1, color: VetoPalette.border),
+              dropdownColor: VetoGlassTokens.menuPanel,
+              style: const TextStyle(color: VetoGlassTokens.textPrimary, fontSize: 14),
+              underline: Container(height: 1, color: VetoGlassTokens.glassBorder),
               items: AdminStrings.emergencyEventStatuses
                   .map(
                     (v) => DropdownMenuItem<String>(
@@ -308,8 +312,12 @@ class _VetoScreenState extends State<VetoScreen> {
       builder: (ctx) => Directionality(
         textDirection: isRtl ? TextDirection.rtl : TextDirection.ltr,
         child: AlertDialog(
-          backgroundColor: VetoPalette.surface,
-          title: Text(title, style: const TextStyle(color: VetoPalette.text)),
+          backgroundColor: VetoGlassTokens.sheetPanel,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+            side: const BorderSide(color: VetoGlassTokens.glassBorder),
+          ),
+          title: Text(title, style: const TextStyle(color: VetoGlassTokens.textPrimary)),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -318,13 +326,13 @@ class _VetoScreenState extends State<VetoScreen> {
                 OutlinedButton.icon(
                   onPressed: () => Navigator.pop(ctx, 'clear'),
                   icon: const Icon(Icons.layers_clear_outlined, color: VetoPalette.primary),
-                  label: Text(clearLabel, style: const TextStyle(color: VetoPalette.text)),
+                  label: Text(clearLabel, style: const TextStyle(color: VetoGlassTokens.textPrimary)),
                 ),
               if (hasEvidence) const SizedBox(height: 10),
               FilledButton.icon(
                 style: FilledButton.styleFrom(backgroundColor: VetoPalette.emergency),
                 onPressed: () => Navigator.pop(ctx, 'delete'),
-                icon: const Icon(Icons.delete_outline, color: Colors.white),
+                icon: const Icon(Icons.delete_outline, color: VetoGlassTokens.textPrimary),
                 label: Text(AdminStrings.t(_langKey, 'deleteEvent')),
               ),
             ],
@@ -369,14 +377,18 @@ class _VetoScreenState extends State<VetoScreen> {
       builder: (ctx) => Directionality(
         textDirection: isRtl ? TextDirection.rtl : TextDirection.ltr,
         child: AlertDialog(
-          backgroundColor: VetoPalette.surface,
+          backgroundColor: VetoGlassTokens.sheetPanel,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+            side: const BorderSide(color: VetoGlassTokens.glassBorder),
+          ),
           title: Text(
             AdminStrings.t(_langKey, 'deleteEvent'),
-            style: const TextStyle(color: VetoPalette.text),
+            style: const TextStyle(color: VetoGlassTokens.textPrimary),
           ),
           content: Text(
             AdminStrings.t(_langKey, 'deleteEventConfirm'),
-            style: const TextStyle(color: VetoPalette.textMuted),
+            style: const TextStyle(color: VetoGlassTokens.textMuted),
           ),
           actions: [
             TextButton(
@@ -1867,26 +1879,26 @@ class _VetoScreenState extends State<VetoScreen> {
       else if (_adminFiles.isEmpty)
         Container(
           padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(color: VetoPalette.surface,
+          decoration: BoxDecoration(color: VetoGlassTokens.glassFillStrong,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: VetoPalette.border)),
+              border: Border.all(color: VetoGlassTokens.glassBorder)),
           child: Text(
             isRtl ? 'אין אירועים עם ראיות בשרת' : 'No events with evidence on server',
-            style: const TextStyle(color: VetoPalette.textMuted),
+            style: const TextStyle(color: VetoGlassTokens.textMuted),
             textAlign: TextAlign.center,
           ),
         )
       else
         Container(
-          decoration: BoxDecoration(color: VetoPalette.surface,
+          decoration: BoxDecoration(color: VetoGlassTokens.glassFillStrong,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: VetoPalette.border)),
+              border: Border.all(color: VetoGlassTokens.glassBorder)),
           clipBehavior: Clip.antiAlias,
           child: ListView.separated(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             itemCount: _adminFiles.length > 25 ? 25 : _adminFiles.length,
-            separatorBuilder: (_, __) => const Divider(height: 1, color: VetoPalette.border),
+            separatorBuilder: (_, __) => const Divider(height: 1, color: VetoGlassTokens.glassBorder),
             itemBuilder: (ctx, i) {
               final ev = _adminFiles[i];
               final user = ev['user_id'];
@@ -1911,7 +1923,7 @@ class _VetoScreenState extends State<VetoScreen> {
                     Expanded(
                       child: Text(
                         user is Map ? (user['full_name'] ?? user['phone'] ?? 'משתמש').toString() : 'משתמש',
-                        style: const TextStyle(color: VetoPalette.text, fontSize: 13, fontWeight: FontWeight.w600),
+                        style: const TextStyle(color: VetoGlassTokens.textPrimary, fontSize: 13, fontWeight: FontWeight.w600),
                       ),
                     ),
                     if (eid != null) ...[
@@ -2054,7 +2066,7 @@ class _VetoScreenState extends State<VetoScreen> {
               decoration: BoxDecoration(
                 color: isUser
                     ? VetoPalette.primary.withValues(alpha: 0.10)
-                    : VetoPalette.surface,
+                    : VetoGlassTokens.glassFillStrong,
                 borderRadius: BorderRadius.only(
                   topLeft: const Radius.circular(18),
                   topRight: const Radius.circular(18),
@@ -2064,7 +2076,7 @@ class _VetoScreenState extends State<VetoScreen> {
                 border: Border.all(
                     color: isUser
                         ? VetoPalette.primary.withValues(alpha: 0.30)
-                        : VetoPalette.border,
+                        : VetoGlassTokens.glassBorder,
                     width: 1.5),
                 boxShadow: [
                   BoxShadow(
@@ -2074,7 +2086,7 @@ class _VetoScreenState extends State<VetoScreen> {
               ),
               child: Text(msg.text,
                   style: TextStyle(
-                      color: isUser ? VetoPalette.primary : VetoPalette.text,
+                      color: isUser ? VetoPalette.primary : VetoGlassTokens.textPrimary,
                       fontSize: 14.5,
                       height: 1.55,
                       fontWeight: isUser ? FontWeight.w700 : FontWeight.w600)),
@@ -2111,11 +2123,11 @@ class _VetoScreenState extends State<VetoScreen> {
       margin: const EdgeInsets.symmetric(vertical: 5),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-          color: VetoPalette.surface,
+          color: VetoGlassTokens.glassFillStrong,
           borderRadius: const BorderRadius.only(
             topLeft: Radius.circular(18), topRight: Radius.circular(18),
             bottomLeft: Radius.circular(18), bottomRight: Radius.circular(4)),
-          border: Border.all(color: VetoPalette.border, width: 1.5),
+          border: Border.all(color: VetoGlassTokens.glassBorder, width: 1.5),
           boxShadow: [BoxShadow(
               color: Colors.black.withValues(alpha: 0.04),
               blurRadius: 8, offset: const Offset(0, 2))]),
@@ -2124,11 +2136,11 @@ class _VetoScreenState extends State<VetoScreen> {
             width: 48,
             child: LinearProgressIndicator(
                 borderRadius: BorderRadius.circular(4),
-                backgroundColor: VetoPalette.border,
+                backgroundColor: VetoGlassTokens.glassBorder,
                 valueColor: const AlwaysStoppedAnimation(VetoPalette.success))),
         const SizedBox(width: 10),
         Text(_l.processing,
-            style: const TextStyle(color: VetoPalette.textMuted,
+            style: const TextStyle(color: VetoGlassTokens.textMuted,
                 fontSize: 13, fontWeight: FontWeight.w500)),
       ]),
     ),
@@ -2257,7 +2269,7 @@ class _VetoScreenState extends State<VetoScreen> {
                         ),
                     ],
                   ),
-                  child: const Icon(Icons.send, color: Colors.white, size: 22),
+                  child: const Icon(Icons.send, color: VetoGlassTokens.onNeon, size: 22),
                 ),
               ),
             ),
@@ -2446,31 +2458,31 @@ class _ContactSheetState extends State<_ContactSheet> {
                       color: accent, size: 18)),
               const SizedBox(width: 10),
               Text(title, style: const TextStyle(
-                  color: VetoPalette.text, fontSize: 18, fontWeight: FontWeight.w700)),
+                  color: VetoGlassTokens.textPrimary, fontSize: 18, fontWeight: FontWeight.w700)),
               const Spacer(),
               IconButton(
                   icon: const Icon(Icons.close),
-                  color: VetoPalette.textMuted,
+                  color: VetoGlassTokens.textMuted,
                   onPressed: () => Navigator.pop(context)),
             ]),
             const SizedBox(height: 12),
             TextField(
               controller: _ctrl,
               textDirection: TextDirection.ltr,
-              style: const TextStyle(color: VetoPalette.text),
+              style: const TextStyle(color: VetoGlassTokens.textPrimary),
               decoration: InputDecoration(
                 labelText: labelText,
-                labelStyle: const TextStyle(color: VetoPalette.textMuted),
+                labelStyle: const TextStyle(color: VetoGlassTokens.textMuted),
                 hintText: hintText,
-                hintStyle: const TextStyle(color: VetoPalette.textSubtle),
+                hintStyle: const TextStyle(color: VetoGlassTokens.textSubtle),
                 filled: true,
-                fillColor: VetoPalette.bg,
+                fillColor: const Color(0xFF0F1A24),
                 border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10),
-                    borderSide: const BorderSide(color: VetoPalette.border)),
+                    borderSide: const BorderSide(color: VetoGlassTokens.glassBorder)),
                 enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10),
-                    borderSide: const BorderSide(color: VetoPalette.border)),
+                    borderSide: const BorderSide(color: VetoGlassTokens.glassBorder)),
               ),
               onChanged: (_) => setState(() {}),
             ),
@@ -2481,13 +2493,14 @@ class _ContactSheetState extends State<_ContactSheet> {
                 onPressed: _busy || _ctrl.text.trim().isEmpty ? null : _go,
                 style: FilledButton.styleFrom(
                     backgroundColor: accent,
+                    foregroundColor: VetoGlassTokens.onNeon,
                     padding: const EdgeInsets.symmetric(vertical: 14)),
                 icon: _busy
                     ? const SizedBox(width: 16, height: 16,
-                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                    : const Icon(Icons.open_in_new, size: 18),
+                        child: CircularProgressIndicator(strokeWidth: 2, color: VetoGlassTokens.onNeon))
+                    : const Icon(Icons.open_in_new, size: 18, color: VetoGlassTokens.onNeon),
                 label: Text(isRtl ? 'פתח' : 'Open',
-                    style: const TextStyle(fontWeight: FontWeight.w700)),
+                    style: const TextStyle(fontWeight: FontWeight.w700, color: VetoGlassTokens.onNeon)),
               ),
             ),
             if (widget.type != 'video') ...[
@@ -2495,7 +2508,7 @@ class _ContactSheetState extends State<_ContactSheet> {
               TextButton(
                 onPressed: () => setState(() => _ctrl.text = '+972'),
                 child: Text(isRtl ? '▼ ישראל +972...' : '▼ Israel +972...',
-                    style: const TextStyle(color: VetoPalette.textMuted, fontSize: 12)),
+                    style: const TextStyle(color: VetoGlassTokens.textMuted, fontSize: 12)),
               ),
             ],
             const SizedBox(height: 8),

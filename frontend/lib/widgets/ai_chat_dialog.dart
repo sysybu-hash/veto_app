@@ -115,7 +115,7 @@ class _AiChatDialogState extends State<AiChatDialog> {
                             child: Text(
                               m['text'] ?? '',
                               style: TextStyle(
-                                color: isUser ? Colors.white : VetoGlassTokens.textPrimary,
+                                color: isUser ? VetoGlassTokens.onNeon : VetoGlassTokens.textPrimary,
                                 height: 1.45,
                                 fontWeight: FontWeight.w500,
                               ),
@@ -176,7 +176,7 @@ class _AiChatDialogState extends State<AiChatDialog> {
                               ),
                             ],
                           ),
-                          child: const Icon(Icons.send, color: Colors.white),
+                          child: const Icon(Icons.send, color: VetoGlassTokens.onNeon),
                         ),
                       ),
                     ],

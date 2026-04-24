@@ -1,5 +1,6 @@
 ﻿import 'package:flutter/material.dart';
 
+import 'veto_glass_system.dart';
 import 'veto_theme.dart';
 
 /// Plain dark background — replaced aurora/grid backdrop with clean solid.
@@ -10,7 +11,7 @@ class FutureBackdrop extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ColoredBox(color: VetoPalette.bg, child: child);
+    return ColoredBox(color: VetoGlassTokens.bgBase, child: child);
   }
 }
 
@@ -30,14 +31,14 @@ class GlassPanel extends StatelessWidget {
     return Container(
       padding: padding ?? const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: VetoPalette.surface,
+        color: VetoGlassTokens.glassFillStrong,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: VetoPalette.border),
-        boxShadow: const [
+        border: Border.all(color: VetoGlassTokens.glassBorder),
+        boxShadow: [
           BoxShadow(
-            color: Color(0x1A000000),
-            blurRadius: 6,
-            offset: Offset(0, 2),
+            color: Colors.black.withValues(alpha: 0.35),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
           ),
         ],
       ),

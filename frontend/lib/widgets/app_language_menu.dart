@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../core/i18n/app_language.dart';
+import '../core/theme/veto_glass_system.dart';
 import '../core/theme/veto_theme.dart';
 
 class AppLanguageMenu extends StatelessWidget {
@@ -25,8 +26,11 @@ class AppLanguageMenu extends StatelessWidget {
     return PopupMenuButton<String>(
       tooltip: tooltip ?? 'Language',
       initialValue: code,
-      color: VetoPalette.surface2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      color: VetoGlassTokens.menuPanel,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(14),
+        side: const BorderSide(color: VetoGlassTokens.glassBorder),
+      ),
       onSelected: (value) async {
         await context.read<AppLanguageController>().setLanguage(value);
         onLanguageChanged?.call(value);
@@ -41,13 +45,13 @@ class AppLanguageMenu extends StatelessWidget {
                 Icon(
                   selected ? Icons.radio_button_checked : Icons.radio_button_off,
                   size: 18,
-                  color: selected ? VetoPalette.primary : VetoPalette.textSubtle,
+                  color: selected ? VetoGlassTokens.neonCyan : VetoGlassTokens.textSubtle,
                 ),
                 const SizedBox(width: 10),
                 Text(
                   AppLanguage.labels[languageCode] ?? languageCode,
                   style: TextStyle(
-                    color: selected ? VetoPalette.text : VetoPalette.textMuted,
+                    color: selected ? VetoGlassTokens.textPrimary : VetoGlassTokens.textMuted,
                     fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
                   ),
                 ),
@@ -62,20 +66,20 @@ class AppLanguageMenu extends StatelessWidget {
           vertical: compact ? 8 : 10,
         ),
         decoration: BoxDecoration(
-          color: VetoPalette.surface.withValues(alpha: 0.92),
+          color: VetoGlassTokens.glassFillStrong,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: VetoPalette.border),
+          border: Border.all(color: VetoGlassTokens.glassBorder),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             const Icon(Icons.language_rounded,
-                size: 16, color: VetoPalette.primary),
+                size: 16, color: VetoGlassTokens.neonCyan),
             const SizedBox(width: 8),
             Text(
               AppLanguage.labels[code] ?? code,
               style: TextStyle(
-                color: compact ? VetoPalette.textMuted : VetoPalette.text,
+                color: compact ? VetoGlassTokens.textMuted : VetoGlassTokens.textPrimary,
                 fontWeight: FontWeight.w600,
                 fontSize: compact ? 12 : 13,
               ),

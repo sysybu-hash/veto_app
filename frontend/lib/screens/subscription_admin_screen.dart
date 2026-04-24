@@ -494,10 +494,14 @@ class _SubscriptionAdminScreenState
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setDlg) => AlertDialog(
-          backgroundColor: VetoPalette.surface,
+          backgroundColor: VetoGlassTokens.sheetPanel,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: const BorderSide(color: VetoGlassTokens.glassBorder),
+          ),
           title: Text(_t(code, 'edit'),
               style: const TextStyle(
-                  color: VetoPalette.text, fontWeight: FontWeight.w800)),
+                  color: VetoGlassTokens.textPrimary, fontWeight: FontWeight.w800)),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -505,56 +509,89 @@ class _SubscriptionAdminScreenState
               children: [
                 TextField(
                   controller: nameCtrl,
+                  cursorColor: VetoGlassTokens.neonCyan,
                   decoration: InputDecoration(
                     labelText: _t(code, 'fullName'),
-                    labelStyle: const TextStyle(color: VetoPalette.textMuted),
+                    labelStyle: const TextStyle(color: VetoGlassTokens.textMuted),
+                    filled: true,
+                    fillColor: const Color(0xFF0F1A24),
+                    border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: const BorderSide(color: VetoGlassTokens.glassBorder)),
+                    enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: const BorderSide(color: VetoGlassTokens.glassBorder)),
                   ),
-                  style: const TextStyle(color: VetoPalette.text),
+                  style: const TextStyle(color: VetoGlassTokens.textPrimary),
                 ),
                 TextField(
                   controller: phoneCtrl,
+                  cursorColor: VetoGlassTokens.neonCyan,
                   decoration: InputDecoration(
                     labelText: _t(code, 'phoneLabel'),
-                    labelStyle: const TextStyle(color: VetoPalette.textMuted),
+                    labelStyle: const TextStyle(color: VetoGlassTokens.textMuted),
+                    filled: true,
+                    fillColor: const Color(0xFF0F1A24),
+                    border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: const BorderSide(color: VetoGlassTokens.glassBorder)),
+                    enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: const BorderSide(color: VetoGlassTokens.glassBorder)),
                   ),
-                  style: const TextStyle(color: VetoPalette.text),
+                  style: const TextStyle(color: VetoGlassTokens.textPrimary),
                   keyboardType: TextInputType.phone,
                 ),
                 TextField(
                   controller: emailCtrl,
+                  cursorColor: VetoGlassTokens.neonCyan,
                   decoration: InputDecoration(
                     labelText: _t(code, 'emailLabel'),
-                    labelStyle: const TextStyle(color: VetoPalette.textMuted),
+                    labelStyle: const TextStyle(color: VetoGlassTokens.textMuted),
+                    filled: true,
+                    fillColor: const Color(0xFF0F1A24),
+                    border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: const BorderSide(color: VetoGlassTokens.glassBorder)),
+                    enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: const BorderSide(color: VetoGlassTokens.glassBorder)),
                   ),
-                  style: const TextStyle(color: VetoPalette.text),
+                  style: const TextStyle(color: VetoGlassTokens.textPrimary),
                   keyboardType: TextInputType.emailAddress,
                 ),
                 const SizedBox(height: 8),
                 ListTile(
                   contentPadding: EdgeInsets.zero,
                   title: Text(_t(code, 'subscribed'),
-                      style: const TextStyle(color: VetoPalette.text, fontSize: 14)),
+                      style: const TextStyle(color: VetoGlassTokens.textPrimary, fontSize: 14)),
                   trailing: Switch(
                     value: subscribed,
                     onChanged: (v) => setDlg(() => subscribed = v),
+                    activeTrackColor: VetoGlassTokens.neonCyan.withValues(alpha: 0.4),
+                    activeThumbColor: VetoGlassTokens.neonCyan,
                   ),
                 ),
                 ListTile(
                   contentPadding: EdgeInsets.zero,
                   title: Text(_t(code, 'manualExempt'),
-                      style: const TextStyle(color: VetoPalette.text, fontSize: 14)),
+                      style: const TextStyle(color: VetoGlassTokens.textPrimary, fontSize: 14)),
                   trailing: Switch(
                     value: manual,
                     onChanged: (v) => setDlg(() => manual = v),
+                    activeTrackColor: VetoGlassTokens.neonCyan.withValues(alpha: 0.4),
+                    activeThumbColor: VetoGlassTokens.neonCyan,
                   ),
                 ),
                 ListTile(
                   contentPadding: EdgeInsets.zero,
                   title: Text(_t(code, 'accountEnabled'),
-                      style: const TextStyle(color: VetoPalette.text, fontSize: 14)),
+                      style: const TextStyle(color: VetoGlassTokens.textPrimary, fontSize: 14)),
                   trailing: Switch(
                     value: active,
                     onChanged: (v) => setDlg(() => active = v),
+                    activeTrackColor: VetoGlassTokens.neonCyan.withValues(alpha: 0.4),
+                    activeThumbColor: VetoGlassTokens.neonCyan,
                   ),
                 ),
                 Row(children: [
@@ -568,7 +605,7 @@ class _SubscriptionAdminScreenState
                                   '${x.day}/${x.month}/${x.year}';
                             }(),
                       style: const TextStyle(
-                          color: VetoPalette.textMuted, fontSize: 13),
+                          color: VetoGlassTokens.textMuted, fontSize: 13),
                     ),
                   ),
                   TextButton(
@@ -596,11 +633,14 @@ class _SubscriptionAdminScreenState
             TextButton(
               onPressed: () => Navigator.pop(ctx, false),
               child: Text(_t(code, 'no'),
-                  style: const TextStyle(color: VetoPalette.textMuted)),
+                  style: const TextStyle(color: VetoGlassTokens.textMuted)),
             ),
             FilledButton(
               onPressed: () => Navigator.pop(ctx, true),
-              style: FilledButton.styleFrom(backgroundColor: VetoPalette.primary),
+              style: FilledButton.styleFrom(
+                backgroundColor: VetoGlassTokens.neonCyan,
+                foregroundColor: VetoGlassTokens.onNeon,
+              ),
               child: Text(_t(code, 'save')),
             ),
           ],
@@ -643,19 +683,25 @@ class _SubscriptionAdminScreenState
       await showDialog<bool>(
         context: context,
         builder: (ctx) => AlertDialog(
-          backgroundColor: VetoPalette.surface,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          backgroundColor: VetoGlassTokens.sheetPanel,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: const BorderSide(color: VetoGlassTokens.glassBorder),
+          ),
           content: Text(msg,
-              style: const TextStyle(color: VetoPalette.text, fontSize: 15)),
+              style: const TextStyle(color: VetoGlassTokens.textPrimary, fontSize: 15)),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx, false),
               child: Text(_t(context.read<AppLanguageController>().code, 'no'),
-                  style: const TextStyle(color: VetoPalette.textMuted)),
+                  style: const TextStyle(color: VetoGlassTokens.textMuted)),
             ),
             FilledButton(
               onPressed: () => Navigator.pop(ctx, true),
-              style: FilledButton.styleFrom(backgroundColor: VetoPalette.primary),
+              style: FilledButton.styleFrom(
+                backgroundColor: VetoGlassTokens.neonCyan,
+                foregroundColor: VetoGlassTokens.onNeon,
+              ),
               child: Text(_t(context.read<AppLanguageController>().code, 'yes')),
             ),
           ],

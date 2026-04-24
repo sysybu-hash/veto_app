@@ -29,6 +29,13 @@ class VetoGlassTokens {
   static const Color glassBorder = Color(0x28FFFFFF);
   static const Color glassBorderBright = Color(0x40FFFFFF);
 
+  /// Dialogs, modals, bottom sheets (aligned with glassDark theme)
+  static const Color sheetPanel = Color(0xE6121824);
+  /// [DropdownButton] / popup surfaces on dark UI
+  static const Color menuPanel = Color(0xFF152232);
+  /// Text/icons on neon / gradient buttons
+  static const Color onNeon = Color(0xFF041018);
+
   static const LinearGradient neonButton = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,

@@ -336,21 +336,24 @@ class _LawyerSettingsScreenState extends State<LawyerSettingsScreen> {
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: VetoPalette.surface,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        backgroundColor: VetoGlassTokens.sheetPanel,
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: const BorderSide(color: VetoGlassTokens.glassBorder)),
         title: Text(_t(code, 'deleteAccount'),
             style: const TextStyle(color: VetoPalette.emergency, fontWeight: FontWeight.w700)),
         content: Text(_t(code, 'deleteConfirm'),
-            style: const TextStyle(color: VetoPalette.text)),
+            style: const TextStyle(color: VetoGlassTokens.textPrimary)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
             child: Text(_t(code, 'no'),
-                style: const TextStyle(color: VetoPalette.textMuted)),
+                style: const TextStyle(color: VetoGlassTokens.textMuted)),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, true),
-            style: FilledButton.styleFrom(backgroundColor: VetoPalette.emergency),
+            style: FilledButton.styleFrom(
+                backgroundColor: VetoPalette.emergency, foregroundColor: Colors.white),
             child: Text(_t(code, 'yes')),
           ),
         ],
@@ -461,7 +464,7 @@ class _LawyerSettingsScreenState extends State<LawyerSettingsScreen> {
                       Padding(
                         padding: const EdgeInsets.only(bottom: 10),
                         child: Text(_t(code, 'scheduleDesc'),
-                            style: const TextStyle(color: VetoPalette.textMuted, fontSize: 13)),
+                            style: const TextStyle(color: VetoGlassTokens.textMuted, fontSize: 13)),
                       ),
                       ..._schedule.map((day) => _ScheduleRow(
                             dayLabel: _t(code, day.key),
@@ -482,7 +485,7 @@ class _LawyerSettingsScreenState extends State<LawyerSettingsScreen> {
                       Padding(
                         padding: const EdgeInsets.only(bottom: 10),
                         child: Text(_t(code, 'specDesc'),
-                            style: const TextStyle(color: VetoPalette.textMuted, fontSize: 13)),
+                            style: const TextStyle(color: VetoGlassTokens.textMuted, fontSize: 13)),
                       ),
                       if (_specializations.isNotEmpty)
                         Padding(
@@ -500,19 +503,24 @@ class _LawyerSettingsScreenState extends State<LawyerSettingsScreen> {
                         Expanded(
                           child: TextField(
                             controller: _specCtrl,
-                            style: const TextStyle(color: VetoPalette.text, fontSize: 14),
+                            style: const TextStyle(color: VetoGlassTokens.textPrimary, fontSize: 14),
+                            cursorColor: VetoGlassTokens.neonCyan,
                             decoration: InputDecoration(
                               hintText: _t(code, 'addSpecHint'),
-                              hintStyle: const TextStyle(color: VetoPalette.textMuted),
+                              hintStyle: const TextStyle(color: VetoGlassTokens.textMuted),
                               filled: true,
-                              fillColor: VetoPalette.bg,
+                              fillColor: const Color(0xFF0F1A24),
                               contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                               border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(10),
-                                  borderSide: const BorderSide(color: VetoPalette.border)),
+                                  borderSide: const BorderSide(color: VetoGlassTokens.glassBorder)),
                               enabledBorder: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(10),
-                                  borderSide: const BorderSide(color: VetoPalette.border)),
+                                  borderSide: const BorderSide(color: VetoGlassTokens.glassBorder)),
+                              focusedBorder: const OutlineInputBorder(
+                                  borderRadius: BorderRadius.all(Radius.circular(10)),
+                                  borderSide: BorderSide(
+                                      color: VetoGlassTokens.neonCyan, width: 1.5)),
                             ),
                             onSubmitted: (_) => _addSpec(code),
                           ),
@@ -520,7 +528,10 @@ class _LawyerSettingsScreenState extends State<LawyerSettingsScreen> {
                         const SizedBox(width: 8),
                         FilledButton(
                           onPressed: () => _addSpec(code),
-                          style: FilledButton.styleFrom(backgroundColor: VetoPalette.primary),
+                          style: FilledButton.styleFrom(
+                            backgroundColor: VetoGlassTokens.neonCyan,
+                            foregroundColor: VetoGlassTokens.onNeon,
+                          ),
                           child: Text(_t(code, 'add')),
                         ),
                       ]),
@@ -647,7 +658,7 @@ class _LawyerSettingsScreenState extends State<LawyerSettingsScreen> {
                       _ActionTile(
                         label: _t(code, 'logout'),
                         icon: Icons.logout_rounded,
-                        color: VetoPalette.textMuted,
+                        color: VetoGlassTokens.textMuted,
                         onTap: () => _auth.logout(context),
                       ),
                       _ActionTile(
@@ -679,10 +690,10 @@ class _Section extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: VetoGlassTokens.glassFillStrong,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE2E8F8)),
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 8, offset: const Offset(0, 2))],
+        border: Border.all(color: VetoGlassTokens.glassBorder),
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.2), blurRadius: 20, offset: const Offset(0, 8))],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -693,16 +704,16 @@ class _Section extends StatelessWidget {
               Container(
                 width: 32, height: 32,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF5B8FFF).withValues(alpha: 0.10),
+                  color: VetoGlassTokens.neonBlue.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Icon(icon, color: const Color(0xFF5B8FFF), size: 16),
+                child: Icon(icon, color: VetoGlassTokens.accentSoft, size: 16),
               ),
               const SizedBox(width: 10),
-              Text(title, style: const TextStyle(color: Color(0xFF0F172A), fontSize: 15, fontWeight: FontWeight.w700)),
+              Text(title, style: const TextStyle(color: VetoGlassTokens.textPrimary, fontSize: 15, fontWeight: FontWeight.w700)),
             ]),
           ),
-          const Divider(height: 1, color: Color(0xFFE2E8F8)),
+          const Divider(height: 1, color: VetoGlassTokens.glassBorder),
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 14),
             child: Column(children: children),
@@ -741,16 +752,16 @@ class _ToggleTile extends StatelessWidget {
         const SizedBox(width: 12),
         Expanded(
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(label, style: const TextStyle(color: VetoPalette.text,
+            Text(label, style: const TextStyle(color: VetoGlassTokens.textPrimary,
                 fontSize: 14, fontWeight: FontWeight.w500)),
             if (subtitle != null)
-              Text(subtitle!, style: const TextStyle(color: VetoPalette.textMuted, fontSize: 11)),
+              Text(subtitle!, style: const TextStyle(color: VetoGlassTokens.textMuted, fontSize: 11)),
           ]),
         ),
         Switch(
           value: value,
           onChanged: onChanged,
-          activeThumbColor: VetoPalette.primary,
+          activeThumbColor: VetoGlassTokens.neonCyan,
         ),
       ]),
     );
@@ -775,31 +786,33 @@ class _FieldTile extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Row(children: [
-          Icon(icon, color: VetoPalette.textMuted, size: 14),
+          Icon(icon, color: VetoGlassTokens.textMuted, size: 14),
           const SizedBox(width: 6),
-          Text(label, style: const TextStyle(color: VetoPalette.textMuted,
+          Text(label, style: const TextStyle(color: VetoGlassTokens.textMuted,
               fontSize: 12, fontWeight: FontWeight.w600)),
         ]),
         const SizedBox(height: 6),
         TextField(
           controller: controller,
           keyboardType: keyboardType,
-          style: const TextStyle(color: VetoPalette.text, fontSize: 14),
+          cursorColor: VetoGlassTokens.neonCyan,
+          style: const TextStyle(color: VetoGlassTokens.textPrimary, fontSize: 14),
           decoration: InputDecoration(
             hintText: hint,
-            hintStyle: const TextStyle(color: VetoPalette.textSubtle),
+            hintStyle: const TextStyle(color: VetoGlassTokens.textSubtle),
             filled: true,
-            fillColor: VetoPalette.surface,
+            fillColor: const Color(0xFF0F1A24),
             contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(10),
-                borderSide: const BorderSide(color: VetoPalette.border)),
+                borderSide: const BorderSide(color: VetoGlassTokens.glassBorder)),
             enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(10),
-                borderSide: const BorderSide(color: VetoPalette.border)),
-            focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10),
-                borderSide: const BorderSide(color: VetoPalette.primary)),
+                borderSide: const BorderSide(color: VetoGlassTokens.glassBorder)),
+            focusedBorder: const OutlineInputBorder(
+                borderRadius: BorderRadius.all(Radius.circular(10)),
+                borderSide: BorderSide(
+                    color: VetoGlassTokens.neonCyan, width: 1.5)),
           ),
         ),
       ]),
@@ -825,16 +838,16 @@ class _SliderTile extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-          Text(label, style: const TextStyle(color: VetoPalette.textMuted,
+          Text(label, style: const TextStyle(color: VetoGlassTokens.textMuted,
               fontSize: 13, fontWeight: FontWeight.w500)),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
             decoration: BoxDecoration(
-              color: VetoPalette.primary.withValues(alpha: 0.12),
+              color: VetoGlassTokens.neonCyan.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Text('$value $unit', style: const TextStyle(
-                color: VetoPalette.primary, fontSize: 13, fontWeight: FontWeight.w700)),
+                color: VetoGlassTokens.neonCyan, fontSize: 13, fontWeight: FontWeight.w700)),
           ),
         ]),
         Slider(
@@ -842,7 +855,7 @@ class _SliderTile extends StatelessWidget {
           min: min.toDouble(),
           max: max.toDouble(),
           divisions: divisions,
-          activeColor: VetoPalette.primary,
+          activeColor: VetoGlassTokens.neonCyan,
           onChanged: (v) => onChanged(v.round()),
         ),
       ]),
@@ -885,17 +898,17 @@ class _SpecChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
-        color: VetoPalette.primary.withValues(alpha: 0.10),
+        color: VetoGlassTokens.neonCyan.withValues(alpha: 0.10),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: VetoPalette.primary.withValues(alpha: 0.25)),
+        border: Border.all(color: VetoGlassTokens.neonCyan.withValues(alpha: 0.25)),
       ),
       child: Row(mainAxisSize: MainAxisSize.min, children: [
         Text(label, style: const TextStyle(
-            color: VetoPalette.primary, fontSize: 13, fontWeight: FontWeight.w600)),
+            color: VetoGlassTokens.neonCyan, fontSize: 13, fontWeight: FontWeight.w600)),
         const SizedBox(width: 6),
         GestureDetector(
           onTap: onRemove,
-          child: const Icon(Icons.close_rounded, size: 14, color: VetoPalette.primary),
+          child: const Icon(Icons.close_rounded, size: 14, color: VetoGlassTokens.neonCyan),
         ),
       ]),
     );
@@ -923,7 +936,7 @@ class _ScheduleRow extends StatelessWidget {
         SizedBox(
           width: 48,
           child: Text(dayLabel, style: const TextStyle(
-              color: VetoPalette.text, fontSize: 13, fontWeight: FontWeight.w600)),
+              color: VetoGlassTokens.textPrimary, fontSize: 13, fontWeight: FontWeight.w600)),
         ),
         Switch(
           value: schedule.open,
@@ -934,7 +947,7 @@ class _ScheduleRow extends StatelessWidget {
         if (!schedule.open)
           Expanded(
             child: Text(closedLabel, style: const TextStyle(
-                color: VetoPalette.textMuted, fontSize: 12)),
+                color: VetoGlassTokens.textMuted, fontSize: 12)),
           )
         else ...[
           const SizedBox(width: 4),
@@ -945,7 +958,7 @@ class _ScheduleRow extends StatelessWidget {
           ),
           const Padding(
             padding: EdgeInsets.symmetric(horizontal: 6),
-            child: Text('–', style: TextStyle(color: VetoPalette.textMuted)),
+            child: Text('–', style: TextStyle(color: VetoGlassTokens.textMuted)),
           ),
           _TimeDropdown(
             label: toLabel,
@@ -975,8 +988,8 @@ class _TimeDropdown extends StatelessWidget {
   Widget build(BuildContext context) {
     return DropdownButton<String>(
       value: _slots.contains(value) ? value : _slots.first,
-      dropdownColor: VetoPalette.surface,
-      style: const TextStyle(color: VetoPalette.text, fontSize: 13),
+      dropdownColor: VetoGlassTokens.menuPanel,
+      style: const TextStyle(color: VetoGlassTokens.textPrimary, fontSize: 13),
       underline: const SizedBox(),
       items: _slots.map((t) => DropdownMenuItem(
         value: t,

@@ -10,6 +10,7 @@ import 'package:provider/provider.dart';
 
 import '../core/accessibility/accessibility_settings.dart';
 import '../core/i18n/app_language.dart';
+import '../core/theme/veto_glass_system.dart';
 import '../core/theme/veto_theme.dart';
 
 const _copy = {
@@ -60,10 +61,7 @@ const _copy = {
   },
 };
 
-// Explicit sheet colors (VetoColors.white is primary *text* ink, not a light fill).
-const Color _sheetBg = Color(0xFFFFFFFF);
-const Color _sheetInk = Color(0xFF0F172A);
-const Color _sheetMuted = Color(0xFF64748B);
+// Set 5 — dark glass sheet (see [VetoGlassTokens.sheetPanel])
 
 String _tx(String code, String k) =>
     (_copy[AppLanguage.normalize(code)] ?? _copy['en']!)[k] ?? k;
@@ -80,7 +78,7 @@ void showAccessibilitySheet(BuildContext context) {
     enableDrag: true,
     barrierColor: const Color(0x66000000),
     showDragHandle: true,
-    backgroundColor: _sheetBg,
+    backgroundColor: VetoGlassTokens.sheetPanel,
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
     ),
@@ -91,7 +89,7 @@ void showAccessibilitySheet(BuildContext context) {
       return SafeArea(
         minimum: const EdgeInsets.only(top: 8),
         child: Material(
-          color: _sheetBg,
+          color: VetoGlassTokens.sheetPanel,
           child: ConstrainedBox(
             constraints: BoxConstraints(maxHeight: maxH),
             child: ListenableBuilder(
@@ -110,7 +108,7 @@ void showAccessibilitySheet(BuildContext context) {
                           fontFamily: 'Heebo',
                           fontSize: 22,
                           fontWeight: FontWeight.w900,
-                          color: _sheetInk,
+                          color: VetoGlassTokens.textPrimary,
                           height: 1.2,
                         ),
                       ),
@@ -122,7 +120,7 @@ void showAccessibilitySheet(BuildContext context) {
                           fontFamily: 'Heebo',
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
-                          color: _sheetMuted,
+                          color: VetoGlassTokens.textMuted,
                           height: 1.35,
                         ),
                       ),
@@ -133,7 +131,7 @@ void showAccessibilitySheet(BuildContext context) {
                           fontFamily: 'Heebo',
                           fontSize: 15,
                           fontWeight: FontWeight.w800,
-                          color: _sheetInk,
+                          color: VetoGlassTokens.textPrimary,
                         ),
                       ),
                       const SizedBox(height: 10),
@@ -147,7 +145,7 @@ void showAccessibilitySheet(BuildContext context) {
                               icon: const Icon(Icons.text_decrease_rounded,
                                   color: VetoColors.accentDark),
                               label: Text(_tx(code, 'smaller'),
-                                  style: const TextStyle(color: _sheetInk)),
+                                  style: const TextStyle(color: VetoGlassTokens.textPrimary)),
                             ),
                           ),
                           const SizedBox(width: 10),
@@ -159,7 +157,7 @@ void showAccessibilitySheet(BuildContext context) {
                               icon: const Icon(Icons.text_increase_rounded,
                                   color: VetoColors.accentDark),
                               label: Text(_tx(code, 'larger'),
-                                  style: const TextStyle(color: _sheetInk)),
+                                  style: const TextStyle(color: VetoGlassTokens.textPrimary)),
                             ),
                           ),
                         ],
@@ -171,7 +169,7 @@ void showAccessibilitySheet(BuildContext context) {
                         title: Text(_tx(code, 'highContrast'),
                             style: const TextStyle(
                                 fontFamily: 'Heebo',
-                                color: _sheetInk,
+                                color: VetoGlassTokens.textPrimary,
                                 fontWeight: FontWeight.w600)),
                         activeThumbColor: VetoColors.accent,
                         contentPadding: EdgeInsets.zero,
@@ -182,7 +180,7 @@ void showAccessibilitySheet(BuildContext context) {
                         title: Text(_tx(code, 'bold'),
                             style: const TextStyle(
                                 fontFamily: 'Heebo',
-                                color: _sheetInk,
+                                color: VetoGlassTokens.textPrimary,
                                 fontWeight: FontWeight.w600)),
                         activeThumbColor: VetoColors.accent,
                         contentPadding: EdgeInsets.zero,
@@ -193,7 +191,7 @@ void showAccessibilitySheet(BuildContext context) {
                         title: Text(_tx(code, 'reduceMotion'),
                             style: const TextStyle(
                                 fontFamily: 'Heebo',
-                                color: _sheetInk,
+                                color: VetoGlassTokens.textPrimary,
                                 fontWeight: FontWeight.w600)),
                         activeThumbColor: VetoColors.accent,
                         contentPadding: EdgeInsets.zero,
@@ -204,7 +202,7 @@ void showAccessibilitySheet(BuildContext context) {
                         title: Text(_tx(code, 'underline'),
                             style: const TextStyle(
                                 fontFamily: 'Heebo',
-                                color: _sheetInk,
+                                color: VetoGlassTokens.textPrimary,
                                 fontWeight: FontWeight.w600)),
                         activeThumbColor: VetoColors.accent,
                         contentPadding: EdgeInsets.zero,
@@ -215,7 +213,7 @@ void showAccessibilitySheet(BuildContext context) {
                         title: Text(_tx(code, 'focus'),
                             style: const TextStyle(
                                 fontFamily: 'Heebo',
-                                color: _sheetInk,
+                                color: VetoGlassTokens.textPrimary,
                                 fontWeight: FontWeight.w600)),
                         activeThumbColor: VetoColors.accent,
                         contentPadding: EdgeInsets.zero,
@@ -236,8 +234,8 @@ void showAccessibilitySheet(BuildContext context) {
                           FilledButton(
                             onPressed: () => Navigator.pop(sheetContext),
                             style: FilledButton.styleFrom(
-                              backgroundColor: _sheetInk,
-                              foregroundColor: _sheetBg,
+                              backgroundColor: VetoGlassTokens.neonCyan,
+                              foregroundColor: VetoGlassTokens.onNeon,
                               shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(12)),
                             ),
@@ -286,7 +284,7 @@ class AccessibilityToolbarHost extends StatelessWidget {
       enableDrag: true,
       barrierColor: const Color(0x66000000),
       showDragHandle: true,
-      backgroundColor: _sheetBg,
+      backgroundColor: VetoGlassTokens.sheetPanel,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -297,7 +295,7 @@ class AccessibilityToolbarHost extends StatelessWidget {
         return SafeArea(
           minimum: const EdgeInsets.only(top: 8),
           child: Material(
-            color: _sheetBg,
+            color: VetoGlassTokens.sheetPanel,
             child: ConstrainedBox(
               constraints: BoxConstraints(maxHeight: maxH),
               child: ListenableBuilder(
@@ -316,7 +314,7 @@ class AccessibilityToolbarHost extends StatelessWidget {
                             fontFamily: 'Heebo',
                             fontSize: 22,
                             fontWeight: FontWeight.w900,
-                            color: _sheetInk,
+                            color: VetoGlassTokens.textPrimary,
                             height: 1.2,
                           ),
                         ),
@@ -328,7 +326,7 @@ class AccessibilityToolbarHost extends StatelessWidget {
                             fontFamily: 'Heebo',
                             fontSize: 13,
                             fontWeight: FontWeight.w600,
-                            color: _sheetMuted,
+                            color: VetoGlassTokens.textMuted,
                             height: 1.35,
                           ),
                         ),
@@ -339,7 +337,7 @@ class AccessibilityToolbarHost extends StatelessWidget {
                             fontFamily: 'Heebo',
                             fontSize: 15,
                             fontWeight: FontWeight.w800,
-                            color: _sheetInk,
+                            color: VetoGlassTokens.textPrimary,
                           ),
                         ),
                         const SizedBox(height: 10),
@@ -353,7 +351,7 @@ class AccessibilityToolbarHost extends StatelessWidget {
                                 icon: const Icon(Icons.text_decrease_rounded,
                                     color: VetoColors.accentDark),
                                 label: Text(_tx(code, 'smaller'),
-                                    style: const TextStyle(color: _sheetInk)),
+                                    style: const TextStyle(color: VetoGlassTokens.textPrimary)),
                               ),
                             ),
                             const SizedBox(width: 10),
@@ -365,7 +363,7 @@ class AccessibilityToolbarHost extends StatelessWidget {
                                 icon: const Icon(Icons.text_increase_rounded,
                                     color: VetoColors.accentDark),
                                 label: Text(_tx(code, 'larger'),
-                                    style: const TextStyle(color: _sheetInk)),
+                                    style: const TextStyle(color: VetoGlassTokens.textPrimary)),
                               ),
                             ),
                           ],
@@ -394,7 +392,7 @@ class AccessibilityToolbarHost extends StatelessWidget {
                               fontFamily: 'Heebo',
                               fontWeight: FontWeight.w700,
                               fontSize: 15,
-                              color: _sheetInk,
+                              color: VetoGlassTokens.textPrimary,
                             ),
                           ),
                           secondary: const Icon(Icons.contrast,
@@ -409,7 +407,7 @@ class AccessibilityToolbarHost extends StatelessWidget {
                               fontFamily: 'Heebo',
                               fontWeight: FontWeight.w700,
                               fontSize: 15,
-                              color: _sheetInk,
+                              color: VetoGlassTokens.textPrimary,
                             ),
                           ),
                           secondary: const Icon(Icons.format_bold,
@@ -424,7 +422,7 @@ class AccessibilityToolbarHost extends StatelessWidget {
                               fontFamily: 'Heebo',
                               fontWeight: FontWeight.w700,
                               fontSize: 15,
-                              color: _sheetInk,
+                              color: VetoGlassTokens.textPrimary,
                             ),
                           ),
                           secondary: const Icon(Icons.motion_photos_off_outlined,
@@ -439,7 +437,7 @@ class AccessibilityToolbarHost extends StatelessWidget {
                               fontFamily: 'Heebo',
                               fontWeight: FontWeight.w700,
                               fontSize: 15,
-                              color: _sheetInk,
+                              color: VetoGlassTokens.textPrimary,
                             ),
                           ),
                           secondary: const Icon(Icons.link,
@@ -454,7 +452,7 @@ class AccessibilityToolbarHost extends StatelessWidget {
                               fontFamily: 'Heebo',
                               fontWeight: FontWeight.w700,
                               fontSize: 15,
-                              color: _sheetInk,
+                              color: VetoGlassTokens.textPrimary,
                             ),
                           ),
                           secondary: const Icon(
@@ -472,14 +470,14 @@ class AccessibilityToolbarHost extends StatelessWidget {
                           icon: const Icon(Icons.restart_alt_rounded,
                               color: VetoColors.accentDark),
                           label: Text(_tx(code, 'reset'),
-                              style: const TextStyle(color: _sheetInk)),
+                              style: const TextStyle(color: VetoGlassTokens.textPrimary)),
                         ),
                         const SizedBox(height: 8),
                         FilledButton(
                           onPressed: () => Navigator.pop(sheetContext),
                           style: FilledButton.styleFrom(
-                            backgroundColor: VetoColors.accent,
-                            foregroundColor: Colors.white,
+                            backgroundColor: VetoGlassTokens.neonCyan,
+                            foregroundColor: VetoGlassTokens.onNeon,
                           ),
                           child: Text(_tx(code, 'close')),
                         ),
@@ -528,9 +526,9 @@ class AccessibilityToolbarHost extends StatelessWidget {
                     height: 58,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: _sheetInk,
+                      color: VetoGlassTokens.bgDeep,
                       border: Border.all(
-                        color: VetoPalette.primary,
+                        color: VetoGlassTokens.neonCyan,
                         width: 2.5,
                       ),
                       boxShadow: [
@@ -567,7 +565,7 @@ class _AccessibilityFabGlyph extends StatelessWidget {
       style: const TextStyle(
         fontSize: 28,
         height: 1.05,
-        color: Colors.white,
+        color: VetoGlassTokens.neonCyan,
         fontFamilyFallback: <String>[
           'Segoe UI Emoji',
           'Apple Color Emoji',
