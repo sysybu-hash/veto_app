@@ -64,6 +64,10 @@ dependencies:
   # ── File Picker (vault uploads) ─────────────────────────────
   file_picker: ^8.0.0
   web: ^1.1.1
+  # Gzip compression for vault payloads (Web + mobile)
+  archive: ^3.6.0
+  # Same Web MediaStream class our recorder needs for MediaRecorder options
+  dart_webrtc: ^1.4.0
 
 # ══════════════════════════════════════════════════════════════
 #  Dev Dependencies

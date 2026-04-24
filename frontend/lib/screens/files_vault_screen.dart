@@ -4,6 +4,7 @@
 //            lawyer access sharing, 100 MB quota, compression
 // ============================================================
 
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/foundation.dart' show kIsWeb, debugPrint;
 import 'package:flutter/material.dart';
@@ -16,6 +17,7 @@ import '../core/i18n/app_language.dart';
 import '../core/theme/veto_glass_system.dart';
 import '../core/theme/veto_theme.dart';
 import '../services/auth_service.dart';
+import '../services/vault_save_queue.dart';
 import '../platform/browser_bridge.dart' as browser_bridge;
 
 // ── i18n strings ─────────────────────────────────────────────
@@ -201,6 +203,8 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
   String? _activeFileId;
 
   late TabController _tabController;
+  VaultSaveQueue? _queue;
+  void Function()? _queueListRefresh;
 
   double get _usedMb =>
       _files.fold(0.0, (s, f) => s + f.sizeBytes) / (1024 * 1024);
@@ -218,6 +222,16 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
     _tabController.addListener(() => setState(() {}));
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _queue = context.read<VaultSaveQueue>();
+      _queueListRefresh = () {
+        if (mounted) {
+          unawaited(_load());
+        }
+      };
+      _queue!.listRefresh.addListener(_queueListRefresh!);
+    });
     _load();
     if (kIsWeb) {
       browser_bridge.setupDragAndDropHandlers(
@@ -233,8 +247,9 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
 
   @override
   void dispose() {
-    // browser_bridge handlers are anonymous in this implementation, 
-    // ideally we'd remove them but flutter doesn't provide a clean dispose for global listeners easily without complexity
+    if (_queueListRefresh != null) {
+      _queue?.listRefresh.removeListener(_queueListRefresh!);
+    }
     _tabController.dispose();
     super.dispose();
   }
@@ -804,6 +819,107 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
     ));
   }
 
+  Widget _buildCallSaveBanners() {
+    final q = context.watch<VaultSaveQueue>();
+    if (q.visibleJobs.isEmpty) {
+      return const SizedBox.shrink();
+    }
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          for (final j in q.visibleJobs) _oneSaveBanner(j, q),
+        ],
+      ),
+    );
+  }
+
+  Widget _oneSaveBanner(VaultSaveJob j, VaultSaveQueue q) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Material(
+        color: VetoGlassTokens.glassBorder.withValues(alpha: 0.25),
+        borderRadius: BorderRadius.circular(12),
+        child: InkWell(
+          onTap: j.error == null
+              ? null
+              : () {
+                  q.dismissJob(j.id);
+                },
+          borderRadius: BorderRadius.circular(12),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  children: [
+                    Icon(
+                      j.error != null
+                          ? Icons.error_outline_rounded
+                          : (j.isDone
+                              ? Icons.check_circle_outline_rounded
+                              : Icons.cloud_upload_outlined),
+                      size: 18,
+                      color: j.error != null
+                          ? VetoPalette.emergency
+                          : VetoGlassTokens.neonCyan,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        j.label,
+                        style: const TextStyle(
+                          color: VetoGlassTokens.textPrimary,
+                          fontWeight: FontWeight.w700,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    if (j.error != null)
+                      IconButton(
+                        onPressed: () => q.dismissJob(j.id),
+                        icon: const Icon(Icons.close, size: 18),
+                        color: VetoGlassTokens.textMuted,
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  j.error ?? j.statusLine,
+                  style: TextStyle(
+                    color: j.error != null
+                        ? VetoPalette.emergency
+                        : VetoGlassTokens.textMuted,
+                    fontSize: 12,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                if (!j.isDone && j.error == null) ...[
+                  const SizedBox(height: 8),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(4),
+                    child: LinearProgressIndicator(
+                      value: j.progress,
+                      minHeight: 4,
+                      backgroundColor: VetoGlassTokens.glassBorder,
+                      color: VetoGlassTokens.neonCyan,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   // ── Build ─────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
@@ -865,6 +981,7 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
           _loading
               ? const Center(child: CircularProgressIndicator(color: VetoGlassTokens.neonCyan))
               : Column(children: [
+                  _buildCallSaveBanners(),
                   _buildQuotaBar(),
                   Expanded(
                     child: TabBarView(

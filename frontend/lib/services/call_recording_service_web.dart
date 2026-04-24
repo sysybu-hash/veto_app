@@ -1,14 +1,25 @@
+import 'dart:async';
+import 'dart:js_interop';
+
+import 'package:dart_webrtc/dart_webrtc.dart' show MediaStreamWeb;
 import 'package:flutter/foundation.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:http/http.dart' as http;
-import 'package:web/web.dart' show URL;
+import 'package:web/web.dart' as web;
 
 import 'call_recording_service.dart';
 
+const int _kAudioBps = 96000;
+const int _kVideoBps = 1200000;
+const int _kTimeSliceMs = 1000;
+
 class _WebCallRecordingService implements CallRecordingService {
-  MediaRecorder? _recorder;
+  web.MediaRecorder? _rec;
   MediaStream? _recordingStream;
   String _mimeType = 'audio/webm';
+  Completer<String>? _urlCompleter;
+  final List<web.Blob> _chunks = [];
+  var _isVideo = false;
 
   @override
   bool get isSupported => kIsWeb;
@@ -19,7 +30,9 @@ class _WebCallRecordingService implements CallRecordingService {
     required MediaStream? remoteStream,
     required bool video,
   }) async {
-    if (!isSupported || _recorder != null) return;
+    if (!isSupported || _rec != null) return;
+    _isVideo = video;
+    _chunks.clear();
 
     final sourceVideo = remoteStream?.getVideoTracks().isNotEmpty == true
         ? remoteStream
@@ -27,7 +40,7 @@ class _WebCallRecordingService implements CallRecordingService {
     final sourceAudio = <MediaStream?>[localStream, remoteStream];
 
     if ((sourceVideo == null || sourceVideo.getTracks().isEmpty) &&
-        sourceAudio.every((stream) => stream == null || stream.getTracks().isEmpty)) {
+        sourceAudio.every((s) => s == null || s.getAudioTracks().isEmpty)) {
       return;
     }
 
@@ -45,43 +58,95 @@ class _WebCallRecordingService implements CallRecordingService {
 
     for (final stream in sourceAudio) {
       if (stream == null) continue;
-      for (final track in stream.getAudioTracks()) {
-        await _recordingStream!.addTrack(track, addToNative: false);
+      for (final t in stream.getAudioTracks()) {
+        await _recordingStream!.addTrack(t, addToNative: false);
       }
     }
 
-    _recorder = MediaRecorder();
-    _recorder!.startWeb(
-      _recordingStream!,
-      mimeType: _mimeType,
-      timeSlice: 1000,
-    );
+    final s = _recordingStream;
+    if (s is! MediaStreamWeb) {
+      return;
+    }
+
+    final opts = video
+        ? web.MediaRecorderOptions(
+            mimeType: _mimeType,
+            audioBitsPerSecond: _kAudioBps,
+            videoBitsPerSecond: _kVideoBps,
+          )
+        : web.MediaRecorderOptions(
+            mimeType: _mimeType,
+            audioBitsPerSecond: _kAudioBps,
+          );
+
+    _urlCompleter = Completer<String>();
+    _rec = web.MediaRecorder(s.jsStream, opts);
+    final recorder = _rec!;
+
+    void onDataAvailable(web.Event event) {
+      final blob = (event as web.BlobEvent).data;
+      if (blob.size > 0) {
+        _chunks.add(blob);
+      }
+      if (recorder.state == 'inactive') {
+        if (_urlCompleter != null && !_urlCompleter!.isCompleted) {
+          if (_chunks.isEmpty) {
+            _urlCompleter!.complete('');
+          } else {
+            final b = web.Blob(_chunks.toJS, web.BlobPropertyBag(type: _mimeType));
+            _urlCompleter!.complete(web.URL.createObjectURL(b));
+          }
+        }
+      }
+    }
+
+    void onError(JSAny e) {
+      if (_urlCompleter != null && !_urlCompleter!.isCompleted) {
+        _urlCompleter!.completeError(e);
+      }
+    }
+
+    recorder.addEventListener('dataavailable', onDataAvailable.toJS);
+    recorder.addEventListener('error', onError.toJS);
+    recorder.start(_kTimeSliceMs);
   }
 
   @override
   Future<CallRecordingResult?> stop() async {
-    final recorder = _recorder;
-    if (recorder == null) return null;
-
-    _recorder = null;
-    final objectUrl = await recorder.stop() as String?;
-    if (objectUrl == null || objectUrl.isEmpty) return null;
+    if (_rec == null || _urlCompleter == null) {
+      return null;
+    }
+    _rec!.stop();
+    var objectUrl = '';
+    try {
+      objectUrl = await _urlCompleter!.future;
+    } catch (_) {
+      return null;
+    } finally {
+      _rec = null;
+      _urlCompleter = null;
+      _recordingStream = null;
+      _chunks.clear();
+    }
+    if (objectUrl.isEmpty) {
+      return null;
+    }
 
     try {
       final response = await http.get(Uri.parse(objectUrl));
       if (response.statusCode < 200 || response.statusCode >= 300) {
         return null;
       }
-      final bytes = Uint8List.fromList(response.bodyBytes);
+      final u8 = Uint8List.fromList(response.bodyBytes);
       return CallRecordingResult(
-        bytes: bytes,
+        bytes: u8,
         mimeType: _mimeType,
-        fileName: _mimeType.startsWith('video')
+        fileName: _isVideo
             ? 'veto-call.webm'
             : 'veto-call-audio.webm',
       );
     } finally {
-      URL.revokeObjectURL(objectUrl);
+      web.URL.revokeObjectURL(objectUrl);
     }
   }
 }

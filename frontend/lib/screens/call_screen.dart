@@ -7,18 +7,15 @@
 // ============================================================
 
 import 'dart:async';
-import 'dart:convert';
-import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
-import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
-import '../config/app_config.dart';
+
 import '../core/theme/veto_theme.dart';
 import '../services/auth_service.dart';
-import '../services/call_api_service.dart';
 import '../services/call_recording_service.dart';
+import '../services/vault_save_queue.dart';
 import '../services/webrtc_service.dart';
 import '../services/socket_service.dart';
 
@@ -49,14 +46,10 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
   String  _eventId  = '';
   String  _language = 'he';
 
-  bool _showTranscript = false;
   bool _recordingStarted = false;
   bool _finalizedCall = false;
-  bool _savingArtifacts = false;
-  String? _transcriptText;
   String? _callErrorText;
   late final CallRecordingService _recordingService;
-  final CallApiService _callApiService = CallApiService();
 
   /// Subscriber-only: user must opt in before we capture media.
   bool _isSubscriber = false;
@@ -376,12 +369,57 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
     });
   }
 
+  String _formatChatAsTranscript() {
+    final buf = StringBuffer();
+    for (final line in _chatLines) {
+      buf.writeln(
+        line.mine ? '[Me] ${line.text}' : '[$_peerName] ${line.text}',
+      );
+    }
+    return buf.toString().trim();
+  }
+
+  /// Stops the recorder, enqueues long uploads to the vault queue, and navigates
+  /// immediately (work continues in the background).
   Future<void> _finalizeAndNavigate() async {
-    await _finalizeArtifacts();
     if (!mounted) return;
-    Navigator.of(context).pushReplacementNamed(
-      _myRole == 'lawyer' ? '/lawyer_dashboard' : '/veto_screen',
-    );
+    final queue = context.read<VaultSaveQueue>();
+    var goVault = false;
+    if (_isChat) {
+      final t = _formatChatAsTranscript();
+      if (t.isNotEmpty) {
+        queue.enqueueChatTranscript(
+          eventId: _eventId,
+          transcript: t,
+          roomLabel: _peerName,
+        );
+        goVault = true;
+      }
+    } else {
+      CallRecordingResult? rec;
+      if (_recordingStarted) {
+        rec = await _recordingService.stop();
+        _liveRecording = false;
+        _recordingStarted = false;
+      }
+      if (rec != null && rec.bytes.isNotEmpty) {
+        queue.enqueueWebrtcCallArtifacts(
+          eventId: _eventId,
+          language: _language,
+          roomLabel: _peerName,
+          recording: rec,
+        );
+        goVault = true;
+      }
+    }
+    if (!mounted) return;
+    if (goVault) {
+      Navigator.of(context).pushReplacementNamed('/files_vault');
+    } else {
+      Navigator.of(context).pushReplacementNamed(
+        _myRole == 'lawyer' ? '/lawyer_dashboard' : '/veto_screen',
+      );
+    }
   }
 
   Future<void> _endCall() async {
@@ -398,172 +436,6 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
       return;
     }
     await _webrtc?.endCall();
-  }
-
-  Future<void> _finalizeArtifacts() async {
-    if (_savingArtifacts || _eventId.isEmpty) return;
-    _savingArtifacts = true;
-    if (mounted) {
-      setState(() => _showTranscript = true);
-    }
-
-    try {
-      if (_isChat) {
-        final buf = StringBuffer();
-        for (final line in _chatLines) {
-          buf.writeln(line.mine ? '[Me] ${line.text}' : '[$_peerName] ${line.text}');
-        }
-        final transcript = buf.toString().trim();
-        if (mounted) setState(() => _transcriptText = transcript);
-        if (transcript.isNotEmpty && mounted) {
-          await _maybeOfferVaultSave(transcript: transcript, audioBytes: null);
-        }
-        return;
-      }
-
-      final recording = await _recordingService.stop();
-      _liveRecording = false;
-
-      String? transcript;
-      if (recording != null && recording.bytes.isNotEmpty) {
-        await _callApiService.uploadRecording(
-          eventId: _eventId,
-          bytes: recording.bytes,
-          mimeType: recording.mimeType,
-          fileName: recording.fileName,
-        );
-
-        transcript = await _callApiService.transcribeRecording(
-          eventId: _eventId,
-          bytes: recording.bytes,
-          mimeType: recording.mimeType,
-          language: _language,
-        );
-      }
-
-      if (mounted) {
-        setState(() => _transcriptText = transcript);
-      }
-
-      if (mounted && transcript != null && transcript.isNotEmpty) {
-        await _maybeOfferVaultSave(
-          transcript: transcript,
-          audioBytes: recording?.bytes,
-          audioMime: recording?.mimeType,
-          audioName: recording?.fileName,
-        );
-      }
-    } catch (_) {
-      if (mounted) {
-        setState(() {
-          _transcriptText = _language == 'he'
-              ? 'שמירת ההקלטה או התמלול נכשלה.'
-              : 'Recording or transcription failed to save.';
-        });
-      }
-    } finally {
-      _savingArtifacts = false;
-    }
-  }
-
-  Future<void> _maybeOfferVaultSave({
-    required String transcript,
-    Uint8List? audioBytes,
-    String? audioMime,
-    String? audioName,
-  }) async {
-    if (!mounted) return;
-    final go = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(_language == 'he'
-            ? 'שמירה לכספת'
-            : _language == 'ru'
-                ? 'Сохранить в хранилище'
-                : 'Save to vault'),
-        content: Text(_language == 'he'
-            ? 'לשמור את התמלול (וההקלטה אם קיימת) לתיק המסמכים?'
-            : _language == 'ru'
-                ? 'Сохранить расшифровку (и запись) в хранилище?'
-                : 'Save transcript (and recording if any) to your file vault?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text(_language == 'he' ? 'לא' : _language == 'ru' ? 'Нет' : 'No'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: Text(_language == 'he' ? 'שמור' : _language == 'ru' ? 'Сохранить' : 'Save'),
-          ),
-        ],
-      ),
-    );
-    if (go != true || !mounted) return;
-
-    final token = await AuthService().getToken();
-    if (token == null) return;
-
-    try {
-      final tReq = http.MultipartRequest(
-        'POST',
-        Uri.parse('${AppConfig.baseUrl}/vault/files/upload'),
-      );
-      tReq.headers.addAll(
-        AppConfig.httpHeadersBinary({'Authorization': 'Bearer $token'}),
-      );
-      tReq.fields['name'] = 'veto-transcript-$_eventId.txt';
-      tReq.fields['mimeType'] = 'text/plain';
-      tReq.files.add(http.MultipartFile.fromBytes(
-        'file',
-        utf8.encode(transcript),
-        filename: 'veto-transcript-$_eventId.txt',
-      ));
-      final tRes = await tReq.send();
-      if (tRes.statusCode < 200 || tRes.statusCode >= 300) {
-        throw Exception('transcript vault ${tRes.statusCode}');
-      }
-
-      if (audioBytes != null && audioBytes.isNotEmpty) {
-        final aReq = http.MultipartRequest(
-          'POST',
-          Uri.parse('${AppConfig.baseUrl}/vault/files/upload'),
-        );
-        aReq.headers.addAll(
-          AppConfig.httpHeadersBinary({'Authorization': 'Bearer $token'}),
-        );
-        aReq.fields['name'] = audioName ?? 'veto-call-$_eventId.webm';
-        aReq.fields['mimeType'] = audioMime ?? 'audio/webm';
-        aReq.files.add(http.MultipartFile.fromBytes(
-          'file',
-          audioBytes,
-          filename: audioName ?? 'recording.webm',
-        ));
-        await aReq.send();
-      }
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(_language == 'he'
-                ? 'נשמר בכספת'
-                : _language == 'ru'
-                    ? 'Сохранено'
-                    : 'Saved to vault'),
-          ),
-        );
-      }
-    } catch (_) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(_language == 'he'
-                ? 'שמירה לכספת נכשלה'
-                : 'Vault save failed'),
-            backgroundColor: VetoColors.error,
-          ),
-        );
-      }
-    }
   }
 
   @override
@@ -601,11 +473,6 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
               top: 0, left: 0, right: 0,
               child: SafeArea(child: _buildTopBar()),
             ),
-            if (_showTranscript)
-              Positioned(
-                bottom: 120, left: 16, right: 16,
-                child: _buildTranscriptPanel(),
-              ),
             Positioned(
               bottom: 0, left: 0, right: 0,
               child: SafeArea(child: _buildControls()),
@@ -1259,60 +1126,6 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
   }
 
   // ─────────────────────────────────────────────────────────
-  //  Transcript panel
-  // ─────────────────────────────────────────────────────────
-  Widget _buildTranscriptPanel() {
-    return Container(
-      constraints: const BoxConstraints(maxHeight: 200),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.95),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE2E8F8)),
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.10), blurRadius: 16)],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Row(
-            children: [
-              const Icon(Icons.transcribe, color: Color(0xFF5B8FFF), size: 16),
-              const SizedBox(width: 8),
-              const Text(
-                'תמלול חי',
-                style: TextStyle(
-                  fontFamily: 'Heebo',
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: Color(0xFF5B8FFF),
-                ),
-              ),
-              const Spacer(),
-              GestureDetector(
-                onTap: () => setState(() => _showTranscript = false),
-                child: const Icon(Icons.close, color: Color(0xFF64748B), size: 16),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Text(
-            _transcriptText ??
-                (            _savingArtifacts
-                    ? 'שומר הקלטה ומכין תמלול...'
-                    : 'התמלול יהיה זמין בסיום השיחה...'),
-            style: const TextStyle(
-              fontFamily: 'Heebo',
-              fontSize: 13,
-              color: Color(0xFF334155),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ─────────────────────────────────────────────────────────
   //  Controls
   // ─────────────────────────────────────────────────────────
   Widget _buildControls() {
@@ -1398,12 +1211,6 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
                   onTap: () => unawaited(_toggleRecordingOptIn()),
                 ),
               if (_isSubscriber) const SizedBox(width: 16),
-              _buildControlBtn(
-                icon: Icons.transcribe,
-                label: 'תמלול',
-                color: _showTranscript ? VetoColors.accent : VetoColors.silver,
-                onTap: () => setState(() => _showTranscript = !_showTranscript),
-              ),
             ],
           ),
           const SizedBox(height: 24),

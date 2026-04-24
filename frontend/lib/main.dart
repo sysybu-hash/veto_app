@@ -34,6 +34,7 @@ import 'screens/call_screen.dart';
 import 'screens/maps_screen.dart';
 import 'screens/shared_vault_screen.dart';
 import 'services/socket_service.dart';
+import 'services/vault_save_queue.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -87,6 +88,9 @@ Future<void> main() async {
       providers: [
         provider.ChangeNotifierProvider.value(value: languageController),
         provider.ChangeNotifierProvider.value(value: accessibilitySettings),
+        provider.ChangeNotifierProvider<VaultSaveQueue>(
+          create: (_) => VaultSaveQueue(),
+        ),
         provider.Provider<SocketService>(
           create: (_) => SocketService(),
           lazy: true,
