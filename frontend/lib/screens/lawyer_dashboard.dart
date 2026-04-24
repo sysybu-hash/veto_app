@@ -631,7 +631,7 @@ class _LawyerDashboardState extends State<LawyerDashboard> {
                             child: Padding(
                               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                               child: Row(children: [
-                                Icon(
+                                const Icon(
                                   Icons.toggle_on_rounded,
                                   color: VetoGlassTokens.neonCyan,
                                   size: 22,
@@ -735,9 +735,9 @@ class _LawyerDashboardState extends State<LawyerDashboard> {
 
                     // ── Bottom nav bar ──────────────────────────
                     Container(
-                      decoration: BoxDecoration(
+                      decoration: const BoxDecoration(
                         color: VetoGlassTokens.glassFillStrong,
-                        border: const Border(
+                        border: Border(
                           top: BorderSide(color: VetoGlassTokens.glassBorder),
                         ),
                       ),

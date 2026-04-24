@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 
 import '../core/i18n/app_language.dart';
 import '../core/theme/veto_glass_system.dart';
-import '../core/theme/veto_theme.dart';
 
 class AppLanguageMenu extends StatelessWidget {
   final bool compact;

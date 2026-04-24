@@ -847,7 +847,8 @@ class _ChatScreenState extends State<ChatScreen> {
                   const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(24),
-                borderSide: BorderSide(color: VetoGlassTokens.glassBorder),
+                borderSide:
+                    const BorderSide(color: VetoGlassTokens.glassBorder),
               ),
             ),
             onSubmitted: (_) => _send(),
