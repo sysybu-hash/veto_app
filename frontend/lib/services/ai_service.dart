@@ -62,15 +62,18 @@ class AiService {
     String lang = 'he',
   }) async {
     try {
+      final token = await AuthService().getToken();
+      if (token == null || token.isEmpty) {
+        // Avoid a pointless POST (and red 401 in the browser) — /ai/chat is protected.
+        return _fallbackReply('נדרש להתחבר מחדש כדי להשתמש בעוזר המשפטי.');
+      }
       // Render free instances may be asleep; wake the backend first.
       await _warmUpBackend();
-
-      final token = await AuthService().getToken();
       final resp = await http
           .post(
             Uri.parse('${AppConfig.baseUrl}/ai/chat'),
             headers: AppConfig.httpHeaders({
-              if (token != null) 'Authorization': 'Bearer $token',
+              'Authorization': 'Bearer $token',
             }),
             body: jsonEncode({'message': message, 'history': history, 'lang': lang}),
           )
