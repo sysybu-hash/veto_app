@@ -127,9 +127,9 @@ vercel --prod
 
 1. [vercel.com/new](https://vercel.com/new) → **Import Git Repository**
 2. בחר את ה-repo
-3. **Root Directory:** `frontend`
-4. **Build & Output Settings** → Override:
-   - Build Command: *(ריק)*
+3. **Root Directory:** `frontend` (חשוב: כל הקבצים `scripts/vercel-assert.cjs` ו-`vercel.json` ב־`frontend` חייבים לעלות; לא להפנות `buildCommand` ל-`../scripts/…` — מחוץ ל־Root Vercel לא מעלה)
+4. **Build & Output Settings** → Override (או השאר כמו ב-`frontend/vercel.json`):
+   - Build Command: `node scripts/vercel-assert.cjs` (רק בודק שקיים `build/web` אחרי build מקומי/CI)
    - Output Directory: `build/web`
 5. **Deploy**
 
