@@ -8,6 +8,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:ui' show ImageFilter;
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:geolocator/geolocator.dart';
@@ -100,6 +101,30 @@ class _VetoScreenState extends State<VetoScreen> {
         if (mounted) _checkSubscription();
       });
     });
+    if (kIsWeb) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        Future<void>.delayed(const Duration(milliseconds: 900), _retryWebFlows);
+      });
+    }
+  }
+
+  /// Flows: Flutter Web may build `flt-glass-pane` after first paint — retry after shell mount.
+  Future<void> _retryWebFlows() async {
+    if (!kIsWeb || !mounted) return;
+    final auth = AuthService();
+    final uid = await auth.getStoredUserId();
+    if (uid == null || uid.isEmpty) return;
+    if (!mounted) return;
+    final role = (await auth.getStoredRole()) ?? 'user';
+    if (!mounted) return;
+    final lang = context.read<AppLanguageController>().code;
+    try {
+      await browser_bridge.flowsSetUser(
+        userId: uid,
+        role: role,
+        lang: lang,
+      );
+    } catch (_) {}
   }
 
   Future<void> _checkSubscription() async {
@@ -1749,28 +1774,41 @@ class _VetoScreenState extends State<VetoScreen> {
   }
 
   // ── Rights card (dark glass) ─────────────────────────────
-  Widget _rightsCard() => Container(
-        decoration: BoxDecoration(
-          color: VetoGlassTokens.glassFillStrong,
-          borderRadius: BorderRadius.circular(16),
-          border: const BorderDirectional(
-            top: BorderSide(color: VetoGlassTokens.glassBorder),
-            end: BorderSide(color: VetoGlassTokens.glassBorder),
-            bottom: BorderSide(color: VetoGlassTokens.glassBorder),
-            start: BorderSide(color: VetoGlassTokens.neonCyan, width: 3),
+  /// Rounded + border: Flutter disallows [BorderDirectional] with different side widths
+  /// together with [borderRadius]. Use a uniform [Border.all] and a "start" accent strip in a [Stack].
+  Widget _rightsCard() {
+    const r = 16.0;
+    const accentC = VetoGlassTokens.neonCyan;
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(r),
+        boxShadow: [
+          BoxShadow(
+            color: VetoGlassTokens.neonCyan.withValues(alpha: 0.12),
+            blurRadius: 20,
+            offset: const Offset(0, 6),
           ),
-          boxShadow: [
-            BoxShadow(
-              color: VetoGlassTokens.neonCyan.withValues(alpha: 0.12),
-              blurRadius: 20, offset: const Offset(0, 6),
-            ),
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.4),
-              blurRadius: 16, offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Column(children: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.4),
+            blurRadius: 16,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(r),
+        child: Stack(
+          fit: StackFit.passthrough,
+          children: [
+            Container(
+              decoration: BoxDecoration(
+                color: VetoGlassTokens.glassFillStrong,
+                border: Border.all(
+                  color: accentC.withValues(alpha: 0.35),
+                  width: 1,
+                ),
+              ),
+              child: Column(children: [
           InkWell(
             onTap: () => setState(() => _rightsExpanded = !_rightsExpanded),
             borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
@@ -1852,7 +1890,30 @@ class _VetoScreenState extends State<VetoScreen> {
               ),
             ),
         ]),
-      );
+            ),
+            Builder(
+              builder: (context) {
+                final rtl =
+                    Directionality.of(context) == TextDirection.rtl;
+                return Positioned(
+                  left: rtl ? null : 0,
+                  right: rtl ? 0 : null,
+                  top: 0,
+                  bottom: 0,
+                  child: IgnorePointer(
+                    child: Container(
+                      width: 2,
+                      color: accentC.withValues(alpha: 0.45),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
   // ── Admin Evidence Files ──────────────────────────────────
   Widget _adminSection(bool isRtl) => Column(

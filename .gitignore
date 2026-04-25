@@ -26,6 +26,7 @@ frontend/.flutter-plugins-dependencies
 # IDE
 .idea/
 *.iml
+.claude/
 
 # Local Flutter SDK checkout (do not commit)
 flutter/

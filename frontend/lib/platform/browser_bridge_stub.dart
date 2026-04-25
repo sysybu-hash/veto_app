@@ -34,3 +34,11 @@ void triggerCameraCapture(void Function(dynamic file) onFile) {}
 bool shouldUseCaptureAttributeOnFileInput() => false;
 
 Future<dynamic> pickEvidenceMedia({bool preferCameraCapture = true}) async => null;
+
+/// Flows (web-only). Returns a small status map from `window.vetoFlows.setUser(...)`.
+Future<Map<String, dynamic>?> flowsSetUser({
+  required String userId,
+  required String role,
+  required String lang,
+}) async =>
+    null;

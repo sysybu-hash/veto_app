@@ -2,6 +2,8 @@
 //  main.dart — VETO app entry + named routes
 // ============================================================
 
+import 'dart:async' show unawaited;
+
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -77,12 +79,12 @@ Future<void> main() async {
 
   final languageController = AppLanguageController();
   final accessibilitySettings = AccessibilitySettings();
-  // Load language, accessibility prefs, and warm up the backend concurrently.
+  // Load language + a11y — do *not* block the first frame on /health (can hang ~10s if API/tunnel is down).
   await Future.wait([
     languageController.load(),
     accessibilitySettings.hydrate(),
-    _warmUpBackend(),
   ]);
+  unawaited(_warmUpBackend());
   runApp(
     provider.MultiProvider(
       providers: [
@@ -101,13 +103,17 @@ Future<void> main() async {
   );
 }
 
-/// Fire a lightweight /health GET to wake Render's free-tier instance
-/// before the user tries to log in. Failures are silently ignored.
+/// Fire a lightweight /health GET to wake Render (or verify localhost). Runs in the
+/// background so startup never waits on a dead tunnel or slow network.
+/// Uses [AppConfig.httpGetHeaders] so localtunnel requests are not stuck on the reminder page.
 Future<void> _warmUpBackend() async {
   try {
     await http
-        .get(Uri.parse(AppConfig.healthCheckUrl))
-        .timeout(const Duration(seconds: 10));
+        .get(
+          Uri.parse(AppConfig.healthCheckUrl),
+          headers: AppConfig.httpGetHeaders,
+        )
+        .timeout(const Duration(seconds: 3));
   } catch (_) {}
 }
 

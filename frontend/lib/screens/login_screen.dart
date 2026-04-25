@@ -5,6 +5,7 @@
 // ============================================================
 
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:pinput/pinput.dart';
 import 'package:provider/provider.dart';
@@ -63,6 +64,10 @@ const _copy = <String, Map<String, String>>{
     'missingName': 'הכנס שם מלא כדי להשלים את ההרשמה.',
     'registerFailed': 'לא ניתן ליצור את החשבון שלך. נסה שוב.',
     'otpFailed': 'לא ניתן לשלוח את הקוד. ודא שהחשבון קיים או עבור להרשמה.',
+    'otpNotFound': 'לא נמצא חשבון עם מספר זה. עבור להרשמה או בדוק את המספר.',
+    'otpRateLimited': 'נשלחו יותר מדי בקשות לקוד בזמן קצר. המתן כ-10 דקות ונסה שוב.',
+    'otpServer': 'השרת לא זמין כרגע. נסה שוב בעוד רגע.',
+    'otpNetwork': 'לא ניתן להתחבר לשרת. ודא שה-API רץ (למשל פורט 5001) ושהכתובת נכונה.',
     'systemError': 'שגיאה זמנית. נסה שוב.',
     'otpInvalid': 'הקוד אינו תקין.',
     'otpIncomplete': 'הכנס את כל 6 הספרות.',
@@ -119,6 +124,10 @@ const _copy = <String, Map<String, String>>{
     'missingName': 'Please enter your full name to complete registration.',
     'registerFailed': 'Could not create your account. Please try again.',
     'otpFailed': 'Could not send the code. Make sure the account exists or switch to registration.',
+    'otpNotFound': 'No account was found for this phone number. Switch to registration or check the number.',
+    'otpRateLimited': 'Too many code requests in a short time. Please wait about 10 minutes and try again.',
+    'otpServer': 'The server is temporarily unavailable. Please try again in a moment.',
+    'otpNetwork': 'Could not reach the server. Make sure the API is running (port 5001 locally) and the address is correct.',
     'systemError': 'A temporary error occurred. Please try again.',
     'otpInvalid': 'The code is not valid.',
     'otpIncomplete': 'Please enter all 6 digits.',
@@ -178,6 +187,10 @@ const _copy = <String, Map<String, String>>{
     'missingName': 'Введите полное имя для завершения регистрации.',
     'registerFailed': 'Не удалось создать аккаунт. Попробуйте снова.',
     'otpFailed': 'Не удалось отправить код. Убедитесь, что аккаунт существует.',
+    'otpNotFound': 'Аккаунт с таким номером не найден. Перейдите к регистрации или проверьте номер.',
+    'otpRateLimited': 'Слишком много запросов кода за короткое время. Подождите около 10 минут и попробуйте снова.',
+    'otpServer': 'Сервер временно недоступен. Попробуйте снова чуть позже.',
+    'otpNetwork': 'Не удалось подключиться к серверу. Убедитесь, что API запущен (локально порт 5001) и адрес верный.',
     'systemError': 'Временная ошибка. Попробуйте снова.',
     'otpInvalid': 'Код недействителен.',
     'otpIncomplete': 'Введите все 6 цифр.',
@@ -256,6 +269,13 @@ class _LoginScreenState extends State<LoginScreen> {
     Map<String, dynamic> data,
     String lang,
   ) async {
+    if (!mounted) return;
+    final languageController = context.read<AppLanguageController>();
+    final messenger = ScaffoldMessenger.maybeOf(context);
+
+    final userId = data['user']?['id']?.toString() ??
+        data['user']?['_id']?.toString() ??
+        await AuthService().getStoredUserId();
     final role = data['user']?['role']?.toString() ??
         await AuthService().getStoredRole() ??
         _role;
@@ -263,9 +283,50 @@ class _LoginScreenState extends State<LoginScreen> {
       data['user']?['preferred_language']?.toString() ?? lang,
     );
     if (!mounted) return;
-    await context
-        .read<AppLanguageController>()
-        .setLanguage(preferredLanguage, persist: false);
+    await languageController.setLanguage(preferredLanguage, persist: false);
+
+    if (!mounted) return;
+
+    // Flows SDK (web only): identify user after successful auth
+    if (userId != null && userId.isNotEmpty) {
+      if (kIsWeb) {
+        final status = await browser_bridge.flowsSetUser(
+          userId: userId,
+          role: role,
+          lang: preferredLanguage,
+        );
+        if (!mounted) return;
+        if (mounted) {
+          final ok = status?['ok'] == true;
+          final stage = status?['stage']?.toString();
+          final key = status?['key']?.toString();
+          final err = status?['error']?.toString();
+          final msg = lang == 'he'
+              ? (ok
+                  ? 'Flows: הופעל (${stage ?? ''}${key != null ? ' · $key' : ''})'
+                  : 'Flows: נכשל (${err ?? 'unknown'})')
+              : lang == 'ru'
+                  ? (ok
+                      ? 'Flows: OK (${stage ?? ''}${key != null ? ' · $key' : ''})'
+                      : 'Flows: ошибка (${err ?? 'unknown'})')
+                  : (ok
+                      ? 'Flows: OK (${stage ?? ''}${key != null ? ' · $key' : ''})'
+                      : 'Flows: failed (${err ?? 'unknown'})');
+          messenger?.showSnackBar(
+            SnackBar(
+              content: Text(msg),
+              duration: const Duration(seconds: 4),
+            ),
+          );
+        }
+      } else {
+        browser_bridge.callBrowserMethod('vetoFlows', 'setUser', [
+          userId,
+          role,
+          preferredLanguage,
+        ]);
+      }
+    }
 
     if (!mounted) return;
 
@@ -277,6 +338,33 @@ class _LoginScreenState extends State<LoginScreen> {
     } else {
       Navigator.of(context).pushReplacementNamed('/veto_screen');
     }
+  }
+
+  String _messageForOtpRequestFailure(String lang, String? result) {
+    if (result == null || result == 'error') {
+      return _t(lang, 'otpNetwork');
+    }
+
+    if (result.startsWith('error|')) {
+      final parts = result.split('|');
+      if (parts.length >= 3) {
+        final code = int.tryParse(parts[1]);
+        final server = parts.sublist(2).join('|').trim();
+        if (code == 404) return _t(lang, 'otpNotFound');
+        if (code == 429) return _t(lang, 'otpRateLimited');
+        if (code != null && code >= 500) return _t(lang, 'otpServer');
+        if (server.isNotEmpty) return server;
+      }
+    }
+
+    if (result.startsWith('error:')) {
+      final code = int.tryParse(result.substring('error:'.length));
+      if (code == 404) return _t(lang, 'otpNotFound');
+      if (code == 429) return _t(lang, 'otpRateLimited');
+      if (code != null && code >= 500) return _t(lang, 'otpServer');
+    }
+
+    return _t(lang, 'otpFailed');
   }
 
   // ?? Phone flow ??????????????????????????????????????????????
@@ -312,14 +400,19 @@ class _LoginScreenState extends State<LoginScreen> {
 
       final otp = await AuthService().requestOTPDetailed(_fullPhone, _role);
       if (!mounted) return;
-      if (otp == 'error') {
-        setState(() { _loading = false; _error = _t(lang, 'otpFailed'); });
+      if (otp == 'error' ||
+          (otp != null && otp.startsWith('error:')) ||
+          (otp != null && otp.startsWith('error|'))) {
+        setState(() {
+          _loading = false;
+          _error = _messageForOtpRequestFailure(lang, otp);
+        });
         return;
       }
 
       setState(() { _loading = false; _step = _Step.otp; });
 
-      if (otp != null) {
+      if (otp != null && otp.isNotEmpty) {
         await showDialog<void>(
           context: context,
           builder: (_) => _OtpCodeDialog(code: lang, otp: otp),
@@ -818,10 +911,23 @@ class _RoleCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(20),
           border: selected
               ? Border(
-                  left: const BorderSide(color: VetoGlassTokens.neonCyan, width: 3),
-                  top: BorderSide(color: VetoGlassTokens.neonCyan.withValues(alpha: 0.3)),
-                  right: BorderSide(color: VetoGlassTokens.neonCyan.withValues(alpha: 0.3)),
-                  bottom: BorderSide(color: VetoGlassTokens.neonCyan.withValues(alpha: 0.3)),
+                  // Flutter requires uniform border colors when borderRadius is set.
+                  left: BorderSide(
+                    color: VetoGlassTokens.neonCyan.withValues(alpha: 0.35),
+                    width: 3,
+                  ),
+                  top: BorderSide(
+                    color: VetoGlassTokens.neonCyan.withValues(alpha: 0.35),
+                    width: 1,
+                  ),
+                  right: BorderSide(
+                    color: VetoGlassTokens.neonCyan.withValues(alpha: 0.35),
+                    width: 1,
+                  ),
+                  bottom: BorderSide(
+                    color: VetoGlassTokens.neonCyan.withValues(alpha: 0.35),
+                    width: 1,
+                  ),
                 )
               : Border.all(color: VetoGlassTokens.glassBorder),
         ),

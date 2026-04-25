@@ -23,6 +23,12 @@ class AuthService {
     webOptions: _kWebOptions,
   );
 
+  /// Returns:
+  /// - OTP string when exposed by server (dev / RETURN_OTP_IN_JSON)
+  /// - empty string when OTP is sent but not exposed
+  /// - `error:<httpStatus>` when the server responds without a JSON `error` field
+  /// - `error|<httpStatus>|<server error>` when JSON includes `{ error: ... }`
+  /// - `error` on network/parse failures
   Future<String?> requestOTPDetailed(String phone, String role) async {
     try {
       final response = await http.post(
@@ -33,9 +39,22 @@ class AuthService {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        return data['otp']?.toString(); // null if not exposed
+        final exposed = data['otp'];
+        if (exposed == null) return '';
+        return exposed.toString();
       }
-      return 'error';
+
+      String? serverMsg;
+      try {
+        final data = jsonDecode(response.body);
+        final err = data['error'];
+        if (err != null) serverMsg = err.toString();
+      } catch (_) {}
+
+      if (serverMsg != null && serverMsg.isNotEmpty) {
+        return 'error|${response.statusCode}|$serverMsg';
+      }
+      return 'error:${response.statusCode}';
     } catch (e) {
       return 'error';
     }
@@ -55,6 +74,7 @@ class AuthService {
         final user = data['user'];
         
         // Correct role extraction from nested user object
+        final userId = user?['id']?.toString() ?? user?['_id']?.toString();
         final role = user?['role']?.toString() ?? 'user';
         final name = user?['full_name']?.toString() ?? user?['name']?.toString() ?? '';
         final preferredLanguage = user?['preferred_language']?.toString() ?? 'he';
@@ -62,6 +82,9 @@ class AuthService {
         if (token != null) {
           await _storage.write(key: 'jwt', value: token);
           await _storage.write(key: 'veto_role', value: role);
+          if (userId != null && userId.isNotEmpty) {
+            await _storage.write(key: 'veto_user_id', value: userId);
+          }
           await _storage.write(key: 'veto_phone', value: phone);
           if (name.isNotEmpty) await _storage.write(key: 'veto_name', value: name);
           await _storage.write(key: 'veto_language', value: preferredLanguage);
@@ -140,12 +163,16 @@ class AuthService {
         final data = jsonDecode(response.body) as Map<String, dynamic>;
         final token = data['token'];
         final user  = data['user'];
+        final userId = user?['id']?.toString() ?? user?['_id']?.toString();
         final role  = user?['role']?.toString() ?? 'user';
         final name  = user?['full_name']?.toString() ?? '';
         final preferredLanguage = user?['preferred_language']?.toString() ?? language;
         if (token != null) {
           await _storage.write(key: 'jwt', value: token);
           await _storage.write(key: 'veto_role', value: role);
+          if (userId != null && userId.isNotEmpty) {
+            await _storage.write(key: 'veto_user_id', value: userId);
+          }
           if (name.isNotEmpty) await _storage.write(key: 'veto_name', value: name);
           await _storage.write(key: 'veto_language', value: preferredLanguage);
           final isSubscribed = user?['is_subscribed'] == true;
@@ -167,6 +194,7 @@ class AuthService {
   Future<String?> getStoredRole() async => await _storage.read(key: 'veto_role');
   Future<String?> getStoredName() async => await _storage.read(key: 'veto_name');
   Future<String?> getStoredPhone() async => await _storage.read(key: 'veto_phone');
+  Future<String?> getStoredUserId() async => await _storage.read(key: 'veto_user_id');
   Future<String?> getStoredPreferredLanguage() async =>
       await _storage.read(key: 'veto_language');
   Future<void> setStoredPreferredLanguage(String value) async {

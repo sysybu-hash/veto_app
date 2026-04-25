@@ -23,7 +23,7 @@ class AppConfig {
   static const String kDefaultRenderOrigin = 'https://veto-app-new.onrender.com';
 
   /// Host שמתאים ל-`npm run tunnel` (שורת ה-subdomain ב-backend/package.json)
-  static const String kDefaultTunnelHost = 'veto-app-new.onrender.com';
+  static const String kDefaultTunnelHost = 'sweet-turkey-60.loca.lt';
   static const int kLocalPort = 5001;
 
   /// כותרת חובה מול localtunnel לכל לקוח שאינו דפדפן עם הרחבה (ערך יכול להיות כל מחרוזת).

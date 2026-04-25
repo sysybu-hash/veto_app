@@ -1,8 +1,9 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:js_interop';
 import 'dart:js_interop_unsafe';
-import 'dart:typed_data';
 
+import 'package:flutter/foundation.dart';
 import 'package:web/web.dart';
 
 void openInNewTab(String url) {
@@ -176,4 +177,74 @@ Future<dynamic> pickEvidenceMedia({bool preferCameraCapture = true}) async {
   input.click();
 
   return completer.future;
+}
+
+Future<Map<String, dynamic>?> _mapFlowsJsResultToDart(JSAny? raw) async {
+  if (raw == null) return null;
+  // JS returns a Promise<object> from async setUser
+  if (raw.isA<JSPromise>()) {
+    final any = await (raw as JSPromise<JSAny?>).toDart;
+    if (any == null) return null;
+    return _stringifyJsObjectToMap(any);
+  }
+  return _stringifyJsObjectToMap(raw);
+}
+
+Map<String, dynamic>? _stringifyJsObjectToMap(JSAny any) {
+  if (!any.isA<JSObject>()) return null;
+  final jsonAny = (window as JSObject)['JSON'];
+  if (jsonAny == null || !jsonAny.isA<JSObject>()) return null;
+  final jsonStr =
+      (jsonAny as JSObject).callMethod<JSString>('stringify'.toJS, any).toDart;
+  final decoded = jsonDecode(jsonStr);
+  if (decoded is Map) return Map<String, dynamic>.from(decoded);
+  return null;
+}
+
+Future<Map<String, dynamic>?> flowsSetUser({
+  required String userId,
+  required String role,
+  required String lang,
+}) async {
+  try {
+    final win = window as JSObject;
+
+    // `index.html` exposes this so we don't rely on host-object quirks for `vetoFlows`.
+    final invoke = win['vetoFlowsInvoke'];
+    if (invoke.isA<JSFunction>()) {
+      return _mapFlowsJsResultToDart(
+        (invoke as JSFunction)
+            .callAsFunction(null, userId.toJS, role.toJS, lang.toJS),
+      );
+    }
+
+    final flows = win['vetoFlows'];
+    if (flows == null || !flows.isA<JSObject>()) {
+      if (kDebugMode) {
+        debugPrint(
+          '[VETO Flows] missing window.vetoFlows (Flows module not loaded yet?)',
+        );
+      }
+      return null;
+    }
+    final setUser = (flows as JSObject)['setUser'];
+    if (setUser == null || !setUser.isA<JSFunction>()) {
+      if (kDebugMode) {
+        debugPrint('[VETO Flows] vetoFlows.setUser is not a function');
+      }
+      return null;
+    }
+
+    return _mapFlowsJsResultToDart(
+      (setUser as JSFunction).callAsFunction(
+        null,
+        userId.toJS,
+        role.toJS,
+        lang.toJS,
+      ),
+    );
+  } catch (e, st) {
+    debugPrint('[VETO Flows] flowsSetUser: $e\n$st');
+    return null;
+  }
 }
