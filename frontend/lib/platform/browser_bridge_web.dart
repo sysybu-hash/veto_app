@@ -16,6 +16,12 @@ void registerSttResultHandler(void Function(String result) handler) {
   }).toJS;
 }
 
+void registerGeminiLiveResultHandler(void Function(String result) handler) {
+  (window as JSObject)['vetoGeminiLiveResult'] = ((JSString s) {
+    handler(s.toDart);
+  }).toJS;
+}
+
 JSAny? _dynamicToJSAny(dynamic e) {
   if (e == null) return null;
   if (e is bool) return e.toJS;

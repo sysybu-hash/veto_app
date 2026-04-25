@@ -167,4 +167,10 @@ async function geminiChat(history, userMessage, lang = 'he') {
   }
 }
 
-module.exports = { geminiChat, isTransientGeminiFailure, isApiErrorPayloadText };
+module.exports = {
+  geminiChat,
+  isTransientGeminiFailure,
+  isApiErrorPayloadText,
+  /** Legal intake prompts — shared with Multimodal Live (ephemeral token) when enabled. */
+  SYSTEM_INSTRUCTIONS,
+};

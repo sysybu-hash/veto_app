@@ -21,6 +21,13 @@ const fs = require('fs');
       if (process.env.NODE_ENV !== 'production') {
         console.log(`📄 .env loaded: ${envPath}`);
       }
+      const local = path.join(path.dirname(envPath), '.env.local');
+      if (fs.existsSync(local)) {
+        require('dotenv').config({ path: local, override: true });
+        if (process.env.NODE_ENV !== 'production') {
+          console.log(`📄 .env.local loaded (overrides): ${local}`);
+        }
+      }
       return;
     }
   }

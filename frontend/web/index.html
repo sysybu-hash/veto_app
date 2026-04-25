@@ -34,6 +34,7 @@
 
   <title>VETO LEGAL</title>
   <link rel="manifest" href="manifest.json">
+  <link rel="modulepreload" href="gemini_live.mjs">
 
   <meta name="google-signin-client_id" content="752712664923-7loca49f7fggd514q8reljn93meatmrf.apps.googleusercontent.com">
   <!-- Google Site Verification (Search Console) -->
@@ -119,6 +120,14 @@
       },
       stop: function() { if (window.speechSynthesis) window.speechSynthesis.cancel(); }
     };
+
+    // Gemini Multimodal Live (real impl overwrites in gemini_live.mjs)
+    window.vetoGeminiLive = {
+      isSupported: function() { return false; },
+      start: function() {},
+      stop: function() {}
+    };
+    window.vetoGeminiLiveResult = function() {};
   </script>
   <!-- Google Identity Services (GIS) — reliable token client for Flutter Web -->
   <script src="https://accounts.google.com/gsi/client" async defer></script>
@@ -387,6 +396,7 @@
       return await window.vetoFlows.setUser(userId, role, lang);
     };
   </script>
+  <script type="module" src="gemini_live.mjs"></script>
   <script src="flutter_bootstrap.js" defer></script>
 </body>
 </html>

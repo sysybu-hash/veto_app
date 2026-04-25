@@ -50,6 +50,8 @@ class _VetoScreenState extends State<VetoScreen> {
   bool _isDispatching = false;
   bool _isLoading = false;
   bool _isListening = false;
+  /// Web: Gemini Multimodal Live (mic) session, distinct from [SpeechRecognition] [STT].
+  bool _liveSessionActive = false;
   String? _activeEventId;
   String? _token;
   StreamSubscription<Map<String, dynamic>>? _emergencyCreatedSub;
@@ -82,6 +84,9 @@ class _VetoScreenState extends State<VetoScreen> {
     super.initState();
     _loadData();
     browser_bridge.registerSttResultHandler(_onSTTResult);
+    if (kIsWeb) {
+      browser_bridge.registerGeminiLiveResultHandler(_onGeminiLiveResult);
+    }
     _emergencyCreatedSub = SocketService().onEmergencyCreated.listen((data) {
       final id = data['eventId'] as String?;
       if (id != null && mounted) setState(() => _activeEventId = id);
@@ -150,6 +155,9 @@ class _VetoScreenState extends State<VetoScreen> {
 
   @override
   void dispose() {
+    if (kIsWeb) {
+      _safeJs('vetoGeminiLive', 'stop', []);
+    }
     _safeJs('vetoSTT', 'stop', []);
     _safeJs('vetoTTS', 'stop', []);
     _inputCtrl.dispose();
@@ -555,6 +563,20 @@ class _VetoScreenState extends State<VetoScreen> {
     _isListening ? _stopListening() : _startListening();
   }
   void _startListening() {
+    final canGemini = kIsWeb &&
+        _token != null &&
+        _token!.isNotEmpty &&
+        !(_isLoading || _isDispatching) &&
+        browser_bridge.supportsBrowserMethod('vetoGeminiLive', 'isSupported', const []);
+    if (canGemini) {
+      _stopSpeaking();
+      setState(() {
+        _isListening = true;
+        _liveSessionActive = true;
+      });
+      _safeJs('vetoGeminiLive', 'start', [_langKey, _token, AppConfig.baseUrl]);
+      return;
+    }
     final ok = browser_bridge.supportsBrowserMethod('vetoSTT', 'isSupported', const []);
     if (!ok) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -564,11 +586,125 @@ class _VetoScreenState extends State<VetoScreen> {
     setState(() => _isListening = true);
     _safeJs('vetoSTT', 'start', [_l.code]);
   }
-  void _stopListening() { setState(() => _isListening = false); _safeJs('vetoSTT', 'stop', []); }
+  void _stopListening() {
+    if (_liveSessionActive) {
+      setState(() {
+        _isListening = false;
+        _liveSessionActive = false;
+      });
+      _safeJs('vetoGeminiLive', 'stop', const []);
+      return;
+    }
+    setState(() => _isListening = false);
+    _safeJs('vetoSTT', 'stop', const []);
+  }
   void _onSTTResult(String r) {
     if (!mounted) return;
+    if (_liveSessionActive) return;
     setState(() => _isListening = false);
     if (r.startsWith('OK:')) _send(r.substring(3));
+  }
+
+  void _onGeminiLiveResult(String r) {
+    if (!mounted) return;
+    if (!kIsWeb) return;
+    if (!r.startsWith('LIVE:')) return;
+    setState(() {
+      _isListening = false;
+      _liveSessionActive = false;
+    });
+    Map<String, dynamic>? o;
+    try {
+      o = jsonDecode(r.substring(5)) as Map<String, dynamic>?;
+    } catch (_) {
+      return;
+    }
+    if (o == null) return;
+    if (o['err'] != null) {
+      final e = o['err'].toString();
+      final t = e == 'not_supported'
+          ? (_langKey == 'he'
+              ? 'הדפדפן/המכשיר לא תומנים בקלט קול (HTTPS ומכשיר נדרשים).'
+              : _langKey == 'ru'
+                  ? 'Колючий ввод недоступен в этой среде.'
+                  : 'Voice input is not available in this browser.')
+          : e;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(t)));
+      return;
+    }
+    unawaited(_ingestGeminiLiveTurn(
+      o['u'] as String? ?? '',
+      o['m'] as String? ?? '',
+      nativeAudio: o['nativeAudio'] == true,
+    ));
+  }
+
+  /// Parses the same legal JSON the REST chat model uses (from Multimodal Live [modelRaw]).
+  Future<void> _ingestGeminiLiveTurn(String u, String m, {bool nativeAudio = false}) async {
+    if (!mounted) return;
+    final uText = u.trim();
+    final mText = m.trim();
+    if (mText.isEmpty && !nativeAudio) {
+      if (uText.isNotEmpty) await _send(uText);
+      return;
+    }
+    if (mText.isEmpty && nativeAudio) {
+      setState(() => _isLoading = false);
+      if (uText.isNotEmpty) {
+        setState(() {
+          _messages.add(_Msg(text: uText, isUser: true));
+        });
+      }
+      _scrollToBottom();
+      return;
+    }
+    if (uText.isNotEmpty) {
+      setState(() {
+        _messages.add(_Msg(text: uText, isUser: true));
+      });
+    }
+    _inputCtrl.clear();
+    _scrollToBottom();
+    var displayReply = mText;
+    var classified = false;
+    String? spec;
+    try {
+      final jsonMatch = RegExp(r'\{[\s\S]*\}').firstMatch(mText);
+      final j = jsonMatch != null
+          ? jsonDecode(jsonMatch.group(0)!) as Map<dynamic, dynamic>?
+          : null;
+      if (j != null) {
+        classified = j['classified'] == true;
+        displayReply = (j['reply'] as String?)?.trim() ?? mText;
+        if (j['specialization'] != null) {
+          spec = j['specialization'] as String?;
+        }
+      }
+    } catch (_) {
+      displayReply = mText;
+    }
+    if (!mounted) return;
+    setState(() => _isLoading = false);
+    final uHist = uText.isNotEmpty ? uText : _langKey == 'he' ? '(קלט קולי)' : '(voice)';
+    _geminiHistory
+      ..add({'role': 'user', 'parts': [
+            {'text': uHist}
+          ]})
+      ..add({'role': 'model', 'parts': [
+            {'text': displayReply}
+          ]});
+    setState(() {
+      _messages.add(_Msg(text: displayReply, isUser: false));
+    });
+    _scrollToBottom();
+    if (!nativeAudio) {
+      _speak(displayReply);
+    }
+    if (classified) {
+      await Future<void>.delayed(const Duration(milliseconds: 400));
+      if (!mounted) return;
+      await _payAndDispatch(spec, null);
+    }
   }
   void _speak(String t) => _safeJs('vetoTTS', 'speak', [t, _l.code]);
   void _stopSpeaking() => _safeJs('vetoTTS', 'stop', []);

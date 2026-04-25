@@ -9,12 +9,22 @@
  */
 const DEFAULT_GEMINI_MODEL = 'gemini-2.5-flash';
 
+/** Multimodal Live — native voice (AUDIO out). Override with `GEMINI_LIVE_MODEL`. */
+const DEFAULT_GEMINI_LIVE_MODEL = 'gemini-live-2.5-flash-native-audio';
+
 function getGeminiModelId() {
   const fromEnv = (process.env.GEMINI_MODEL || '').trim();
   return fromEnv.length > 0 ? fromEnv : DEFAULT_GEMINI_MODEL;
 }
 
+function getGeminiLiveModelId() {
+  const fromEnv = (process.env.GEMINI_LIVE_MODEL || '').trim();
+  return fromEnv.length > 0 ? fromEnv : DEFAULT_GEMINI_LIVE_MODEL;
+}
+
 module.exports = {
   getGeminiModelId,
+  getGeminiLiveModelId,
   DEFAULT_GEMINI_MODEL,
+  DEFAULT_GEMINI_LIVE_MODEL,
 };
