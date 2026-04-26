@@ -250,6 +250,8 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
     final w = _webrtc;
     if (w == null) return;
     if (!mounted) return;
+    // [WebRTCService] may notify again after we start navigation — avoid setState after dispose.
+    if (_finalizedCall) return;
     setState(() {});
 
     if (w.errorMessage != null && w.errorMessage!.trim().isNotEmpty) {

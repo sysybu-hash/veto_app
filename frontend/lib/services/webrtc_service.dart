@@ -34,6 +34,10 @@ class WebRTCService extends ChangeNotifier {
   Timer? _durationTimer;
   String? _errorMessage;
 
+  /// True while we intentionally tear down the peer connection (avoid treating
+  /// `disconnected` from `close()` as a user-visible failure; also reduces duplicate notifies).
+  bool _isTearingDown = false;
+
   /// Set by `room-joined`: first peer creates the offer only after `peer-joined`.
   bool _isCaller = false;
 
@@ -78,6 +82,7 @@ class WebRTCService extends ChangeNotifier {
     CallType callType, {
     required String socketRole,
   }) async {
+    _isTearingDown = false;
     _roomId    = roomId;
     _callType  = callType;
     _errorMessage = null;
@@ -177,9 +182,16 @@ class WebRTCService extends ChangeNotifier {
         _errorMessage = null;
         _setState(CallState.connected);
         _startDurationTimer();
-      } else if (state == RTCPeerConnectionState.RTCPeerConnectionStateFailed ||
-                 state == RTCPeerConnectionState.RTCPeerConnectionStateDisconnected) {
-        _setError('Peer connection failed.');
+      } else if (state == RTCPeerConnectionState.RTCPeerConnectionStateFailed) {
+        if (!_isTearingDown) {
+          _setError('Peer connection failed.');
+        }
+      } else if (state == RTCPeerConnectionState.RTCPeerConnectionStateDisconnected) {
+        // `close()` often emits disconnected/closed; do not overwrite a clean [ended] with [error].
+        if (!_isTearingDown &&
+            (_state == CallState.connected || _state == CallState.ringing)) {
+          _setError('Peer connection failed.');
+        }
       }
     };
 
@@ -350,6 +362,7 @@ class WebRTCService extends ChangeNotifier {
   }
 
   Future<void> _onCallEnded({required bool remote}) async {
+    _isTearingDown = true;
     _stopDurationTimer();
     _setState(CallState.ended);
 
