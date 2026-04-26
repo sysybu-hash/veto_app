@@ -451,18 +451,33 @@ class WebRTCService extends ChangeNotifier {
     }
   }
 
-  /// Stops native ICE / track / state callbacks from touching [SocketService] or [notifyListeners] during teardown.
-  void _suppressPeerConnectionCallbacks() {
+  /// Sever native → Dart callbacks before close/dispose (Flutter Web childList safety).
+  void _silenceNativeEvents() {
     final pc = _pc;
     if (pc == null) return;
     try {
-      pc.onIceCandidate = (_) {};
-      pc.onTrack = (RTCTrackEvent _) {};
-      pc.onConnectionState = (RTCPeerConnectionState _) {};
+      pc.onSignalingState = null;
+      pc.onConnectionState = null;
+      pc.onIceGatheringState = null;
+      pc.onIceConnectionState = null;
+      pc.onIceCandidate = null;
+      pc.onAddStream = null;
+      pc.onRemoveStream = null;
+      pc.onAddTrack = null;
+      pc.onRemoveTrack = null;
+      pc.onDataChannel = null;
+      pc.onRenegotiationNeeded = null;
+      pc.onTrack = null;
     } catch (e, st) {
-      _logError('_suppressPeerConnectionCallbacks', e, st);
+      _logError('_silenceNativeEvents', e, st);
     }
   }
+
+  /// Public hook for [CallScreen] exit shield — same as [_silenceNativeEvents].
+  void silenceNativeEvents() => _silenceNativeEvents();
+
+  /// Stops native callbacks from reaching Dart during teardown.
+  void _suppressPeerConnectionCallbacks() => _silenceNativeEvents();
 
   void _registerSocketHandlers() {
     _socket.on('room-joined', _onSocketRoomJoined);
@@ -542,6 +557,7 @@ class WebRTCService extends ChangeNotifier {
 
   Future<void> endCall() async {
     try {
+      _silenceNativeEvents();
       await _onCallEnded(remote: false);
       try {
         _socket.emit('call-ended', {
@@ -715,6 +731,12 @@ class WebRTCService extends ChangeNotifier {
       'WebRTCService: Starting dispose sequence',
       name: 'VETO.WebRTC',
     );
+
+    try {
+      _silenceNativeEvents();
+    } catch (e, st) {
+      _logError('dispose _silenceNativeEvents', e, st);
+    }
 
     try {
       _stopDurationTimer();

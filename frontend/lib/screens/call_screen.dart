@@ -72,6 +72,10 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
   /// Flutter Web: when true, [RTCVideoView] is replaced by black boxes before teardown / navigation.
   bool _isExiting = false;
 
+  /// Fresh [Element] keys for [RTCVideoView] (avoid DOM reuse); rotated on each new WebRTC session.
+  UniqueKey _remoteVideoKey = UniqueKey();
+  UniqueKey _localVideoKey = UniqueKey();
+
   @override
   void initState() {
     super.initState();
@@ -155,6 +159,8 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
 
     final w = WebRTCService(socketService);
     _webrtc = w;
+    _remoteVideoKey = UniqueKey();
+    _localVideoKey = UniqueKey();
 
     await w.joinRoom(
       _roomId,
@@ -379,6 +385,8 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
     }
     final w = WebRTCService(socketService);
     _webrtc = w;
+    _remoteVideoKey = UniqueKey();
+    _localVideoKey = UniqueKey();
     w.addListener(_onWebRTCUpdate);
     await w.joinRoom(
       _roomId,
@@ -737,13 +745,14 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
     );
   }
 
-  /// Safe-exit shield: one frame without [RTCVideoView] before service teardown / navigation.
+  /// Safe-exit shield: blind UI + silence native PC, then buffer before teardown / navigation.
   Future<void> _prepareExitShield() async {
     if (_isChat) return;
     if (!mounted) return;
     if (_isExiting) return;
     setState(() => _isExiting = true);
-    await Future<void>.delayed(const Duration(milliseconds: 100));
+    _webrtc?.silenceNativeEvents();
+    await Future<void>.delayed(const Duration(milliseconds: 200));
   }
 
   // ─────────────────────────────────────────────────────────
@@ -784,12 +793,21 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
     return Stack(
       children: [
         Positioned.fill(
-          child: _isExiting
-              ? Container(color: Colors.black)
-              : RTCVideoView(
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              Container(color: Colors.black),
+              Visibility(
+                visible: !_isExiting,
+                maintainState: false,
+                child: RTCVideoView(
                   w.remoteRenderer,
+                  key: _remoteVideoKey,
                   objectFit: RTCVideoViewObjectFit.RTCVideoViewObjectFitCover,
                 ),
+              ),
+            ],
+          ),
         ),
         Positioned(
           top: 100,
@@ -807,13 +825,22 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
                   ? const Center(
                       child: Icon(Icons.videocam_off, color: VetoColors.silver, size: 28),
                     )
-                  : (_isExiting
-                      ? Container(color: Colors.black)
-                      : RTCVideoView(
-                          w.localRenderer,
-                          mirror: true,
-                          objectFit: RTCVideoViewObjectFit.RTCVideoViewObjectFitCover,
-                        )),
+                  : Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        Container(color: Colors.black),
+                        Visibility(
+                          visible: !_isExiting,
+                          maintainState: false,
+                          child: RTCVideoView(
+                            w.localRenderer,
+                            key: _localVideoKey,
+                            mirror: true,
+                            objectFit: RTCVideoViewObjectFit.RTCVideoViewObjectFitCover,
+                          ),
+                        ),
+                      ],
+                    ),
             ),
           ),
         ),
