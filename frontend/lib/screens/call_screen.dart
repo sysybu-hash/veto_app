@@ -522,29 +522,43 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
 
   @override
   void dispose() {
-    developer.log('CallScreen disposing', name: 'VETO.CallScreen');
-    try {
-      final w = _webrtc;
-      if (w != null) {
-        try {
-          w.localRenderer.srcObject = null;
-          w.remoteRenderer.srcObject = null;
-        } catch (e, st) {
-          developer.log(
-            'clear renderer srcObject (sync)',
-            name: 'VETO.CallScreen',
-            error: e,
-            stackTrace: st,
-          );
-        }
+    developer.log(
+      'CallScreen: Starting dispose sequence',
+      name: 'VETO.CallScreen',
+    );
+
+    final w = _webrtc;
+    _webrtc = null;
+
+    if (w != null) {
+      try {
+        w.removeListener(_onWebRTCUpdate);
+        w.localRenderer.srcObject = null;
+        w.remoteRenderer.srcObject = null;
+        scheduleMicrotask(() {
+          try {
+            w.dispose();
+            developer.log(
+              'WebRTCService disposed successfully in microtask',
+              name: 'VETO.CallScreen',
+            );
+          } catch (e, stack) {
+            developer.log(
+              'Error disposing WebRTC service in microtask',
+              name: 'VETO.CallScreen',
+              error: e,
+              stackTrace: stack,
+            );
+          }
+        });
+      } catch (e, stack) {
+        developer.log(
+          'Error during CallScreen teardown sync phase',
+          name: 'VETO.CallScreen',
+          error: e,
+          stackTrace: stack,
+        );
       }
-    } catch (e, st) {
-      developer.log(
-        'dispose pre-teardown',
-        name: 'VETO.CallScreen',
-        error: e,
-        stackTrace: st,
-      );
     }
 
     _waitTimeout?.cancel();
@@ -558,18 +572,7 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
     svc.removeHandler('chat-ready', _onChatReadyEvent);
     svc.removeHandler('call-chat-message', _onChatMessageEvent);
     svc.removeHandler('call-ended', _onCallEndedEvent);
-    _webrtc?.removeListener(_onWebRTCUpdate);
-    try {
-      _webrtc?.dispose();
-    } catch (e, st) {
-      developer.log(
-        'WebRTCService.dispose',
-        name: 'VETO.CallScreen',
-        error: e,
-        stackTrace: st,
-      );
-    }
-    _webrtc = null;
+
     super.dispose();
   }
 

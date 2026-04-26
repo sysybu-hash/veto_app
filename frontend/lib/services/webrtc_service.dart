@@ -712,11 +712,10 @@ class WebRTCService extends ChangeNotifier {
 
   @override
   void dispose() {
-    try {
-      _unregisterCallSocketHandlers();
-    } catch (e, st) {
-      _logError('dispose socket off', e, st);
-    }
+    developer.log(
+      'WebRTCService: Starting dispose sequence',
+      name: 'VETO.WebRTC',
+    );
 
     try {
       _stopDurationTimer();
@@ -724,18 +723,51 @@ class WebRTCService extends ChangeNotifier {
       _logError('dispose _stopDurationTimer', e, st);
     }
 
+    // 1. Sync teardown of media channels; 2. drop signaling listeners
     try {
       _syncTeardownMedia();
     } catch (e, st) {
       _logError('dispose _syncTeardownMedia', e, st);
     }
-
     try {
-      localRenderer.dispose();
-      remoteRenderer.dispose();
+      _unregisterCallSocketHandlers();
     } catch (e, st) {
-      _logError('dispose renderers', e, st);
+      _logError('dispose _unregisterCallSocketHandlers', e, st);
     }
+
+    // Capture renderers, detach <video> from stream before Flutter unmounts widgets.
+    final lr = localRenderer;
+    final rr = remoteRenderer;
+    try {
+      lr.srcObject = null;
+      rr.srcObject = null;
+    } catch (e, st) {
+      _logError('dispose renderers srcObject', e, st);
+    }
+
+    // Defer native renderer disposal — avoids Flutter Web childList / MutationObserver crash.
+    scheduleMicrotask(() {
+      try {
+        lr.dispose();
+      } catch (e, stack) {
+        developer.log(
+          'Error disposing local renderer',
+          name: 'VETO.WebRTC',
+          error: e,
+          stackTrace: stack,
+        );
+      }
+      try {
+        rr.dispose();
+      } catch (e, stack) {
+        developer.log(
+          'Error disposing remote renderer',
+          name: 'VETO.WebRTC',
+          error: e,
+          stackTrace: stack,
+        );
+      }
+    });
 
     super.dispose();
   }
