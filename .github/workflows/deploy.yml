@@ -67,11 +67,14 @@ jobs:
             --dart-define=VETO_API_BASE=${{ env.VETO_API_BASE }} \
             --dart-define=VETO_BUILD_ID=$SHORT_SHA
 
+      # Root Directory must match Vercel project settings (frontend = frontend/vercel.json + build/web).
       - name: Deploy to Vercel
-        uses: amondnet/vercel-action@v25
+        uses: amondnet/vercel-action@v42.2.0
         with:
           vercel-token: ${{ secrets.VERCEL_TOKEN }}
           vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
           vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
           working-directory: ./frontend
+          root-directory: frontend
+          vercel-version: latest
           vercel-args: '--prod'
