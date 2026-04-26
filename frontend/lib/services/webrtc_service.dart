@@ -473,17 +473,18 @@ class WebRTCService extends ChangeNotifier {
     }
   }
 
-  /// Exit shield: stop tracks + null PC callbacks. Does **not** clear [localRenderer]/[remoteRenderer] [srcObject] or call [RTCVideoRenderer.dispose].
+  /// Exit shield: stop all media tracks once, null core PC callbacks. Does not touch [srcObject] or [RTCVideoRenderer.dispose].
   void silenceNativeEvents() {
-    _localStream?.getTracks().forEach((t) => t.stop());
-    _remoteStream?.getTracks().forEach((t) => t.stop());
-    if (_pc != null) {
-      _pc!.onIceCandidate = null;
-      _pc!.onTrack = null;
-      _pc!.onConnectionState = null;
-      _pc!.onIceConnectionState = null;
-      _pc!.onSignalingState = null;
+    for (final stream in <MediaStream?>[_localStream, _remoteStream]) {
+      stream?.getTracks().forEach((t) => t.stop());
     }
+    final pc = _pc;
+    if (pc == null) return;
+    pc.onIceCandidate = null;
+    pc.onTrack = null;
+    pc.onConnectionState = null;
+    pc.onIceConnectionState = null;
+    pc.onSignalingState = null;
   }
 
   /// Stops native callbacks from reaching Dart during internal teardown.
