@@ -473,37 +473,16 @@ class WebRTCService extends ChangeNotifier {
     }
   }
 
-  /// Iron Curtain: stop tracks, null core PC handlers — do not [close] here; teardown runs after navigation.
+  /// Bunker / exit: stop tracks, null core PC handlers — PC stays open until post-navigation teardown.
   void silenceNativeEvents() {
-    try {
-      _localStream?.getTracks().forEach((t) {
-        try {
-          t.stop();
-        } catch (e, st) {
-          _logError('silenceNativeEvents local track.stop', e, st);
-        }
-      });
-      _remoteStream?.getTracks().forEach((t) {
-        try {
-          t.stop();
-        } catch (e, st) {
-          _logError('silenceNativeEvents remote track.stop', e, st);
-        }
-      });
-    } catch (e, st) {
-      _logError('silenceNativeEvents tracks', e, st);
-    }
-    final pc = _pc;
-    if (pc != null) {
-      try {
-        pc.onIceCandidate = null;
-        pc.onTrack = null;
-        pc.onConnectionState = null;
-        pc.onIceConnectionState = null;
-        pc.onSignalingState = null;
-      } catch (e, st) {
-        _logError('silenceNativeEvents handlers', e, st);
-      }
+    _localStream?.getTracks().forEach((t) => t.stop());
+    _remoteStream?.getTracks().forEach((t) => t.stop());
+    if (_pc != null) {
+      _pc!.onIceCandidate = null;
+      _pc!.onTrack = null;
+      _pc!.onConnectionState = null;
+      _pc!.onIceConnectionState = null;
+      _pc!.onSignalingState = null;
     }
   }
 

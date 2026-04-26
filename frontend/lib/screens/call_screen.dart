@@ -69,7 +69,7 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
   int _waitSeconds = 0;
   Timer? _waitTick;
 
-  /// Flutter Web: when true, video stays in the tree but is hidden (Opacity / IgnorePointer).
+  /// Flutter Web: when true, videos move off-screen (bunker) + black shield; never unmounted for DOM stability.
   bool _isExiting = false;
 
   /// Stable keys — never rotate (avoids DOM churn from UniqueKey in build/session resets).
@@ -418,11 +418,9 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
   Future<void> _finalizeAndNavigate() async {
     if (!mounted) return;
     if (!_isChat) {
-      if (!_isExiting) {
-        setState(() => _isExiting = true);
-      }
+      setState(() => _isExiting = true);
       _webrtc?.silenceNativeEvents();
-      await Future<void>.delayed(const Duration(milliseconds: 500));
+      await Future<void>.delayed(const Duration(milliseconds: 800));
       if (!mounted) return;
     }
     _webrtc?.removeListener(_onWebRTCUpdate);
@@ -801,19 +799,23 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
 
     return Stack(
       children: [
-        Positioned.fill(
-          child: IgnorePointer(
-            ignoring: _isExiting,
-            child: Opacity(
-              opacity: _isExiting ? 0.001 : 1.0,
-              child: RTCVideoView(
-                w.remoteRenderer,
-                key: _remoteVideoKey,
-                objectFit: RTCVideoViewObjectFit.RTCVideoViewObjectFitCover,
-              ),
-            ),
+        Positioned(
+          left: _isExiting ? -10000 : 0,
+          top: _isExiting ? -10000 : 0,
+          right: _isExiting ? null : 0,
+          bottom: _isExiting ? null : 0,
+          width: _isExiting ? 100 : null,
+          height: _isExiting ? 100 : null,
+          child: RTCVideoView(
+            w.remoteRenderer,
+            key: _remoteVideoKey,
+            objectFit: RTCVideoViewObjectFit.RTCVideoViewObjectFitCover,
           ),
         ),
+        if (_isExiting)
+          Positioned.fill(
+            child: Container(color: Colors.black),
+          ),
         Positioned(
           top: 100,
           right: 16,
@@ -830,17 +832,28 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
                   ? const Center(
                       child: Icon(Icons.videocam_off, color: VetoColors.silver, size: 28),
                     )
-                  : IgnorePointer(
-                      ignoring: _isExiting,
-                      child: Opacity(
-                        opacity: _isExiting ? 0.001 : 1.0,
-                        child: RTCVideoView(
-                          w.localRenderer,
-                          key: _localVideoKey,
-                          mirror: true,
-                          objectFit: RTCVideoViewObjectFit.RTCVideoViewObjectFitCover,
+                  : Stack(
+                      clipBehavior: Clip.hardEdge,
+                      children: [
+                        Positioned(
+                          left: _isExiting ? -10000 : 0,
+                          top: _isExiting ? -10000 : 0,
+                          right: _isExiting ? null : 0,
+                          bottom: _isExiting ? null : 0,
+                          width: _isExiting ? 100 : null,
+                          height: _isExiting ? 100 : null,
+                          child: RTCVideoView(
+                            w.localRenderer,
+                            key: _localVideoKey,
+                            mirror: true,
+                            objectFit: RTCVideoViewObjectFit.RTCVideoViewObjectFitCover,
+                          ),
                         ),
-                      ),
+                        if (_isExiting)
+                          Positioned.fill(
+                            child: Container(color: Colors.black),
+                          ),
+                      ],
                     ),
             ),
           ),
