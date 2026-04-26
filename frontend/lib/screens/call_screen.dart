@@ -13,7 +13,6 @@ import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:provider/provider.dart';
 
 import '../core/theme/veto_theme.dart';
-import '../services/auth_service.dart';
 import '../services/call_recording_service.dart';
 import '../services/vault_save_queue.dart';
 import '../services/webrtc_service.dart';
@@ -51,8 +50,6 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
   String? _callErrorText;
   late final CallRecordingService _recordingService;
 
-  /// Subscriber-only: user must opt in before we capture media.
-  bool _isSubscriber = false;
   bool _userOptedRecord = false;
   bool _liveRecording = false;
 
@@ -114,11 +111,10 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
       _myRole    = myRole;
       _eventId   = args['eventId']?.toString() ?? '';
       _language  = args['language']?.toString() ?? 'he';
+      _userOptedRecord = true;
     });
 
     final socketService = context.read<SocketService>();
-    _isSubscriber = await AuthService().getStoredIsSubscribed();
-    if (!mounted) return;
 
     final online = await socketService.ensureConnected(role: myRole);
     if (!mounted) return;
@@ -279,7 +275,7 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
 
   void _maybeStartRecording(WebRTCService w) {
     if (_recordingStarted) return;
-    if (!_isSubscriber || !_userOptedRecord) return;
+    if (!_userOptedRecord) return;
     _recordingStarted = true;
     _liveRecording = true;
     _recordingService.start(
@@ -290,7 +286,6 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
   }
 
   Future<void> _toggleRecordingOptIn() async {
-    if (!_isSubscriber) return;
     setState(() => _userOptedRecord = !_userOptedRecord);
     final w = _webrtc;
     if (_userOptedRecord && w != null && w.state == CallState.connected && !_recordingStarted) {
@@ -385,39 +380,61 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
   /// immediately (work continues in the background).
   Future<void> _finalizeAndNavigate() async {
     if (!mounted) return;
-    final queue = context.read<VaultSaveQueue>();
-    var goVault = false;
-    if (_isChat) {
-      final t = _formatChatAsTranscript();
-      if (t.isNotEmpty) {
-        queue.enqueueChatTranscript(
-          eventId: _eventId,
-          transcript: t,
-          roomLabel: _peerName,
+    final vaultEventId =
+        _eventId.trim().isNotEmpty ? _eventId.trim() : _roomId.trim();
+    try {
+      final queue = context.read<VaultSaveQueue>();
+      var goVault = false;
+      if (_isChat) {
+        final t = _formatChatAsTranscript();
+        if (t.isNotEmpty && vaultEventId.isNotEmpty) {
+          queue.enqueueChatTranscript(
+            eventId: vaultEventId,
+            transcript: t,
+            roomLabel: _peerName,
+          );
+          goVault = true;
+        }
+      } else {
+        CallRecordingResult? rec;
+        if (_recordingStarted) {
+          try {
+            rec = await _recordingService.stop();
+          } catch (e, st) {
+            debugPrint('[CallScreen] recording stop failed: $e\n$st');
+            rec = null;
+          }
+          _liveRecording = false;
+          _recordingStarted = false;
+        }
+        try {
+          await _webrtc?.completeMediaTeardown();
+        } catch (e, st) {
+          debugPrint('[CallScreen] media teardown: $e\n$st');
+        }
+        if (rec != null &&
+            rec.bytes.isNotEmpty &&
+            vaultEventId.isNotEmpty) {
+          queue.enqueueWebrtcCallArtifacts(
+            eventId: vaultEventId,
+            language: _language,
+            roomLabel: _peerName,
+            recording: rec,
+          );
+          goVault = true;
+        }
+      }
+      if (!mounted) return;
+      if (goVault) {
+        Navigator.of(context).pushReplacementNamed('/files_vault');
+      } else {
+        Navigator.of(context).pushReplacementNamed(
+          _myRole == 'lawyer' ? '/lawyer_dashboard' : '/veto_screen',
         );
-        goVault = true;
       }
-    } else {
-      CallRecordingResult? rec;
-      if (_recordingStarted) {
-        rec = await _recordingService.stop();
-        _liveRecording = false;
-        _recordingStarted = false;
-      }
-      if (rec != null && rec.bytes.isNotEmpty) {
-        queue.enqueueWebrtcCallArtifacts(
-          eventId: _eventId,
-          language: _language,
-          roomLabel: _peerName,
-          recording: rec,
-        );
-        goVault = true;
-      }
-    }
-    if (!mounted) return;
-    if (goVault) {
-      Navigator.of(context).pushReplacementNamed('/files_vault');
-    } else {
+    } catch (e, st) {
+      debugPrint('[CallScreen] _finalizeAndNavigate: $e\n$st');
+      if (!mounted) return;
       Navigator.of(context).pushReplacementNamed(
         _myRole == 'lawyer' ? '/lawyer_dashboard' : '/veto_screen',
       );
@@ -1205,14 +1222,13 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
                 ),
                 const SizedBox(width: 16),
               ],
-              if (_isSubscriber)
-                _buildControlBtn(
-                  icon: _userOptedRecord ? Icons.radio_button_checked : Icons.radio_button_off,
-                  label: _language == 'he' ? 'הקלטה' : 'Rec',
-                  color: _userOptedRecord ? Colors.redAccent : VetoColors.silver,
-                  onTap: () => unawaited(_toggleRecordingOptIn()),
-                ),
-              if (_isSubscriber) const SizedBox(width: 16),
+              _buildControlBtn(
+                icon: _userOptedRecord ? Icons.radio_button_checked : Icons.radio_button_off,
+                label: _language == 'he' ? 'הקלטה' : 'Rec',
+                color: _userOptedRecord ? Colors.redAccent : VetoColors.silver,
+                onTap: () => unawaited(_toggleRecordingOptIn()),
+              ),
+              const SizedBox(width: 16),
             ],
           ),
           const SizedBox(height: 24),

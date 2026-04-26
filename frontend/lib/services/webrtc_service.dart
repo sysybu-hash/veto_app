@@ -38,6 +38,9 @@ class WebRTCService extends ChangeNotifier {
   /// `disconnected` from `close()` as a user-visible failure; also reduces duplicate notifies).
   bool _isTearingDown = false;
 
+  /// After [completeMediaTeardown] or [dispose]; avoids double-close.
+  bool _mediaTornDown = false;
+
   /// Set by `room-joined`: first peer creates the offer only after `peer-joined`.
   bool _isCaller = false;
 
@@ -83,6 +86,7 @@ class WebRTCService extends ChangeNotifier {
     required String socketRole,
   }) async {
     _isTearingDown = false;
+    _mediaTornDown = false;
     _roomId    = roomId;
     _callType  = callType;
     _errorMessage = null;
@@ -361,21 +365,48 @@ class WebRTCService extends ChangeNotifier {
     await _onCallEnded(remote: false);
   }
 
+  /// Ends signaling state only — leaves PC/tracks alive so the browser [MediaRecorder]
+  /// can flush WebM after the call (see CallScreen._finalizeAndNavigate).
   Future<void> _onCallEnded({required bool remote}) async {
     _isTearingDown = true;
     _stopDurationTimer();
     _setState(CallState.ended);
+  }
 
-    await _pc?.close();
+  /// Close peer connection and stop tracks — call after local recording is stopped.
+  Future<void> completeMediaTeardown() async {
+    if (_mediaTornDown) return;
+    _mediaTornDown = true;
+    try {
+      await _pc?.close();
+    } catch (_) {}
     _pc = null;
-
-    _localStream?.getTracks().forEach((t) => t.stop());
+    try {
+      _localStream?.getTracks().forEach((t) => t.stop());
+    } catch (_) {}
     _localStream = null;
-
-    localRenderer.srcObject  = null;
-    remoteRenderer.srcObject = null;
-
+    try {
+      localRenderer.srcObject = null;
+      remoteRenderer.srcObject = null;
+    } catch (_) {}
     notifyListeners();
+  }
+
+  void _syncTeardownMedia() {
+    if (_mediaTornDown) return;
+    _mediaTornDown = true;
+    try {
+      _pc?.close();
+    } catch (_) {}
+    _pc = null;
+    try {
+      _localStream?.getTracks().forEach((t) => t.stop());
+    } catch (_) {}
+    _localStream = null;
+    try {
+      localRenderer.srcObject = null;
+      remoteRenderer.srcObject = null;
+    } catch (_) {}
   }
 
   // ═══════════════════════════════════════════════════════════
@@ -432,14 +463,8 @@ class WebRTCService extends ChangeNotifier {
 
     _stopDurationTimer();
 
-    _pc?.close();
-    _pc = null;
+    _syncTeardownMedia();
 
-    _localStream?.getTracks().forEach((t) => t.stop());
-    _localStream = null;
-
-    localRenderer.srcObject  = null;
-    remoteRenderer.srcObject = null;
     localRenderer.dispose();
     remoteRenderer.dispose();
 

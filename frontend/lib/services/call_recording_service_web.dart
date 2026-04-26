@@ -13,6 +13,25 @@ const int _kAudioBps = 96000;
 const int _kVideoBps = 1200000;
 const int _kTimeSliceMs = 1000;
 
+String _pickMime(bool video) {
+  if (video) {
+    const opts = [
+      'video/webm;codecs=vp9,opus',
+      'video/webm;codecs=vp8,opus',
+      'video/webm',
+    ];
+    for (final m in opts) {
+      if (web.MediaRecorder.isTypeSupported(m)) return m;
+    }
+    return 'video/webm';
+  }
+  const opts = ['audio/webm;codecs=opus', 'audio/webm'];
+  for (final m in opts) {
+    if (web.MediaRecorder.isTypeSupported(m)) return m;
+  }
+  return 'audio/webm';
+}
+
 class _WebCallRecordingService implements CallRecordingService {
   web.MediaRecorder? _rec;
   MediaStream? _recordingStream;
@@ -44,7 +63,7 @@ class _WebCallRecordingService implements CallRecordingService {
       return;
     }
 
-    _mimeType = video ? 'video/webm' : 'audio/webm';
+    _mimeType = _pickMime(video);
     _recordingStream = await createLocalMediaStream('veto_call_recording');
 
     if (video) {
@@ -116,10 +135,14 @@ class _WebCallRecordingService implements CallRecordingService {
     if (_rec == null || _urlCompleter == null) {
       return null;
     }
+    try {
+      _rec!.requestData();
+    } catch (_) {}
     _rec!.stop();
     var objectUrl = '';
     try {
-      objectUrl = await _urlCompleter!.future;
+      objectUrl = await _urlCompleter!.future
+          .timeout(const Duration(seconds: 12));
     } catch (_) {
       return null;
     } finally {
