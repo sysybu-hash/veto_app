@@ -451,25 +451,7 @@ class WebRTCService extends ChangeNotifier {
     }
   }
 
-  /// Stop camera/mic/remote tracks so the browser stops decoding before we drop PC handlers.
-  void _stopAllTracksImmediately() {
-    for (final stream in [_localStream, _remoteStream]) {
-      if (stream == null) continue;
-      try {
-        for (final t in stream.getTracks()) {
-          try {
-            t.stop();
-          } catch (e, st) {
-            _logError('_stopAllTracksImmediately track.stop', e, st);
-          }
-        }
-      } catch (e, st) {
-        _logError('_stopAllTracksImmediately getTracks', e, st);
-      }
-    }
-  }
-
-  /// Null all peer-connection delegates (after [_stopAllTracksImmediately] in [silenceNativeEvents]).
+  /// Null all peer-connection delegates during internal teardown (full sever).
   void _nullPeerConnectionHandlers() {
     final pc = _pc;
     if (pc == null) return;
@@ -491,15 +473,38 @@ class WebRTCService extends ChangeNotifier {
     }
   }
 
-  /// Aggressive sever for [CallScreen] exit shield: tracks first, then null native handlers.
-  /// Does not run [_syncTeardownMedia] (that nulls [_pc]); PC close stays in normal teardown.
+  /// Iron Curtain: stop tracks, null core PC handlers — do not [close] here; teardown runs after navigation.
   void silenceNativeEvents() {
     try {
-      _stopAllTracksImmediately();
+      _localStream?.getTracks().forEach((t) {
+        try {
+          t.stop();
+        } catch (e, st) {
+          _logError('silenceNativeEvents local track.stop', e, st);
+        }
+      });
+      _remoteStream?.getTracks().forEach((t) {
+        try {
+          t.stop();
+        } catch (e, st) {
+          _logError('silenceNativeEvents remote track.stop', e, st);
+        }
+      });
     } catch (e, st) {
       _logError('silenceNativeEvents tracks', e, st);
     }
-    _nullPeerConnectionHandlers();
+    final pc = _pc;
+    if (pc != null) {
+      try {
+        pc.onIceCandidate = null;
+        pc.onTrack = null;
+        pc.onConnectionState = null;
+        pc.onIceConnectionState = null;
+        pc.onSignalingState = null;
+      } catch (e, st) {
+        _logError('silenceNativeEvents handlers', e, st);
+      }
+    }
   }
 
   /// Stops native callbacks from reaching Dart during internal teardown.
