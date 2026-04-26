@@ -473,7 +473,7 @@ class WebRTCService extends ChangeNotifier {
     }
   }
 
-  /// Bunker / exit: stop tracks, null core PC handlers — PC stays open until post-navigation teardown.
+  /// Exit shield: stop tracks + null PC callbacks. Does **not** clear [localRenderer]/[remoteRenderer] [srcObject] or call [RTCVideoRenderer.dispose].
   void silenceNativeEvents() {
     _localStream?.getTracks().forEach((t) => t.stop());
     _remoteStream?.getTracks().forEach((t) => t.stop());

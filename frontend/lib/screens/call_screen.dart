@@ -34,6 +34,11 @@ class _ChatLine {
 
 class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
   WebRTCService? _webrtc;
+  /// After [_webrtc] is nulled for the zombie handoff, builds still use this so [RTCVideoView] stays mounted until [dispose].
+  WebRTCService? _webrtcUiHold;
+  bool _webRtcZombieScheduled = false;
+
+  WebRTCService? get _webrtcLive => _webrtc ?? _webrtcUiHold;
   late AnimationController _pulseCtrl;
   late Animation<double>   _pulseAnim;
   late AnimationController _fadeCtrl;
@@ -69,7 +74,7 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
   int _waitSeconds = 0;
   Timer? _waitTick;
 
-  /// Flutter Web: when true, videos move off-screen (bunker) + black shield; never unmounted for DOM stability.
+  /// Flutter Web: [IndexedStack] switches to the black safe zone; child 0 (call UI + videos) stays mounted.
   bool _isExiting = false;
 
   /// Stable keys — never rotate (avoids DOM churn from UniqueKey in build/session resets).
@@ -361,9 +366,21 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
       return;
     }
 
-    _webrtc?.removeListener(_onWebRTCUpdate);
-    _webrtc?.dispose();
+    final oldW = _webrtcLive;
+    oldW?.removeListener(_onWebRTCUpdate);
+    try {
+      oldW?.dispose();
+    } catch (e, st) {
+      developer.log(
+        '_retryJoin dispose WebRTC',
+        name: 'VETO.CallScreen',
+        error: e,
+        stackTrace: st,
+      );
+    }
     _webrtc = null;
+    _webrtcUiHold = null;
+    _webRtcZombieScheduled = false;
 
     final socketService = context.read<SocketService>();
     await Future<void>.delayed(const Duration(milliseconds: 200));
@@ -415,11 +432,44 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
 
   /// Stops the recorder, enqueues long uploads to the vault queue, and navigates
   /// immediately (work continues in the background).
+  void _zombieDisposeWebRTC(WebRTCService? svc) {
+    if (svc == null || _webRtcZombieScheduled) return;
+    _webRtcZombieScheduled = true;
+    Future<void>.delayed(const Duration(seconds: 5), () {
+      try {
+        svc.dispose();
+      } catch (e, st) {
+        developer.log(
+          'zombie WebRTC dispose',
+          name: 'VETO.CallScreen',
+          error: e,
+          stackTrace: st,
+        );
+        debugPrint('[CallScreen] zombie WebRTC dispose: $e\n$st');
+      }
+    });
+  }
+
+  /// Replaces the route; for WebRTC calls hands off service to [_webrtcUiHold] and schedules zombie dispose.
+  void _pushReplacementLeavingCall(NavigatorState nav, String route) {
+    WebRTCService? svc;
+    if (!_isChat) {
+      svc = _webrtc;
+      _webrtcUiHold = svc;
+      _webrtc = null;
+    }
+    if (!mounted) return;
+    nav.pushReplacementNamed(route);
+    _zombieDisposeWebRTC(svc);
+  }
+
   Future<void> _finalizeAndNavigate() async {
     if (!mounted) return;
     if (!_isChat) {
-      setState(() => _isExiting = true);
-      _webrtc?.silenceNativeEvents();
+      if (!_isExiting) {
+        setState(() => _isExiting = true);
+        _webrtc?.silenceNativeEvents();
+      }
       await Future<void>.delayed(const Duration(milliseconds: 800));
       if (!mounted) return;
     }
@@ -476,44 +526,7 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
       final target = goVault
           ? '/files_vault'
           : (myRole == 'lawyer' ? '/lawyer_dashboard' : '/veto_screen');
-      WebRTCService? pending;
-      if (!_isChat) {
-        pending = _webrtc;
-        _webrtc = null;
-      }
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return;
-        nav.pushReplacementNamed(target);
-        final svc = pending;
-        if (svc != null) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            unawaited(() async {
-              try {
-                await svc.completeMediaTeardown();
-              } catch (e, st) {
-                developer.log(
-                  'media teardown (deferred)',
-                  name: 'VETO.CallScreen',
-                  error: e,
-                  stackTrace: st,
-                );
-                debugPrint('[CallScreen] media teardown (deferred): $e\n$st');
-              }
-              try {
-                svc.dispose();
-              } catch (e, st) {
-                developer.log(
-                  'WebRTC dispose (deferred)',
-                  name: 'VETO.CallScreen',
-                  error: e,
-                  stackTrace: st,
-                );
-                debugPrint('[CallScreen] WebRTC dispose (deferred): $e\n$st');
-              }
-            }());
-          });
-        }
-      });
+      _pushReplacementLeavingCall(nav, target);
     } catch (e, st) {
       developer.log(
         '_finalizeAndNavigate',
@@ -523,11 +536,9 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
       );
       debugPrint('[CallScreen] _finalizeAndNavigate: $e\n$st');
       if (!mounted) return;
-      final fallback = _myRole == 'lawyer' ? '/lawyer_dashboard' : '/veto_screen';
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return;
-        Navigator.of(context).pushReplacementNamed(fallback);
-      });
+      final fallback =
+          _myRole == 'lawyer' ? '/lawyer_dashboard' : '/veto_screen';
+      _pushReplacementLeavingCall(Navigator.of(context), fallback);
     }
   }
 
@@ -566,24 +577,23 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
       name: 'VETO.CallScreen',
     );
 
-    final w = _webrtc;
+    final w = _webrtc ?? _webrtcUiHold;
     _webrtc = null;
+    _webrtcUiHold = null;
 
     if (w != null) {
       try {
         w.removeListener(_onWebRTCUpdate);
-        w.dispose();
-        developer.log(
-          'WebRTCService disposed synchronously',
-          name: 'VETO.CallScreen',
-        );
       } catch (e, stack) {
         developer.log(
-          'Error disposing WebRTC service',
+          'WebRTC removeListener in dispose',
           name: 'VETO.CallScreen',
           error: e,
           stackTrace: stack,
         );
+      }
+      if (!_webRtcZombieScheduled) {
+        _zombieDisposeWebRTC(w);
       }
     }
 
@@ -612,15 +622,30 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
       body: FadeTransition(
         opacity: _fadeAnim,
         child: Stack(
+          fit: StackFit.expand,
           children: [
-            if (_isChat) _buildChatLayer() else _buildVideoLayer(),
+            if (_isChat)
+              _buildChatLayer()
+            else
+              IndexedStack(
+                index: _isExiting ? 1 : 0,
+                sizing: StackFit.expand,
+                children: [
+                  _buildActualCallUI(),
+                  const ColoredBox(color: Colors.black),
+                ],
+              ),
             if (!_isChat) _buildGradientOverlay(),
             Positioned(
-              top: 0, left: 0, right: 0,
+              left: 0,
+              top: 0,
+              right: 0,
               child: SafeArea(child: _buildTopBar()),
             ),
             Positioned(
-              bottom: 0, left: 0, right: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
               child: SafeArea(child: _buildControls()),
             ),
           ],
@@ -753,7 +778,7 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
     );
   }
 
-  /// Immediate iron curtain before [endCall]; long buffer lives in [_finalizeAndNavigate].
+  /// Switch [IndexedStack] to black + silence native PC before [endCall].
   Future<void> _prepareExitShield() async {
     if (_isChat) return;
     if (!mounted) return;
@@ -763,10 +788,10 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
   }
 
   // ─────────────────────────────────────────────────────────
-  //  Video layer
+  //  Call UI (index 0 of [IndexedStack] — stays mounted until route dispose)
   // ─────────────────────────────────────────────────────────
-  Widget _buildVideoLayer() {
-    final w = _webrtc;
+  Widget _buildActualCallUI() {
+    final w = _webrtcLive;
     if (w == null) {
       return Container(
         width: double.infinity,
@@ -782,13 +807,6 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
     final isConnected = w.state == CallState.connected;
 
     if (!isVideo || !isConnected) {
-      if (_isExiting) {
-        return Container(
-          width: double.infinity,
-          height: double.infinity,
-          color: Colors.black,
-        );
-      }
       return Container(
         width: double.infinity,
         height: double.infinity,
@@ -799,23 +817,13 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
 
     return Stack(
       children: [
-        Positioned(
-          left: _isExiting ? -10000 : 0,
-          top: _isExiting ? -10000 : 0,
-          right: _isExiting ? null : 0,
-          bottom: _isExiting ? null : 0,
-          width: _isExiting ? 100 : null,
-          height: _isExiting ? 100 : null,
+        Positioned.fill(
           child: RTCVideoView(
             w.remoteRenderer,
             key: _remoteVideoKey,
             objectFit: RTCVideoViewObjectFit.RTCVideoViewObjectFitCover,
           ),
         ),
-        if (_isExiting)
-          Positioned.fill(
-            child: Container(color: Colors.black),
-          ),
         Positioned(
           top: 100,
           right: 16,
@@ -832,28 +840,11 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
                   ? const Center(
                       child: Icon(Icons.videocam_off, color: VetoColors.silver, size: 28),
                     )
-                  : Stack(
-                      clipBehavior: Clip.hardEdge,
-                      children: [
-                        Positioned(
-                          left: _isExiting ? -10000 : 0,
-                          top: _isExiting ? -10000 : 0,
-                          right: _isExiting ? null : 0,
-                          bottom: _isExiting ? null : 0,
-                          width: _isExiting ? 100 : null,
-                          height: _isExiting ? 100 : null,
-                          child: RTCVideoView(
-                            w.localRenderer,
-                            key: _localVideoKey,
-                            mirror: true,
-                            objectFit: RTCVideoViewObjectFit.RTCVideoViewObjectFitCover,
-                          ),
-                        ),
-                        if (_isExiting)
-                          Positioned.fill(
-                            child: Container(color: Colors.black),
-                          ),
-                      ],
+                  : RTCVideoView(
+                      w.localRenderer,
+                      key: _localVideoKey,
+                      mirror: true,
+                      objectFit: RTCVideoViewObjectFit.RTCVideoViewObjectFitCover,
                     ),
             ),
           ),
@@ -1189,7 +1180,7 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
   //  Top bar
   // ─────────────────────────────────────────────────────────
   Widget _buildTopBar() {
-    final w = _webrtc;
+    final w = _webrtcLive;
     final webrtcConnected = w != null && w.state == CallState.connected;
     final showDur = _isChat ? _chatReady : webrtcConnected;
     final durText = _isChat ? _formattedChatDuration : (w?.formattedDuration ?? '00:00');
@@ -1320,7 +1311,7 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
   //  Controls
   // ─────────────────────────────────────────────────────────
   Widget _buildControls() {
-    final w = _webrtc;
+    final w = _webrtcLive;
 
     if (_isChat) {
       return Container(
