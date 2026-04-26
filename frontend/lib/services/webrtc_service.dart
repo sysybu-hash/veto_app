@@ -473,11 +473,9 @@ class WebRTCService extends ChangeNotifier {
     }
   }
 
-  /// Exit shield: stop all media tracks once, null core PC callbacks. Does not touch [srcObject] or [RTCVideoRenderer.dispose].
+  /// Nuclear exit: null peer-connection handlers first so the browser cannot deliver events into Dart during teardown/navigation.
+  /// Does not touch streams, [srcObject], or renderers (full teardown follows in [_syncTeardownMedia] / [_disposeStreamFully]).
   void silenceNativeEvents() {
-    for (final stream in <MediaStream?>[_localStream, _remoteStream]) {
-      stream?.getTracks().forEach((t) => t.stop());
-    }
     final pc = _pc;
     if (pc == null) return;
     pc.onIceCandidate = null;
@@ -567,8 +565,8 @@ class WebRTCService extends ChangeNotifier {
   }
 
   Future<void> endCall() async {
+    silenceNativeEvents();
     try {
-      silenceNativeEvents();
       await _onCallEnded(remote: false);
       try {
         _socket.emit('call-ended', {
@@ -738,16 +736,16 @@ class WebRTCService extends ChangeNotifier {
 
   @override
   void dispose() {
-    developer.log(
-      'WebRTCService: Starting dispose sequence',
-      name: 'VETO.WebRTC',
-    );
-
     try {
       silenceNativeEvents();
     } catch (e, st) {
       _logError('dispose silenceNativeEvents', e, st);
     }
+
+    developer.log(
+      'WebRTCService: Starting dispose sequence',
+      name: 'VETO.WebRTC',
+    );
 
     try {
       _stopDurationTimer();

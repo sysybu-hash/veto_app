@@ -74,12 +74,12 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
   int _waitSeconds = 0;
   Timer? _waitTick;
 
-  /// Flutter Web: bunker layout moves [RTCVideoView] off-screen; black shield overlays until navigate.
+  /// Flutter Web: Visibility hides [RTCVideoView]; black shield overlays until navigate.
   bool _isExiting = false;
 
-  /// Stable keys — never rotate (avoids DOM churn from UniqueKey in build/session resets).
-  final Key _remoteVideoKey = const ValueKey<String>('remote_video_stream');
-  final Key _localVideoKey = const ValueKey<String>('local_video_stream');
+  /// One [UniqueKey] per screen instance so video elements are not recycled across exit (not recreated each build).
+  final UniqueKey _remoteVideoNuclearKey = UniqueKey();
+  final UniqueKey _localVideoNuclearKey = UniqueKey();
 
   @override
   void initState() {
@@ -430,7 +430,7 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
     return buf.toString().trim();
   }
 
-  /// First exit only: bunker UI + [WebRTCService.silenceNativeEvents]. Safe to call from [_prepareExitShield] and [_finalizeAndNavigate].
+  /// Silence and blind: idempotent; used from [_prepareExitShield] and start of [_finalizeAndNavigate].
   void _enterCallExitIfNeeded() {
     if (_isChat || !mounted || _isExiting) return;
     setState(() => _isExiting = true);
@@ -473,7 +473,7 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
     if (!_isChat) {
       _enterCallExitIfNeeded();
       if (!mounted) return;
-      await Future<void>.delayed(const Duration(milliseconds: 800));
+      await Future<void>.delayed(const Duration(milliseconds: 200));
       if (!mounted) return;
     }
     _webrtc?.removeListener(_onWebRTCUpdate);
@@ -783,13 +783,13 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
     );
   }
 
-  /// Same exit shield as [_finalizeAndNavigate] (instant bunker when user hangs up).
+  /// Same silence-and-blind as [_finalizeAndNavigate] when the user hangs up first.
   Future<void> _prepareExitShield() async {
     _enterCallExitIfNeeded();
   }
 
   // ─────────────────────────────────────────────────────────
-  //  Call UI (bunker: videos stay mounted, moved off-screen when [_isExiting])
+  //  Call UI ([Visibility] + [UniqueKey] when exiting)
   // ─────────────────────────────────────────────────────────
   Widget _buildActualCallUI() {
     final w = _webrtcLive;
@@ -819,17 +819,15 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
     return Stack(
       fit: StackFit.expand,
       children: [
-        Positioned(
-          left: _isExiting ? -10000 : 0,
-          top: _isExiting ? -10000 : 0,
-          right: _isExiting ? null : 0,
-          bottom: _isExiting ? null : 0,
-          width: _isExiting ? 100 : null,
-          height: _isExiting ? 100 : null,
-          child: RTCVideoView(
-            w.remoteRenderer,
-            key: _remoteVideoKey,
-            objectFit: RTCVideoViewObjectFit.RTCVideoViewObjectFitCover,
+        Positioned.fill(
+          child: Visibility(
+            visible: !_isExiting,
+            maintainState: false,
+            child: RTCVideoView(
+              w.remoteRenderer,
+              key: _remoteVideoNuclearKey,
+              objectFit: RTCVideoViewObjectFit.RTCVideoViewObjectFitCover,
+            ),
           ),
         ),
         Positioned(
@@ -848,25 +846,15 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
                   ? const Center(
                       child: Icon(Icons.videocam_off, color: VetoColors.silver, size: 28),
                     )
-                  : Stack(
-                      clipBehavior: Clip.hardEdge,
-                      fit: StackFit.expand,
-                      children: [
-                        Positioned(
-                          left: _isExiting ? -10000 : 0,
-                          top: _isExiting ? -10000 : 0,
-                          right: _isExiting ? null : 0,
-                          bottom: _isExiting ? null : 0,
-                          width: _isExiting ? 100 : null,
-                          height: _isExiting ? 100 : null,
-                          child: RTCVideoView(
-                            w.localRenderer,
-                            key: _localVideoKey,
-                            mirror: true,
-                            objectFit: RTCVideoViewObjectFit.RTCVideoViewObjectFitCover,
-                          ),
-                        ),
-                      ],
+                  : Visibility(
+                      visible: !_isExiting,
+                      maintainState: false,
+                      child: RTCVideoView(
+                        w.localRenderer,
+                        key: _localVideoNuclearKey,
+                        mirror: true,
+                        objectFit: RTCVideoViewObjectFit.RTCVideoViewObjectFitCover,
+                      ),
                     ),
             ),
           ),

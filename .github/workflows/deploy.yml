@@ -61,7 +61,7 @@ jobs:
         run: |
           cd frontend
           SHORT_SHA=$(echo '${{ github.sha }}' | cut -c1-7)
-          flutter build web --release --no-wasm-dry-run \
+          flutter build web --release \
             --no-tree-shake-icons \
             --pwa-strategy=none \
             --dart-define=VETO_API_BASE=${{ env.VETO_API_BASE }} \
