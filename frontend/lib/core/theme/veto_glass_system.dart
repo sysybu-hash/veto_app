@@ -1,6 +1,6 @@
 // ============================================================
-//  veto_glass_system.dart — Dark glassmorphism (mockup-aligned)
-//  Fluid aurora background, blur panels, neon cyan/blue accents
+//  veto_glass_system.dart — Dark glassmorphism (VETO v4)
+//  Deep ink base, mint–indigo aurora, frosted panels
 // ============================================================
 
 import 'dart:math' as math;
@@ -8,39 +8,40 @@ import 'dart:ui' show ImageFilter;
 
 import 'package:flutter/material.dart';
 
-/// Design tokens for dark glass UI (LEXIGUARD / LegalAid style references).
+/// Design tokens for dark glass UI — single source for screens + painters.
 class VetoGlassTokens {
   VetoGlassTokens._();
 
-  static const Color bgBase = Color(0xFF06101C);
-  static const Color bgDeep = Color(0xFF030A12);
+  static const Color bgBase = Color(0xFF0A0E17);
+  static const Color bgDeep = Color(0xFF05070D);
 
   static const Color textPrimary = Color(0xFFF8FAFC);
   static const Color textSecondary = Color(0xFFE2E8F0);
   static const Color textMuted = Color(0xFF94A3B8);
   static const Color textSubtle = Color(0xFF64748B);
 
-  static const Color neonCyan = Color(0xFF00E5FF);
-  static const Color neonBlue = Color(0xFF007BFF);
-  static const Color accentSoft = Color(0xFF38BDF8);
-  static const Color violetGlow = Color(0xFF8B5CF6);
+  /// Primary accent (mint–teal). Kept name [neonCyan] for stable call sites.
+  static const Color neonCyan = Color(0xFF5EEAD4);
+  static const Color neonBlue = Color(0xFF6366F1);
+  static const Color accentSoft = Color(0xFF2DD4BF);
+  static const Color violetGlow = Color(0xFFA78BFA);
 
-  static const Color glassFill = Color(0x14FFFFFF);
-  static const Color glassFillStrong = Color(0x22FFFFFF);
-  static const Color glassBorder = Color(0x28FFFFFF);
-  static const Color glassBorderBright = Color(0x40FFFFFF);
+  static const Color glassFill = Color(0x12FFFFFF);
+  static const Color glassFillStrong = Color(0x1EFFFFFF);
+  static const Color glassBorder = Color(0x24FFFFFF);
+  static const Color glassBorderBright = Color(0x3AFFFFFF);
 
   /// Dialogs, modals, bottom sheets (aligned with glassDark theme)
-  static const Color sheetPanel = Color(0xE6121824);
+  static const Color sheetPanel = Color(0xE6161F2E);
   /// [DropdownButton] / popup surfaces on dark UI
-  static const Color menuPanel = Color(0xFF152232);
+  static const Color menuPanel = Color(0xFF151B2C);
   /// Text/icons on neon / gradient buttons
-  static const Color onNeon = Color(0xFF041018);
+  static const Color onNeon = Color(0xFF071018);
 
   static const LinearGradient neonButton = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [Color(0xFF00E5FF), Color(0xFF007BFF)],
+    colors: [Color(0xFF5EEAD4), Color(0xFF6366F1)],
   );
 
   static const LinearGradient specularTop = LinearGradient(
@@ -92,21 +93,20 @@ class VetoFluidBackgroundPainter extends CustomPainter {
       begin: Alignment.topLeft,
       end: Alignment.bottomRight,
       colors: [
-        Color(0xFF07182A),
-        Color(0xFF06101C),
-        Color(0xFF0A1E32),
+        Color(0xFF0D1526),
+        Color(0xFF0A0E17),
+        Color(0xFF111827),
       ],
     ).createShader(Rect.fromLTWH(0, 0, w, h));
     canvas.drawRect(Rect.fromLTWH(0, 0, w, h), base);
 
-    _blob(canvas, Offset(w * 0.82, h * 0.05), w * 0.48, const Color(0xFF00B4D8), 0.28);
-    _blob(canvas, Offset(w * 0.12, h * 0.12), w * 0.52, const Color(0xFF4DB6AC), 0.22);
-    _blob(canvas, Offset(w * 0.08, h * 0.58), w * 0.48, const Color(0xFF7C6FED), 0.18);
-    _blob(canvas, Offset(w * 0.88, h * 0.72), w * 0.42, const Color(0xFF2196F3), 0.16);
-    // Set 5 — extra aurora: violet + cyan low on canvas (deep "northern light" feel)
-    _blob(canvas, Offset(w * 0.48, h * 0.88), w * 0.55, const Color(0xFF7C3AED), 0.24);
-    _blob(canvas, Offset(w * 0.25, h * 0.42), w * 0.38, const Color(0xFF00E5FF), 0.18);
-    _blob(canvas, Offset(w * 0.62, h * 0.18), w * 0.32, const Color(0xFF22D3EE), 0.12);
+    _blob(canvas, Offset(w * 0.82, h * 0.05), w * 0.48, const Color(0xFF2DD4BF), 0.26);
+    _blob(canvas, Offset(w * 0.12, h * 0.12), w * 0.52, const Color(0xFF34D399), 0.20);
+    _blob(canvas, Offset(w * 0.08, h * 0.58), w * 0.48, const Color(0xFF818CF8), 0.17);
+    _blob(canvas, Offset(w * 0.88, h * 0.72), w * 0.42, const Color(0xFF6366F1), 0.14);
+    _blob(canvas, Offset(w * 0.48, h * 0.88), w * 0.55, const Color(0xFFA78BFA), 0.22);
+    _blob(canvas, Offset(w * 0.25, h * 0.42), w * 0.38, const Color(0xFF5EEAD4), 0.16);
+    _blob(canvas, Offset(w * 0.62, h * 0.18), w * 0.32, const Color(0xFF22D3EE), 0.10);
 
     // Subtle bokeh specks
     final rnd = Paint()..color = Colors.white.withValues(alpha: 0.055);
@@ -153,8 +153,8 @@ class VetoAuroraMotionPainter extends CustomPainter {
       w * (0.18 + 0.12 * math.cos(t * 0.82)),
       h * (0.72 + 0.08 * math.sin(t * 0.55)),
     );
-    _wash(canvas, c1, w * 0.62, const Color(0xFF00E5FF), 0.10);
-    _wash(canvas, c2, w * 0.48, const Color(0xFF8B5CF6), 0.085);
+    _wash(canvas, c1, w * 0.62, const Color(0xFF5EEAD4), 0.09);
+    _wash(canvas, c2, w * 0.48, const Color(0xFFA78BFA), 0.075);
   }
 
   void _wash(Canvas canvas, Offset c, double r, Color col, double a) {
@@ -186,9 +186,9 @@ class VetoCommandMapPainter extends CustomPainter {
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
         colors: [
-          Color(0xFF0B1628),
-          Color(0xFF06101C),
-          Color(0xFF0A1A2E),
+          Color(0xFF0F1729),
+          Color(0xFF0A0E17),
+          Color(0xFF131C2E),
         ],
       ).createShader(Rect.fromLTWH(0, 0, w, h));
     canvas.drawRect(Rect.fromLTWH(0, 0, w, h), base);

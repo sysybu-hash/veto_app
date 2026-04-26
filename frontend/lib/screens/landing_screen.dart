@@ -207,8 +207,8 @@ class LandingScreen extends StatelessWidget {
             context: context,
             builder: (_) => AiChatDialog(code: code),
           ),
-          backgroundColor: const Color(0xFF00B4D4),
-          foregroundColor: const Color(0xFF06101C),
+          backgroundColor: VetoGlassTokens.neonCyan,
+          foregroundColor: VetoGlassTokens.onNeon,
           icon: const Icon(Icons.auto_awesome_rounded),
           label: Text(
             code == 'he' ? 'שאל את VETO AI'
@@ -328,7 +328,7 @@ class _NavBarState extends State<_NavBar> {
                       BoxShadow(color: VetoGlassTokens.neonCyan.withValues(alpha: 0.35), blurRadius: 12),
                     ],
                   ),
-                  child: const Icon(Icons.shield_rounded, color: Color(0xFF06101C), size: 20),
+                  child: const Icon(Icons.shield_rounded, color: VetoGlassTokens.onNeon, size: 20),
                 ),
                 const SizedBox(width: 10),
                 const Text('VETO', style: TextStyle(
@@ -414,7 +414,7 @@ class _NavBtn extends StatelessWidget {
                 style: const TextStyle(
                   fontWeight: FontWeight.w800,
                   fontSize: 14,
-                  color: Color(0xFF06101C),
+                  color: VetoGlassTokens.onNeon,
                   letterSpacing: 0.3,
                 ),
               ),
@@ -546,7 +546,7 @@ class _UserBubble extends StatelessWidget {
               child: Row(mainAxisSize: MainAxisSize.min, children: [
                 Text(
                   code == 'he' ? 'כניסה' : code == 'ru' ? 'Войти' : 'Enter',
-                  style: const TextStyle(color: Color(0xFF06101C), fontSize: 11, fontWeight: FontWeight.w800),
+                  style: const TextStyle(color: VetoGlassTokens.onNeon, fontSize: 11, fontWeight: FontWeight.w800),
                 ),
                 const SizedBox(width: 4),
                 const Icon(Icons.arrow_forward_ios_rounded, color: Colors.white, size: 11),

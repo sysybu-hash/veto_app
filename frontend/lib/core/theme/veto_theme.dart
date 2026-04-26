@@ -1,39 +1,41 @@
 // ============================================================
-//  veto_theme.dart — VETO Design System v3
-//  Light Aurora Glassmorphism — bright frosted glass, glowing orbs,
-//  soft teal/sky/lavender aurora on white, dark navy typography
+//  veto_theme.dart — VETO Design System v4
+//  Light: crisp slate paper + teal/indigo brand
+//  Dark: ink base + mint/indigo glass (see VetoGlassTokens)
 // ============================================================
 
 import 'package:flutter/material.dart';
 
-// ── Light Aurora palette ──────────────────────────────────
+import 'veto_glass_system.dart';
+
+// ── Light mode palette ────────────────────────────────────
 class VetoColors {
   VetoColors._();
 
   // ── Background layers ─────────────────────────────────
-  static const Color background    = Color(0xFFF0F4FF);   // soft white-blue
+  static const Color background    = Color(0xFFF8FAFC);   // slate paper
   static const Color surface       = Color(0xFFFFFFFF);   // pure white card
-  static const Color surfaceHigh   = Color(0xFFF8FAFF);   // slightly off-white
-  static const Color surfaceGlass  = Color(0xCCFFFFFF);   // white 80%
+  static const Color surfaceHigh   = Color(0xFFF1F5F9);   // subtle lift
+  static const Color surfaceGlass  = Color(0xE6FFFFFF);   // frosted white
 
-  static const Color surfaceMint     = Color(0x1500E5CC);
-  static const Color surfaceSky      = Color(0x1538BDF8);
-  static const Color surfaceLavender = Color(0x15A78BFA);
+  static const Color surfaceMint     = Color(0x142DD4BF);
+  static const Color surfaceSky      = Color(0x146366F1);
+  static const Color surfaceLavender = Color(0x14A78BFA);
 
-  // ── Brand blue ────────────────────────────────────────
-  static const Color accent        = Color(0xFF5B8FFF);   // light blue (primary)
-  static const Color accentDark    = Color(0xFF4A7FEF);
-  static const Color accentGlow    = Color(0x405B8FFF);
+  // ── Brand (teal + indigo) ─────────────────────────────
+  static const Color accent        = Color(0xFF0D9488);   // teal-600 primary
+  static const Color accentDark    = Color(0xFF0F766E);
+  static const Color accentGlow    = Color(0x400D9488);
 
-  static const Color accentSky     = Color(0xFF38BDF8);
-  static const Color accentViolet  = Color(0xFFA78BFA);
+  static const Color accentSky     = Color(0xFF6366F1);   // indigo-500
+  static const Color accentViolet  = Color(0xFF8B5CF6);
   static const Color accentCoral   = Color(0xFFFF6B6B);
-  static const Color accentTeal    = Color(0xFF00C9B1);
+  static const Color accentTeal    = Color(0xFF14B8A6);
 
-  // ── Legacy "gold" names (remapped to blue) ───────────
-  static const Color goldLight     = Color(0xFF5B8FFF);
-  static const Color goldDim       = Color(0xFF4A7FEF);
-  static const Color goldSoft      = Color(0x1A5B8FFF);
+  // ── Legacy "gold" names (remapped to brand teal) ─────
+  static const Color goldLight     = Color(0xFF0D9488);
+  static const Color goldDim       = Color(0xFF0F766E);
+  static const Color goldSoft      = Color(0x1A0D9488);
 
   // ── Emergency red ─────────────────────────────────────
   static const Color vetoRed       = Color(0xFFFF3B3B);
@@ -59,9 +61,9 @@ class VetoColors {
   static const Color online        = Color(0xFF22C55E);
 
   // ── Border / divider ──────────────────────────────────
-  static const Color border        = Color(0xFFE2E8F8);
-  static const Color borderLight   = Color(0xFFEEF2FF);
-  static const Color divider       = Color(0xFFE8EDF8);
+  static const Color border        = Color(0xFFE2E8F0);
+  static const Color borderLight   = Color(0xFFF1F5F9);
+  static const Color divider       = Color(0xFFE2E8F0);
 }
 
 // ══════════════════════════════════════════════════════════
@@ -80,7 +82,7 @@ class VetoPalette {
   static const Color primary       = VetoColors.accent;
   static const Color accentSky     = VetoColors.accentSky;
   static const Color info          = VetoColors.accentSky;
-  static const Color cyan          = Color(0xFF06B6D4);
+  static const Color cyan          = Color(0xFF2DD4BF);
   static const Color coral         = VetoColors.accentCoral;
 
   static const Color surfaceMint     = VetoColors.surfaceMint;
@@ -332,25 +334,26 @@ class VetoTheme {
     );
   }
 
-  /// Dark glassmorphism — white typography on deep aurora base (mockup-aligned).
+  /// Dark glass — typography on ink base + mint/indigo accents.
   static ThemeData glassDark() {
-    const on = Color(0xFFF8FAFC);
-    const surface = Color(0x14FFFFFF);
+    const on = VetoGlassTokens.textPrimary;
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.dark,
-      scaffoldBackgroundColor: const Color(0xFF06101C),
+      scaffoldBackgroundColor: VetoGlassTokens.bgBase,
       primaryIconTheme: const IconThemeData(color: on, size: 24),
       iconTheme: const IconThemeData(color: on, size: 24),
       colorScheme: const ColorScheme.dark(
         brightness: Brightness.dark,
-        primary: Color(0xFF00E5FF),
-        onPrimary: Color(0xFF06101C),
-        secondary: Color(0xFF007BFF),
+        primary: VetoGlassTokens.neonCyan,
+        onPrimary: VetoGlassTokens.onNeon,
+        secondary: VetoGlassTokens.neonBlue,
         onSecondary: Colors.white,
-        surface: surface,
-        onSurface: on,
-        error: Color(0xFFFF4B4B),
+        tertiary: VetoGlassTokens.violetGlow,
+        onTertiary: VetoGlassTokens.onNeon,
+        surface: VetoGlassTokens.glassFill,
+        onSurface: VetoGlassTokens.textPrimary,
+        error: Color(0xFFF87171),
         onError: Colors.white,
       ),
       appBarTheme: const AppBarTheme(
@@ -388,7 +391,7 @@ class VetoTheme {
         labelSmall:     TextStyle(fontFamily: 'Heebo', fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF94A3B8)),
       ),
       cardTheme: CardThemeData(
-        color: surface,
+        color: VetoGlassTokens.glassFill,
         elevation: 0,
         shadowColor: Colors.transparent,
         shape: RoundedRectangleBorder(
@@ -403,28 +406,28 @@ class VetoTheme {
         contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
         hintStyle: const TextStyle(fontFamily: 'Heebo', color: Color(0xFF64748B), fontSize: 14),
         labelStyle: const TextStyle(fontFamily: 'Heebo', color: Color(0xFF94A3B8), fontSize: 14),
-        floatingLabelStyle: const TextStyle(fontFamily: 'Heebo', color: Color(0xFF00E5FF), fontSize: 12),
+        floatingLabelStyle: const TextStyle(fontFamily: 'Heebo', color: VetoGlassTokens.neonCyan, fontSize: 12),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
           borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.14), width: 1),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: Color(0xFF00E5FF), width: 1.5),
+          borderSide: const BorderSide(color: VetoGlassTokens.neonCyan, width: 1.5),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: Color(0xFFFF4B4B), width: 1),
+          borderSide: const BorderSide(color: Color(0xFFF87171), width: 1),
         ),
         focusedErrorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: Color(0xFFFF4B4B), width: 1.5),
+          borderSide: const BorderSide(color: Color(0xFFF87171), width: 1.5),
         ),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFF00B4D4),
-          foregroundColor: const Color(0xFF06101C),
+          backgroundColor: VetoGlassTokens.accentSoft,
+          foregroundColor: VetoGlassTokens.onNeon,
           disabledBackgroundColor: const Color(0xFF334155),
           disabledForegroundColor: const Color(0xFF94A3B8),
           elevation: 0,
@@ -436,8 +439,8 @@ class VetoTheme {
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
-          backgroundColor: const Color(0xFF00E5FF),
-          foregroundColor: const Color(0xFF06101C),
+          backgroundColor: VetoGlassTokens.neonCyan,
+          foregroundColor: VetoGlassTokens.onNeon,
           elevation: 0,
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
           minimumSize: const Size(48, 48),
@@ -457,13 +460,13 @@ class VetoTheme {
       ),
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
-          foregroundColor: const Color(0xFF00E5FF),
+          foregroundColor: VetoGlassTokens.neonCyan,
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
           textStyle: const TextStyle(fontFamily: 'Heebo', fontSize: 14, fontWeight: FontWeight.w600),
         ),
       ),
       dialogTheme: DialogThemeData(
-        backgroundColor: const Color(0xE6121824),
+        backgroundColor: VetoGlassTokens.sheetPanel,
         elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(26),
@@ -473,45 +476,56 @@ class VetoTheme {
         contentTextStyle: const TextStyle(fontFamily: 'Heebo', fontSize: 14, color: Color(0xFFCBD5E1)),
       ),
       bottomSheetTheme: BottomSheetThemeData(
-        backgroundColor: const Color(0xE6121824),
+        backgroundColor: VetoGlassTokens.sheetPanel,
         modalBarrierColor: Colors.black.withValues(alpha: 0.55),
         shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(26)),
         ),
       ),
       snackBarTheme: SnackBarThemeData(
-        backgroundColor: const Color(0xFF0F172A),
+        backgroundColor: VetoGlassTokens.menuPanel,
         contentTextStyle: const TextStyle(fontFamily: 'Heebo', color: on, fontSize: 14),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
         behavior: SnackBarBehavior.floating,
       ),
       dividerTheme: DividerThemeData(color: Colors.white.withValues(alpha: 0.08), thickness: 1),
+      popupMenuTheme: const PopupMenuThemeData(
+        color: VetoGlassTokens.menuPanel,
+        surfaceTintColor: Colors.transparent,
+        textStyle: TextStyle(fontFamily: 'Heebo', color: VetoGlassTokens.textPrimary, fontSize: 14),
+      ),
+      menuTheme: MenuThemeData(
+        style: MenuStyle(
+          backgroundColor: WidgetStateProperty.all(VetoGlassTokens.menuPanel),
+          surfaceTintColor: WidgetStateProperty.all(Colors.transparent),
+        ),
+      ),
       navigationBarTheme: NavigationBarThemeData(
         backgroundColor: const Color(0x18FFFFFF),
         elevation: 0,
         shadowColor: Colors.transparent,
-        indicatorColor: const Color(0xFF00E5FF).withValues(alpha: 0.18),
+        indicatorColor: VetoGlassTokens.neonCyan.withValues(alpha: 0.18),
         labelTextStyle: WidgetStateProperty.all(
           const TextStyle(fontFamily: 'Heebo', fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFFCBD5E1)),
         ),
         iconTheme: WidgetStateProperty.resolveWith((s) {
           final selected = s.contains(WidgetState.selected);
           return IconThemeData(
-            color: selected ? const Color(0xFF00E5FF) : const Color(0xFF64748B),
+            color: selected ? VetoGlassTokens.neonCyan : const Color(0xFF64748B),
             size: 24,
           );
         }),
       ),
       switchTheme: SwitchThemeData(
         thumbColor: WidgetStateProperty.resolveWith((s) =>
-            s.contains(WidgetState.selected) ? const Color(0xFF00E5FF) : const Color(0xFF475569)),
+            s.contains(WidgetState.selected) ? VetoGlassTokens.neonCyan : const Color(0xFF475569)),
         trackColor: WidgetStateProperty.resolveWith((s) =>
-            s.contains(WidgetState.selected) ? const Color(0xFF00E5FF).withValues(alpha: 0.35) : const Color(0xFF1E293B)),
+            s.contains(WidgetState.selected) ? VetoGlassTokens.neonCyan.withValues(alpha: 0.35) : const Color(0xFF1E293B)),
       ),
       listTileTheme: const ListTileThemeData(
         tileColor: Colors.transparent,
         textColor: on,
-        iconColor: Color(0xFF00E5FF),
+        iconColor: VetoGlassTokens.neonCyan,
         contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       ),
       pageTransitionsTheme: PageTransitionsTheme(
@@ -535,10 +549,10 @@ class VetoDecorations {
       BoxDecoration(
         color: Color.fromRGBO(255, 255, 255, opacity),
         borderRadius: BorderRadius.circular(radius),
-        border: Border.all(color: const Color(0xFFE2E8F8), width: 1.5),
+        border: Border.all(color: VetoColors.border, width: 1.5),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF5B8FFF).withValues(alpha: 0.07),
+            color: VetoColors.accent.withValues(alpha: 0.08),
             blurRadius: 24,
             spreadRadius: 0,
             offset: const Offset(0, 8),
@@ -569,28 +583,28 @@ class VetoDecorations {
         color: const Color(0xFFFFFFFF),
         borderRadius: BorderRadius.circular(radius),
         border: Border.all(
-          color: const Color(0xFF5B8FFF).withValues(alpha: 0.35),
+          color: VetoColors.accent.withValues(alpha: 0.35),
           width: 1.5,
         ),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF5B8FFF).withValues(alpha: 0.10),
+            color: VetoColors.accent.withValues(alpha: 0.12),
             blurRadius: 20,
             spreadRadius: 0,
           ),
         ],
       );
 
-  /// Light aurora background — solid soft white-blue base
+  /// Light background — slate paper
   static BoxDecoration gradientBg() => const BoxDecoration(
-        color: Color(0xFFF0F4FF),
+        color: VetoColors.background,
       );
 
   static BoxDecoration legalHeaderBg() => BoxDecoration(
         color: const Color(0xEEFFFFFF),
         border: Border(
           bottom: BorderSide(
-            color: const Color(0xFF5B8FFF).withValues(alpha: 0.15),
+            color: VetoColors.accent.withValues(alpha: 0.18),
             width: 1,
           ),
         ),
@@ -612,7 +626,7 @@ class VetoDecorations {
 
   static List<BoxShadow> accentGlow({double intensity = 1.0}) => [
         BoxShadow(
-          color: const Color(0xFF5B8FFF).withValues(alpha: 0.35 * intensity),
+          color: VetoColors.accent.withValues(alpha: 0.35 * intensity),
           blurRadius: 24 * intensity,
           spreadRadius: 2 * intensity,
         ),
@@ -620,13 +634,13 @@ class VetoDecorations {
 
   static List<BoxShadow> goldGlow({double intensity = 1.0}) => [
         BoxShadow(
-          color: const Color(0xFF5B8FFF).withValues(alpha: 0.15 * intensity),
+          color: VetoColors.accent.withValues(alpha: 0.15 * intensity),
           blurRadius: 22 * intensity,
           spreadRadius: 0,
           offset: const Offset(0, 4),
         ),
         BoxShadow(
-          color: const Color(0xFF38BDF8).withValues(alpha: 0.10 * intensity),
+          color: VetoColors.accentSky.withValues(alpha: 0.10 * intensity),
           blurRadius: 40 * intensity,
           spreadRadius: 2 * intensity,
         ),

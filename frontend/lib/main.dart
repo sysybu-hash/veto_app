@@ -14,6 +14,7 @@ import 'config/app_config.dart';
 import 'core/accessibility/accessibility_settings.dart';
 import 'core/i18n/app_language.dart';
 import 'core/theme/veto_theme.dart';
+import 'core/theme/veto_glass_system.dart';
 import 'screens/login_screen.dart';
 import 'screens/landing_screen.dart';
 import 'screens/lawyer_dashboard.dart';
@@ -44,30 +45,30 @@ Future<void> main() async {
   // Global Error Boundary to prevent Red Screen of Death
   ErrorWidget.builder = (FlutterErrorDetails details) {
     return Material(
-      color: const Color(0xFF06101C),
+      color: VetoGlassTokens.bgBase,
       child: Container(
-        color: const Color(0xFF06101C),
+        color: VetoGlassTokens.bgBase,
         padding: const EdgeInsets.all(24),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.warning_amber_rounded, color: Color(0xFFFF4B4B), size: 64),
+            const Icon(Icons.warning_amber_rounded, color: Color(0xFFF87171), size: 64),
             const SizedBox(height: 24),
             const Text(
               'משהו השתבש',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: Color(0xFFF8FAFC)),
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: VetoGlassTokens.textPrimary),
             ),
             const SizedBox(height: 12),
             const Text(
               'אנחנו עובדים על זה. נסה לרענן את העמוד.',
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 15, color: Color(0xFF94A3B8)),
+              style: TextStyle(fontSize: 15, color: VetoGlassTokens.textMuted),
             ),
             const SizedBox(height: 24),
             Text(
               details.exceptionAsString(),
               textAlign: TextAlign.center,
-              style: const TextStyle(color: Color(0xFF64748B), fontSize: 11),
+              style: const TextStyle(color: VetoGlassTokens.textSubtle, fontSize: 11),
               maxLines: 3,
               overflow: TextOverflow.ellipsis,
             ),

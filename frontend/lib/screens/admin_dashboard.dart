@@ -259,7 +259,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                           BoxShadow(color: VetoGlassTokens.neonCyan.withValues(alpha: 0.35), blurRadius: 10),
                         ],
                       ),
-                      child: const Icon(Icons.shield_rounded, color: Color(0xFF06101C), size: 18),
+                      child: const Icon(Icons.shield_rounded, color: VetoGlassTokens.onNeon, size: 18),
                     ),
                     const SizedBox(width: 10),
                     Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
