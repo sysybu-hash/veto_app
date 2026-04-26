@@ -65,6 +65,12 @@ let ioReady    = false;
 const app = express();
 const server = http.createServer(app);
 
+// Render / other reverse proxies send X-Forwarded-For. express-rate-limit v7 validates this
+// and throws ERR_ERL_UNEXPECTED_X_FORWARDED_FOR unless trust proxy is enabled.
+if (process.env.RENDER === 'true' || process.env.NODE_ENV === 'production') {
+  app.set('trust proxy', 1);
+}
+
 app.use(
   cors({
     origin: true,
