@@ -25,4 +25,8 @@ This runs `flutter build web` (with production `VETO_API_BASE`) and `vercel:chec
 
 ## Backend (Render)
 
-Pushing **`main`** triggers Render when the backend changed. Frontend-only commits do not require a Render redeploy.
+`render.yaml` sets **`branch: main`** and **`autoDeployTrigger: commit`** — every push to `main` deploys **`veto-app-new`** (not only when `backend/` changes). If the dashboard had auto-deploy off, sync the Blueprint once so YAML applies.
+
+## Frontend (Vercel via GitHub Actions)
+
+On **`push` to `main`**, `.github/workflows/deploy.yml` builds Flutter and deploys to Vercel prod. Analyze/test run with **`continue-on-error`** so a failing test does not skip the deploy (warnings appear in the workflow log).

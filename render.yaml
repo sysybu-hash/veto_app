@@ -22,6 +22,9 @@ services:
     runtime: node
     region: frankfurt
     plan: free
+    # Explicit production branch — every push to main deploys the API.
+    branch: main
+    autoDeployTrigger: commit
     rootDir: backend
     buildCommand: npm ci --legacy-peer-deps
     startCommand: npm start
