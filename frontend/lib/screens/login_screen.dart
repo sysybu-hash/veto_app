@@ -1,8 +1,10 @@
 // ============================================================
-//  LoginScreen.dart � Full auth wizard (v3)
+//  LoginScreen.dart — Full auth wizard (v3)
 //  Steps: role ? profile (phone OR Google) ? otp
 //  Improvements: Google Sign-In, OTP copy button, symmetric layout
 // ============================================================
+
+import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
@@ -287,20 +289,32 @@ class _LoginScreenState extends State<LoginScreen> {
 
     if (!mounted) return;
 
-    // Flows SDK (web only): identify user after successful auth
+    // Flows SDK (web only): identify user after successful auth.
+    // If the JS Promise never settles (network / Flows bug), awaiting here froze the tab ("Page unresponsive").
     if (userId != null && userId.isNotEmpty) {
       if (kIsWeb) {
-        final status = await browser_bridge.flowsSetUser(
-          userId: userId,
-          role: role,
-          lang: preferredLanguage,
-        );
+        Map<String, dynamic>? status;
+        try {
+          status = await browser_bridge
+              .flowsSetUser(
+                userId: userId,
+                role: role,
+                lang: preferredLanguage,
+              )
+              .timeout(const Duration(seconds: 8));
+        } on TimeoutException {
+          debugPrint('[VETO Flows] flowsSetUser timed out after 8s; continuing login.');
+          status = null;
+        } catch (e, st) {
+          debugPrint('[VETO Flows] flowsSetUser error: $e\n$st');
+          status = null;
+        }
         if (!mounted) return;
-        if (mounted) {
-          final ok = status?['ok'] == true;
-          final stage = status?['stage']?.toString();
-          final key = status?['key']?.toString();
-          final err = status?['error']?.toString();
+        if (mounted && status != null) {
+          final ok = status['ok'] == true;
+          final stage = status['stage']?.toString();
+          final key = status['key']?.toString();
+          final err = status['error']?.toString();
           final msg = lang == 'he'
               ? (ok
                   ? 'Flows: הופעל (${stage ?? ''}${key != null ? ' · $key' : ''})'
