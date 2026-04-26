@@ -430,11 +430,11 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
     return buf.toString().trim();
   }
 
-  /// Silence and blind: idempotent; used from [_prepareExitShield] and start of [_finalizeAndNavigate].
+  /// Blackout then blind: [silenceNativeEvents] (srcObject clear) before UI exit. Idempotent.
   void _enterCallExitIfNeeded() {
     if (_isChat || !mounted || _isExiting) return;
-    setState(() => _isExiting = true);
     _webrtc?.silenceNativeEvents();
+    setState(() => _isExiting = true);
   }
 
   void _zombieDisposeWebRTC(WebRTCService? svc) {
@@ -473,7 +473,7 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
     if (!_isChat) {
       _enterCallExitIfNeeded();
       if (!mounted) return;
-      await Future<void>.delayed(const Duration(milliseconds: 200));
+      await Future<void>.delayed(const Duration(milliseconds: 800));
       if (!mounted) return;
     }
     _webrtc?.removeListener(_onWebRTCUpdate);
@@ -789,7 +789,7 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
   }
 
   // ─────────────────────────────────────────────────────────
-  //  Call UI ([Visibility] + [UniqueKey] when exiting)
+  //  Call UI (bunker Positioned + [Visibility] + [UniqueKey] on exit)
   // ─────────────────────────────────────────────────────────
   Widget _buildActualCallUI() {
     final w = _webrtcLive;
@@ -819,7 +819,13 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
     return Stack(
       fit: StackFit.expand,
       children: [
-        Positioned.fill(
+        Positioned(
+          left: _isExiting ? -10000 : 0,
+          top: _isExiting ? -10000 : 0,
+          right: _isExiting ? null : 0,
+          bottom: _isExiting ? null : 0,
+          width: _isExiting ? 100 : null,
+          height: _isExiting ? 100 : null,
           child: Visibility(
             visible: !_isExiting,
             maintainState: false,
@@ -846,15 +852,29 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
                   ? const Center(
                       child: Icon(Icons.videocam_off, color: VetoColors.silver, size: 28),
                     )
-                  : Visibility(
-                      visible: !_isExiting,
-                      maintainState: false,
-                      child: RTCVideoView(
-                        w.localRenderer,
-                        key: _localVideoNuclearKey,
-                        mirror: true,
-                        objectFit: RTCVideoViewObjectFit.RTCVideoViewObjectFitCover,
-                      ),
+                  : Stack(
+                      clipBehavior: Clip.hardEdge,
+                      fit: StackFit.expand,
+                      children: [
+                        Positioned(
+                          left: _isExiting ? -10000 : 0,
+                          top: _isExiting ? -10000 : 0,
+                          right: _isExiting ? null : 0,
+                          bottom: _isExiting ? null : 0,
+                          width: _isExiting ? 100 : null,
+                          height: _isExiting ? 100 : null,
+                          child: Visibility(
+                            visible: !_isExiting,
+                            maintainState: false,
+                            child: RTCVideoView(
+                              w.localRenderer,
+                              key: _localVideoNuclearKey,
+                              mirror: true,
+                              objectFit: RTCVideoViewObjectFit.RTCVideoViewObjectFitCover,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
             ),
           ),
