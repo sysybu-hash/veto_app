@@ -451,33 +451,59 @@ class WebRTCService extends ChangeNotifier {
     }
   }
 
-  /// Sever native → Dart callbacks before close/dispose (Flutter Web childList safety).
-  void _silenceNativeEvents() {
+  /// Stop camera/mic/remote tracks so the browser stops decoding before we drop PC handlers.
+  void _stopAllTracksImmediately() {
+    for (final stream in [_localStream, _remoteStream]) {
+      if (stream == null) continue;
+      try {
+        for (final t in stream.getTracks()) {
+          try {
+            t.stop();
+          } catch (e, st) {
+            _logError('_stopAllTracksImmediately track.stop', e, st);
+          }
+        }
+      } catch (e, st) {
+        _logError('_stopAllTracksImmediately getTracks', e, st);
+      }
+    }
+  }
+
+  /// Null all peer-connection delegates (after [_stopAllTracksImmediately] in [silenceNativeEvents]).
+  void _nullPeerConnectionHandlers() {
     final pc = _pc;
     if (pc == null) return;
     try {
-      pc.onSignalingState = null;
-      pc.onConnectionState = null;
-      pc.onIceGatheringState = null;
-      pc.onIceConnectionState = null;
       pc.onIceCandidate = null;
+      pc.onTrack = null;
+      pc.onConnectionState = null;
+      pc.onIceConnectionState = null;
+      pc.onSignalingState = null;
+      pc.onIceGatheringState = null;
       pc.onAddStream = null;
       pc.onRemoveStream = null;
       pc.onAddTrack = null;
       pc.onRemoveTrack = null;
       pc.onDataChannel = null;
       pc.onRenegotiationNeeded = null;
-      pc.onTrack = null;
     } catch (e, st) {
-      _logError('_silenceNativeEvents', e, st);
+      _logError('_nullPeerConnectionHandlers', e, st);
     }
   }
 
-  /// Public hook for [CallScreen] exit shield — same as [_silenceNativeEvents].
-  void silenceNativeEvents() => _silenceNativeEvents();
+  /// Aggressive sever for [CallScreen] exit shield: tracks first, then null native handlers.
+  /// Does not run [_syncTeardownMedia] (that nulls [_pc]); PC close stays in normal teardown.
+  void silenceNativeEvents() {
+    try {
+      _stopAllTracksImmediately();
+    } catch (e, st) {
+      _logError('silenceNativeEvents tracks', e, st);
+    }
+    _nullPeerConnectionHandlers();
+  }
 
-  /// Stops native callbacks from reaching Dart during teardown.
-  void _suppressPeerConnectionCallbacks() => _silenceNativeEvents();
+  /// Stops native callbacks from reaching Dart during internal teardown.
+  void _suppressPeerConnectionCallbacks() => _nullPeerConnectionHandlers();
 
   void _registerSocketHandlers() {
     _socket.on('room-joined', _onSocketRoomJoined);
@@ -557,7 +583,7 @@ class WebRTCService extends ChangeNotifier {
 
   Future<void> endCall() async {
     try {
-      _silenceNativeEvents();
+      silenceNativeEvents();
       await _onCallEnded(remote: false);
       try {
         _socket.emit('call-ended', {
@@ -733,9 +759,9 @@ class WebRTCService extends ChangeNotifier {
     );
 
     try {
-      _silenceNativeEvents();
+      silenceNativeEvents();
     } catch (e, st) {
-      _logError('dispose _silenceNativeEvents', e, st);
+      _logError('dispose silenceNativeEvents', e, st);
     }
 
     try {

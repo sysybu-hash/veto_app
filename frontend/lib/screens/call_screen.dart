@@ -72,9 +72,9 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
   /// Flutter Web: when true, [RTCVideoView] is replaced by black boxes before teardown / navigation.
   bool _isExiting = false;
 
-  /// Fresh [Element] keys for [RTCVideoView] (avoid DOM reuse); rotated on each new WebRTC session.
-  UniqueKey _remoteVideoKey = UniqueKey();
-  UniqueKey _localVideoKey = UniqueKey();
+  /// Stable keys — never rotate (avoids DOM churn from UniqueKey in build/session resets).
+  final Key _remoteVideoKey = const ValueKey<String>('remote_video_stream');
+  final Key _localVideoKey = const ValueKey<String>('local_video_stream');
 
   @override
   void initState() {
@@ -159,8 +159,6 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
 
     final w = WebRTCService(socketService);
     _webrtc = w;
-    _remoteVideoKey = UniqueKey();
-    _localVideoKey = UniqueKey();
 
     await w.joinRoom(
       _roomId,
@@ -385,8 +383,6 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
     }
     final w = WebRTCService(socketService);
     _webrtc = w;
-    _remoteVideoKey = UniqueKey();
-    _localVideoKey = UniqueKey();
     w.addListener(_onWebRTCUpdate);
     await w.joinRoom(
       _roomId,
@@ -745,14 +741,14 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
     );
   }
 
-  /// Safe-exit shield: blind UI + silence native PC, then buffer before teardown / navigation.
+  /// Ghost overlay on + sever native media, then short buffer before teardown / navigation.
   Future<void> _prepareExitShield() async {
     if (_isChat) return;
     if (!mounted) return;
     if (_isExiting) return;
     setState(() => _isExiting = true);
     _webrtc?.silenceNativeEvents();
-    await Future<void>.delayed(const Duration(milliseconds: 200));
+    await Future<void>.delayed(const Duration(milliseconds: 150));
   }
 
   // ─────────────────────────────────────────────────────────
@@ -796,16 +792,15 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
           child: Stack(
             fit: StackFit.expand,
             children: [
-              Container(color: Colors.black),
-              Visibility(
-                visible: !_isExiting,
-                maintainState: false,
-                child: RTCVideoView(
-                  w.remoteRenderer,
-                  key: _remoteVideoKey,
-                  objectFit: RTCVideoViewObjectFit.RTCVideoViewObjectFitCover,
-                ),
+              RTCVideoView(
+                w.remoteRenderer,
+                key: _remoteVideoKey,
+                objectFit: RTCVideoViewObjectFit.RTCVideoViewObjectFitCover,
               ),
+              if (_isExiting)
+                Positioned.fill(
+                  child: Container(color: Colors.black),
+                ),
             ],
           ),
         ),
@@ -828,17 +823,16 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
                   : Stack(
                       fit: StackFit.expand,
                       children: [
-                        Container(color: Colors.black),
-                        Visibility(
-                          visible: !_isExiting,
-                          maintainState: false,
-                          child: RTCVideoView(
-                            w.localRenderer,
-                            key: _localVideoKey,
-                            mirror: true,
-                            objectFit: RTCVideoViewObjectFit.RTCVideoViewObjectFitCover,
-                          ),
+                        RTCVideoView(
+                          w.localRenderer,
+                          key: _localVideoKey,
+                          mirror: true,
+                          objectFit: RTCVideoViewObjectFit.RTCVideoViewObjectFitCover,
                         ),
+                        if (_isExiting)
+                          Positioned.fill(
+                            child: Container(color: Colors.black),
+                          ),
                       ],
                     ),
             ),
