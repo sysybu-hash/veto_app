@@ -202,10 +202,18 @@ function finalize(st, err) {
 }
 
 /**
- * The @google/genai Live client calls conn.send() without checking WebSocket.readyState,
- * which spams "WebSocket is already in CLOSING or CLOSED state" while the mic loop runs.
- * Intercept send + close so we stop capture as soon as the socket is not OPEN.
+ * The @google/genai web Live stack uses a BrowserWebSocket wrapper: real socket is conn.ws.
+ * conn.readyState is undefined on the wrapper, so an earlier guard never skipped sends — mic loop
+ * kept calling send on a CLOSING/CLOSED ws (console: __browser_websocket.ts).
+ * Use conn.ws.readyState + close on conn.ws.
  */
+function liveUnderlyingWs(conn) {
+  if (!conn) return null;
+  if (conn.ws && typeof conn.ws.readyState === "number") return conn.ws;
+  if (typeof conn.readyState === "number") return conn;
+  return null;
+}
+
 function guardLiveConnSend(st, session) {
   const conn = session && session.conn;
   if (!conn || typeof conn.send !== "function") return;
@@ -213,7 +221,8 @@ function guardLiveConnSend(st, session) {
   const orig = conn.send.bind(conn);
   conn.send = function (data) {
     if (st.done || st._micStopped) return;
-    const rs = conn.readyState;
+    const ws = liveUnderlyingWs(conn);
+    const rs = ws != null ? ws.readyState : undefined;
     if (rs !== undefined && rs !== WS_OPEN) {
       if (!st._micStopped) {
         st._micStopped = true;
@@ -240,8 +249,9 @@ function guardLiveConnSend(st, session) {
       }
     }
   };
-  if (typeof conn.addEventListener === "function") {
-    conn.addEventListener("close", function () {
+  const ws = liveUnderlyingWs(conn);
+  if (ws && typeof ws.addEventListener === "function") {
+    ws.addEventListener("close", function () {
       if (st.done || st._micStopped) return;
       st._micStopped = true;
       try {

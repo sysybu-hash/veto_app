@@ -1,0 +1,28 @@
+---
+description: Ship Flutter web to Vercel without leaving unbuilt or half-synced artifacts.
+globs: frontend/**/*
+alwaysApply: false
+---
+
+# VETO — ship frontend (Vercel prebuild)
+
+Vercel **does not** run `flutter build`; it only serves committed **`frontend/build/web`**.
+
+## Before pushing web/UI changes to `main`
+
+From **repo root**:
+
+```bash
+npm run ship:web
+```
+
+This runs `flutter build web` (with production `VETO_API_BASE`) and `vercel:check`. Then **stage and commit** everything under `frontend/build/web` that changed, plus any edits in `frontend/web/` (e.g. `index.html`, `gemini_live.mjs`).
+
+## Do not
+
+- Push only `frontend/web/*` without rebuilding and committing `frontend/build/web` when Dart or web assets changed.
+- Leave fixes only on feature branches if production should update — **merge to `main`** so GitHub → Vercel/Render auto-deploy hooks run.
+
+## Backend (Render)
+
+Pushing **`main`** triggers Render when the backend changed. Frontend-only commits do not require a Render redeploy.
