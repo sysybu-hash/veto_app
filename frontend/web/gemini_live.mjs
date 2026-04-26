@@ -368,3 +368,14 @@ Object.assign(window["vetoGeminiLive"], {
     userStop();
   },
 });
+
+window["__vetoGeminiLiveModuleApplied"] = true;
+try {
+  const pending = window["__vetoGeminiLivePending"];
+  if (pending && pending.jwt) {
+    window["__vetoGeminiLivePending"] = null;
+    window["vetoGeminiLive"].start(pending.lang, pending.jwt, pending.apiBase);
+  }
+} catch (_) {
+  // ignore
+}

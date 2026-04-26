@@ -121,12 +121,29 @@
       stop: function() { if (window.speechSynthesis) window.speechSynthesis.cancel(); }
     };
 
-    // Gemini Multimodal Live (real impl overwrites in gemini_live.mjs)
-    window.vetoGeminiLive = {
-      isSupported: function() { return false; },
-      start: function() {},
-      stop: function() {}
-    };
+    // Gemini Multimodal Live — capability check matches gemini_live.mjs; real start/stop merge on module load.
+    window.__vetoGeminiLivePending = null;
+    window.__vetoGeminiLiveModuleApplied = false;
+    (function () {
+      var AC = typeof AudioContext !== "undefined" ? AudioContext : (typeof window !== "undefined" ? window.webkitAudioContext : null);
+      function geminiLiveCaps() {
+        return typeof navigator !== "undefined" &&
+          !!navigator.mediaDevices &&
+          typeof navigator.mediaDevices.getUserMedia === "function" &&
+          !!AC &&
+          typeof AC.prototype.createScriptProcessor === "function" &&
+          (typeof isSecureContext === "undefined" || isSecureContext);
+      }
+      window.vetoGeminiLive = {
+        isSupported: function () { return geminiLiveCaps(); },
+        start: function (lang, jwt, apiBase) {
+          window.__vetoGeminiLivePending = { lang: lang, jwt: jwt, apiBase: apiBase };
+        },
+        stop: function () {
+          window.__vetoGeminiLivePending = null;
+        }
+      };
+    })();
     window.vetoGeminiLiveResult = function() {};
   </script>
   <!-- Google Identity Services (GIS) — reliable token client for Flutter Web -->
