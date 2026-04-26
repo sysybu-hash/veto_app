@@ -74,12 +74,11 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
   int _waitSeconds = 0;
   Timer? _waitTick;
 
-  /// Flutter Web: Visibility hides [RTCVideoView]; black shield overlays until navigate.
+  /// Flutter Web: Eternal bunker — [RTCVideoView] stays mounted; exit only moves/fades it (+ black shield).
   bool _isExiting = false;
 
-  /// One [UniqueKey] per screen instance so video elements are not recycled across exit (not recreated each build).
-  final UniqueKey _remoteVideoNuclearKey = UniqueKey();
-  final UniqueKey _localVideoNuclearKey = UniqueKey();
+  final Key _remoteVideoKey = const ValueKey<String>('remote_video_stream');
+  final Key _localVideoKey = const ValueKey<String>('local_video_stream');
 
   @override
   void initState() {
@@ -789,7 +788,7 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
   }
 
   // ─────────────────────────────────────────────────────────
-  //  Call UI (bunker Positioned + [Visibility] + [UniqueKey] on exit)
+  //  Call UI (Eternal bunker: stable keys, Positioned + Opacity when [_isExiting])
   // ─────────────────────────────────────────────────────────
   Widget _buildActualCallUI() {
     final w = _webrtcLive;
@@ -826,12 +825,11 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
           bottom: _isExiting ? null : 0,
           width: _isExiting ? 100 : null,
           height: _isExiting ? 100 : null,
-          child: Visibility(
-            visible: !_isExiting,
-            maintainState: false,
+          child: Opacity(
+            opacity: _isExiting ? 0.01 : 1.0,
             child: RTCVideoView(
               w.remoteRenderer,
-              key: _remoteVideoNuclearKey,
+              key: _remoteVideoKey,
               objectFit: RTCVideoViewObjectFit.RTCVideoViewObjectFitCover,
             ),
           ),
@@ -863,12 +861,11 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
                           bottom: _isExiting ? null : 0,
                           width: _isExiting ? 100 : null,
                           height: _isExiting ? 100 : null,
-                          child: Visibility(
-                            visible: !_isExiting,
-                            maintainState: false,
+                          child: Opacity(
+                            opacity: _isExiting ? 0.01 : 1.0,
                             child: RTCVideoView(
                               w.localRenderer,
-                              key: _localVideoNuclearKey,
+                              key: _localVideoKey,
                               mirror: true,
                               objectFit: RTCVideoViewObjectFit.RTCVideoViewObjectFitCover,
                             ),
