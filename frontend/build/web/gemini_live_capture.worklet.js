@@ -9,7 +9,12 @@ class VetoGeminiCaptureProcessor extends AudioWorkletProcessor {
     this._outRate = 16000;
   }
 
-  process(inputs) {
+  process(inputs, outputs) {
+    if (outputs && outputs[0]) {
+      for (let c = 0; c < outputs[0].length; c++) {
+        outputs[0][c].fill(0);
+      }
+    }
     const input = inputs[0];
     if (!input || input.length === 0) return true;
     const inCh = input[0];
