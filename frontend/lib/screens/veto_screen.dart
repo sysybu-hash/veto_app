@@ -622,6 +622,26 @@ class _VetoScreenState extends State<VetoScreen> {
     if (o == null) return;
     if (o['err'] != null) {
       final e = o['err'].toString();
+      final uRecover = (o['u'] as String?)?.trim() ?? '';
+      // Gemini Live guard (gemini_live.mjs) — not a user-facing raw error string.
+      if (e == 'live_socket_closed') {
+        if (uRecover.isNotEmpty) {
+          unawaited(_ingestGeminiLiveTurn(uRecover, '', nativeAudio: false));
+        } else if (mounted) {
+          final msg = _langKey == 'he'
+              ? 'החיבור הקולי נותק. לחץ שוב על המיקרופון.'
+              : _langKey == 'ru'
+                  ? 'Голосовая сессия прервалась. Нажмите микрофон ещё раз.'
+                  : 'Voice session disconnected. Tap the mic to try again.';
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(msg),
+              duration: const Duration(seconds: 4),
+            ),
+          );
+        }
+        return;
+      }
       final t = e == 'not_supported'
           ? (_langKey == 'he'
               ? 'הדפדפן/המכשיר לא תומנים בקלט קול (HTTPS ומכשיר נדרשים).'
