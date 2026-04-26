@@ -201,6 +201,59 @@ function finalize(st, err) {
   }
 }
 
+/**
+ * The @google/genai Live client calls conn.send() without checking WebSocket.readyState,
+ * which spams "WebSocket is already in CLOSING or CLOSED state" while the mic loop runs.
+ * Intercept send + close so we stop capture as soon as the socket is not OPEN.
+ */
+function guardLiveConnSend(st, session) {
+  const conn = session && session.conn;
+  if (!conn || typeof conn.send !== "function") return;
+  const WS_OPEN = typeof WebSocket !== "undefined" ? WebSocket.OPEN : 1;
+  const orig = conn.send.bind(conn);
+  conn.send = function (data) {
+    if (st.done || st._micStopped) return;
+    const rs = conn.readyState;
+    if (rs !== undefined && rs !== WS_OPEN) {
+      if (!st._micStopped) {
+        st._micStopped = true;
+        try {
+          teardownCapture(st);
+        } catch (_) {
+          // ignore
+        }
+        finalize(st, "live_socket_closed");
+      }
+      return;
+    }
+    try {
+      return orig(data);
+    } catch (err) {
+      if (!st._micStopped) {
+        st._micStopped = true;
+        try {
+          teardownCapture(st);
+        } catch (_) {
+          // ignore
+        }
+        finalize(st, err && err.message ? err.message : String(err));
+      }
+    }
+  };
+  if (typeof conn.addEventListener === "function") {
+    conn.addEventListener("close", function () {
+      if (st.done || st._micStopped) return;
+      st._micStopped = true;
+      try {
+        teardownCapture(st);
+      } catch (_) {
+        // ignore
+      }
+      finalize(st, null);
+    });
+  }
+}
+
 function startPcmMic(stream, session, st) {
   const AC = getAudioContextCtor();
   if (!AC) throw new Error("no_audio_context");
@@ -317,6 +370,7 @@ async function startSession(lang, jwt, apiBase) {
     },
   });
   st.session = session;
+  guardLiveConnSend(st, session);
   startPcmMic(media, session, st);
 }
 
