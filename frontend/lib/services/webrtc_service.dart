@@ -741,27 +741,25 @@ class WebRTCService extends ChangeNotifier {
 
     final lr = localRenderer;
     final rr = remoteRenderer;
-    Future<void>.delayed(Duration.zero, () {
+    Future.delayed(const Duration(milliseconds: 300), () {
       try {
         lr.srcObject = null;
         lr.dispose();
-      } catch (e, stack) {
+      } catch (e) {
         developer.log(
-          'Error disposing local renderer',
+          'Error disposing local renderer safely',
           name: 'VETO.WebRTC',
           error: e,
-          stackTrace: stack,
         );
       }
       try {
         rr.srcObject = null;
         rr.dispose();
-      } catch (e, stack) {
+      } catch (e) {
         developer.log(
-          'Error disposing remote renderer',
+          'Error disposing remote renderer safely',
           name: 'VETO.WebRTC',
           error: e,
-          stackTrace: stack,
         );
       }
     });

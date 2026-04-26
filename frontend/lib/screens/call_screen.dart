@@ -534,11 +534,11 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
       try {
         w.removeListener(_onWebRTCUpdate);
         final svc = w;
-        Future<void>.delayed(Duration.zero, () {
+        Future.delayed(const Duration(milliseconds: 300), () {
           try {
             svc.dispose();
             developer.log(
-              'WebRTCService disposed successfully after frame',
+              'WebRTCService disposed after DOM flush buffer',
               name: 'VETO.CallScreen',
             );
           } catch (e, stack) {
