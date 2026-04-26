@@ -69,6 +69,9 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
   int _waitSeconds = 0;
   Timer? _waitTick;
 
+  /// Flutter Web: when true, [RTCVideoView] is not built so DOM teardown avoids childList races.
+  bool _isNavigatingOut = false;
+
   @override
   void initState() {
     super.initState();
@@ -284,7 +287,11 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
     if (w.state == CallState.ended && !_finalizedCall) {
       _finalizedCall = true;
       w.removeListener(_onWebRTCUpdate);
-      unawaited(_finalizeAndNavigate());
+      unawaited(() async {
+        await _prepareVideoBlindForExit();
+        if (!mounted) return;
+        await _finalizeAndNavigate();
+      }());
     }
   }
 
@@ -337,6 +344,7 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
       _finalizedCall = false;
       _recordingStarted = false;
       _liveRecording = false;
+      _isNavigatingOut = false;
     });
 
     if (_isChat) {
@@ -507,6 +515,8 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
       }
       return;
     }
+    await _prepareVideoBlindForExit();
+    if (!mounted) return;
     try {
       await _webrtc?.endCall();
     } catch (e, st) {
@@ -714,6 +724,15 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
     );
   }
 
+  /// Replace [RTCVideoView] with a plain box before signaling/navigation (Flutter Web DOM safety).
+  Future<void> _prepareVideoBlindForExit() async {
+    if (_isChat || _callType != 'video') return;
+    if (!mounted) return;
+    if (_isNavigatingOut) return;
+    setState(() => _isNavigatingOut = true);
+    await Future<void>.delayed(const Duration(milliseconds: 100));
+  }
+
   // ─────────────────────────────────────────────────────────
   //  Video layer
   // ─────────────────────────────────────────────────────────
@@ -727,6 +746,14 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
         child: const Center(
           child: CircularProgressIndicator(color: Colors.white54),
         ),
+      );
+    }
+
+    if (_isNavigatingOut) {
+      return Container(
+        width: double.infinity,
+        height: double.infinity,
+        color: Colors.black,
       );
     }
 
