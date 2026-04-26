@@ -118,8 +118,9 @@ const register = async (req, res, next) => {
 
 // ============================================================
 //  POST /auth/request-otp
-//  Admin phones ? fixed OTP 123456 stored in DB
-//  Regular users  ? Twilio Verify sends OTP (not stored in DB)
+//  Admin phones → fixed OTP 123456 in DB
+//  Others → random 6-digit in DB; SMS via Twilio when TWILIO_* env is set.
+//  If Twilio is not configured, OTP is also returned in JSON so the app can show it (until SMS is live).
 // ============================================================
 const requestOTP = async (req, res, next) => {
   try {
@@ -147,10 +148,23 @@ const requestOTP = async (req, res, next) => {
 
     logEvent({ phone, role, event: 'otp_request', success: true, user_id: doc._id, ip: req.ip, user_agent: req.headers['user-agent'] });
 
+    const twilioConfigured = !!(
+      process.env.TWILIO_ACCOUNT_SID &&
+      process.env.TWILIO_AUTH_TOKEN
+    );
+    // Until Twilio (or another SMS provider) sends the code, the client has no way to know the OTP.
+    // Expose it in JSON only when SMS is not wired up, or in dev / when explicitly enabled.
     const exposeOtp =
       process.env.NODE_ENV !== 'production' ||
       process.env.RETURN_OTP_IN_JSON === '1' ||
-      process.env.RETURN_OTP_IN_JSON === 'true';
+      process.env.RETURN_OTP_IN_JSON === 'true' ||
+      !twilioConfigured;
+
+    if (exposeOtp && process.env.NODE_ENV === 'production' && !twilioConfigured) {
+      console.warn(
+        '[AUTH] OTP returned in JSON because TWILIO_ACCOUNT_SID / TWILIO_AUTH_TOKEN are not set. Configure Twilio for production SMS.',
+      );
+    }
 
     return res.status(200).json({
       message: 'OTP sent.',
@@ -164,8 +178,7 @@ const requestOTP = async (req, res, next) => {
 
 // ============================================================
 //  POST /auth/verify-otp
-//  Body: { phone, otp }
-//  Admin ? check DB; Regular ? check via Twilio Verify
+//  Body: { phone, otp } — compared to otp_code stored on the user/lawyer document.
 // ============================================================
 const verifyOTP = async (req, res, next) => {
   try {
