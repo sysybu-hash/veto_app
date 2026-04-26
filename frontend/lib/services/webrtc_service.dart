@@ -37,6 +37,8 @@ class WebRTCService extends ChangeNotifier {
 
   bool _isTearingDown = false;
   bool _mediaTornDown = false;
+  /// Prevents duplicate [CallState.ended] / teardown when local + remote race.
+  bool _sessionFinished = false;
   bool _isCaller = false;
 
   RTCPeerConnection? _pc;
@@ -89,6 +91,7 @@ class WebRTCService extends ChangeNotifier {
   }) async {
     _isTearingDown = false;
     _mediaTornDown = false;
+    _sessionFinished = false;
     _roomId = roomId;
     _callType = callType;
     _errorMessage = null;
@@ -187,6 +190,7 @@ class WebRTCService extends ChangeNotifier {
 
     pc.onTrack = (event) {
       try {
+        if (_isTearingDown || _mediaTornDown) return;
         if (event.streams.isEmpty) return;
         _remoteStream = event.streams.first;
         try {
@@ -202,12 +206,18 @@ class WebRTCService extends ChangeNotifier {
 
     pc.onIceCandidate = (candidate) {
       try {
+        if (_isTearingDown || _mediaTornDown) return;
         if (candidate.candidate == null) return;
-        _socket.emit('ice-candidate', {
-          'roomId': _roomId,
-          'candidate': candidate.toMap(),
-          'targetSocketId': _peerSocketId,
-        });
+        if (!_socket.isConnected) return;
+        try {
+          _socket.emit('ice-candidate', {
+            'roomId': _roomId,
+            'candidate': candidate.toMap(),
+            'targetSocketId': _peerSocketId,
+          });
+        } catch (e, st) {
+          _logError('onIceCandidate emit', e, st);
+        }
       } catch (e, st) {
         _logError('onIceCandidate', e, st);
       }
@@ -215,6 +225,7 @@ class WebRTCService extends ChangeNotifier {
 
     pc.onConnectionState = (RTCPeerConnectionState state) {
       try {
+        if (_isTearingDown || _mediaTornDown) return;
         developer.log('Connection state: $state', name: 'VETO.WebRTC');
         if (state == RTCPeerConnectionState.RTCPeerConnectionStateConnected) {
           _errorMessage = null;
@@ -250,11 +261,14 @@ class WebRTCService extends ChangeNotifier {
 
     if (isCaller) {
       try {
+        if (_isTearingDown || _mediaTornDown) return;
         final offer = await pc.createOffer({
           'offerToReceiveAudio': true,
           'offerToReceiveVideo': _callType == CallType.video,
         });
         await pc.setLocalDescription(offer);
+        if (_isTearingDown || _mediaTornDown || _sessionFinished) return;
+        if (!_socket.isConnected) return;
         _socket.emit('webrtc-offer', {
           'roomId': _roomId,
           'offer': offer.toMap(),
@@ -267,9 +281,39 @@ class WebRTCService extends ChangeNotifier {
     }
   }
 
+  void _unregisterCallSocketHandlers() {
+    try {
+      _socket.off('room-joined');
+      _socket.off('peer-joined');
+      _socket.off('webrtc-offer');
+      _socket.off('webrtc-answer');
+      _socket.off('ice-candidate');
+      _socket.off('call-error');
+      _socket.off('peer-media-toggle');
+      _socket.off('call-ended');
+      _socket.off('peer-left');
+    } catch (e, st) {
+      _logError('_unregisterCallSocketHandlers', e, st);
+    }
+  }
+
+  /// Stops native ICE / track / state callbacks from touching [SocketService] or [notifyListeners] during teardown.
+  void _suppressPeerConnectionCallbacks() {
+    final pc = _pc;
+    if (pc == null) return;
+    try {
+      pc.onIceCandidate = (_) {};
+      pc.onTrack = (RTCTrackEvent _) {};
+      pc.onConnectionState = (RTCPeerConnectionState _) {};
+    } catch (e, st) {
+      _logError('_suppressPeerConnectionCallbacks', e, st);
+    }
+  }
+
   void _registerSocketHandlers() {
     _socket.on('room-joined', (data) async {
       try {
+        if (_isTearingDown || _mediaTornDown || _sessionFinished) return;
         final raw = data['isCaller'];
         final isCaller = raw == true || raw == 'true';
         debugPrint('[WebRTC] Room joined | isCaller=$isCaller');
@@ -282,12 +326,14 @@ class WebRTCService extends ChangeNotifier {
 
     _socket.on('peer-joined', (data) async {
       try {
+        if (_isTearingDown || _mediaTornDown || _sessionFinished) return;
         final peerSocketId = data['socketId']?.toString();
         debugPrint('[WebRTC] Peer joined: $peerSocketId');
         if (!_isCaller || peerSocketId == null || peerSocketId.isEmpty) return;
         if (_pc != null) return;
         if (_state != CallState.joining && _state != CallState.ringing) return;
         await Future<void>.delayed(const Duration(milliseconds: 200));
+        if (_isTearingDown || _mediaTornDown || _sessionFinished) return;
         try {
           await _initCall(true, peerSocketId);
         } catch (e, st) {
@@ -301,10 +347,12 @@ class WebRTCService extends ChangeNotifier {
 
     _socket.on('webrtc-offer', (data) async {
       try {
+        if (_isTearingDown || _mediaTornDown || _sessionFinished) return;
         final fromSid = data['fromSocketId']?.toString();
         if (_pc == null) {
           await _initCall(false, fromSid);
         }
+        if (_isTearingDown || _mediaTornDown || _sessionFinished) return;
         final pc = _pc;
         if (pc == null) {
           debugPrint('[WebRTC] webrtc-offer: peer connection is null');
@@ -321,6 +369,8 @@ class WebRTCService extends ChangeNotifier {
           'offerToReceiveVideo': wantVideo,
         });
         await pc.setLocalDescription(answer);
+        if (_isTearingDown || _mediaTornDown || _sessionFinished) return;
+        if (!_socket.isConnected) return;
         _socket.emit('webrtc-answer', {
           'roomId': _roomId,
           'answer': answer.toMap(),
@@ -334,6 +384,7 @@ class WebRTCService extends ChangeNotifier {
 
     _socket.on('webrtc-answer', (data) async {
       try {
+        if (_isTearingDown || _mediaTornDown || _sessionFinished) return;
         final pc = _pc;
         if (pc == null) return;
         final answerMap = Map<String, dynamic>.from(data['answer']);
@@ -348,16 +399,22 @@ class WebRTCService extends ChangeNotifier {
 
     _socket.on('ice-candidate', (data) async {
       try {
+        if (_isTearingDown || _mediaTornDown || _sessionFinished) return;
         final pc = _pc;
         if (pc == null) return;
         final candMap = Map<String, dynamic>.from(data['candidate']);
-        await pc.addCandidate(
-          RTCIceCandidate(
-            candMap['candidate'],
-            candMap['sdpMid'],
-            candMap['sdpMLineIndex'],
-          ),
-        );
+        try {
+          await pc.addCandidate(
+            RTCIceCandidate(
+              candMap['candidate'],
+              candMap['sdpMid'],
+              candMap['sdpMLineIndex'],
+            ),
+          );
+        } catch (e, st) {
+          if (_isTearingDown || _mediaTornDown) return;
+          _logError('ice-candidate addCandidate', e, st);
+        }
       } catch (e, st) {
         _logError('ice-candidate handler', e, st);
       }
@@ -365,6 +422,7 @@ class WebRTCService extends ChangeNotifier {
 
     _socket.on('call-error', (data) {
       try {
+        if (_isTearingDown || _mediaTornDown || _sessionFinished) return;
         String? message;
         if (data is Map) {
           final map = Map<String, dynamic>.from(data);
@@ -378,6 +436,7 @@ class WebRTCService extends ChangeNotifier {
 
     _socket.on('peer-media-toggle', (data) {
       try {
+        if (_isTearingDown || _mediaTornDown || _sessionFinished) return;
         notifyListeners();
       } catch (e, st) {
         _logError('peer-media-toggle', e, st);
@@ -387,6 +446,7 @@ class WebRTCService extends ChangeNotifier {
     _socket.on('call-ended', (data) {
       unawaited(() async {
         try {
+          if (_sessionFinished) return;
           await _onCallEnded(remote: true);
         } catch (e, st) {
           _logError('_onCallEnded(remote from call-ended)', e, st);
@@ -397,6 +457,7 @@ class WebRTCService extends ChangeNotifier {
     _socket.on('peer-left', (data) {
       unawaited(() async {
         try {
+          if (_sessionFinished) return;
           await _onCallEnded(remote: true);
         } catch (e, st) {
           _logError('_onCallEnded(remote from peer-left)', e, st);
@@ -407,6 +468,7 @@ class WebRTCService extends ChangeNotifier {
 
   void toggleMic() {
     try {
+      if (_isTearingDown || _mediaTornDown) return;
       _micMuted = !_micMuted;
       final stream = _localStream;
       if (stream != null) {
@@ -431,6 +493,7 @@ class WebRTCService extends ChangeNotifier {
 
   void toggleCamera() {
     try {
+      if (_isTearingDown || _mediaTornDown) return;
       _cameraOff = !_cameraOff;
       final stream = _localStream;
       if (stream != null) {
@@ -455,6 +518,7 @@ class WebRTCService extends ChangeNotifier {
 
   Future<void> switchCamera() async {
     try {
+      if (_isTearingDown || _mediaTornDown) return;
       if (_callType != CallType.video) return;
       final stream = _localStream;
       final videoTracks = stream?.getVideoTracks();
@@ -468,11 +532,15 @@ class WebRTCService extends ChangeNotifier {
 
   Future<void> endCall() async {
     try {
-      _socket.emit('call-ended', {
-        'roomId': _roomId,
-        'duration': _callDuration,
-      });
       await _onCallEnded(remote: false);
+      try {
+        _socket.emit('call-ended', {
+          'roomId': _roomId,
+          'duration': _callDuration,
+        });
+      } catch (e, st) {
+        _logError('endCall emit call-ended', e, st);
+      }
     } catch (e, st) {
       _logError('endCall', e, st);
     }
@@ -480,9 +548,17 @@ class WebRTCService extends ChangeNotifier {
 
   Future<void> _onCallEnded({required bool remote}) async {
     try {
+      if (_sessionFinished) return;
+      _sessionFinished = true;
       _isTearingDown = true;
       _stopDurationTimer();
+      _suppressPeerConnectionCallbacks();
       _setState(CallState.ended);
+      try {
+        _unregisterCallSocketHandlers();
+      } catch (e, st) {
+        _logError('_onCallEnded unregister', e, st);
+      }
     } catch (e, st) {
       _logError('_onCallEnded(remote=$remote)', e, st);
     }
@@ -514,6 +590,7 @@ class WebRTCService extends ChangeNotifier {
     try {
       _mediaTornDown = true;
       developer.log('Starting async media teardown', name: 'VETO.WebRTC');
+      _suppressPeerConnectionCallbacks();
       final pc = _pc;
       _pc = null;
       if (pc != null) {
@@ -550,6 +627,7 @@ class WebRTCService extends ChangeNotifier {
     try {
       _mediaTornDown = true;
       developer.log('Starting sync-scheduled media teardown', name: 'VETO.WebRTC');
+      _suppressPeerConnectionCallbacks();
       final pc = _pc;
       _pc = null;
       if (pc != null) {
@@ -635,15 +713,7 @@ class WebRTCService extends ChangeNotifier {
   @override
   void dispose() {
     try {
-      _socket.off('room-joined');
-      _socket.off('peer-joined');
-      _socket.off('webrtc-offer');
-      _socket.off('webrtc-answer');
-      _socket.off('ice-candidate');
-      _socket.off('call-error');
-      _socket.off('peer-media-toggle');
-      _socket.off('call-ended');
-      _socket.off('peer-left');
+      _unregisterCallSocketHandlers();
     } catch (e, st) {
       _logError('dispose socket off', e, st);
     }

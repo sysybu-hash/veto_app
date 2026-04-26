@@ -409,11 +409,13 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
   /// immediately (work continues in the background).
   Future<void> _finalizeAndNavigate() async {
     if (!mounted) return;
+    _webrtc?.removeListener(_onWebRTCUpdate);
     final vaultEventId =
         _eventId.trim().isNotEmpty ? _eventId.trim() : _roomId.trim();
     try {
       final nav = Navigator.of(context);
       final queue = context.read<VaultSaveQueue>();
+      final myRole = _myRole;
       var goVault = false;
       if (_isChat) {
         final t = _formatChatAsTranscript();
@@ -430,21 +432,22 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
         if (_recordingStarted) {
           try {
             rec = await _recordingService.stop();
-      } catch (e, st) {
-        developer.log(
-          'recording stop failed',
-          name: 'VETO.CallScreen',
-          error: e,
-          stackTrace: st,
-        );
-        debugPrint('[CallScreen] recording stop failed: $e\n$st');
-        rec = null;
-      }
+          } catch (e, st) {
+            developer.log(
+              'recording stop failed',
+              name: 'VETO.CallScreen',
+              error: e,
+              stackTrace: st,
+            );
+            debugPrint('[CallScreen] recording stop failed: $e\n$st');
+            rec = null;
+          }
           _liveRecording = false;
           _recordingStarted = false;
         }
+        final webrtc = _webrtc;
         try {
-          await _webrtc?.completeMediaTeardown();
+          await webrtc?.completeMediaTeardown();
         } catch (e, st) {
           developer.log(
             'media teardown',
@@ -469,7 +472,7 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
       if (!mounted) return;
       final target = goVault
           ? '/files_vault'
-          : (_myRole == 'lawyer' ? '/lawyer_dashboard' : '/veto_screen');
+          : (myRole == 'lawyer' ? '/lawyer_dashboard' : '/veto_screen');
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
         nav.pushReplacementNamed(target);
@@ -483,11 +486,10 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
       );
       debugPrint('[CallScreen] _finalizeAndNavigate: $e\n$st');
       if (!mounted) return;
+      final fallback = _myRole == 'lawyer' ? '/lawyer_dashboard' : '/veto_screen';
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
-        Navigator.of(context).pushReplacementNamed(
-          _myRole == 'lawyer' ? '/lawyer_dashboard' : '/veto_screen',
-        );
+        Navigator.of(context).pushReplacementNamed(fallback);
       });
     }
   }
