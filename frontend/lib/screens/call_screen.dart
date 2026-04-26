@@ -533,26 +533,14 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
     if (w != null) {
       try {
         w.removeListener(_onWebRTCUpdate);
-        final svc = w;
-        Future.delayed(const Duration(milliseconds: 300), () {
-          try {
-            svc.dispose();
-            developer.log(
-              'WebRTCService disposed after DOM flush buffer',
-              name: 'VETO.CallScreen',
-            );
-          } catch (e, stack) {
-            developer.log(
-              'Error disposing WebRTC service (deferred)',
-              name: 'VETO.CallScreen',
-              error: e,
-              stackTrace: stack,
-            );
-          }
-        });
+        w.dispose();
+        developer.log(
+          'WebRTCService disposed synchronously',
+          name: 'VETO.CallScreen',
+        );
       } catch (e, stack) {
         developer.log(
-          'Error during CallScreen teardown sync phase',
+          'Error disposing WebRTC service',
           name: 'VETO.CallScreen',
           error: e,
           stackTrace: stack,

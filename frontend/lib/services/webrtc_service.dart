@@ -657,7 +657,8 @@ class WebRTCService extends ChangeNotifier {
       final rem = _remoteStream;
       _remoteStream = null;
       unawaited(_disposeStreamFully(rem));
-      // Renderer srcObject / dispose: only in [dispose] via Future.delayed (Flutter Web DOM safety).
+      // Flutter Web: never call RTCVideoRenderer.dispose() during route teardown — only
+      // clear srcObject in [dispose] (see dispose). GC / long-lived renderer is safe.
     } catch (e, st) {
       _logError('_syncTeardownMedia', e, st);
     }
@@ -739,30 +740,14 @@ class WebRTCService extends ChangeNotifier {
       _logError('dispose _unregisterCallSocketHandlers', e, st);
     }
 
-    final lr = localRenderer;
-    final rr = remoteRenderer;
-    Future.delayed(const Duration(milliseconds: 300), () {
-      try {
-        lr.srcObject = null;
-        lr.dispose();
-      } catch (e) {
-        developer.log(
-          'Error disposing local renderer safely',
-          name: 'VETO.WebRTC',
-          error: e,
-        );
-      }
-      try {
-        rr.srcObject = null;
-        rr.dispose();
-      } catch (e) {
-        developer.log(
-          'Error disposing remote renderer safely',
-          name: 'VETO.WebRTC',
-          error: e,
-        );
-      }
-    });
+    // Flutter Web: do not call RTCVideoRenderer.dispose() here — HtmlElementView may still
+    // reference the underlying video node during this frame. Detach media only.
+    try {
+      localRenderer.srcObject = null;
+      remoteRenderer.srcObject = null;
+    } catch (e, st) {
+      _logError('dispose renderer srcObject', e, st);
+    }
 
     super.dispose();
   }
