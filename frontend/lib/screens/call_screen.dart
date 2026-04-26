@@ -69,8 +69,8 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
   int _waitSeconds = 0;
   Timer? _waitTick;
 
-  /// Flutter Web: when true, [RTCVideoView] is not built so DOM teardown avoids childList races.
-  bool _isNavigatingOut = false;
+  /// Flutter Web: when true, [RTCVideoView] is replaced by black boxes before teardown / navigation.
+  bool _isExiting = false;
 
   @override
   void initState() {
@@ -287,11 +287,7 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
     if (w.state == CallState.ended && !_finalizedCall) {
       _finalizedCall = true;
       w.removeListener(_onWebRTCUpdate);
-      unawaited(() async {
-        await _prepareVideoBlindForExit();
-        if (!mounted) return;
-        await _finalizeAndNavigate();
-      }());
+      unawaited(_finalizeAndNavigate());
     }
   }
 
@@ -344,7 +340,7 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
       _finalizedCall = false;
       _recordingStarted = false;
       _liveRecording = false;
-      _isNavigatingOut = false;
+      _isExiting = false;
     });
 
     if (_isChat) {
@@ -417,6 +413,10 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
   /// immediately (work continues in the background).
   Future<void> _finalizeAndNavigate() async {
     if (!mounted) return;
+    if (!_isChat) {
+      await _prepareExitShield();
+      if (!mounted) return;
+    }
     _webrtc?.removeListener(_onWebRTCUpdate);
     final vaultEventId =
         _eventId.trim().isNotEmpty ? _eventId.trim() : _roomId.trim();
@@ -465,6 +465,19 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
           );
           debugPrint('[CallScreen] media teardown: $e\n$st');
         }
+        try {
+          webrtc?.dispose();
+        } catch (e, st) {
+          developer.log(
+            'WebRTC dispose before navigate',
+            name: 'VETO.CallScreen',
+            error: e,
+            stackTrace: st,
+          );
+          debugPrint('[CallScreen] WebRTC dispose: $e\n$st');
+        }
+        _webrtc = null;
+
         if (rec != null &&
             rec.bytes.isNotEmpty &&
             vaultEventId.isNotEmpty) {
@@ -515,7 +528,7 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
       }
       return;
     }
-    await _prepareVideoBlindForExit();
+    await _prepareExitShield();
     if (!mounted) return;
     try {
       await _webrtc?.endCall();
@@ -724,12 +737,12 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
     );
   }
 
-  /// Replace [RTCVideoView] with a plain box before signaling/navigation (Flutter Web DOM safety).
-  Future<void> _prepareVideoBlindForExit() async {
-    if (_isChat || _callType != 'video') return;
+  /// Safe-exit shield: one frame without [RTCVideoView] before service teardown / navigation.
+  Future<void> _prepareExitShield() async {
+    if (_isChat) return;
     if (!mounted) return;
-    if (_isNavigatingOut) return;
-    setState(() => _isNavigatingOut = true);
+    if (_isExiting) return;
+    setState(() => _isExiting = true);
     await Future<void>.delayed(const Duration(milliseconds: 100));
   }
 
@@ -749,18 +762,17 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
       );
     }
 
-    if (_isNavigatingOut) {
-      return Container(
-        width: double.infinity,
-        height: double.infinity,
-        color: Colors.black,
-      );
-    }
-
     final isVideo = _callType == 'video';
     final isConnected = w.state == CallState.connected;
 
     if (!isVideo || !isConnected) {
+      if (_isExiting) {
+        return Container(
+          width: double.infinity,
+          height: double.infinity,
+          color: Colors.black,
+        );
+      }
       return Container(
         width: double.infinity,
         height: double.infinity,
@@ -772,10 +784,12 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
     return Stack(
       children: [
         Positioned.fill(
-          child: RTCVideoView(
-            w.remoteRenderer,
-            objectFit: RTCVideoViewObjectFit.RTCVideoViewObjectFitCover,
-          ),
+          child: _isExiting
+              ? Container(color: Colors.black)
+              : RTCVideoView(
+                  w.remoteRenderer,
+                  objectFit: RTCVideoViewObjectFit.RTCVideoViewObjectFitCover,
+                ),
         ),
         Positioned(
           top: 100,
@@ -793,11 +807,13 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
                   ? const Center(
                       child: Icon(Icons.videocam_off, color: VetoColors.silver, size: 28),
                     )
-                  : RTCVideoView(
-                      w.localRenderer,
-                      mirror: true,
-                      objectFit: RTCVideoViewObjectFit.RTCVideoViewObjectFitCover,
-                    ),
+                  : (_isExiting
+                      ? Container(color: Colors.black)
+                      : RTCVideoView(
+                          w.localRenderer,
+                          mirror: true,
+                          objectFit: RTCVideoViewObjectFit.RTCVideoViewObjectFitCover,
+                        )),
             ),
           ),
         ),
