@@ -70,6 +70,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
     _loadUserData();
   }
 
+  @override
+  void dispose() {
+    _nameCtrl.dispose();
+    super.dispose();
+  }
+
   Future<void> _saveProfile() async {
     final code = context.read<AppLanguageController>().code;
     final name = _nameCtrl.text.trim();

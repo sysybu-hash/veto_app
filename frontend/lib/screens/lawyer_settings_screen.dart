@@ -294,6 +294,7 @@ class _LawyerSettingsScreenState extends State<LawyerSettingsScreen> {
   }
 
   Future<void> _save(String code) async {
+    if (!mounted) return;
     setState(() => _saving = true);
     try {
       final tok = await _auth.getToken();
@@ -329,7 +330,9 @@ class _LawyerSettingsScreenState extends State<LawyerSettingsScreen> {
       ).timeout(const Duration(seconds: 12));
       _snack(_t(code, 'saved'));
     } catch (_) {}
-    if (mounted) setState(() => _saving = false);
+    finally {
+      if (mounted) setState(() => _saving = false);
+    }
   }
 
   Future<void> _deleteAccount(String code) async {

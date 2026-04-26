@@ -281,17 +281,171 @@ class WebRTCService extends ChangeNotifier {
     }
   }
 
+  Future<void> _onSocketRoomJoined(dynamic data) async {
+    try {
+      if (_isTearingDown || _mediaTornDown || _sessionFinished) return;
+      final raw = data['isCaller'];
+      final isCaller = raw == true || raw == 'true';
+      debugPrint('[WebRTC] Room joined | isCaller=$isCaller');
+      _isCaller = isCaller;
+      _setState(CallState.ringing);
+    } catch (e, st) {
+      _logError('socket room-joined', e, st);
+    }
+  }
+
+  Future<void> _onSocketPeerJoined(dynamic data) async {
+    try {
+      if (_isTearingDown || _mediaTornDown || _sessionFinished) return;
+      final peerSocketId = data['socketId']?.toString();
+      debugPrint('[WebRTC] Peer joined: $peerSocketId');
+      if (!_isCaller || peerSocketId == null || peerSocketId.isEmpty) return;
+      if (_pc != null) return;
+      if (_state != CallState.joining && _state != CallState.ringing) return;
+      await Future<void>.delayed(const Duration(milliseconds: 200));
+      if (_isTearingDown || _mediaTornDown || _sessionFinished) return;
+      try {
+        await _initCall(true, peerSocketId);
+      } catch (e, st) {
+        _logError('peer-joined _initCall', e, st);
+        _setError('Could not start the call.');
+      }
+    } catch (e, st) {
+      _logError('socket peer-joined', e, st);
+    }
+  }
+
+  Future<void> _onSocketWebrtcOffer(dynamic data) async {
+    try {
+      if (_isTearingDown || _mediaTornDown || _sessionFinished) return;
+      final fromSid = data['fromSocketId']?.toString();
+      if (_pc == null) {
+        await _initCall(false, fromSid);
+      }
+      if (_isTearingDown || _mediaTornDown || _sessionFinished) return;
+      final pc = _pc;
+      if (pc == null) {
+        debugPrint('[WebRTC] webrtc-offer: peer connection is null');
+        return;
+      }
+      _peerSocketId = fromSid;
+      final offerMap = Map<String, dynamic>.from(data['offer']);
+      await pc.setRemoteDescription(
+        RTCSessionDescription(offerMap['sdp'], offerMap['type']),
+      );
+      final wantVideo = _callType == CallType.video;
+      final answer = await pc.createAnswer({
+        'offerToReceiveAudio': true,
+        'offerToReceiveVideo': wantVideo,
+      });
+      await pc.setLocalDescription(answer);
+      if (_isTearingDown || _mediaTornDown || _sessionFinished) return;
+      if (!_socket.isConnected) return;
+      _socket.emit('webrtc-answer', {
+        'roomId': _roomId,
+        'answer': answer.toMap(),
+        'targetSocketId': _peerSocketId,
+      });
+    } catch (e, st) {
+      _logError('webrtc-offer handler', e, st);
+      _setError('Could not process the incoming call offer.');
+    }
+  }
+
+  Future<void> _onSocketWebrtcAnswer(dynamic data) async {
+    try {
+      if (_isTearingDown || _mediaTornDown || _sessionFinished) return;
+      final pc = _pc;
+      if (pc == null) return;
+      final answerMap = Map<String, dynamic>.from(data['answer']);
+      await pc.setRemoteDescription(
+        RTCSessionDescription(answerMap['sdp'], answerMap['type']),
+      );
+    } catch (e, st) {
+      _logError('webrtc-answer handler', e, st);
+      _setError('Could not process the call answer.');
+    }
+  }
+
+  Future<void> _onSocketIceCandidate(dynamic data) async {
+    try {
+      if (_isTearingDown || _mediaTornDown || _sessionFinished) return;
+      final pc = _pc;
+      if (pc == null) return;
+      final candMap = Map<String, dynamic>.from(data['candidate']);
+      try {
+        await pc.addCandidate(
+          RTCIceCandidate(
+            candMap['candidate'],
+            candMap['sdpMid'],
+            candMap['sdpMLineIndex'],
+          ),
+        );
+      } catch (e, st) {
+        if (_isTearingDown || _mediaTornDown) return;
+        _logError('ice-candidate addCandidate', e, st);
+      }
+    } catch (e, st) {
+      _logError('ice-candidate handler', e, st);
+    }
+  }
+
+  void _onSocketCallError(dynamic data) {
+    try {
+      if (_isTearingDown || _mediaTornDown || _sessionFinished) return;
+      String? message;
+      if (data is Map) {
+        final map = Map<String, dynamic>.from(data);
+        message = map['message']?.toString();
+      }
+      _setError(message ?? 'Failed to join the call.');
+    } catch (e, st) {
+      _logError('call-error handler', e, st);
+    }
+  }
+
+  void _onSocketPeerMediaToggle(dynamic data) {
+    try {
+      if (_isTearingDown || _mediaTornDown || _sessionFinished) return;
+      notifyListeners();
+    } catch (e, st) {
+      _logError('peer-media-toggle', e, st);
+    }
+  }
+
+  void _onSocketCallEndedEvent(dynamic _) {
+    unawaited(() async {
+      try {
+        if (_sessionFinished) return;
+        await _onCallEnded(remote: true);
+      } catch (e, st) {
+        _logError('_onCallEnded(remote from call-ended)', e, st);
+      }
+    }());
+  }
+
+  void _onSocketPeerLeft(dynamic _) {
+    unawaited(() async {
+      try {
+        if (_sessionFinished) return;
+        await _onCallEnded(remote: true);
+      } catch (e, st) {
+        _logError('_onCallEnded(remote from peer-left)', e, st);
+      }
+    }());
+  }
+
   void _unregisterCallSocketHandlers() {
     try {
-      _socket.off('room-joined');
-      _socket.off('peer-joined');
-      _socket.off('webrtc-offer');
-      _socket.off('webrtc-answer');
-      _socket.off('ice-candidate');
-      _socket.off('call-error');
-      _socket.off('peer-media-toggle');
-      _socket.off('call-ended');
-      _socket.off('peer-left');
+      _socket.removeHandler('room-joined', _onSocketRoomJoined);
+      _socket.removeHandler('peer-joined', _onSocketPeerJoined);
+      _socket.removeHandler('webrtc-offer', _onSocketWebrtcOffer);
+      _socket.removeHandler('webrtc-answer', _onSocketWebrtcAnswer);
+      _socket.removeHandler('ice-candidate', _onSocketIceCandidate);
+      _socket.removeHandler('call-error', _onSocketCallError);
+      _socket.removeHandler('peer-media-toggle', _onSocketPeerMediaToggle);
+      _socket.removeHandler('call-ended', _onSocketCallEndedEvent);
+      _socket.removeHandler('peer-left', _onSocketPeerLeft);
     } catch (e, st) {
       _logError('_unregisterCallSocketHandlers', e, st);
     }
@@ -311,159 +465,15 @@ class WebRTCService extends ChangeNotifier {
   }
 
   void _registerSocketHandlers() {
-    _socket.on('room-joined', (data) async {
-      try {
-        if (_isTearingDown || _mediaTornDown || _sessionFinished) return;
-        final raw = data['isCaller'];
-        final isCaller = raw == true || raw == 'true';
-        debugPrint('[WebRTC] Room joined | isCaller=$isCaller');
-        _isCaller = isCaller;
-        _setState(CallState.ringing);
-      } catch (e, st) {
-        _logError('socket room-joined', e, st);
-      }
-    });
-
-    _socket.on('peer-joined', (data) async {
-      try {
-        if (_isTearingDown || _mediaTornDown || _sessionFinished) return;
-        final peerSocketId = data['socketId']?.toString();
-        debugPrint('[WebRTC] Peer joined: $peerSocketId');
-        if (!_isCaller || peerSocketId == null || peerSocketId.isEmpty) return;
-        if (_pc != null) return;
-        if (_state != CallState.joining && _state != CallState.ringing) return;
-        await Future<void>.delayed(const Duration(milliseconds: 200));
-        if (_isTearingDown || _mediaTornDown || _sessionFinished) return;
-        try {
-          await _initCall(true, peerSocketId);
-        } catch (e, st) {
-          _logError('peer-joined _initCall', e, st);
-          _setError('Could not start the call.');
-        }
-      } catch (e, st) {
-        _logError('socket peer-joined', e, st);
-      }
-    });
-
-    _socket.on('webrtc-offer', (data) async {
-      try {
-        if (_isTearingDown || _mediaTornDown || _sessionFinished) return;
-        final fromSid = data['fromSocketId']?.toString();
-        if (_pc == null) {
-          await _initCall(false, fromSid);
-        }
-        if (_isTearingDown || _mediaTornDown || _sessionFinished) return;
-        final pc = _pc;
-        if (pc == null) {
-          debugPrint('[WebRTC] webrtc-offer: peer connection is null');
-          return;
-        }
-        _peerSocketId = fromSid;
-        final offerMap = Map<String, dynamic>.from(data['offer']);
-        await pc.setRemoteDescription(
-          RTCSessionDescription(offerMap['sdp'], offerMap['type']),
-        );
-        final wantVideo = _callType == CallType.video;
-        final answer = await pc.createAnswer({
-          'offerToReceiveAudio': true,
-          'offerToReceiveVideo': wantVideo,
-        });
-        await pc.setLocalDescription(answer);
-        if (_isTearingDown || _mediaTornDown || _sessionFinished) return;
-        if (!_socket.isConnected) return;
-        _socket.emit('webrtc-answer', {
-          'roomId': _roomId,
-          'answer': answer.toMap(),
-          'targetSocketId': _peerSocketId,
-        });
-      } catch (e, st) {
-        _logError('webrtc-offer handler', e, st);
-        _setError('Could not process the incoming call offer.');
-      }
-    });
-
-    _socket.on('webrtc-answer', (data) async {
-      try {
-        if (_isTearingDown || _mediaTornDown || _sessionFinished) return;
-        final pc = _pc;
-        if (pc == null) return;
-        final answerMap = Map<String, dynamic>.from(data['answer']);
-        await pc.setRemoteDescription(
-          RTCSessionDescription(answerMap['sdp'], answerMap['type']),
-        );
-      } catch (e, st) {
-        _logError('webrtc-answer handler', e, st);
-        _setError('Could not process the call answer.');
-      }
-    });
-
-    _socket.on('ice-candidate', (data) async {
-      try {
-        if (_isTearingDown || _mediaTornDown || _sessionFinished) return;
-        final pc = _pc;
-        if (pc == null) return;
-        final candMap = Map<String, dynamic>.from(data['candidate']);
-        try {
-          await pc.addCandidate(
-            RTCIceCandidate(
-              candMap['candidate'],
-              candMap['sdpMid'],
-              candMap['sdpMLineIndex'],
-            ),
-          );
-        } catch (e, st) {
-          if (_isTearingDown || _mediaTornDown) return;
-          _logError('ice-candidate addCandidate', e, st);
-        }
-      } catch (e, st) {
-        _logError('ice-candidate handler', e, st);
-      }
-    });
-
-    _socket.on('call-error', (data) {
-      try {
-        if (_isTearingDown || _mediaTornDown || _sessionFinished) return;
-        String? message;
-        if (data is Map) {
-          final map = Map<String, dynamic>.from(data);
-          message = map['message']?.toString();
-        }
-        _setError(message ?? 'Failed to join the call.');
-      } catch (e, st) {
-        _logError('call-error handler', e, st);
-      }
-    });
-
-    _socket.on('peer-media-toggle', (data) {
-      try {
-        if (_isTearingDown || _mediaTornDown || _sessionFinished) return;
-        notifyListeners();
-      } catch (e, st) {
-        _logError('peer-media-toggle', e, st);
-      }
-    });
-
-    _socket.on('call-ended', (data) {
-      unawaited(() async {
-        try {
-          if (_sessionFinished) return;
-          await _onCallEnded(remote: true);
-        } catch (e, st) {
-          _logError('_onCallEnded(remote from call-ended)', e, st);
-        }
-      }());
-    });
-
-    _socket.on('peer-left', (data) {
-      unawaited(() async {
-        try {
-          if (_sessionFinished) return;
-          await _onCallEnded(remote: true);
-        } catch (e, st) {
-          _logError('_onCallEnded(remote from peer-left)', e, st);
-        }
-      }());
-    });
+    _socket.on('room-joined', _onSocketRoomJoined);
+    _socket.on('peer-joined', _onSocketPeerJoined);
+    _socket.on('webrtc-offer', _onSocketWebrtcOffer);
+    _socket.on('webrtc-answer', _onSocketWebrtcAnswer);
+    _socket.on('ice-candidate', _onSocketIceCandidate);
+    _socket.on('call-error', _onSocketCallError);
+    _socket.on('peer-media-toggle', _onSocketPeerMediaToggle);
+    _socket.on('call-ended', _onSocketCallEndedEvent);
+    _socket.on('peer-left', _onSocketPeerLeft);
   }
 
   void toggleMic() {

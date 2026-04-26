@@ -397,6 +397,7 @@ class _SettingsScreenState extends State<SettingsScreen>
   }
 
   Future<void> _save(String code) async {
+    if (!mounted) return;
     setState(() => _saving = true);
     try {
       final tok = await _auth.getToken();
@@ -442,7 +443,9 @@ class _SettingsScreenState extends State<SettingsScreen>
       await WebRtcSettingsStore.instance.save(_webrtc);
       _snack(_t(code, 'saved'));
     } catch (_) {}
-    if (mounted) setState(() => _saving = false);
+    finally {
+      if (mounted) setState(() => _saving = false);
+    }
   }
 
   Future<void> _deleteAccount(String code) async {
@@ -1110,9 +1113,6 @@ class _SettingsScreenState extends State<SettingsScreen>
                             color: VetoGlassTokens.textMuted),
                         onTap: () async {
                           await _auth.logout(context);
-                          if (!context.mounted) return;
-                          Navigator.of(context).pushNamedAndRemoveUntil(
-                              '/', (_) => false);
                         },
                       ),
                       ListTile(

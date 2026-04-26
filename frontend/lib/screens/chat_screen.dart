@@ -212,7 +212,10 @@ class _ChatScreenState extends State<ChatScreen> {
 
   // ── Load conversations ────────────────────────────────────────
   Future<void> _loadConversations({bool silent = false}) async {
-    if (!silent) setState(() => _loadingConvs = true);
+    if (!silent) {
+      if (!mounted) return;
+      setState(() => _loadingConvs = true);
+    }
     try {
       final tok = await _token;
       if (tok == null) return;
@@ -229,13 +232,18 @@ class _ChatScreenState extends State<ChatScreen> {
             .toList());
       }
     } catch (_) {}
-    if (mounted && !silent) setState(() => _loadingConvs = false);
+    finally {
+      if (mounted && !silent) setState(() => _loadingConvs = false);
+    }
   }
 
   // ── Load messages ──────────────────────────────────────────────
   Future<void> _loadMessages({bool reset = false, bool silent = false}) async {
     if (_activePartnerId == null) return;
-    if (!silent) setState(() => _loadingMsgs = true);
+    if (!silent) {
+      if (!mounted) return;
+      setState(() => _loadingMsgs = true);
+    }
     if (reset) { _page = 1; _hasMore = true; }
 
     try {
@@ -267,7 +275,9 @@ class _ChatScreenState extends State<ChatScreen> {
         }
       }
     } catch (_) {}
-    if (mounted && !silent) setState(() => _loadingMsgs = false);
+    finally {
+      if (mounted && !silent) setState(() => _loadingMsgs = false);
+    }
   }
 
   void _onScroll() {
@@ -291,6 +301,7 @@ class _ChatScreenState extends State<ChatScreen> {
   Future<void> _send() async {
     final text = _msgCtrl.text.trim();
     if (text.isEmpty || _activePartnerId == null) return;
+    if (!mounted) return;
     setState(() => _sending = true);
     _msgCtrl.clear();
     try {
@@ -313,7 +324,9 @@ class _ChatScreenState extends State<ChatScreen> {
         _loadConversations(silent: true);
       }
     } catch (_) {}
-    if (mounted) setState(() => _sending = false);
+    finally {
+      if (mounted) setState(() => _sending = false);
+    }
   }
 
   // ── Delete message ─────────────────────────────────────────────
@@ -327,6 +340,7 @@ class _ChatScreenState extends State<ChatScreen> {
         headers: AppConfig.httpHeaders({'Authorization': 'Bearer $tok'}),
       ).timeout(const Duration(seconds: 10));
       if (res.statusCode == 200 || res.statusCode == 204) {
+        if (!mounted) return;
         setState(() => _messages.removeWhere((m) => m.id == msg.id));
       }
     } catch (_) {}
@@ -336,6 +350,7 @@ class _ChatScreenState extends State<ChatScreen> {
   Future<void> _showNewChatPicker() async {
     List<_Partner> partners = [];
     bool loading = true;
+    var partnersLoadStarted = false;
 
     await showModalBottomSheet<void>(
       context: context,
@@ -345,9 +360,23 @@ class _ChatScreenState extends State<ChatScreen> {
           borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setS) {
-          if (loading) {
+          if (loading && !partnersLoadStarted) {
+            partnersLoadStarted = true;
             _loadPartners().then((list) {
-              if (ctx.mounted) setS(() { partners = list; loading = false; });
+              if (ctx.mounted) {
+                setS(() {
+                  partners = list;
+                  loading = false;
+                });
+              }
+            }).catchError((Object e, StackTrace st) {
+              debugPrint('ChatScreen _loadPartners: $e\n$st');
+              if (ctx.mounted) {
+                setS(() {
+                  partners = [];
+                  loading = false;
+                });
+              }
             });
           }
           return DraggableScrollableSheet(

@@ -107,6 +107,8 @@ String getFileType(dynamic htmlFile) => (htmlFile as File).type;
 void triggerCameraCapture(void Function(dynamic file) onFile) {
   pickEvidenceMedia().then((f) {
     if (f != null) onFile(f);
+  }).catchError((Object e, StackTrace st) {
+    debugPrint('triggerCameraCapture / pickEvidenceMedia: $e\n$st');
   });
 }
 

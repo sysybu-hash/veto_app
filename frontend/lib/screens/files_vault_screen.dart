@@ -261,11 +261,12 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
 
   Future<void> _uploadHtmlFile(dynamic file) async {
     if (_usedMb >= _quotaMb) { _snack(_l.quota, isError: true); return; }
+    if (!mounted) return;
     setState(() => _uploading = true);
     try {
       final tok = await _token;
       if (tok == null) return;
-      
+
       final bytes = await browser_bridge.readFileAsBytes(file);
       final fileName = browser_bridge.getFileName(file);
       final fileType = browser_bridge.getFileType(file);
@@ -275,7 +276,7 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
         ..headers.addAll(AppConfig.httpHeadersBinary({'Authorization': 'Bearer $tok'}))
         ..fields['name'] = fileName
         ..fields['mimeType'] = fileType.isNotEmpty ? fileType : 'application/octet-stream';
-      
+
       req.files.add(http.MultipartFile.fromBytes('file', bytes, filename: fileName));
       final streamed = await req.send();
       if (streamed.statusCode == 201 || streamed.statusCode == 200) {
@@ -286,8 +287,9 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
       }
     } catch (_) {
       _snack(_l.errorUpload, isError: true);
+    } finally {
+      if (mounted) setState(() => _uploading = false);
     }
-    if (mounted) setState(() => _uploading = false);
   }
 
   // ── Camera capture (web) ─────────────────────────────────────
@@ -401,6 +403,7 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
 
   // ── API calls ────────────────────────────────────────────────
   Future<void> _load() async {
+    if (!mounted) return;
     setState(() => _loading = true);
     try {
       final tok = await _token;
@@ -426,7 +429,9 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
         _cases = (list as List).map((e) => _LegalCase.fromJson(e as Map<String, dynamic>)).toList();
       }
     } catch (_) {}
-    if (mounted) setState(() => _loading = false);
+    finally {
+      if (mounted) setState(() => _loading = false);
+    }
   }
 
   Future<void> _pickFile() async {
@@ -497,6 +502,7 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
   }
 
   Future<void> _analyzeFile(_VaultFile file) async {
+    if (!mounted) return;
     setState(() { _analyzing = true; _activeFileId = file.id; });
     try {
       final tok = await _token;
@@ -510,7 +516,9 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
         await _load();
       }
     } catch (_) {}
-    if (mounted) setState(() { _analyzing = false; _activeFileId = null; });
+    finally {
+      if (mounted) setState(() { _analyzing = false; _activeFileId = null; });
+    }
   }
 
   Future<void> _toggleLawyerAccess(_VaultFile file) async {
