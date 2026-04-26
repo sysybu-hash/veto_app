@@ -36,6 +36,9 @@ dependencies:
   flutter_webrtc: ^1.4.1
   # Peer-to-peer WebRTC calls — web + iOS + Android
 
+  # ── Agora RTC (optional stable path for video; configure App ID) ──
+  agora_rtc_engine: ^6.3.2
+
   # ── Permissions ─────────────────────────────────────────────
   permission_handler: ^11.3.0
   # Camera, microphone, storage permissions
