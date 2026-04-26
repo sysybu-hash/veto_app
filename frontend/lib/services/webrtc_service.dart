@@ -389,7 +389,8 @@ class WebRTCService extends ChangeNotifier {
       localRenderer.srcObject = null;
       remoteRenderer.srcObject = null;
     } catch (_) {}
-    notifyListeners();
+    // Do not notifyListeners here: [CallScreen] may be inside another listener
+    // callback / finalize path; re-entrant notify caused uncaught errors on web.
   }
 
   void _syncTeardownMedia() {

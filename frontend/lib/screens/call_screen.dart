@@ -269,6 +269,7 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
 
     if (w.state == CallState.ended && !_finalizedCall) {
       _finalizedCall = true;
+      w.removeListener(_onWebRTCUpdate);
       unawaited(_finalizeAndNavigate());
     }
   }
@@ -383,6 +384,7 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
     final vaultEventId =
         _eventId.trim().isNotEmpty ? _eventId.trim() : _roomId.trim();
     try {
+      final nav = Navigator.of(context);
       final queue = context.read<VaultSaveQueue>();
       var goVault = false;
       if (_isChat) {
@@ -425,19 +427,22 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
         }
       }
       if (!mounted) return;
-      if (goVault) {
-        Navigator.of(context).pushReplacementNamed('/files_vault');
-      } else {
-        Navigator.of(context).pushReplacementNamed(
-          _myRole == 'lawyer' ? '/lawyer_dashboard' : '/veto_screen',
-        );
-      }
+      final target = goVault
+          ? '/files_vault'
+          : (_myRole == 'lawyer' ? '/lawyer_dashboard' : '/veto_screen');
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        nav.pushReplacementNamed(target);
+      });
     } catch (e, st) {
       debugPrint('[CallScreen] _finalizeAndNavigate: $e\n$st');
       if (!mounted) return;
-      Navigator.of(context).pushReplacementNamed(
-        _myRole == 'lawyer' ? '/lawyer_dashboard' : '/veto_screen',
-      );
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        Navigator.of(context).pushReplacementNamed(
+          _myRole == 'lawyer' ? '/lawyer_dashboard' : '/veto_screen',
+        );
+      });
     }
   }
 
