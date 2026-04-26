@@ -67,14 +67,15 @@ jobs:
             --dart-define=VETO_API_BASE=${{ env.VETO_API_BASE }} \
             --dart-define=VETO_BUILD_ID=$SHORT_SHA
 
-      # Root Directory must match Vercel project settings (frontend = frontend/vercel.json + build/web).
+      # Deploy from frontend/ so frontend/vercel.json + build/web match Vercel "Root Directory: frontend".
+      # Explicit npx vercel@latest avoids amondnet/vercel-action pinning CLI 25.x (API now requires ≥47.2.2).
       - name: Deploy to Vercel
-        uses: amondnet/vercel-action@v42.2.0
-        with:
-          vercel-token: ${{ secrets.VERCEL_TOKEN }}
-          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
-          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
-          working-directory: ./frontend
-          root-directory: frontend
-          vercel-version: latest
-          vercel-args: '--prod'
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        working-directory: frontend
+        run: |
+          set -e
+          npx --yes vercel@latest --version
+          npx --yes vercel@latest deploy --prod --yes
