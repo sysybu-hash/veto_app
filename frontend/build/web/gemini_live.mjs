@@ -231,7 +231,8 @@ function guardLiveConnSend(st, session) {
         } catch (_) {
           // ignore
         }
-        finalize(st, "live_socket_closed");
+        // Same as ws "close": end session with whatever transcript we have — not an error string in UI.
+        finalize(st, null);
       }
       return;
     }
