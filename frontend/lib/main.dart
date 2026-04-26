@@ -10,6 +10,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart' as provider;
 
+import 'app_navigator.dart';
 import 'config/app_config.dart';
 import 'core/accessibility/accessibility_settings.dart';
 import 'core/i18n/app_language.dart';
@@ -118,8 +119,36 @@ Future<void> _warmUpBackend() async {
   } catch (_) {}
 }
 
+/// Route table for [VetoApp] and tests (single source of truth).
+final Map<String, WidgetBuilder> vetoAppRoutes = <String, WidgetBuilder>{
+  '/': (_) => const SplashScreen(),
+  '/landing': (_) => const LandingScreen(),
+  '/login': (_) => const LoginScreen(),
+  '/wizard_home': (_) => const WizardShellScreen(),
+  '/veto_screen': (_) => const VetoScreen(),
+  '/lawyer_dashboard': (_) => const LawyerDashboard(),
+  '/profile': (_) => const ProfileScreen(),
+  '/admin_settings': (_) => const AdminSettingsScreen(),
+  '/files_vault': (_) => const FilesVaultScreen(),
+  '/admin_dashboard': (_) => const AdminDashboard(),
+  '/admin_subscriptions': (_) => const SubscriptionAdminScreen(),
+  '/settings': (_) => const SettingsScreen(),
+  '/admin_users': (_) => const AllUsersScreen(),
+  '/admin_lawyers': (_) => const AllLawyersScreen(),
+  '/admin_pending': (_) => const PendingLawyersScreen(),
+  '/admin_logs': (_) => const EmergencyLogsScreen(),
+  '/lawyer_settings': (_) => const LawyerSettingsScreen(),
+  '/chat': (_) => const ChatScreen(),
+  '/call': (_) => const CallScreen(),
+  '/maps': (_) => const MapsScreen(),
+  '/shared_vault': (_) => const SharedVaultScreen(),
+};
+
 class VetoApp extends StatelessWidget {
-  const VetoApp({super.key});
+  /// Production uses `'/'` (splash). Tests may start at `/landing` to avoid splash timers under fake async.
+  final String initialRoute;
+
+  const VetoApp({super.key, this.initialRoute = '/'});
 
   @override
   Widget build(BuildContext context) {
@@ -128,6 +157,7 @@ class VetoApp extends StatelessWidget {
     final baseTheme = VetoTheme.glassDark();
 
     return MaterialApp(
+      navigatorKey: vetoRootNavigatorKey,
       debugShowCheckedModeBanner: false,
       title: 'VETO',
       theme: a11y.mergeTheme(baseTheme),
@@ -167,30 +197,8 @@ class VetoApp extends StatelessWidget {
           child: navigatorChild,
         );
       },
-      initialRoute: '/',
-      routes: {
-        '/': (context) => const SplashScreen(),
-        '/landing': (context) => const LandingScreen(),
-        '/login': (context) => const LoginScreen(),
-        '/wizard_home': (context) => const WizardShellScreen(),
-        '/veto_screen': (context) => const VetoScreen(),
-        '/lawyer_dashboard': (context) => const LawyerDashboard(),
-        '/profile': (context) => const ProfileScreen(),
-        '/admin_settings': (context) => const AdminSettingsScreen(),
-        '/files_vault': (context) => const FilesVaultScreen(),
-        '/admin_dashboard': (context) => const AdminDashboard(),
-        '/admin_subscriptions': (context) => const SubscriptionAdminScreen(),
-        '/settings': (context) => const SettingsScreen(),
-        '/admin_users': (context) => const AllUsersScreen(),
-        '/admin_lawyers': (context) => const AllLawyersScreen(),
-        '/admin_pending': (context) => const PendingLawyersScreen(),
-        '/admin_logs': (context) => const EmergencyLogsScreen(),
-        '/lawyer_settings': (context) => const LawyerSettingsScreen(),
-        '/chat': (context) => const ChatScreen(),
-        '/call': (context) => const CallScreen(),
-        '/maps': (context) => const MapsScreen(),
-        '/shared_vault': (context) => const SharedVaultScreen(),
-      },
+      initialRoute: initialRoute,
+      routes: vetoAppRoutes,
     );
   }
 }

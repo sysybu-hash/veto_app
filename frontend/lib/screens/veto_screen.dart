@@ -1014,19 +1014,11 @@ class _VetoScreenState extends State<VetoScreen> {
         ),
       ),
       iconTheme: const IconThemeData(color: VetoGlassTokens.textPrimary, size: 24),
-      // Left side: accessibility + flag (language)
+      // Start side: language only (accessibility sits next to hamburger in [actions])
       leading: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           const SizedBox(width: 4),
-          IconButton(
-            visualDensity: VisualDensity.compact,
-            constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
-            icon: const Icon(Icons.accessibility_new_rounded, size: 22),
-            color: VetoGlassTokens.textMuted,
-            onPressed: () => showAccessibilitySheet(context),
-            tooltip: _langKey == 'he' ? 'נגישות' : _langKey == 'ru' ? 'Доступность' : 'Accessibility',
-          ),
           AppLanguageMenu(
             compact: true,
             tooltip: _langKey == 'he' ? 'שפה' : _langKey == 'ru' ? 'Язык' : 'Language',
@@ -1042,7 +1034,7 @@ class _VetoScreenState extends State<VetoScreen> {
           ),
         ],
       ),
-      leadingWidth: 96,
+      leadingWidth: 120,
       // Centered brand title
       title: Row(
         mainAxisSize: MainAxisSize.min,
@@ -1077,8 +1069,28 @@ class _VetoScreenState extends State<VetoScreen> {
         ],
       ),
       centerTitle: true,
-      // Right side: hamburger menu
+      // End side: accessibility immediately beside hamburger (stable on RTL Web)
       actions: [
+        IconButton(
+          visualDensity: VisualDensity.compact,
+          constraints: const BoxConstraints(minWidth: 40, minHeight: 44),
+          icon: Icon(
+            Icons.accessibility_new_rounded,
+            size: 22,
+            semanticLabel: kIsWeb
+                ? (_langKey == 'he'
+                    ? 'נגישות'
+                    : _langKey == 'ru'
+                        ? 'Доступность'
+                        : 'Accessibility')
+                : null,
+          ),
+          color: VetoGlassTokens.textMuted,
+          onPressed: () => showAccessibilitySheet(context),
+          tooltip: kIsWeb
+              ? null
+              : (_langKey == 'he' ? 'נגישות' : _langKey == 'ru' ? 'Доступность' : 'Accessibility'),
+        ),
         Builder(
           builder: (ctx) => IconButton(
             visualDensity: VisualDensity.compact,

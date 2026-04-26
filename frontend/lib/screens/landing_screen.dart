@@ -5,6 +5,7 @@
 
 import 'dart:ui' show ImageFilter;
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -289,6 +290,33 @@ class _NavBarState extends State<_NavBar> {
     }
   }
 
+  void _showCompactNav(BuildContext context, List<String> navItemLabels) {
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: VetoGlassTokens.sheetPanel,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 8),
+            for (final label in navItemLabels)
+              ListTile(
+                title: Text(label, style: const TextStyle(color: _C.inkDark, fontWeight: FontWeight.w600)),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  widget.onTap();
+                },
+              ),
+            const SizedBox(height: 12),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     const t = _T.get;
@@ -311,7 +339,7 @@ class _NavBarState extends State<_NavBar> {
               BoxShadow(color: VetoGlassTokens.neonBlue.withValues(alpha: 0.12), blurRadius: 20, offset: const Offset(0, 4)),
             ],
           ),
-          padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 12),
+          padding: EdgeInsets.symmetric(horizontal: widget.compact ? 16 : 28, vertical: 12),
           child: Center(
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 1100),
@@ -352,14 +380,38 @@ class _NavBarState extends State<_NavBar> {
 
               const Spacer(),
 
-              // ── Accessibility + Language ──
+              // ── Desktop: language then accessibility (keeps a11y off the outer edge in RTL Web)
+              if (!widget.compact) const AppLanguageMenu(compact: true),
+              // ── Mobile: hamburger then accessibility (ליד כפתור התפריט), then language
+              if (widget.compact)
+                IconButton(
+                  icon: const Icon(Icons.menu_rounded, color: _C.inkMid, size: 22),
+                  onPressed: () => _showCompactNav(context, navItems),
+                  tooltip: kIsWeb
+                      ? null
+                      : (c == 'he' ? 'תפריט' : c == 'ru' ? 'Меню' : 'Menu'),
+                  constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
+                ),
               IconButton(
-                icon: const Icon(Icons.accessibility_new_rounded, color: _C.inkMid, size: 20),
+                icon: Icon(
+                  Icons.accessibility_new_rounded,
+                  color: _C.inkMid,
+                  size: 20,
+                  semanticLabel: kIsWeb
+                      ? (c == 'he'
+                          ? 'נגישות'
+                          : c == 'ru'
+                              ? 'Доступность'
+                              : 'Accessibility')
+                      : null,
+                ),
                 onPressed: () => showAccessibilitySheet(context),
-                tooltip: c == 'he' ? 'נגישות' : c == 'ru' ? 'Доступность' : 'Accessibility',
+                tooltip: kIsWeb
+                    ? null
+                    : (c == 'he' ? 'נגישות' : c == 'ru' ? 'Доступность' : 'Accessibility'),
                 constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
               ),
-              const AppLanguageMenu(compact: true),
+              if (widget.compact) const AppLanguageMenu(compact: true),
               const SizedBox(width: 8),
 
               // ── Auth: user bubble or login buttons ──

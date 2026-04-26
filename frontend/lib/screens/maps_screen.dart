@@ -8,8 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 
 import '../core/theme/veto_glass_system.dart';
-import '../platform/maps_embed_stub.dart';
-import '../platform/maps_embed_web.dart' as maps_web;
+import '../platform/maps_embed_export.dart';
 
 class MapsScreen extends StatefulWidget {
   const MapsScreen({super.key});
@@ -102,9 +101,10 @@ class _MapsScreenState extends State<MapsScreen> {
               )
             : _embedUrl == null
                 ? const Center(child: CircularProgressIndicator(color: VetoGlassTokens.neonCyan))
-                : kIsWeb
-                    ? maps_web.buildMapsEmbed(_webViewId!, _embedUrl!)
-                    : MapsEmbed(embedUrl: _embedUrl!),
+                : buildPlatformMapsEmbed(
+                    kIsWeb ? _webViewId : null,
+                    _embedUrl!,
+                  ),
       ),
     );
   }

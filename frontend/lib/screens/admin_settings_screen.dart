@@ -323,26 +323,39 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
   );
 
   Widget _statCard(String label, String value, IconData icon, Color color) =>
-      Container(
-        padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 12),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border(
-            left: BorderSide(color: color, width: 3),
-            top: const BorderSide(color: Color(0xFFE2E8F8)),
-            right: const BorderSide(color: Color(0xFFE2E8F8)),
-            bottom: const BorderSide(color: Color(0xFFE2E8F8)),
-          ),
-          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 8, offset: const Offset(0, 2))],
+      ClipRRect(
+        borderRadius: BorderRadius.circular(16),
+        child: Stack(
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 12),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                border: Border.all(color: const Color(0xFFE2E8F8)),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.04),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Column(children: [
+                Icon(icon, color: color, size: 22),
+                const SizedBox(height: 8),
+                Text(value, style: TextStyle(color: color, fontSize: 26, fontWeight: FontWeight.w900)),
+                const SizedBox(height: 3),
+                Text(label, style: const TextStyle(color: Color(0xFF64748B), fontSize: 11)),
+              ]),
+            ),
+            PositionedDirectional(
+              start: 0,
+              top: 0,
+              bottom: 0,
+              child: Container(width: 3, color: color),
+            ),
+          ],
         ),
-        child: Column(children: [
-          Icon(icon, color: color, size: 22),
-          const SizedBox(height: 8),
-          Text(value, style: TextStyle(color: color, fontSize: 26, fontWeight: FontWeight.w900)),
-          const SizedBox(height: 3),
-          Text(label, style: const TextStyle(color: Color(0xFF64748B), fontSize: 11)),
-        ]),
       );
 
   Widget _infoCard(String label, String value, {Color? statusColor}) =>
