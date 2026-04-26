@@ -214,7 +214,7 @@ function startPcmMic(stream, session, st) {
   const mute = ac.createGain();
   mute.gain.value = 0;
   proc.onaudioprocess = function (ev) {
-    if (st.done) return;
+    if (st.done || st._micStopped) return;
     const input = ev.inputBuffer.getChannelData(0);
     const inRate = ac.sampleRate;
     const outRate = IN_SR;
@@ -235,8 +235,15 @@ function startPcmMic(stream, session, st) {
     const b64 = btoa(bin);
     try {
       session.sendRealtimeInput({ audio: { data: b64, mimeType: "audio/pcm;rate=16000" } });
-    } catch (_) {
-      // ignore
+    } catch (err) {
+      if (st.done || st._micStopped) return;
+      st._micStopped = true;
+      try {
+        teardownCapture(st);
+      } catch (_) {
+        // ignore
+      }
+      finalize(st, err && err.message ? err.message : String(err));
     }
   };
   src.connect(proc);
@@ -282,6 +289,8 @@ async function startSession(lang, jwt, apiBase) {
     usedNativeAudio: false,
     done: false,
     _timer: null,
+    /** Mic loop stopped after send failure (avoids spamming a closed Live WebSocket). */
+    _micStopped: false,
   };
   window[NS + "st"] = st;
 
@@ -296,7 +305,14 @@ async function startSession(lang, jwt, apiBase) {
     callbacks: {
       onmessage: (e) => onServerMessage(st, e),
       onerror: (e) => {
-        if (!st.done) finalize(st, (e && e.error) ? e.error : "live error");
+        if (st.done) return;
+        st._micStopped = true;
+        try {
+          teardownCapture(st);
+        } catch (_) {
+          // ignore
+        }
+        finalize(st, e && e.error ? e.error : "live error");
       },
     },
   });

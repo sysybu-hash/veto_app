@@ -178,9 +178,10 @@ class SocketService {
     final socket = _socket;
     if (socket == null || !socket.connected) {
       _pendingEmits.add({'event': event, 'data': data});
-      if (socket != null && !socket.connected) {
-        socket.connect();
-      } else if (socket == null) {
+      // Do not call socket.connect() here: on Flutter Web, redundant opens while the
+      // engine is closing the WebSocket spam "already in CLOSING or CLOSED" errors.
+      // Reconnection is handled by socket.io (reconnection: true); pending emits flush onConnect.
+      if (socket == null) {
         debugPrint(
           'SocketService.emit: no socket — call connect(role:) before emitting "$event".',
         );
