@@ -40,6 +40,8 @@ class WebRTCService extends ChangeNotifier {
   /// Prevents duplicate [CallState.ended] / teardown when local + remote race.
   bool _sessionFinished = false;
   bool _isCaller = false;
+  /// After [silenceNativeEvents], suppresses [notifyListeners] during route exit.
+  bool _isExitingService = false;
 
   RTCPeerConnection? _pc;
   MediaStream? _localStream;
@@ -92,6 +94,7 @@ class WebRTCService extends ChangeNotifier {
     _isTearingDown = false;
     _mediaTornDown = false;
     _sessionFinished = false;
+    _isExitingService = false;
     _roomId = roomId;
     _callType = callType;
     _errorMessage = null;
@@ -198,7 +201,7 @@ class WebRTCService extends ChangeNotifier {
         } catch (e, st) {
           _logError('onTrack remoteRenderer.srcObject', e, st);
         }
-        notifyListeners();
+        _notifyListenersIfActive();
       } catch (e, st) {
         _logError('onTrack', e, st);
       }
@@ -407,7 +410,7 @@ class WebRTCService extends ChangeNotifier {
   void _onSocketPeerMediaToggle(dynamic data) {
     try {
       if (_isTearingDown || _mediaTornDown || _sessionFinished) return;
-      notifyListeners();
+      _notifyListenersIfActive();
     } catch (e, st) {
       _logError('peer-media-toggle', e, st);
     }
@@ -473,16 +476,34 @@ class WebRTCService extends ChangeNotifier {
     }
   }
 
-  /// Nuclear exit: null peer-connection handlers first so the browser cannot deliver events into Dart during teardown/navigation.
-  /// Does not touch streams, [srcObject], or renderers (full teardown follows in [_syncTeardownMedia] / [_disposeStreamFully]).
+  /// Blackout: clear renderer [srcObject] first (Web), stop tracks, mute notifications, null PC handlers.
   void silenceNativeEvents() {
+    try {
+      localRenderer.srcObject = null;
+    } catch (e, st) {
+      _logError('silenceNativeEvents localRenderer.srcObject', e, st);
+    }
+    try {
+      remoteRenderer.srcObject = null;
+    } catch (e, st) {
+      _logError('silenceNativeEvents remoteRenderer.srcObject', e, st);
+    }
+    _localStream?.getTracks().forEach((t) => t.stop());
+    _remoteStream?.getTracks().forEach((t) => t.stop());
+    _isExitingService = true;
     final pc = _pc;
-    if (pc == null) return;
-    pc.onIceCandidate = null;
-    pc.onTrack = null;
-    pc.onConnectionState = null;
-    pc.onIceConnectionState = null;
-    pc.onSignalingState = null;
+    if (pc != null) {
+      pc.onIceCandidate = null;
+      pc.onTrack = null;
+      pc.onConnectionState = null;
+      pc.onIceConnectionState = null;
+      pc.onSignalingState = null;
+    }
+  }
+
+  void _notifyListenersIfActive() {
+    if (_isExitingService) return;
+    notifyListeners();
   }
 
   /// Stops native callbacks from reaching Dart during internal teardown.
@@ -519,7 +540,7 @@ class WebRTCService extends ChangeNotifier {
         'audio': !_micMuted,
         'video': !_cameraOff,
       });
-      notifyListeners();
+      _notifyListenersIfActive();
     } catch (e, st) {
       _logError('toggleMic', e, st);
     }
@@ -544,7 +565,7 @@ class WebRTCService extends ChangeNotifier {
         'audio': !_micMuted,
         'video': !_cameraOff,
       });
-      notifyListeners();
+      _notifyListenersIfActive();
     } catch (e, st) {
       _logError('toggleCamera', e, st);
     }
@@ -676,8 +697,7 @@ class WebRTCService extends ChangeNotifier {
       final rem = _remoteStream;
       _remoteStream = null;
       unawaited(_disposeStreamFully(rem));
-      // Flutter Web: do not touch RTCVideoRenderer (srcObject / dispose) during teardown —
-      // let HtmlElementView unmount without illegal DOM mutation; stop tracks & PC only.
+      // [silenceNativeEvents] may already have cleared renderer srcObject; finish streams & PC here.
     } catch (e, st) {
       _logError('_syncTeardownMedia', e, st);
     }
@@ -690,7 +710,7 @@ class WebRTCService extends ChangeNotifier {
       _durationTimer = Timer.periodic(const Duration(seconds: 1), (_) {
         try {
           _callDuration++;
-          notifyListeners();
+          _notifyListenersIfActive();
         } catch (e, st) {
           _logError('_startDurationTimer tick', e, st);
         }
@@ -718,7 +738,12 @@ class WebRTCService extends ChangeNotifier {
   void _setState(CallState s) {
     try {
       _state = s;
-      notifyListeners();
+      // [CallScreen] must observe [CallState.ended] once to run [_finalizeAndNavigate] after [endCall].
+      if (s == CallState.ended) {
+        notifyListeners();
+      } else {
+        _notifyListenersIfActive();
+      }
     } catch (e, st) {
       _logError('_setState', e, st);
     }
@@ -728,7 +753,7 @@ class WebRTCService extends ChangeNotifier {
     try {
       _errorMessage = message;
       _state = CallState.error;
-      notifyListeners();
+      _notifyListenersIfActive();
     } catch (e, st) {
       _logError('_setError', e, st);
     }
