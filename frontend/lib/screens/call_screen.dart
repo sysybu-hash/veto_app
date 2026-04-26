@@ -7,6 +7,7 @@
 // ============================================================
 
 import 'dart:async';
+import 'dart:developer' as developer;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
@@ -90,6 +91,21 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
     WidgetsBinding.instance.addPostFrameCallback((_) => _init());
   }
 
+  void _safeSetState(VoidCallback fn) {
+    if (!mounted) return;
+    try {
+      setState(fn);
+    } catch (e, st) {
+      developer.log(
+        '_safeSetState',
+        name: 'VETO.CallScreen',
+        error: e,
+        stackTrace: st,
+      );
+      debugPrint('[CallScreen] _safeSetState: $e\n$st');
+    }
+  }
+
   Future<void> _init() async {
     final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
     if (args == null) {
@@ -104,7 +120,7 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
     var ct = args['callType']?.toString() ?? 'video';
     if (ct == 'webrtc') ct = 'video';
 
-    setState(() {
+    _safeSetState(() {
       _roomId    = args['roomId']?.toString() ?? '';
       _callType  = ct;
       _peerName  = args['peerName']?.toString() ?? 'Legal Counsel';
@@ -119,7 +135,7 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
     final online = await socketService.ensureConnected(role: myRole);
     if (!mounted) return;
     if (!online) {
-      setState(() {
+      _safeSetState(() {
         _callErrorText = _language == 'he'
             ? 'אין חיבור לשרת. בדוק רשת ונסה שוב.'
             : _language == 'ru'
@@ -147,12 +163,12 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
 
     _waitTick = Timer.periodic(const Duration(seconds: 1), (_) {
       if (!mounted) return;
-      setState(() => _waitSeconds++);
+      _safeSetState(() => _waitSeconds++);
     });
     _waitTimeout = Timer(const Duration(seconds: 75), () {
       if (!mounted) return;
       if (w.state != CallState.connected) {
-        setState(() => _timedOut = true);
+        _safeSetState(() => _timedOut = true);
         _waitTick?.cancel();
       }
     });
@@ -162,7 +178,7 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
     if (!mounted) return;
     final m = _socketMap(raw);
     if (m['roomId']?.toString() != _roomId) return;
-    setState(() => _chatReady = true);
+    _safeSetState(() => _chatReady = true);
     _waitTimeout?.cancel();
     _waitTick?.cancel();
     _startChatDurationTimer();
@@ -177,7 +193,7 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
     final mine = (_myRole == 'user' || _myRole == 'admin')
         ? (from == 'user' || from == 'admin')
         : from == 'lawyer';
-    setState(() {
+    _safeSetState(() {
       _chatLines.add(_ChatLine(text: t, mine: mine));
     });
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -208,12 +224,12 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
 
     _waitTick = Timer.periodic(const Duration(seconds: 1), (_) {
       if (!mounted) return;
-      setState(() => _waitSeconds++);
+      _safeSetState(() => _waitSeconds++);
     });
     _waitTimeout = Timer(const Duration(seconds: 75), () {
       if (!mounted) return;
       if (!_chatReady) {
-        setState(() => _timedOut = true);
+        _safeSetState(() => _timedOut = true);
         _waitTick?.cancel();
       }
     });
@@ -232,7 +248,7 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
     _chatSeconds = 0;
     _chatDurationTimer = Timer.periodic(const Duration(seconds: 1), (_) {
       if (!mounted) return;
-      setState(() => _chatSeconds++);
+      _safeSetState(() => _chatSeconds++);
     });
   }
 
@@ -248,7 +264,7 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
     if (!mounted) return;
     // [WebRTCService] may notify again after we start navigation — avoid setState after dispose.
     if (_finalizedCall) return;
-    setState(() {});
+    _safeSetState(() {});
 
     if (w.errorMessage != null && w.errorMessage!.trim().isNotEmpty) {
       _callErrorText = w.errorMessage;
@@ -257,13 +273,11 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
     if (w.state == CallState.connected && !_recordingStarted) {
       _waitTimeout?.cancel();
       _waitTick?.cancel();
-      if (mounted) {
-        setState(() {
-          _timedOut = false;
-          _waitSeconds = 0;
-          _callErrorText = null;
-        });
-      }
+      _safeSetState(() {
+        _timedOut = false;
+        _waitSeconds = 0;
+        _callErrorText = null;
+      });
       _maybeStartRecording(w);
     }
 
@@ -287,22 +301,36 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
   }
 
   Future<void> _toggleRecordingOptIn() async {
-    setState(() => _userOptedRecord = !_userOptedRecord);
+    if (!mounted) return;
+    _safeSetState(() => _userOptedRecord = !_userOptedRecord);
     final w = _webrtc;
     if (_userOptedRecord && w != null && w.state == CallState.connected && !_recordingStarted) {
       _maybeStartRecording(w);
     }
     if (!_userOptedRecord && _liveRecording) {
-      await _recordingService.stop();
-      _recordingStarted = false;
-      _liveRecording = false;
+      try {
+        await _recordingService.stop();
+      } catch (e, st) {
+        developer.log(
+          '_toggleRecordingOptIn stop',
+          name: 'VETO.CallScreen',
+          error: e,
+          stackTrace: st,
+        );
+        debugPrint('[CallScreen] _toggleRecordingOptIn stop: $e\n$st');
+      }
+      if (!mounted) return;
+      _safeSetState(() {
+        _recordingStarted = false;
+        _liveRecording = false;
+      });
     }
   }
 
   Future<void> _retryJoin() async {
     _waitTimeout?.cancel();
     _waitTick?.cancel();
-    setState(() {
+    _safeSetState(() {
       _timedOut = false;
       _waitSeconds = 0;
       _callErrorText = null;
@@ -312,7 +340,7 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
     });
 
     if (_isChat) {
-      setState(() {
+      _safeSetState(() {
         _chatReady = false;
         _chatLines.clear();
       });
@@ -336,7 +364,7 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
     final online = await socketService.ensureConnected(role: _myRole);
     if (!mounted) return;
     if (!online) {
-      setState(() {
+      _safeSetState(() {
         _callErrorText = _language == 'he'
             ? 'אין חיבור לשרת. בדוק רשת ונסה שוב.'
             : _language == 'ru'
@@ -356,12 +384,12 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
 
     _waitTick = Timer.periodic(const Duration(seconds: 1), (_) {
       if (!mounted) return;
-      setState(() => _waitSeconds++);
+      _safeSetState(() => _waitSeconds++);
     });
     _waitTimeout = Timer(const Duration(seconds: 75), () {
       if (!mounted) return;
       if (w.state != CallState.connected) {
-        setState(() => _timedOut = true);
+        _safeSetState(() => _timedOut = true);
         _waitTick?.cancel();
       }
     });
@@ -402,16 +430,28 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
         if (_recordingStarted) {
           try {
             rec = await _recordingService.stop();
-          } catch (e, st) {
-            debugPrint('[CallScreen] recording stop failed: $e\n$st');
-            rec = null;
-          }
+      } catch (e, st) {
+        developer.log(
+          'recording stop failed',
+          name: 'VETO.CallScreen',
+          error: e,
+          stackTrace: st,
+        );
+        debugPrint('[CallScreen] recording stop failed: $e\n$st');
+        rec = null;
+      }
           _liveRecording = false;
           _recordingStarted = false;
         }
         try {
           await _webrtc?.completeMediaTeardown();
         } catch (e, st) {
+          developer.log(
+            'media teardown',
+            name: 'VETO.CallScreen',
+            error: e,
+            stackTrace: st,
+          );
           debugPrint('[CallScreen] media teardown: $e\n$st');
         }
         if (rec != null &&
@@ -435,6 +475,12 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
         nav.pushReplacementNamed(target);
       });
     } catch (e, st) {
+      developer.log(
+        '_finalizeAndNavigate',
+        name: 'VETO.CallScreen',
+        error: e,
+        stackTrace: st,
+      );
       debugPrint('[CallScreen] _finalizeAndNavigate: $e\n$st');
       if (!mounted) return;
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -459,11 +505,46 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
       }
       return;
     }
-    await _webrtc?.endCall();
+    try {
+      await _webrtc?.endCall();
+    } catch (e, st) {
+      developer.log(
+        '_endCall WebRTC',
+        name: 'VETO.CallScreen',
+        error: e,
+        stackTrace: st,
+      );
+      debugPrint('[CallScreen] _endCall WebRTC: $e\n$st');
+    }
   }
 
   @override
   void dispose() {
+    developer.log('CallScreen disposing', name: 'VETO.CallScreen');
+    try {
+      final w = _webrtc;
+      if (w != null) {
+        try {
+          w.localRenderer.srcObject = null;
+          w.remoteRenderer.srcObject = null;
+        } catch (e, st) {
+          developer.log(
+            'clear renderer srcObject (sync)',
+            name: 'VETO.CallScreen',
+            error: e,
+            stackTrace: st,
+          );
+        }
+      }
+    } catch (e, st) {
+      developer.log(
+        'dispose pre-teardown',
+        name: 'VETO.CallScreen',
+        error: e,
+        stackTrace: st,
+      );
+    }
+
     _waitTimeout?.cancel();
     _waitTick?.cancel();
     _chatDurationTimer?.cancel();
@@ -476,7 +557,17 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
     svc.removeHandler('call-chat-message', _onChatMessageEvent);
     svc.removeHandler('call-ended', _onCallEndedEvent);
     _webrtc?.removeListener(_onWebRTCUpdate);
-    _webrtc?.dispose();
+    try {
+      _webrtc?.dispose();
+    } catch (e, st) {
+      developer.log(
+        'WebRTCService.dispose',
+        name: 'VETO.CallScreen',
+        error: e,
+        stackTrace: st,
+      );
+    }
+    _webrtc = null;
     super.dispose();
   }
 
@@ -599,7 +690,7 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
       'roomId': _roomId,
       'text': t,
     });
-    setState(() {
+    _safeSetState(() {
       _chatLines.add(_ChatLine(text: t, mine: true));
       _chatInput.clear();
     });

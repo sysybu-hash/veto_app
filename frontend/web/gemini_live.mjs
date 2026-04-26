@@ -82,6 +82,15 @@ function enqueuePcm(st, int16, sampleRate) {
   st._nextPlay = startAt + buf.duration;
   if (!st._sources) st._sources = [];
   st._sources.push(src);
+  // Drop finished nodes so long Gemini replies do not grow _sources without bound (Flutter Web memory).
+  src.onended = function () {
+    try {
+      const ix = st._sources.indexOf(src);
+      if (ix >= 0) st._sources.splice(ix, 1);
+    } catch (_) {
+      // ignore
+    }
+  };
 }
 
 function onServerMessage(st, msg) {
@@ -196,7 +205,21 @@ function finalize(st, err) {
         nativeAudio: !!st.usedNativeAudio,
       };
       if (err) {
-        emit("LIVE:" + JSON.stringify({ u: payload.u, m: "", err: String(err), nativeAudio: false }));
+        const errStr = String(err);
+        // Recoverable disconnect: keep user transcript for Flutter (veto_screen live_socket_closed).
+        if (errStr === "live_socket_closed") {
+          emit(
+            "LIVE:" +
+              JSON.stringify({
+                u: payload.u,
+                m: payload.m,
+                err: errStr,
+                nativeAudio: !!st.usedNativeAudio,
+              }),
+          );
+        } else {
+          emit("LIVE:" + JSON.stringify({ u: payload.u, m: "", err: errStr, nativeAudio: false }));
+        }
       } else {
         emit("LIVE:" + JSON.stringify(payload));
       }
@@ -204,8 +227,22 @@ function finalize(st, err) {
     }, 200);
   } else {
     const payload = { u: st.accUser || "", m: st.accModel || "", nativeAudio: !!st.usedNativeAudio };
-    if (err) emit("LIVE:" + JSON.stringify({ u: payload.u, m: "", err: String(err), nativeAudio: false }));
-    else emit("LIVE:" + JSON.stringify(payload));
+    if (err) {
+      const errStr = String(err);
+      if (errStr === "live_socket_closed") {
+        emit(
+          "LIVE:" +
+            JSON.stringify({
+              u: payload.u,
+              m: payload.m,
+              err: errStr,
+              nativeAudio: !!st.usedNativeAudio,
+            }),
+        );
+      } else {
+        emit("LIVE:" + JSON.stringify({ u: payload.u, m: "", err: errStr, nativeAudio: false }));
+      }
+    } else emit("LIVE:" + JSON.stringify(payload));
     window[NS + "st"] = null;
   }
 }
@@ -269,7 +306,8 @@ function guardLiveConnSend(st, session) {
       } catch (_) {
         // ignore
       }
-      finalize(st, null);
+      // User tapped stop: treat as normal end (full transcript). Otherwise abnormal drop.
+      finalize(st, st._userRequestedStop ? null : "live_socket_closed");
     });
   }
 }
@@ -379,11 +417,28 @@ async function startSession(lang, jwt, apiBase) {
   if (!apiBase) throw new Error("apiBase missing");
   if (!jwt) throw new Error("JWT missing");
   const url = String(apiBase).replace(/\/$/, "") + "/ai/live-token";
-  const res = await fetch(url, {
-    method: "POST",
-    headers: headersFor(jwt),
-    body: JSON.stringify({ lang: lang || "he" }),
-  });
+  const ctrl = new AbortController();
+  const to = setTimeout(function () {
+    try {
+      ctrl.abort();
+    } catch (_) {
+      // ignore
+    }
+  }, 25000);
+  let res;
+  try {
+    res = await fetch(url, {
+      method: "POST",
+      headers: headersFor(jwt),
+      body: JSON.stringify({ lang: lang || "he" }),
+      signal: ctrl.signal,
+    });
+  } catch (e) {
+    clearTimeout(to);
+    if (e && e.name === "AbortError") throw new Error("live_token_timeout");
+    throw e;
+  }
+  clearTimeout(to);
   if (!res.ok) {
     let d = "HTTP " + res.status;
     try {
@@ -416,6 +471,8 @@ async function startSession(lang, jwt, apiBase) {
     _timer: null,
     /** Mic loop stopped after send failure (avoids spamming a closed Live WebSocket). */
     _micStopped: false,
+    /** True when [userStop] ran — WebSocket `close` is then a normal teardown, not a drop. */
+    _userRequestedStop: false,
   };
   window[NS + "st"] = st;
 
@@ -449,6 +506,7 @@ async function startSession(lang, jwt, apiBase) {
 function userStop() {
   const st = window[NS + "st"];
   if (!st || st.done) return;
+  st._userRequestedStop = true;
   teardownCapture(st);
   try {
     if (st.session) st.session.sendRealtimeInput({ audioStreamEnd: true });

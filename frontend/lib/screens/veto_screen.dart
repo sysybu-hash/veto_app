@@ -636,8 +636,13 @@ class _VetoScreenState extends State<VetoScreen> {
       final uRecover = (o['u'] as String?)?.trim() ?? '';
       // Gemini Live guard (gemini_live.mjs) — not a user-facing raw error string.
       if (e == 'live_socket_closed') {
-        if (uRecover.isNotEmpty) {
-          unawaited(_ingestGeminiLiveTurn(uRecover, '', nativeAudio: false));
+        final mRecover = (o['m'] as String?)?.trim() ?? '';
+        if (uRecover.isNotEmpty || mRecover.isNotEmpty) {
+          unawaited(_ingestGeminiLiveTurn(
+            uRecover,
+            mRecover,
+            nativeAudio: o['nativeAudio'] == true,
+          ));
         } else if (mounted) {
           final msg = _langKey == 'he'
               ? 'החיבור הקולי נותק. לחץ שוב על המיקרופון.'

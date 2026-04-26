@@ -7,79 +7,81 @@
 // ============================================================
 
 import 'dart:async';
+import 'dart:developer' as developer;
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
+
 import 'socket_service.dart';
 import 'webrtc_ice_config_service.dart';
 import 'webrtc_settings_store.dart';
 import 'webrtc_user_settings.dart';
 
 enum CallState { idle, joining, ringing, connected, ended, error }
-enum CallType  { audio, video }
+enum CallType { audio, video }
 
 class WebRTCService extends ChangeNotifier {
-  // ── Dependencies ──────────────────────────────────────────
   final SocketService _socket;
 
-  // ── Call state ────────────────────────────────────────────
-  CallState _state      = CallState.idle;
-  CallType  _callType   = CallType.video;
-  String?   _roomId;
-  String?   _peerSocketId;
+  CallState _state = CallState.idle;
+  CallType _callType = CallType.video;
+  String? _roomId;
+  String? _peerSocketId;
 
-  bool _micMuted        = false;
-  bool _cameraOff       = false;
+  bool _micMuted = false;
+  bool _cameraOff = false;
   final bool _isRecording = false;
-  int  _callDuration    = 0;
+  int _callDuration = 0;
   Timer? _durationTimer;
   String? _errorMessage;
 
-  /// True while we intentionally tear down the peer connection (avoid treating
-  /// `disconnected` from `close()` as a user-visible failure; also reduces duplicate notifies).
   bool _isTearingDown = false;
-
-  /// After [completeMediaTeardown] or [dispose]; avoids double-close.
   bool _mediaTornDown = false;
-
-  /// Set by `room-joined`: first peer creates the offer only after `peer-joined`.
   bool _isCaller = false;
 
-  // ── WebRTC objects ────────────────────────────────────────
   RTCPeerConnection? _pc;
-  MediaStream?       _localStream;
-  MediaStream?       _remoteStream;
+  MediaStream? _localStream;
+  MediaStream? _remoteStream;
 
-  final RTCVideoRenderer localRenderer  = RTCVideoRenderer();
+  final RTCVideoRenderer localRenderer = RTCVideoRenderer();
   final RTCVideoRenderer remoteRenderer = RTCVideoRenderer();
 
-  // ── Getters ───────────────────────────────────────────────
-  CallState get state        => _state;
-  CallType  get callType     => _callType;
-  String?   get roomId       => _roomId;
-  bool      get micMuted     => _micMuted;
-  bool      get cameraOff    => _cameraOff;
-  bool      get isRecording  => _isRecording;
-  int       get callDuration => _callDuration;
-  bool      get hasVideo     => _callType == CallType.video && !_cameraOff;
-  String?   get errorMessage => _errorMessage;
-  MediaStream? get localStream  => _localStream;
+  CallState get state => _state;
+  CallType get callType => _callType;
+  String? get roomId => _roomId;
+  bool get micMuted => _micMuted;
+  bool get cameraOff => _cameraOff;
+  bool get isRecording => _isRecording;
+  int get callDuration => _callDuration;
+  bool get hasVideo => _callType == CallType.video && !_cameraOff;
+  String? get errorMessage => _errorMessage;
+  MediaStream? get localStream => _localStream;
   MediaStream? get remoteStream => _remoteStream;
 
   WebRTCService(this._socket) {
     _registerSocketHandlers();
   }
 
-  // ═══════════════════════════════════════════════════════════
-  //  Initialize renderers
-  // ═══════════════════════════════════════════════════════════
-  Future<void> initRenderers() async {
-    await localRenderer.initialize();
-    await remoteRenderer.initialize();
+  static void _logError(String where, Object e, StackTrace st) {
+    developer.log(
+      where,
+      name: 'VETO.WebRTC',
+      error: e,
+      stackTrace: st,
+    );
+    debugPrint('[WebRTC] $where\nError: $e\nStackTrace:\n$st');
   }
 
-  // ═══════════════════════════════════════════════════════════
-  //  Start a call (join room)
-  // ═══════════════════════════════════════════════════════════
+  Future<void> initRenderers() async {
+    try {
+      await localRenderer.initialize();
+      await remoteRenderer.initialize();
+    } catch (e, st) {
+      _logError('initRenderers', e, st);
+      rethrow;
+    }
+  }
+
   Future<void> joinRoom(
     String roomId,
     CallType callType, {
@@ -87,8 +89,8 @@ class WebRTCService extends ChangeNotifier {
   }) async {
     _isTearingDown = false;
     _mediaTornDown = false;
-    _roomId    = roomId;
-    _callType  = callType;
+    _roomId = roomId;
+    _callType = callType;
     _errorMessage = null;
     _setState(CallState.joining);
 
@@ -102,33 +104,29 @@ class WebRTCService extends ChangeNotifier {
       }
       await initRenderers();
       _socket.emit('join-call-room', {
-        'roomId':   roomId,
+        'roomId': roomId,
         'callType': callType == CallType.video ? 'video' : 'audio',
       });
-    } catch (e) {
-      debugPrint('[WebRTC] joinRoom error: $e');
+    } catch (e, st) {
+      _logError('joinRoom', e, st);
       _setError('Failed to join the call room.');
     }
   }
 
-  // ═══════════════════════════════════════════════════════════
-  //  Get user media and init peer connection
-  // ═══════════════════════════════════════════════════════════
   Future<void> _initCall(bool isCaller, String? peerSocketId) async {
     _peerSocketId = peerSocketId;
 
     final WebRtcUserSettings mediaPrefs =
         await WebRtcSettingsStore.instance.load();
 
-    // ── Get local media (constraints from Settings) ───────────
     final constraints = mediaPrefs.mediaConstraints(
       wantVideo: _callType == CallType.video,
     );
 
     try {
       _localStream = await navigator.mediaDevices.getUserMedia(constraints);
-    } catch (e) {
-      debugPrint('[WebRTC] getUserMedia failed: $e');
+    } catch (e, st) {
+      _logError('getUserMedia', e, st);
       _setError(
         _callType == CallType.video
             ? 'Camera or microphone permission was denied.'
@@ -136,294 +134,477 @@ class WebRTCService extends ChangeNotifier {
       );
       rethrow;
     }
-    localRenderer.srcObject = _localStream;
 
-    // ── Create peer connection (local STUN + optional server TURN) ─
+    final local = _localStream;
+    if (local == null) {
+      debugPrint('[WebRTC] _initCall: local stream null after getUserMedia');
+      _setError('Could not access microphone or camera.');
+      return;
+    }
+
+    try {
+      localRenderer.srcObject = local;
+    } catch (e, st) {
+      _logError('localRenderer.srcObject', e, st);
+    }
+
     final rtcCfg = Map<String, dynamic>.from(
       mediaPrefs.peerConnectionConfiguration(),
     );
     final serverIce = await WebRtcIceConfigService.instance.fetchServerIceServers();
     if (serverIce != null && serverIce.isNotEmpty) {
-      final local = rtcCfg['iceServers'];
-      if (local is List) {
-        rtcCfg['iceServers'] = <dynamic>[...local, ...serverIce];
+      final localIce = rtcCfg['iceServers'];
+      if (localIce is List) {
+        rtcCfg['iceServers'] = <dynamic>[...localIce, ...serverIce];
       } else {
         rtcCfg['iceServers'] = serverIce;
       }
     }
     rtcCfg['sdpSemantics'] = 'unified-plan';
-    _pc = await createPeerConnection(rtcCfg);
 
-    // Add local tracks
-    _localStream!.getTracks().forEach((track) {
-      _pc!.addTrack(track, _localStream!);
-    });
+    RTCPeerConnection? pc;
+    try {
+      pc = await createPeerConnection(rtcCfg);
+      _pc = pc;
+    } catch (e, st) {
+      _logError('createPeerConnection', e, st);
+      _setError('Could not create peer connection.');
+      return;
+    }
 
-    // Remote stream
-    _pc!.onTrack = (event) {
-      if (event.streams.isNotEmpty) {
-        _remoteStream       = event.streams[0];
-        remoteRenderer.srcObject = _remoteStream;
+    try {
+      final tracks = local.getTracks();
+      for (final track in tracks) {
+        try {
+          await pc.addTrack(track, local);
+        } catch (e, st) {
+          _logError('addTrack', e, st);
+        }
+      }
+    } catch (e, st) {
+      _logError('_initCall add tracks loop', e, st);
+    }
+
+    pc.onTrack = (event) {
+      try {
+        if (event.streams.isEmpty) return;
+        _remoteStream = event.streams.first;
+        try {
+          remoteRenderer.srcObject = _remoteStream;
+        } catch (e, st) {
+          _logError('onTrack remoteRenderer.srcObject', e, st);
+        }
         notifyListeners();
+      } catch (e, st) {
+        _logError('onTrack', e, st);
       }
     };
 
-    // ICE candidates
-    _pc!.onIceCandidate = (candidate) {
-      if (candidate.candidate != null) {
+    pc.onIceCandidate = (candidate) {
+      try {
+        if (candidate.candidate == null) return;
         _socket.emit('ice-candidate', {
-          'roomId':         _roomId,
-          'candidate':      candidate.toMap(),
+          'roomId': _roomId,
+          'candidate': candidate.toMap(),
           'targetSocketId': _peerSocketId,
         });
+      } catch (e, st) {
+        _logError('onIceCandidate', e, st);
       }
     };
 
-    // Connection state
-    _pc!.onConnectionState = (state) {
-      debugPrint('[WebRTC] Connection state: $state');
-      if (state == RTCPeerConnectionState.RTCPeerConnectionStateConnected) {
-        _errorMessage = null;
-        _setState(CallState.connected);
-        _startDurationTimer();
-      } else if (state == RTCPeerConnectionState.RTCPeerConnectionStateFailed) {
-        if (!_isTearingDown) {
-          _setError('Peer connection failed.');
+    pc.onConnectionState = (RTCPeerConnectionState state) {
+      try {
+        developer.log('Connection state: $state', name: 'VETO.WebRTC');
+        if (state == RTCPeerConnectionState.RTCPeerConnectionStateConnected) {
+          _errorMessage = null;
+          _setState(CallState.connected);
+          _startDurationTimer();
+          return;
         }
-      } else if (state == RTCPeerConnectionState.RTCPeerConnectionStateDisconnected) {
-        // `close()` often emits disconnected/closed; do not overwrite a clean [ended] with [error].
-        if (!_isTearingDown &&
-            (_state == CallState.connected || _state == CallState.ringing)) {
-          _setError('Peer connection failed.');
+        // Ignore RTCPeerConnectionStateDisconnected — often transient on Web (ICE restart).
+        final fatal = state ==
+                RTCPeerConnectionState.RTCPeerConnectionStateFailed ||
+            state == RTCPeerConnectionState.RTCPeerConnectionStateClosed;
+        if (!fatal) return;
+        if (_isTearingDown || _mediaTornDown) return;
+        final inCall = _state == CallState.connected ||
+            _state == CallState.ringing;
+        if (state == RTCPeerConnectionState.RTCPeerConnectionStateClosed &&
+            !inCall) {
+          return;
         }
+        developer.log(
+          'Connection fatally lost or closed; surfacing error to UI.',
+          name: 'VETO.WebRTC',
+        );
+        _setError(
+          state == RTCPeerConnectionState.RTCPeerConnectionStateFailed
+              ? 'Peer connection failed.'
+              : 'Peer connection closed.',
+        );
+      } catch (e, st) {
+        _logError('onConnectionState', e, st);
       }
     };
 
-    // ── Caller creates offer, callee waits for offer ──────────
     if (isCaller) {
-      final offer = await _pc!.createOffer({
-        'offerToReceiveAudio': true,
-        'offerToReceiveVideo': _callType == CallType.video,
-      });
-      await _pc!.setLocalDescription(offer);
-      _socket.emit('webrtc-offer', {
-        'roomId':         _roomId,
-        'offer':          offer.toMap(),
-        'targetSocketId': _peerSocketId,
-      });
+      try {
+        final offer = await pc.createOffer({
+          'offerToReceiveAudio': true,
+          'offerToReceiveVideo': _callType == CallType.video,
+        });
+        await pc.setLocalDescription(offer);
+        _socket.emit('webrtc-offer', {
+          'roomId': _roomId,
+          'offer': offer.toMap(),
+          'targetSocketId': _peerSocketId,
+        });
+      } catch (e, st) {
+        _logError('createOffer / emit offer', e, st);
+        _setError('Could not start the call negotiation.');
+      }
     }
   }
 
-  // ═══════════════════════════════════════════════════════════
-  //  Socket event handlers
-  // ═══════════════════════════════════════════════════════════
   void _registerSocketHandlers() {
-    // Room joined — now we know if we're caller or callee
     _socket.on('room-joined', (data) async {
-      final raw = data['isCaller'];
-      final isCaller = raw == true || raw == 'true';
-      debugPrint('[WebRTC] Room joined | isCaller=$isCaller');
-      _isCaller = isCaller;
-      _setState(CallState.ringing);
-      // Caller must NOT create an offer here — the room has no peer yet, so the
-      // offer would be broadcast to nobody. Callee waits for `webrtc-offer`.
-    });
-
-    // Second peer joined: only the caller creates the offer, now that we have a target.
-    _socket.on('peer-joined', (data) async {
-      final peerSocketId = data['socketId']?.toString();
-      debugPrint('[WebRTC] Peer joined: $peerSocketId');
-      if (!_isCaller || peerSocketId == null || peerSocketId.isEmpty) return;
-      if (_pc != null) return;
-      if (_state != CallState.joining && _state != CallState.ringing) return;
-      await Future.delayed(const Duration(milliseconds: 200));
       try {
-        await _initCall(true, peerSocketId);
+        final raw = data['isCaller'];
+        final isCaller = raw == true || raw == 'true';
+        debugPrint('[WebRTC] Room joined | isCaller=$isCaller');
+        _isCaller = isCaller;
+        _setState(CallState.ringing);
       } catch (e, st) {
-        debugPrint('[WebRTC] Caller init failed: $e\n$st');
-        _setError('Could not start the call.');
+        _logError('socket room-joined', e, st);
       }
     });
 
-    // Received offer (callee side)
+    _socket.on('peer-joined', (data) async {
+      try {
+        final peerSocketId = data['socketId']?.toString();
+        debugPrint('[WebRTC] Peer joined: $peerSocketId');
+        if (!_isCaller || peerSocketId == null || peerSocketId.isEmpty) return;
+        if (_pc != null) return;
+        if (_state != CallState.joining && _state != CallState.ringing) return;
+        await Future<void>.delayed(const Duration(milliseconds: 200));
+        try {
+          await _initCall(true, peerSocketId);
+        } catch (e, st) {
+          _logError('peer-joined _initCall', e, st);
+          _setError('Could not start the call.');
+        }
+      } catch (e, st) {
+        _logError('socket peer-joined', e, st);
+      }
+    });
+
     _socket.on('webrtc-offer', (data) async {
       try {
         final fromSid = data['fromSocketId']?.toString();
         if (_pc == null) {
-          // Init without creating offer (we're callee)
           await _initCall(false, fromSid);
+        }
+        final pc = _pc;
+        if (pc == null) {
+          debugPrint('[WebRTC] webrtc-offer: peer connection is null');
+          return;
         }
         _peerSocketId = fromSid;
         final offerMap = Map<String, dynamic>.from(data['offer']);
-        await _pc!.setRemoteDescription(
+        await pc.setRemoteDescription(
           RTCSessionDescription(offerMap['sdp'], offerMap['type']),
         );
         final wantVideo = _callType == CallType.video;
-        final answer = await _pc!.createAnswer({
+        final answer = await pc.createAnswer({
           'offerToReceiveAudio': true,
           'offerToReceiveVideo': wantVideo,
         });
-        await _pc!.setLocalDescription(answer);
+        await pc.setLocalDescription(answer);
         _socket.emit('webrtc-answer', {
-          'roomId':         _roomId,
-          'answer':         answer.toMap(),
+          'roomId': _roomId,
+          'answer': answer.toMap(),
           'targetSocketId': _peerSocketId,
         });
-      } catch (e) {
-        debugPrint('[WebRTC] Handle offer error: $e');
+      } catch (e, st) {
+        _logError('webrtc-offer handler', e, st);
         _setError('Could not process the incoming call offer.');
       }
     });
 
-    // Received answer (caller side)
     _socket.on('webrtc-answer', (data) async {
       try {
+        final pc = _pc;
+        if (pc == null) return;
         final answerMap = Map<String, dynamic>.from(data['answer']);
-        await _pc!.setRemoteDescription(
+        await pc.setRemoteDescription(
           RTCSessionDescription(answerMap['sdp'], answerMap['type']),
         );
-      } catch (e) {
-        debugPrint('[WebRTC] Handle answer error: $e');
+      } catch (e, st) {
+        _logError('webrtc-answer handler', e, st);
         _setError('Could not process the call answer.');
       }
     });
 
-    // ICE candidate
     _socket.on('ice-candidate', (data) async {
       try {
-        if (_pc == null) return;
+        final pc = _pc;
+        if (pc == null) return;
         final candMap = Map<String, dynamic>.from(data['candidate']);
-        await _pc!.addCandidate(
+        await pc.addCandidate(
           RTCIceCandidate(
             candMap['candidate'],
             candMap['sdpMid'],
             candMap['sdpMLineIndex'],
           ),
         );
-      } catch (e) {
-        debugPrint('[WebRTC] ICE candidate error: $e');
+      } catch (e, st) {
+        _logError('ice-candidate handler', e, st);
       }
     });
 
     _socket.on('call-error', (data) {
-      String? message;
-      if (data is Map) {
-        final map = Map<String, dynamic>.from(data);
-        message = map['message']?.toString();
+      try {
+        String? message;
+        if (data is Map) {
+          final map = Map<String, dynamic>.from(data);
+          message = map['message']?.toString();
+        }
+        _setError(message ?? 'Failed to join the call.');
+      } catch (e, st) {
+        _logError('call-error handler', e, st);
       }
-      _setError(message ?? 'Failed to join the call.');
     });
 
-    // Peer toggled media
     _socket.on('peer-media-toggle', (data) {
-      notifyListeners();
+      try {
+        notifyListeners();
+      } catch (e, st) {
+        _logError('peer-media-toggle', e, st);
+      }
     });
 
-    // Peer left / call ended by other side
     _socket.on('call-ended', (data) {
-      _onCallEnded(remote: true);
+      unawaited(() async {
+        try {
+          await _onCallEnded(remote: true);
+        } catch (e, st) {
+          _logError('_onCallEnded(remote from call-ended)', e, st);
+        }
+      }());
     });
 
     _socket.on('peer-left', (data) {
-      _onCallEnded(remote: true);
+      unawaited(() async {
+        try {
+          await _onCallEnded(remote: true);
+        } catch (e, st) {
+          _logError('_onCallEnded(remote from peer-left)', e, st);
+        }
+      }());
     });
   }
 
-  // ═══════════════════════════════════════════════════════════
-  //  Controls
-  // ═══════════════════════════════════════════════════════════
   void toggleMic() {
-    _micMuted = !_micMuted;
-    _localStream?.getAudioTracks().forEach((t) => t.enabled = !_micMuted);
-    _socket.emit('media-toggle', {'roomId': _roomId, 'audio': !_micMuted, 'video': !_cameraOff});
-    notifyListeners();
-  }
-
-  void toggleCamera() {
-    _cameraOff = !_cameraOff;
-    _localStream?.getVideoTracks().forEach((t) => t.enabled = !_cameraOff);
-    _socket.emit('media-toggle', {'roomId': _roomId, 'audio': !_micMuted, 'video': !_cameraOff});
-    notifyListeners();
-  }
-
-  Future<void> switchCamera() async {
-    if (_callType != CallType.video) return;
-    final videoTracks = _localStream?.getVideoTracks();
-    if (videoTracks != null && videoTracks.isNotEmpty) {
-      await Helper.switchCamera(videoTracks.first);
+    try {
+      _micMuted = !_micMuted;
+      final stream = _localStream;
+      if (stream != null) {
+        for (final t in stream.getAudioTracks()) {
+          try {
+            t.enabled = !_micMuted;
+          } catch (e, st) {
+            _logError('toggleMic track', e, st);
+          }
+        }
+      }
+      _socket.emit('media-toggle', {
+        'roomId': _roomId,
+        'audio': !_micMuted,
+        'video': !_cameraOff,
+      });
+      notifyListeners();
+    } catch (e, st) {
+      _logError('toggleMic', e, st);
     }
   }
 
-  // ═══════════════════════════════════════════════════════════
-  //  End call
-  // ═══════════════════════════════════════════════════════════
+  void toggleCamera() {
+    try {
+      _cameraOff = !_cameraOff;
+      final stream = _localStream;
+      if (stream != null) {
+        for (final t in stream.getVideoTracks()) {
+          try {
+            t.enabled = !_cameraOff;
+          } catch (e, st) {
+            _logError('toggleCamera track', e, st);
+          }
+        }
+      }
+      _socket.emit('media-toggle', {
+        'roomId': _roomId,
+        'audio': !_micMuted,
+        'video': !_cameraOff,
+      });
+      notifyListeners();
+    } catch (e, st) {
+      _logError('toggleCamera', e, st);
+    }
+  }
+
+  Future<void> switchCamera() async {
+    try {
+      if (_callType != CallType.video) return;
+      final stream = _localStream;
+      final videoTracks = stream?.getVideoTracks();
+      if (videoTracks != null && videoTracks.isNotEmpty) {
+        await Helper.switchCamera(videoTracks.first);
+      }
+    } catch (e, st) {
+      _logError('switchCamera', e, st);
+    }
+  }
+
   Future<void> endCall() async {
-    _socket.emit('call-ended', {
-      'roomId':   _roomId,
-      'duration': _callDuration,
-    });
-    await _onCallEnded(remote: false);
+    try {
+      _socket.emit('call-ended', {
+        'roomId': _roomId,
+        'duration': _callDuration,
+      });
+      await _onCallEnded(remote: false);
+    } catch (e, st) {
+      _logError('endCall', e, st);
+    }
   }
 
-  /// Ends signaling state only — leaves PC/tracks alive so the browser [MediaRecorder]
-  /// can flush WebM after the call (see CallScreen._finalizeAndNavigate).
   Future<void> _onCallEnded({required bool remote}) async {
-    _isTearingDown = true;
-    _stopDurationTimer();
-    _setState(CallState.ended);
+    try {
+      _isTearingDown = true;
+      _stopDurationTimer();
+      _setState(CallState.ended);
+    } catch (e, st) {
+      _logError('_onCallEnded(remote=$remote)', e, st);
+    }
   }
 
-  /// Close peer connection and stop tracks — call after local recording is stopped.
+  /// Stops tracks and releases the native stream (flutter_webrtc Web best practice).
+  Future<void> _disposeStreamFully(MediaStream? stream) async {
+    if (stream == null) return;
+    try {
+      for (final t in stream.getTracks()) {
+        try {
+          t.stop();
+        } catch (e, st) {
+          _logError('_disposeStreamFully track.stop', e, st);
+        }
+      }
+    } catch (e, st) {
+      _logError('_disposeStreamFully getTracks', e, st);
+    }
+    try {
+      await stream.dispose();
+    } catch (e, st) {
+      _logError('_disposeStreamFully stream.dispose', e, st);
+    }
+  }
+
   Future<void> completeMediaTeardown() async {
     if (_mediaTornDown) return;
-    _mediaTornDown = true;
     try {
-      await _pc?.close();
-    } catch (_) {}
-    _pc = null;
-    try {
-      _localStream?.getTracks().forEach((t) => t.stop());
-    } catch (_) {}
-    _localStream = null;
-    try {
-      localRenderer.srcObject = null;
-      remoteRenderer.srcObject = null;
-    } catch (_) {}
-    // Do not notifyListeners here: [CallScreen] may be inside another listener
-    // callback / finalize path; re-entrant notify caused uncaught errors on web.
+      _mediaTornDown = true;
+      developer.log('Starting async media teardown', name: 'VETO.WebRTC');
+      final pc = _pc;
+      _pc = null;
+      if (pc != null) {
+        try {
+          await pc.close();
+        } catch (e, st) {
+          _logError('completeMediaTeardown pc.close', e, st);
+        }
+      }
+
+      final loc = _localStream;
+      _localStream = null;
+      await _disposeStreamFully(loc);
+
+      final rem = _remoteStream;
+      _remoteStream = null;
+      await _disposeStreamFully(rem);
+
+      try {
+        localRenderer.srcObject = null;
+        remoteRenderer.srcObject = null;
+      } catch (e, st) {
+        _logError('completeMediaTeardown renderer srcObject', e, st);
+      }
+      developer.log('Async media teardown complete', name: 'VETO.WebRTC');
+    } catch (e, st) {
+      _logError('completeMediaTeardown', e, st);
+    }
   }
 
+  /// Used from [dispose]: cannot await [close] / [MediaStream.dispose]; schedule async work.
   void _syncTeardownMedia() {
     if (_mediaTornDown) return;
-    _mediaTornDown = true;
     try {
-      _pc?.close();
-    } catch (_) {}
-    _pc = null;
-    try {
-      _localStream?.getTracks().forEach((t) => t.stop());
-    } catch (_) {}
-    _localStream = null;
-    try {
-      localRenderer.srcObject = null;
-      remoteRenderer.srcObject = null;
-    } catch (_) {}
+      _mediaTornDown = true;
+      developer.log('Starting sync-scheduled media teardown', name: 'VETO.WebRTC');
+      final pc = _pc;
+      _pc = null;
+      if (pc != null) {
+        unawaited(() async {
+          try {
+            await pc.close();
+          } catch (e, st) {
+            _logError('_syncTeardownMedia pc.close', e, st);
+          }
+        }());
+      }
+
+      final loc = _localStream;
+      _localStream = null;
+      unawaited(_disposeStreamFully(loc));
+
+      final rem = _remoteStream;
+      _remoteStream = null;
+      unawaited(_disposeStreamFully(rem));
+
+      try {
+        localRenderer.srcObject = null;
+        remoteRenderer.srcObject = null;
+      } catch (e, st) {
+        _logError('_syncTeardownMedia renderer srcObject', e, st);
+      }
+    } catch (e, st) {
+      _logError('_syncTeardownMedia', e, st);
+    }
   }
 
-  // ═══════════════════════════════════════════════════════════
-  //  Duration timer
-  // ═══════════════════════════════════════════════════════════
   void _startDurationTimer() {
-    _callDuration = 0;
-    _durationTimer = Timer.periodic(const Duration(seconds: 1), (_) {
-      _callDuration++;
-      notifyListeners();
-    });
+    try {
+      _callDuration = 0;
+      _durationTimer?.cancel();
+      _durationTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+        try {
+          _callDuration++;
+          notifyListeners();
+        } catch (e, st) {
+          _logError('_startDurationTimer tick', e, st);
+        }
+      });
+    } catch (e, st) {
+      _logError('_startDurationTimer', e, st);
+    }
   }
 
   void _stopDurationTimer() {
-    _durationTimer?.cancel();
-    _durationTimer = null;
+    try {
+      _durationTimer?.cancel();
+      _durationTimer = null;
+    } catch (e, st) {
+      _logError('_stopDurationTimer', e, st);
+    }
   }
 
   String get formattedDuration {
@@ -432,42 +613,59 @@ class WebRTCService extends ChangeNotifier {
     return '$minutes:$seconds';
   }
 
-  // ═══════════════════════════════════════════════════════════
-  //  Internal state setter
-  // ═══════════════════════════════════════════════════════════
   void _setState(CallState s) {
-    _state = s;
-    notifyListeners();
+    try {
+      _state = s;
+      notifyListeners();
+    } catch (e, st) {
+      _logError('_setState', e, st);
+    }
   }
 
   void _setError(String message) {
-    _errorMessage = message;
-    _state = CallState.error;
-    notifyListeners();
+    try {
+      _errorMessage = message;
+      _state = CallState.error;
+      notifyListeners();
+    } catch (e, st) {
+      _logError('_setError', e, st);
+    }
   }
 
-  // ═══════════════════════════════════════════════════════════
-  //  Dispose
-  // ═══════════════════════════════════════════════════════════
   @override
   void dispose() {
-    // Unregister all socket event listeners to avoid memory leaks
-    _socket.off('room-joined');
-    _socket.off('peer-joined');
-    _socket.off('webrtc-offer');
-    _socket.off('webrtc-answer');
-    _socket.off('ice-candidate');
-    _socket.off('call-error');
-    _socket.off('peer-media-toggle');
-    _socket.off('call-ended');
-    _socket.off('peer-left');
+    try {
+      _socket.off('room-joined');
+      _socket.off('peer-joined');
+      _socket.off('webrtc-offer');
+      _socket.off('webrtc-answer');
+      _socket.off('ice-candidate');
+      _socket.off('call-error');
+      _socket.off('peer-media-toggle');
+      _socket.off('call-ended');
+      _socket.off('peer-left');
+    } catch (e, st) {
+      _logError('dispose socket off', e, st);
+    }
 
-    _stopDurationTimer();
+    try {
+      _stopDurationTimer();
+    } catch (e, st) {
+      _logError('dispose _stopDurationTimer', e, st);
+    }
 
-    _syncTeardownMedia();
+    try {
+      _syncTeardownMedia();
+    } catch (e, st) {
+      _logError('dispose _syncTeardownMedia', e, st);
+    }
 
-    localRenderer.dispose();
-    remoteRenderer.dispose();
+    try {
+      localRenderer.dispose();
+      remoteRenderer.dispose();
+    } catch (e, st) {
+      _logError('dispose renderers', e, st);
+    }
 
     super.dispose();
   }
