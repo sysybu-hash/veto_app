@@ -647,13 +647,7 @@ class WebRTCService extends ChangeNotifier {
       final rem = _remoteStream;
       _remoteStream = null;
       unawaited(_disposeStreamFully(rem));
-
-      try {
-        localRenderer.srcObject = null;
-        remoteRenderer.srcObject = null;
-      } catch (e, st) {
-        _logError('_syncTeardownMedia renderer srcObject', e, st);
-      }
+      // Renderer srcObject / dispose: only in [dispose] via Future.delayed (Flutter Web DOM safety).
     } catch (e, st) {
       _logError('_syncTeardownMedia', e, st);
     }
@@ -735,19 +729,11 @@ class WebRTCService extends ChangeNotifier {
       _logError('dispose _unregisterCallSocketHandlers', e, st);
     }
 
-    // Capture renderers, detach <video> from stream before Flutter unmounts widgets.
     final lr = localRenderer;
     final rr = remoteRenderer;
-    try {
-      lr.srcObject = null;
-      rr.srcObject = null;
-    } catch (e, st) {
-      _logError('dispose renderers srcObject', e, st);
-    }
-
-    // Defer native renderer disposal — avoids Flutter Web childList / MutationObserver crash.
-    scheduleMicrotask(() {
+    Future<void>.delayed(Duration.zero, () {
       try {
+        lr.srcObject = null;
         lr.dispose();
       } catch (e, stack) {
         developer.log(
@@ -758,6 +744,7 @@ class WebRTCService extends ChangeNotifier {
         );
       }
       try {
+        rr.srcObject = null;
         rr.dispose();
       } catch (e, stack) {
         developer.log(

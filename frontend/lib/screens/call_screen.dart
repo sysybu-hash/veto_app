@@ -533,18 +533,17 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
     if (w != null) {
       try {
         w.removeListener(_onWebRTCUpdate);
-        w.localRenderer.srcObject = null;
-        w.remoteRenderer.srcObject = null;
-        scheduleMicrotask(() {
+        final svc = w;
+        Future<void>.delayed(Duration.zero, () {
           try {
-            w.dispose();
+            svc.dispose();
             developer.log(
-              'WebRTCService disposed successfully in microtask',
+              'WebRTCService disposed successfully after frame',
               name: 'VETO.CallScreen',
             );
           } catch (e, stack) {
             developer.log(
-              'Error disposing WebRTC service in microtask',
+              'Error disposing WebRTC service (deferred)',
               name: 'VETO.CallScreen',
               error: e,
               stackTrace: stack,

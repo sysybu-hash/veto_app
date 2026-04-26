@@ -518,15 +518,28 @@ function userStop() {
   }, 2800);
 }
 
-const _AC = typeof AudioContext !== "undefined" ? AudioContext : typeof window !== "undefined" ? window.webkitAudioContext : null;
-const supported =
-  typeof navigator !== "undefined" &&
-  !!navigator.mediaDevices &&
-  typeof navigator.mediaDevices.getUserMedia === "function" &&
-  !!_AC &&
-  (typeof _AC.prototype.audioWorklet !== "undefined" ||
-    typeof _AC.prototype.createScriptProcessor === "function") &&
-  (typeof isSecureContext === "undefined" || isSecureContext);
+// Do not read AudioContext.prototype.audioWorklet — some browsers invoke a getter that
+// requires a real instance as |this|, which throws TypeError: Illegal invocation.
+const supported = (function () {
+  try {
+    if (typeof navigator === "undefined" || !navigator.mediaDevices) return false;
+    if (typeof navigator.mediaDevices.getUserMedia !== "function") return false;
+    const AC = typeof AudioContext !== "undefined" ? AudioContext : typeof window !== "undefined" ? window.webkitAudioContext : null;
+    if (!AC) return false;
+    const hasWorklet = typeof AudioWorkletNode !== "undefined";
+    let hasScriptProcessor = false;
+    try {
+      hasScriptProcessor = typeof AC.prototype.createScriptProcessor === "function";
+    } catch (_) {
+      hasScriptProcessor = false;
+    }
+    if (!hasWorklet && !hasScriptProcessor) return false;
+    if (typeof isSecureContext !== "undefined" && !isSecureContext) return false;
+    return true;
+  } catch (_) {
+    return false;
+  }
+})();
 
 if (!window["vetoGeminiLive"] || typeof window["vetoGeminiLive"] !== "object") {
   window["vetoGeminiLive"] = {};
