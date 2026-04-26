@@ -79,6 +79,17 @@ class _VetoScreenState extends State<VetoScreen> {
   String get _sLabel =>
       _langKey == 'ru' ? _s.ru : _langKey == 'en' ? _s.en : _s.he;
 
+  /// Web Gemini Live: replaces generic hint while mic session is active.
+  String get _geminiLiveInputHint {
+    if (_langKey == 'ru') {
+      return 'Голосовой режим Gemini Live — нажмите микрофон ещё раз, чтобы остановить';
+    }
+    if (_langKey == 'en') {
+      return 'Gemini Live voice — tap the mic again to stop';
+    }
+    return 'שיחה קולית (Gemini Live) — הקש שוב על המיקרופון לסיום';
+  }
+
   @override
   void initState() {
     super.initState();
@@ -2455,7 +2466,11 @@ class _VetoScreenState extends State<VetoScreen> {
               textDirection: isRtl ? TextDirection.rtl : TextDirection.ltr,
               style: const TextStyle(color: VetoGlassTokens.textPrimary, fontSize: 14),
               decoration: InputDecoration(
-                hintText: _isDispatching ? _l.dispatching : _l.hint,
+                hintText: _isDispatching
+                    ? _l.dispatching
+                    : (_isListening && _liveSessionActive && kIsWeb
+                        ? _geminiLiveInputHint
+                        : _l.hint),
                 hintStyle: const TextStyle(color: VetoGlassTokens.textMuted),
                 filled: true,
                 fillColor: VetoGlassTokens.glassFill,

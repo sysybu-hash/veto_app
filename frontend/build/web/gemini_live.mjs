@@ -2,7 +2,7 @@
  * VETO — Gemini Multimodal Live (native AUDIO) in the browser.
  * Ephemeral token from POST /api/ai/live-token (v1alpha). No API key in the page.
  *
- * Input: 16 kHz mono 16-bit LE PCM (ScriptProcessor resample from mic).
+ * Input: 16 kHz mono s16le via AudioWorklet (gemini_live_capture.worklet.js); ScriptProcessor fallback only if worklet fails.
  * Output: 24 kHz model PCM from inlineData → Web Audio API scheduling.
  * Flutter: receives LIVE:{ u, m, nativeAudio } — m from outputAudioTranscription; skip vetoTTS when nativeAudio.
  */
@@ -121,6 +121,15 @@ function onServerMessage(st, msg) {
 }
 
 function teardownCapture(st) {
+  try {
+    if (st.workletNode) {
+      st.workletNode.port.onmessage = null;
+      st.workletNode.disconnect();
+    }
+  } catch (_) {
+    // ignore
+  }
+  st.workletNode = null;
   try {
     if (st.scriptNode) {
       st.scriptNode.disconnect();
@@ -265,11 +274,28 @@ function guardLiveConnSend(st, session) {
   }
 }
 
-function startPcmMic(stream, session, st) {
-  const AC = getAudioContextCtor();
-  if (!AC) throw new Error("no_audio_context");
-  const ac = new AC();
-  st.captureCtx = ac;
+function sendPcmChunk(session, st, i16) {
+  if (!i16 || i16.length === 0 || st.done || st._micStopped) return;
+  const u8 = new Uint8Array(i16.buffer, i16.byteOffset, i16.byteLength);
+  let bin = "";
+  for (let j = 0; j < u8.length; j++) bin += String.fromCharCode(u8[j]);
+  const b64 = btoa(bin);
+  try {
+    session.sendRealtimeInput({ audio: { data: b64, mimeType: "audio/pcm;rate=16000" } });
+  } catch (err) {
+    if (st.done || st._micStopped) return;
+    st._micStopped = true;
+    try {
+      teardownCapture(st);
+    } catch (_) {
+      // ignore
+    }
+    finalize(st, err && err.message ? err.message : String(err));
+  }
+}
+
+/** Legacy path — only if AudioWorklet addModule / node fails. */
+function startPcmMicScriptProcessor(stream, session, st, ac) {
   const src = ac.createMediaStreamSource(stream);
   st.mediaSourceNode = src;
   const bufferSize = 4096;
@@ -293,26 +319,60 @@ function startPcmMic(stream, session, st) {
       s = Math.max(-1, Math.min(1, s));
       i16[i] = s < 0 ? s * 32768 : s * 32767;
     }
-    const u8 = new Uint8Array(i16.buffer);
-    let bin = "";
-    for (let j = 0; j < u8.length; j++) bin += String.fromCharCode(u8[j]);
-    const b64 = btoa(bin);
-    try {
-      session.sendRealtimeInput({ audio: { data: b64, mimeType: "audio/pcm;rate=16000" } });
-    } catch (err) {
-      if (st.done || st._micStopped) return;
-      st._micStopped = true;
-      try {
-        teardownCapture(st);
-      } catch (_) {
-        // ignore
-      }
-      finalize(st, err && err.message ? err.message : String(err));
-    }
+    sendPcmChunk(session, st, i16);
   };
   src.connect(proc);
   proc.connect(mute);
   mute.connect(ac.destination);
+}
+
+async function startPcmMic(stream, session, st) {
+  const AC = getAudioContextCtor();
+  if (!AC) throw new Error("no_audio_context");
+  const ac = new AC();
+  st.captureCtx = ac;
+  const canWorklet =
+    ac.audioWorklet && typeof ac.audioWorklet.addModule === "function" && typeof AudioWorkletNode === "function";
+
+  if (canWorklet) {
+    try {
+      const modUrl = new URL("gemini_live_capture.worklet.js", import.meta.url).href;
+      await ac.audioWorklet.addModule(modUrl);
+      const src = ac.createMediaStreamSource(stream);
+      st.mediaSourceNode = src;
+      const node = new AudioWorkletNode(ac, "veto-gemini-capture", { numberOfInputs: 1, numberOfOutputs: 1, channelCount: 1 });
+      st.workletNode = node;
+      node.port.onmessage = function (ev) {
+        if (st.done || st._micStopped) return;
+        const buf = ev.data;
+        if (!buf || !(buf instanceof ArrayBuffer)) return;
+        sendPcmChunk(session, st, new Int16Array(buf));
+      };
+      const mute = ac.createGain();
+      mute.gain.value = 0;
+      src.connect(node);
+      node.connect(mute);
+      mute.connect(ac.destination);
+      await ac.resume().catch(() => {});
+      return;
+    } catch (e) {
+      console.warn("[VETO Gemini Live] AudioWorklet unavailable, fallback:", e && e.message ? e.message : e);
+      try {
+        if (st.workletNode) {
+          st.workletNode.port.onmessage = null;
+          st.workletNode.disconnect();
+        }
+      } catch (_) {}
+      st.workletNode = null;
+      try {
+        if (st.mediaSourceNode) st.mediaSourceNode.disconnect();
+      } catch (_) {}
+      st.mediaSourceNode = null;
+    }
+  }
+
+  startPcmMicScriptProcessor(stream, session, st, ac);
+  await ac.resume().catch(() => {});
 }
 
 async function startSession(lang, jwt, apiBase) {
@@ -344,6 +404,7 @@ async function startSession(lang, jwt, apiBase) {
     stream: null,
     captureCtx: null,
     mediaSourceNode: null,
+    workletNode: null,
     scriptNode: null,
     playbackCtx: null,
     _nextPlay: null,
@@ -382,7 +443,7 @@ async function startSession(lang, jwt, apiBase) {
   });
   st.session = session;
   guardLiveConnSend(st, session);
-  startPcmMic(media, session, st);
+  await startPcmMic(media, session, st);
 }
 
 function userStop() {
@@ -405,7 +466,8 @@ const supported =
   !!navigator.mediaDevices &&
   typeof navigator.mediaDevices.getUserMedia === "function" &&
   !!_AC &&
-  typeof _AC.prototype.createScriptProcessor === "function" &&
+  (typeof _AC.prototype.audioWorklet !== "undefined" ||
+    typeof _AC.prototype.createScriptProcessor === "function") &&
   (typeof isSecureContext === "undefined" || isSecureContext);
 
 if (!window["vetoGeminiLive"] || typeof window["vetoGeminiLive"] !== "object") {
