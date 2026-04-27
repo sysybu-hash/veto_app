@@ -66,4 +66,28 @@ async function sendToMany(lawyers, payload) {
   );
 }
 
-module.exports = { sendToLawyer, sendToMany, VAPID_PUBLIC_KEY: () => process.env.VAPID_PUBLIC_KEY };
+/**
+ * @param {Object} user - Mongoose User document (select +push_subscription)
+ */
+async function sendToUser(user, { title, body, data = {} }) {
+  if (!configure()) return { sent: false, reason: 'VAPID not configured' };
+  if (!user || !user.push_subscription) return { sent: false, reason: 'no subscription' };
+  const User = require('../models/User');
+  try {
+    await webpush.sendNotification(user.push_subscription, JSON.stringify({ title, body, data }));
+    return { sent: true };
+  } catch (err) {
+    if (err.statusCode === 410 || err.statusCode === 404) {
+      await User.findByIdAndUpdate(user._id, { $unset: { push_subscription: 1 } });
+    }
+    console.error(`[PUSH] Failed for user ${user._id}:`, err.message);
+    return { sent: false, reason: err.message };
+  }
+}
+
+module.exports = {
+  sendToLawyer,
+  sendToMany,
+  sendToUser,
+  VAPID_PUBLIC_KEY: () => process.env.VAPID_PUBLIC_KEY,
+};

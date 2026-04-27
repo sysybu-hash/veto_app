@@ -34,6 +34,7 @@ git push origin main
 ```
 
 > ⚠️ `backend/.env` כבר ב-`.gitignore` — לא יעלה ל-GitHub.  
+> **מפה לפירוט משתנים + לינקים (כולל מסלול בלי Firebase):** [backend/ENV_GUIDE.md](backend/ENV_GUIDE.md) ו־[backend/.env.example](backend/.env.example).  
 > ✅ `frontend/build/web/` **כן** עולה (הוחרג מה-gitignore) — Vercel יגיש אותו ישירות.
 
 ---

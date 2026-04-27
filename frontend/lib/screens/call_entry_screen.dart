@@ -1,6 +1,5 @@
 // ============================================================
-//  call_entry_screen.dart — Routes /call to chat (WebRTC room
-//  signaling only) or to Agora for real-time audio/video.
+//  call_entry_screen.dart — Routes /call: text chat or Agora A/V.
 // ============================================================
 
 import 'package:flutter/material.dart';
@@ -44,6 +43,8 @@ class CallEntryScreen extends StatelessWidget {
 
     return AgoraCallScreen(
       channelId: roomId,
+      eventId: args['eventId']?.toString() ?? roomId,
+      language: args['language']?.toString() ?? 'he',
       token: args['agoraToken']?.toString() ?? '',
       peerLabel: args['peerName']?.toString() ?? 'Peer',
       wantVideo: ct == 'video',

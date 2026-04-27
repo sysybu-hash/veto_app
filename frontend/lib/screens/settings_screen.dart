@@ -15,8 +15,6 @@ import '../core/i18n/app_language.dart';
 import '../core/theme/veto_glass_system.dart';
 import '../core/theme/veto_theme.dart';
 import '../services/auth_service.dart';
-import '../services/webrtc_settings_store.dart';
-import '../services/webrtc_user_settings.dart';
 
 // ── i18n ──────────────────────────────────────────────────────
 const _i18n = {
@@ -63,6 +61,9 @@ const _i18n = {
     'planFree': 'חינמי',
     'planBasic': 'בסיסי',
     'planPro': 'מקצועי',
+    'agoraCallTitle': 'שיחות וידאו/אודיו (Agora)',
+    'agoraCallBody':
+        'שיחות הווידאו והאודיו ב-VETO מנותבות דרך Agora. אין צורך בהגדרת STUN/TURN ידנית. ודאו הרשאות מצלמה ומיקרופן במכשיר.',
     'webrtcTitle': 'שיחות WebRTC',
     'webrtcHint': 'חל על השיחה הבאה. STUN מההגדרות כאן; אם בשרת הוגדרו TURN/ICE (משתני סביבה), הם יתווספו אוטומטית לשיחה.',
     'webrtcIce': 'רשימת STUN',
@@ -139,6 +140,9 @@ const _i18n = {
     'planFree': 'Free',
     'planBasic': 'Basic',
     'planPro': 'Pro',
+    'agoraCallTitle': 'Video/audio calls (Agora)',
+    'agoraCallBody':
+        'VETO routes video and audio calls through Agora RTC. No manual STUN/TURN settings are required. Allow camera and microphone in your browser or device settings.',
     'webrtcTitle': 'WebRTC calls',
     'webrtcHint': 'Applies to the next call. STUN from here; if the backend exposes TURN/ICE env vars, they are merged automatically.',
     'webrtcIce': 'STUN server set',
@@ -215,6 +219,9 @@ const _i18n = {
     'planFree': 'Бесплатный',
     'planBasic': 'Базовый',
     'planPro': 'Pro',
+    'agoraCallTitle': 'Видео/аудио (Agora)',
+    'agoraCallBody':
+        'Звонки VETO идут через Agora RTC. Ручная настройка STUN/TURN не нужна. Разрешите камеру и микрофон в настройках устройства или браузера.',
     'webrtcTitle': 'Звонки WebRTC',
     'webrtcHint': 'Со следующего звонка. STUN — здесь; TURN/ICE с сервера (env) подмешиваются автоматически.',
     'webrtcIce': 'Набор STUN',
@@ -252,12 +259,6 @@ const _i18n = {
 
 String _t(String code, String key) =>
     (_i18n[code] ?? _i18n['en']!)[key] ?? key;
-
-String _webrtcVideoPreset(WebRtcUserSettings w) {
-  if (w.videoWidth >= 1920 && w.videoHeight >= 1000) return 'fhd';
-  if (w.videoWidth <= 854 && w.videoHeight <= 520) return 'sd';
-  return 'hd';
-}
 
 // ── Screen ────────────────────────────────────────────────────
 class SettingsScreen extends StatefulWidget {
@@ -298,10 +299,7 @@ class _SettingsScreenState extends State<SettingsScreen>
   late TextEditingController _maxFileSizeCtrl;
   late TextEditingController _defaultQuotaCtrl;
 
-  // WebRTC (local prefs — not sent to API)
-  WebRtcUserSettings _webrtc = WebRtcUserSettings.defaults();
-
-  /// Wizard: 0 general → 1 WebRTC → 2 account & safety
+  /// Wizard: 0 general → 1 call stack → 2 account & safety
   late TabController _wizardTab;
 
   @override
@@ -389,10 +387,6 @@ class _SettingsScreenState extends State<SettingsScreen>
         }
       }
     } catch (_) {}
-    try {
-      final w = await WebRtcSettingsStore.instance.load();
-      if (mounted) setState(() => _webrtc = w);
-    } catch (_) {}
     if (mounted) setState(() => _loading = false);
   }
 
@@ -440,7 +434,6 @@ class _SettingsScreenState extends State<SettingsScreen>
         ).timeout(const Duration(seconds: 10));
       }
 
-      await WebRtcSettingsStore.instance.save(_webrtc);
       _snack(_t(code, 'saved'));
     } catch (_) {}
     finally {
@@ -699,280 +692,24 @@ class _SettingsScreenState extends State<SettingsScreen>
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                  // ── WebRTC (audio/video calls) ───────────
+                  // ── Agora: video/audio path (no manual ICE) ─
                   _Section(
                     icon: Icons.video_call_rounded,
-                    title: _t(code, 'webrtcTitle'),
+                    title: _t(code, 'agoraCallTitle'),
                     children: [
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
-                          child: Text(
-                            _t(code, 'webrtcHint'),
-                            style: const TextStyle(
-                              color: VetoGlassTokens.textMuted,
-                              fontSize: 12,
-                              height: 1.45,
-                            ),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+                        child: Text(
+                          _t(code, 'agoraCallBody'),
+                          style: const TextStyle(
+                            color: VetoGlassTokens.textMuted,
+                            fontSize: 12,
+                            height: 1.45,
                           ),
                         ),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                _t(code, 'webrtcIce'),
-                                style: const TextStyle(
-                                    color: VetoGlassTokens.textMuted, fontSize: 13),
-                              ),
-                              const SizedBox(height: 4),
-                              DropdownButton<WebRtcIcePreset>(
-                                isExpanded: true,
-                                value: _webrtc.icePreset,
-                                borderRadius: BorderRadius.circular(10),
-                                dropdownColor: VetoGlassTokens.menuPanel,
-                                style: const TextStyle(
-                                    color: VetoGlassTokens.textPrimary, fontSize: 14),
-                                items: [
-                                  DropdownMenuItem(
-                                    value: WebRtcIcePreset.minimal,
-                                    child: Text(_t(code, 'webrtcIceMin')),
-                                  ),
-                                  DropdownMenuItem(
-                                    value: WebRtcIcePreset.extended,
-                                    child: Text(_t(code, 'webrtcIceExt')),
-                                  ),
-                                ],
-                                onChanged: (v) {
-                                  if (v == null) return;
-                                  setState(
-                                      () => _webrtc = _webrtc.copyWith(icePreset: v));
-                                },
-                              ),
-                            ],
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                '${_t(code, 'webrtcPool')}: ${_webrtc.iceCandidatePoolSize}',
-                                style: const TextStyle(
-                                    color: VetoGlassTokens.textPrimary,
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w600),
-                              ),
-                              Slider.adaptive(
-                                value: _webrtc.iceCandidatePoolSize.toDouble(),
-                                min: 0,
-                                max: 30,
-                                divisions: 30,
-                                label: '${_webrtc.iceCandidatePoolSize}',
-                                onChanged: (v) => setState(() => _webrtc =
-                                    _webrtc.copyWith(
-                                        iceCandidatePoolSize: v.round())),
-                              ),
-                            ],
-                          ),
-                        ),
-                        _ToggleTile(
-                          label: _t(code, 'webrtcEcho'),
-                          icon: Icons.hearing_rounded,
-                          color: VetoPalette.primary,
-                          value: _webrtc.echoCancellation,
-                          onChanged: (v) => setState(
-                              () => _webrtc = _webrtc.copyWith(echoCancellation: v)),
-                        ),
-                        _ToggleTile(
-                          label: _t(code, 'webrtcNoise'),
-                          icon: Icons.graphic_eq_rounded,
-                          color: VetoPalette.primary,
-                          value: _webrtc.noiseSuppression,
-                          onChanged: (v) => setState(
-                              () => _webrtc = _webrtc.copyWith(noiseSuppression: v)),
-                        ),
-                        _ToggleTile(
-                          label: _t(code, 'webrtcAgc'),
-                          icon: Icons.trending_up_rounded,
-                          color: VetoPalette.primary,
-                          value: _webrtc.autoGainControl,
-                          onChanged: (v) => setState(
-                              () => _webrtc = _webrtc.copyWith(autoGainControl: v)),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                _t(code, 'webrtcRes'),
-                                style: const TextStyle(
-                                    color: VetoGlassTokens.textMuted, fontSize: 13),
-                              ),
-                              const SizedBox(height: 4),
-                              DropdownButton<String>(
-                                isExpanded: true,
-                                value: _webrtcVideoPreset(_webrtc),
-                                borderRadius: BorderRadius.circular(10),
-                                dropdownColor: VetoGlassTokens.menuPanel,
-                                style: const TextStyle(
-                                    color: VetoGlassTokens.textPrimary, fontSize: 14),
-                                items: [
-                                  DropdownMenuItem(
-                                    value: 'sd',
-                                    child: Text(_t(code, 'webrtcResSd')),
-                                  ),
-                                  DropdownMenuItem(
-                                    value: 'hd',
-                                    child: Text(_t(code, 'webrtcResHd')),
-                                  ),
-                                  DropdownMenuItem(
-                                    value: 'fhd',
-                                    child: Text(_t(code, 'webrtcResFhd')),
-                                  ),
-                                ],
-                                onChanged: (v) {
-                                  if (v == null) return;
-                                  setState(() {
-                                    switch (v) {
-                                      case 'sd':
-                                        _webrtc = _webrtc.copyWith(
-                                            videoWidth: 640, videoHeight: 480);
-                                        break;
-                                      case 'fhd':
-                                        _webrtc = _webrtc.copyWith(
-                                            videoWidth: 1920,
-                                            videoHeight: 1080);
-                                        break;
-                                      case 'hd':
-                                        _webrtc = _webrtc.copyWith(
-                                            videoWidth: 1280, videoHeight: 720);
-                                    }
-                                  });
-                                },
-                              ),
-                            ],
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                _t(code, 'webrtcFacing'),
-                                style: const TextStyle(
-                                    color: VetoGlassTokens.textMuted, fontSize: 13),
-                              ),
-                              const SizedBox(height: 4),
-                              DropdownButton<String>(
-                                isExpanded: true,
-                                value: _webrtc.facingMode,
-                                borderRadius: BorderRadius.circular(10),
-                                dropdownColor: VetoGlassTokens.menuPanel,
-                                style: const TextStyle(
-                                    color: VetoGlassTokens.textPrimary, fontSize: 14),
-                                items: [
-                                  DropdownMenuItem(
-                                    value: 'user',
-                                    child: Text(_t(code, 'webrtcFacingUser')),
-                                  ),
-                                  DropdownMenuItem(
-                                    value: 'environment',
-                                    child: Text(_t(code, 'webrtcFacingEnv')),
-                                  ),
-                                ],
-                                onChanged: (v) {
-                                  if (v == null) return;
-                                  setState(() =>
-                                      _webrtc = _webrtc.copyWith(facingMode: v));
-                                },
-                              ),
-                            ],
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                _t(code, 'webrtcBundle'),
-                                style: const TextStyle(
-                                    color: VetoGlassTokens.textMuted, fontSize: 13),
-                              ),
-                              const SizedBox(height: 4),
-                              DropdownButton<String>(
-                                isExpanded: true,
-                                value: _webrtc.bundlePolicy,
-                                borderRadius: BorderRadius.circular(10),
-                                dropdownColor: VetoGlassTokens.menuPanel,
-                                style: const TextStyle(
-                                    color: VetoGlassTokens.textPrimary, fontSize: 14),
-                                items: [
-                                  DropdownMenuItem(
-                                    value: 'balanced',
-                                    child: Text(_t(code, 'webrtcBundleBalanced')),
-                                  ),
-                                  DropdownMenuItem(
-                                    value: 'max-bundle',
-                                    child: Text(_t(code, 'webrtcBundleMaxBundle')),
-                                  ),
-                                  DropdownMenuItem(
-                                    value: 'max-compat',
-                                    child: Text(_t(code, 'webrtcBundleMaxCompat')),
-                                  ),
-                                ],
-                                onChanged: (v) {
-                                  if (v == null) return;
-                                  setState(() => _webrtc =
-                                      _webrtc.copyWith(bundlePolicy: v));
-                                },
-                              ),
-                            ],
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                _t(code, 'webrtcMux'),
-                                style: const TextStyle(
-                                    color: VetoGlassTokens.textMuted, fontSize: 13),
-                              ),
-                              const SizedBox(height: 4),
-                              DropdownButton<String>(
-                                isExpanded: true,
-                                value: _webrtc.rtcpMuxPolicy,
-                                borderRadius: BorderRadius.circular(10),
-                                dropdownColor: VetoGlassTokens.menuPanel,
-                                style: const TextStyle(
-                                    color: VetoGlassTokens.textPrimary, fontSize: 14),
-                                items: [
-                                  DropdownMenuItem(
-                                    value: 'require',
-                                    child: Text(_t(code, 'webrtcMuxReq')),
-                                  ),
-                                  DropdownMenuItem(
-                                    value: 'negotiate',
-                                    child: Text(_t(code, 'webrtcMuxNeg')),
-                                  ),
-                                ],
-                                onChanged: (v) {
-                                  if (v == null) return;
-                                  setState(() => _webrtc =
-                                      _webrtc.copyWith(rtcpMuxPolicy: v));
-                                },
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
+                      ),
+                    ],
+                  ),
                   const SizedBox(height: 16),
                     ],
                   ),

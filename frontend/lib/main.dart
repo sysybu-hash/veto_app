@@ -25,6 +25,8 @@ import 'screens/profile_screen.dart';
 import 'screens/admin_settings_screen.dart';
 import 'screens/wizard/wizard_shell_screen.dart';
 import 'screens/files_vault_screen.dart';
+import 'screens/legal_calendar_screen.dart';
+import 'screens/legal_notebook_screen.dart';
 import 'screens/admin_dashboard.dart';
 import 'screens/subscription_admin_screen.dart';
 import 'screens/settings_screen.dart';
@@ -130,6 +132,8 @@ final Map<String, WidgetBuilder> vetoAppRoutes = <String, WidgetBuilder>{
   '/profile': (_) => const ProfileScreen(),
   '/admin_settings': (_) => const AdminSettingsScreen(),
   '/files_vault': (_) => const FilesVaultScreen(),
+  '/legal_calendar': (_) => const LegalCalendarScreen(),
+  '/legal_notebook': (_) => const LegalNotebookScreen(),
   '/admin_dashboard': (_) => const AdminDashboard(),
   '/admin_subscriptions': (_) => const SubscriptionAdminScreen(),
   '/settings': (_) => const SettingsScreen(),

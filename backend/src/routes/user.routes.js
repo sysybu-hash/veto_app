@@ -86,4 +86,33 @@ router.put('/location', async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
+// POST /api/users/push-subscription — Web Push (VAPID) for client users
+router.post('/push-subscription', async (req, res, next) => {
+  try {
+    if (req.user.role === 'lawyer') {
+      return res.status(400).json({ error: 'Lawyers use /api/lawyers/push-subscription' });
+    }
+    const { subscription } = req.body;
+    await User.findByIdAndUpdate(req.user.userId, {
+      push_subscription: subscription || null,
+    });
+    res.json({ message: subscription ? 'Push subscription saved.' : 'Push subscription cleared.' });
+  } catch (err) { next(err); }
+});
+
+// POST /api/users/fcm-token — Firebase Cloud Messaging (mobile)
+router.post('/fcm-token', async (req, res, next) => {
+  try {
+    if (req.user.role === 'lawyer') {
+      const { token } = req.body;
+      const Lawyer = require('../models/Lawyer');
+      await Lawyer.findByIdAndUpdate(req.user.userId, { fcm_token: token || null });
+      return res.json({ message: token ? 'FCM token saved.' : 'FCM token cleared.' });
+    }
+    const { token } = req.body;
+    await User.findByIdAndUpdate(req.user.userId, { fcm_token: token || null });
+    res.json({ message: token ? 'FCM token saved.' : 'FCM token cleared.' });
+  } catch (err) { next(err); }
+});
+
 module.exports = router;

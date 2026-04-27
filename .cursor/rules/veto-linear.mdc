@@ -1,0 +1,19 @@
+---
+description: Linear MCP — only veto_legal workspace (team VET)
+alwaysApply: true
+---
+
+# VETO legal — Linear (this repo only)
+
+This Cursor workspace maps to the **veto_legal** product and the Linear workspace **`veto-legal`** (URL slug), team **`Veto_legal`**, issue prefix **`VET`**.
+
+## When using Linear MCP tools (`plugin-linear-linear`)
+
+- **Only** read or write issues, projects, documents, and comments under team **`Veto_legal`** or key **`VET`**.
+- **Do not** use other Linear teams or workspaces from this repo (e.g. do not target **`Bsd-ybm`**, **`BSD-*`**, or any team that is not VETO).
+- When creating issues, **`team` must be `Veto_legal` or `VET`** (per tool schema).
+- If `list_teams` or queries do not show **`Veto_legal` / `VET`**, stop and tell the user the MCP session is bound to the wrong Linear workspace — they must reconnect Linear in Cursor while logged into **veto-legal** in the browser (see Linear integration / sign out & authorize again). Do not fall back to another team.
+
+## Issue identifiers
+
+- Valid issue IDs for this product look like **`VET-123`**. Treat **`BSD-*`** or other prefixes as **out of scope** for this repository unless the user explicitly asks to work on another workspace.

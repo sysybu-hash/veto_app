@@ -12,9 +12,13 @@ import 'support/pump_veto_test_app.dart';
 const _kSmokeRoutes = <String>[
   '/landing',
   '/login',
+  '/wizard_home',
+  '/veto_screen',
   '/profile',
   '/admin_settings',
   '/files_vault',
+  '/legal_calendar',
+  '/legal_notebook',
   '/admin_dashboard',
   '/admin_subscriptions',
   '/settings',

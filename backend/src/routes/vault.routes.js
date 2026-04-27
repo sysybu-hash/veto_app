@@ -4,13 +4,18 @@ const multer = require('multer');
 const { protect, authorize } = require('../middleware/auth.middleware');
 const {
   getFiles, deleteFile, updateFileAccess, analyzeFile,
-  getCases, createCase, updateCase, deleteCase, updateFile, getSharedFiles
+  getCases, createCase, updateCase, deleteCase, updateFile, getSharedFiles,
+  getFolders, createFolder, updateFolder, deleteFolder,
 } = require('../controllers/vault.controller');
 
 // Secure all routes with protect middleware
 router.use(protect);
 
 router.get('/files', getFiles);
+router.get('/folders', getFolders);
+router.post('/folders', createFolder);
+router.patch('/folders/:folderId', updateFolder);
+router.delete('/folders/:folderId', deleteFolder);
 router.delete('/files/:fileId', deleteFile);
 router.patch('/files/:fileId/access', updateFileAccess);
 router.patch('/files/:fileId', updateFile);
@@ -55,12 +60,24 @@ router.post('/files/upload', upload.single('file'), async (req, res, next) => {
     if (cloudUrl.startsWith('http://res.cloudinary')) cloudUrl = cloudUrl.replace('http:', 'https:');
 
     const VaultFile = require('../models/VaultFile');
+    const { folderId } = req.body;
+    let folderObjectId = null;
+    if (folderId && String(folderId) !== 'null' && String(folderId) !== '') {
+      const VaultFolder = require('../models/VaultFolder');
+      const mongoose = require('mongoose');
+      if (mongoose.Types.ObjectId.isValid(String(folderId))) {
+        const f = await VaultFolder.findOne({ _id: folderId, user_id: req.user.userId });
+        if (f) folderObjectId = f._id;
+      }
+    }
+
     const file = await VaultFile.create({
       user_id: req.user.userId,
       name: req.body.name || req.file.originalname,
       mimeType: req.body.mimeType || req.file.mimetype,
       url: cloudUrl,
       sizeBytes: req.file.size,
+      folderId: folderObjectId,
     });
 
     res.status(201).json(file);

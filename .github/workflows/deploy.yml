@@ -67,8 +67,26 @@ jobs:
             --dart-define=VETO_API_BASE=${{ env.VETO_API_BASE }} \
             --dart-define=VETO_BUILD_ID=$SHORT_SHA
 
+      - name: Verify web bundle for Vercel
+        working-directory: frontend
+        run: |
+          set -e
+          test -f build/web/index.html || (echo "Missing build/web — Vercel buildCommand will fail." && exit 1)
+          ls -la build/web/index.html
+
       # Deploy from frontend/ so frontend/vercel.json + build/web match Vercel "Root Directory: frontend".
-      # Explicit npx vercel@latest avoids amondnet/vercel-action pinning CLI 25.x (API now requires ≥47.2.2).
+      # Secrets: VERCEL_TOKEN = Account → Tokens.
+      # VERCEL_ORG_ID = Team ID (Settings → your team → General → "Team ID", usually team_...),
+      #   NOT the project slug and NOT the Project ID.
+      # VERCEL_PROJECT_ID = Project → Settings → General → "Project ID" (prj_...).
+      - name: Vercel CLI (auth check)
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        working-directory: frontend
+        run: |
+          set -e
+          npx --yes vercel@latest --version
+          npx --yes vercel@latest whoami
       - name: Deploy to Vercel
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
@@ -77,5 +95,4 @@ jobs:
         working-directory: frontend
         run: |
           set -e
-          npx --yes vercel@latest --version
           npx --yes vercel@latest deploy --prod --yes

@@ -14,6 +14,7 @@
 #
 #  URL לאחר deploy:  https://veto-app-new.onrender.com
 #  בדיקת בריאות:     https://veto-app-new.onrender.com/health
+#  משתני סביבה (מסלול בלי Firebase): backend/ENV_GUIDE.md
 # ============================================================
 
 services:
@@ -67,6 +68,13 @@ services:
         sync: false
       - key: CLOUDINARY_API_SECRET
         sync: false
+
+      # ── Optional: calendar email (ICS) + FCM (replace placeholder google-services) ─
+      # - key: PUBLIC_API_BASE
+      #   value: https://veto-app-new.onrender.com
+      # - key: SMTP_HOST, SMTP_PORT, SMTP_FROM, SMTP_USER, SMTP_PASS
+      # - key: FIREBASE_SERVICE_ACCOUNT
+      #   sync: false
 
       # ── Web Push (VAPID) ──────────────────────────────────────
       - key: VAPID_PUBLIC_KEY

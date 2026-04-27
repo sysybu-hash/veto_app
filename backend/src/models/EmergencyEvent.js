@@ -155,7 +155,7 @@ const EmergencyEventSchema = new mongoose.Schema(
     // ── Call Info ─────────────────────────────────────────────
     call_type: {
       type: String,
-      enum: ['video', 'audio', 'webrtc', 'chat', 'pending'],
+      enum: ['video', 'audio', 'chat', 'pending'],
       default: 'pending',
     },
 

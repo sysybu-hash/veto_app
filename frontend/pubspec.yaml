@@ -32,10 +32,6 @@ dependencies:
   # ── Socket.io (real-time dispatch) ──────────────────────────
   socket_io_client: ^2.0.3+1
 
-  # ── WebRTC (in-app audio/video calls) ───────────────────────
-  flutter_webrtc: ^1.4.1
-  # Peer-to-peer WebRTC calls — web + iOS + Android
-
   # ── Agora RTC (optional stable path for video; configure App ID) ──
   agora_rtc_engine: ^6.3.2
 
@@ -64,14 +60,15 @@ dependencies:
   # ── Google Sign-In ─────────────────────────────────────────
   google_sign_in: ^6.2.1
 
+  # ── Push (FCM) — add google-services / GoogleService-Info for real devices
+  firebase_core: ^3.8.0
+  firebase_messaging: ^15.1.5
+
   # ── File Picker (vault uploads) ─────────────────────────────
   file_picker: ^8.0.0
   web: ^1.1.1
   # Gzip compression for vault payloads (Web + mobile)
   archive: ^3.6.0
-  # Same Web MediaStream class our recorder needs for MediaRecorder options
-  dart_webrtc: ^1.4.0
-
 # ══════════════════════════════════════════════════════════════
 #  Dev Dependencies
 # ══════════════════════════════════════════════════════════════

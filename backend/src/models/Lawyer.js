@@ -186,6 +186,19 @@ const LawyerSchema = new mongoose.Schema(
       select: false, // don't expose by default
     },
 
+    fcm_token: {
+      type: String,
+      default: null,
+      select: false,
+    },
+    icalFeedToken: {
+      type: String,
+      default: null,
+      select: false,
+      index: true,
+      sparse: true,
+    },
+
     // ── Response Config ───────────────────────────────────────
     response_minutes: {
       type: Number,

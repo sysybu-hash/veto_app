@@ -84,6 +84,35 @@ class CallApiService {
     }
   }
 
+  /// When [EmergencyEvent.recording_url] is set (e.g. after upload), the server
+  /// fetches the file and transcribes — no inline [audioBase64] required.
+  Future<String?> transcribeFromStoredRecording({
+    required String eventId,
+    required String language,
+  }) async {
+    final token = await _auth.getToken();
+    if (token == null || eventId.isEmpty) return null;
+
+    final response = await http.post(
+      Uri.parse('${AppConfig.baseUrl}/calls/$eventId/transcribe'),
+      headers: AppConfig.httpHeaders({'Authorization': 'Bearer $token'}),
+      body: jsonEncode({'language': language}),
+    );
+
+    if (response.statusCode == 400) {
+      return null;
+    }
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      if (response.statusCode == 503) return null;
+      throw Exception(
+        'Transcription failed (${response.statusCode}): ${response.body}',
+      );
+    }
+
+    final data = jsonDecode(response.body) as Map<String, dynamic>;
+    return data['transcript']?.toString();
+  }
+
   Future<String?> transcribeRecording({
     required String eventId,
     required Uint8List bytes,

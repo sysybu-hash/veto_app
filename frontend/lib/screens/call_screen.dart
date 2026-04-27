@@ -1,23 +1,17 @@
 // ============================================================
-//  call_screen.dart — Chat session on /call (text only, socket room).
-//  Audio/video sessions use [AgoraCallScreen] via [CallEntryScreen].
-//
-//  Route: /call (only when callType == 'chat')
-//  Args:  { roomId, callType: 'chat', peerName, role, eventId, language }
+//  call_screen.dart — Text chat session on /call (callType == 'chat').
+//  Audio/video use [AgoraCallScreen] via [CallEntryScreen] only.
 // ============================================================
 
 import 'dart:async';
 import 'dart:developer' as developer;
 
 import 'package:flutter/material.dart';
-import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:provider/provider.dart';
 
 import '../core/theme/veto_theme.dart';
-import '../services/call_recording_service.dart';
-import '../services/vault_save_queue.dart';
-import '../services/webrtc_service.dart';
 import '../services/socket_service.dart';
+import '../services/vault_save_queue.dart';
 
 class CallScreen extends StatefulWidget {
   const CallScreen({super.key});
@@ -33,34 +27,18 @@ class _ChatLine {
 }
 
 class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
-  WebRTCService? _webrtc;
-  /// After [_webrtc] is nulled for the zombie handoff, builds still use this so [RTCVideoView] stays mounted until [dispose].
-  WebRTCService? _webrtcUiHold;
-  bool _webRtcZombieScheduled = false;
-
-  WebRTCService? get _webrtcLive => _webrtc ?? _webrtcUiHold;
-  late AnimationController _pulseCtrl;
-  late Animation<double>   _pulseAnim;
   late AnimationController _fadeCtrl;
-  late Animation<double>   _fadeAnim;
+  late Animation<double> _fadeAnim;
 
-  String  _roomId   = '';
-  String  _callType = 'video';
-  String  _peerName = 'Connecting...';
-  String  _myRole   = 'user';
-  String  _eventId  = '';
-  String  _language = 'he';
+  String _roomId = '';
+  String _peerName = 'Connecting...';
+  String _myRole = 'user';
+  String _eventId = '';
+  String _language = 'he';
 
-  bool _recordingStarted = false;
   bool _finalizedCall = false;
   String? _callErrorText;
-  late final CallRecordingService _recordingService;
 
-  bool _userOptedRecord = false;
-  bool _liveRecording = false;
-
-  // Text session (same room, no WebRTC media)
-  bool get _isChat => _callType == 'chat';
   bool _chatReady = false;
   final List<_ChatLine> _chatLines = [];
   final TextEditingController _chatInput = TextEditingController();
@@ -68,37 +46,17 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
   Timer? _chatDurationTimer;
   int _chatSeconds = 0;
 
-  // Timeout: if no peer joins within 75 seconds, show cancel option
   Timer? _waitTimeout;
   bool _timedOut = false;
   int _waitSeconds = 0;
   Timer? _waitTick;
 
-  /// Flutter Web: Eternal bunker — [RTCVideoView] stays mounted; exit only moves/fades it (+ black shield).
-  bool _isExiting = false;
-
-  final Key _remoteVideoKey = const ValueKey<String>('remote_video_stream');
-  final Key _localVideoKey = const ValueKey<String>('local_video_stream');
-
   @override
   void initState() {
     super.initState();
-
-    // Pulse animation for connecting state
-    _pulseCtrl = AnimationController(
-      duration: const Duration(seconds: 2),
-      vsync: this,
-    )..repeat(reverse: true);
-    _pulseAnim = Tween<double>(begin: 0.8, end: 1.0).animate(
-      CurvedAnimation(parent: _pulseCtrl, curve: Curves.easeInOut),
-    );
-
-    // Fade in animation
     _fadeCtrl = AnimationController(duration: const Duration(milliseconds: 600), vsync: this);
     _fadeAnim = CurvedAnimation(parent: _fadeCtrl, curve: Curves.easeIn);
     _fadeCtrl.forward();
-    _recordingService = createCallRecordingService();
-
     WidgetsBinding.instance.addPostFrameCallback((_) => _init());
   }
 
@@ -107,42 +65,44 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
     try {
       setState(fn);
     } catch (e, st) {
-      developer.log(
-        '_safeSetState',
-        name: 'VETO.CallScreen',
-        error: e,
-        stackTrace: st,
-      );
-      debugPrint('[CallScreen] _safeSetState: $e\n$st');
+      developer.log('_safeSetState', name: 'VETO.CallScreen', error: e, stackTrace: st);
     }
   }
 
   Future<void> _init() async {
     final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
     if (args == null) {
-      // Navigated directly to /call without arguments — go back
+      if (mounted) Navigator.of(context).pushReplacementNamed('/veto_screen');
+      return;
+    }
+
+    var ct = args['callType']?.toString() ?? 'chat';
+    if (ct == 'webrtc') ct = 'video';
+
+    if (ct != 'chat') {
       if (mounted) {
-        Navigator.of(context).pushReplacementNamed('/veto_screen');
+        Navigator.of(context).pushReplacementNamed(
+          (args['role']?.toString() == 'lawyer') ? '/lawyer_dashboard' : '/veto_screen',
+        );
       }
       return;
     }
 
     final myRole = args['role']?.toString() ?? 'user';
-    var ct = args['callType']?.toString() ?? 'video';
-    if (ct == 'webrtc') ct = 'video';
-
     _safeSetState(() {
-      _roomId    = args['roomId']?.toString() ?? '';
-      _callType  = ct;
-      _peerName  = args['peerName']?.toString() ?? 'Legal Counsel';
-      _myRole    = myRole;
-      _eventId   = args['eventId']?.toString() ?? '';
-      _language  = args['language']?.toString() ?? 'he';
-      _userOptedRecord = true;
+      _roomId = args['roomId']?.toString() ?? '';
+      _peerName = args['peerName']?.toString() ?? 'Legal Counsel';
+      _myRole = myRole;
+      _eventId = args['eventId']?.toString() ?? '';
+      _language = args['language']?.toString() ?? 'he';
     });
 
-    final socketService = context.read<SocketService>();
+    if (_roomId.isEmpty) {
+      if (mounted) Navigator.of(context).pushReplacementNamed('/veto_screen');
+      return;
+    }
 
+    final socketService = context.read<SocketService>();
     final online = await socketService.ensureConnected(role: myRole);
     if (!mounted) return;
     if (!online) {
@@ -156,33 +116,7 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
       return;
     }
 
-    if (_isChat) {
-      await _initChatSession(socketService);
-      return;
-    }
-
-    final w = WebRTCService(socketService);
-    _webrtc = w;
-
-    await w.joinRoom(
-      _roomId,
-      _callType == 'video' ? CallType.video : CallType.audio,
-      socketRole: myRole,
-    );
-
-    w.addListener(_onWebRTCUpdate);
-
-    _waitTick = Timer.periodic(const Duration(seconds: 1), (_) {
-      if (!mounted) return;
-      _safeSetState(() => _waitSeconds++);
-    });
-    _waitTimeout = Timer(const Duration(seconds: 75), () {
-      if (!mounted) return;
-      if (w.state != CallState.connected) {
-        _safeSetState(() => _timedOut = true);
-        _waitTick?.cancel();
-      }
-    });
+    await _initChatSession(socketService);
   }
 
   void _onChatReadyEvent(dynamic raw) {
@@ -215,7 +149,7 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
   }
 
   void _onCallEndedEvent(dynamic raw) {
-    if (!_isChat || !mounted || _finalizedCall) return;
+    if (!mounted || _finalizedCall) return;
     final m = _socketMap(raw);
     final rid = m['roomId']?.toString();
     if (rid != null && rid.isNotEmpty && rid != _roomId) return;
@@ -269,156 +203,6 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
     return '$m:$s';
   }
 
-  void _onWebRTCUpdate() {
-    final w = _webrtc;
-    if (w == null) return;
-    if (!mounted) return;
-    // [WebRTCService] may notify again after we start navigation — avoid setState after dispose.
-    if (_finalizedCall) return;
-    _safeSetState(() {});
-
-    if (w.errorMessage != null && w.errorMessage!.trim().isNotEmpty) {
-      _callErrorText = w.errorMessage;
-    }
-
-    if (w.state == CallState.connected && !_recordingStarted) {
-      _waitTimeout?.cancel();
-      _waitTick?.cancel();
-      _safeSetState(() {
-        _timedOut = false;
-        _waitSeconds = 0;
-        _callErrorText = null;
-      });
-      _maybeStartRecording(w);
-    }
-
-    if (w.state == CallState.ended && !_finalizedCall) {
-      _finalizedCall = true;
-      w.removeListener(_onWebRTCUpdate);
-      unawaited(_finalizeAndNavigate());
-    }
-  }
-
-  void _maybeStartRecording(WebRTCService w) {
-    if (_recordingStarted) return;
-    if (!_userOptedRecord) return;
-    _recordingStarted = true;
-    _liveRecording = true;
-    _recordingService.start(
-      localStream: w.localStream,
-      remoteStream: w.remoteStream,
-      video: _callType == 'video',
-    );
-  }
-
-  Future<void> _toggleRecordingOptIn() async {
-    if (!mounted) return;
-    _safeSetState(() => _userOptedRecord = !_userOptedRecord);
-    final w = _webrtc;
-    if (_userOptedRecord && w != null && w.state == CallState.connected && !_recordingStarted) {
-      _maybeStartRecording(w);
-    }
-    if (!_userOptedRecord && _liveRecording) {
-      try {
-        await _recordingService.stop();
-      } catch (e, st) {
-        developer.log(
-          '_toggleRecordingOptIn stop',
-          name: 'VETO.CallScreen',
-          error: e,
-          stackTrace: st,
-        );
-        debugPrint('[CallScreen] _toggleRecordingOptIn stop: $e\n$st');
-      }
-      if (!mounted) return;
-      _safeSetState(() {
-        _recordingStarted = false;
-        _liveRecording = false;
-      });
-    }
-  }
-
-  Future<void> _retryJoin() async {
-    _waitTimeout?.cancel();
-    _waitTick?.cancel();
-    _safeSetState(() {
-      _timedOut = false;
-      _waitSeconds = 0;
-      _callErrorText = null;
-      _finalizedCall = false;
-      _recordingStarted = false;
-      _liveRecording = false;
-      _isExiting = false;
-    });
-
-    if (_isChat) {
-      _safeSetState(() {
-        _chatReady = false;
-        _chatLines.clear();
-      });
-      final socketService = context.read<SocketService>();
-      socketService.removeHandler('chat-ready', _onChatReadyEvent);
-      socketService.removeHandler('call-chat-message', _onChatMessageEvent);
-      socketService.removeHandler('call-ended', _onCallEndedEvent);
-      await Future<void>.delayed(const Duration(milliseconds: 150));
-      await _initChatSession(socketService);
-      return;
-    }
-
-    final oldW = _webrtcLive;
-    oldW?.removeListener(_onWebRTCUpdate);
-    try {
-      oldW?.dispose();
-    } catch (e, st) {
-      developer.log(
-        '_retryJoin dispose WebRTC',
-        name: 'VETO.CallScreen',
-        error: e,
-        stackTrace: st,
-      );
-    }
-    _webrtc = null;
-    _webrtcUiHold = null;
-    _webRtcZombieScheduled = false;
-
-    final socketService = context.read<SocketService>();
-    await Future<void>.delayed(const Duration(milliseconds: 200));
-    if (!mounted) return;
-
-    final online = await socketService.ensureConnected(role: _myRole);
-    if (!mounted) return;
-    if (!online) {
-      _safeSetState(() {
-        _callErrorText = _language == 'he'
-            ? 'אין חיבור לשרת. בדוק רשת ונסה שוב.'
-            : _language == 'ru'
-                ? 'Нет связи с сервером. Проверьте сеть и повторите.'
-                : 'Cannot reach the server. Check your connection and try again.';
-      });
-      return;
-    }
-    final w = WebRTCService(socketService);
-    _webrtc = w;
-    w.addListener(_onWebRTCUpdate);
-    await w.joinRoom(
-      _roomId,
-      _callType == 'video' ? CallType.video : CallType.audio,
-      socketRole: _myRole,
-    );
-
-    _waitTick = Timer.periodic(const Duration(seconds: 1), (_) {
-      if (!mounted) return;
-      _safeSetState(() => _waitSeconds++);
-    });
-    _waitTimeout = Timer(const Duration(seconds: 75), () {
-      if (!mounted) return;
-      if (w.state != CallState.connected) {
-        _safeSetState(() => _timedOut = true);
-        _waitTick?.cancel();
-      }
-    });
-  }
-
   String _formatChatAsTranscript() {
     final buf = StringBuffer();
     for (final line in _chatLines) {
@@ -429,180 +213,78 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
     return buf.toString().trim();
   }
 
-  /// Blackout then blind: [silenceNativeEvents] (srcObject clear) before UI exit. Idempotent.
-  void _enterCallExitIfNeeded() {
-    if (_isChat || !mounted || _isExiting) return;
-    _webrtc?.silenceNativeEvents();
-    setState(() => _isExiting = true);
-  }
-
-  void _zombieDisposeWebRTC(WebRTCService? svc) {
-    if (svc == null || _webRtcZombieScheduled) return;
-    _webRtcZombieScheduled = true;
-    Future<void>.delayed(const Duration(seconds: 5), () {
-      try {
-        svc.dispose();
-      } catch (e, st) {
-        developer.log(
-          'zombie WebRTC dispose',
-          name: 'VETO.CallScreen',
-          error: e,
-          stackTrace: st,
-        );
-        debugPrint('[CallScreen] zombie WebRTC dispose: $e\n$st');
-      }
+  Future<void> _retryJoin() async {
+    _waitTimeout?.cancel();
+    _waitTick?.cancel();
+    _safeSetState(() {
+      _timedOut = false;
+      _waitSeconds = 0;
+      _callErrorText = null;
+      _finalizedCall = false;
+      _chatReady = false;
+      _chatLines.clear();
     });
+    final socketService = context.read<SocketService>();
+    socketService.removeHandler('chat-ready', _onChatReadyEvent);
+    socketService.removeHandler('call-chat-message', _onChatMessageEvent);
+    socketService.removeHandler('call-ended', _onCallEndedEvent);
+    await Future<void>.delayed(const Duration(milliseconds: 150));
+    await _initChatSession(socketService);
   }
 
-  /// Replaces the route; for WebRTC calls hands off service to [_webrtcUiHold] and schedules zombie dispose.
-  void _pushReplacementLeavingCall(NavigatorState nav, String route) {
-    WebRTCService? svc;
-    if (!_isChat) {
-      svc = _webrtc;
-      _webrtcUiHold = svc;
-      _webrtc = null;
-    }
-    if (!mounted) return;
+  void _pushReplacement(NavigatorState nav, String route) {
     nav.pushReplacementNamed(route);
-    _zombieDisposeWebRTC(svc);
   }
 
   Future<void> _finalizeAndNavigate() async {
     if (!mounted) return;
-    if (!_isChat) {
-      _enterCallExitIfNeeded();
-      if (!mounted) return;
-      await Future<void>.delayed(const Duration(milliseconds: 800));
-      if (!mounted) return;
-    }
-    _webrtc?.removeListener(_onWebRTCUpdate);
-    final vaultEventId =
-        _eventId.trim().isNotEmpty ? _eventId.trim() : _roomId.trim();
     try {
       final nav = Navigator.of(context);
       final queue = context.read<VaultSaveQueue>();
       final myRole = _myRole;
       var goVault = false;
-      if (_isChat) {
-        final t = _formatChatAsTranscript();
-        if (t.isNotEmpty && vaultEventId.isNotEmpty) {
-          queue.enqueueChatTranscript(
-            eventId: vaultEventId,
-            transcript: t,
-            roomLabel: _peerName,
-          );
-          goVault = true;
-        }
-      } else {
-        CallRecordingResult? rec;
-        if (_recordingStarted) {
-          try {
-            rec = await _recordingService.stop();
-          } catch (e, st) {
-            developer.log(
-              'recording stop failed',
-              name: 'VETO.CallScreen',
-              error: e,
-              stackTrace: st,
-            );
-            debugPrint('[CallScreen] recording stop failed: $e\n$st');
-            rec = null;
-          }
-          _liveRecording = false;
-          _recordingStarted = false;
-        }
-
-        if (rec != null &&
-            rec.bytes.isNotEmpty &&
-            vaultEventId.isNotEmpty) {
-          queue.enqueueWebrtcCallArtifacts(
-            eventId: vaultEventId,
-            language: _language,
-            roomLabel: _peerName,
-            recording: rec,
-          );
-          goVault = true;
-        }
+      final t = _formatChatAsTranscript();
+      final vaultEventId = _eventId.trim().isNotEmpty ? _eventId.trim() : _roomId.trim();
+      if (t.isNotEmpty && vaultEventId.isNotEmpty) {
+        queue.enqueueChatTranscript(
+          eventId: vaultEventId,
+          transcript: t,
+          roomLabel: _peerName,
+        );
+        goVault = true;
       }
       if (!mounted) return;
       final target = goVault
           ? '/files_vault'
           : (myRole == 'lawyer' ? '/lawyer_dashboard' : '/veto_screen');
-      _pushReplacementLeavingCall(nav, target);
+      _pushReplacement(nav, target);
     } catch (e, st) {
-      developer.log(
-        '_finalizeAndNavigate',
-        name: 'VETO.CallScreen',
-        error: e,
-        stackTrace: st,
-      );
-      debugPrint('[CallScreen] _finalizeAndNavigate: $e\n$st');
+      developer.log('_finalizeAndNavigate', name: 'VETO.CallScreen', error: e, stackTrace: st);
       if (!mounted) return;
-      final fallback =
-          _myRole == 'lawyer' ? '/lawyer_dashboard' : '/veto_screen';
-      _pushReplacementLeavingCall(Navigator.of(context), fallback);
+      _pushReplacement(
+        Navigator.of(context),
+        _myRole == 'lawyer' ? '/lawyer_dashboard' : '/veto_screen',
+      );
     }
   }
 
   Future<void> _endCall() async {
-    if (_isChat) {
-      context.read<SocketService>().emit('call-ended', {
-        'roomId': _roomId,
-        'duration': _chatSeconds,
-      });
-      _chatDurationTimer?.cancel();
-      if (!_finalizedCall) {
-        _finalizedCall = true;
-        unawaited(_finalizeAndNavigate());
-      }
-      return;
-    }
-    await _prepareExitShield();
-    if (!mounted) return;
-    try {
-      await _webrtc?.endCall();
-    } catch (e, st) {
-      developer.log(
-        '_endCall WebRTC',
-        name: 'VETO.CallScreen',
-        error: e,
-        stackTrace: st,
-      );
-      debugPrint('[CallScreen] _endCall WebRTC: $e\n$st');
+    context.read<SocketService>().emit('call-ended', {
+      'roomId': _roomId,
+      'duration': _chatSeconds,
+    });
+    _chatDurationTimer?.cancel();
+    if (!_finalizedCall) {
+      _finalizedCall = true;
+      unawaited(_finalizeAndNavigate());
     }
   }
 
   @override
   void dispose() {
-    developer.log(
-      'CallScreen: Starting dispose sequence',
-      name: 'VETO.CallScreen',
-    );
-
-    final w = _webrtc ?? _webrtcUiHold;
-    _webrtc = null;
-    _webrtcUiHold = null;
-
-    if (w != null) {
-      try {
-        w.removeListener(_onWebRTCUpdate);
-      } catch (e, stack) {
-        developer.log(
-          'WebRTC removeListener in dispose',
-          name: 'VETO.CallScreen',
-          error: e,
-          stackTrace: stack,
-        );
-      }
-      if (!_webRtcZombieScheduled) {
-        _zombieDisposeWebRTC(w);
-      }
-    }
-
     _waitTimeout?.cancel();
     _waitTick?.cancel();
     _chatDurationTimer?.cancel();
-    _pulseCtrl.dispose();
     _fadeCtrl.dispose();
     _chatInput.dispose();
     _chatScroll.dispose();
@@ -610,13 +292,9 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
     svc.removeHandler('chat-ready', _onChatReadyEvent);
     svc.removeHandler('call-chat-message', _onChatMessageEvent);
     svc.removeHandler('call-ended', _onCallEndedEvent);
-
     super.dispose();
   }
 
-  // ─────────────────────────────────────────────────────────
-  //  Build
-  // ─────────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -626,20 +304,7 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
         child: Stack(
           fit: StackFit.expand,
           children: [
-            if (_isChat)
-              _buildChatLayer()
-            else
-              Stack(
-                fit: StackFit.expand,
-                children: [
-                  _buildActualCallUI(),
-                  if (_isExiting)
-                    const Positioned.fill(
-                      child: ColoredBox(color: Colors.black),
-                    ),
-                ],
-              ),
-            if (!_isChat) _buildGradientOverlay(),
+            _buildChatLayer(),
             Positioned(
               left: 0,
               top: 0,
@@ -658,9 +323,6 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
     );
   }
 
-  // ─────────────────────────────────────────────────────────
-  //  Text session layer
-  // ─────────────────────────────────────────────────────────
   Widget _buildChatLayer() {
     return Container(
       width: double.infinity,
@@ -673,19 +335,15 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
                 ? Center(child: _buildChatWaitingBody())
                 : ListView.builder(
                     controller: _chatScroll,
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.fromLTRB(16, 80, 16, 16),
                     itemCount: _chatLines.length,
                     itemBuilder: (_, i) {
                       final line = _chatLines[i];
                       return Align(
-                        alignment:
-                            line.mine ? Alignment.centerRight : Alignment.centerLeft,
+                        alignment: line.mine ? Alignment.centerRight : Alignment.centerLeft,
                         child: Container(
                           margin: const EdgeInsets.symmetric(vertical: 4),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 8,
-                          ),
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                           constraints: const BoxConstraints(maxWidth: 280),
                           decoration: BoxDecoration(
                             color: line.mine
@@ -720,8 +378,7 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
                             : _language == 'ru'
                                 ? 'Сообщение…'
                                 : 'Type a message…',
-                        hintStyle:
-                            TextStyle(color: Colors.white.withValues(alpha: 0.5)),
+                        hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.5)),
                         filled: true,
                         fillColor: Colors.white.withValues(alpha: 0.08),
                         border: OutlineInputBorder(
@@ -782,166 +439,6 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
     );
   }
 
-  /// Same silence-and-blind as [_finalizeAndNavigate] when the user hangs up first.
-  Future<void> _prepareExitShield() async {
-    _enterCallExitIfNeeded();
-  }
-
-  // ─────────────────────────────────────────────────────────
-  //  Call UI (Eternal bunker: stable keys, Positioned + Opacity when [_isExiting])
-  // ─────────────────────────────────────────────────────────
-  Widget _buildActualCallUI() {
-    final w = _webrtcLive;
-    if (w == null) {
-      return Container(
-        width: double.infinity,
-        height: double.infinity,
-        decoration: VetoDecorations.gradientBg(),
-        child: const Center(
-          child: CircularProgressIndicator(color: Colors.white54),
-        ),
-      );
-    }
-
-    final isVideo = _callType == 'video';
-    final isConnected = w.state == CallState.connected;
-
-    if (!isVideo || !isConnected) {
-      return Container(
-        width: double.infinity,
-        height: double.infinity,
-        decoration: VetoDecorations.gradientBg(),
-        child: Center(child: _buildAvatar(w)),
-      );
-    }
-
-    return Stack(
-      fit: StackFit.expand,
-      children: [
-        Positioned(
-          left: _isExiting ? -10000 : 0,
-          top: _isExiting ? -10000 : 0,
-          right: _isExiting ? null : 0,
-          bottom: _isExiting ? null : 0,
-          width: _isExiting ? 100 : null,
-          height: _isExiting ? 100 : null,
-          child: Opacity(
-            opacity: _isExiting ? 0.01 : 1.0,
-            child: RTCVideoView(
-              w.remoteRenderer,
-              key: _remoteVideoKey,
-              objectFit: RTCVideoViewObjectFit.RTCVideoViewObjectFitCover,
-            ),
-          ),
-        ),
-        Positioned(
-          top: 100,
-          right: 16,
-          width: 100,
-          height: 140,
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child: Container(
-              decoration: BoxDecoration(
-                color: VetoColors.surface,
-                border: Border.all(color: VetoColors.border, width: 1),
-              ),
-              child: w.cameraOff
-                  ? const Center(
-                      child: Icon(Icons.videocam_off, color: VetoColors.silver, size: 28),
-                    )
-                  : Stack(
-                      clipBehavior: Clip.hardEdge,
-                      fit: StackFit.expand,
-                      children: [
-                        Positioned(
-                          left: _isExiting ? -10000 : 0,
-                          top: _isExiting ? -10000 : 0,
-                          right: _isExiting ? null : 0,
-                          bottom: _isExiting ? null : 0,
-                          width: _isExiting ? 100 : null,
-                          height: _isExiting ? 100 : null,
-                          child: Opacity(
-                            opacity: _isExiting ? 0.01 : 1.0,
-                            child: RTCVideoView(
-                              w.localRenderer,
-                              key: _localVideoKey,
-                              mirror: true,
-                              objectFit: RTCVideoViewObjectFit.RTCVideoViewObjectFitCover,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  // ─────────────────────────────────────────────────────────
-  //  Avatar (audio mode / connecting)
-  // ─────────────────────────────────────────────────────────
-  Widget _buildAvatar(WebRTCService w) {
-    final isConnecting = w.state != CallState.connected;
-
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        AnimatedBuilder(
-          animation: _pulseAnim,
-          builder: (_, child) => Transform.scale(
-            scale: isConnecting ? _pulseAnim.value : 1.0,
-            child: child,
-          ),
-          child: Container(
-            width: 120,
-            height: 120,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: const LinearGradient(
-                colors: [VetoColors.accent, VetoColors.accentDark],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              boxShadow: VetoDecorations.accentGlow(intensity: isConnecting ? 1.5 : 1.0),
-            ),
-            child: Center(
-              child: Text(
-                _peerName.isNotEmpty ? _peerName[0].toUpperCase() : 'L',
-                style: const TextStyle(
-                  fontFamily: 'Heebo',
-                  fontSize: 48,
-                  fontWeight: FontWeight.w700,
-                  color: VetoColors.white,
-                ),
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(height: 24),
-        Text(
-          _peerName,
-          style: const TextStyle(
-            fontFamily: 'Heebo',
-            fontSize: 24,
-            fontWeight: FontWeight.w600,
-            color: VetoColors.white,
-          ),
-        ),
-        const SizedBox(height: 8),
-        _buildStatusText(w),
-        const SizedBox(height: 20),
-        if (w.state == CallState.error) ...[
-          _buildErrorPanel(),
-        ] else if (w.state == CallState.joining || w.state == CallState.ringing) ...[
-          _timedOut ? _buildTimeoutPanel() : _buildWaitingPanel(),
-        ],
-      ],
-    );
-  }
-
   Widget _buildWaitingPanel() {
     final remaining = 75 - _waitSeconds;
     final label = _language == 'he'
@@ -949,33 +446,41 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
         : _language == 'ru'
             ? 'Ожидание подключения... ($remaining сек)'
             : 'Waiting for connection... ($remaining s)';
-    return Column(mainAxisSize: MainAxisSize.min, children: [
-      // Progress bar
-      SizedBox(
-        width: 180,
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(4),
-          child: LinearProgressIndicator(
-            value: _waitSeconds / 75,
-            backgroundColor: Colors.white.withValues(alpha: 0.2),
-            valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF5B8FFF)),
-            minHeight: 4,
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        SizedBox(
+          width: 180,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: LinearProgressIndicator(
+              value: _waitSeconds / 75,
+              backgroundColor: Colors.white.withValues(alpha: 0.2),
+              valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF5B8FFF)),
+              minHeight: 4,
+            ),
           ),
         ),
-      ),
-      const SizedBox(height: 8),
-      Text(label, style: const TextStyle(color: Colors.white70, fontSize: 12, fontFamily: 'Heebo')),
-      const SizedBox(height: 12),
-      // Cancel button
-      TextButton.icon(
-        onPressed: _endCall,
-        icon: const Icon(Icons.close_rounded, size: 15, color: Colors.white54),
-        label: Text(
-          _language == 'he' ? 'בטל' : _language == 'ru' ? 'Отмена' : 'Cancel',
-          style: const TextStyle(color: Colors.white54, fontSize: 13),
+        const SizedBox(height: 8),
+        Text(
+          label,
+          style: const TextStyle(
+            color: Colors.white70,
+            fontSize: 12,
+            fontFamily: 'Heebo',
+          ),
         ),
-      ),
-    ]);
+        const SizedBox(height: 12),
+        TextButton.icon(
+          onPressed: _endCall,
+          icon: const Icon(Icons.close_rounded, size: 15, color: Colors.white54),
+          label: Text(
+            _language == 'he' ? 'בטל' : _language == 'ru' ? 'Отмена' : 'Cancel',
+            style: const TextStyle(color: Colors.white54, fontSize: 13),
+          ),
+        ),
+      ],
+    );
   }
 
   Widget _buildTimeoutPanel() {
@@ -987,62 +492,56 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
       ),
-      child: Column(mainAxisSize: MainAxisSize.min, children: [
-        const Icon(Icons.access_time_rounded, color: Colors.white70, size: 32),
-        const SizedBox(height: 10),
-        Text(
-          _language == 'he'
-              ? 'לא נמצא עורך דין זמין'
-              : _language == 'ru'
-                  ? 'Нет доступных адвокатов'
-                  : 'No lawyer available right now',
-          style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w700, fontFamily: 'Heebo'),
-          textAlign: TextAlign.center,
-        ),
-        const SizedBox(height: 6),
-        Text(
-          _language == 'he'
-              ? 'ניתן לנסות שוב או לחזור לאפליקציה'
-              : _language == 'ru'
-                  ? 'Попробуйте позже или вернитесь в приложение'
-                  : 'Try again or go back to the app',
-          style: const TextStyle(color: Colors.white60, fontSize: 12, fontFamily: 'Heebo'),
-          textAlign: TextAlign.center,
-        ),
-        const SizedBox(height: 16),
-        Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-          OutlinedButton(
-            onPressed: _endCall,
-            style: OutlinedButton.styleFrom(
-              foregroundColor: Colors.white,
-              side: const BorderSide(color: Colors.white38),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.access_time_rounded, color: Colors.white70, size: 32),
+          const SizedBox(height: 10),
+          Text(
+            _language == 'he'
+                ? 'לא נמצא עורך דין זמין'
+                : _language == 'ru'
+                    ? 'Нет доступных адвокатов'
+                    : 'No lawyer available right now',
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 15,
+              fontWeight: FontWeight.w700,
+              fontFamily: 'Heebo',
             ),
-            child: Text(_language == 'he' ? 'חזרה' : _language == 'ru' ? 'Назад' : 'Go back'),
+            textAlign: TextAlign.center,
           ),
-          const SizedBox(width: 12),
-          FilledButton(
-            onPressed: _retryJoin,
-            style: FilledButton.styleFrom(
-              backgroundColor: const Color(0xFF5B8FFF),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-            ),
-            child: Text(_language == 'he' ? 'נסה שוב' : _language == 'ru' ? 'Повторить' : 'Try again'),
+          const SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              OutlinedButton(
+                onPressed: _endCall,
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: Colors.white,
+                  side: const BorderSide(color: Colors.white38),
+                ),
+                child: Text(
+                  _language == 'he' ? 'חזרה' : _language == 'ru' ? 'Назад' : 'Go back',
+                ),
+              ),
+              const SizedBox(width: 12),
+              FilledButton(
+                onPressed: _retryJoin,
+                style: FilledButton.styleFrom(backgroundColor: const Color(0xFF5B8FFF)),
+                child: Text(
+                  _language == 'he' ? 'נסה שוב' : _language == 'ru' ? 'Повторить' : 'Try again',
+                ),
+              ),
+            ],
           ),
-        ]),
-      ]),
+        ],
+      ),
     );
   }
 
   Widget _buildErrorPanel() {
-    final msg = _callErrorText ??
-        (_language == 'he'
-            ? 'שגיאה בחיבור לשיחה.'
-            : _language == 'ru'
-                ? 'Ошибка подключения к звонку.'
-                : 'Call connection failed.');
+    final msg = _callErrorText ?? 'Error';
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 32),
       padding: const EdgeInsets.all(20),
@@ -1056,162 +555,18 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
         children: [
           const Icon(Icons.error_outline_rounded, color: VetoColors.error, size: 32),
           const SizedBox(height: 10),
-          Text(
-            _language == 'he'
-                ? 'השיחה לא הצליחה להתחיל'
-                : _language == 'ru'
-                    ? 'Не удалось начать звонок'
-                    : 'The call could not start',
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 15,
-              fontWeight: FontWeight.w700,
-              fontFamily: 'Heebo',
-            ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 8),
-          Text(
-            msg,
-            style: const TextStyle(
-              color: Colors.white70,
-              fontSize: 12,
-              fontFamily: 'Heebo',
-              height: 1.4,
-            ),
-            textAlign: TextAlign.center,
-          ),
+          Text(msg, textAlign: TextAlign.center, style: const TextStyle(color: Colors.white70)),
           const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              OutlinedButton(
-                onPressed: _endCall,
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: Colors.white,
-                  side: const BorderSide(color: Colors.white38),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 10,
-                  ),
-                ),
-                child: Text(
-                  _language == 'he'
-                      ? 'חזרה'
-                      : _language == 'ru'
-                          ? 'Назад'
-                          : 'Go back',
-                ),
-              ),
-              const SizedBox(width: 12),
-              FilledButton(
-                onPressed: _retryJoin,
-                style: FilledButton.styleFrom(
-                  backgroundColor: const Color(0xFF5B8FFF),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 10,
-                  ),
-                ),
-                child: Text(
-                  _language == 'he'
-                      ? 'נסה שוב'
-                      : _language == 'ru'
-                          ? 'Повторить'
-                          : 'Try again',
-                ),
-              ),
-            ],
+          FilledButton(
+            onPressed: _endCall,
+            child: const Text('OK'),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildStatusText(WebRTCService w) {
-    String text;
-    Color  color;
-
-    switch (w.state) {
-      case CallState.joining:
-        text  = 'מתחבר לחדר...';
-        color = VetoColors.accent;
-      case CallState.ringing:
-        text  = 'מחכה לצד השני...';
-        color = VetoColors.warning;
-      case CallState.connected:
-        text  = w.formattedDuration;
-        color = VetoColors.success;
-      case CallState.ended:
-        text  = 'השיחה הסתיימה';
-        color = VetoColors.error;
-      case CallState.error:
-        text  = 'שגיאה בחיבור';
-        color = VetoColors.error;
-      default:
-        text  = '';
-        color = VetoColors.silver;
-    }
-
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        if (w.state == CallState.connected)
-          Container(
-            width: 8,
-            height: 8,
-            margin: const EdgeInsets.only(left: 8),
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: VetoColors.success,
-              boxShadow: [BoxShadow(color: VetoColors.success.withValues(alpha:0.5), blurRadius: 6)],
-            ),
-          ),
-        Text(text, style: TextStyle(fontFamily: 'Heebo', fontSize: 14, color: color)),
-      ],
-    );
-  }
-
-  // ─────────────────────────────────────────────────────────
-  //  Gradient overlay
-  // ─────────────────────────────────────────────────────────
-  Widget _buildGradientOverlay() {
-    return Positioned.fill(
-      child: IgnorePointer(
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end:   Alignment.bottomCenter,
-              colors: [
-                Colors.black.withValues(alpha:0.6),
-                Colors.transparent,
-                Colors.transparent,
-                Colors.black.withValues(alpha:0.8),
-              ],
-              stops: const [0.0, 0.15, 0.75, 1.0],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  // ─────────────────────────────────────────────────────────
-  //  Top bar
-  // ─────────────────────────────────────────────────────────
   Widget _buildTopBar() {
-    final w = _webrtcLive;
-    final webrtcConnected = w != null && w.state == CallState.connected;
-    final showDur = _isChat ? _chatReady : webrtcConnected;
-    final durText = _isChat ? _formattedChatDuration : (w?.formattedDuration ?? '00:00');
-
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Row(
@@ -1221,7 +576,7 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
             decoration: BoxDecoration(
               color: VetoColors.vetoRedSoft,
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: VetoColors.vetoRed.withValues(alpha:0.3)),
+              border: Border.all(color: VetoColors.vetoRed.withValues(alpha: 0.3)),
             ),
             child: const Row(
               mainAxisSize: MainAxisSize.min,
@@ -1241,86 +596,27 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
               ],
             ),
           ),
-
           const Spacer(),
-
-          if (_liveRecording)
-            Padding(
-              padding: const EdgeInsets.only(right: 8),
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                decoration: BoxDecoration(
-                  color: Colors.red.withValues(alpha: 0.35),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: Colors.redAccent.withValues(alpha: 0.6)),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.fiber_manual_record, color: Colors.red.shade200, size: 12),
-                    const SizedBox(width: 6),
-                    Text(
-                      _language == 'he' ? 'מוקלט' : 'REC',
-                      style: TextStyle(
-                        fontFamily: 'Heebo',
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.red.shade100,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: Colors.black.withValues(alpha:0.4),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: VetoColors.border),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  _callType == 'video'
-                      ? Icons.videocam
-                      : _callType == 'chat'
-                          ? Icons.chat
-                          : Icons.mic,
-                  color: Colors.white.withValues(alpha: 0.85),
-                  size: 14,
-                ),
-                const SizedBox(width: 6),
-                Text(
-                  _callType == 'video'
-                      ? 'וידאו'
-                      : _callType == 'chat'
-                          ? (_language == 'he' ? 'צ\'ט' : 'Chat')
-                          : 'אודיו',
-                  style: TextStyle(
-                    fontFamily: 'Heebo',
-                    fontSize: 12,
-                    color: Colors.white.withValues(alpha: 0.88),
-                  ),
-                ),
-              ],
+          Text(
+            _peerName,
+            style: const TextStyle(
+              color: Colors.white,
+              fontFamily: 'Heebo',
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
             ),
           ),
-
-          const SizedBox(width: 8),
-
-          if (showDur)
+          const Spacer(),
+          if (_chatReady)
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
-                color: VetoColors.success.withValues(alpha:0.15),
+                color: VetoColors.success.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: VetoColors.success.withValues(alpha:0.3)),
+                border: Border.all(color: VetoColors.success.withValues(alpha: 0.3)),
               ),
               child: Text(
-                durText,
+                _formattedChatDuration,
                 style: const TextStyle(
                   fontFamily: 'Heebo',
                   fontSize: 13,
@@ -1334,94 +630,12 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
     );
   }
 
-  // ─────────────────────────────────────────────────────────
-  //  Controls
-  // ─────────────────────────────────────────────────────────
   Widget _buildControls() {
-    final w = _webrtcLive;
-
-    if (_isChat) {
-      return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            GestureDetector(
-              onTap: _endCall,
-              child: Container(
-                width: 72,
-                height: 72,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: VetoColors.vetoRed,
-                  boxShadow: VetoDecorations.vetoGlow(intensity: 0.8),
-                ),
-                child: const Icon(
-                  Icons.call_end,
-                  color: VetoColors.white,
-                  size: 32,
-                ),
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              _language == 'he' ? 'סיום שיחה' : 'End',
-              style: const TextStyle(
-                fontFamily: 'Heebo',
-                fontSize: 12,
-                color: VetoColors.silverDim,
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-
-    if (w == null) {
-      return const SizedBox.shrink();
-    }
-
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              _buildControlBtn(
-                icon: w.micMuted ? Icons.mic_off : Icons.mic,
-                label: w.micMuted ? 'הפעל' : 'השתק',
-                color: w.micMuted ? VetoColors.error : VetoColors.silver,
-                onTap: w.toggleMic,
-              ),
-              const SizedBox(width: 16),
-              if (_callType == 'video') ...[
-                _buildControlBtn(
-                  icon: w.cameraOff ? Icons.videocam_off : Icons.videocam,
-                  label: w.cameraOff ? 'הפעל' : 'כבה',
-                  color: w.cameraOff ? VetoColors.error : VetoColors.silver,
-                  onTap: w.toggleCamera,
-                ),
-                const SizedBox(width: 16),
-                _buildControlBtn(
-                  icon: Icons.flip_camera_ios,
-                  label: 'הפוך',
-                  color: VetoColors.silver,
-                  onTap: w.switchCamera,
-                ),
-                const SizedBox(width: 16),
-              ],
-              _buildControlBtn(
-                icon: _userOptedRecord ? Icons.radio_button_checked : Icons.radio_button_off,
-                label: _language == 'he' ? 'הקלטה' : 'Rec',
-                color: _userOptedRecord ? Colors.redAccent : VetoColors.silver,
-                onTap: () => unawaited(_toggleRecordingOptIn()),
-              ),
-              const SizedBox(width: 16),
-            ],
-          ),
-          const SizedBox(height: 24),
           GestureDetector(
             onTap: _endCall,
             child: Container(
@@ -1432,55 +646,16 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
                 color: VetoColors.vetoRed,
                 boxShadow: VetoDecorations.vetoGlow(intensity: 0.8),
               ),
-              child: const Icon(
-                Icons.call_end,
-                color: VetoColors.white,
-                size: 32,
-              ),
+              child: const Icon(Icons.call_end, color: VetoColors.white, size: 32),
             ),
           ),
           const SizedBox(height: 8),
-          const Text(
-            'סיום שיחה',
-            style: TextStyle(
+          Text(
+            _language == 'he' ? 'סיום שיחה' : 'End',
+            style: const TextStyle(
               fontFamily: 'Heebo',
               fontSize: 12,
               color: VetoColors.silverDim,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildControlBtn({
-    required IconData icon,
-    required String   label,
-    required Color    color,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 52,
-            height: 52,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: Colors.white.withValues(alpha:0.1),
-              border: Border.all(color: Colors.white.withValues(alpha:0.2)),
-            ),
-            child: Icon(icon, color: color, size: 24),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            label,
-            style: const TextStyle(
-              fontFamily: 'Heebo',
-              fontSize: 11,
-              color: VetoColors.silver,
             ),
           ),
         ],

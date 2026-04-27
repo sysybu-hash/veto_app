@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -8,6 +9,7 @@ import '../core/i18n/app_language.dart';
 import '../core/theme/veto_glass_system.dart';
 import '../core/theme/veto_theme.dart';
 import '../services/auth_service.dart';
+import '../services/fcm_user_service.dart';
 import '../services/push_service.dart';
 import '../services/socket_service.dart';
 
@@ -184,6 +186,9 @@ class _LawyerDashboardState extends State<LawyerDashboard> {
 
     // Register browser push subscription (fire-and-forget — non-blocking)
     PushService().registerLawyerPush();
+    if (!kIsWeb) {
+      unawaited(registerFcmIfAvailable());
+    }
 
     _alertSub = SocketService().onNewEmergencyAlert.listen((data) {
       if (!mounted) return;

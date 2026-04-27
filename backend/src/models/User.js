@@ -123,6 +123,27 @@ const UserSchema = new mongoose.Schema(
       notifyUpdates:   { type: Boolean, default: true },
       notifySms:       { type: Boolean, default: false },
     },
+
+    /** Web Push (browser) — same shape as PushSubscription JSON */
+    push_subscription: {
+      type: mongoose.Schema.Types.Mixed,
+      default: null,
+      select: false,
+    },
+    /** Firebase Cloud Messaging device token (mobile) */
+    fcm_token: {
+      type: String,
+      default: null,
+      select: false,
+    },
+    /** Secret for GET /api/calendar/export.ics?token= (iCal feed) */
+    icalFeedToken: {
+      type: String,
+      default: null,
+      select: false,
+      index: true,
+      sparse: true,
+    },
   },
   {
     timestamps: true, // createdAt, updatedAt

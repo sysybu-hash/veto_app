@@ -8,4 +8,5 @@ class PushService {
   PushService._();
 
   Future<void> registerLawyerPush() async {}
+  Future<void> registerUserPush() async {}
 }

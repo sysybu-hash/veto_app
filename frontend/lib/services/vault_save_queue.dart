@@ -33,6 +33,7 @@ class VaultSaveQueue extends ChangeNotifier {
   final List<VaultSaveJob> _jobs = [];
   final CallApiService _api;
   int _idCounter = 0;
+  final Set<String> _enqueuedAgoraTranscribe = {};
 
   /// Bumped when a call-related save has finished; [FilesVaultScreen] refreshes the list.
   final ValueNotifier<int> listRefresh = ValueNotifier(0);
@@ -67,8 +68,36 @@ class VaultSaveQueue extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Enqueue a full post-call pipeline (server recording + transcribe + vault).
-  void enqueueWebrtcCallArtifacts({
+  /// After a call, if a recording was uploaded to the event on the server,
+  /// run transcription and save the transcript to the vault.
+  void enqueueAgoraRecordingTranscript({
+    required String eventId,
+    required String language,
+    String? roomLabel,
+  }) {
+    if (eventId.isEmpty) return;
+    if (_enqueuedAgoraTranscribe.contains(eventId)) return;
+    _enqueuedAgoraTranscribe.add(eventId);
+    final job = VaultSaveJob(
+      id: _newId(),
+      label: roomLabel ?? 'תמלול שיחה',
+    );
+    _jobs.add(job);
+    if (_jobs.length > 8) {
+      _jobs.removeAt(0);
+    }
+    notifyListeners();
+    unawaited(
+      _runAgoraTranscript(
+        job,
+        eventId: eventId,
+        language: language,
+      ),
+    );
+  }
+
+  /// Enqueue a full post-call pipeline (client recording + transcribe + vault).
+  void enqueueCallMediaArtifacts({
     required String eventId,
     required String language,
     String? roomLabel,
@@ -88,7 +117,7 @@ class VaultSaveQueue extends ChangeNotifier {
     notifyListeners();
 
     unawaited(
-      _runWebrtc(
+      _runCallMedia(
         job,
         eventId: eventId,
         language: language,
@@ -127,7 +156,47 @@ class VaultSaveQueue extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> _runWebrtc(
+  Future<void> _runAgoraTranscript(
+    VaultSaveJob job, {
+    required String eventId,
+    required String language,
+  }) async {
+    try {
+      _updateJob(job, p: 0.1, line: 'ממליל…');
+      final tText = await _api.transcribeFromStoredRecording(
+        eventId: eventId,
+        language: language,
+      );
+      if (tText == null || tText.trim().isEmpty) {
+        _finishJob(
+          job,
+          err: 'אין הקלטה בשרת או תמלול לא זמין (Agora ללא Cloud Recording)',
+        );
+        return;
+      }
+      _updateJob(job, p: 0.4, line: 'מדחס תמלול…');
+      final tr = compressTranscriptForVault(
+        tText,
+        eventId: eventId,
+      );
+      await _saveTranscriptToVault(
+        job,
+        comp: tr,
+        progressStart: 0.45,
+        progressEnd: 1,
+        label: 'שומר בכספת…',
+      );
+      _updateJob(job, p: 1, line: 'הושלם');
+      _finishJob(job);
+    } catch (e) {
+      _finishJob(
+        job,
+        err: e is Exception ? e.toString() : 'השמירה נכשלה',
+      );
+    }
+  }
+
+  Future<void> _runCallMedia(
     VaultSaveJob job, {
     required String eventId,
     required String language,
