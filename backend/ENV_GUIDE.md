@@ -104,15 +104,15 @@
 
 ### Flutter Web (Vercel) + CORS / 404
 
-- אם בדפדפן מופיע `blocked by CORS` או `GET .../health ... 404` מ־**מקור** `https://…vercel.app` ל־`https://…onrender.com`:
-  1. **ודאו** ב־[Render](https://dashboard.render.com) שה־**Public URL** של שירות ה־Web שמריץ את `node server.js` הוא **בדיוק** זה שמוגדר ב־`VETO_API_BASE` / ב־[app_config.dart](../frontend/lib/config/app_config.dart). `404` על `/health` בדרך כלל אומר שמחוברים ל־**שירות אחר** (או שם host ישן) — לא ל־VETO.
-  2. בדיקה בלי דפדפן: `curl -sS -i "https://<host>/health"` — אמור `200` ו־JSON עם `"app":"VETO"`.
-  3. אחרי שינוי host ב־Render: `npm run build:web` מהשורש + commit ל־`frontend/build/web` + deploy ב־Vercel.
+- אם בדפדפן מופיע `blocked by CORS` או `GET .../health ... 404` / `x-render-routing: no-server` ב־`curl`:
+  1. **ודאו** ב־[Render](https://dashboard.render.com) → השירות → **Public URL** (למשל `veto-app-new.onrender.com`). **לא** מניחים ש־`veto-legal` או שם ה־Blueprint = הדומיין — `curl` ל־**ה־URL שמופיע בדשבורד** (`…/health` → 200, `"app":"VETO"`).
+  2. `VETO_API_BASE` / [app_config.dart](../frontend/lib/config/app_config.dart) / `package.json` `build:web` — **אותו origin** כמו ב־Dashboard.
+  3. אחרי שינוי: `npm run build:web` מהשורש + commit ל־`frontend/build/web` + deploy ב־Vercel.
 
 ### URL אחד, שירות אחד (פרודקשן)
 
 - **הדומיין הציבורי** של API מופיע ב־**Render → Web Service** תחת **Settings** (Default **onrender.com** hostname) או **Custom Domains**.  
-  ה־`PUBLIC_API_BASE` / `VETO_PUBLIC_BASE` (אם בשימוש), **GitHub Actions** `VETO_API_BASE` ([`.github/workflows/deploy.yml`](../.github/workflows/deploy.yml)), וה־`AppConfig` ב־[app_config.dart](../frontend/lib/config/app_config.dart) חייבים **לאותו origin** (למשל `https://veto-legal.onrender.com` — בלי `/api`).
+  ה־`PUBLIC_API_BASE` / `VETO_PUBLIC_BASE` (אם בשימוש), **GitHub Actions** `VETO_API_BASE` ([`.github/workflows/deploy.yml`](../.github/workflows/deploy.yml)), וה־`AppConfig` ב־[app_config.dart](../frontend/lib/config/app_config.dart) חייבים **לאותו origin** כמו **Public URL** ב־Render (למשל `https://veto-app-new.onrender.com` — בלי `/api`). שם השירות ב־Render (למשל `veto_legal`) **לא** תמיד שווה לתת־הדומיין ב־`onrender.com` — תמיד לבדוק ב־Dashboard.
 - **ללא שני “Live”** לאותו מוצר: אם יש **שני** Web Services שמייצרים API (למשל שריט ישן + Blueprint מ־`render.yaml`), בחר אחד לפרוד, העתק env, וכבה/מחק את השני — אחרת לקוחות/בניית web עלולה לפנות ל־**URL הלא־נכון**.
 
 ---
