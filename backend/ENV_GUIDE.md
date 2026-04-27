@@ -102,6 +102,12 @@
 - [Render Dashboard](https://dashboard.render.com/) → Web Service → **Environment**  
 - **Secrets:** `MONGO_URI`, `JWT_SECRET`, `GOOGLE_CLIENT_SECRET`, `GEMINI_API_KEY`, Cloudinary, `VAPID_PRIVATE_KEY`, SMTP password, `GOOGLE_NOTEBOOKLM_SA_JSON` (אם בשימוש).
 
+### URL אחד, שירות אחד (פרודקשן)
+
+- **הדומיין הציבורי** של API מופיע ב־**Render → Web Service** תחת **Settings** (Default **onrender.com** hostname) או **Custom Domains**.  
+  ה־`PUBLIC_API_BASE` / `VETO_PUBLIC_BASE` (אם בשימוש), **GitHub Actions** `VETO_API_BASE` ([`.github/workflows/deploy.yml`](../.github/workflows/deploy.yml)), וה־`AppConfig` ב־[app_config.dart](../frontend/lib/config/app_config.dart) חייבים **לאותו origin** (למשל `https://veto-legal.onrender.com` — בלי `/api`).
+- **ללא שני “Live”** לאותו מוצר: אם יש **שני** Web Services שמייצרים API (למשל שריט ישן + Blueprint מ־`render.yaml`), בחר אחד לפרוד, העתק env, וכבה/מחק את השני — אחרת לקוחות/בניית web עלולה לפנות ל־**URL הלא־נכון**.
+
 ---
 
 ## 10) Neon

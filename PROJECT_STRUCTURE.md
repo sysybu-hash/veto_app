@@ -77,6 +77,8 @@ veto_legal/
 | `/profile` | `ProfileScreen` |
 | `/admin_settings` | `AdminSettingsScreen` |
 | `/files_vault` | `FilesVaultScreen` |
+| `/legal_calendar` | `LegalCalendarScreen` |
+| `/legal_notebook` | `LegalNotebookScreen` |
 | `/admin_dashboard` | `AdminDashboard` |
 | `/admin_subscriptions` | `SubscriptionAdminScreen` |
 | `/settings` | `SettingsScreen` |
@@ -89,6 +91,8 @@ veto_legal/
 | `/call` | `CallEntryScreen` (see B below) |
 | `/maps` | `MapsScreen` |
 | `/shared_vault` | `SharedVaultScreen` |
+| `/privacy` | `LegalDocumentScreen` (privacy) |
+| `/terms` | `LegalDocumentScreen` (terms) |
 
 ### B. `/call` (CallEntryScreen) — no extra named route
 
