@@ -595,6 +595,40 @@ class _LoginScreenState extends State<LoginScreen> {
                     style: const TextStyle(color: VetoGlassTokens.textMuted, fontSize: 12),
                     textAlign: TextAlign.center,
                   ),
+                  const SizedBox(height: 10),
+                  Wrap(
+                    alignment: WrapAlignment.center,
+                    spacing: 4,
+                    runSpacing: 0,
+                    children: [
+                      TextButton(
+                        onPressed: () => Navigator.pushNamed(context, '/privacy'),
+                        child: Text(
+                          lang == 'he' ? 'מדיניות פרטיות' : lang == 'ru' ? 'Конфиденциальность' : 'Privacy',
+                          style: const TextStyle(
+                            color: VetoGlassTokens.neonCyan,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                      Text(
+                        lang == 'he' ? '·' : '·',
+                        style: const TextStyle(color: VetoGlassTokens.textMuted, fontSize: 12),
+                      ),
+                      TextButton(
+                        onPressed: () => Navigator.pushNamed(context, '/terms'),
+                        child: Text(
+                          lang == 'he' ? 'תנאי שימוש' : lang == 'ru' ? 'Условия' : 'Terms',
+                          style: const TextStyle(
+                            color: VetoGlassTokens.neonCyan,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ]),
               ),
             ),

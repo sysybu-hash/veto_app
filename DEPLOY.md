@@ -64,6 +64,8 @@ git push origin main
 
 6. **Save Changes → Manual Deploy**
 
+> **שירות API אחד בפרוד:** אם יש שני Web Services (למשל שם ישן `veto-app-new` + שירות חדש), זה **לא** נפתר בקוד בלבד. ב־[Render Dashboard](https://dashboard.render.com) בחר שירות **אחד** שמייצג את ה־API, שמור עליו את כל ה־Environment, והתאם אליו את **כל** המקורות: `VETO_API_BASE` ב־CI, `PUBLIC_API_BASE` (אם מוגדר), וברירת ה־host ב־`AppConfig` — ראו [ENV_GUIDE — Render, URL](backend/ENV_GUIDE.md#9-render).
+
 ### אפשרות 2: Web Service ידני
 
 Settings של השירות:

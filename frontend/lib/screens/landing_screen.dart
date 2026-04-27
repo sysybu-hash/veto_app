@@ -76,6 +76,8 @@ class _T {
       'ctaBody':       'ההרשמה קצרה. מהרגע שהיא מסתיימת, כל חירום משפטי מקבל מסך ברור ומוכן לפעולה.',
       'ctaBtn':        'לעבור לאשף',
       'footer':        'VETO LEGAL | מערכת תגובה משפטית חכמה, מהירה ורב-לשונית',
+      'linkPrivacy':   'מדיניות פרטיות',
+      'linkTerms':     'תנאי שימוש',
     },
     'en': {
       'navHome':       'Home',
@@ -120,6 +122,8 @@ class _T {
       'ctaBody':       'Registration is short. Once done, every legal emergency starts from one clear interface.',
       'ctaBtn':        'Open the wizard',
       'footer':        'VETO LEGAL | Fast, intelligent, multilingual legal response',
+      'linkPrivacy':   'Privacy',
+      'linkTerms':     'Terms',
     },
     'ru': {
       'navHome':       'Главная',
@@ -164,6 +168,8 @@ class _T {
       'ctaBody':       'Регистрация занимает минуту. После этого любая экстренная ситуация начинается с одного экрана.',
       'ctaBtn':        'Перейти к мастеру',
       'footer':        'VETO LEGAL | Быстрая, умная и мультиязычная юридическая реакция',
+      'linkPrivacy':   'Конфиденциальность',
+      'linkTerms':     'Условия',
     },
   };
 }
@@ -1229,10 +1235,50 @@ class _Footer extends StatelessWidget {
           top: BorderSide(color: VetoGlassTokens.glassBorder),
         ),
       ),
-      child: Text(
-        _T.get(code, 'footer'),
-        textAlign: TextAlign.center,
-        style: const TextStyle(color: _C.inkLight, fontSize: 12, height: 1.8),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            _T.get(code, 'footer'),
+            textAlign: TextAlign.center,
+            style: const TextStyle(color: _C.inkLight, fontSize: 12, height: 1.8),
+          ),
+          const SizedBox(height: 12),
+          Wrap(
+            alignment: WrapAlignment.center,
+            spacing: 8,
+            runSpacing: 4,
+            children: [
+              TextButton(
+                onPressed: () => Navigator.pushNamed(context, '/privacy'),
+                child: Text(
+                  _T.get(code, 'linkPrivacy'),
+                  style: const TextStyle(
+                    color: _C.accent,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    decoration: TextDecoration.underline,
+                    decorationColor: _C.accent,
+                  ),
+                ),
+              ),
+              Text(' · ', style: TextStyle(color: _C.inkLight.withValues(alpha: 0.5))),
+              TextButton(
+                onPressed: () => Navigator.pushNamed(context, '/terms'),
+                child: Text(
+                  _T.get(code, 'linkTerms'),
+                  style: const TextStyle(
+                    color: _C.accent,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    decoration: TextDecoration.underline,
+                    decorationColor: _C.accent,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

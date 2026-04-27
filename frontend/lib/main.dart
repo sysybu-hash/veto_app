@@ -39,6 +39,7 @@ import 'screens/chat_screen.dart';
 import 'screens/call_entry_screen.dart';
 import 'screens/maps_screen.dart';
 import 'screens/shared_vault_screen.dart';
+import 'screens/legal_document_screen.dart';
 import 'services/socket_service.dart';
 import 'services/vault_save_queue.dart';
 
@@ -146,6 +147,8 @@ final Map<String, WidgetBuilder> vetoAppRoutes = <String, WidgetBuilder>{
   '/call': (_) => const CallEntryScreen(),
   '/maps': (_) => const MapsScreen(),
   '/shared_vault': (_) => const SharedVaultScreen(),
+  '/privacy': (_) => const LegalDocumentScreen(kind: LegalDocKind.privacy),
+  '/terms': (_) => const LegalDocumentScreen(kind: LegalDocKind.terms),
 };
 
 class VetoApp extends StatelessWidget {

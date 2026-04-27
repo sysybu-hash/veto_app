@@ -56,6 +56,9 @@ const _i18n = {
     'yes': 'כן',
     'no': 'לא',
     'logout': 'התנתק',
+    'legalSection': 'מסמכים משפטיים',
+    'privacyPolicy': 'מדיניות פרטיות',
+    'termsOfService': 'תנאי שימוש',
     'deployBuild': 'מזהה גרסה',
     'addLink': 'הוסף קישור',
     'planFree': 'חינמי',
@@ -135,6 +138,9 @@ const _i18n = {
     'yes': 'Yes',
     'no': 'No',
     'logout': 'Sign out',
+    'legalSection': 'Legal',
+    'privacyPolicy': 'Privacy policy',
+    'termsOfService': 'Terms of service',
     'deployBuild': 'Deploy build',
     'addLink': 'Add link',
     'planFree': 'Free',
@@ -214,6 +220,9 @@ const _i18n = {
     'yes': 'Да',
     'no': 'Нет',
     'logout': 'Выйти',
+    'legalSection': 'Документы',
+    'privacyPolicy': 'Конфиденциальность',
+    'termsOfService': 'Условия',
     'deployBuild': 'Сборка',
     'addLink': 'Добавить ссылку',
     'planFree': 'Бесплатный',
@@ -831,6 +840,40 @@ class _SettingsScreenState extends State<SettingsScreen>
                     ),
                     const SizedBox(height: 16),
                   ],
+                  // ── Legal (privacy / terms) ───────────────
+                  _Section(
+                    icon: Icons.policy_outlined,
+                    title: _t(code, 'legalSection'),
+                    children: [
+                      ListTile(
+                        dense: true,
+                        leading: const Icon(Icons.privacy_tip_outlined,
+                            color: VetoGlassTokens.textMuted, size: 20),
+                        title: Text(_t(code, 'privacyPolicy'),
+                            style: const TextStyle(
+                                color: VetoGlassTokens.textPrimary,
+                                fontWeight: FontWeight.w600)),
+                        trailing: const Icon(Icons.chevron_right_rounded,
+                            color: VetoGlassTokens.textMuted),
+                        onTap: () =>
+                            Navigator.pushNamed(context, '/privacy'),
+                      ),
+                      ListTile(
+                        dense: true,
+                        leading: const Icon(Icons.article_outlined,
+                            color: VetoGlassTokens.textMuted, size: 20),
+                        title: Text(_t(code, 'termsOfService'),
+                            style: const TextStyle(
+                                color: VetoGlassTokens.textPrimary,
+                                fontWeight: FontWeight.w600)),
+                        trailing: const Icon(Icons.chevron_right_rounded,
+                            color: VetoGlassTokens.textMuted),
+                        onTap: () =>
+                            Navigator.pushNamed(context, '/terms'),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
                   // ── Danger zone ─────────────────────────
                   _Section(
                     icon: Icons.warning_amber_rounded,
