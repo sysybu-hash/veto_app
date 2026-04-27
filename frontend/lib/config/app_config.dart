@@ -9,7 +9,7 @@
 // —— Production (Render) ——————————————————————————————————————
 // ברירת מחדל ב-release: [kDefaultRenderOrigin] (אין צורך ב-define).
 // לדריסה או ל-debug מול שרת אחר:
-//   flutter run --dart-define=VETO_API_BASE=https://veto-legal.onrender.com
+//   flutter run --dart-define=VETO_API_BASE=https://veto-app-new.onrender.com
 // (ללא סיומת /api — רק origin). כשמוגדר, מתעלמים מ-VETO_HOST ל-REST/WebSocket.
 // —————————————————————————————————————————————————————————————
 
@@ -17,10 +17,11 @@ import 'package:flutter/foundation.dart';
 
 class AppConfig {
   /// Host קבוע ב-Render (לתיעוד / שימוש חיצוני; ה-origin המלא ב-[kDefaultRenderOrigin]).
-  static const String kDefaultRenderHost = 'veto-legal.onrender.com';
+  static const String kDefaultRenderHost = 'veto-app-new.onrender.com';
 
   /// Origin של ה-API בפרודקשן (Render). משמש כברירת מחדל ב-`kReleaseMode` כשאין `VETO_API_BASE`.
-  static const String kDefaultRenderOrigin = 'https://veto-legal.onrender.com';
+  /// חייב להתאים ל-**Public URL** ב-Render Dashboard (למשל `veto-app-new` — לא מספיק שם שירות `veto_legal` בלי לבדוק דומיין).
+  static const String kDefaultRenderOrigin = 'https://veto-app-new.onrender.com';
 
   /// Host שמתאים ל-`npm run tunnel` (שורת ה-subdomain ב-backend/package.json)
   static const String kDefaultTunnelHost = 'sweet-turkey-60.loca.lt';

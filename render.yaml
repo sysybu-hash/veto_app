@@ -12,8 +12,9 @@
 #    Start Command:  npm start
 #    Health Check:   /health
 #
-#  URL לאחר deploy (בדוק ב-Dashboard — לרוב):  https://veto-legal.onrender.com
-#  בדיקת בריאות:     https://veto-legal.onrender.com/health
+#  Public URL ב-Render יכול להיות שונה משם השירות (למשל שירות veto_legal → veto-app-new.onrender.com).
+#  בדוק ב-Dashboard → URL אמיתי, ולעדכן VETO_API_BASE / AppConfig בהתאם.
+#  בדיקת בריאות:  GET https://<your-service>.onrender.com/health
 #  משתני סביבה (מסלול בלי Firebase): backend/ENV_GUIDE.md
 # ============================================================
 
@@ -71,7 +72,7 @@ services:
 
       # ── Optional: calendar email (ICS) + FCM (replace placeholder google-services) ─
       # - key: PUBLIC_API_BASE
-      #   value: https://veto-legal.onrender.com
+      #   value: https://veto-app-new.onrender.com
       # - key: SMTP_HOST, SMTP_PORT, SMTP_FROM, SMTP_USER, SMTP_PASS
       # - key: FIREBASE_SERVICE_ACCOUNT
       #   sync: false

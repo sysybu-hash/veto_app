@@ -9,7 +9,7 @@ on:
 
 # Render API origin — must match AppConfig / production backend.
 env:
-  VETO_API_BASE: https://veto-legal.onrender.com
+  VETO_API_BASE: https://veto-app-new.onrender.com
 
 concurrency:
   group: vercel-deploy-${{ github.ref }}

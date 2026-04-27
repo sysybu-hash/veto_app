@@ -7,7 +7,7 @@ Use this alongside [QA_CHECKLIST.md](QA_CHECKLIST.md) before calling a build “
 
 | Item | Value / note |
 |------|----------------|
-| **API origin (Render)** | e.g. `https://veto-legal.onrender.com` — must match [AppConfig](../frontend/lib/config/app_config.dart) defaults, GitHub Actions `VETO_API_BASE`, and `PUBLIC_API_BASE` if set. See [ENV_GUIDE — Render, URL](../backend/ENV_GUIDE.md#9-render). |
+| **API origin (Render)** | Use the **Public URL** from the Render service page (e.g. `https://veto-app-new.onrender.com`) — must match [AppConfig](../frontend/lib/config/app_config.dart), `VETO_API_BASE` in CI, and `PUBLIC_API_BASE` if set. See [ENV_GUIDE — Render, URL](../backend/ENV_GUIDE.md#9-render). |
 | **Web (Vercel)** | e.g. `https://…vercel.app` — same product, static `frontend/build/web`. |
 | **Single API service** | Only **one** live Render web service for this product; duplicate services cause wrong endpoints. |
 
