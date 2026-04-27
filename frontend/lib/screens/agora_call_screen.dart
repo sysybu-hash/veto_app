@@ -1,6 +1,5 @@
 // ============================================================
-//  agora_call_screen.dart — Agora video/audio call (PiP + fullscreen)
-//  Joins the same socket `call:${roomId}` room as legacy WebRTC for cleanup.
+//  agora_call_screen.dart — Agora video/audio; socket room for end/cleanup.
 // ============================================================
 
 import 'dart:async';
@@ -10,14 +9,19 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 
+import 'package:provider/provider.dart';
+
 import '../core/theme/veto_theme.dart';
 import '../services/agora_service.dart';
 import '../services/socket_service.dart';
+import '../services/vault_save_queue.dart';
 
 class AgoraCallScreen extends StatefulWidget {
   const AgoraCallScreen({
     super.key,
     required this.channelId,
+    this.eventId = '',
+    this.language = 'he',
     this.token = '',
     this.peerLabel = 'Lawyer',
     this.wantVideo = true,
@@ -25,6 +29,8 @@ class AgoraCallScreen extends StatefulWidget {
   });
 
   final String channelId;
+  final String eventId;
+  final String language;
   final String token;
   final String peerLabel;
   final bool wantVideo;
@@ -76,6 +82,9 @@ class _AgoraCallScreenState extends State<AgoraCallScreen> {
     _remoteHangup = true;
     _durationTimer?.cancel();
     _unregisterCallSockets();
+    if (mounted) {
+      _queueVaultTranscribe();
+    }
     try {
       await _agora.leaveChannelAndRelease();
     } catch (_) {}
@@ -137,6 +146,18 @@ class _AgoraCallScreenState extends State<AgoraCallScreen> {
     }
   }
 
+  void _queueVaultTranscribe() {
+    final eid = widget.eventId;
+    if (eid.isEmpty) return;
+    try {
+      context.read<VaultSaveQueue>().enqueueAgoraRecordingTranscript(
+        eventId: eid,
+        language: widget.language,
+        roomLabel: widget.peerLabel,
+      );
+    } catch (_) {}
+  }
+
   Future<void> _endCall() async {
     if (_leaving) return;
     _leaving = true;
@@ -150,12 +171,82 @@ class _AgoraCallScreenState extends State<AgoraCallScreen> {
         });
       }
     } catch (_) {}
+    if (mounted) {
+      _queueVaultTranscribe();
+    }
     try {
       await _agora.leaveChannelAndRelease();
     } catch (_) {}
     if (mounted) {
       Navigator.of(context).pop();
     }
+  }
+
+  Widget _buildWaitingForEngine() {
+    if (kIsWeb) {
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.all(24),
+          child: Text(
+            'מתחבר למדיה (דפדפן)… אם נשאר כך — בדקו מצלמה/מיקרופן בהרשאות האתר',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: Colors.white70,
+              fontFamily: 'Heebo',
+              fontSize: 16,
+            ),
+          ),
+        ),
+      );
+    }
+    return const Center(
+      child: Padding(
+        padding: EdgeInsets.all(24),
+        child: Text(
+          'מכין שיחה…',
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            color: Colors.white70,
+            fontFamily: 'Heebo',
+            fontSize: 16,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _remoteVideoOrWaiting({
+    required RtcEngine eng,
+    required int? remote,
+    required String channel,
+  }) {
+    if (remote == null) {
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.person_search, color: Colors.white54, size: 56),
+            const SizedBox(height: 16),
+            Text(
+              'Waiting for ${widget.peerLabel}…',
+              style: const TextStyle(
+                color: Colors.white,
+                fontFamily: 'Heebo',
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+    return AgoraVideoView(
+      controller: VideoViewController.remote(
+        rtcEngine: eng,
+        canvas: VideoCanvas(uid: remote),
+        connection: RtcConnection(channelId: channel),
+      ),
+    );
   }
 
   @override
@@ -174,9 +265,10 @@ class _AgoraCallScreenState extends State<AgoraCallScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final eng = _agora.engine;
-    final remote = _agora.remoteUid;
-    final channel = widget.channelId;
+    // Copy for stable null-promotion: engine can be null after leave/dispose or on Web edge cases.
+    final RtcEngine? eng = _agora.engine;
+    final int? remote = _agora.remoteUid;
+    final String channel = widget.channelId;
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -203,35 +295,15 @@ class _AgoraCallScreenState extends State<AgoraCallScreen> {
                 ),
               ),
             )
-          else if (eng != null) ...[
+          else if (eng == null) _buildWaitingForEngine()
+          else ...[
             if (widget.wantVideo)
               Positioned.fill(
-                child: remote != null
-                    ? AgoraVideoView(
-                        controller: VideoViewController.remote(
-                          rtcEngine: eng,
-                          canvas: VideoCanvas(uid: remote),
-                          connection: RtcConnection(channelId: channel),
-                        ),
-                      )
-                    : Center(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(Icons.person_search, color: Colors.white54, size: 56),
-                            const SizedBox(height: 16),
-                            Text(
-                              'Waiting for ${widget.peerLabel}…',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontFamily: 'Heebo',
-                                fontSize: 18,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
+                child: _remoteVideoOrWaiting(
+                  eng: eng,
+                  remote: remote,
+                  channel: channel,
+                ),
               )
             else
               Positioned.fill(

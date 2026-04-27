@@ -1,0 +1,113 @@
+# הדרכת ENV ל-VETO (Render / מקומי) — **בלי Firebase / FCM**
+
+**סדר טעינה בשרת (Node):** `backend/.env` → `backend/.env.local` (אם קיים, דורס).  
+**לא** נטען: `.env` או `.env.local` **בשורש** הפרויקט (כאשר `backend/.env` קיים). הערכים ל-API ב־`backend/.env` בלבד.
+
+המקור בקוד: [`.env.example`](.env.example) + `render.yaml` (בשורש הפרויקט) + שימושי `process.env` ב־`src/`.
+
+**לא ממלאים במסלול "בלי Firebase"**
+
+- `FIREBASE_SERVICE_ACCOUNT` — לא (שליחת FCM דרך `firebase-admin` לא מופעלת).
+- אין צורך ב־`flutterfire`, `google-services.json` או `GoogleService-Info.plist` **ל־FCM**.
+
+---
+
+## 1) ליבה (MONGO, JWT, שרת)
+
+### `MONGO_URI`
+
+- **מאיפה:** MongoDB Atlas (האפליקציה בנויה על Mongoose + MongoDB, לא Postgres/Neon).
+- **לינקים:** [התחלה — Atlas](https://www.mongodb.com/docs/atlas/getting-started/) · [Build a Cluster](https://www.mongodb.com/docs/atlas/tutorial/create-new-cluster/) · [Connect — Drivers — `mongodb+srv://...`](https://www.mongodb.com/docs/atlas/driver-connection/)
+- **קצר:** Create Project → Cluster (Free) → Network Access (למשל `0.0.0.0/0` לבדיקות) → Database User → Connect → Drivers → העתק מחרוזת. סיסמאות עם תווים מיוחדים: URL-encode.
+
+### `JWT_SECRET`
+
+- **יצירה (מקומי, בלי commit):**  
+  `node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"`
+
+### `JWT_EXPIRES_IN`
+
+- לרוב `30d` (ברירת מחדל ב־`auth.middleware`).
+
+### `PORT` / `NODE_ENV`
+
+- **מקומי:** `PORT=5001` · `NODE_ENV=development`
+- **Render:** `PORT` בדרך כלל אוטומטי; `NODE_ENV=production`
+
+---
+
+## 2) Google OAuth (אם Google Sign-In פעיל)
+
+- `GOOGLE_CLIENT_ID` + `GOOGLE_CLIENT_SECRET`
+- [Google Cloud — Credentials](https://console.cloud.google.com/apis/credentials) · [OAuth 2.0 client (Web)](https://support.google.com/cloud/answer/6158849?hl=he)
+
+---
+
+## 3) Gemini (AI + ניתוח כספת)
+
+- `GEMINI_API_KEY` — [Google AI Studio — API key](https://aistudio.google.com/apikey)
+- אופציונלי: `GEMINI_MODEL` (למשל `gemini-2.5-flash`)
+- אופציונלי: `VAULT_ANALYSIS_MAX_BYTES` (גודל מקסימלי לניתוח קובץ; ברירת מחדל בקוד ~20MB)
+
+---
+
+## 4) Cloudinary (העלאות / כספה / ראיות)
+
+- `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`
+- [Cloudinary Console](https://cloudinary.com/console) · [מציאת API Key](https://cloudinary.com/documentation/finding_cloud_credentials)
+
+---
+
+## 5) VAPID (Web Push בדפדפן — לא Firebase)
+
+- `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` (מומלץ `mailto:...` אמיתי)
+- **יצירה:** `npx web-push generate-vapid-keys` — [web-push CLI](https://github.com/web-push-libs/web-push#command-line)
+
+---
+
+## 6) אופציונלי — יומן, iCal, מייל
+
+- `PUBLIC_API_BASE` או `VETO_PUBLIC_BASE` — **origin** מלא בלי `/api` (למשל `https://your-app.onrender.com`) לבניית `webcalUrl` ב־API היומן.
+- **SMTP** (אם רוצה מייל + ICS): `SMTP_HOST`, `SMTP_PORT`, `SMTP_FROM`, ולעיתים `SMTP_USER`, `SMTP_PASS`, `SMTP_SECURE`  
+  - [Resend SMTP](https://resend.com/docs/send-with-smtp) · [SendGrid SMTP](https://docs.sendgrid.com/for-developers/sending-email/getting-started-smtp)
+
+### Cron (תזכורות יומן)
+
+- `npm run cron:calendar` (דורש `MONGO_URI` זהה)
+- אופציונלי: `CALENDAR_REMINDER_WINDOW_MIN` (בדקות; ראו `scripts/cron-calendar-reminders.js`)
+- על Render: בדרך כלל **Cron Job** נפרד או שירות worker שמפעיל את הסקריפט.
+
+---
+
+## 7) אופציונלי — PayPal, Sentry, TURN, Twilio, OTP
+
+- PayPal: [developer.paypal.com](https://developer.paypal.com/)
+- Sentry: [sentry.io](https://sentry.io/) — DSN ל־Node
+- TURN / ICE: `WEBRTC_ICE_SERVERS_JSON` או `TURN_*` (ראו `call.controller.js`)
+- Twilio + `RETURN_OTP_IN_JSON` — ראו `auth.controller.js` (אל תשאיר `RETURN_OTP_IN_JSON` בפרודקשן)
+
+---
+
+## 8) רק NotebookLM Enterprise (GCP) — לא FCM
+
+- `GCP_PROJECT_ID` או `GOOGLE_CLOUD_PROJECT`
+- `GOOGLE_NOTEBOOKLM_SA_JSON` — **מחרוזת JSON אחת** (תוכן קובץ service account)  
+- [תיעוד המוצר](https://cloud.google.com/gemini/enterprise/notebooklm-enterprise/docs) · [Service Accounts](https://console.cloud.google.com/iam-admin/serviceaccounts) → Create key → JSON
+- אופציונלי: `NOTEBOOKLM_ENT_URL` (ברירה בקוד: `https://notebooklm.cloud.google.com`)
+
+---
+
+## 9) Render
+
+- [Render Dashboard](https://dashboard.render.com/) → Web Service → **Environment**  
+- **Secrets:** `MONGO_URI`, `JWT_SECRET`, `GOOGLE_CLIENT_SECRET`, `GEMINI_API_KEY`, Cloudinary, `VAPID_PRIVATE_KEY`, SMTP password, `GOOGLE_NOTEBOOKLM_SA_JSON` (אם בשימוש).
+
+---
+
+## 10) Neon
+
+- VETO משתמש ב־**MongoDB (Atlas)**, לא ב־**Neon (Postgres)**. אין מיפוי ישיר ביניהם בלי מיגרציית DB.
+
+---
+
+תבנית שדות מעודכנת: ראו קובץ [`.env.example`](.env.example) ב־`backend/`.

@@ -126,6 +126,8 @@ const apiDiscovery = (_, res) =>
       health: '/health',
       apiRoot: '/api',
       pushVapidKey: '/api/push/vapid-key',
+      legalCalendar: '/api/calendar/events?year=YYYY&month=MM (JWT)',
+      icalExport: '/api/calendar/export.ics?token= (public)',
     },
     postExamples: {
       requestOtp: '/api/auth/request-otp',
@@ -157,6 +159,11 @@ app.get('/api/push/vapid-key', (_, res) => {
   if (!key) return res.status(503).json({ error: 'Push notifications not configured.' });
   res.json({ publicKey: key });
 });
+const { exportIcs: calendarExportIcs } = require('./src/controllers/calendar.controller');
+app.get('/api/calendar/export.ics', calendarExportIcs);
+app.use('/api/calendar', require('./src/routes/calendar.routes'));
+app.use('/api/legal-notebook', require('./src/routes/legalNotebook.routes'));
+app.use('/api/integrations/gcal', require('./src/routes/gcalOAuth.routes'));
 app.use('/api/events', require('./src/routes/event.routes'));
 app.use('/api/admin', require('./src/routes/admin.routes'));
 app.use('/api/ai', require('./src/routes/ai.routes'));

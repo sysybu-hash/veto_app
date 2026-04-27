@@ -28,9 +28,11 @@ class _L {
       shareWithLawyer, lawyerAccess, fileType, size, date, status,
       aiSummary, aiBtn, cancel, save, errorUpload, successUpload,
       successDelete, successShare, compressing, caseCreated, loading,
-      rename, fileName, successRename,
+      rename, fileName,       successRename,
       deleteCase, deleteCaseConfirm, successDeleteCase,
-      removeFromCase;
+      removeFromCase,
+      folders, newFolder, folderName, moveToFolder, rootVault, deleteFolder,
+      deleteFolderConfirm, folderNotEmpty, goUp, openFolder;
 
   const _L({
     required this.title, required this.upload, required this.uploading,
@@ -49,6 +51,10 @@ class _L {
     required this.rename, required this.fileName, required this.successRename,
     required this.deleteCase, required this.deleteCaseConfirm, required this.successDeleteCase,
     required this.removeFromCase,
+    required this.folders, required this.newFolder, required this.folderName,
+    required this.moveToFolder, required this.rootVault, required this.deleteFolder,
+    required this.deleteFolderConfirm, required this.folderNotEmpty, required this.goUp,
+    required this.openFolder,
   });
 }
 
@@ -70,6 +76,10 @@ const _he = _L(
   rename: 'שנה שם', fileName: 'שם הקובץ', successRename: 'השם עודכן',
   deleteCase: 'מחק תיק', deleteCaseConfirm: 'למחוק את התיק? הקבצים יישארו בכספת.',
   successDeleteCase: 'התיק נמחק', removeFromCase: 'הסר מהתיק',
+  folders: 'תיקיות', newFolder: 'תיקייה חדשה', folderName: 'שם התיקייה',
+  moveToFolder: 'העבר לתיקייה', rootVault: 'כספת', deleteFolder: 'מחק תיקייה',
+  deleteFolderConfirm: 'למחוק את התיקייה? (רק אם ריקה)', folderNotEmpty: 'התיקייה אינה ריקה',
+  goUp: 'הקודם', openFolder: 'פתח',
 );
 
 const _en = _L(
@@ -90,6 +100,10 @@ const _en = _L(
   rename: 'Rename', fileName: 'File name', successRename: 'Name updated',
   deleteCase: 'Delete Case', deleteCaseConfirm: 'Delete this case? Files will remain in your vault.',
   successDeleteCase: 'Case deleted', removeFromCase: 'Remove from Case',
+  folders: 'Folders', newFolder: 'New folder', folderName: 'Folder name',
+  moveToFolder: 'Move to folder', rootVault: 'Vault', deleteFolder: 'Delete folder',
+  deleteFolderConfirm: 'Delete this folder? (only if empty)', folderNotEmpty: 'Folder is not empty',
+  goUp: 'Up', openFolder: 'Open',
 );
 
 const _ru = _L(
@@ -110,6 +124,10 @@ const _ru = _L(
   rename: 'Переименовать', fileName: 'Имя файла', successRename: 'Имя обновлено',
   deleteCase: 'Удалить дело', deleteCaseConfirm: 'Удалить это дело? Файлы останутся в хранилище.',
   successDeleteCase: 'Дело удалено', removeFromCase: 'Убрать из дела',
+  folders: 'Папки', newFolder: 'Новая папка', folderName: 'Имя папки',
+  moveToFolder: 'Переместить', rootVault: 'Хранилище', deleteFolder: 'Удалить папку',
+  deleteFolderConfirm: 'Удалить папку? (только пустая)', folderNotEmpty: 'Папка не пуста',
+  goUp: 'Назад', openFolder: 'Открыть',
 );
 
 // ── Data models ───────────────────────────────────────────────
@@ -118,16 +136,26 @@ class _VaultFile {
   final int sizeBytes;
   final DateTime uploadedAt;
   final bool lawyerAccess;
-  final String? aiSummary, caseId;
+  final String? aiSummary, caseId, folderId;
 
   const _VaultFile({
     required this.id, required this.name, required this.type,
     required this.url, required this.status, required this.sizeBytes,
     required this.uploadedAt, required this.lawyerAccess,
-    this.aiSummary, this.caseId,
+    this.aiSummary, this.caseId, this.folderId,
   });
 
-  factory _VaultFile.fromJson(Map<String, dynamic> j) => _VaultFile(
+  factory _VaultFile.fromJson(Map<String, dynamic> j) {
+    final raw = j['folderId'];
+    String? fid;
+    if (raw == null) {
+      fid = null;
+    } else if (raw is String) {
+      fid = raw.isEmpty ? null : raw;
+    } else {
+      fid = raw.toString();
+    }
+    return _VaultFile(
     id: j['_id'] ?? j['id'] ?? '',
     name: j['name'] ?? j['fileName'] ?? 'file',
     type: j['mimeType'] ?? j['type'] ?? 'application/octet-stream',
@@ -138,7 +166,9 @@ class _VaultFile {
     lawyerAccess: j['lawyerAccess'] == true,
     aiSummary: j['aiSummary'] as String?,
     caseId: j['caseId'] as String?,
+    folderId: fid,
   );
+  }
 
   String get sizeLabel {
     if (sizeBytes < 1024) return '${sizeBytes}B';
@@ -161,6 +191,22 @@ class _VaultFile {
     if (type.startsWith('audio/')) return VetoPalette.accentSky;
     if (type.contains('pdf')) return VetoPalette.emergency;
     return VetoPalette.textMuted;
+  }
+}
+
+class _VaultFolder {
+  final String id, name;
+  final String? parentId;
+  const _VaultFolder({
+    required this.id, required this.name, this.parentId,
+  });
+  factory _VaultFolder.fromJson(Map<String, dynamic> j) {
+    final p = j['parentId'];
+    return _VaultFolder(
+      id: (j['_id'] ?? j['id'] ?? '').toString(),
+      name: (j['name'] ?? 'folder').toString(),
+      parentId: p?.toString(),
+    );
   }
 }
 
@@ -195,7 +241,12 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
   final AuthService _auth = AuthService();
 
   List<_VaultFile> _files = [];
+  List<_VaultFolder> _folders = [];
   List<_LegalCase> _cases = [];
+  /// Breadcrumb: first is always root; last is current folder (id null = vault root).
+  final List<({String? id, String name})> _folderPath = [
+    (id: null, name: ''), // name filled from _l.rootVault in build
+  ];
   bool _loading = true;
   bool _uploading = false;
   bool _analyzing = false;
@@ -209,6 +260,228 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
   double get _usedMb =>
       _files.fold(0.0, (s, f) => s + f.sizeBytes) / (1024 * 1024);
   double get _quotaMb => 100.0;
+
+  String? get _currentFolderId =>
+      _folderPath.isEmpty ? null : _folderPath.last.id;
+
+  List<_VaultFolder> get _subfolders {
+    final cur = _currentFolderId;
+    final out = _folders.where((f) {
+      final p = f.parentId;
+      if (cur == null || cur.isEmpty) {
+        return p == null || p.isEmpty;
+      }
+      return p == cur;
+    }).toList();
+    out.sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+    return out;
+  }
+
+  List<_VaultFile> get _filesHere {
+    final cur = _currentFolderId;
+    return _files.where((f) {
+      final fid = f.folderId;
+      if (cur == null || cur.isEmpty) {
+        return fid == null || fid.isEmpty;
+      }
+      return fid == cur;
+    }).toList();
+  }
+
+  void _goFolderUp() {
+    if (_folderPath.length <= 1) return;
+    setState(() {
+      _folderPath.removeLast();
+    });
+  }
+
+  void _openFolder(_VaultFolder f) {
+    setState(() {
+      _folderPath.add((id: f.id, name: f.name));
+    });
+  }
+
+  Future<void> _createSubfolder() async {
+    final ctrl = TextEditingController();
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: VetoGlassTokens.sheetPanel,
+        title: Text(_l.newFolder, style: const TextStyle(color: VetoGlassTokens.textPrimary)),
+        content: TextField(
+          controller: ctrl,
+          decoration: InputDecoration(
+            labelText: _l.folderName,
+            labelStyle: const TextStyle(color: VetoGlassTokens.textMuted),
+          ),
+          style: const TextStyle(color: VetoGlassTokens.textPrimary),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(_l.cancel, style: const TextStyle(color: VetoGlassTokens.textMuted)),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(_l.save),
+          ),
+        ],
+      ),
+    );
+    if (ok != true) return;
+    final name = ctrl.text.trim();
+    if (name.isEmpty) return;
+    try {
+      final tok = await _token;
+      if (tok == null) return;
+      final res = await http
+          .post(
+            Uri.parse('${AppConfig.baseUrl}/vault/folders'),
+            headers: AppConfig.httpHeaders({'Authorization': 'Bearer $tok'}),
+            body: jsonEncode({
+              'name': name,
+              'parentId': _currentFolderId,
+            }),
+          )
+          .timeout(const Duration(seconds: 15));
+      if (res.statusCode == 201 || res.statusCode == 200) {
+        await _load();
+      } else {
+        _snack(_l.errorUpload, isError: true);
+      }
+    } catch (_) {
+      _snack(_l.errorUpload, isError: true);
+    } finally {
+      ctrl.dispose();
+    }
+  }
+
+  Future<void> _removeFolder(_VaultFolder f) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: VetoGlassTokens.sheetPanel,
+        title: Text(_l.deleteFolder, style: const TextStyle(color: VetoGlassTokens.textPrimary)),
+        content: Text(_l.deleteFolderConfirm, style: const TextStyle(color: VetoGlassTokens.textMuted)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(_l.cancel, style: const TextStyle(color: VetoGlassTokens.textMuted)),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: FilledButton.styleFrom(backgroundColor: VetoPalette.emergency, foregroundColor: Colors.white),
+            child: Text(_l.delete),
+          ),
+        ],
+      ),
+    );
+    if (confirm != true) return;
+    try {
+      final tok = await _token;
+      if (tok == null) return;
+      final res = await http
+          .delete(
+            Uri.parse('${AppConfig.baseUrl}/vault/folders/${f.id}'),
+            headers: AppConfig.httpHeaders({'Authorization': 'Bearer $tok'}),
+          )
+          .timeout(const Duration(seconds: 10));
+      if (res.statusCode == 200) {
+        if (_currentFolderId == f.id) {
+          _goFolderUp();
+        }
+        _folderPath.removeWhere((s) => s.id == f.id);
+        await _load();
+        return;
+      }
+      if (res.statusCode == 400) {
+        _snack(_l.folderNotEmpty, isError: true);
+        return;
+      }
+      _snack(_l.errorUpload, isError: true);
+    } catch (_) {
+      _snack(_l.errorUpload, isError: true);
+    }
+  }
+
+  Future<void> _moveFileToFolder(_VaultFile file) async {
+    String? targetId; // null = root
+    await showDialog<void>(
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          backgroundColor: VetoGlassTokens.sheetPanel,
+          title: Text(_l.moveToFolder, style: const TextStyle(color: VetoGlassTokens.textPrimary, fontSize: 16)),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.home_outlined, color: VetoGlassTokens.neonCyan),
+                  title: Text(_l.rootVault, style: const TextStyle(color: VetoGlassTokens.textPrimary)),
+                  onTap: () {
+                    targetId = 'ROOT';
+                    Navigator.pop(ctx);
+                  },
+                ),
+                ..._folders.map((g) {
+                  if (g.id == file.folderId) {
+                    return const SizedBox.shrink();
+                  }
+                  return ListTile(
+                    leading: const Icon(Icons.folder_outlined, color: VetoGlassTokens.textMuted),
+                    title: Text(
+                      g.name,
+                      style: const TextStyle(color: VetoGlassTokens.textPrimary),
+                      maxLines: 1,
+                    ),
+                    onTap: () {
+                      targetId = g.id;
+                      Navigator.pop(ctx);
+                    },
+                  );
+                }),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                targetId = '__cancel__';
+                Navigator.pop(ctx);
+              },
+              child: Text(_l.cancel, style: const TextStyle(color: VetoGlassTokens.textMuted)),
+            ),
+          ],
+        );
+      },
+    );
+    if (targetId == null || targetId == '__cancel__') return;
+    final payload = <String, dynamic>{};
+    if (targetId == 'ROOT') {
+      payload['folderId'] = null;
+    } else {
+      payload['folderId'] = targetId;
+    }
+    try {
+      final tok = await _token;
+      if (tok == null) return;
+      final res = await http
+          .patch(
+            Uri.parse('${AppConfig.baseUrl}/vault/files/${file.id}'),
+            headers: AppConfig.httpHeaders({'Authorization': 'Bearer $tok'}),
+            body: jsonEncode(payload),
+          )
+          .timeout(const Duration(seconds: 10));
+      if (res.statusCode == 200) {
+        await _load();
+      } else {
+        _snack(_l.errorUpload, isError: true);
+      }
+    } catch (_) {
+      _snack(_l.errorUpload, isError: true);
+    }
+  }
 
   _L get _l {
     final code = context.read<AppLanguageController>().code;
@@ -276,6 +549,10 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
         ..headers.addAll(AppConfig.httpHeadersBinary({'Authorization': 'Bearer $tok'}))
         ..fields['name'] = fileName
         ..fields['mimeType'] = fileType.isNotEmpty ? fileType : 'application/octet-stream';
+      final pfo = _currentFolderId;
+      if (pfo != null && pfo.isNotEmpty) {
+        req.fields['folderId'] = pfo;
+      }
 
       req.files.add(http.MultipartFile.fromBytes('file', bytes, filename: fileName));
       final streamed = await req.send();
@@ -423,6 +700,15 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
         final list = data is List ? data : (data['files'] ?? []);
         _files = (list as List).map((e) => _VaultFile.fromJson(e as Map<String, dynamic>)).toList();
       }
+      final foldersRes = await http.get(
+        Uri.parse('${AppConfig.baseUrl}/vault/folders'),
+        headers: AppConfig.httpHeaders({'Authorization': 'Bearer $tok'}),
+      ).timeout(const Duration(seconds: 15));
+      if (foldersRes.statusCode == 200) {
+        final data = jsonDecode(foldersRes.body);
+        final list = data is List ? data : (data['folders'] ?? []);
+        _folders = (list as List).map((e) => _VaultFolder.fromJson(e as Map<String, dynamic>)).toList();
+      }
       if (casesRes.statusCode == 200) {
         final data = jsonDecode(casesRes.body);
         final list = data is List ? data : (data['cases'] ?? []);
@@ -470,6 +756,10 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
       final req = http.MultipartRequest('POST', uri)
         ..headers.addAll(AppConfig.httpHeadersBinary({'Authorization': 'Bearer $tok'}))
         ..fields['name'] = pf.name;
+      final pfo = _currentFolderId;
+      if (pfo != null && pfo.isNotEmpty) {
+        req.fields['folderId'] = pfo;
+      }
 
       if (pf.extension != null) {
         req.fields['mimeType'] = 'application/${pf.extension}';
@@ -1070,36 +1360,141 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
   }
 
   Widget _buildAllFilesTab() {
-    if (_files.isEmpty) {
-      return Center(
-        child: Column(mainAxisSize: MainAxisSize.min, children: [
-          Icon(Icons.folder_open_outlined,
-              size: 64, color: VetoGlassTokens.textSubtle.withValues(alpha: 0.5)),
-          const SizedBox(height: 16),
-          Text(_l.noFiles,
-              style: const TextStyle(color: VetoGlassTokens.textMuted,
-                  fontSize: 16, fontWeight: FontWeight.w500)),
+    final subs = _subfolders;
+    final here = _filesHere;
+    final isEmpty = subs.isEmpty && here.isEmpty;
+    if (isEmpty) {
+      return ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          _buildFolderBreadcrumb(),
           const SizedBox(height: 8),
-          Text(_l.upload,
-              style: const TextStyle(color: VetoGlassTokens.textSubtle, fontSize: 13)),
-        ]),
+          Row(
+            children: [
+              FilledButton.tonal(
+                onPressed: _createSubfolder,
+                child: Text(_l.newFolder),
+              ),
+              const SizedBox(width: 8),
+              if (_folderPath.length > 1)
+                OutlinedButton(
+                  onPressed: _goFolderUp,
+                  child: Text(_l.goUp),
+                ),
+            ],
+          ),
+          const SizedBox(height: 32),
+          Center(
+            child: Column(mainAxisSize: MainAxisSize.min, children: [
+              Icon(Icons.folder_open_outlined,
+                  size: 64, color: VetoGlassTokens.textSubtle.withValues(alpha: 0.5)),
+              const SizedBox(height: 16),
+              Text(_l.noFiles,
+                  style: const TextStyle(color: VetoGlassTokens.textMuted,
+                      fontSize: 16, fontWeight: FontWeight.w500)),
+              const SizedBox(height: 8),
+              Text(_l.upload,
+                  style: const TextStyle(color: VetoGlassTokens.textSubtle, fontSize: 13)),
+            ]),
+          ),
+        ],
       );
     }
-    return ListView.separated(
+    return ListView(
       padding: const EdgeInsets.all(16),
-      itemCount: _files.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 8),
-      itemBuilder: (context, i) => _FileCard(
-        file: _files[i],
-        l: _l,
-        isAnalyzing: _analyzing && _activeFileId == _files[i].id,
-        onAnalyze: () => _analyzeFile(_files[i]),
-        onDelete: () => _deleteFile(_files[i]),
-        onToggleAccess: () => _toggleLawyerAccess(_files[i]),
-        onRename: () => _renameFile(_files[i]),
-        onAddToCase: _cases.isEmpty ? null : () => _showAddToCase(_files[i]),
-        onRemoveFromCase: _files[i].caseId == null ? null : () => _removeFromCase(_files[i]),
-        onPreview: () => _showPreview(_files[i]),
+      children: [
+        _buildFolderBreadcrumb(),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            FilledButton.tonal(
+              onPressed: _createSubfolder,
+              child: Text(_l.newFolder),
+            ),
+            const SizedBox(width: 8),
+            if (_folderPath.length > 1)
+              OutlinedButton(
+                onPressed: _goFolderUp,
+                child: Text(_l.goUp),
+              ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        ...subs.map(
+          (fo) => Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: _FolderListTile(
+              name: fo.name,
+              l: _l,
+              onOpen: () => _openFolder(fo),
+              onDelete: () => _removeFolder(fo),
+            ),
+          ),
+        ),
+        if (here.isNotEmpty) const SizedBox(height: 4),
+        ...here.map(
+          (f) => Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: _FileCard(
+              file: f,
+              l: _l,
+              isAnalyzing: _analyzing && _activeFileId == f.id,
+              onAnalyze: () => _analyzeFile(f),
+              onDelete: () => _deleteFile(f),
+              onToggleAccess: () => _toggleLawyerAccess(f),
+              onRename: () => _renameFile(f),
+              onAddToCase: _cases.isEmpty ? null : () => _showAddToCase(f),
+              onRemoveFromCase: f.caseId == null ? null : () => _removeFromCase(f),
+              onMoveToFolder: (_folders.isNotEmpty ||
+                      (f.folderId != null && f.folderId!.isNotEmpty))
+                  ? () => unawaited(_moveFileToFolder(f))
+                  : null,
+              onPreview: () => _showPreview(f),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildFolderBreadcrumb() {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: [
+          for (var i = 0; i < _folderPath.length; i++) ...[
+            if (i > 0)
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 4),
+                child: Icon(Icons.chevron_right, size: 16, color: VetoGlassTokens.textMuted),
+              ),
+            InkWell(
+              onTap: i < _folderPath.length - 1
+                  ? () {
+                      setState(() {
+                        while (_folderPath.length > i + 1) {
+                          _folderPath.removeLast();
+                        }
+                      });
+                    }
+                  : null,
+              borderRadius: BorderRadius.circular(6),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                child: Text(
+                  (i == 0 && _folderPath[i].name.isEmpty) ? _l.rootVault : _folderPath[i].name,
+                  style: TextStyle(
+                    color: i == _folderPath.length - 1
+                        ? VetoGlassTokens.neonCyan
+                        : VetoGlassTokens.textPrimary,
+                    fontWeight: i == _folderPath.length - 1 ? FontWeight.w700 : FontWeight.w500,
+                    fontSize: 13,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ],
       ),
     );
   }
@@ -1199,20 +1594,78 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
   }
 }
 
+class _FolderListTile extends StatelessWidget {
+  const _FolderListTile({
+    required this.name,
+    required this.l,
+    required this.onOpen,
+    required this.onDelete,
+  });
+  final String name;
+  final _L l;
+  final VoidCallback onOpen, onDelete;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: VetoGlassTokens.glassFillStrong,
+      borderRadius: BorderRadius.circular(14),
+      child: InkWell(
+        onTap: onOpen,
+        borderRadius: BorderRadius.circular(14),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: VetoGlassTokens.glassBorder),
+          ),
+          child: Row(
+            children: [
+              const Icon(Icons.folder_rounded, color: VetoGlassTokens.neonCyan, size: 30),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  name,
+                  style: const TextStyle(
+                    color: VetoGlassTokens.textPrimary,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 15,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              TextButton(
+                onPressed: onOpen,
+                child: Text(l.openFolder),
+              ),
+              IconButton(
+                icon: const Icon(Icons.delete_outline, color: VetoPalette.emergency, size: 20),
+                onPressed: onDelete,
+                tooltip: l.deleteFolder,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 // ── File card widget ─────────────────────────────────────────
 class _FileCard extends StatelessWidget {
   final _VaultFile file;
   final _L l;
   final bool isAnalyzing;
   final VoidCallback onAnalyze, onDelete, onToggleAccess, onRename;
-  final VoidCallback? onAddToCase, onRemoveFromCase;
+  final VoidCallback? onAddToCase, onRemoveFromCase, onMoveToFolder;
   final VoidCallback? onPreview;
 
   const _FileCard({
     required this.file, required this.l, required this.isAnalyzing,
     required this.onAnalyze, required this.onDelete,
     required this.onToggleAccess, required this.onRename,
-    this.onAddToCase, this.onRemoveFromCase, this.onPreview,
+    this.onAddToCase, this.onRemoveFromCase, this.onMoveToFolder, this.onPreview,
   });
 
   @override
@@ -1329,6 +1782,13 @@ class _FileCard extends StatelessWidget {
               label: l.addToCase,
               color: VetoGlassTokens.accentSoft,
               onTap: onAddToCase!,
+            ),
+          if (onMoveToFolder != null)
+            _ActionChip(
+              icon: Icons.drive_file_move_rounded,
+              label: l.moveToFolder,
+              color: VetoPalette.info,
+              onTap: onMoveToFolder!,
             ),
           _ActionChip(
             icon: Icons.delete_outline_rounded,

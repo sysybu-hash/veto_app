@@ -29,6 +29,8 @@ import '../services/socket_service.dart';
 import '../services/ai_service.dart';
 import '../services/payment_service.dart';
 import '../services/admin_service.dart';
+import '../services/fcm_user_service.dart';
+import '../services/push_service.dart';
 import 'admin/admin_i18n.dart';
 import 'evidence_screen.dart';
 
@@ -222,6 +224,11 @@ class _VetoScreenState extends State<VetoScreen> {
     }
     if ((r ?? '').isNotEmpty) {
       await SocketService().connect(role: r ?? 'user');
+    }
+    if (kIsWeb) {
+      unawaited(PushService().registerUserPush());
+    } else {
+      unawaited(registerFcmIfAvailable());
     }
   }
 
@@ -1178,6 +1185,14 @@ class _VetoScreenState extends State<VetoScreen> {
                   _langKey == 'he' ? 'כספת קבצים' : _langKey == 'ru' ? 'Хранилище' : 'File Vault',
                   VetoGlassTokens.neonCyan,
                   () { Navigator.pop(ctx); Navigator.pushNamed(context, '/files_vault'); }),
+              _menuItem(Icons.calendar_month_outlined,
+                  _langKey == 'he' ? 'יומן משפטי' : 'Legal calendar',
+                  VetoGlassTokens.neonCyan,
+                  () { Navigator.pop(ctx); Navigator.pushNamed(context, '/legal_calendar'); }),
+              _menuItem(Icons.menu_book_outlined,
+                  _langKey == 'he' ? 'מחברת (Enterprise)' : 'Notebook (Enterprise)',
+                  VetoGlassTokens.neonCyan,
+                  () { Navigator.pop(ctx); Navigator.pushNamed(context, '/legal_notebook'); }),
               _menuItem(Icons.map_outlined,
                   _langKey == 'he' ? 'מפה' : _langKey == 'ru' ? 'Карта' : 'Map',
                   VetoGlassTokens.neonCyan,
