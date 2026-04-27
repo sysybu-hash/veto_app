@@ -34,7 +34,7 @@ import 'screens/admin/pending_lawyers_screen.dart';
 import 'screens/admin/emergency_logs_screen.dart';
 import 'screens/lawyer_settings_screen.dart';
 import 'screens/chat_screen.dart';
-import 'screens/call_screen.dart';
+import 'screens/call_entry_screen.dart';
 import 'screens/maps_screen.dart';
 import 'screens/shared_vault_screen.dart';
 import 'services/socket_service.dart';
@@ -139,7 +139,7 @@ final Map<String, WidgetBuilder> vetoAppRoutes = <String, WidgetBuilder>{
   '/admin_logs': (_) => const EmergencyLogsScreen(),
   '/lawyer_settings': (_) => const LawyerSettingsScreen(),
   '/chat': (_) => const ChatScreen(),
-  '/call': (_) => const CallScreen(),
+  '/call': (_) => const CallEntryScreen(),
   '/maps': (_) => const MapsScreen(),
   '/shared_vault': (_) => const SharedVaultScreen(),
 };
