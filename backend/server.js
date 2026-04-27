@@ -73,6 +73,7 @@ if (process.env.RENDER === 'true' || process.env.NODE_ENV === 'production') {
 
 app.use(
   cors({
+    // Reflect request Origin so Flutter web (Vercel) and mobile clients work.
     origin: true,
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
@@ -81,6 +82,7 @@ app.use(
       'Authorization',
       'Accept',
       'bypass-tunnel-reminder',
+      'X-Requested-With',
     ],
   }),
 );
@@ -89,6 +91,8 @@ app.use(
 app.use(helmet({
   contentSecurityPolicy: false,  // Flutter web needs inline scripts
   crossOriginOpenerPolicy: false, // handled by Vercel headers
+  // Allow cross-origin fetch / Socket.io from Vercel and other web origins (default same-site can block usefully).
+  crossOriginResourcePolicy: false,
 }));
 
 // ── Rate limiting on auth routes ──────────────────────────────
@@ -107,6 +111,8 @@ const apiLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: 'Too many requests, please try again later.' },
+  // CORS preflight (OPTIONS) must not burn the budget or return a response without CORS headers.
+  skip: (req) => req.method === 'OPTIONS',
 });
 
 app.use(express.json());

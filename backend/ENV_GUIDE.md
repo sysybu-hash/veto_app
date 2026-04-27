@@ -102,6 +102,13 @@
 - [Render Dashboard](https://dashboard.render.com/) → Web Service → **Environment**  
 - **Secrets:** `MONGO_URI`, `JWT_SECRET`, `GOOGLE_CLIENT_SECRET`, `GEMINI_API_KEY`, Cloudinary, `VAPID_PRIVATE_KEY`, SMTP password, `GOOGLE_NOTEBOOKLM_SA_JSON` (אם בשימוש).
 
+### Flutter Web (Vercel) + CORS / 404
+
+- אם בדפדפן מופיע `blocked by CORS` או `GET .../health ... 404` מ־**מקור** `https://…vercel.app` ל־`https://…onrender.com`:
+  1. **ודאו** ב־[Render](https://dashboard.render.com) שה־**Public URL** של שירות ה־Web שמריץ את `node server.js` הוא **בדיוק** זה שמוגדר ב־`VETO_API_BASE` / ב־[app_config.dart](../frontend/lib/config/app_config.dart). `404` על `/health` בדרך כלל אומר שמחוברים ל־**שירות אחר** (או שם host ישן) — לא ל־VETO.
+  2. בדיקה בלי דפדפן: `curl -sS -i "https://<host>/health"` — אמור `200` ו־JSON עם `"app":"VETO"`.
+  3. אחרי שינוי host ב־Render: `npm run build:web` מהשורש + commit ל־`frontend/build/web` + deploy ב־Vercel.
+
 ### URL אחד, שירות אחד (פרודקשן)
 
 - **הדומיין הציבורי** של API מופיע ב־**Render → Web Service** תחת **Settings** (Default **onrender.com** hostname) או **Custom Domains**.  
