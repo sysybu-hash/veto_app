@@ -111,6 +111,11 @@ class _AgoraCallScreenState extends State<AgoraCallScreen> {
     if (mounted) setState(() {});
   }
 
+  /// Agora `AgoraVideoView` on **Flutter web** can throw
+  /// "Null check operator used on a null value" (SDK / texture). We join **audio only** on web
+  /// and use the same UI as the audio call path (no camera views).
+  bool get _webAudioOnly => kIsWeb;
+
   Future<void> _bootstrap() async {
     try {
       final socket = SocketService();
@@ -123,7 +128,7 @@ class _AgoraCallScreenState extends State<AgoraCallScreen> {
       _registerCallSockets();
       socket.emit('join-call-room', {
         'roomId': widget.channelId,
-        'callType': widget.wantVideo ? 'video' : 'audio',
+        'callType': (widget.wantVideo && !_webAudioOnly) ? 'video' : 'audio',
       });
 
       if (!kIsWeb) {
@@ -133,10 +138,12 @@ class _AgoraCallScreenState extends State<AgoraCallScreen> {
         }
       }
 
+      // Web: do not enable video track — avoids AgoraVideoView null crashes.
+      final publishVideo = widget.wantVideo && !_webAudioOnly;
       await _agora.joinChannel(
         channelId: widget.channelId,
         token: widget.token,
-        publishVideo: widget.wantVideo,
+        publishVideo: publishVideo,
       );
     } catch (e) {
       _startError = e.toString();
@@ -265,6 +272,8 @@ class _AgoraCallScreenState extends State<AgoraCallScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // On web, never use Agora video surfaces (see [_webAudioOnly]).
+    final showVideoUI = widget.wantVideo && !_webAudioOnly;
     // Copy for stable null-promotion: engine can be null after leave/dispose or on Web edge cases.
     final RtcEngine? eng = _agora.engine;
     final int? remote = _agora.remoteUid;
@@ -297,7 +306,7 @@ class _AgoraCallScreenState extends State<AgoraCallScreen> {
             )
           else if (eng == null) _buildWaitingForEngine()
           else ...[
-            if (widget.wantVideo)
+            if (showVideoUI)
               Positioned.fill(
                 child: _remoteVideoOrWaiting(
                   eng: eng,
@@ -333,7 +342,7 @@ class _AgoraCallScreenState extends State<AgoraCallScreen> {
                   ),
                 ),
               ),
-            if (widget.wantVideo)
+            if (showVideoUI)
               Positioned(
                 top: 100,
                 right: 16,
@@ -411,6 +420,32 @@ class _AgoraCallScreenState extends State<AgoraCallScreen> {
               ),
             ),
           ),
+          if (_webAudioOnly && widget.wantVideo)
+            Positioned(
+              left: 12,
+              right: 12,
+              top: 100,
+              child: SafeArea(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.black54,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.white24),
+                  ),
+                  child: const Text(
+                    'דפדפן: שיחה קולית בלבד (למצלמה מלאה השתמש באפליקציית מובייל).',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: Colors.white70,
+                      fontFamily: 'Heebo',
+                      fontSize: 12,
+                      height: 1.35,
+                    ),
+                  ),
+                ),
+              ),
+            ),
           Positioned(
             left: 0,
             right: 0,
@@ -437,7 +472,7 @@ class _AgoraCallScreenState extends State<AgoraCallScreen> {
                       Padding(
                         padding: const EdgeInsets.only(bottom: 12, left: 16, right: 16),
                         child: Text(
-                          _agora.errorMessage!,
+                          _agora.errorMessage ?? '',
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             color: Colors.orange.shade200,

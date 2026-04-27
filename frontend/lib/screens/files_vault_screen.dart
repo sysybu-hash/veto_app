@@ -804,6 +804,11 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
       if (res.statusCode == 200) {
         _snack(_l.aiSummary);
         await _load();
+      } else if (res.statusCode == 401) {
+        if (kIsWeb) {
+          debugPrint('vault analyze 401: sign in again or file not owned by this user');
+        }
+        _snack('נדרש להתחבר מחדש (או אין גישה לקובץ)', isError: true);
       }
     } catch (_) {}
     finally {
