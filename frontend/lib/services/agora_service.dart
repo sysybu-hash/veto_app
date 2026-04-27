@@ -25,7 +25,7 @@ class AgoraService extends ChangeNotifier {
   String? get errorMessage => _errorMessage;
 
   /// Creates and initializes [RtcEngine] once. Safe to call again if already ready.
-  Future<void> initializeEngine() async {
+  Future<void> initializeEngine({bool enableVideoTrack = true}) async {
     if (_engine != null) return;
     try {
       _engine = createAgoraRtcEngine();
@@ -62,8 +62,12 @@ class AgoraService extends ChangeNotifier {
         ),
       );
 
-      await _engine!.enableVideo();
-      await _engine!.startPreview();
+      if (enableVideoTrack) {
+        await _engine!.enableVideo();
+        await _engine!.startPreview();
+      } else {
+        await _engine!.disableVideo();
+      }
       notifyListeners();
     } catch (e, st) {
       _errorMessage = e.toString();
@@ -83,8 +87,9 @@ class AgoraService extends ChangeNotifier {
     required String channelId,
     String token = '',
     int uid = 0,
+    bool publishVideo = true,
   }) async {
-    await initializeEngine();
+    await initializeEngine(enableVideoTrack: publishVideo);
     final eng = _engine;
     if (eng == null) return;
 
@@ -96,9 +101,13 @@ class AgoraService extends ChangeNotifier {
       token: token,
       channelId: channelId,
       uid: uid,
-      options: const ChannelMediaOptions(
+      options: ChannelMediaOptions(
         clientRoleType: ClientRoleType.clientRoleBroadcaster,
         channelProfile: ChannelProfileType.channelProfileCommunication,
+        publishCameraTrack: publishVideo,
+        publishMicrophoneTrack: true,
+        autoSubscribeAudio: true,
+        autoSubscribeVideo: true,
       ),
     );
   }

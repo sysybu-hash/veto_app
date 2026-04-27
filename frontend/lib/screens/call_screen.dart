@@ -1,9 +1,9 @@
 // ============================================================
-//  call_screen.dart — WebRTC Audio/Video Call Screen
-//  VETO Legal Emergency App
+//  call_screen.dart — Chat session on /call (text only, socket room).
+//  Audio/video sessions use [AgoraCallScreen] via [CallEntryScreen].
 //
-//  Route: /call
-//  Args:  { roomId, callType: 'video'|'audio', peerName, role }
+//  Route: /call (only when callType == 'chat')
+//  Args:  { roomId, callType: 'chat', peerName, role, eventId, language }
 // ============================================================
 
 import 'dart:async';

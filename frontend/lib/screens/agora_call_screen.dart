@@ -1,6 +1,6 @@
 // ============================================================
-//  agora_call_screen.dart — Agora video call (PiP + fullscreen)
-//  Style aligned with [CallScreen]; logic uses [AgoraService] only.
+//  agora_call_screen.dart — Agora video/audio call (PiP + fullscreen)
+//  Joins the same socket `call:${roomId}` room as legacy WebRTC for cleanup.
 // ============================================================
 
 import 'dart:async';
@@ -12,6 +12,7 @@ import 'package:permission_handler/permission_handler.dart';
 
 import '../core/theme/veto_theme.dart';
 import '../services/agora_service.dart';
+import '../services/socket_service.dart';
 
 class AgoraCallScreen extends StatefulWidget {
   const AgoraCallScreen({
@@ -19,11 +20,15 @@ class AgoraCallScreen extends StatefulWidget {
     required this.channelId,
     this.token = '',
     this.peerLabel = 'Lawyer',
+    this.wantVideo = true,
+    this.socketRole = 'user',
   });
 
   final String channelId;
   final String token;
   final String peerLabel;
+  final bool wantVideo;
+  final String socketRole;
 
   @override
   State<AgoraCallScreen> createState() => _AgoraCallScreenState();
@@ -33,6 +38,51 @@ class _AgoraCallScreenState extends State<AgoraCallScreen> {
   late final AgoraService _agora;
   bool _starting = true;
   String? _startError;
+  bool _leaving = false;
+  bool _remoteHangup = false;
+  bool _socketHandlersRegistered = false;
+  int _durationSeconds = 0;
+  Timer? _durationTimer;
+
+  void _onSocketCallEnded(dynamic _) {
+    if (_leaving || !mounted) return;
+    unawaited(_finishBecauseRemote());
+  }
+
+  void _onSocketPeerLeft(dynamic _) {
+    if (_leaving || !mounted) return;
+    unawaited(_finishBecauseRemote());
+  }
+
+  void _registerCallSockets() {
+    if (_socketHandlersRegistered) return;
+    final s = SocketService();
+    s.on('call-ended', _onSocketCallEnded);
+    s.on('peer-left', _onSocketPeerLeft);
+    _socketHandlersRegistered = true;
+  }
+
+  void _unregisterCallSockets() {
+    if (!_socketHandlersRegistered) return;
+    final s = SocketService();
+    s.removeHandler('call-ended', _onSocketCallEnded);
+    s.removeHandler('peer-left', _onSocketPeerLeft);
+    _socketHandlersRegistered = false;
+  }
+
+  Future<void> _finishBecauseRemote() async {
+    if (_leaving) return;
+    _leaving = true;
+    _remoteHangup = true;
+    _durationTimer?.cancel();
+    _unregisterCallSockets();
+    try {
+      await _agora.leaveChannelAndRelease();
+    } catch (_) {}
+    if (mounted) {
+      Navigator.of(context).pop();
+    }
+  }
 
   @override
   void initState() {
@@ -43,39 +93,80 @@ class _AgoraCallScreenState extends State<AgoraCallScreen> {
   }
 
   void _onAgora() {
+    if (_agora.joined && _durationTimer == null) {
+      _durationTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+        if (!mounted) return;
+        setState(() => _durationSeconds++);
+      });
+    }
     if (mounted) setState(() {});
   }
 
   Future<void> _bootstrap() async {
     try {
-      if (!kIsWeb) {
-        await Future.wait([
-          Permission.microphone.request(),
-          Permission.camera.request(),
-        ]);
+      final socket = SocketService();
+      final online = await socket.ensureConnected(role: widget.socketRole);
+      if (!online) {
+        _startError = 'Could not connect to the server. Check your network and try again.';
+        return;
       }
+
+      _registerCallSockets();
+      socket.emit('join-call-room', {
+        'roomId': widget.channelId,
+        'callType': widget.wantVideo ? 'video' : 'audio',
+      });
+
+      if (!kIsWeb) {
+        await Permission.microphone.request();
+        if (widget.wantVideo) {
+          await Permission.camera.request();
+        }
+      }
+
       await _agora.joinChannel(
         channelId: widget.channelId,
         token: widget.token,
+        publishVideo: widget.wantVideo,
       );
     } catch (e) {
       _startError = e.toString();
+      _unregisterCallSockets();
     } finally {
       if (mounted) setState(() => _starting = false);
     }
   }
 
   Future<void> _endCall() async {
-    await _agora.leaveChannelAndRelease();
-    if (!mounted) return;
-    Navigator.of(context).pop();
+    if (_leaving) return;
+    _leaving = true;
+    _durationTimer?.cancel();
+    _unregisterCallSockets();
+    try {
+      if (!_remoteHangup) {
+        SocketService().emit('call-ended', {
+          'roomId': widget.channelId,
+          'duration': _durationSeconds,
+        });
+      }
+    } catch (_) {}
+    try {
+      await _agora.leaveChannelAndRelease();
+    } catch (_) {}
+    if (mounted) {
+      Navigator.of(context).pop();
+    }
   }
 
   @override
   void dispose() {
+    _durationTimer?.cancel();
     _agora.removeListener(_onAgora);
+    _unregisterCallSockets();
     unawaited(() async {
-      await _agora.leaveChannelAndRelease();
+      try {
+        await _agora.leaveChannelAndRelease();
+      } catch (_) {}
       _agora.dispose();
     }());
     super.dispose();
@@ -113,59 +204,89 @@ class _AgoraCallScreenState extends State<AgoraCallScreen> {
               ),
             )
           else if (eng != null) ...[
-            Positioned.fill(
-              child: remote != null
-                  ? AgoraVideoView(
-                      controller: VideoViewController.remote(
-                        rtcEngine: eng,
-                        canvas: VideoCanvas(uid: remote),
-                        connection: RtcConnection(channelId: channel),
-                      ),
-                    )
-                  : Center(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(Icons.person_search, color: Colors.white54, size: 56),
-                          const SizedBox(height: 16),
-                          Text(
-                            'Waiting for ${widget.peerLabel}…',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontFamily: 'Heebo',
-                              fontSize: 18,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-            ),
-            Positioned(
-              top: 100,
-              right: 16,
-              width: 100,
-              height: 140,
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(12),
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: VetoColors.surface,
-                    border: Border.all(color: VetoColors.border),
-                  ),
-                  child: _agora.joined
-                      ? AgoraVideoView(
-                          controller: VideoViewController(
-                            rtcEngine: eng,
-                            canvas: const VideoCanvas(uid: 0),
-                          ),
-                        )
-                      : const Center(
-                          child: Icon(Icons.videocam_outlined, color: VetoColors.silver),
+            if (widget.wantVideo)
+              Positioned.fill(
+                child: remote != null
+                    ? AgoraVideoView(
+                        controller: VideoViewController.remote(
+                          rtcEngine: eng,
+                          canvas: VideoCanvas(uid: remote),
+                          connection: RtcConnection(channelId: channel),
                         ),
+                      )
+                    : Center(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.person_search, color: Colors.white54, size: 56),
+                            const SizedBox(height: 16),
+                            Text(
+                              'Waiting for ${widget.peerLabel}…',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontFamily: 'Heebo',
+                                fontSize: 18,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+              )
+            else
+              Positioned.fill(
+                child: Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        remote != null ? Icons.mic : Icons.mic_none,
+                        color: Colors.white.withValues(alpha: 0.85),
+                        size: 72,
+                      ),
+                      const SizedBox(height: 20),
+                      Text(
+                        remote != null
+                            ? 'Connected — ${widget.peerLabel}'
+                            : 'Waiting for ${widget.peerLabel}…',
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontFamily: 'Heebo',
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
+            if (widget.wantVideo)
+              Positioned(
+                top: 100,
+                right: 16,
+                width: 100,
+                height: 140,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: VetoColors.surface,
+                      border: Border.all(color: VetoColors.border),
+                    ),
+                    child: _agora.joined
+                        ? AgoraVideoView(
+                            controller: VideoViewController(
+                              rtcEngine: eng,
+                              canvas: const VideoCanvas(uid: 0),
+                            ),
+                          )
+                        : const Center(
+                            child: Icon(Icons.videocam_outlined, color: VetoColors.silver),
+                          ),
+                  ),
+                ),
+              ),
           ],
           Positioned(
             left: 0,
@@ -228,6 +349,18 @@ class _AgoraCallScreenState extends State<AgoraCallScreen> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
+                    if (_agora.joined)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: Text(
+                          '${(_durationSeconds ~/ 60).toString().padLeft(2, '0')}:${(_durationSeconds % 60).toString().padLeft(2, '0')}',
+                          style: TextStyle(
+                            fontFamily: 'Heebo',
+                            fontSize: 14,
+                            color: Colors.white.withValues(alpha: 0.65),
+                          ),
+                        ),
+                      ),
                     if (_agora.errorMessage != null)
                       Padding(
                         padding: const EdgeInsets.only(bottom: 12, left: 16, right: 16),
