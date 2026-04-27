@@ -25,7 +25,7 @@ This runs `flutter build web` (with production `VETO_API_BASE`) and `vercel:chec
 
 ## Backend (Render)
 
-`render.yaml` sets **`branch: main`** and **`autoDeployTrigger: commit`** — every push to `main` deploys **`veto-app-new`** (not only when `backend/` changes). If the dashboard had auto-deploy off, sync the Blueprint once so YAML applies.
+`render.yaml` sets **`branch: main`** and **`autoDeployTrigger: commit`** — every push to `main` deploys **`veto_legal`** (not only when `backend/` changes). If the dashboard had auto-deploy off, sync the Blueprint once so YAML applies.
 
 ## Frontend (Vercel via GitHub Actions)
 
