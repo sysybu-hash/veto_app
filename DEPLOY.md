@@ -9,7 +9,7 @@
 ┌─────────────────────────────────────┐     ┌──────────────────────────────────────┐
 │  VERCEL (Frontend)                  │     │  RENDER (Backend)                    │
 │  Flutter Web — Static Site          │────▶│  Node.js + Express + Socket.io       │
-│  https://veto-app.vercel.app        │     │  https://veto-app-new.onrender.com   │
+│  https://veto-app.vercel.app        │     │  https://veto-legal.onrender.com   │
 └─────────────────────────────────────┘     └──────────────────────────────────────┘
                                                           │
                                             ┌─────────────┴──────────────┐
@@ -46,7 +46,7 @@ git push origin main
 1. פתח [dashboard.render.com](https://dashboard.render.com)
 2. **New → Blueprint**
 3. בחר את ה-repo ו-branch `main`
-4. Render יקרא את `render.yaml` ויצור שירות `veto-app-new`
+4. Render יקרא את `render.yaml` ויצור שירות `veto_legal`
 5. בסיום הצג ← **Environment** ← הוסף ידנית את המשתנים הסודיים:
 
 | משתנה | ערך |
@@ -78,7 +78,7 @@ Settings של השירות:
 ### בדיקה אחרי Deploy
 
 ```
-GET https://veto-app-new.onrender.com/health
+GET https://veto-legal.onrender.com/health
 ```
 
 תגובה תקינה:
@@ -164,17 +164,17 @@ git push
 cd frontend
 
 # Android (debug)
-flutter run -d android --dart-define=VETO_API_BASE=https://veto-app-new.onrender.com
+flutter run -d android --dart-define=VETO_API_BASE=https://veto-legal.onrender.com
 
 # Android (release APK)
-flutter build apk --release --dart-define=VETO_API_BASE=https://veto-app-new.onrender.com
+flutter build apk --release --dart-define=VETO_API_BASE=https://veto-legal.onrender.com
 
 # iOS (Simulator)
-flutter run -d ios --dart-define=VETO_API_BASE=https://veto-app-new.onrender.com
+flutter run -d ios --dart-define=VETO_API_BASE=https://veto-legal.onrender.com
 ```
 
 > `VETO_API_BASE` — רק origin בלי `/api` (נוסף אוטומטית).  
-> ב-Release builds: אם לא מגדירים `--dart-define`, הברירת מחדל היא `https://veto-app-new.onrender.com`.
+> ב-Release builds: אם לא מגדירים `--dart-define`, הברירת מחדל היא `https://veto-legal.onrender.com`.
 
 ### Windows + נתיב עם רווח (`VETO App\`)
 
@@ -230,7 +230,7 @@ RETURN_OTP_IN_JSON=1
 
 | שירות | URL |
 |---|---|
-| **Backend API** | `https://veto-app-new.onrender.com/api` |
-| **Health Check** | `https://veto-app-new.onrender.com/health` |
+| **Backend API** | `https://veto-legal.onrender.com/api` |
+| **Health Check** | `https://veto-legal.onrender.com/health` |
 | **Frontend Web** | `https://veto-app-xxxx.vercel.app` |
-| **Socket.io** | `https://veto-app-new.onrender.com` (WebSocket upgrade) |
+| **Socket.io** | `https://veto-legal.onrender.com` (WebSocket upgrade) |

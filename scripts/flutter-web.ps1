@@ -20,5 +20,5 @@ $flutterBat = Join-Path $projectRoot "flutter\bin\flutter.bat"
 $flutterExe = if (Test-Path $flutterBat) { $flutterBat } else { "flutter" }
 
 Set-Location "${drive}:\frontend"
-$define = "--dart-define=VETO_API_BASE=https://veto-app.onrender.com"
+$define = "--dart-define=VETO_API_BASE=https://veto-legal.onrender.com"
 & $flutterExe run -d chrome $define @args
