@@ -46,6 +46,9 @@ class VetoScreen extends StatefulWidget {
 }
 
 class _VetoScreenState extends State<VetoScreen> {
+  // #region agent log (perf counters)
+  static int _buildCount = 0;
+  // #endregion agent log (perf counters)
   // ── Navigation
   int _tab = 0;
   // ── Core state
@@ -99,6 +102,12 @@ class _VetoScreenState extends State<VetoScreen> {
   @override
   void initState() {
     super.initState();
+    // #region agent log (perf boot)
+    if (kIsWeb) {
+      // ignore: avoid_print
+      print('[VETO][perf] veto_screen_init mobile=${browser_bridge.isMobileBrowser()} blurSigma=${VetoGlassTokens.blurSigma}');
+    }
+    // #endregion agent log (perf boot)
     unawaited(_loadLiveAudioPrefs());
     _loadData();
     browser_bridge.registerSttResultHandler(_onSTTResult);
@@ -1035,6 +1044,13 @@ class _VetoScreenState extends State<VetoScreen> {
   // ─────────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
+    // #region agent log (perf build)
+    _buildCount++;
+    if (kIsWeb && browser_bridge.isMobileBrowser() && _buildCount % 30 == 0) {
+      // ignore: avoid_print
+      print('[VETO][perf] veto_screen_build count=$_buildCount tab=$_tab loading=$_isLoading dispatching=$_isDispatching listening=$_isListening');
+    }
+    // #endregion agent log (perf build)
     final bool isAdmin = _role == 'admin' || _phone.contains('525640021') || _phone.contains('506400030');
     final bool isRtl = _langKey == 'he';
     // Tab indices: 0=home, 1=chat, 2=files, 3=profile
