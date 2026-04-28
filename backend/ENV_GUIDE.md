@@ -47,7 +47,12 @@
 
 - `GEMINI_API_KEY` — [Google AI Studio — API key](https://aistudio.google.com/apikey)
 - אופציונלי: `GEMINI_MODEL` (למשל `gemini-2.5-flash`)
-- אופציונלי: `VAULT_ANALYSIS_MAX_BYTES` (גודל מקסימלי לניתוח קובץ; ברירת מחדל בקוד ~20MB)
+- אופציונלי: `VAULT_ANALYSIS_MAX_BYTES` (גודל מקסימלי לניתוח קבצים; ברירת מחדל בקוד ~20MB)
+
+### Agora RTC (שיחות)
+
+- `AGORA_APP_ID` — **אותו** App ID כמו ב-Flutter, קבוע `kAgoraAppIdPlaceholder` ב-`frontend/lib/services/agora_service.dart`.
+- `AGORA_APP_CERTIFICATE` — מ-Console (Primary certificate). אם ריק, השרת שולח `agoraToken` ריק ו-`agoraUid: 0` (התאמה לפרויקט שמאפשר join רק לפי App ID; אם ב-Agora הופעל **App Certificate** וחובה token — חייבים למלא. הטוקן נבנה ב-`agoraToken.service.js` ב-`session_ready`.
 
 ---
 

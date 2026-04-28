@@ -41,11 +41,19 @@ class CallEntryScreen extends StatelessWidget {
       return const Scaffold(body: SizedBox.shrink());
     }
 
+    int parseAgoraUid(dynamic v) {
+      if (v == null) return 0;
+      if (v is int) return v;
+      if (v is num) return v.toInt();
+      return int.tryParse(v.toString()) ?? 0;
+    }
+
     return AgoraCallScreen(
       channelId: roomId,
       eventId: args['eventId']?.toString() ?? roomId,
       language: args['language']?.toString() ?? 'he',
       token: args['agoraToken']?.toString() ?? '',
+      agoraUid: parseAgoraUid(args['agoraUid']),
       peerLabel: args['peerName']?.toString() ?? 'Peer',
       wantVideo: ct == 'video',
       socketRole: args['role']?.toString() ?? 'user',

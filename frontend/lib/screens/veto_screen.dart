@@ -787,6 +787,8 @@ class _VetoScreenState extends State<VetoScreen> {
         'role': socketRole,
         'eventId': data['eventId']?.toString() ?? roomId,
         'language': _langKey,
+        'agoraToken': data['agoraToken']?.toString() ?? '',
+        'agoraUid': data['agoraUid'],
       },
     );
   }

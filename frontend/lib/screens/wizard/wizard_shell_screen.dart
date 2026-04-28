@@ -128,6 +128,8 @@ class _WizardShellScreenState extends State<WizardShellScreen> {
           'role': _role == 'admin' ? 'admin' : 'user',
           'eventId': data['eventId']?.toString() ?? roomId,
           'language': _langCode,
+          'agoraToken': data['agoraToken']?.toString() ?? '',
+          'agoraUid': data['agoraUid'],
         },
       );
     });

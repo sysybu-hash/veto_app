@@ -8,6 +8,7 @@ const Lawyer         = require('../models/Lawyer');
 const User           = require('../models/User');
 const EmergencyEvent = require('../models/EmergencyEvent');
 const push           = require('../services/push.service');
+const { buildRtcTokenForUid } = require('../services/agoraToken.service');
 
 // ── Build WebRTC room link (replaces WhatsApp/Telegram) ───────
 // The room ID is the eventId. Both parties join /call?roomId=eventId
@@ -401,10 +402,17 @@ module.exports = function initDispatch(io) {
           language: ev.language || 'he',
         };
 
+        const userAgora = buildRtcTokenForUid(roomId, ev.user_id);
+        const lawyerAgora = ev.assigned_lawyer_id
+          ? buildRtcTokenForUid(roomId, ev.assigned_lawyer_id)
+          : { token: '', agoraUid: 0 };
+
         io.to(`user:${ev.user_id}`).emit('session_ready', {
           ...basePayload,
           lawyerName: lawyer?.full_name || 'Lawyer',
           peerName:   lawyer?.full_name || 'Lawyer',
+          agoraToken: userAgora.token,
+          agoraUid:   userAgora.agoraUid,
         });
 
         if (ev.assigned_lawyer_id) {
@@ -412,6 +420,8 @@ module.exports = function initDispatch(io) {
             ...basePayload,
             peerName:   clientLabel,
             lawyerName: lawyer?.full_name,
+            agoraToken: lawyerAgora.token,
+            agoraUid:   lawyerAgora.agoraUid,
           });
         }
       } catch (err) {
