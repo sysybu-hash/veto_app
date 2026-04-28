@@ -119,7 +119,7 @@ class _AgoraCallScreenState extends State<AgoraCallScreen> {
     }
     if (kIsWeb && widget.wantVideo && _agora.joined && !_webVideoSurfaceOk) {
       _webVideoGateTimer?.cancel();
-      _webVideoGateTimer = Timer(const Duration(milliseconds: 850), () {
+      _webVideoGateTimer = Timer(const Duration(milliseconds: 1200), () {
         if (mounted) setState(() => _webVideoSurfaceOk = true);
       });
     }
