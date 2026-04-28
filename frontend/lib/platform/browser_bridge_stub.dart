@@ -37,6 +37,9 @@ bool shouldUseCaptureAttributeOnFileInput() => false;
 
 Future<dynamic> pickEvidenceMedia({bool preferCameraCapture = true}) async => null;
 
+/// Heuristic: Web-only check (always false off-web).
+bool isMobileBrowser() => false;
+
 /// Flows (web-only). Returns a small status map from `window.vetoFlows.setUser(...)`.
 Future<Map<String, dynamic>?> flowsSetUser({
   required String userId,
