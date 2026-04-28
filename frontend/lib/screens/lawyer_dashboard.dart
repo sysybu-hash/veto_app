@@ -221,7 +221,7 @@ class _LawyerDashboardState extends State<LawyerDashboard> {
         '/call',
         arguments: {
           'roomId': roomId,
-          'callType': data['callType']?.toString() ?? 'audio',
+          'callType': data['callType']?.toString() ?? 'video',
           'peerName': data['peerName']?.toString() ?? 'Client',
           'role': 'lawyer',
           'eventId': data['eventId']?.toString() ?? roomId,
@@ -237,7 +237,7 @@ class _LawyerDashboardState extends State<LawyerDashboard> {
         '/call',
         arguments: {
           'roomId': roomId,
-          'callType': data['callType']?.toString() ?? 'audio',
+          'callType': data['callType']?.toString() ?? 'video',
           'peerName': data['peerName']?.toString() ?? 'Client',
           'role': 'lawyer',
           'eventId': data['eventId']?.toString() ?? roomId,

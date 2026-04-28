@@ -781,7 +781,7 @@ class _VetoScreenState extends State<VetoScreen> {
       '/call',
       arguments: {
         'roomId': roomId,
-        'callType': data['callType']?.toString() ?? 'audio',
+        'callType': data['callType']?.toString() ?? 'video',
         'peerName': data['peerName']?.toString() ??
             (_langKey == 'he' ? 'עורך דין' : 'Lawyer'),
         'role': socketRole,
