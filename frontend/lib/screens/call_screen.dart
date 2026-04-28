@@ -1,6 +1,6 @@
 // ============================================================
 //  call_screen.dart — Text chat session on /call (callType == 'chat').
-//  Audio/video use [AgoraCallScreen] via [CallEntryScreen] only.
+//  Audio/video use [CallSessionScreen] via [CallEntryScreen] only.
 // ============================================================
 
 import 'dart:async';

@@ -27,6 +27,55 @@ class AgoraService extends ChangeNotifier {
   String? get activeChannelId => _activeChannelId;
   String? get errorMessage => _errorMessage;
 
+  bool _micPublishMuted = false;
+  bool _videoPublishMuted = false;
+  bool _speakerOn = true;
+
+  bool get micPublishMuted => _micPublishMuted;
+  bool get videoPublishMuted => _videoPublishMuted;
+  /// Mobile: earpiece vs speaker (no-op on web).
+  bool get speakerOn => _speakerOn;
+
+  /// Mute/unmute **published** local audio (remote hears silence when muted).
+  Future<void> setMicPublishMuted(bool muted) async {
+    final e = _engine;
+    if (e == null) return;
+    await e.muteLocalAudioStream(muted);
+    _micPublishMuted = muted;
+    notifyListeners();
+  }
+
+  /// Mute/unmute **published** local video (camera off for remote; capture may continue).
+  Future<void> setVideoPublishMuted(bool muted) async {
+    final e = _engine;
+    if (e == null) return;
+    await e.muteLocalVideoStream(muted);
+    _videoPublishMuted = muted;
+    notifyListeners();
+  }
+
+  /// Mobile only: switch front/back camera.
+  Future<void> switchCamera() async {
+    if (kIsWeb) return;
+    final e = _engine;
+    if (e == null) return;
+    await e.switchCamera();
+  }
+
+  /// Route playback to the loudspeaker (iOS/Android). No-op on web.
+  Future<void> setSpeakerOn(bool on) async {
+    if (kIsWeb) return;
+    final e = _engine;
+    if (e == null) return;
+    try {
+      await e.setEnableSpeakerphone(on);
+      _speakerOn = on;
+      notifyListeners();
+    } catch (err, st) {
+      developer.log('setSpeakerOn', name: 'VETO.Agora', error: err, stackTrace: st);
+    }
+  }
+
   /// Creates and initializes [RtcEngine] once. Safe to call again if already ready.
   Future<void> initializeEngine({bool enableVideoTrack = true}) async {
     if (_engine != null) return;
@@ -179,6 +228,9 @@ class AgoraService extends ChangeNotifier {
       _joined = false;
       _remoteUid = null;
       _activeChannelId = null;
+      _micPublishMuted = false;
+      _videoPublishMuted = false;
+      _speakerOn = true;
       notifyListeners();
     }
   }
