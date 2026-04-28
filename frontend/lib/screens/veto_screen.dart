@@ -1053,6 +1053,7 @@ class _VetoScreenState extends State<VetoScreen> {
     // #endregion agent log (perf build)
     final bool isAdmin = _role == 'admin' || _phone.contains('525640021') || _phone.contains('506400030');
     final bool isRtl = _langKey == 'he';
+    final bool liteWeb = kIsWeb && browser_bridge.isMobileBrowser();
     // Tab indices: 0=home, 1=chat, 2=files, 3=profile
     return Directionality(
       textDirection: isRtl ? TextDirection.rtl : TextDirection.ltr,
@@ -1062,7 +1063,11 @@ class _VetoScreenState extends State<VetoScreen> {
         appBar: _buildAppBar(isAdmin),
         body: Stack(
           children: [
-            const Positioned.fill(child: CustomPaint(painter: VetoFluidBackgroundPainter())),
+            Positioned.fill(
+              child: liteWeb
+                  ? const ColoredBox(color: VetoGlassTokens.bgBase)
+                  : const CustomPaint(painter: VetoFluidBackgroundPainter()),
+            ),
             SafeArea(
               child: _tab == 0
                   ? _buildWizardTab(isAdmin, isRtl)
