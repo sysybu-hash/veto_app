@@ -184,8 +184,23 @@
   </script>
 
   <!-- Flows (Basics V2) — loaded via CDN ESM (no npm bundling needed for Flutter Web) -->
+  <!-- Mobile browsers (especially iOS Safari) can freeze under continuous MutationObserver + fixed overlays.
+       We disable Flows on mobile UA by default to protect core app UX. -->
+  <script>
+    (function () {
+      try {
+        var ua = (navigator && navigator.userAgent ? navigator.userAgent : "").toLowerCase();
+        window.__vetoIsMobile = ua.includes("iphone") || ua.includes("ipad") || ua.includes("ipod") || ua.includes("android") || ua.includes("mobile");
+      } catch (e) {
+        window.__vetoIsMobile = false;
+      }
+    })();
+  </script>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@flows/js-components/index.css">
   <script type="module">
+    if (window.__vetoIsMobile) {
+      console.warn("[VETO Flows] disabled on mobile web to prevent freezes");
+    } else {
     // Flows on Flutter Web:
     // - Docs order: init() then setupJsComponents() — https://flows.sh/docs/javascript/installation
     // - Flutter paints a full-viewport layer; keep <flows-floating-blocks> last in <body> with high z-index.
@@ -324,6 +339,7 @@
         };
       }
     };
+    } // end mobile guard
   </script>
 
   <script>
@@ -408,7 +424,11 @@
   </script>
 
   <!-- Flows floating renderer (upgraded by setupJsComponents) -->
-  <flows-floating-blocks></flows-floating-blocks>
+  <script>
+    if (!window.__vetoIsMobile) {
+      document.write("<flows-floating-blocks></flows-floating-blocks>");
+    }
+  </script>
 
   <script>
     // Stable entry for Dart (package:web) — the module above assigns window.vetoFlows.setUser; this
