@@ -13,31 +13,31 @@ import 'package:flutter/material.dart';
 class VetoGlassTokens {
   VetoGlassTokens._();
 
-  static const Color bgBase = Color(0xFF0A0E17);
-  static const Color bgDeep = Color(0xFF05070D);
+  static const Color bgBase = Color(0xFFF8FAFC);
+  static const Color bgDeep = Color(0xFFF1F5F9);
 
-  static const Color textPrimary = Color(0xFFF8FAFC);
-  static const Color textSecondary = Color(0xFFE2E8F0);
-  static const Color textMuted = Color(0xFF94A3B8);
-  static const Color textSubtle = Color(0xFF64748B);
+  static const Color textPrimary = Color(0xFF0F172A);
+  static const Color textSecondary = Color(0xFF334155);
+  static const Color textMuted = Color(0xFF64748B);
+  static const Color textSubtle = Color(0xFF94A3B8);
 
   /// Primary accent (mint–teal). Kept name [neonCyan] for stable call sites.
-  static const Color neonCyan = Color(0xFF5EEAD4);
-  static const Color neonBlue = Color(0xFF6366F1);
-  static const Color accentSoft = Color(0xFF2DD4BF);
-  static const Color violetGlow = Color(0xFFA78BFA);
+  static const Color neonCyan = Color(0xFF0D9488);
+  static const Color neonBlue = Color(0xFF4F46E5);
+  static const Color accentSoft = Color(0xFF14B8A6);
+  static const Color violetGlow = Color(0xFF7C3AED);
 
-  static const Color glassFill = Color(0x12FFFFFF);
-  static const Color glassFillStrong = Color(0x1EFFFFFF);
-  static const Color glassBorder = Color(0x24FFFFFF);
-  static const Color glassBorderBright = Color(0x3AFFFFFF);
+  static const Color glassFill = Color(0xE6FFFFFF);
+  static const Color glassFillStrong = Color(0xFFFFFFFF);
+  static const Color glassBorder = Color(0xFFE2E8F0);
+  static const Color glassBorderBright = Color(0xFFCBD5E1);
 
   /// Dialogs, modals, bottom sheets (aligned with glassDark theme)
-  static const Color sheetPanel = Color(0xE6161F2E);
+  static const Color sheetPanel = Color(0xFFFFFFFF);
   /// [DropdownButton] / popup surfaces on dark UI
-  static const Color menuPanel = Color(0xFF151B2C);
+  static const Color menuPanel = Color(0xFFFFFFFF);
   /// Text/icons on neon / gradient buttons
-  static const Color onNeon = Color(0xFF071018);
+  static const Color onNeon = Color(0xFFFFFFFF);
 
   static const LinearGradient neonButton = LinearGradient(
     begin: Alignment.topLeft,
@@ -94,20 +94,20 @@ class VetoFluidBackgroundPainter extends CustomPainter {
       begin: Alignment.topLeft,
       end: Alignment.bottomRight,
       colors: [
-        Color(0xFF0D1526),
-        Color(0xFF0A0E17),
-        Color(0xFF111827),
+        Color(0xFFF8FAFC),
+        Color(0xFFF1F5F9),
+        Color(0xFFE2E8F0),
       ],
     ).createShader(Rect.fromLTWH(0, 0, w, h));
     canvas.drawRect(Rect.fromLTWH(0, 0, w, h), base);
 
-    _blob(canvas, Offset(w * 0.82, h * 0.05), w * 0.48, const Color(0xFF2DD4BF), 0.26);
-    _blob(canvas, Offset(w * 0.12, h * 0.12), w * 0.52, const Color(0xFF34D399), 0.20);
-    _blob(canvas, Offset(w * 0.08, h * 0.58), w * 0.48, const Color(0xFF818CF8), 0.17);
-    _blob(canvas, Offset(w * 0.88, h * 0.72), w * 0.42, const Color(0xFF6366F1), 0.14);
-    _blob(canvas, Offset(w * 0.48, h * 0.88), w * 0.55, const Color(0xFFA78BFA), 0.22);
-    _blob(canvas, Offset(w * 0.25, h * 0.42), w * 0.38, const Color(0xFF5EEAD4), 0.16);
-    _blob(canvas, Offset(w * 0.62, h * 0.18), w * 0.32, const Color(0xFF22D3EE), 0.10);
+    _blob(canvas, Offset(w * 0.82, h * 0.05), w * 0.48, const Color(0xFF2DD4BF), 0.12);
+    _blob(canvas, Offset(w * 0.12, h * 0.12), w * 0.52, const Color(0xFF34D399), 0.10);
+    _blob(canvas, Offset(w * 0.08, h * 0.58), w * 0.48, const Color(0xFF818CF8), 0.08);
+    _blob(canvas, Offset(w * 0.88, h * 0.72), w * 0.42, const Color(0xFF6366F1), 0.07);
+    _blob(canvas, Offset(w * 0.48, h * 0.88), w * 0.55, const Color(0xFFA78BFA), 0.11);
+    _blob(canvas, Offset(w * 0.25, h * 0.42), w * 0.38, const Color(0xFF5EEAD4), 0.08);
+    _blob(canvas, Offset(w * 0.62, h * 0.18), w * 0.32, const Color(0xFF22D3EE), 0.05);
 
     // Subtle bokeh specks
     final rnd = Paint()..color = Colors.white.withValues(alpha: 0.055);

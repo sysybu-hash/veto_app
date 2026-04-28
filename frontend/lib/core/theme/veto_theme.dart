@@ -655,4 +655,47 @@ class VetoDecorations {
           spreadRadius: 2 * intensity,
         ),
       ];
+
+  /// 2026 Light 3D panel with deep soft shadows and smooth curves
+  static BoxDecoration light3DPanel({double radius = 24, Color? color}) =>
+      BoxDecoration(
+        color: color ?? const Color(0xFFFDFEFF),
+        borderRadius: BorderRadius.circular(radius),
+        border: Border.all(color: const Color(0x33B4C6E4), width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF0C1A30).withValues(alpha: 0.05),
+            blurRadius: 32,
+            spreadRadius: 2,
+            offset: const Offset(0, 12),
+          ),
+          BoxShadow(
+            color: const Color(0xFF90A4AE).withValues(alpha: 0.12),
+            blurRadius: 16,
+            spreadRadius: -4,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      );
+
+  /// 2026 3D SOS Orb with rich gradients and volumetric shadows
+  static BoxDecoration light3DOrb({bool active = false}) => BoxDecoration(
+        shape: BoxShape.circle,
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: active
+              ? [const Color(0xFFFF6B6B), const Color(0xFFFF3B3B), const Color(0xFFB91C1C)]
+              : [const Color(0xFFFF9494), const Color(0xFFFF4D4D), const Color(0xFFD92D2D)],
+          stops: const [0.0, 0.5, 1.0],
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFFFF3B3B).withValues(alpha: 0.4),
+            blurRadius: 40,
+            spreadRadius: 4,
+            offset: const Offset(0, 16),
+          ),
+        ],
+      );
 }
