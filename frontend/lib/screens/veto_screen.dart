@@ -17,6 +17,7 @@ import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../config/app_config.dart';
+import '../config/veto_live_audio_prefs.dart';
 import '../core/i18n/app_language.dart';
 import '../platform/browser_bridge.dart' as browser_bridge;
 import '../core/theme/veto_glass_system.dart';
@@ -33,6 +34,7 @@ import '../services/fcm_user_service.dart';
 import '../services/push_service.dart';
 import 'admin/admin_i18n.dart';
 import 'evidence_screen.dart';
+import '../widgets/veto_live_voice_sheet.dart';
 
 part 'veto/veto_screen_models.dart';
 
@@ -65,6 +67,8 @@ class _VetoScreenState extends State<VetoScreen> {
   StreamSubscription<Map<String, dynamic>>? _sessionReadySub;
   final List<_Msg> _messages = [];
   final List<Map<String, dynamic>> _geminiHistory = [];
+  String _geminiLiveVoice = 'Kore';
+  double _geminiLiveGain = 0.85;
   final _inputCtrl = TextEditingController();
   final _scrollCtrl = ScrollController();
   // ── Wizard state
@@ -95,6 +99,7 @@ class _VetoScreenState extends State<VetoScreen> {
   @override
   void initState() {
     super.initState();
+    unawaited(_loadLiveAudioPrefs());
     _loadData();
     browser_bridge.registerSttResultHandler(_onSTTResult);
     if (kIsWeb) {
@@ -115,8 +120,8 @@ class _VetoScreenState extends State<VetoScreen> {
     _sessionReadySub =
         SocketService().onSessionReady.listen(_handleSessionReady);
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Future<void>.delayed(const Duration(milliseconds: 350), () {
-        if (mounted) _checkSubscription();
+      Future<void>.delayed(const Duration(milliseconds: 650), () {
+        if (mounted) unawaited(_checkSubscription());
       });
     });
     if (kIsWeb) {
@@ -137,12 +142,29 @@ class _VetoScreenState extends State<VetoScreen> {
     if (!mounted) return;
     final lang = context.read<AppLanguageController>().code;
     try {
-      await browser_bridge.flowsSetUser(
+      await browser_bridge
+          .flowsSetUser(
         userId: uid,
         role: role,
         lang: lang,
+      )
+          .timeout(
+        const Duration(seconds: 8),
+        onTimeout: () => null,
       );
+    } on TimeoutException {
+      debugPrint('[VETO] flowsSetUser (veto retry) timed out; continuing');
     } catch (_) {}
+  }
+
+  Future<void> _loadLiveAudioPrefs() async {
+    final v = await VetoLiveAudioPrefs.getVoice();
+    final g = await VetoLiveAudioPrefs.getGain();
+    if (!mounted) return;
+    setState(() {
+      _geminiLiveVoice = v;
+      _geminiLiveGain = g;
+    });
   }
 
   Future<void> _checkSubscription() async {
@@ -592,7 +614,13 @@ class _VetoScreenState extends State<VetoScreen> {
         _isListening = true;
         _liveSessionActive = true;
       });
-      _safeJs('vetoGeminiLive', 'start', [_langKey, _token, AppConfig.baseUrl]);
+      _safeJs('vetoGeminiLive', 'start', [
+        _langKey,
+        _token,
+        AppConfig.baseUrl,
+        _geminiLiveVoice,
+        _geminiLiveGain,
+      ]);
       return;
     }
     final ok = browser_bridge.supportsBrowserMethod('vetoSTT', 'isSupported', const []);
@@ -2409,7 +2437,8 @@ class _VetoScreenState extends State<VetoScreen> {
   );
 
   Widget _chatInput(bool isRtl) {
-    const sideSlot = 96.0;
+    // Web: mic + optional Gemini Live tune + paste — needs extra width vs mobile STT+paste.
+    const sideSlot = 152.0;
     return Padding(
       padding: const EdgeInsets.fromLTRB(12, 4, 12, 4),
       child: Row(
@@ -2454,6 +2483,45 @@ class _VetoScreenState extends State<VetoScreen> {
                     ),
                   ),
                 ),
+                if (kIsWeb &&
+                    browser_bridge.supportsBrowserMethod('vetoGeminiLive', 'isSupported', const [])) ...[
+                  const SizedBox(width: 6),
+                  Tooltip(
+                    message: _langKey == 'he'
+                        ? 'הגדרות שמע (Gemini Live)'
+                        : _langKey == 'ru'
+                            ? 'Настройки звука (Gemini Live)'
+                            : 'Live voice & volume',
+                    child: GestureDetector(
+                      onTap: () async {
+                        await showVetoLiveVoiceSheet(context);
+                        if (!mounted) return;
+                        final v = await VetoLiveAudioPrefs.getVoice();
+                        final g = await VetoLiveAudioPrefs.getGain();
+                        if (mounted) {
+                          setState(() {
+                            _geminiLiveVoice = v;
+                            _geminiLiveGain = g;
+                          });
+                        }
+                      },
+                      child: Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: VetoGlassTokens.glassFillStrong,
+                          border: Border.all(color: VetoGlassTokens.glassBorder),
+                        ),
+                        child: const Icon(
+                          Icons.tune_rounded,
+                          color: VetoGlassTokens.neonCyan,
+                          size: 20,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
                 const SizedBox(width: 8),
                 GestureDetector(
                   onTap: () async {

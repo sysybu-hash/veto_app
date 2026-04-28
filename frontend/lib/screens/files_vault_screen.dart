@@ -32,7 +32,8 @@ class _L {
       deleteCase, deleteCaseConfirm, successDeleteCase,
       removeFromCase,
       folders, newFolder, folderName, moveToFolder, rootVault, deleteFolder,
-      deleteFolderConfirm, folderNotEmpty, goUp, openFolder;
+      deleteFolderConfirm, folderNotEmpty, goUp, openFolder,
+      dropFilesHere, uploadZoneTitle, uploadZoneHint;
 
   const _L({
     required this.title, required this.upload, required this.uploading,
@@ -55,6 +56,7 @@ class _L {
     required this.moveToFolder, required this.rootVault, required this.deleteFolder,
     required this.deleteFolderConfirm, required this.folderNotEmpty, required this.goUp,
     required this.openFolder,
+    required this.dropFilesHere, required this.uploadZoneTitle, required this.uploadZoneHint,
   });
 }
 
@@ -80,6 +82,9 @@ const _he = _L(
   moveToFolder: 'העבר לתיקייה', rootVault: 'כספת', deleteFolder: 'מחק תיקייה',
   deleteFolderConfirm: 'למחוק את התיקייה? (רק אם ריקה)', folderNotEmpty: 'התיקייה אינה ריקה',
   goUp: 'הקודם', openFolder: 'פתח',
+  dropFilesHere: 'שחררו כאן לטעינה',
+  uploadZoneTitle: 'העלאה מהירה',
+  uploadZoneHint: 'במובייל: "העלה" או מצלמה. בווב: גרירה לכאן או לכל מקום על המסך.',
 );
 
 const _en = _L(
@@ -104,6 +109,9 @@ const _en = _L(
   moveToFolder: 'Move to folder', rootVault: 'Vault', deleteFolder: 'Delete folder',
   deleteFolderConfirm: 'Delete this folder? (only if empty)', folderNotEmpty: 'Folder is not empty',
   goUp: 'Up', openFolder: 'Open',
+  dropFilesHere: 'Drop to upload',
+  uploadZoneTitle: 'Quick upload',
+  uploadZoneHint: 'Mobile: use Upload or camera. Web: drag files here or anywhere on the page.',
 );
 
 const _ru = _L(
@@ -128,6 +136,9 @@ const _ru = _L(
   moveToFolder: 'Переместить', rootVault: 'Хранилище', deleteFolder: 'Удалить папку',
   deleteFolderConfirm: 'Удалить папку? (только пустая)', folderNotEmpty: 'Папка не пуста',
   goUp: 'Назад', openFolder: 'Открыть',
+  dropFilesHere: 'Отпустите для загрузки',
+  uploadZoneTitle: 'Быстрая загрузка',
+  uploadZoneHint: 'Телефон: кнопка загрузки или камера. Веб: перетащите сюда или в любую область.',
 );
 
 // ── Data models ───────────────────────────────────────────────
@@ -1313,14 +1324,85 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
                           size: 60, color: VetoGlassTokens.neonCyan),
                     ),
                     const SizedBox(height: 20),
-                    const Text('Drop files here',
-                        style: TextStyle(color: VetoGlassTokens.neonCyan,
+                    Text(_l.dropFilesHere,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(color: VetoGlassTokens.neonCyan,
                             fontSize: 22, fontWeight: FontWeight.w700)),
                   ]),
                 ),
               ),
             ),
         ]),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildUploadZoneCard() {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: _uploading ? null : _pickFile,
+          borderRadius: BorderRadius.circular(16),
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: VetoGlassTokens.neonCyan.withValues(alpha: 0.45),
+                width: 1.5,
+              ),
+              color: VetoGlassTokens.glassFill.withValues(alpha: 0.6),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: VetoGlassTokens.neonBlue.withValues(alpha: 0.2),
+                  ),
+                  child: const Icon(
+                    Icons.cloud_upload_rounded,
+                    color: VetoGlassTokens.neonCyan,
+                    size: 28,
+                  ),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        _l.uploadZoneTitle,
+                        style: const TextStyle(
+                          color: VetoGlassTokens.textPrimary,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        _l.uploadZoneHint,
+                        style: const TextStyle(
+                          color: VetoGlassTokens.textMuted,
+                          fontSize: 12,
+                          height: 1.35,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const Icon(
+                  Icons.chevron_right,
+                  color: VetoGlassTokens.textSubtle,
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );
@@ -1374,6 +1456,7 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
         children: [
           _buildFolderBreadcrumb(),
           const SizedBox(height: 8),
+          _buildUploadZoneCard(),
           Row(
             children: [
               FilledButton.tonal(
@@ -1410,6 +1493,7 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
       children: [
         _buildFolderBreadcrumb(),
         const SizedBox(height: 8),
+        _buildUploadZoneCard(),
         Row(
           children: [
             FilledButton.tonal(

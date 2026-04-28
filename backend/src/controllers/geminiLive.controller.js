@@ -7,6 +7,9 @@ const { GoogleGenAI } = require('@google/genai');
 const { getGeminiLiveModelId } = require('../config/gemini.config');
 const { SYSTEM_INSTRUCTIONS } = require('../services/gemini.service');
 
+/** Live API prebuilt voice names (must match @google/genai prebuilt v2 list). */
+const ALLOWED_LIVE_VOICES = new Set(['Kore', 'Puck', 'Charon', 'Fenrir', 'Zephyr', 'Aoede']);
+
 let _v1ai;
 function getV1alphaGenai() {
   if (!_v1ai) {
@@ -23,8 +26,9 @@ function getV1alphaGenai() {
 
 /**
  * POST /api/ai/live-token
- * Body: { lang?: 'he'|'en'|'ru'|'ar' }
- * Returns: { model, name, newSessionExpireTime, expireTime }
+ * Body: { lang?: 'he'|'en'|'ru'|'ar', voiceName?: string }
+ *   voiceName — optional; must be in ALLOWED_LIVE_VOICES or defaults to Kore.
+ * Returns: { model, name, newSessionExpireTime, expireTime, lang, voiceName }
  * Client passes `name` to GoogleGenAI as apiKey for live.connect.
  */
 exports.createLiveToken = async (req, res) => {
@@ -52,6 +56,10 @@ exports.createLiveToken = async (req, res) => {
   const newSessionExpireTime = new Date(Date.now() + 3 * 60 * 1000).toISOString();
   const expireTime = new Date(Date.now() + 25 * 60 * 1000).toISOString();
 
+  const rawVoice = req.body?.voiceName;
+  const voiceName =
+    typeof rawVoice === 'string' && ALLOWED_LIVE_VOICES.has(rawVoice.trim()) ? rawVoice.trim() : 'Kore';
+
   try {
     const token = await ai.authTokens.create({
       config: {
@@ -70,7 +78,7 @@ exports.createLiveToken = async (req, res) => {
             speechConfig: {
               languageCode: speechLang,
               voiceConfig: {
-                prebuiltVoiceConfig: { voiceName: 'Kore' },
+                prebuiltVoiceConfig: { voiceName },
               },
             },
           },
@@ -86,6 +94,7 @@ exports.createLiveToken = async (req, res) => {
       newSessionExpireTime,
       expireTime,
       lang: safeLang,
+      voiceName,
     });
   } catch (err) {
     console.error('[VETO] authTokens.create (live) failed:', err?.message || err);
