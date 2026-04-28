@@ -4,11 +4,11 @@
 
 import 'package:flutter/material.dart';
 
-import 'agora_call_screen.dart';
+import 'call_session_screen.dart';
 import 'call_screen.dart';
 
 /// Named route `/call` entry: [CallScreen] handles `callType == 'chat'`;
-/// audio/video use [AgoraCallScreen].
+/// audio/video use [CallSessionScreen] (Agora + in-call chat + optional caption).
 class CallEntryScreen extends StatelessWidget {
   const CallEntryScreen({super.key});
 
@@ -48,7 +48,7 @@ class CallEntryScreen extends StatelessWidget {
       return int.tryParse(v.toString()) ?? 0;
     }
 
-    return AgoraCallScreen(
+    return CallSessionScreen(
       channelId: roomId,
       eventId: args['eventId']?.toString() ?? roomId,
       language: args['language']?.toString() ?? 'he',

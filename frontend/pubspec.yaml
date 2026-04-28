@@ -69,6 +69,7 @@ dependencies:
   web: ^1.1.1
   # Gzip compression for vault payloads (Web + mobile)
   archive: ^3.6.0
+  speech_to_text: ^7.3.0
 # ══════════════════════════════════════════════════════════════
 #  Dev Dependencies
 # ══════════════════════════════════════════════════════════════
