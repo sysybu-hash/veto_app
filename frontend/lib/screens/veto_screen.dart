@@ -80,8 +80,6 @@ class _VetoScreenState extends State<VetoScreen> {
   // ── Admin state
   List<dynamic> _adminFiles = [];
   bool _adminFilesLoading = false;
-  /// Cached once at init — avoids calling dart:js on every build().
-  late final bool _liteWeb;
 
   _LL get _l => _langs[_langKey]!;
   _SD get _s => _sdMap[_scenario]!;
@@ -110,7 +108,6 @@ class _VetoScreenState extends State<VetoScreen> {
       print('[VETO][perf] veto_screen_init mobile=${browser_bridge.isMobileBrowser()} blurSigma=${VetoGlassTokens.blurSigma}');
     }
     // #endregion agent log (perf boot)
-    _liteWeb = kIsWeb;
     unawaited(_loadLiveAudioPrefs());
     _loadData();
     browser_bridge.registerSttResultHandler(_onSTTResult);
