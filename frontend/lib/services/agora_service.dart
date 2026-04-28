@@ -1,6 +1,7 @@
 // ============================================================
 //  agora_service.dart — Agora RTC engine wrapper (ChangeNotifier)
-//  App ID: [kAgoraAppIdPlaceholder] (from Agora Console).
+//  Includes: Video, Audio, Screen Share, Noise Suppression,
+//  Network Quality, Connection Stats (Agora SDK v6.x)
 // ============================================================
 
 import 'dart:async' show unawaited;
@@ -30,11 +31,48 @@ class AgoraService extends ChangeNotifier {
   bool _micPublishMuted = false;
   bool _videoPublishMuted = false;
   bool _speakerOn = true;
+  bool _screenSharing = false;
+  bool _noiseSuppression = true;
+
+  // Network quality (0=Unknown 1=Excellent 2=Good 3=Poor 4=Bad 5=VBad 6=Down)
+  int _localNetworkQuality = 0;
+  int _remoteNetworkQuality = 0;
+  // RtcStats
+  int _rttMs = 0;
+  int _txPacketLossRate = 0;
+  int _rxPacketLossRate = 0;
+  int _txBitrateKbps = 0;
+  int _rxBitrateKbps = 0;
 
   bool get micPublishMuted => _micPublishMuted;
   bool get videoPublishMuted => _videoPublishMuted;
   /// Mobile: earpiece vs speaker (no-op on web).
   bool get speakerOn => _speakerOn;
+  bool get screenSharing => _screenSharing;
+  bool get noiseSuppression => _noiseSuppression;
+  int get localNetworkQuality => _localNetworkQuality;
+  int get remoteNetworkQuality => _remoteNetworkQuality;
+  int get rttMs => _rttMs;
+  int get txPacketLossRate => _txPacketLossRate;
+  int get rxPacketLossRate => _rxPacketLossRate;
+  int get txBitrateKbps => _txBitrateKbps;
+  int get rxBitrateKbps => _rxBitrateKbps;
+
+  /// Signal quality label for UI (uses worst of tx/rx).
+  String get networkQualityLabel {
+    final worst = _localNetworkQuality > _remoteNetworkQuality
+        ? _localNetworkQuality
+        : _remoteNetworkQuality;
+    switch (worst) {
+      case 1: return 'מעולה';
+      case 2: return 'טובה';
+      case 3: return 'בינונית';
+      case 4: return 'גרועה';
+      case 5:
+      case 6: return 'נוראית';
+      default: return '';
+    }
+  }
 
   /// Mute/unmute **published** local audio (remote hears silence when muted).
   Future<void> setMicPublishMuted(bool muted) async {
@@ -60,6 +98,63 @@ class AgoraService extends ChangeNotifier {
     final e = _engine;
     if (e == null) return;
     await e.switchCamera();
+  }
+
+  /// Toggle screen sharing (Web + desktop). No-op on mobile.
+  Future<void> toggleScreenShare() async {
+    final e = _engine;
+    if (e == null) return;
+    try {
+      if (_screenSharing) {
+        await e.stopScreenCapture();
+        _screenSharing = false;
+      } else {
+        if (kIsWeb) {
+          await e.startScreenCapture(
+            const ScreenCaptureParameters2(
+              captureAudio: true,
+              captureVideo: true,
+              videoParams: ScreenVideoParameters(
+                dimensions: VideoDimensions(width: 1280, height: 720),
+                frameRate: 15,
+                bitrate: 1500,
+              ),
+              audioParams: ScreenAudioParameters(
+                sampleRate: 16000,
+                channels: 2,
+                captureSignalVolume: 100,
+              ),
+            ),
+          );
+        } else {
+          // Mobile screen share not supported in this build.
+          return;
+        }
+        _screenSharing = true;
+      }
+      notifyListeners();
+    } catch (err, st) {
+      developer.log('toggleScreenShare', name: 'VETO.Agora', error: err, stackTrace: st);
+    }
+  }
+
+  /// Enable/disable AI noise suppression + echo cancellation.
+  Future<void> setNoiseSuppression(bool enable) async {
+    final e = _engine;
+    if (e == null) return;
+    try {
+      await e.setAINSMode(
+        enabled: enable,
+        mode: AudioAinsMode.ainsModeBalanced,
+      );
+      await e.setEchoCancellationMode(
+        mode: EchoCancellationMode.echoCancellationMedium,
+      );
+      _noiseSuppression = enable;
+      notifyListeners();
+    } catch (err, st) {
+      developer.log('setNoiseSuppression', name: 'VETO.Agora', error: err, stackTrace: st);
+    }
   }
 
   /// Route playback to the loudspeaker (iOS/Android). No-op on web.
@@ -125,11 +220,46 @@ class AgoraService extends ChangeNotifier {
               notifyListeners();
             }
           },
+          // Network quality callback — fires every 2 seconds.
+          onNetworkQuality: (RtcConnection connection, int uid,
+              QualityType txQuality, QualityType rxQuality) {
+            if (uid == 0) {
+              // uid=0 means local user
+              _localNetworkQuality = txQuality.index;
+            } else {
+              _remoteNetworkQuality = rxQuality.index;
+            }
+            notifyListeners();
+          },
+          // RTC Stats — fires every 2 seconds.
+          onRtcStats: (RtcConnection connection, RtcStats stats) {
+            _rttMs = stats.lastmileDelay ?? 0;
+            _txPacketLossRate = stats.txPacketLossRate ?? 0;
+            _rxPacketLossRate = stats.rxPacketLossRate ?? 0;
+            _txBitrateKbps = (stats.txKBitRate ?? 0);
+            _rxBitrateKbps = (stats.rxKBitRate ?? 0);
+            notifyListeners();
+          },
         ),
       );
 
       if (enableVideoTrack) {
         await eng.enableVideo();
+        // Set audio profile optimized for speech/legal consultation
+        await eng.setAudioProfile(
+          profile: AudioProfileType.audioProfileSpeechStandard,
+          scenario: AudioScenarioType.audioScenarioChatroom,
+        );
+        // Enable AI noise suppression by default
+        try {
+          await eng.setAINSMode(
+            enabled: true,
+            mode: AudioAinsMode.ainsModeBalanced,
+          );
+          await eng.setEchoCancellationMode(
+            mode: EchoCancellationMode.echoCancellationMedium,
+          );
+        } catch (_) {}
         // On iOS/Android, preview before join is normal. On **web**, starting preview
         // before join has been reported to hang or kill the tab; we start preview in
         // [onJoinChannelSuccess] when [_webPreviewAfterJoin] is set.
@@ -138,6 +268,11 @@ class AgoraService extends ChangeNotifier {
         }
       } else {
         await eng.disableVideo();
+        // Audio-only: use highest quality speech profile
+        await eng.setAudioProfile(
+          profile: AudioProfileType.audioProfileSpeechStandard,
+          scenario: AudioScenarioType.audioScenarioChatroom,
+        );
       }
       notifyListeners();
     } catch (e, st) {
@@ -231,6 +366,10 @@ class AgoraService extends ChangeNotifier {
       _micPublishMuted = false;
       _videoPublishMuted = false;
       _speakerOn = true;
+      _screenSharing = false;
+      _localNetworkQuality = 0;
+      _remoteNetworkQuality = 0;
+      _rttMs = 0;
       notifyListeners();
     }
   }
