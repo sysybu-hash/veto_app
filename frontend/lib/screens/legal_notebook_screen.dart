@@ -80,17 +80,16 @@ class _LegalNotebookScreenState extends State<LegalNotebookScreen> {
                           icon: const Icon(Icons.sync, color: VetoGlassTokens.accentSoft, size: 20),
                           onPressed: () async {
                             final res = await _api.sync(id);
-                            if (mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(
-                                    res?['sync']?['ok'] == true
-                                        ? 'הסנכרון הושלם (בבדיקת API)'
-                                        : (res?['sync']?['message'] as String? ?? res?['sync']?['error'] as String? ?? 'סנכרון'),
-                                  ),
+                            if (!context.mounted) return;
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  res?['sync']?['ok'] == true
+                                      ? 'הסנכרון הושלם (בבדיקת API)'
+                                      : (res?['sync']?['message'] as String? ?? res?['sync']?['error'] as String? ?? 'סנכרון'),
                                 ),
-                              );
-                            }
+                              ),
+                            );
                             await _reload();
                           },
                         ),
