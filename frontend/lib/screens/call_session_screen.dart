@@ -10,9 +10,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
-import 'package:speech_to_text/speech_to_text.dart'
-    show ListenMode, SpeechListenOptions, SpeechToText;
 
+import 'in_call_speech.dart';
 import '../core/theme/veto_theme.dart';
 import '../services/agora_service.dart';
 import '../services/socket_service.dart';
@@ -68,12 +67,7 @@ class _CallSessionScreenState extends State<CallSessionScreen>
   final _chatInput = TextEditingController();
   final List<_ChatLine> _chatLines = <_ChatLine>[];
 
-  final SpeechToText _speech = SpeechToText();
-  bool _sttInited = false;
-  bool _sttListen = false;
-  String? _sttError;
-  String _sttPartial = '';
-  final List<String> _transcriptLines = <String>[];
+  late final InCallSpeech _inCallSpeech;
   late TabController _sideTabController;
 
   Map<String, dynamic> _socketMap(dynamic raw) {
@@ -130,98 +124,12 @@ class _CallSessionScreenState extends State<CallSessionScreen>
     _socketHandlersRegistered = false;
   }
 
-  String get _sttLocale {
-    final l = widget.language;
-    if (l == 'he') return 'he_IL';
-    if (l == 'ru') return 'ru_RU';
-    if (l == 'ar') return 'ar_SA';
-    return 'en_US';
-  }
-
-  Future<void> _toggleStt() async {
-    if (_sttListen) {
-      try {
-        await _speech.stop();
-      } catch (_) {}
-      if (mounted) {
-        setState(() {
-          _sttListen = false;
-        });
-      }
-      return;
-    }
-    if (!_sttInited) {
-      setState(() => _sttError = null);
-      _sttInited = await _speech.initialize(
-        onError: (e) {
-          if (mounted) {
-            setState(() => _sttError = e.errorMsg);
-          }
-        },
-        onStatus: (s) {
-          if (!mounted) return;
-          if (s == 'notListening' || s == 'done') {
-            setState(() => _sttListen = _speech.isListening);
-          }
-        },
-      );
-      if (!_sttInited) {
-        if (mounted) {
-          setState(
-            () => _sttError = kIsWeb
-                ? 'Live caption is limited on this browser. Try the mobile app.'
-                : 'Could not start speech recognition.',
-          );
-        }
-        return;
-      }
-    }
-    setState(() {
-      _sttError = null;
-      _sttPartial = '';
-    });
-    try {
-      await _speech.listen(
-        onResult: (r) {
-          if (!mounted) return;
-          setState(() {
-            if (r.finalResult) {
-              final w = r.recognizedWords.trim();
-              if (w.isNotEmpty) {
-                _transcriptLines.add(w);
-                _sttPartial = '';
-              }
-            } else {
-              _sttPartial = r.recognizedWords;
-            }
-          });
-        },
-        localeId: _sttLocale,
-        pauseFor: const Duration(seconds: 4),
-        listenFor: const Duration(minutes: 30),
-        listenOptions: SpeechListenOptions(
-          listenMode: ListenMode.dictation,
-          partialResults: true,
-        ),
-      );
-      if (mounted) {
-        setState(() => _sttListen = _speech.isListening);
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() => _sttError = e.toString());
-      }
-    }
-  }
-
   Future<void> _finishBecauseRemote() async {
     if (_leaving) return;
     _leaving = true;
     _remoteHangup = true;
     _durationTimer?.cancel();
-    if (_sttListen) {
-      unawaited(_speech.stop().catchError((_) {}));
-    }
+    unawaited(_inCallSpeech.dispose());
     _unregisterCallSockets();
     if (mounted) {
       _queueVaultTranscribe();
@@ -242,6 +150,10 @@ class _CallSessionScreenState extends State<CallSessionScreen>
     }
     _agora = AgoraService();
     _agora.addListener(_onAgora);
+    _inCallSpeech = createInCallSpeech(() {
+      if (mounted) setState(() {});
+    });
+    _inCallSpeech.setLanguageCode(widget.language);
     _sideTabController = TabController(length: 2, vsync: this);
     unawaited(_bootstrap());
   }
@@ -328,9 +240,7 @@ class _CallSessionScreenState extends State<CallSessionScreen>
     if (_leaving) return;
     _leaving = true;
     _durationTimer?.cancel();
-    if (_sttListen) {
-      unawaited(_speech.stop().catchError((_) {}));
-    }
+    unawaited(_inCallSpeech.dispose());
     _unregisterCallSockets();
     try {
       if (!_remoteHangup) {
@@ -786,6 +696,7 @@ class _CallSessionScreenState extends State<CallSessionScreen>
   }
 
   Widget _captionTab() {
+    final s = _inCallSpeech;
     return ListView(
       padding: const EdgeInsets.all(12),
       children: [
@@ -793,7 +704,7 @@ class _CallSessionScreenState extends State<CallSessionScreen>
           Padding(
             padding: const EdgeInsets.only(bottom: 8),
             child: Text(
-              'On web, the mic is shared with the call. Live caption can fail or stutter; prefer the app.',
+              'בדפדפן אין כתוביות מקומיות; אחרי השיחה — תמלול דרך Vault כשההקלטה בשרת קיימת. באפליקיית מובייל אפשר כאן תמלול מקומי.',
               style: TextStyle(
                 color: Colors.orange.shade200,
                 fontSize: 12,
@@ -802,26 +713,32 @@ class _CallSessionScreenState extends State<CallSessionScreen>
             ),
           ),
         FilledButton.icon(
-          onPressed: _starting ? null : _toggleStt,
+          onPressed: _starting
+              ? null
+              : () {
+                  unawaited(s.toggle());
+                },
           style: FilledButton.styleFrom(
             backgroundColor:
-                _sttListen ? VetoColors.vetoRed : VetoColors.surface,
-            foregroundColor: _sttListen ? Colors.white : VetoColors.silver,
+                s.listening ? VetoColors.vetoRed : VetoColors.surface,
+            foregroundColor: s.listening ? Colors.white : VetoColors.silver,
           ),
           icon: Icon(
-            _sttListen ? Icons.stop_circle_outlined : Icons.mic,
+            s.listening ? Icons.stop_circle_outlined : Icons.mic,
           ),
           label: Text(
-            _sttListen
-                ? 'Stop live caption'
-                : 'Start local live caption',
+            kIsWeb
+                ? 'מידע על תמלול'
+                : (s.listening
+                    ? 'Stop live caption'
+                    : 'Start local live caption'),
             style: const TextStyle(fontFamily: 'Heebo'),
           ),
         ),
-        if (_sttError != null) ...[
+        if (s.error != null) ...[
           const SizedBox(height: 8),
           Text(
-            _sttError!,
+            s.error!,
             style: TextStyle(
               color: Colors.orange.shade200,
               fontSize: 12,
@@ -830,9 +747,9 @@ class _CallSessionScreenState extends State<CallSessionScreen>
           ),
         ],
         const SizedBox(height: 12),
-        if (_sttPartial.isNotEmpty) ...[
+        if (s.partial.isNotEmpty) ...[
           Text(
-            _sttPartial,
+            s.partial,
             style: const TextStyle(
               color: VetoColors.silver,
               fontSize: 14,
@@ -841,7 +758,7 @@ class _CallSessionScreenState extends State<CallSessionScreen>
           ),
           const SizedBox(height: 8),
         ],
-        for (final line in _transcriptLines)
+        for (final line in s.lines)
           Padding(
             padding: const EdgeInsets.only(bottom: 6),
             child: Text(
@@ -854,7 +771,7 @@ class _CallSessionScreenState extends State<CallSessionScreen>
               ),
             ),
           ),
-        if (_transcriptLines.isEmpty && _sttPartial.isEmpty)
+        if (s.lines.isEmpty && s.partial.isEmpty && s.error == null)
           const Text(
             'This is on-device text from your side only (not the peer). Server-side transcription uses the recording when you end the call.',
             style: TextStyle(
@@ -974,9 +891,7 @@ class _CallSessionScreenState extends State<CallSessionScreen>
     _durationTimer?.cancel();
     _chatScroll.dispose();
     _chatInput.dispose();
-    if (_sttListen) {
-      unawaited(_speech.stop().catchError((_) {}));
-    }
+    unawaited(_inCallSpeech.dispose());
     _agora.removeListener(_onAgora);
     _unregisterCallSockets();
     unawaited(() async {
@@ -1001,65 +916,73 @@ class _CallSessionScreenState extends State<CallSessionScreen>
       backgroundColor: Colors.black,
       body: Stack(
         children: [
-          Container(
-            width: double.infinity,
-            height: double.infinity,
-            decoration: VetoDecorations.gradientBg(),
+          Positioned.fill(
+            child: DecoratedBox(
+              decoration: VetoDecorations.gradientBg(),
+            ),
           ),
           if (_starting)
-            const Center(
-              child: CircularProgressIndicator(color: Colors.white54),
+            const Positioned.fill(
+              child: Center(
+                child: CircularProgressIndicator(color: Colors.white54),
+              ),
             )
           else if (_startError != null)
-            Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Text(
-                  _startError!,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    color: Colors.white70,
-                    fontFamily: 'Heebo',
+            Positioned.fill(
+              child: Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Text(
+                    _startError!,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      color: Colors.white70,
+                      fontFamily: 'Heebo',
+                    ),
                   ),
                 ),
               ),
             )
           else if (eng == null)
-            _buildWaitingForEngine()
+            Positioned.fill(child: _buildWaitingForEngine())
           else if (useWideSide)
-            Row(
-              children: [
-                Expanded(
-                  child: _buildVideoStage(
-                    eng,
-                    remote: remote,
-                    channel: channel,
-                    useVideoSurface: useVideoSurface,
+            Positioned.fill(
+              child: Row(
+                children: [
+                  Expanded(
+                    child: _buildVideoStage(
+                      eng,
+                      remote: remote,
+                      channel: channel,
+                      useVideoSurface: useVideoSurface,
+                    ),
                   ),
-                ),
-                SizedBox(
-                  width: 320,
-                  child: _sidePanel(),
-                ),
-              ],
+                  SizedBox(
+                    width: 320,
+                    child: _sidePanel(),
+                  ),
+                ],
+              ),
             )
           else
-            Column(
-              children: [
-                Expanded(
-                  child: _buildVideoStage(
-                    eng,
-                    remote: remote,
-                    channel: channel,
-                    useVideoSurface: useVideoSurface,
+            Positioned.fill(
+              child: Column(
+                children: [
+                  Expanded(
+                    child: _buildVideoStage(
+                      eng,
+                      remote: remote,
+                      channel: channel,
+                      useVideoSurface: useVideoSurface,
+                    ),
                   ),
-                ),
-                SizedBox(
-                  height: (MediaQuery.sizeOf(context).height * 0.38)
-                      .clamp(220.0, 420.0),
-                  child: _sidePanel(),
-                ),
-              ],
+                  SizedBox(
+                    height: (MediaQuery.sizeOf(context).height * 0.38)
+                        .clamp(220.0, 420.0),
+                    child: _sidePanel(),
+                  ),
+                ],
+              ),
             ),
         ],
       ),
