@@ -138,7 +138,7 @@ class AgoraService extends ChangeNotifier {
     }
   }
 
-  /// Enable/disable AI noise suppression + echo cancellation.
+  /// Enable/disable AI noise suppression.
   Future<void> setNoiseSuppression(bool enable) async {
     final e = _engine;
     if (e == null) return;
@@ -146,9 +146,6 @@ class AgoraService extends ChangeNotifier {
       await e.setAINSMode(
         enabled: enable,
         mode: AudioAinsMode.ainsModeBalanced,
-      );
-      await e.setEchoCancellationMode(
-        mode: EchoCancellationMode.echoCancellationMedium,
       );
       _noiseSuppression = enable;
       notifyListeners();
@@ -255,9 +252,6 @@ class AgoraService extends ChangeNotifier {
           await eng.setAINSMode(
             enabled: true,
             mode: AudioAinsMode.ainsModeBalanced,
-          );
-          await eng.setEchoCancellationMode(
-            mode: EchoCancellationMode.echoCancellationMedium,
           );
         } catch (_) {}
         // On iOS/Android, preview before join is normal. On **web**, starting preview

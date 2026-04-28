@@ -46,7 +46,6 @@ import 'screens/legal_document_screen.dart';
 import 'navigation/call_route_args_observer.dart';
 import 'services/socket_service.dart';
 import 'services/vault_save_queue.dart';
-import 'platform/browser_bridge.dart' as browser_bridge;
 
 void _installGlobalErrorLogging() {
   final previousHandler = FlutterError.onError;
