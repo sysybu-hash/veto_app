@@ -42,6 +42,7 @@ import 'screens/call_entry_screen.dart';
 import 'screens/maps_screen.dart';
 import 'screens/shared_vault_screen.dart';
 import 'screens/legal_document_screen.dart';
+import 'navigation/call_route_args_observer.dart';
 import 'services/socket_service.dart';
 import 'services/vault_save_queue.dart';
 
@@ -217,6 +218,7 @@ class VetoApp extends StatelessWidget {
 
     return MaterialApp(
       navigatorKey: vetoRootNavigatorKey,
+      navigatorObservers: <NavigatorObserver>[CallRouteArgsObserver()],
       debugShowCheckedModeBanner: false,
       title: 'VETO',
       theme: a11y.mergeTheme(baseTheme),

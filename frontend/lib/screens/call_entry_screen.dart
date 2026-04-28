@@ -4,6 +4,7 @@
 
 import 'package:flutter/material.dart';
 
+import '../services/call_route_args_storage.dart';
 import 'call_session_screen.dart';
 import 'call_screen.dart';
 
@@ -14,14 +15,33 @@ class CallEntryScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+    var args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+    args ??= callRouteArgsStorageRead();
     if (args == null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (context.mounted) {
           Navigator.of(context).pushReplacementNamed('/veto_screen');
         }
       });
-      return const Scaffold(body: SizedBox.shrink());
+      return const Scaffold(
+        backgroundColor: Color(0xFF0B0B0C),
+        body: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              CircularProgressIndicator(color: Colors.white54),
+              SizedBox(height: 16),
+              Text(
+                'מעבירים לבית…',
+                style: TextStyle(
+                  color: Colors.white70,
+                  fontFamily: 'Heebo',
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
     }
 
     var ct = args['callType']?.toString() ?? 'video';
@@ -38,7 +58,25 @@ class CallEntryScreen extends StatelessWidget {
           Navigator.of(context).pushReplacementNamed('/veto_screen');
         }
       });
-      return const Scaffold(body: SizedBox.shrink());
+      return const Scaffold(
+        backgroundColor: Color(0xFF0B0B0C),
+        body: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              CircularProgressIndicator(color: Colors.white54),
+              SizedBox(height: 16),
+              Text(
+                'מעבירים לבית…',
+                style: TextStyle(
+                  color: Colors.white70,
+                  fontFamily: 'Heebo',
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
     }
 
     int parseAgoraUid(dynamic v) {
