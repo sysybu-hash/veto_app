@@ -207,9 +207,17 @@ class _CallSessionScreenState extends State<CallSessionScreen>
         token: widget.token,
         uid: widget.agoraUid,
         publishVideo: widget.wantVideo,
-      ).timeout(const Duration(seconds: 12), onTimeout: () {
-        throw TimeoutException('Agora media connection timed out. Please check your camera permissions or network.');
-      });
+      );
+
+      // Wait for Agora to fully join the channel
+      int waitMs = 0;
+      while (!_agora.joined && waitMs < 10000) {
+        await Future.delayed(const Duration(milliseconds: 250));
+        waitMs += 250;
+      }
+      if (!_agora.joined) {
+        throw TimeoutException('Agora media connection timed out waiting to join channel. Please verify token/App ID.');
+      }
     } catch (e) {
       debugPrint('Agora connection failed: $e. Proceeding to chat fallback.');
       _agoraFailed = true;
