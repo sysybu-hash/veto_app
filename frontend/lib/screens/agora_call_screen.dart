@@ -52,6 +52,9 @@ class _AgoraCallScreenState extends State<AgoraCallScreen> {
   bool _socketHandlersRegistered = false;
   int _durationSeconds = 0;
   Timer? _durationTimer;
+  /// On web, creating [AgoraVideoView] too early can hit SDK null/PlatformView races; short delay after join.
+  bool _webVideoSurfaceOk = true;
+  Timer? _webVideoGateTimer;
 
   void _onSocketCallEnded(dynamic _) {
     if (_leaving || !mounted) return;
@@ -99,6 +102,9 @@ class _AgoraCallScreenState extends State<AgoraCallScreen> {
   @override
   void initState() {
     super.initState();
+    if (kIsWeb && widget.wantVideo) {
+      _webVideoSurfaceOk = false;
+    }
     _agora = AgoraService();
     _agora.addListener(_onAgora);
     unawaited(_bootstrap());
@@ -109,6 +115,12 @@ class _AgoraCallScreenState extends State<AgoraCallScreen> {
       _durationTimer = Timer.periodic(const Duration(seconds: 1), (_) {
         if (!mounted) return;
         setState(() => _durationSeconds++);
+      });
+    }
+    if (kIsWeb && widget.wantVideo && _agora.joined && !_webVideoSurfaceOk) {
+      _webVideoGateTimer?.cancel();
+      _webVideoGateTimer = Timer(const Duration(milliseconds: 850), () {
+        if (mounted) setState(() => _webVideoSurfaceOk = true);
       });
     }
     if (mounted) setState(() {});
@@ -225,6 +237,7 @@ class _AgoraCallScreenState extends State<AgoraCallScreen> {
     required RtcEngine eng,
     required int? remote,
     required String channel,
+    required bool useVideoSurface,
   }) {
     if (remote == null) {
       return Center(
@@ -246,7 +259,28 @@ class _AgoraCallScreenState extends State<AgoraCallScreen> {
         ),
       );
     }
+    if (!useVideoSurface) {
+      return const Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            CircularProgressIndicator(color: Colors.white54),
+            SizedBox(height: 20),
+            Text(
+              'מכין תצוגת וידאו (דפדפן)…',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: Colors.white70,
+                fontFamily: 'Heebo',
+                fontSize: 16,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
     return AgoraVideoView(
+      key: ValueKey('remote-$remote'),
       controller: VideoViewController.remote(
         rtcEngine: eng,
         canvas: VideoCanvas(uid: remote),
@@ -257,6 +291,7 @@ class _AgoraCallScreenState extends State<AgoraCallScreen> {
 
   @override
   void dispose() {
+    _webVideoGateTimer?.cancel();
     _durationTimer?.cancel();
     _agora.removeListener(_onAgora);
     _unregisterCallSockets();
@@ -275,6 +310,7 @@ class _AgoraCallScreenState extends State<AgoraCallScreen> {
     final RtcEngine? eng = _agora.engine;
     final int? remote = _agora.remoteUid;
     final String channel = widget.channelId;
+    final useVideoSurface = !kIsWeb || _webVideoSurfaceOk;
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -309,6 +345,7 @@ class _AgoraCallScreenState extends State<AgoraCallScreen> {
                   eng: eng,
                   remote: remote,
                   channel: channel,
+                  useVideoSurface: useVideoSurface,
                 ),
               )
             else
@@ -353,12 +390,20 @@ class _AgoraCallScreenState extends State<AgoraCallScreen> {
                       border: Border.all(color: VetoColors.border),
                     ),
                     child: _agora.joined
-                        ? AgoraVideoView(
-                            controller: VideoViewController(
-                              rtcEngine: eng,
-                              canvas: const VideoCanvas(uid: 0),
-                            ),
-                          )
+                        ? (useVideoSurface
+                            ? AgoraVideoView(
+                                key: const ValueKey('local-0'),
+                                controller: VideoViewController(
+                                  rtcEngine: eng,
+                                  canvas: const VideoCanvas(uid: 0),
+                                ),
+                              )
+                            : const Center(
+                                child: CircularProgressIndicator(
+                                  color: VetoColors.silver,
+                                  strokeWidth: 2,
+                                ),
+                              ))
                         : const Center(
                             child: Icon(Icons.videocam_outlined, color: VetoColors.silver),
                           ),

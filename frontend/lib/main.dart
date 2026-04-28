@@ -2,8 +2,10 @@
 //  main.dart — VETO app entry + named routes
 // ============================================================
 
-import 'dart:async' show unawaited;
+import 'dart:async' show runZonedGuarded, unawaited;
+import 'dart:ui' show PlatformDispatcher;
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -43,8 +45,44 @@ import 'screens/legal_document_screen.dart';
 import 'services/socket_service.dart';
 import 'services/vault_save_queue.dart';
 
+void _installGlobalErrorLogging() {
+  final previousHandler = FlutterError.onError;
+  FlutterError.onError = (FlutterErrorDetails details) {
+    if (kIsWeb) {
+      // Web release: debugPrint is a no-op; use print so DevTools shows the real error.
+      // ignore: avoid_print
+      print('[VETO][FlutterError] ${details.exceptionAsString()}');
+      final s = details.stack;
+      if (s != null) {
+        // ignore: avoid_print
+        print(s);
+      }
+    } else {
+      debugPrint('[VETO][FlutterError] ${details.exceptionAsString()}');
+      if (details.stack != null) {
+        debugPrintStack(stackTrace: details.stack);
+      }
+    }
+    previousHandler?.call(details);
+  };
+
+  PlatformDispatcher.instance.onError = (Object error, StackTrace stack) {
+    if (kIsWeb) {
+      // ignore: avoid_print
+      print('[VETO][async] $error');
+      // ignore: avoid_print
+      print(stack);
+    } else {
+      debugPrint('[VETO][async] $error');
+      debugPrintStack(stackTrace: stack);
+    }
+    return false;
+  };
+}
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  _installGlobalErrorLogging();
 
   // Global Error Boundary to prevent Red Screen of Death
   ErrorWidget.builder = (FlutterErrorDetails details) {
@@ -73,7 +111,7 @@ Future<void> main() async {
               details.exceptionAsString(),
               textAlign: TextAlign.center,
               style: const TextStyle(color: VetoGlassTokens.textSubtle, fontSize: 11),
-              maxLines: 3,
+              maxLines: kIsWeb ? 14 : 5,
               overflow: TextOverflow.ellipsis,
             ),
           ],
@@ -90,21 +128,35 @@ Future<void> main() async {
     accessibilitySettings.hydrate(),
   ]);
   unawaited(_warmUpBackend());
-  runApp(
-    provider.MultiProvider(
-      providers: [
-        provider.ChangeNotifierProvider.value(value: languageController),
-        provider.ChangeNotifierProvider.value(value: accessibilitySettings),
-        provider.ChangeNotifierProvider<VaultSaveQueue>(
-          create: (_) => VaultSaveQueue(),
+  runZonedGuarded(
+    () {
+      runApp(
+        provider.MultiProvider(
+          providers: [
+            provider.ChangeNotifierProvider.value(value: languageController),
+            provider.ChangeNotifierProvider.value(value: accessibilitySettings),
+            provider.ChangeNotifierProvider<VaultSaveQueue>(
+              create: (_) => VaultSaveQueue(),
+            ),
+            provider.Provider<SocketService>(
+              create: (_) => SocketService(),
+              lazy: true,
+            ),
+          ],
+          child: const VetoApp(),
         ),
-        provider.Provider<SocketService>(
-          create: (_) => SocketService(),
-          lazy: true,
-        ),
-      ],
-      child: const VetoApp(),
-    ),
+      );
+    },
+    (Object error, StackTrace stack) {
+      if (kIsWeb) {
+        // ignore: avoid_print
+        print('[VETO][zone] $error');
+        // ignore: avoid_print
+        print(stack);
+      } else {
+        debugPrint('[VETO][zone] $error\n$stack');
+      }
+    },
   );
 }
 

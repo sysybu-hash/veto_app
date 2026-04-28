@@ -61,6 +61,14 @@ class AgoraService extends ChangeNotifier {
             _errorMessage = '$err: $msg';
             notifyListeners();
           },
+          onConnectionStateChanged: (RtcConnection connection,
+              ConnectionStateType state, ConnectionChangedReasonType reason) {
+            if (state == ConnectionStateType.connectionStateFailed) {
+              _errorMessage =
+                  'Agora connection failed ($reason). Check token, App ID, and network.';
+              notifyListeners();
+            }
+          },
         ),
       );
 
