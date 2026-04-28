@@ -1546,11 +1546,8 @@ class _VetoScreenState extends State<VetoScreen> {
       label: _langKey == 'he' ? 'לחץ להפעלת מצוקה ושיגור עורך דין'
           : _langKey == 'ru' ? 'Нажмите для вызова адвоката'
           : 'Tap to dispatch a lawyer',
-      child: VetoGlassBlur(
-        borderRadius: 32,
-        sigma: 20,
-        fill: const Color(0x2EFFFFFF),
-        borderColor: VetoGlassTokens.neonCyan.withValues(alpha: 0.22),
+      child: Container(
+        decoration: VetoDecorations.light3DPanel(radius: 32),
         child: Padding(
           padding: EdgeInsets.symmetric(vertical: compact ? 20 : 24, horizontal: 12),
           child: Column(
@@ -1599,60 +1596,11 @@ class _VetoScreenState extends State<VetoScreen> {
                           ),
                         ),
                       ),
-                      // Core orb
                       Container(
                         width: orbSize,
                         height: orbSize,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          boxShadow: _isDispatching
-                              ? [
-                                  BoxShadow(
-                                    color: const Color(0xFFFF4B4B).withValues(alpha: 0.30),
-                                    blurRadius: 40,
-                                    spreadRadius: 6,
-                                  ),
-                                ]
-                              : [
-                                  BoxShadow(
-                                    color: const Color(0xFFFF4B4B).withValues(alpha: 0.22),
-                                    blurRadius: 60,
-                                    spreadRadius: 18,
-                                  ),
-                                  BoxShadow(
-                                    color: const Color(0xFFFF4B4B).withValues(alpha: 0.45),
-                                    blurRadius: 28,
-                                    spreadRadius: 6,
-                                  ),
-                                  BoxShadow(
-                                    color: const Color(0xFFFF4B4B).withValues(alpha: 0.65),
-                                    blurRadius: 12,
-                                    spreadRadius: 1,
-                                  ),
-                                ],
-                        ),
-                        child: Container(
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            gradient: RadialGradient(
-                              colors: _isDispatching
-                                  ? [
-                                      const Color(0xFFFF6B6B).withValues(alpha: 0.6),
-                                      const Color(0xFFCC2222).withValues(alpha: 0.4),
-                                    ]
-                                  : const [
-                                      Color(0xFFFF7777),
-                                      Color(0xFFFF3333),
-                                      Color(0xFFBB1111),
-                                    ],
-                              stops: _isDispatching ? const [0.0, 1.0] : const [0.0, 0.55, 1.0],
-                            ),
-                            border: Border.all(
-                              color: Colors.white.withValues(alpha: _isDispatching ? 0.2 : 0.38),
-                              width: 2.5,
-                            ),
-                          ),
-                          child: Column(
+                        decoration: VetoDecorations.light3DOrb(active: _isDispatching),
+                        child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               if (_isDispatching)
@@ -1689,11 +1637,10 @@ class _VetoScreenState extends State<VetoScreen> {
                             ],
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
-              ),
               const SizedBox(height: 10),
               Text(
                 _isDispatching
