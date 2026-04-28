@@ -1065,6 +1065,7 @@ class _VetoScreenState extends State<VetoScreen> {
 
   // ── AppBar: accessibility+flag left | centered title | hamburger right ──
   PreferredSizeWidget _buildAppBar(bool isAdmin) {
+    final liteWeb = kIsWeb && browser_bridge.isMobileBrowser();
     return AppBar(
       backgroundColor: VetoGlassTokens.glassFill,
       surfaceTintColor: Colors.transparent,
@@ -1074,17 +1075,35 @@ class _VetoScreenState extends State<VetoScreen> {
       shadowColor: Colors.transparent,
       toolbarHeight: 56,
       flexibleSpace: ClipRect(
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
-          child: Container(
-            decoration: BoxDecoration(
-              color: VetoGlassTokens.glassFill,
-              border: Border(
-                bottom: BorderSide(color: Colors.white.withValues(alpha: 0.1), width: 1),
+        child: liteWeb || VetoGlassTokens.blurSigma <= 0
+            ? Container(
+                decoration: BoxDecoration(
+                  color: VetoGlassTokens.glassFill,
+                  border: Border(
+                    bottom: BorderSide(
+                      color: Colors.white.withValues(alpha: 0.1),
+                      width: 1,
+                    ),
+                  ),
+                ),
+              )
+            : BackdropFilter(
+                filter: ImageFilter.blur(
+                  sigmaX: VetoGlassTokens.blurSigma,
+                  sigmaY: VetoGlassTokens.blurSigma,
+                ),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: VetoGlassTokens.glassFill,
+                    border: Border(
+                      bottom: BorderSide(
+                        color: Colors.white.withValues(alpha: 0.1),
+                        width: 1,
+                      ),
+                    ),
+                  ),
+                ),
               ),
-            ),
-          ),
-        ),
       ),
       iconTheme: const IconThemeData(color: VetoGlassTokens.textPrimary, size: 24),
       // Start side: language only (accessibility sits next to hamburger in [actions])
@@ -2386,25 +2405,35 @@ class _VetoScreenState extends State<VetoScreen> {
       ),
     ),
     // ── Input row ────────────────────────────────────────────
-    ClipRect(
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: VetoGlassTokens.blurSigma, sigmaY: VetoGlassTokens.blurSigma),
-        child: Container(
-          decoration: BoxDecoration(
-            color: VetoGlassTokens.glassFillStrong,
-            border: Border(top: BorderSide(color: VetoGlassTokens.glassBorder.withValues(alpha: 0.9))),
-            boxShadow: [
-              BoxShadow(color: Colors.black.withValues(alpha: 0.35), blurRadius: 18, offset: const Offset(0, -6)),
-            ],
-          ),
-          child: Column(mainAxisSize: MainAxisSize.min, children: [
-            _chatInput(isRtl),
-            _chatActBar(),
-            const SizedBox(height: 4),
-          ]),
+    Builder(builder: (context) {
+      final liteWeb = kIsWeb && browser_bridge.isMobileBrowser();
+      final shell = Container(
+        decoration: BoxDecoration(
+          color: VetoGlassTokens.glassFillStrong,
+          border: Border(top: BorderSide(color: VetoGlassTokens.glassBorder.withValues(alpha: 0.9))),
+          boxShadow: [
+            BoxShadow(color: Colors.black.withValues(alpha: 0.35), blurRadius: 18, offset: const Offset(0, -6)),
+          ],
         ),
-      ),
-    ),
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          _chatInput(isRtl),
+          _chatActBar(),
+          const SizedBox(height: 4),
+        ]),
+      );
+      if (liteWeb || VetoGlassTokens.blurSigma <= 0) {
+        return ClipRect(child: shell);
+      }
+      return ClipRect(
+        child: BackdropFilter(
+          filter: ImageFilter.blur(
+            sigmaX: VetoGlassTokens.blurSigma,
+            sigmaY: VetoGlassTokens.blurSigma,
+          ),
+          child: shell,
+        ),
+      );
+    }),
   ]);
 
   Widget _typingBubble() => Align(
