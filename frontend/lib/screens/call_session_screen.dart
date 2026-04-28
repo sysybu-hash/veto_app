@@ -995,7 +995,7 @@ class _CallSessionScreenState extends State<CallSessionScreen>
                 ),
               ),
             )
-          else if (eng == null)
+          else if (eng == null || !_agora.joined)
             Positioned.fill(child: _buildWaitingForEngine())
           else if (useWideSide)
             Positioned.fill(
