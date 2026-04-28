@@ -23,6 +23,7 @@ class AgoraCallScreen extends StatefulWidget {
     this.eventId = '',
     this.language = 'he',
     this.token = '',
+    this.agoraUid = 0,
     this.peerLabel = 'Lawyer',
     this.wantVideo = true,
     this.socketRole = 'user',
@@ -32,6 +33,8 @@ class AgoraCallScreen extends StatefulWidget {
   final String eventId;
   final String language;
   final String token;
+  /// From server [session_ready] — must match RTC token. Use 0 with empty token (dev / no certificate).
+  final int agoraUid;
   final String peerLabel;
   final bool wantVideo;
   final String socketRole;
@@ -136,6 +139,7 @@ class _AgoraCallScreenState extends State<AgoraCallScreen> {
       await _agora.joinChannel(
         channelId: widget.channelId,
         token: widget.token,
+        uid: widget.agoraUid,
         publishVideo: widget.wantVideo,
       );
     } catch (e) {

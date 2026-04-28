@@ -62,6 +62,12 @@ services:
       - key: GEMINI_MODEL
         value: gemini-2.5-flash
 
+      # ── Agora RTC — sync מ-Dashboard: אותו App ID כמו ב-Flutter + Certificate מ-Console
+      - key: AGORA_APP_ID
+        sync: false
+      - key: AGORA_APP_CERTIFICATE
+        sync: false
+
       # ── Cloudinary (הקלטות + ראיות) ───────────────────────────
       - key: CLOUDINARY_CLOUD_NAME
         sync: false

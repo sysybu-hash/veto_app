@@ -27,16 +27,18 @@ class AgoraService extends ChangeNotifier {
   /// Creates and initializes [RtcEngine] once. Safe to call again if already ready.
   Future<void> initializeEngine({bool enableVideoTrack = true}) async {
     if (_engine != null) return;
+    RtcEngine? eng;
     try {
-      _engine = createAgoraRtcEngine();
-      await _engine!.initialize(
+      eng = createAgoraRtcEngine();
+      _engine = eng;
+      await eng.initialize(
         const RtcEngineContext(
           appId: kAgoraAppIdPlaceholder,
           channelProfile: ChannelProfileType.channelProfileCommunication,
         ),
       );
 
-      _engine!.registerEventHandler(
+      eng.registerEventHandler(
         RtcEngineEventHandler(
           onJoinChannelSuccess: (RtcConnection connection, int elapsed) {
             _joined = true;
@@ -63,10 +65,10 @@ class AgoraService extends ChangeNotifier {
       );
 
       if (enableVideoTrack) {
-        await _engine!.enableVideo();
-        await _engine!.startPreview();
+        await eng.enableVideo();
+        await eng.startPreview();
       } else {
-        await _engine!.disableVideo();
+        await eng.disableVideo();
       }
       notifyListeners();
     } catch (e, st) {
@@ -77,12 +79,22 @@ class AgoraService extends ChangeNotifier {
         error: e,
         stackTrace: st,
       );
+      // Singleton engine must not stay half-initialized; next call would return early and break join.
+      try {
+        if (eng != null) {
+          await eng.release();
+        }
+      } catch (_) {}
+      _engine = null;
+      eng = null;
       notifyListeners();
       rethrow;
     }
   }
 
-  /// Joins a channel. [token] can be empty only if your project allows App ID join (dev).
+  /// Joins a channel.
+  /// - [token] + [uid] from server must match (see [buildRtcTokenForUid] in backend).
+  /// - For dev without certificate, [token] is empty and [uid] should be 0.
   Future<void> joinChannel({
     required String channelId,
     String token = '',

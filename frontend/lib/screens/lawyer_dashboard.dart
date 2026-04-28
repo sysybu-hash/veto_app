@@ -226,6 +226,8 @@ class _LawyerDashboardState extends State<LawyerDashboard> {
           'role': 'lawyer',
           'eventId': data['eventId']?.toString() ?? roomId,
           'language': data['language']?.toString() ?? preferredLanguage,
+          'agoraToken': data['agoraToken']?.toString() ?? '',
+          'agoraUid': data['agoraUid'],
         },
       );
     });
@@ -242,6 +244,8 @@ class _LawyerDashboardState extends State<LawyerDashboard> {
           'role': 'lawyer',
           'eventId': data['eventId']?.toString() ?? roomId,
           'language': data['language']?.toString() ?? preferredLanguage,
+          'agoraToken': data['agoraToken']?.toString() ?? '',
+          'agoraUid': data['agoraUid'],
         },
       );
     });
