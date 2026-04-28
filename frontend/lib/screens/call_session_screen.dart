@@ -377,6 +377,8 @@ class _CallSessionScreenState extends State<CallSessionScreen>
   }
 
   Widget _buildTopBar() {
+    final quality = _agora.networkQualityLabel;
+    final rtt = _agora.rttMs;
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
@@ -410,6 +412,12 @@ class _CallSessionScreenState extends State<CallSessionScreen>
               ),
             ),
             const Spacer(),
+            // אינדיקטור איכות רשת בזמן אמת
+            if (quality.isNotEmpty) ...
+              [
+                _NetworkQualityChip(label: quality, rttMs: rtt),
+                const SizedBox(width: 8),
+              ],
             if (_agora.joined)
               Text(
                 '${(_durationSeconds ~/ 60).toString().padLeft(2, '0')}:'
@@ -452,6 +460,27 @@ class _CallSessionScreenState extends State<CallSessionScreen>
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            // רמקול רעשים (AI Noise Suppression)
+            IconButton(
+              onPressed: () {
+                unawaited(
+                  _agora.setNoiseSuppression(!_agora.noiseSuppression),
+                );
+              },
+              style: IconButton.styleFrom(
+                backgroundColor: _agora.noiseSuppression
+                    ? VetoColors.vetoRed.withValues(alpha: 0.3)
+                    : Colors.white12,
+              ),
+              icon: Icon(
+                _agora.noiseSuppression
+                    ? Icons.noise_aware
+                    : Icons.noise_control_off,
+                color: _agora.noiseSuppression ? VetoColors.vetoRed : Colors.white54,
+              ),
+              tooltip: _agora.noiseSuppression ? 'Noise suppression ON' : 'Noise suppression OFF',
+            ),
+            const SizedBox(width: 4),
             if (!kIsWeb)
               IconButton(
                 onPressed: () {
@@ -522,6 +551,29 @@ class _CallSessionScreenState extends State<CallSessionScreen>
                   color: Colors.white,
                 ),
                 tooltip: 'Flip camera',
+              ),
+            ],
+            // שיתוף מסך (Web only)
+            if (kIsWeb) ...[
+              const SizedBox(width: 4),
+              IconButton(
+                onPressed: () {
+                  unawaited(_agora.toggleScreenShare());
+                },
+                style: IconButton.styleFrom(
+                  backgroundColor: _agora.screenSharing
+                      ? const Color(0xFF10B981)
+                      : Colors.white12,
+                ),
+                icon: Icon(
+                  _agora.screenSharing
+                      ? Icons.stop_screen_share
+                      : Icons.screen_share,
+                  color: _agora.screenSharing
+                      ? Colors.white
+                      : Colors.white70,
+                ),
+                tooltip: _agora.screenSharing ? 'Stop sharing' : 'Share screen',
               ),
             ],
           ],
@@ -984,6 +1036,56 @@ class _CallSessionScreenState extends State<CallSessionScreen>
                 ],
               ),
             ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Network Quality Chip ──────────────────────────────────────
+class _NetworkQualityChip extends StatelessWidget {
+  final String label;
+  final int rttMs;
+
+  const _NetworkQualityChip({required this.label, required this.rttMs});
+
+  Color get _color {
+    switch (label) {
+      case 'מעולה': return const Color(0xFF10B981);
+      case 'טובה':  return const Color(0xFF34D399);
+      case 'בינונית': return const Color(0xFFF59E0B);
+      case 'גרועה': return const Color(0xFFEF4444);
+      default: return const Color(0xFFEF4444);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: _color.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: _color.withValues(alpha: 0.4)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 7,
+            height: 7,
+            decoration: BoxDecoration(color: _color, shape: BoxShape.circle),
+          ),
+          const SizedBox(width: 5),
+          Text(
+            rttMs > 0 ? '$label · ${rttMs}ms' : label,
+            style: TextStyle(
+              color: _color,
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              fontFamily: 'Heebo',
+            ),
+          ),
         ],
       ),
     );
