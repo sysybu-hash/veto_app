@@ -122,7 +122,7 @@ class _WizardShellScreenState extends State<WizardShellScreen> {
         '/call',
         arguments: {
           'roomId': roomId,
-          'callType': data['callType']?.toString() ?? 'audio',
+          'callType': data['callType']?.toString() ?? 'video',
           'peerName': data['peerName']?.toString() ??
               (_langCode == 'he' ? 'עורך דין' : 'Lawyer'),
           'role': _role == 'admin' ? 'admin' : 'user',
