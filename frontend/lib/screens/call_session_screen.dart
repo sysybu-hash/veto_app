@@ -62,6 +62,7 @@ class _CallSessionScreenState extends State<CallSessionScreen>
   Timer? _durationTimer;
   bool _webVideoSurfaceOk = true;
   Timer? _webVideoGateTimer;
+  bool _agoraFailed = false;
 
   final _chatScroll = ScrollController();
   final _chatInput = TextEditingController();
@@ -159,6 +160,10 @@ class _CallSessionScreenState extends State<CallSessionScreen>
   }
 
   void _onAgora() {
+    if (_agora.errorMessage != null && _startError == null) {
+      _startError = _agora.errorMessage;
+      _starting = false;
+    }
     if (_agora.joined && _durationTimer == null) {
       _durationTimer = Timer.periodic(const Duration(seconds: 1), (_) {
         if (!mounted) return;
@@ -202,10 +207,12 @@ class _CallSessionScreenState extends State<CallSessionScreen>
         token: widget.token,
         uid: widget.agoraUid,
         publishVideo: widget.wantVideo,
-      );
+      ).timeout(const Duration(seconds: 12), onTimeout: () {
+        throw TimeoutException('Agora media connection timed out. Please check your camera permissions or network.');
+      });
     } catch (e) {
-      _startError = e.toString();
-      _unregisterCallSockets();
+      debugPrint('Agora connection failed: $e. Proceeding to chat fallback.');
+      _agoraFailed = true;
     } finally {
       if (mounted) setState(() => _starting = false);
     }
@@ -295,11 +302,32 @@ class _CallSessionScreenState extends State<CallSessionScreen>
   }
 
   Widget _remoteVideoOrWaiting({
-    required RtcEngine eng,
+    RtcEngine? eng,
     required int? remote,
     required String channel,
     required bool useVideoSurface,
   }) {
+    if (_agoraFailed || eng == null) {
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.videocam_off, color: Colors.white54, size: 56),
+            const SizedBox(height: 16),
+            const Text(
+              'חיבור מדיה לא זמין (מצלמה/מיקרופון).\nתוכל להשתמש בצ׳אט מימין.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: Colors.white,
+                fontFamily: 'Heebo',
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
     if (remote == null) {
       return Center(
         child: Column(
@@ -351,14 +379,15 @@ class _CallSessionScreenState extends State<CallSessionScreen>
   }
 
   Widget _localPreview({
-    required RtcEngine eng,
+    RtcEngine? eng,
     required bool useVideoSurface,
   }) {
-    if (!_agora.joined) {
+    if (_agoraFailed || eng == null || !_agora.joined) {
       return const Center(
         child: Icon(Icons.videocam_outlined, color: VetoColors.silver),
       );
     }
+
     if (!useVideoSurface) {
       return const Center(
         child: CircularProgressIndicator(
@@ -837,7 +866,7 @@ class _CallSessionScreenState extends State<CallSessionScreen>
   }
 
   Widget _buildVideoStage(
-    RtcEngine eng, {
+    RtcEngine? eng, {
     required int? remote,
     required String channel,
     required bool useVideoSurface,
@@ -993,7 +1022,7 @@ class _CallSessionScreenState extends State<CallSessionScreen>
                 ),
               ),
             )
-          else if (eng == null || !_agora.joined)
+          else if ((eng == null || !_agora.joined) && !_agoraFailed)
             Positioned.fill(child: _buildWaitingForEngine())
           else if (useWideSide)
             Positioned.fill(
