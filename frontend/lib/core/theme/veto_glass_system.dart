@@ -6,6 +6,7 @@
 import 'dart:math' as math;
 import 'dart:ui' show ImageFilter;
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 
 /// Design tokens for dark glass UI — single source for screens + painters.
@@ -304,7 +305,7 @@ class _VetoGlassAuroraBackgroundState extends State<VetoGlassAuroraBackground>
         const Positioned.fill(
           child: CustomPaint(painter: VetoFluidBackgroundPainter()),
         ),
-        if (!reduceMotion)
+        if (!reduceMotion && !kIsWeb)
           Positioned.fill(
             child: RepaintBoundary(
               child: AnimatedBuilder(

@@ -89,7 +89,7 @@ Future<void> main() async {
 
   // Mobile web can freeze under heavy glassmorphism (BackdropFilter blur) on some browsers.
   // Reduce blur by default on mobile user agents; users still get the same UI structure.
-  if (kIsWeb && browser_bridge.isMobileBrowser()) {
+  if (kIsWeb) {
     // 0 = disable BackdropFilter-heavy effects; this is the most reliable fix for
     // iOS Safari / low-end Android Chrome freezes on large blurred surfaces.
     VetoGlassTokens.blurSigma = 0;
