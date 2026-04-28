@@ -110,11 +110,13 @@ class _LegalCalendarScreenState extends State<LegalCalendarScreen> {
                           lastDate: DateTime(_y + 2),
                         );
                         if (d == null) return;
+                        if (!context.mounted) return;
                         final t = await showTimePicker(
                           context: context,
                           initialTime: TimeOfDay.fromDateTime(pickedStart),
                         );
                         if (t == null) return;
+                        if (!context.mounted) return;
                         setS(() {
                           pickedStart = DateTime(d.year, d.month, d.day, t.hour, t.minute);
                         });
@@ -133,11 +135,13 @@ class _LegalCalendarScreenState extends State<LegalCalendarScreen> {
                           lastDate: DateTime(_y + 2),
                         );
                         if (d == null) return;
+                        if (!context.mounted) return;
                         final t = await showTimePicker(
                           context: context,
                           initialTime: TimeOfDay.fromDateTime(pickedEnd),
                         );
                         if (t == null) return;
+                        if (!context.mounted) return;
                         setS(() {
                           pickedEnd = DateTime(d.year, d.month, d.day, t.hour, t.minute);
                         });

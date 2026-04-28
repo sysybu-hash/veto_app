@@ -132949,11 +132949,13 @@ s=3
 return A.f(A.akG(n,A.cN(k.e-1,1,1,0,0,0,0),l,A.cN(k.e+2,1,1,0,0,0,0)),$async$$0)
 case 3:j=b
 if(j==null){s=1
+break}if(n.e==null){s=1
 break}l=m.a
 s=4
 return A.f(A.bcm(n,new A.c2(A.eW(l),A.md(l))),$async$$0)
 case 4:o=b
 if(o==null){s=1
+break}if(n.e==null){s=1
 break}p.d.$1(new A.aYq(m,j,o))
 case 1:return A.n(q,r)}})
 return A.o($async$$0,r)},
@@ -132973,11 +132975,13 @@ s=3
 return A.f(A.akG(n,A.cN(k.e-1,1,1,0,0,0,0),l,A.cN(k.e+2,1,1,0,0,0,0)),$async$$0)
 case 3:j=b
 if(j==null){s=1
+break}if(n.e==null){s=1
 break}l=m.b
 s=4
 return A.f(A.bcm(n,new A.c2(A.eW(l),A.md(l))),$async$$0)
 case 4:o=b
 if(o==null){s=1
+break}if(n.e==null){s=1
 break}p.d.$1(new A.aYp(m,j,o))
 case 1:return A.n(q,r)}})
 return A.o($async$$0,r)},
@@ -133066,13 +133070,15 @@ s=A.i(A.c3(s==null?"\u2014":s),r,r,r,r,r,B.bS,r,r,r)
 return new A.zE(B.Z,A.fG(!1,r,r,r,!0,r,r,r,!0,o.h(p,"lastError")!=null,r,r,r,r,r,r,!1,r,r,r,s,r,n,A.ag(A.b([A.bQ(r,r,r,B.a4B,r,r,new A.aYG(q,m,this.b),r,r,r,r,r),A.cu(B.aE4,new A.aYH(q,m),r)],t.p),B.h,B.f,B.D,0,r),r),r)},
 $S:774}
 A.aYG.prototype={
-$0(){var s=0,r=A.p(t.H),q=this,p,o,n,m,l
+$0(){var s=0,r=A.p(t.H),q,p=this,o,n,m,l,k
 var $async$$0=A.l(function(a,b){if(a===1)return A.m(b,r)
-for(;;)switch(s){case 0:m=q.a
-s=2
-return A.f(m.d.zH(0,q.b),$async$$0)
-case 2:l=b
-if(m.c!=null){p=q.c.a0(t.J).f
+for(;;)switch(s){case 0:m=p.a
+s=3
+return A.f(m.d.zH(0,p.b),$async$$0)
+case 3:l=b
+k=p.c
+if(k.e==null){s=1
+break}k=k.a0(t.J).f
 o=l==null
 if(o)n=null
 else{n=J.K(l,"sync")
@@ -133083,9 +133089,10 @@ n=n==null?null:J.K(n,"message")}A.bw(n)
 if(n==null){if(o)o=null
 else{o=J.K(l,"sync")
 o=o==null?null:J.K(o,"error")}A.bw(o)}else o=n
-if(o==null)o="\u05e1\u05e0\u05db\u05e8\u05d5\u05df"}p.e4(A.dP(null,null,null,null,null,B.v,null,A.i(o,null,null,null,null,null,null,null,null,null),null,B.aP,null,null,null,null,null,null,null,null,null,null))}s=3
+if(o==null)o="\u05e1\u05e0\u05db\u05e8\u05d5\u05df"}k.e4(A.dP(null,null,null,null,null,B.v,null,A.i(o,null,null,null,null,null,null,null,null,null),null,B.aP,null,null,null,null,null,null,null,null,null,null))
+s=4
 return A.f(m.tE(),$async$$0)
-case 3:return A.n(null,r)}})
+case 4:case 1:return A.n(q,r)}})
 return A.o($async$$0,r)},
 $S:3}
 A.aYH.prototype={
