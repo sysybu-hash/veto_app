@@ -6,7 +6,7 @@
  * Output: 24 kHz model PCM from inlineData → Web Audio API scheduling.
  * Flutter: receives LIVE:{ u, m, nativeAudio } — m from outputAudioTranscription; skip vetoTTS when nativeAudio.
  */
-import { GoogleGenAI } from "https://esm.sh/@google/genai@1.48.0?target=es2022";
+import { GoogleGenAI } from "https://esm.sh/@google/genai@1.50.1?target=es2022";
 
 const NS = "vetoGeminiLive_";
 const OUT_SR = 24000;
@@ -69,13 +69,23 @@ function enqueuePcm(st, int16, sampleRate) {
   }
   const ctx = st.playbackCtx;
   ctx.resume().catch(() => {});
+  if (!st._masterGain) {
+    st._masterGain = ctx.createGain();
+    st._masterGain.gain.value =
+      typeof st._gainVal === "number" && !isNaN(st._gainVal) ? Math.max(0, Math.min(1, st._gainVal)) : 0.85;
+    st._masterGain.connect(ctx.destination);
+  }
   const n = int16.length;
   const buf = ctx.createBuffer(1, n, sampleRate);
   const ch = buf.getChannelData(0);
   for (let i = 0; i < n; i++) ch[i] = Math.max(-1, Math.min(1, int16[i] / 32768));
   const src = ctx.createBufferSource();
   src.buffer = buf;
-  src.connect(ctx.destination);
+  try {
+    src.connect(st._masterGain);
+  } catch (_) {
+    src.connect(ctx.destination);
+  }
   const now = ctx.currentTime;
   const startAt = st._nextPlay != null ? Math.max(now, st._nextPlay) : now;
   src.start(startAt);
@@ -188,6 +198,7 @@ function finalize(st, err) {
     // ignore
   }
   st.playbackCtx = null;
+  st._masterGain = null;
 
   if (st.session) {
     setTimeout(function () {
@@ -413,10 +424,14 @@ async function startPcmMic(stream, session, st) {
   await ac.resume().catch(() => {});
 }
 
-async function startSession(lang, jwt, apiBase) {
+async function startSession(lang, jwt, apiBase, voiceName, playbackLinearGain) {
   if (!apiBase) throw new Error("apiBase missing");
   if (!jwt) throw new Error("JWT missing");
   const url = String(apiBase).replace(/\/$/, "") + "/ai/live-token";
+  const tokenBody = { lang: lang || "he" };
+  if (typeof voiceName === "string" && voiceName.length) {
+    tokenBody.voiceName = voiceName;
+  }
   const ctrl = new AbortController();
   const to = setTimeout(function () {
     try {
@@ -430,7 +445,7 @@ async function startSession(lang, jwt, apiBase) {
     res = await fetch(url, {
       method: "POST",
       headers: headersFor(jwt),
-      body: JSON.stringify({ lang: lang || "he" }),
+      body: JSON.stringify(tokenBody),
       signal: ctrl.signal,
     });
   } catch (e) {
@@ -454,6 +469,10 @@ async function startSession(lang, jwt, apiBase) {
   const model = body.model;
   if (!name || !model) throw new Error("Invalid token response");
 
+  const g =
+    typeof playbackLinearGain === "number" && !isNaN(playbackLinearGain)
+      ? Math.max(0, Math.min(1, playbackLinearGain))
+      : 0.85;
   const st = {
     session: null,
     stream: null,
@@ -464,6 +483,8 @@ async function startSession(lang, jwt, apiBase) {
     playbackCtx: null,
     _nextPlay: null,
     _sources: [],
+    _masterGain: null,
+    _gainVal: g,
     accUser: "",
     accModel: "",
     usedNativeAudio: false,
@@ -548,7 +569,7 @@ Object.assign(window["vetoGeminiLive"], {
   isSupported: function () {
     return supported;
   },
-  start: function (lang, jwt, apiBase) {
+  start: function (lang, jwt, apiBase, voiceName, playbackLinearGain) {
     (async function () {
       if (!supported) {
         emit("LIVE:" + JSON.stringify({ err: "not_supported" }));
@@ -558,7 +579,7 @@ Object.assign(window["vetoGeminiLive"], {
         return;
       }
       try {
-        await startSession(lang, jwt, apiBase);
+        await startSession(lang, jwt, apiBase, voiceName, playbackLinearGain);
       } catch (e) {
         const st = window[NS + "st"];
         if (st) {
