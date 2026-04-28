@@ -8,6 +8,7 @@ import 'dart:ui' show PlatformDispatcher;
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart' as provider;
@@ -92,6 +93,22 @@ Future<void> main() async {
     // 0 = disable BackdropFilter-heavy effects; this is the most reliable fix for
     // iOS Safari / low-end Android Chrome freezes on large blurred surfaces.
     VetoGlassTokens.blurSigma = 0;
+
+    // #region agent log (frame timings)
+    // Runtime evidence for "silent freeze": logs slow frames to console (no PII).
+    // This lets us tell if freezes are build-bound vs raster-bound.
+    SchedulerBinding.instance.addTimingsCallback((List<FrameTiming> timings) {
+      for (final t in timings) {
+        final buildMs = t.buildDuration.inMilliseconds;
+        final rasterMs = t.rasterDuration.inMilliseconds;
+        final totalMs = buildMs + rasterMs;
+        if (totalMs >= 40) {
+          // ignore: avoid_print
+          print('[VETO][perf] slow_frame build=${buildMs}ms raster=${rasterMs}ms total=${totalMs}ms');
+        }
+      }
+    });
+    // #endregion agent log (frame timings)
   }
 
   // Global Error Boundary to prevent Red Screen of Death
