@@ -69,6 +69,90 @@
   </style>
 
   <script>
+    // #region agent log (mobile freeze triage)
+    // Runtime debug instrumentation (no secrets). Writes NDJSON via local ingest.
+    // This helps diagnose "silent freeze" on mobile web (long tasks, errors, reload loops).
+    (function () {
+      var ENDPOINT = 'http://127.0.0.1:7401/ingest/2cc35e0b-18a8-4185-b7a4-e3770da269e9';
+      var SESSION = '4cc158';
+      function send(hypothesisId, message, data) {
+        try {
+          fetch(ENDPOINT, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': SESSION },
+            body: JSON.stringify({
+              sessionId: SESSION,
+              runId: 'pre-fix',
+              hypothesisId: hypothesisId,
+              location: 'frontend/web/index.html:dbg',
+              message: message,
+              data: data || {},
+              timestamp: Date.now(),
+            }),
+          }).catch(function () {});
+        } catch (_) {}
+      }
+
+      // Avoid PII/secrets: never include JWT, phone, etc.
+      var ua = '';
+      try { ua = (navigator && navigator.userAgent ? navigator.userAgent : ''); } catch (_) {}
+      send('BOOT', 'page_boot', {
+        href: (location && location.href) || '',
+        ua: ua.slice(0, 180),
+        ts: Date.now(),
+      });
+
+      window.addEventListener('error', function (e) {
+        send('ERR', 'window_error', {
+          msg: String(e && e.message ? e.message : ''),
+          src: String(e && e.filename ? e.filename : ''),
+          line: e && e.lineno,
+          col: e && e.colno,
+        });
+      });
+      window.addEventListener('unhandledrejection', function (e) {
+        var r = e && e.reason;
+        send('ERR', 'unhandled_rejection', {
+          reason: (r && r.message) ? String(r.message) : String(r),
+        });
+      });
+
+      // Heartbeat: if these stop appearing before you manually refresh, we likely hit a main-thread stall.
+      var hb = 0;
+      setInterval(function () {
+        hb += 1;
+        send('HB', 'heartbeat', { n: hb, vis: document.visibilityState });
+      }, 2000);
+
+      // Long tasks observer (main-thread stalls)
+      try {
+        if ('PerformanceObserver' in window) {
+          var po = new PerformanceObserver(function (list) {
+            var entries = list.getEntries();
+            for (var i = 0; i < entries.length; i++) {
+              var lt = entries[i];
+              // duration in ms; report only if significant
+              if (lt && lt.duration && lt.duration >= 120) {
+                send('LT', 'longtask', { durMs: Math.round(lt.duration) });
+              }
+            }
+          });
+          po.observe({ type: 'longtask', buffered: true });
+          send('BOOT', 'longtask_observer_on', {});
+        }
+      } catch (_) {}
+
+      document.addEventListener('visibilitychange', function () {
+        send('VIS', 'visibility', { state: document.visibilityState });
+      });
+      window.addEventListener('pagehide', function () {
+        send('VIS', 'pagehide', {});
+      });
+    })();
+    // #endregion agent log (mobile freeze triage)
+  </script>
+
+  <script>
     // ── Web Speech API bridge (called from Flutter via dart:js) ──
 
     // Speech-to-Text
