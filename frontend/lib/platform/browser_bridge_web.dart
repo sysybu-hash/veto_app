@@ -10,6 +10,20 @@ void openInNewTab(String url) {
   window.open(url, '_blank');
 }
 
+bool isMobileBrowser() {
+  try {
+    final ua = (window.navigator.userAgent).toLowerCase();
+    // Common mobile UA tokens (good enough for performance gating).
+    return ua.contains('iphone') ||
+        ua.contains('ipad') ||
+        ua.contains('ipod') ||
+        ua.contains('android') ||
+        ua.contains('mobile');
+  } catch (_) {
+    return false;
+  }
+}
+
 void registerSttResultHandler(void Function(String result) handler) {
   (window as JSObject)['vetoSTTResult'] = ((JSString s) {
     handler(s.toDart);

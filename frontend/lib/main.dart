@@ -45,6 +45,7 @@ import 'screens/legal_document_screen.dart';
 import 'navigation/call_route_args_observer.dart';
 import 'services/socket_service.dart';
 import 'services/vault_save_queue.dart';
+import 'platform/browser_bridge.dart' as browser_bridge;
 
 void _installGlobalErrorLogging() {
   final previousHandler = FlutterError.onError;
@@ -84,6 +85,12 @@ void _installGlobalErrorLogging() {
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   _installGlobalErrorLogging();
+
+  // Mobile web can freeze under heavy glassmorphism (BackdropFilter blur) on some browsers.
+  // Reduce blur by default on mobile user agents; users still get the same UI structure.
+  if (kIsWeb && browser_bridge.isMobileBrowser()) {
+    VetoGlassTokens.blurSigma = 10;
+  }
 
   // Global Error Boundary to prevent Red Screen of Death
   ErrorWidget.builder = (FlutterErrorDetails details) {
