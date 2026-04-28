@@ -969,9 +969,7 @@ class _CallSessionScreenState extends State<CallSessionScreen>
       body: Stack(
         children: [
           Positioned.fill(
-            child: DecoratedBox(
-              decoration: VetoDecorations.gradientBg(),
-            ),
+            child: Container(color: const Color(0xFF0A0E17)),
           ),
           if (_starting)
             const Positioned.fill(
