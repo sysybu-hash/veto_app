@@ -70,27 +70,31 @@
 
   <script>
     // #region agent log (mobile freeze triage)
-    // Runtime debug instrumentation (no secrets). Writes NDJSON via local ingest.
-    // This helps diagnose "silent freeze" on mobile web (long tasks, errors, reload loops).
+    // Runtime debug instrumentation (no secrets).
+    // NOTE: On HTTPS sites, posting to http://127.0.0.1 can be blocked as mixed content.
+    // Therefore we log to console + keep a small in-memory ring buffer that can be copied.
     (function () {
-      var ENDPOINT = 'http://127.0.0.1:7401/ingest/2cc35e0b-18a8-4185-b7a4-e3770da269e9';
       var SESSION = '4cc158';
-      function send(hypothesisId, message, data) {
+      var MAX = 120;
+      window.__vetoDbg = window.__vetoDbg || { sessionId: SESSION, events: [] };
+      function push(evt) {
         try {
-          fetch(ENDPOINT, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': SESSION },
-            body: JSON.stringify({
-              sessionId: SESSION,
-              runId: 'pre-fix',
-              hypothesisId: hypothesisId,
-              location: 'frontend/web/index.html:dbg',
-              message: message,
-              data: data || {},
-              timestamp: Date.now(),
-            }),
-          }).catch(function () {});
+          window.__vetoDbg.events.push(evt);
+          if (window.__vetoDbg.events.length > MAX) window.__vetoDbg.events.shift();
         } catch (_) {}
+      }
+      function send(hypothesisId, message, data) {
+        var evt = {
+          sessionId: SESSION,
+          runId: 'pre-fix',
+          hypothesisId: hypothesisId,
+          location: 'frontend/web/index.html:dbg',
+          message: message,
+          data: data || {},
+          timestamp: Date.now(),
+        };
+        push(evt);
+        try { console.log('VETO_DBG', evt); } catch (_) {}
       }
 
       // Avoid PII/secrets: never include JWT, phone, etc.
