@@ -1625,11 +1625,12 @@ class _VetoScreenState extends State<VetoScreen> {
                     _statusBadge(),
                     SizedBox(height: compact ? 14 : 18),
                     _sosButton(compact),
-                    SizedBox(height: compact ? 14 : 18),
-                    _availableLawyersStrip(isRtl, compact),
-                    SizedBox(height: compact ? 14 : 18),
-                    _securityBar(),
-                    SizedBox(height: compact ? 14 : 18),
+                    // 2026 redesign — per approved citizen.html rev 2:
+                    //   removed: _availableLawyersStrip (chips of nearby lawyers)
+                    //   removed: _securityBar (encryption banner)
+                    // Match handling happens in dispatch flow; security context
+                    // is conveyed via status pill + vault context only.
+                    SizedBox(height: compact ? 18 : 22),
                     _secLabel(isRtl
                         ? 'מה קורה עכשיו?'
                         : _langKey == 'ru'
@@ -1888,7 +1889,9 @@ class _VetoScreenState extends State<VetoScreen> {
     );
   }
 
-  /// Set 5 — glass chips: nearby lawyers (illustrative; live matching happens on SOS).
+  /// Removed from UI in 2026 redesign (rev 2). Kept here for potential reuse —
+  /// e.g. as a "matched lawyers" strip during dispatch loading.
+  // ignore: unused_element
   Widget _availableLawyersStrip(bool isRtl, bool compact) {
     final title = _langKey == 'he'
         ? 'עורכי דין זמינים בקרבת מקום'
@@ -2028,7 +2031,9 @@ class _VetoScreenState extends State<VetoScreen> {
     );
   }
 
-  // ── Security level bar card (dark frosted) ────────────────
+  // ── Security level bar card — removed from UI in 2026 redesign (rev 2).
+  // Kept for optional reuse (e.g. a future "trust badge" surface).
+  // ignore: unused_element
   Widget _securityBar() => Container(
         decoration: VetoTokens.cardDecoration(),
         child: Padding(
