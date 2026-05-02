@@ -249,7 +249,15 @@ class _CallSessionScreenState extends State<CallSessionScreen>
         'text': t,
       });
     } catch (_) {}
-    _chatInput.clear();
+    setState(() {
+      _chatLines.add(_ChatLine(text: t, mine: true));
+      _chatInput.clear();
+    });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_chatScroll.hasClients) {
+        _chatScroll.jumpTo(_chatScroll.position.maxScrollExtent);
+      }
+    });
   }
 
   Future<void> _endCall() async {
@@ -691,6 +699,98 @@ class _CallSessionScreenState extends State<CallSessionScreen>
     );
   }
 
+  Widget _chatFallbackScreen(bool useWideSide) {
+    final isRtl = widget.language == 'he';
+    return Directionality(
+      textDirection: isRtl ? TextDirection.rtl : TextDirection.ltr,
+      child: Container(
+        decoration: VetoTokens.ambientPageDecoration(),
+        child: SafeArea(
+          child: Center(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                maxWidth: useWideSide ? 620 : double.infinity,
+              ),
+              child: Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
+                    child: Container(
+                      padding: const EdgeInsets.all(14),
+                      decoration:
+                          VetoTokens.cardDecoration(radius: VetoTokens.rMd),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: VetoTokens.warnSoft,
+                              borderRadius:
+                                  BorderRadius.circular(VetoTokens.rSm),
+                            ),
+                            child: const Icon(
+                              Icons.videocam_off_rounded,
+                              color: VetoTokens.warn,
+                              size: 20,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  isRtl
+                                      ? 'השיחה זמינה בצ׳אט'
+                                      : 'Call available in chat',
+                                  style: VetoTokens.titleSm.copyWith(
+                                    color: VetoTokens.ink900,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  isRtl
+                                      ? 'חיבור מדיה לא זמין כרגע. אפשר להמשיך בהתכתבות מאובטחת.'
+                                      : 'Media connection is unavailable. Continue securely by chat.',
+                                  style: VetoTokens.bodyXs.copyWith(
+                                    color: VetoTokens.ink500,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          IconButton(
+                            onPressed: _endCall,
+                            tooltip: 'End',
+                            style: IconButton.styleFrom(
+                              backgroundColor: VetoTokens.emerg,
+                              foregroundColor: Colors.white,
+                            ),
+                            icon: const Icon(Icons.call_end_rounded, size: 18),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(VetoTokens.rLg),
+                        child: _sidePanel(),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _chatTab() {
     return Column(
       children: [
@@ -724,14 +824,19 @@ class _CallSessionScreenState extends State<CallSessionScreen>
                         constraints: const BoxConstraints(maxWidth: 260),
                         decoration: BoxDecoration(
                           color: line.mine
-                              ? VetoTokens.emerg.withValues(alpha: 0.25)
-                              : Colors.white12,
+                              ? VetoTokens.navy600
+                              : VetoTokens.paper2,
+                          border: Border.all(
+                            color: line.mine
+                                ? VetoTokens.navy600
+                                : VetoTokens.hairline,
+                          ),
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: Text(
                           line.text,
-                          style: const TextStyle(
-                            color: Colors.white,
+                          style: TextStyle(
+                            color: line.mine ? Colors.white : VetoTokens.ink800,
                             fontFamily: 'Heebo',
                             fontSize: 14,
                           ),
@@ -743,7 +848,7 @@ class _CallSessionScreenState extends State<CallSessionScreen>
         ),
         Container(
           padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
-          color: Colors.black26,
+          color: VetoTokens.surface,
           child: Row(
             children: [
               Expanded(
@@ -752,7 +857,7 @@ class _CallSessionScreenState extends State<CallSessionScreen>
                   minLines: 1,
                   maxLines: 3,
                   style: const TextStyle(
-                    color: Colors.white,
+                    color: VetoTokens.ink900,
                     fontFamily: 'Heebo',
                   ),
                   decoration: const InputDecoration(
@@ -1029,6 +1134,8 @@ class _CallSessionScreenState extends State<CallSessionScreen>
                 ),
               ),
             )
+          else if (_agoraFailed)
+            Positioned.fill(child: _chatFallbackScreen(useWideSide))
           else if ((eng == null || !_agora.joined) && !_agoraFailed)
             Positioned.fill(child: _buildWaitingForEngine())
           else if (useWideSide)
