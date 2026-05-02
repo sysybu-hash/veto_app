@@ -6,7 +6,7 @@ import 'package:provider/provider.dart';
 
 import '../config/veto_live_audio_prefs.dart';
 import '../core/i18n/app_language.dart';
-import '../core/theme/veto_glass_system.dart';
+import '../core/theme/veto_tokens_2026.dart';
 
 class VetoLiveVoiceSheet extends StatefulWidget {
   const VetoLiveVoiceSheet({super.key});
@@ -45,7 +45,7 @@ class _VetoLiveVoiceSheetState extends State<VetoLiveVoiceSheet> {
       return const Padding(
         padding: EdgeInsets.all(32),
         child: Center(
-          child: CircularProgressIndicator(color: VetoGlassTokens.neonCyan),
+          child: CircularProgressIndicator(color: VetoTokens.navy600),
         ),
       );
     }
@@ -54,7 +54,7 @@ class _VetoLiveVoiceSheetState extends State<VetoLiveVoiceSheet> {
         padding: const EdgeInsets.all(24),
         child: Text(
           t.webOnly,
-          style: const TextStyle(color: VetoGlassTokens.textPrimary),
+          style: const TextStyle(color: VetoTokens.ink900),
         ),
       );
     }
@@ -76,7 +76,7 @@ class _VetoLiveVoiceSheetState extends State<VetoLiveVoiceSheet> {
                 height: 4,
                 margin: const EdgeInsets.only(bottom: 16),
                 decoration: BoxDecoration(
-                  color: VetoGlassTokens.glassBorder,
+                  color: VetoTokens.hairline,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -85,7 +85,7 @@ class _VetoLiveVoiceSheetState extends State<VetoLiveVoiceSheet> {
               t.title,
               textAlign: TextAlign.center,
               style: const TextStyle(
-                color: VetoGlassTokens.textPrimary,
+                color: VetoTokens.ink900,
                 fontSize: 18,
                 fontWeight: FontWeight.w800,
               ),
@@ -95,7 +95,7 @@ class _VetoLiveVoiceSheetState extends State<VetoLiveVoiceSheet> {
               t.hint,
               textAlign: TextAlign.center,
               style: const TextStyle(
-                color: VetoGlassTokens.textMuted,
+                color: VetoTokens.ink500,
                 fontSize: 13,
                 height: 1.35,
               ),
@@ -104,7 +104,7 @@ class _VetoLiveVoiceSheetState extends State<VetoLiveVoiceSheet> {
             Text(
               t.voiceLabel,
               style: const TextStyle(
-                color: VetoGlassTokens.textSubtle,
+                color: VetoTokens.ink300,
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
               ),
@@ -113,9 +113,9 @@ class _VetoLiveVoiceSheetState extends State<VetoLiveVoiceSheet> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12),
               decoration: BoxDecoration(
-                color: VetoGlassTokens.glassFill,
+                color: VetoTokens.surface2,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: VetoGlassTokens.glassBorder),
+                border: Border.all(color: VetoTokens.hairline),
               ),
               child: DropdownButtonHideUnderline(
                 child: DropdownButton<String>(
@@ -123,7 +123,7 @@ class _VetoLiveVoiceSheetState extends State<VetoLiveVoiceSheet> {
                   value: VetoLiveAudioPrefs.normalizeVoice(_voice),
                   dropdownColor: const Color(0xFF0B1220),
                   style: const TextStyle(
-                    color: VetoGlassTokens.textPrimary,
+                    color: VetoTokens.ink900,
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
                   ),
@@ -145,7 +145,7 @@ class _VetoLiveVoiceSheetState extends State<VetoLiveVoiceSheet> {
             Text(
               t.gainLabel,
               style: const TextStyle(
-                color: VetoGlassTokens.textSubtle,
+                color: VetoTokens.ink300,
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
               ),
@@ -155,20 +155,20 @@ class _VetoLiveVoiceSheetState extends State<VetoLiveVoiceSheet> {
                 const Icon(
                   Icons.volume_mute,
                   size: 20,
-                  color: VetoGlassTokens.textMuted,
+                  color: VetoTokens.ink500,
                 ),
                 Expanded(
                   child: Slider(
                     value: _gain,
                     onChanged: (g) => setState(() => _gain = g),
-                    activeColor: VetoGlassTokens.neonCyan,
-                    inactiveColor: VetoGlassTokens.glassBorder,
+                    activeColor: VetoTokens.navy600,
+                    inactiveColor: VetoTokens.hairline,
                   ),
                 ),
                 const Icon(
                   Icons.volume_up,
                   size: 20,
-                  color: VetoGlassTokens.textMuted,
+                  color: VetoTokens.ink500,
                 ),
               ],
             ),
@@ -205,25 +205,30 @@ class _VetoLiveVoiceCopy {
       case 'ru':
         return const _VetoLiveVoiceCopy(
           title: 'Голос Gemini Live',
-          hint: 'Предзаписанные голоса. Громкость влогает на воспроизведение (PCM) в этом браузере. Начните сессию снова после смены голоса.',
+          hint:
+              'Предзаписанные голоса. Громкость влогает на воспроизведение (PCM) в этом браузере. Начните сессию снова после смены голоса.',
           voiceLabel: 'Голос',
           gainLabel: 'Громкость ответа',
           save: 'Сохранить',
-          webOnly: 'Мультимодальное прямое аудио Gemini (Live) доступно только в веб-версии.',
+          webOnly:
+              'Мультимодальное прямое аудио Gemini (Live) доступно только в веб-версии.',
         );
       case 'en':
         return const _VetoLiveVoiceCopy(
           title: 'Gemini Live voice',
-          hint: 'Prebuilt model voices. Gain applies to native PCM playback in this browser. Start a new mic session after changing the voice.',
+          hint:
+              'Prebuilt model voices. Gain applies to native PCM playback in this browser. Start a new mic session after changing the voice.',
           voiceLabel: 'Voice',
           gainLabel: 'Reply volume',
           save: 'Save',
-          webOnly: 'Gemini Multimodal Live audio is only available in the web app.',
+          webOnly:
+              'Gemini Multimodal Live audio is only available in the web app.',
         );
       default:
         return const _VetoLiveVoiceCopy(
           title: 'הגדרות שמע – Gemini Live',
-          hint: 'מצבים קבועים מראש של קול. העוצמה משפיעה על שמע המודל (PCM) בדפדפן. אחרי שינוי קול, הפעל מחדש את ה-session מהמיקרופון.',
+          hint:
+              'מצבים קבועים מראש של קול. העוצמה משפיעה על שמע המודל (PCM) בדפדפן. אחרי שינוי קול, הפעל מחדש את ה-session מהמיקרופון.',
           voiceLabel: 'דיבור (קול)',
           gainLabel: 'עוצמת תשובה',
           save: 'שמור',
@@ -236,7 +241,7 @@ class _VetoLiveVoiceCopy {
 Future<String?> showVetoLiveVoiceSheet(BuildContext context) {
   return showModalBottomSheet<String>(
     context: context,
-    backgroundColor: VetoGlassTokens.bgBase,
+    backgroundColor: VetoTokens.paper,
     isScrollControlled: true,
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(20)),

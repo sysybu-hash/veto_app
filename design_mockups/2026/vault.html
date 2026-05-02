@@ -1,0 +1,424 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>VETO · Vault & Evidence · 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@500;700;900&family=Heebo:wght@300;400;500;600;700;800;900&family=Assistant:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="_veto-2026.css">
+<style>
+  /* Vault layout */
+  .vault-grid{
+    display:grid; grid-template-columns:repeat(auto-fill, minmax(220px, 1fr)); gap:14px;
+  }
+  .file-card{
+    background:#fff; border:1px solid var(--hairline); border-radius:var(--r-md);
+    padding:16px; cursor:pointer; transition:.15s; display:flex; flex-direction:column; gap:10px;
+  }
+  .file-card:hover{ border-color:var(--navy-300); transform:translateY(-2px); box-shadow:var(--shadow-1) }
+  .file-card .ico{
+    width:48px; height:48px; border-radius:12px;
+    background: var(--paper-2); border:1px solid var(--hairline);
+    display:grid; place-items:center; color:var(--navy-600);
+  }
+  .file-card .ico.pdf{ background:#FFF1F0; color:#B81B30; border-color:#F8D6CB }
+  .file-card .ico.audio{ background:#F0F7F1; color:#16664B; border-color:#B7DFCB }
+  .file-card .ico.video{ background:#F0EEFF; color:#5A4FCF; border-color:#D6CDF8 }
+  .file-card .ico.image{ background:#FFF8E6; color:#94681A; border-color:#F2D58E }
+  .file-card .nm{ font-weight:800; font-size:13px; color:var(--ink-900); overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
+  .file-card .meta{ font-size:11px; color:var(--ink-500); display:flex; gap:8px; flex-wrap:wrap }
+  .file-card .meta b{ color:var(--ink-700) }
+  .file-card .badges{ display:flex; gap:5px; flex-wrap:wrap }
+
+  /* Map */
+  .map-stage{
+    flex:1; position:relative; overflow:hidden; background:#E5EBF4;
+    background-image:
+      linear-gradient(0deg, transparent 49%, rgba(11,24,48,.05) 49% 51%, transparent 51%),
+      linear-gradient(90deg, transparent 49%, rgba(11,24,48,.05) 49% 51%, transparent 51%),
+      radial-gradient(circle at 35% 45%, rgba(46,105,231,.06), transparent 30%),
+      radial-gradient(circle at 65% 65%, rgba(184,137,92,.05), transparent 25%);
+    background-size: 60px 60px, 60px 60px, 100% 100%, 100% 100%;
+  }
+  .map-pin{
+    position:absolute; width:36px; height:46px;
+  }
+  .map-pin .head{
+    width:36px; height:36px; border-radius:50%;
+    background:var(--emerg); color:#fff;
+    display:grid; place-items:center; font-weight:800; font-size:13px;
+    box-shadow:0 8px 24px rgba(214,36,58,.35), inset 0 0 0 2px rgba(255,255,255,.3);
+  }
+  .map-pin.lawyer .head{ background:var(--navy-600); box-shadow:0 8px 24px rgba(38,73,117,.35), inset 0 0 0 2px rgba(255,255,255,.3) }
+  .map-pin.lawyer.away .head{ background:var(--ink-300) }
+  .map-pin::after{
+    content:""; display:block; margin:-2px auto 0;
+    width:0; height:0; border-left:8px solid transparent; border-right:8px solid transparent;
+    border-top:14px solid currentColor;
+  }
+  .map-pin{ color:var(--emerg) }
+  .map-pin.lawyer{ color:var(--navy-600) }
+  .map-pin.lawyer.away{ color:var(--ink-300) }
+  .map-card{
+    position:absolute; bottom:18px; left:18px; right:18px;
+    background:#fff; border:1px solid var(--hairline); border-radius:var(--r-lg);
+    padding:14px 16px; box-shadow:var(--shadow-2);
+    display:flex; gap:14px; align-items:center;
+  }
+
+  /* Evidence capture overlay */
+  .ev-stage{
+    flex:1; background:#0B1830; position:relative;
+    background-image:
+      radial-gradient(circle at 50% 50%, rgba(91,139,240,.10), transparent 60%);
+  }
+  .ev-viewfinder{
+    position:absolute; inset:32px;
+    border:2px solid rgba(255,255,255,.30); border-radius:24px;
+  }
+  .ev-corner{
+    position:absolute; width:24px; height:24px; border:3px solid var(--gold);
+  }
+  .ev-corner.tl{ top:24px; left:24px; border-right:0; border-bottom:0; border-radius:6px 0 0 0 }
+  .ev-corner.tr{ top:24px; right:24px; border-left:0; border-bottom:0; border-radius:0 6px 0 0 }
+  .ev-corner.bl{ bottom:24px; left:24px; border-right:0; border-top:0; border-radius:0 0 0 6px }
+  .ev-corner.br{ bottom:24px; right:24px; border-left:0; border-top:0; border-radius:0 0 6px 0 }
+  .ev-overlay-info{
+    position:absolute; top:16px; left:50%; transform:translateX(-50%);
+    background:rgba(11,24,48,.72); border:1px solid rgba(255,255,255,.16);
+    color:#fff; padding:8px 16px; border-radius:var(--r-pill);
+    font-size:12px; font-weight:700; backdrop-filter: blur(8px);
+    display:flex; align-items:center; gap:8px;
+  }
+  .ev-controls{
+    position:absolute; bottom:24px; left:0; right:0;
+    display:flex; gap:18px; justify-content:center; align-items:center;
+  }
+  .ev-shutter{
+    width:74px; height:74px; border-radius:50%; border:5px solid #fff;
+    background:#fff; cursor:pointer;
+    box-shadow:0 0 0 4px rgba(255,255,255,.20), 0 12px 32px rgba(0,0,0,.5);
+  }
+  .ev-mode-btn{
+    width:48px; height:48px; border-radius:50%; border:1px solid rgba(255,255,255,.20);
+    background:rgba(255,255,255,.10); color:#fff;
+    display:grid; place-items:center; backdrop-filter:blur(8px);
+  }
+  .ev-mode-btn.active{ background:var(--gold); border-color:var(--gold) }
+</style>
+</head>
+<body>
+  <div class="page">
+    <div class="page-header">
+      <h1>VETO · כספת מסמכים · ראיות · מפה</h1>
+      <span class="tag">2026 · Files Vault · Shared Vault · Evidence · Maps</span>
+    </div>
+    <p class="page-sub">
+      ארבעת מסכי הניהול הסודי: כספת אישית מוצפנת (קבצים), כספת משותפת עם עורך הדין, מצלמת ראיות בזמן אמירע (camera UI), ומפה לאיתור עורכי דין/אירועים.
+    </p>
+
+    <!-- Files Vault -->
+    <h2 style="font-family:var(--serif); font-size:22px; margin-bottom:14px">1. כספת מסמכים אישית</h2>
+    <div class="device-label">Desktop · Files Vault</div>
+    <div class="desktop">
+      <div class="bar"><i></i><i></i><i></i></div>
+      <div class="canvas">
+        <header class="topbar">
+          <div class="brand"><div class="crest">V</div><div class="name">VETO<em>כספת מסמכים</em></div></div>
+          <nav class="nav">
+            <a href="#">דף הבית</a>
+            <a href="#">צ'אט</a>
+            <a class="active" href="#">כספת</a>
+            <a href="#">יומן</a>
+            <a href="#">מפה</a>
+          </nav>
+          <div style="display:flex; gap:8px">
+            <button class="iconbtn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></button>
+            <button class="cta">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+              העלה קובץ
+            </button>
+          </div>
+        </header>
+
+        <div style="padding:24px 28px; flex:1; overflow-y:auto">
+          <div class="row-between" style="margin-bottom:18px">
+            <div>
+              <div class="kicker">מאובטח · מוצפן E2E</div>
+              <h2 style="font-family:var(--serif); font-size:26px">הכספת שלך</h2>
+              <p class="muted text-sm" style="margin:4px 0 0">142 קבצים · 2.4 GB מתוך 10 GB · נשמר אך ורק במכשיר ובכספת המוצפנת שלך</p>
+            </div>
+            <div class="tabs">
+              <button class="active">הכל</button>
+              <button>מסמכים</button>
+              <button>שמע</button>
+              <button>וידאו</button>
+              <button>תמונות</button>
+            </div>
+          </div>
+
+          <!-- Storage indicator -->
+          <div class="card" style="margin-bottom:18px">
+            <div class="body">
+              <div class="row-between" style="margin-bottom:10px">
+                <div style="display:flex; gap:14px; align-items:center">
+                  <div style="width:42px; height:42px; border-radius:12px; background:linear-gradient(135deg, #2E69E7, #5B8BF0); display:grid; place-items:center; color:#fff"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></div>
+                  <div>
+                    <div style="font-weight:800; font-size:14px">2.4 GB מנוצל מתוך 10 GB</div>
+                    <div class="muted text-xs" style="margin-top:2px">142 קבצים · הצפנה AES-256 בכל קובץ</div>
+                  </div>
+                </div>
+                <button class="ghost-btn">שדרג תוכנית</button>
+              </div>
+              <div class="progress"><i style="width:24%"></i></div>
+            </div>
+          </div>
+
+          <!-- Files grid -->
+          <div class="vault-grid">
+            <div class="file-card">
+              <div class="ico pdf"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 13h6M9 17h6"/></svg></div>
+              <div>
+                <div class="nm">ייפוי כוח חתום.pdf</div>
+                <div class="meta"><span><b>2.4 MB</b></span><span>· אתמול</span></div>
+              </div>
+              <div class="badges"><span class="badge ok">חתום</span></div>
+            </div>
+            <div class="file-card">
+              <div class="ico audio"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V5l12-2v13M6 22a3 3 0 0 1-3-3 3 3 0 0 1 6 0v3M21 19a3 3 0 0 1-3-3 3 3 0 0 1 6 0v3"/></svg></div>
+              <div>
+                <div class="nm">הקלטת חקירה_2025-12-04.m4a</div>
+                <div class="meta"><span><b>14:32</b></span><span>· לפני 3 ימים</span></div>
+              </div>
+              <div class="badges"><span class="badge brand">תיעוד שיחה</span></div>
+            </div>
+            <div class="file-card">
+              <div class="ico image"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg></div>
+              <div>
+                <div class="nm">צילום זימון.jpg</div>
+                <div class="meta"><span><b>1.2 MB</b></span><span>· היום</span></div>
+              </div>
+              <div class="badges"><span class="badge gold">חתום GPS</span></div>
+            </div>
+            <div class="file-card">
+              <div class="ico video"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 7l-7 5 7 5V7zM1 5h15v14H1z"/></svg></div>
+              <div>
+                <div class="nm">סרטון אירוע_כביש4.mp4</div>
+                <div class="meta"><span><b>32 MB</b></span><span>· 1:24 דק'</span></div>
+              </div>
+              <div class="badges"><span class="badge gold">חתום GPS</span><span class="badge brand">ראיה</span></div>
+            </div>
+            <div class="file-card">
+              <div class="ico pdf"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg></div>
+              <div>
+                <div class="nm">חוזה שכירות 2025.pdf</div>
+                <div class="meta"><span><b>800 KB</b></span><span>· שבוע</span></div>
+              </div>
+            </div>
+            <div class="file-card">
+              <div class="ico pdf"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg></div>
+              <div>
+                <div class="nm">ת"ז סרוקה.pdf</div>
+                <div class="meta"><span><b>1.8 MB</b></span><span>· חודש</span></div>
+              </div>
+            </div>
+            <div class="file-card">
+              <div class="ico audio"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V5l12-2v13"/></svg></div>
+              <div>
+                <div class="nm">שיחה עם עו"ד שירה.m4a</div>
+                <div class="meta"><span><b>22:14</b></span><span>· אתמול</span></div>
+              </div>
+              <div class="badges"><span class="badge brand">תיעוד שיחה</span></div>
+            </div>
+            <div class="file-card">
+              <div class="ico image"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/></svg></div>
+              <div>
+                <div class="nm">תאונה_זווית2.jpg</div>
+                <div class="meta"><span><b>2.1 MB</b></span><span>· שבועיים</span></div>
+              </div>
+              <div class="badges"><span class="badge gold">חתום GPS</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Shared Vault -->
+    <h2 style="font-family:var(--serif); font-size:22px; margin:48px 0 14px">2. כספת משותפת עם עו"ד</h2>
+    <div class="device-label">Desktop · Shared Vault</div>
+    <div class="desktop">
+      <div class="bar"><i></i><i></i><i></i></div>
+      <div class="canvas short">
+        <header class="topbar">
+          <div style="display:flex; align-items:center; gap:14px">
+            <button class="iconbtn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg></button>
+            <div>
+              <div class="kicker" style="margin:0">תיק #4521 · חקירה במשטרה</div>
+              <h3 style="font-family:var(--serif); font-size:18px">כספת משותפת · עו"ד שירה כהן</h3>
+            </div>
+          </div>
+          <div style="display:flex; gap:8px; align-items:center">
+            <span class="badge brand"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg> מוצפן · 2 צדדים בלבד</span>
+            <button class="cta"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg> העלה</button>
+          </div>
+        </header>
+
+        <div style="padding:24px 28px; flex:1; overflow-y:auto; display:grid; grid-template-columns:1fr 1fr; gap:24px">
+          <div>
+            <div class="kicker">קבצים שאני העליתי</div>
+            <h3 class="h-section">3 קבצים · 28 MB</h3>
+            <div style="display:flex; flex-direction:column; gap:10px; margin-top:14px">
+              <div class="file-card" style="flex-direction:row; padding:12px; align-items:center">
+                <div class="ico audio" style="width:40px; height:40px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V5l12-2v13"/></svg></div>
+                <div style="flex:1; min-width:0">
+                  <div class="nm">הקלטת חקירה.m4a</div>
+                  <div class="meta"><span>14:32</span><span>· אתמול 22:14</span></div>
+                </div>
+                <span class="badge ok" style="margin-inline-start:auto">נקרא ע"י עו"ד</span>
+              </div>
+              <div class="file-card" style="flex-direction:row; padding:12px; align-items:center">
+                <div class="ico image" style="width:40px; height:40px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/></svg></div>
+                <div style="flex:1; min-width:0">
+                  <div class="nm">צילום זימון.jpg</div>
+                  <div class="meta"><span>1.2 MB</span><span>· אתמול 21:50</span></div>
+                </div>
+                <span class="badge ok" style="margin-inline-start:auto">נקרא</span>
+              </div>
+              <div class="file-card" style="flex-direction:row; padding:12px; align-items:center">
+                <div class="ico video" style="width:40px; height:40px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 7l-7 5 7 5V7z"/></svg></div>
+                <div style="flex:1; min-width:0">
+                  <div class="nm">סרטון מהאירוע.mp4</div>
+                  <div class="meta"><span>32 MB · 1:24</span><span>· היום 09:14</span></div>
+                </div>
+                <span class="badge warn" style="margin-inline-start:auto">לא נקרא</span>
+              </div>
+            </div>
+          </div>
+          <div>
+            <div class="kicker">קבצים מעו"ד שירה</div>
+            <h3 class="h-section">2 קבצים · 1.8 MB</h3>
+            <div style="display:flex; flex-direction:column; gap:10px; margin-top:14px">
+              <div class="file-card" style="flex-direction:row; padding:12px; align-items:center">
+                <div class="ico pdf" style="width:40px; height:40px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg></div>
+                <div style="flex:1; min-width:0">
+                  <div class="nm">ייפוי כוח לחתימה.pdf</div>
+                  <div class="meta"><span>800 KB</span><span>· היום 11:20</span></div>
+                </div>
+                <button class="cta" style="height:32px; padding:0 12px; font-size:12px; margin-inline-start:auto">חתום</button>
+              </div>
+              <div class="file-card" style="flex-direction:row; padding:12px; align-items:center">
+                <div class="ico pdf" style="width:40px; height:40px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg></div>
+                <div style="flex:1; min-width:0">
+                  <div class="nm">סיכום ייעוץ_2025-12-04.pdf</div>
+                  <div class="meta"><span>1.0 MB</span><span>· היום 13:45</span></div>
+                </div>
+                <button class="ghost-btn" style="height:32px; padding:0 12px; font-size:12px; margin-inline-start:auto">צפייה</button>
+              </div>
+            </div>
+            <div class="callout info" style="margin-top:18px">
+              <div class="ico"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="9"/><path d="M12 8v5"/></svg></div>
+              <div>הכספת המשותפת נסגרת אוטומטית 30 ימים לאחר סגירת התיק. כל הקבצים יישארו בכספת האישית שלך.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Evidence + Map mobile -->
+    <h2 style="font-family:var(--serif); font-size:22px; margin:48px 0 14px">3. מצלמת ראיות + 4. מפה</h2>
+    <div class="stage" style="grid-template-columns:1fr 1fr; gap:32px">
+      <div>
+        <div class="device-label">Mobile · Evidence camera</div>
+        <div class="phone tall">
+          <div class="screen">
+            <div style="height:100%; display:flex; flex-direction:column">
+              <div class="ev-stage">
+                <div class="ev-overlay-info">
+                  <span style="width:6px; height:6px; border-radius:50%; background:var(--emerg); box-shadow:0 0 0 3px rgba(214,36,58,.3); animation:blink 1.2s ease-in-out infinite"></span>
+                  מתעד · מצב ראייה משפטית
+                </div>
+                <div class="ev-corner tl"></div>
+                <div class="ev-corner tr"></div>
+                <div class="ev-corner bl"></div>
+                <div class="ev-corner br"></div>
+                <div style="position:absolute; top:80px; right:16px; left:16px; display:flex; justify-content:space-between; gap:8px; flex-wrap:wrap; z-index:2">
+                  <span class="badge gold" style="background:rgba(184,137,92,.18); color:#E9D9C2; border:1px solid rgba(184,137,92,.4); backdrop-filter: blur(6px)">GPS · 32.0853, 34.7818</span>
+                  <span class="badge" style="background:rgba(11,24,48,.50); color:#fff; border:1px solid rgba(255,255,255,.18); backdrop-filter: blur(6px)">14:23 · 04.12.2025</span>
+                </div>
+                <style>@keyframes blink {50% {opacity:.3}}</style>
+                <div class="ev-controls">
+                  <button class="ev-mode-btn"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M23 7l-7 5 7 5V7zM1 5h15v14H1z"/></svg></button>
+                  <button class="ev-shutter"></button>
+                  <button class="ev-mode-btn active"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/></svg></button>
+                </div>
+                <div style="position:absolute; bottom:24px; left:24px; display:flex; gap:6px; z-index:2">
+                  <span class="badge" style="background:rgba(11,24,48,.50); color:#fff; border:1px solid rgba(255,255,255,.18); backdrop-filter:blur(6px)">צילום</span>
+                  <span class="badge" style="background:rgba(11,24,48,.50); color:#B6C7E2; border:1px solid rgba(255,255,255,.18); backdrop-filter:blur(6px)">וידאו</span>
+                  <span class="badge" style="background:rgba(11,24,48,.50); color:#B6C7E2; border:1px solid rgba(255,255,255,.18); backdrop-filter:blur(6px)">קול</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="device-label">Mobile · Map</div>
+        <div class="phone tall">
+          <div class="screen">
+            <header class="topbar">
+              <button class="iconbtn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg></button>
+              <div class="brand"><div class="crest">V</div><div class="name">VETO</div></div>
+              <button class="iconbtn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-14 0"/></svg></button>
+            </header>
+            <div style="flex:1; display:flex; flex-direction:column; position:relative">
+              <div style="padding:14px 16px; border-bottom:1px solid var(--hairline); background:#fff; z-index:2">
+                <div style="display:flex; gap:8px">
+                  <input class="input" placeholder="חפש כתובת או עורך דין..." style="flex:1; height:40px" />
+                  <button class="iconbtn" style="width:40px; height:40px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18l-3 6 3 6H3l3-6-3-6z"/></svg></button>
+                </div>
+                <div style="display:flex; gap:6px; margin-top:10px; overflow-x:auto">
+                  <span class="area-chip selected" style="padding:5px 10px; font-size:11px">פלילי</span>
+                  <span class="area-chip" style="padding:5px 10px; font-size:11px">תעבורה</span>
+                  <span class="area-chip" style="padding:5px 10px; font-size:11px">אזרחי</span>
+                  <span class="area-chip" style="padding:5px 10px; font-size:11px">משפחה</span>
+                </div>
+                <style>.area-chip{padding:6px 12px; border-radius:var(--r-pill); font-size:12px; font-weight:700; background:var(--paper-2); color:var(--ink-700); border:1px solid var(--hairline); cursor:pointer; flex-shrink:0; white-space:nowrap} .area-chip.selected{background:var(--navy-600); color:#fff; border-color:var(--navy-600)}</style>
+              </div>
+
+              <div class="map-stage">
+                <div class="map-pin lawyer" style="top:30%; right:25%"><div class="head">פל</div></div>
+                <div class="map-pin lawyer" style="top:50%; right:55%"><div class="head">בר</div></div>
+                <div class="map-pin lawyer away" style="top:65%; right:35%"><div class="head">לב</div></div>
+                <div class="map-pin" style="top:42%; right:42%"><div class="head"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="3"/></svg></div></div>
+
+                <div class="map-card">
+                  <div class="avatar" style="width:42px; height:42px; border-radius:11px; font-size:14px">פל</div>
+                  <div style="flex:1; min-width:0">
+                    <div style="font-weight:800; font-size:13px">עו"ד דניאל פלר</div>
+                    <div class="muted text-xs">פלילי · 2.1 ק"מ · 4.9★ · <span style="color:var(--ok); font-weight:700">זמין</span></div>
+                  </div>
+                  <button class="cta" style="height:36px">צור קשר</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="notes">
+      <h3>הערות עיצוב · Vault</h3>
+      <ul>
+        <li><b>File cards</b> — אייקון בצבע לפי סוג (PDF אדום, אודיו ירוק, וידאו סגול, תמונה כתום). badges (חתום, GPS, ראיה).</li>
+        <li><b>Storage indicator</b> — סרגל התקדמות עם זום אקיפה (24% של 10GB).</li>
+        <li><b>Shared Vault</b> — שני טורים: שלי / של עו"ד. אפשרות לחתום על מסמכים.</li>
+        <li><b>Evidence camera</b> — UI כהה, viewfinder עם 4 פינות זהב, GPS+timestamp פינות עליונות, badge "מצב ראייה משפטית" עם נקודה אדומה פועמת. shutter ענק לבן.</li>
+        <li><b>Map</b> — pinים אדומים=אירוע, כחול=עו"ד זמין, אפור=לא זמין. כרטיס תחתון לבחירה.</li>
+      </ul>
+    </div>
+  </div>
+</body>
+</html>

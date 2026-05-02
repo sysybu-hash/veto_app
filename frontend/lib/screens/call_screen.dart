@@ -7,9 +7,9 @@ import 'dart:async';
 import 'dart:developer' as developer;
 
 import 'package:flutter/material.dart';
+import '../core/theme/veto_tokens_2026.dart';
 import 'package:provider/provider.dart';
 
-import '../core/theme/veto_theme.dart';
 import '../services/socket_service.dart';
 import '../services/vault_save_queue.dart';
 
@@ -54,7 +54,8 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
-    _fadeCtrl = AnimationController(duration: const Duration(milliseconds: 600), vsync: this);
+    _fadeCtrl = AnimationController(
+        duration: const Duration(milliseconds: 600), vsync: this);
     _fadeAnim = CurvedAnimation(parent: _fadeCtrl, curve: Curves.easeIn);
     _fadeCtrl.forward();
     WidgetsBinding.instance.addPostFrameCallback((_) => _init());
@@ -65,12 +66,14 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
     try {
       setState(fn);
     } catch (e, st) {
-      developer.log('_safeSetState', name: 'VETO.CallScreen', error: e, stackTrace: st);
+      developer.log('_safeSetState',
+          name: 'VETO.CallScreen', error: e, stackTrace: st);
     }
   }
 
   Future<void> _init() async {
-    final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+    final args =
+        ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
     if (args == null) {
       if (mounted) Navigator.of(context).pushReplacementNamed('/veto_screen');
       return;
@@ -82,7 +85,9 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
     if (ct != 'chat') {
       if (mounted) {
         Navigator.of(context).pushReplacementNamed(
-          (args['role']?.toString() == 'lawyer') ? '/lawyer_dashboard' : '/veto_screen',
+          (args['role']?.toString() == 'lawyer')
+              ? '/lawyer_dashboard'
+              : '/veto_screen',
         );
       }
       return;
@@ -244,7 +249,8 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
       final myRole = _myRole;
       var goVault = false;
       final t = _formatChatAsTranscript();
-      final vaultEventId = _eventId.trim().isNotEmpty ? _eventId.trim() : _roomId.trim();
+      final vaultEventId =
+          _eventId.trim().isNotEmpty ? _eventId.trim() : _roomId.trim();
       if (t.isNotEmpty && vaultEventId.isNotEmpty) {
         queue.enqueueChatTranscript(
           eventId: vaultEventId,
@@ -259,7 +265,8 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
           : (myRole == 'lawyer' ? '/lawyer_dashboard' : '/veto_screen');
       _pushReplacement(nav, target);
     } catch (e, st) {
-      developer.log('_finalizeAndNavigate', name: 'VETO.CallScreen', error: e, stackTrace: st);
+      developer.log('_finalizeAndNavigate',
+          name: 'VETO.CallScreen', error: e, stackTrace: st);
       if (!mounted) return;
       _pushReplacement(
         Navigator.of(context),
@@ -327,7 +334,7 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
     return Container(
       width: double.infinity,
       height: double.infinity,
-      decoration: VetoDecorations.gradientBg(),
+      decoration: VetoTokens.ambientPageDecoration(),
       child: Column(
         children: [
           Expanded(
@@ -340,14 +347,18 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
                     itemBuilder: (_, i) {
                       final line = _chatLines[i];
                       return Align(
-                        alignment: line.mine ? Alignment.centerRight : Alignment.centerLeft,
+                        alignment: line.mine
+                            ? Alignment.centerRight
+                            : Alignment.centerLeft,
                         child: Container(
                           margin: const EdgeInsets.symmetric(vertical: 4),
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 8),
                           constraints: const BoxConstraints(maxWidth: 280),
                           decoration: BoxDecoration(
                             color: line.mine
-                                ? const Color(0xFF5B8FFF).withValues(alpha: 0.45)
+                                ? const Color(0xFF5B8FFF)
+                                    .withValues(alpha: 0.45)
                                 : Colors.white.withValues(alpha: 0.12),
                             borderRadius: BorderRadius.circular(12),
                           ),
@@ -378,7 +389,8 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
                             : _language == 'ru'
                                 ? 'Сообщение…'
                                 : 'Type a message…',
-                        hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.5)),
+                        hintStyle: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.5)),
                         filled: true,
                         fillColor: Colors.white.withValues(alpha: 0.08),
                         border: OutlineInputBorder(
@@ -390,7 +402,8 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
                   ),
                   IconButton(
                     onPressed: _sendChatLine,
-                    icon: const Icon(Icons.send_rounded, color: Color(0xFF5B8FFF)),
+                    icon: const Icon(Icons.send_rounded,
+                        color: Color(0xFF5B8FFF)),
                   ),
                 ],
               ),
@@ -456,7 +469,8 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
             child: LinearProgressIndicator(
               value: _waitSeconds / 75,
               backgroundColor: Colors.white.withValues(alpha: 0.2),
-              valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF5B8FFF)),
+              valueColor:
+                  const AlwaysStoppedAnimation<Color>(Color(0xFF5B8FFF)),
               minHeight: 4,
             ),
           ),
@@ -473,9 +487,14 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
         const SizedBox(height: 12),
         TextButton.icon(
           onPressed: _endCall,
-          icon: const Icon(Icons.close_rounded, size: 15, color: Colors.white54),
+          icon:
+              const Icon(Icons.close_rounded, size: 15, color: Colors.white54),
           label: Text(
-            _language == 'he' ? 'בטל' : _language == 'ru' ? 'Отмена' : 'Cancel',
+            _language == 'he'
+                ? 'בטל'
+                : _language == 'ru'
+                    ? 'Отмена'
+                    : 'Cancel',
             style: const TextStyle(color: Colors.white54, fontSize: 13),
           ),
         ),
@@ -495,7 +514,8 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.access_time_rounded, color: Colors.white70, size: 32),
+          const Icon(Icons.access_time_rounded,
+              color: Colors.white70, size: 32),
           const SizedBox(height: 10),
           Text(
             _language == 'he'
@@ -522,15 +542,24 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
                   side: const BorderSide(color: Colors.white38),
                 ),
                 child: Text(
-                  _language == 'he' ? 'חזרה' : _language == 'ru' ? 'Назад' : 'Go back',
+                  _language == 'he'
+                      ? 'חזרה'
+                      : _language == 'ru'
+                          ? 'Назад'
+                          : 'Go back',
                 ),
               ),
               const SizedBox(width: 12),
               FilledButton(
                 onPressed: _retryJoin,
-                style: FilledButton.styleFrom(backgroundColor: const Color(0xFF5B8FFF)),
+                style: FilledButton.styleFrom(
+                    backgroundColor: const Color(0xFF5B8FFF)),
                 child: Text(
-                  _language == 'he' ? 'נסה שוב' : _language == 'ru' ? 'Повторить' : 'Try again',
+                  _language == 'he'
+                      ? 'נסה שוב'
+                      : _language == 'ru'
+                          ? 'Повторить'
+                          : 'Try again',
                 ),
               ),
             ],
@@ -548,14 +577,17 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: VetoColors.error.withValues(alpha: 0.45)),
+        border: Border.all(color: VetoTokens.emerg.withValues(alpha: 0.45)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.error_outline_rounded, color: VetoColors.error, size: 32),
+          const Icon(Icons.error_outline_rounded,
+              color: VetoTokens.emerg, size: 32),
           const SizedBox(height: 10),
-          Text(msg, textAlign: TextAlign.center, style: const TextStyle(color: Colors.white70)),
+          Text(msg,
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: Colors.white70)),
           const SizedBox(height: 16),
           FilledButton(
             onPressed: _endCall,
@@ -574,14 +606,15 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              color: VetoColors.vetoRedSoft,
+              color: VetoTokens.emergSoft,
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: VetoColors.vetoRed.withValues(alpha: 0.3)),
+              border:
+                  Border.all(color: VetoTokens.emerg.withValues(alpha: 0.3)),
             ),
             child: const Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.shield, color: VetoColors.vetoRed, size: 14),
+                Icon(Icons.shield, color: VetoTokens.emerg, size: 14),
                 SizedBox(width: 6),
                 Text(
                   'VETO',
@@ -589,7 +622,7 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
                     fontFamily: 'Heebo',
                     fontSize: 12,
                     fontWeight: FontWeight.w800,
-                    color: VetoColors.vetoRed,
+                    color: VetoTokens.emerg,
                     letterSpacing: 2,
                   ),
                 ),
@@ -611,9 +644,9 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
-                color: VetoColors.success.withValues(alpha: 0.15),
+                color: VetoTokens.ok.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: VetoColors.success.withValues(alpha: 0.3)),
+                border: Border.all(color: VetoTokens.ok.withValues(alpha: 0.3)),
               ),
               child: Text(
                 _formattedChatDuration,
@@ -621,7 +654,7 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
                   fontFamily: 'Heebo',
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
-                  color: VetoColors.success,
+                  color: VetoTokens.ok,
                 ),
               ),
             ),
@@ -641,12 +674,12 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
             child: Container(
               width: 72,
               height: 72,
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 shape: BoxShape.circle,
-                color: VetoColors.vetoRed,
-                boxShadow: VetoDecorations.vetoGlow(intensity: 0.8),
+                color: VetoTokens.emerg,
+                boxShadow: VetoTokens.shadowEmerg,
               ),
-              child: const Icon(Icons.call_end, color: VetoColors.white, size: 32),
+              child: const Icon(Icons.call_end, color: Colors.white, size: 32),
             ),
           ),
           const SizedBox(height: 8),
@@ -655,7 +688,7 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
             style: const TextStyle(
               fontFamily: 'Heebo',
               fontSize: 12,
-              color: VetoColors.silverDim,
+              color: VetoTokens.ink300,
             ),
           ),
         ],

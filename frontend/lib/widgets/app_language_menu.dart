@@ -2,10 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../core/i18n/app_language.dart';
-import '../core/theme/veto_glass_system.dart';
+import '../core/theme/veto_tokens_2026.dart';
 
 class AppLanguageMenu extends StatelessWidget {
   final bool compact;
+
   /// Runs after [AppLanguageController.setLanguage] completes (e.g. reset chat on Veto).
   final ValueChanged<String>? onLanguageChanged;
   final String? tooltip;
@@ -25,10 +26,10 @@ class AppLanguageMenu extends StatelessWidget {
     return PopupMenuButton<String>(
       tooltip: tooltip ?? 'Language',
       initialValue: code,
-      color: VetoGlassTokens.menuPanel,
+      color: VetoTokens.surface,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(14),
-        side: const BorderSide(color: VetoGlassTokens.glassBorder),
+        side: const BorderSide(color: VetoTokens.hairline),
       ),
       onSelected: (value) async {
         await context.read<AppLanguageController>().setLanguage(value);
@@ -42,15 +43,17 @@ class AppLanguageMenu extends StatelessWidget {
             child: Row(
               children: [
                 Icon(
-                  selected ? Icons.radio_button_checked : Icons.radio_button_off,
+                  selected
+                      ? Icons.radio_button_checked
+                      : Icons.radio_button_off,
                   size: 18,
-                  color: selected ? VetoGlassTokens.neonCyan : VetoGlassTokens.textSubtle,
+                  color: selected ? VetoTokens.navy600 : VetoTokens.ink300,
                 ),
                 const SizedBox(width: 10),
                 Text(
                   AppLanguage.labels[languageCode] ?? languageCode,
                   style: TextStyle(
-                    color: selected ? VetoGlassTokens.textPrimary : VetoGlassTokens.textMuted,
+                    color: selected ? VetoTokens.ink900 : VetoTokens.ink500,
                     fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
                   ),
                 ),
@@ -65,20 +68,20 @@ class AppLanguageMenu extends StatelessWidget {
           vertical: compact ? 8 : 10,
         ),
         decoration: BoxDecoration(
-          color: VetoGlassTokens.glassFillStrong,
+          color: VetoTokens.surface,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: VetoGlassTokens.glassBorder),
+          border: Border.all(color: VetoTokens.hairline),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             const Icon(Icons.language_rounded,
-                size: 16, color: VetoGlassTokens.neonCyan),
+                size: 16, color: VetoTokens.navy600),
             const SizedBox(width: 8),
             Text(
               AppLanguage.labels[code] ?? code,
               style: TextStyle(
-                color: compact ? VetoGlassTokens.textMuted : VetoGlassTokens.textPrimary,
+                color: compact ? VetoTokens.ink500 : VetoTokens.ink900,
                 fontWeight: FontWeight.w600,
                 fontSize: compact ? 12 : 13,
               ),

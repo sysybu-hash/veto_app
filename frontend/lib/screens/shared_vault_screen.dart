@@ -1,10 +1,14 @@
+// ============================================================
+//  SharedVaultScreen — VETO 2026
+//  Tokens-aligned. Files shared between citizen and lawyer for a case.
+// ============================================================
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:url_launcher/url_launcher.dart';
 
 import '../config/app_config.dart';
-import '../core/theme/veto_glass_system.dart';
+import '../core/theme/veto_tokens_2026.dart';
 import '../services/auth_service.dart';
 
 class SharedVaultScreen extends StatefulWidget {
@@ -43,14 +47,11 @@ class _SharedVaultScreenState extends State<SharedVaultScreen> {
 
       if (res.statusCode == 200) {
         final data = jsonDecode(res.body);
-        setState(() {
-          _files = data['files'] ?? [];
-          _loading = false;
-        });
+        if (mounted) setState(() { _files = data['files'] ?? []; _loading = false; });
       } else {
-        setState(() => _loading = false);
+        if (mounted) setState(() => _loading = false);
       }
-    } catch (e) {
+    } catch (_) {
       if (mounted) setState(() => _loading = false);
     }
   }
@@ -58,109 +59,127 @@ class _SharedVaultScreenState extends State<SharedVaultScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: VetoGlassTokens.bgBase,
+      backgroundColor: VetoTokens.paper,
       appBar: AppBar(
-        backgroundColor: const Color(0x18FFFFFF),
-        elevation: 0,
-        shadowColor: Colors.transparent,
-        surfaceTintColor: Colors.transparent,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: VetoGlassTokens.textPrimary, size: 20),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18),
           onPressed: () => Navigator.of(context).pop(),
         ),
-          title: Text(
-          _userName != null ? _userName! : 'Vault',
-          style: const TextStyle(color: VetoGlassTokens.textPrimary, fontWeight: FontWeight.w800, fontSize: 18),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Text('כספת משותפת', style: VetoTokens.kicker),
+            Text(_userName ?? 'Vault', style: VetoTokens.titleLg),
+          ],
         ),
-        centerTitle: true,
-        bottom: const PreferredSize(
-          preferredSize: Size.fromHeight(1),
-          child: Divider(height: 1, color: VetoGlassTokens.glassBorder),
-        ),
+        actions: [
+          IconButton(
+            onPressed: _loadSharedFiles,
+            icon: const Icon(Icons.refresh_rounded, size: 18),
+            tooltip: 'רענן',
+          ),
+        ],
       ),
-      body: VetoGlassAuroraBackground(
-        child: _loading
-            ? const Center(child: CircularProgressIndicator(color: VetoGlassTokens.neonCyan))
-            : _files.isEmpty
-                ? const Center(
-                    child: Column(mainAxisSize: MainAxisSize.min, children: [
-                      Icon(Icons.folder_open_outlined, size: 56, color: VetoGlassTokens.textMuted),
-                      SizedBox(height: 12),
-                      Text('No documents shared.', style: TextStyle(color: VetoGlassTokens.textMuted, fontSize: 15)),
-                    ]),
-                  )
-                : ListView.separated(
-                    padding: const EdgeInsets.all(20),
-                    itemCount: _files.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 10),
-                    itemBuilder: (context, i) {
-                      final f = _files[i];
-                      return _SharedFileCard(file: f);
-                    },
+      body: _loading
+          ? const Center(child: CircularProgressIndicator(color: VetoTokens.navy600))
+          : _files.isEmpty
+              ? Center(
+                  child: Container(
+                    margin: const EdgeInsets.all(24),
+                    padding: const EdgeInsets.all(32),
+                    decoration: VetoTokens.cardDecoration(),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 64, height: 64,
+                          decoration: BoxDecoration(color: VetoTokens.paper2, borderRadius: BorderRadius.circular(20)),
+                          alignment: Alignment.center,
+                          child: const Icon(Icons.folder_open_outlined, size: 28, color: VetoTokens.ink300),
+                        ),
+                        const SizedBox(height: 12),
+                        Text('אין מסמכים משותפים', style: VetoTokens.serif(18, FontWeight.w700, color: VetoTokens.ink900)),
+                        const SizedBox(height: 4),
+                        Text('כשהאזרח יעלה קובץ, הוא יופיע כאן.', style: VetoTokens.bodySm.copyWith(color: VetoTokens.ink500), textAlign: TextAlign.center),
+                      ],
+                    ),
                   ),
-      ),
+                )
+              : Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 720),
+                    child: ListView.separated(
+                      padding: const EdgeInsets.all(16),
+                      itemCount: _files.length,
+                      separatorBuilder: (_, __) => const SizedBox(height: 8),
+                      itemBuilder: (context, i) => _SharedFileCard(file: _files[i] as Map<String, dynamic>),
+                    ),
+                  ),
+                ),
     );
   }
 }
 
 class _SharedFileCard extends StatelessWidget {
-  final Map<String, dynamic> file;
-
   const _SharedFileCard({required this.file});
+  final Map<String, dynamic> file;
 
   @override
   Widget build(BuildContext context) {
-    final name = file['name'] ?? 'Untitled';
-    final url = file['url'] ?? '';
-    final type = file['mimeType'] ?? '';
+    final name = (file['name'] ?? 'Untitled').toString();
+    final url = (file['url'] ?? '').toString();
+    final type = (file['mimeType'] ?? '').toString();
 
-    IconData getIcon() {
-      if (type.startsWith('image/')) return Icons.image_outlined;
-      if (type.startsWith('video/')) return Icons.videocam_outlined;
-      if (type.contains('pdf')) return Icons.picture_as_pdf_outlined;
-      return Icons.insert_drive_file_outlined;
+    IconData icon;
+    Color color;
+    if (type.startsWith('image/')) {
+      icon = Icons.image_outlined; color = const Color(0xFF94681A);
+    } else if (type.startsWith('video/')) {
+      icon = Icons.videocam_outlined; color = const Color(0xFF5A4FCF);
+    } else if (type.startsWith('audio/')) {
+      icon = Icons.music_note_rounded; color = const Color(0xFF16664B);
+    } else if (type.contains('pdf')) {
+      icon = Icons.picture_as_pdf_outlined; color = VetoTokens.emerg2;
+    } else {
+      icon = Icons.insert_drive_file_outlined; color = VetoTokens.navy600;
     }
 
-    return VetoGlassBlur(
-      borderRadius: 16,
-      sigma: 12,
-      fill: VetoGlassTokens.glassFillStrong,
-      borderColor: VetoGlassTokens.glassBorder,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: VetoTokens.cardDecoration(radius: VetoTokens.rMd),
+      child: Row(
         children: [
           Container(
-            width: 40, height: 40,
+            width: 44, height: 44,
             decoration: BoxDecoration(
-              color: VetoGlassTokens.neonCyan.withValues(alpha: 0.10),
-              borderRadius: BorderRadius.circular(10),
+              color: color.withValues(alpha: 0.10),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: color.withValues(alpha: 0.20), width: 1),
             ),
-            child: Icon(getIcon(), color: VetoGlassTokens.neonCyan, size: 20),
+            alignment: Alignment.center,
+            child: Icon(icon, color: color, size: 20),
           ),
-          const SizedBox(width: 14),
+          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(name,
-                  style: const TextStyle(color: VetoGlassTokens.textPrimary, fontWeight: FontWeight.w700),
-                  maxLines: 1, overflow: TextOverflow.ellipsis),
-                Text(type,
-                  style: const TextStyle(color: VetoGlassTokens.textMuted, fontSize: 11)),
+                Text(name, style: VetoTokens.titleSm.copyWith(color: VetoTokens.ink900), maxLines: 1, overflow: TextOverflow.ellipsis),
+                Text(type, style: VetoTokens.bodyXs.copyWith(color: VetoTokens.ink500)),
               ],
             ),
           ),
           IconButton(
-            icon: const Icon(Icons.download_rounded, color: VetoGlassTokens.neonCyan),
-            onPressed: () async {
-              if (await canLaunchUrl(Uri.parse(url))) {
-                await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+            icon: const Icon(Icons.download_rounded, size: 18, color: VetoTokens.navy600),
+            onPressed: url.isEmpty ? null : () async {
+              final uri = Uri.parse(url);
+              if (await canLaunchUrl(uri)) {
+                await launchUrl(uri, mode: LaunchMode.externalApplication);
               }
             },
+            tooltip: 'הורד',
           ),
         ],
-        ),
       ),
     );
   }

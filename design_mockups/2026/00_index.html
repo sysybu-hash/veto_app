@@ -1,0 +1,311 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>VETO · 2026 Design · אינדקס</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@500;700;900&family=Heebo:wght@300;400;500;600;700;800;900&family=Assistant:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="_veto-2026.css">
+<style>
+  .hero-mock{
+    background: linear-gradient(160deg, var(--navy-700), var(--navy-600));
+    color:#fff; padding:48px 56px; border-radius:var(--r-2xl);
+    margin-bottom:32px; position:relative; overflow:hidden;
+  }
+  .hero-mock::before{
+    content:""; position:absolute; top:-30%; right:-10%;
+    width:60%; height:140%; background:radial-gradient(closest-side, rgba(184,137,92,.20), transparent 70%);
+  }
+  .hero-mock h1{ font-family:var(--serif); font-size:48px; line-height:1.1; color:#fff; position:relative }
+  .hero-mock h1 em{ font-style:normal; color:var(--gold-soft) }
+  .hero-mock p{ color:#C7D5EE; font-size:16px; line-height:1.7; max-width:60ch; margin:14px 0 0; position:relative }
+
+  .grid-screens{
+    display:grid; grid-template-columns:repeat(auto-fill, minmax(300px, 1fr)); gap:18px;
+  }
+  .screen-card{
+    background:#fff; border:1px solid var(--hairline); border-radius:var(--r-lg);
+    padding:22px; box-shadow:var(--shadow-1); transition:.2s;
+    text-decoration:none; color:inherit; display:flex; flex-direction:column; gap:10px;
+  }
+  .screen-card:hover{ transform:translateY(-3px); box-shadow:var(--shadow-2); border-color:var(--navy-300) }
+  .screen-card .num{
+    font-family:var(--serif); font-size:14px; font-weight:800; color:var(--navy-600);
+    letter-spacing:.06em;
+  }
+  .screen-card .ico{
+    width:44px; height:44px; border-radius:12px;
+    background:linear-gradient(135deg, var(--navy-100), #fff);
+    border:1px solid var(--hairline); color:var(--navy-700);
+    display:grid; place-items:center; margin-bottom:6px;
+  }
+  .screen-card h3{ font-family:var(--serif); font-size:18px; color:var(--ink-900) }
+  .screen-card p{ color:var(--ink-500); font-size:13px; line-height:1.55; margin:0 }
+  .screen-card .badges{ display:flex; gap:5px; flex-wrap:wrap; margin-top:8px }
+  .screen-card .meta{ font-size:11px; color:var(--ink-300); margin-top:auto; padding-top:10px; border-top:1px solid var(--hairline); display:flex; justify-content:space-between }
+
+  .group-h{
+    font-family:var(--serif); font-size:24px; color:var(--ink-900);
+    margin:36px 0 14px; padding-bottom:10px; border-bottom:1px solid var(--hairline);
+    display:flex; align-items:baseline; gap:14px;
+  }
+  .group-h .count{ font-family:var(--sans); font-size:12px; color:var(--ink-500); font-weight:600 }
+</style>
+</head>
+<body>
+  <div class="page" style="max-width:1280px">
+
+    <div class="hero-mock">
+      <h1>VETO · עיצוב 2026<br/>אינדקס מסכים <em>ומוקאפים</em></h1>
+      <p>27 מסכי האפליקציה, מקובצים ל-9 קבוצות. כל מוקאפ HTML מציג דסקטופ + מובייל side-by-side. הכל בכיוון מקצועי-יוקרתי בהשראת Pango — Navy 600 #264975, Frank Ruhl Libre לכותרות, Heebo לגוף, רקעים בהירים, ללא glass כהה / glow ניאון.</p>
+    </div>
+
+    <div class="swatches">
+      <div class="sw"><i style="background:#264975"></i> Navy 600</div>
+      <div class="sw"><i style="background:#2E69E7"></i> Navy 500</div>
+      <div class="sw"><i style="background:#83B7F8"></i> Navy 300</div>
+      <div class="sw"><i style="background:#0B1830"></i> Ink 900</div>
+      <div class="sw"><i style="background:#B8895C"></i> Gold</div>
+      <div class="sw"><i style="background:#D6243A"></i> Emerg</div>
+      <div class="sw"><i style="background:#F6F8FB; border:1px solid #ddd"></i> Paper</div>
+      <div class="sw"><i style="background:#FFFFFF; border:1px solid #ddd"></i> Surface</div>
+    </div>
+
+    <h2 class="group-h">📥 Auth & Entry <span class="count">3 מסכים</span></h2>
+    <div class="grid-screens">
+      <a class="screen-card" href="splash.html">
+        <div class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h7l-1 8 10-12h-7l1-8z"/></svg></div>
+        <div class="num">01</div>
+        <h3>Splash</h3>
+        <p>מסך פתיחה — 1.8 שניות, fade+scale על הקרסט, 3 נקודות פועמות. שתי גרסאות (בהיר/כהה).</p>
+        <div class="meta"><span>splash_screen.dart</span><span>142 שורות</span></div>
+      </a>
+      <a class="screen-card" href="landing.html">
+        <div class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l9-7 9 7M5 10v10h14V10"/></svg></div>
+        <div class="num">02</div>
+        <h3>Landing</h3>
+        <p>דף הבית הציבורי. Hero יוקרתי, 3 תכונות, רצף 1-2-3, סטטיסטיקות, תמחור, CTA כהה, פוטר.</p>
+        <div class="meta"><span>landing_screen.dart</span><span>1,320 שורות</span></div>
+      </a>
+      <a class="screen-card" href="login.html">
+        <div class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg></div>
+        <div class="num">03</div>
+        <h3>Login Wizard</h3>
+        <p>אשף 3 שלבים: תפקיד → פרטים → OTP. עמודה כהה עם ערך + ציטוט, עמודה בהירה עם הטופס.</p>
+        <div class="meta"><span>login_screen.dart</span><span>1,308 שורות</span></div>
+      </a>
+    </div>
+
+    <h2 class="group-h">🛡️ Citizen Core <span class="count">2 מסכים</span></h2>
+    <div class="grid-screens">
+      <a class="screen-card" href="citizen.html">
+        <div class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l8 4v6c0 5-3.5 9-8 10-4.5-1-8-5-8-10V6l8-4z"/></svg></div>
+        <div class="num">04</div>
+        <h3>Citizen Home (VetoScreen)</h3>
+        <p>SOS + status + 6 תרחישים מורחבים (עם פאנל פירוט פעיל) + 6 זכויות מורחבות (עם דוגמאות ישימות).</p>
+        <div class="badges"><span class="badge brand">לב המוצר</span></div>
+        <div class="meta"><span>veto_screen.dart</span><span>3,148 שורות</span></div>
+      </a>
+      <a class="screen-card" href="wizard.html">
+        <div class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div>
+        <div class="num">05</div>
+        <h3>Wizard Shell</h3>
+        <p>אשף Onboarding 4 שלבים: תפקיד, תרחיש, התראות, פרטיות. רכבת התקדמות כהה משמאל.</p>
+        <div class="meta"><span>wizard_shell_screen.dart</span><span>681 שורות</span></div>
+      </a>
+    </div>
+
+    <h2 class="group-h">⚖️ Lawyer Core <span class="count">2 מסכים</span></h2>
+    <div class="grid-screens">
+      <a class="screen-card" href="lawyer.html">
+        <div class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l9-7 9 7M5 10v10h14V10"/></svg></div>
+        <div class="num">06</div>
+        <h3>Lawyer Dashboard</h3>
+        <p>Sidebar + toggle זמינות + 4 stats + רשימת קריאות חירום עם 2 רמות דחיפות.</p>
+        <div class="badges"><span class="badge brand">לב המוצר</span></div>
+        <div class="meta"><span>lawyer_dashboard.dart</span><span>1,059 שורות</span></div>
+      </a>
+      <a class="screen-card" href="lawyer.html#settings">
+        <div class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-14 0"/></svg></div>
+        <div class="num">07</div>
+        <h3>Lawyer Settings</h3>
+        <p>4 כרטיסים: התמחויות, שעות זמינות, שפות, התראות. בקובץ lawyer.html.</p>
+        <div class="meta"><span>lawyer_settings_screen.dart</span></div>
+      </a>
+    </div>
+
+    <h2 class="group-h">💬 Communication <span class="count">4 מסכים</span></h2>
+    <div class="grid-screens">
+      <a class="screen-card" href="communication.html">
+        <div class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a8 8 0 0 1-11 7l-5 1 1-5A8 8 0 1 1 21 12z"/></svg></div>
+        <div class="num">08</div>
+        <h3>Chat (אזרח↔עו"ד + AI)</h3>
+        <p>בועות me/them, hint AI נבדל, composer עם attach/voice/send, sidebar שיחות בדסקטופ.</p>
+        <div class="meta"><span>chat_screen.dart</span></div>
+      </a>
+      <a class="screen-card" href="communication.html#call-entry">
+        <div class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/></svg></div>
+        <div class="num">09</div>
+        <h3>Call Entry</h3>
+        <p>מסך "מתחבר לעורך דין..." עם 3 נקודות פועמות. גם מסך incoming side של עו"ד.</p>
+        <div class="meta"><span>call_entry_screen.dart</span></div>
+      </a>
+      <a class="screen-card" href="communication.html#call">
+        <div class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92V21a2 2 0 0 1-2.18 2A19.79 19.79 0 0 1 2.16 5.18 2 2 0 0 1 4.11 3h4.09a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L9 11.09a16 16 0 0 0 6 6l1.45-1.45a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/></svg></div>
+        <div class="num">10</div>
+        <h3>Voice Call</h3>
+        <p>אווטר ענק, recording pill פועם, 4 כפתורי שליטה. רקע כהה (חריג מהפלטה הבהירה).</p>
+        <div class="meta"><span>call_screen.dart / call_session_screen.dart</span></div>
+      </a>
+      <a class="screen-card" href="communication.html#video">
+        <div class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 7l-7 5 7 5V7zM1 5h15v14H1z"/></svg></div>
+        <div class="num">11</div>
+        <h3>Video Call (Agora)</h3>
+        <p>Self-view בפינה, top-overlays עם backdrop-blur, 4 כפתורים. Recording indicator.</p>
+        <div class="meta"><span>agora_call_screen.dart</span></div>
+      </a>
+    </div>
+
+    <h2 class="group-h">🔒 Vault & Evidence <span class="count">4 מסכים</span></h2>
+    <div class="grid-screens">
+      <a class="screen-card" href="vault.html">
+        <div class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></div>
+        <div class="num">12</div>
+        <h3>Files Vault</h3>
+        <p>גריד קבצים עם אייקונים בצבע לפי סוג, badges (חתום, GPS), Storage indicator.</p>
+        <div class="meta"><span>files_vault_screen.dart</span></div>
+      </a>
+      <a class="screen-card" href="vault.html#shared">
+        <div class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/></svg></div>
+        <div class="num">13</div>
+        <h3>Shared Vault</h3>
+        <p>שני טורים: הקבצים שלי / קבצים מעו"ד. אפשרות חתימה. סוגר אוטומטית 30 יום אחרי תיק.</p>
+        <div class="meta"><span>shared_vault_screen.dart</span></div>
+      </a>
+      <a class="screen-card" href="vault.html#evidence">
+        <div class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></div>
+        <div class="num">14</div>
+        <h3>Evidence Camera</h3>
+        <p>UI כהה עם viewfinder ופינות זהב, GPS+timestamp תוויות, shutter ענק לבן, מצבי צילום/וידאו/קול.</p>
+        <div class="meta"><span>evidence_screen.dart</span></div>
+      </a>
+      <a class="screen-card" href="vault.html#map">
+        <div class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 6v16l7-4 8 4 7-4V2l-7 4-8-4z"/></svg></div>
+        <div class="num">15</div>
+        <h3>Maps</h3>
+        <p>Pinים: אדום=אירוע, כחול=עו"ד זמין, אפור=לא זמין. כרטיס תחתון לבחירה. סינון לפי תחום.</p>
+        <div class="meta"><span>maps_screen.dart</span></div>
+      </a>
+    </div>
+
+    <h2 class="group-h">📚 Legal Tools <span class="count">3 מסכים</span></h2>
+    <div class="grid-screens">
+      <a class="screen-card" href="legal-tools.html">
+        <div class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></div>
+        <div class="num">16</div>
+        <h3>Legal Calendar</h3>
+        <p>חודשי 7×6, אירועים בצבעים: אדום=חירום, כחול=ייעוץ, זהב=דיון, ירוק=הושלם.</p>
+        <div class="meta"><span>legal_calendar_screen.dart</span></div>
+      </a>
+      <a class="screen-card" href="legal-tools.html#notebook">
+        <div class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg></div>
+        <div class="num">17</div>
+        <h3>Legal Notebook (Enterprise)</h3>
+        <p>Markdown editor עם sidebar שיחות, סריפי לתוכן (תחושת מסמך משפטי), שמירה אוטומטית.</p>
+        <div class="meta"><span>legal_notebook_screen.dart</span></div>
+      </a>
+      <a class="screen-card" href="legal-tools.html#document">
+        <div class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg></div>
+        <div class="num">18</div>
+        <h3>Legal Document (Privacy/Terms)</h3>
+        <p>עמוד דפוס: 780px רוחב, 60px padding, סריפי, ירידות שורה רחבות. Tabs פרטיות/תנאים.</p>
+        <div class="meta"><span>legal_document_screen.dart</span></div>
+      </a>
+    </div>
+
+    <h2 class="group-h">⚙️ Settings & Profile <span class="count">2 מסכים</span></h2>
+    <div class="grid-screens">
+      <a class="screen-card" href="settings.html">
+        <div class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg></div>
+        <div class="num">19</div>
+        <h3>Profile</h3>
+        <p>אווטר ענקי, תגיות מנוי, 4 stats, פרטים אישיים בסרגל row-items.</p>
+        <div class="meta"><span>profile_screen.dart</span></div>
+      </a>
+      <a class="screen-card" href="settings.html#settings">
+        <div class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-14 0"/></svg></div>
+        <div class="num">20</div>
+        <h3>Settings</h3>
+        <p>Sidebar קטגוריות, row-items קומפקטים: שפה, נגישות, התראות, אבטחה. אזור מסוכן בורדר אדום.</p>
+        <div class="meta"><span>settings_screen.dart</span></div>
+      </a>
+    </div>
+
+    <h2 class="group-h">👑 Admin Console <span class="count">7 מסכים</span></h2>
+    <div class="grid-screens">
+      <a class="screen-card" href="admin.html">
+        <div class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/></svg></div>
+        <div class="num">21</div>
+        <h3>Admin Dashboard</h3>
+        <p>4 stat cards, chart 14 ימים, פעילות אחרונה חיה. Production/Staging selector.</p>
+        <div class="meta"><span>admin_dashboard.dart</span></div>
+      </a>
+      <a class="screen-card" href="admin.html#users">
+        <div class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M3 21v-2a4 4 0 0 1 4-4h6a4 4 0 0 1 4 4v2"/></svg></div>
+        <div class="num">22</div>
+        <h3>All Users</h3>
+        <p>טבלה: שם, טלפון, הצטרף, סטטוס, מנוי, פעילות. סינון, ייצוא ל-CSV.</p>
+        <div class="meta"><span>all_users_screen.dart</span></div>
+      </a>
+      <a class="screen-card" href="admin.html#lawyers">
+        <div class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l8 4v6c0 5-3.5 9-8 10-4.5-1-8-5-8-10V6l8-4z"/></svg></div>
+        <div class="num">23</div>
+        <h3>All Lawyers</h3>
+        <p>טבלה: שם, תחום, זמין, תיקים השנה, דירוג, פעולות.</p>
+        <div class="meta"><span>all_lawyers_screen.dart</span></div>
+      </a>
+      <a class="screen-card" href="admin.html#pending">
+        <div class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v5"/></svg></div>
+        <div class="num">24</div>
+        <h3>Pending Lawyers</h3>
+        <p>כרטיסי בקשה: אווטר, פרטים, מסמכים מצורפים, CTA אשר/דחה.</p>
+        <div class="meta"><span>pending_lawyers_screen.dart</span></div>
+      </a>
+      <a class="screen-card" href="admin.html#logs">
+        <div class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
+        <div class="num">25</div>
+        <h3>Emergency Logs</h3>
+        <p>זרם logs בזמן אמת: CRITICAL/WARN/OK/ERROR badges, time-stamped.</p>
+        <div class="meta"><span>emergency_logs_screen.dart</span></div>
+      </a>
+      <a class="screen-card" href="admin.html#subscriptions">
+        <div class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/></svg></div>
+        <div class="num">26</div>
+        <h3>Subscriptions</h3>
+        <p>3 stats (פעילים, חידוש, ARPU) + רשימת תוכניות פעילות.</p>
+        <div class="meta"><span>subscription_admin_screen.dart</span></div>
+      </a>
+      <a class="screen-card" href="admin.html#admin-settings">
+        <div class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/></svg></div>
+        <div class="num">27</div>
+        <h3>Admin Settings</h3>
+        <p>הגדרות: דיספאצ'ינג (timeout/רדיוס), תקשורת (Twilio/Agora/FCM/Gemini), תחזוקה.</p>
+        <div class="meta"><span>admin_settings_screen.dart</span></div>
+      </a>
+    </div>
+
+    <div class="notes" style="margin-top:48px">
+      <h3>סיכום</h3>
+      <ul>
+        <li><b>27 מסכים</b> מקובצים ל-9 קבוצות, 12 קבצי HTML.</li>
+        <li><b>תשתית CSS משותפת</b>: <code style="background:var(--paper-2); padding:2px 6px; border-radius:4px">_veto-2026.css</code> — צבעים, טיפוגרפיה, רכיבים. כל המוקאפים נטענים ממנו.</li>
+        <li><b>אפיון פונקציונלי</b>: <a href="../../docs/redesign/00_SPEC.md" style="color:var(--navy-600); font-weight:700">00_SPEC.md</a> — ייצור מיד.</li>
+        <li><b>QA Checklist</b>: <a href="../../docs/redesign/01_QA_CHECKLIST.md" style="color:var(--navy-600); font-weight:700">01_QA_CHECKLIST.md</a> — ייצור מיד.</li>
+      </ul>
+    </div>
+
+  </div>
+</body>
+</html>

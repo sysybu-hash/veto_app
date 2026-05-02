@@ -10,22 +10,22 @@ import 'dart:io';
 import 'package:camera/camera.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import '../core/theme/veto_tokens_2026.dart';
 import 'package:flutter/services.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:permission_handler/permission_handler.dart';
 
-import '../core/theme/veto_theme.dart';
 import '../platform/browser_bridge.dart' as browser_bridge;
 import '../services/upload_service.dart';
 
 // ── Brand palette (shared across the app) ─────────────────
 class _C {
-  static const bg        = VetoPalette.bg;
-  static const silver    = VetoPalette.textMuted;
-  static const silverDim = VetoPalette.textSubtle;
-  static const white     = VetoPalette.text;
-  static const accept    = VetoPalette.success;
-  static const uploading = VetoPalette.info;
+  static const bg = VetoTokens.paper;
+  static const silver = VetoTokens.ink500;
+  static const silverDim = VetoTokens.ink300;
+  static const white = VetoTokens.ink900;
+  static const accept = VetoTokens.ok;
+  static const uploading = VetoTokens.info;
 }
 
 // ── i18n strings ──────────────────────────────────────────
@@ -34,43 +34,43 @@ enum EvidenceLanguage { en, he, ru }
 class _L {
   static const Map<EvidenceLanguage, Map<String, String>> _d = {
     EvidenceLanguage.en: {
-      'capture':    'CAPTURE',
-      'uploading':  'Uploading Evidence...',
-      'saved':      'Evidence Saved',
-      'error':      'Upload Failed',
-      'evidence':   'EVIDENCE',
-      'noGps':      'Acquiring GPS...',
-      'camError':   'Camera unavailable',
-      'empty':      'No evidence captured yet',
-      'webHint':    'Tap capture to take a photo or choose a file',
-      'fromFiles':  'Choose from device',
-      'retryCam':   'Retry camera',
+      'capture': 'CAPTURE',
+      'uploading': 'Uploading Evidence...',
+      'saved': 'Evidence Saved',
+      'error': 'Upload Failed',
+      'evidence': 'EVIDENCE',
+      'noGps': 'Acquiring GPS...',
+      'camError': 'Camera unavailable',
+      'empty': 'No evidence captured yet',
+      'webHint': 'Tap capture to take a photo or choose a file',
+      'fromFiles': 'Choose from device',
+      'retryCam': 'Retry camera',
     },
     EvidenceLanguage.he: {
-      'capture':    'צלם',
-      'uploading':  'מעלה ראיות...',
-      'saved':      'ראיה נשמרה',
-      'error':      'העלאה נכשלה',
-      'evidence':   'ראיות',
-      'noGps':      'מאתר GPS...',
-      'camError':   'המצלמה אינה זמינה',
-      'empty':      'טרם נלכדו ראיות',
-      'webHint':    'לחץ על ״צלם״ לצילום או לבחירת קובץ מהמכשיר',
-      'fromFiles':  'בחר מהמכשיר',
-      'retryCam':   'נסה שוב מצלמה',
+      'capture': 'צלם',
+      'uploading': 'מעלה ראיות...',
+      'saved': 'ראיה נשמרה',
+      'error': 'העלאה נכשלה',
+      'evidence': 'ראיות',
+      'noGps': 'מאתר GPS...',
+      'camError': 'המצלמה אינה זמינה',
+      'empty': 'טרם נלכדו ראיות',
+      'webHint': 'לחץ על ״צלם״ לצילום או לבחירת קובץ מהמכשיר',
+      'fromFiles': 'בחר מהמכשיר',
+      'retryCam': 'נסה שוב מצלמה',
     },
     EvidenceLanguage.ru: {
-      'capture':    'Снять',
-      'uploading':  'Загрузка доказательств...',
-      'saved':      'Материал сохранен',
-      'error':      'Ошибка загрузки',
-      'evidence':   'Доказательства',
-      'noGps':      'Определяем GPS...',
-      'camError':   'Камера недоступна',
-      'empty':      'Доказательства еще не записаны',
-      'webHint':    'Нажмите «Снять», чтобы сделать фото или выбрать файл',
-      'fromFiles':  'Выбрать файл',
-      'retryCam':   'Повторить камеру',
+      'capture': 'Снять',
+      'uploading': 'Загрузка доказательств...',
+      'saved': 'Материал сохранен',
+      'error': 'Ошибка загрузки',
+      'evidence': 'Доказательства',
+      'noGps': 'Определяем GPS...',
+      'camError': 'Камера недоступна',
+      'empty': 'Доказательства еще не записаны',
+      'webHint': 'Нажмите «Снять», чтобы сделать фото или выбрать файл',
+      'fromFiles': 'Выбрать файл',
+      'retryCam': 'Повторить камеру',
     },
   };
 
@@ -102,7 +102,7 @@ class _EvidenceItem {
 class EvidenceScreen extends StatefulWidget {
   final String eventId;
   final String token;
-  final EvidenceLanguage  language;
+  final EvidenceLanguage language;
 
   const EvidenceScreen({
     super.key,
@@ -117,29 +117,29 @@ class EvidenceScreen extends StatefulWidget {
 
 class _EvidenceScreenState extends State<EvidenceScreen>
     with WidgetsBindingObserver, SingleTickerProviderStateMixin {
-
   // ── Camera ─────────────────────────────────────────────────
-  List<CameraDescription> _cameras     = [];
-  CameraController?        _camCtrl;
-  bool                     _camReady   = false;
-  bool                     _camError   = false;
+  List<CameraDescription> _cameras = [];
+  CameraController? _camCtrl;
+  bool _camReady = false;
+  bool _camError = false;
+
   /// Web: live [CameraController] failed — use file picker / upload only.
-  bool                     _webPickerFallback = false;
-  int                      _camIndex   = 0; // 0 = rear
+  bool _webPickerFallback = false;
+  int _camIndex = 0; // 0 = rear
 
   // ── GPS ────────────────────────────────────────────────────
   Position? _position;
-  bool      _gpsReady = false;
+  bool _gpsReady = false;
 
   // ── Upload state ───────────────────────────────────────────
-  bool   _uploading    = false;
-  double _uploadProg   = 0.0;
+  bool _uploading = false;
+  double _uploadProg = 0.0;
   String _uploadStatus = ''; // 'saved' | 'error' | ''
   Timer? _statusTimer;
 
   // ── Capture animation ──────────────────────────────────────
   late final AnimationController _flashCtrl;
-  late Animation<double>         _flashOpacity;
+  late Animation<double> _flashOpacity;
   bool _capturing = false;
 
   // ── Evidence gallery ───────────────────────────────────────
@@ -263,7 +263,8 @@ class _EvidenceScreenState extends State<EvidenceScreen>
       cam,
       kIsWeb ? ResolutionPreset.medium : ResolutionPreset.high,
       enableAudio: false,
-      imageFormatGroup: kIsWeb ? ImageFormatGroup.unknown : ImageFormatGroup.jpeg,
+      imageFormatGroup:
+          kIsWeb ? ImageFormatGroup.unknown : ImageFormatGroup.jpeg,
     );
     _camCtrl = ctrl;
     try {
@@ -291,8 +292,13 @@ class _EvidenceScreenState extends State<EvidenceScreen>
           accuracy: LocationAccuracy.high,
         ),
       );
-      if (mounted) setState(() { _position = pos; _gpsReady = true; });
-    } catch (_) {/* GPS unavailable – proceed without */ }
+      if (mounted) {
+        setState(() {
+          _position = pos;
+          _gpsReady = true;
+        });
+      }
+    } catch (_) {/* GPS unavailable – proceed without */}
   }
 
   // ══════════════════════════════════════════════════════════
@@ -322,7 +328,7 @@ class _EvidenceScreenState extends State<EvidenceScreen>
 
     try {
       final xFile = await _camCtrl!.takePicture();
-      final file  = File(xFile.path);
+      final file = File(xFile.path);
 
       // Refresh GPS if available
       if (_gpsReady) {
@@ -333,10 +339,10 @@ class _EvidenceScreenState extends State<EvidenceScreen>
               timeLimit: Duration(seconds: 3),
             ),
           );
-        } catch (_) { /* keep last known */ }
+        } catch (_) {/* keep last known */}
       }
 
-      final lat = _position?.latitude  ?? 0.0;
+      final lat = _position?.latitude ?? 0.0;
       final lng = _position?.longitude ?? 0.0;
 
       await _uploadFile(file: file, type: 'photo', lat: lat, lng: lng);
@@ -437,24 +443,24 @@ class _EvidenceScreenState extends State<EvidenceScreen>
   //  UPLOAD
   // ══════════════════════════════════════════════════════════
   Future<void> _uploadFile({
-    required File   file,
+    required File file,
     required String type,
     required double lat,
     required double lng,
   }) async {
     setState(() {
-      _uploading    = true;
-      _uploadProg   = 0.0;
+      _uploading = true;
+      _uploadProg = 0.0;
       _uploadStatus = '';
     });
 
     final result = await _uploader.uploadEvidence(
-      file:     file,
-      type:     type,
-      eventId:  widget.eventId,
-      lat:      lat,
-      lng:      lng,
-      token:    widget.token,
+      file: file,
+      type: type,
+      eventId: widget.eventId,
+      lat: lat,
+      lng: lng,
+      token: widget.token,
       onProgress: (p) {
         if (mounted) setState(() => _uploadProg = p);
       },
@@ -470,16 +476,19 @@ class _EvidenceScreenState extends State<EvidenceScreen>
         }
         _gallery.add(_EvidenceItem(
           thumbBytes: thumb,
-          cloudUrl:   result.cloudUrl ?? '',
-          lat:        lat,
-          lng:        lng,
+          cloudUrl: result.cloudUrl ?? '',
+          lat: lat,
+          lng: lng,
           capturedAt: DateTime.now(),
         ));
         _setStatus('saved');
       } else {
         _setStatus('error');
       }
-      setState(() { _uploading = false; _uploadProg = 0.0; });
+      setState(() {
+        _uploading = false;
+        _uploadProg = 0.0;
+      });
     }
   }
 
@@ -573,7 +582,8 @@ class _EvidenceScreenState extends State<EvidenceScreen>
             if (_uploading)
               Positioned(
                 top: MediaQuery.of(context).padding.top + 56,
-                left: 0, right: 0,
+                left: 0,
+                right: 0,
                 child: _buildProgressBar(),
               ),
 
@@ -581,7 +591,8 @@ class _EvidenceScreenState extends State<EvidenceScreen>
             if (_uploadStatus.isNotEmpty)
               Positioned(
                 top: MediaQuery.of(context).padding.top + 68,
-                left: 0, right: 0,
+                left: 0,
+                right: 0,
                 child: _buildStatusToast(),
               ),
 
@@ -590,14 +601,16 @@ class _EvidenceScreenState extends State<EvidenceScreen>
               animation: _flashOpacity,
               builder: (_, __) => IgnorePointer(
                 child: Container(
-                  color: Colors.white.withValues(alpha:_flashOpacity.value),
+                  color: Colors.white.withValues(alpha: _flashOpacity.value),
                 ),
               ),
             ),
 
             // ── 6. Bottom controls ───────────────────────────
             Positioned(
-              bottom: 0, left: 0, right: 0,
+              bottom: 0,
+              left: 0,
+              right: 0,
               child: _buildBottomControls(),
             ),
           ],
@@ -613,7 +626,8 @@ class _EvidenceScreenState extends State<EvidenceScreen>
         color: Colors.black,
         child: Center(
           child: Column(mainAxisSize: MainAxisSize.min, children: [
-            const Icon(Icons.videocam_off_outlined, color: _C.silverDim, size: 48),
+            const Icon(Icons.videocam_off_outlined,
+                color: _C.silverDim, size: 48),
             const SizedBox(height: 16),
             Text(_t('camError'),
                 style: const TextStyle(color: _C.silverDim, fontSize: 14)),
@@ -626,14 +640,12 @@ class _EvidenceScreenState extends State<EvidenceScreen>
     }
     if (!_camReady || _camCtrl == null) {
       return const Center(
-        child: CircularProgressIndicator(
-            strokeWidth: 1.5, color: _C.silverDim),
+        child: CircularProgressIndicator(strokeWidth: 1.5, color: _C.silverDim),
       );
     }
     if (!_camCtrl!.value.isInitialized) {
       return const Center(
-        child: CircularProgressIndicator(
-            strokeWidth: 1.5, color: _C.silverDim),
+        child: CircularProgressIndicator(strokeWidth: 1.5, color: _C.silverDim),
       );
     }
     if (kIsWeb) {
@@ -648,9 +660,9 @@ class _EvidenceScreenState extends State<EvidenceScreen>
       child: FittedBox(
         fit: BoxFit.cover,
         child: SizedBox(
-          width:  _camCtrl!.value.previewSize!.height,
+          width: _camCtrl!.value.previewSize!.height,
           height: _camCtrl!.value.previewSize!.width,
-          child:  CameraPreview(_camCtrl!),
+          child: CameraPreview(_camCtrl!),
         ),
       ),
     );
@@ -696,7 +708,8 @@ class _EvidenceScreenState extends State<EvidenceScreen>
                   icon: const Icon(Icons.videocam_outlined, size: 22),
                   label: Text(_t('retryCam')),
                   style: FilledButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 14),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 22, vertical: 14),
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -707,7 +720,8 @@ class _EvidenceScreenState extends State<EvidenceScreen>
                   style: OutlinedButton.styleFrom(
                     foregroundColor: const Color(0xFFE2E8F0),
                     side: const BorderSide(color: Color(0xFF64748B)),
-                    padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 14),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 22, vertical: 14),
                   ),
                 ),
               ],
@@ -724,8 +738,8 @@ class _EvidenceScreenState extends State<EvidenceScreen>
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topCenter,
-          end:   Alignment.bottomCenter,
-          colors: [Colors.black.withValues(alpha:0.75), Colors.transparent],
+          end: Alignment.bottomCenter,
+          colors: [Colors.black.withValues(alpha: 0.75), Colors.transparent],
         ),
       ),
       child: SafeArea(
@@ -744,22 +758,26 @@ class _EvidenceScreenState extends State<EvidenceScreen>
 
               // VETO badge
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
                 decoration: BoxDecoration(
-                  color: _C.bg.withValues(alpha:0.7),
+                  color: _C.bg.withValues(alpha: 0.7),
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: _C.silver.withValues(alpha:0.3)),
+                  border: Border.all(color: _C.silver.withValues(alpha: 0.3)),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Container(
-                      width: 6, height: 6,
+                      width: 6,
+                      height: 6,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         color: _C.accept,
                         boxShadow: [
-                          BoxShadow(color: _C.accept.withValues(alpha:0.7), blurRadius: 4)
+                          BoxShadow(
+                              color: _C.accept.withValues(alpha: 0.7),
+                              blurRadius: 4)
                         ],
                       ),
                     ),
@@ -810,7 +828,7 @@ class _EvidenceScreenState extends State<EvidenceScreen>
             borderRadius: BorderRadius.circular(4),
             child: LinearProgressIndicator(
               value: _uploadProg > 0 ? _uploadProg : null,
-              backgroundColor: _C.silver.withValues(alpha:0.12),
+              backgroundColor: _C.silver.withValues(alpha: 0.12),
               valueColor: const AlwaysStoppedAnimation(_C.uploading),
               minHeight: 3,
             ),
@@ -827,10 +845,12 @@ class _EvidenceScreenState extends State<EvidenceScreen>
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 7),
         decoration: BoxDecoration(
-          color: (isSaved ? _C.accept : Colors.redAccent).withValues(alpha:0.15),
+          color:
+              (isSaved ? _C.accept : Colors.redAccent).withValues(alpha: 0.15),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: (isSaved ? _C.accept : Colors.redAccent).withValues(alpha:0.4),
+            color:
+                (isSaved ? _C.accept : Colors.redAccent).withValues(alpha: 0.4),
           ),
         ),
         child: Row(
@@ -862,8 +882,8 @@ class _EvidenceScreenState extends State<EvidenceScreen>
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.bottomCenter,
-          end:   Alignment.topCenter,
-          colors: [Colors.black.withValues(alpha:0.88), Colors.transparent],
+          end: Alignment.topCenter,
+          colors: [Colors.black.withValues(alpha: 0.88), Colors.transparent],
         ),
       ),
       child: SafeArea(
@@ -913,8 +933,8 @@ class _EvidenceScreenState extends State<EvidenceScreen>
                   _ShutterButton(
                     isCapturing: _capturing,
                     isUploading: _uploading,
-                    onTap:       _capture,
-                    label:       _t('capture'),
+                    onTap: _capture,
+                    label: _t('capture'),
                   ),
 
                   // Flip camera (native only)
@@ -946,7 +966,7 @@ class _EvidenceScreenState extends State<EvidenceScreen>
           Text(
             _t('empty'),
             style: TextStyle(
-              color: _C.silverDim.withValues(alpha:0.4),
+              color: _C.silverDim.withValues(alpha: 0.4),
               fontSize: 11,
               letterSpacing: 0.5,
             ),
@@ -971,7 +991,7 @@ class _EvidenceScreenState extends State<EvidenceScreen>
           height: 64,
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
-            reverse: true,     // newest on left
+            reverse: true, // newest on left
             itemCount: _gallery.length,
             itemBuilder: (ctx, i) => _GalleryThumb(item: _gallery[i]),
           ),
@@ -987,10 +1007,10 @@ class _EvidenceScreenState extends State<EvidenceScreen>
 
 // ── Shutter Button ─────────────────────────────────────────
 class _ShutterButton extends StatelessWidget {
-  final bool     isCapturing;
-  final bool     isUploading;
+  final bool isCapturing;
+  final bool isUploading;
   final VoidCallback onTap;
-  final String   label;
+  final String label;
 
   const _ShutterButton({
     required this.isCapturing,
@@ -1010,13 +1030,13 @@ class _ShutterButton extends StatelessWidget {
         children: [
           AnimatedContainer(
             duration: const Duration(milliseconds: 180),
-            width:  84,
+            width: 84,
             height: 84,
             decoration: BoxDecoration(
-              shape:  BoxShape.circle,
-              color:  locked
-                  ? _C.silver.withValues(alpha:0.08)
-                  : _C.silver.withValues(alpha:0.15),
+              shape: BoxShape.circle,
+              color: locked
+                  ? _C.silver.withValues(alpha: 0.08)
+                  : _C.silver.withValues(alpha: 0.15),
               border: Border.all(
                 color: locked ? _C.silverDim : _C.silver,
                 width: locked ? 1.5 : 2.5,
@@ -1025,7 +1045,7 @@ class _ShutterButton extends StatelessWidget {
                   ? []
                   : [
                       BoxShadow(
-                        color: _C.silver.withValues(alpha:0.25),
+                        color: _C.silver.withValues(alpha: 0.25),
                         blurRadius: 20,
                         spreadRadius: 2,
                       ),
@@ -1034,18 +1054,18 @@ class _ShutterButton extends StatelessWidget {
             child: Center(
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 180),
-                width:  locked ? 28 : 56,
+                width: locked ? 28 : 56,
                 height: locked ? 28 : 56,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: locked
-                      ? _C.silverDim.withValues(alpha:0.3)
-                      : _C.silver,
+                  color:
+                      locked ? _C.silverDim.withValues(alpha: 0.3) : _C.silver,
                 ),
                 child: locked
                     ? const Center(
                         child: SizedBox(
-                          width: 16, height: 16,
+                          width: 16,
+                          height: 16,
                           child: CircularProgressIndicator(
                             strokeWidth: 1.5,
                             color: _C.white,
@@ -1088,11 +1108,12 @@ class _HUDButton extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        width: 40, height: 40,
+        width: 40,
+        height: 40,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          color: Colors.black.withValues(alpha:0.35),
-          border: Border.all(color: _C.silver.withValues(alpha:0.2)),
+          color: Colors.black.withValues(alpha: 0.35),
+          border: Border.all(color: _C.silver.withValues(alpha: 0.2)),
         ),
         child: Icon(icon, color: color, size: 18),
       ),
@@ -1113,9 +1134,9 @@ class _GalleryThumb extends StatelessWidget {
       margin: const EdgeInsets.only(right: 8),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: _C.silver.withValues(alpha:0.3), width: 1),
+        border: Border.all(color: _C.silver.withValues(alpha: 0.3), width: 1),
         boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha:0.4), blurRadius: 8),
+          BoxShadow(color: Colors.black.withValues(alpha: 0.4), blurRadius: 8),
         ],
       ),
       child: ClipRRect(
@@ -1132,9 +1153,11 @@ class _GalleryThumb extends StatelessWidget {
                 : Image.memory(item.thumbBytes, fit: BoxFit.cover),
             // GPS dot overlay
             Positioned(
-              bottom: 4, right: 4,
+              bottom: 4,
+              right: 4,
               child: Container(
-                width: 8, height: 8,
+                width: 8,
+                height: 8,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: _C.accept,

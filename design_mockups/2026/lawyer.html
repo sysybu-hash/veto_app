@@ -1,0 +1,567 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>VETO · Lawyer · 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@500;700;900&family=Heebo:wght@300;400;500;600;700;800;900&family=Assistant:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="_veto-2026.css">
+<style>
+  /* Lawyer dashboard layout */
+  .lwr-layout{ display:flex; height:100% }
+  .desktop .lwr-layout > .sidebar{ width:240px }
+  .phone .lwr-layout > .sidebar{ display:none }
+
+  .lwr-main{ flex:1; display:flex; flex-direction:column; min-width:0; overflow:hidden }
+  .lwr-topbar{
+    padding:16px 28px; background:#fff; border-bottom:1px solid var(--hairline);
+    display:flex; align-items:center; justify-content:space-between; gap:14px;
+  }
+  .phone .lwr-topbar{ padding:42px 14px 12px }
+  .lwr-content{ flex:1; overflow-y:auto; padding:24px 28px }
+  .phone .lwr-content{ padding:18px 16px }
+
+  .availability-toggle{
+    display:inline-flex; align-items:center; gap:10px;
+    background:#fff; border:1px solid var(--hairline); border-radius:var(--r-pill);
+    padding:5px 6px 5px 14px; box-shadow:var(--shadow-1);
+  }
+  .availability-toggle .dot{
+    width:9px; height:9px; border-radius:50%; background:var(--ok);
+    box-shadow:0 0 0 4px rgba(43,163,116,.18);
+  }
+  .availability-toggle .lbl{ font-size:12px; font-weight:700; color:var(--ink-700) }
+  .availability-toggle .switch{
+    width:44px; height:24px; border-radius:12px; background:var(--ok); position:relative;
+    cursor:pointer; transition:.2s;
+  }
+  .availability-toggle .switch::after{
+    content:""; position:absolute; top:2px; right:2px; width:20px; height:20px;
+    border-radius:50%; background:#fff; transition:.2s;
+    box-shadow:0 2px 6px rgba(0,0,0,.18);
+  }
+  .availability-toggle.off .switch{ background:var(--ink-200) }
+  .availability-toggle.off .switch::after{ right:auto; left:2px }
+  .availability-toggle.off .dot{ background:var(--ink-300); box-shadow:none }
+
+  .lwr-stats{
+    display:grid; grid-template-columns:repeat(4, 1fr); gap:14px; margin-bottom:24px;
+  }
+  .phone .lwr-stats{ grid-template-columns:repeat(2,1fr); gap:10px }
+  .stat-card{
+    background:#fff; border:1px solid var(--hairline); border-radius:var(--r-lg);
+    padding:18px; box-shadow:var(--shadow-1);
+  }
+  .stat-card .lbl{ font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--ink-500); font-weight:700; margin-bottom:8px }
+  .stat-card .val{ font-family:var(--serif); font-size:28px; font-weight:800; color:var(--ink-900); line-height:1 }
+  .stat-card .delta{ font-size:11px; margin-top:6px; color:var(--ok); font-weight:700 }
+  .stat-card .delta.down{ color:var(--emerg) }
+  .stat-card .ico{
+    width:36px; height:36px; border-radius:10px;
+    background:var(--paper-2); border:1px solid var(--hairline);
+    display:grid; place-items:center; color:var(--navy-600);
+    margin-bottom:12px;
+  }
+
+  /* Active call card */
+  .case-card{
+    background:#fff; border:1px solid var(--hairline); border-radius:var(--r-lg);
+    overflow:hidden; box-shadow:var(--shadow-1);
+  }
+  .case-card .top{
+    display:flex; align-items:center; gap:14px; padding:16px 18px;
+    background: linear-gradient(180deg, #FFF5F1, #fff);
+    border-bottom:1px solid var(--emerg-border);
+  }
+  .case-card .top .pulse-icon{
+    width:42px; height:42px; border-radius:12px;
+    background: linear-gradient(135deg, #E5354C, #B81B30); color:#fff;
+    display:grid; place-items:center; box-shadow:0 6px 18px rgba(214,36,58,.30);
+    flex-shrink:0; position:relative;
+  }
+  .case-card .top .pulse-icon::after{
+    content:""; position:absolute; inset:-4px; border-radius:14px;
+    border:2px solid rgba(214,36,58,.4); animation: pulse2 1.6s ease-out infinite;
+  }
+  @keyframes pulse2 { 0%{ transform:scale(.95); opacity:.8 } 100%{ transform:scale(1.4); opacity:0 } }
+  .case-card .top .meta{ flex:1; min-width:0 }
+  .case-card .top .meta .t{ font-family:var(--serif); font-size:16px; font-weight:700; color:#7A2A12; line-height:1.2 }
+  .case-card .top .meta .s{ font-size:11px; color:#9D3E27; margin-top:2px; display:flex; gap:8px; align-items:center }
+  .case-card .top .timer{
+    font-family:var(--mono); font-size:14px; font-weight:800; color:var(--emerg);
+    padding:6px 10px; background:#fff; border-radius:8px; border:1px solid var(--emerg-border);
+  }
+  .case-card .body{ padding:16px 18px; display:grid; gap:12px }
+  .case-row{
+    display:flex; gap:12px; align-items:flex-start; font-size:13px;
+  }
+  .case-row .lbl{
+    font-size:11px; color:var(--ink-500); text-transform:uppercase; letter-spacing:.06em;
+    font-weight:700; min-width:80px;
+  }
+  .case-row .val{ color:var(--ink-700); flex:1 }
+  .case-row .val b{ color:var(--ink-900) }
+  .case-card .actions{
+    display:flex; gap:10px; padding:14px 18px; border-top:1px solid var(--hairline);
+    background:var(--surface-2);
+  }
+  .case-card .actions .cta{ flex:1; justify-content:center; height:42px }
+
+  /* Lawyer Settings layout */
+  .ls-grid{
+    display:grid; grid-template-columns:1fr; gap:18px;
+  }
+  .desktop .ls-grid{ grid-template-columns: 1.2fr 1fr; gap:24px }
+
+  .practice-areas{ display:flex; gap:8px; flex-wrap:wrap }
+  .area-chip{
+    padding:6px 12px; border-radius:var(--r-pill); font-size:12px; font-weight:700;
+    background:var(--paper-2); color:var(--ink-700); border:1px solid var(--hairline);
+    cursor:pointer; transition:.15s;
+  }
+  .area-chip:hover{ border-color:var(--navy-300) }
+  .area-chip.selected{ background:var(--navy-600); color:#fff; border-color:var(--navy-600) }
+
+  /* Profile pane */
+  .profile-hero{
+    display:flex; gap:20px; align-items:center; padding:24px;
+    background:linear-gradient(180deg, var(--surface-2), #fff);
+    border:1px solid var(--hairline); border-radius:var(--r-2xl); box-shadow:var(--shadow-1);
+  }
+  .profile-hero .av{
+    width:80px; height:80px; border-radius:22px;
+    background:linear-gradient(135deg, var(--navy-300), var(--navy-500));
+    color:#fff; font-family:var(--serif); font-weight:800; font-size:30px;
+    display:grid; place-items:center; flex-shrink:0;
+    box-shadow:inset 0 0 0 1px rgba(255,255,255,.18), var(--shadow-1);
+  }
+  .profile-hero h2{ font-family:var(--serif); font-size:22px; color:var(--ink-900) }
+  .profile-hero .sub{ color:var(--ink-500); font-size:13px; margin-top:2px }
+  .profile-hero .badges{ margin-top:8px; display:flex; gap:6px; flex-wrap:wrap }
+</style>
+</head>
+<body>
+  <div class="page">
+    <div class="page-header">
+      <h1>VETO · עמדת עורך הדין · עמודי עו"ד</h1>
+      <span class="tag">2026 · Dashboard + Settings + Profile</span>
+    </div>
+    <p class="page-sub">
+      שלושת מסכי עורך הדין: לוח בקרה (Dashboard), הגדרות מקצועיות (Settings), ופרופיל. עיצוב נקי ב"הקשר משרד עורכי דין יוקרתי" — sidebar שמאלי, סטטיסטיקות מובלטות, כרטיסי קריאת חירום עם דחיפות (אדום) אבל לא צעקני.
+    </p>
+
+    <div class="device-label">Desktop · 1440 wide · Lawyer Dashboard</div>
+    <div class="desktop">
+      <div class="bar"><i></i><i></i><i></i></div>
+      <div class="canvas tall">
+        <div class="lwr-layout">
+          <aside class="sidebar">
+            <div style="display:flex; align-items:center; gap:10px; padding:6px 10px 18px; border-bottom:1px solid var(--hairline); margin-bottom:6px">
+              <div class="brand"><div class="crest">V</div><div class="name">VETO</div></div>
+            </div>
+            <div class="group-title">תיקים</div>
+            <a href="#" class="active">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l9-7 9 7M5 10v10h14V10"/></svg>
+              לוח בקרה <span class="count">2</span>
+            </a>
+            <a href="#">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z"/></svg>
+              תיקים פעילים <span class="count">5</span>
+            </a>
+            <a href="#">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a8 8 0 0 1-11 7l-5 1 1-5A8 8 0 1 1 21 12z"/></svg>
+              שיחות
+            </a>
+            <a href="#">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a4 4 0 0 1-4 4H7l-4 4V5a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"/></svg>
+              היסטוריה
+            </a>
+            <div class="group-title">משרד</div>
+            <a href="#">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
+              כספת מסמכים
+            </a>
+            <a href="#">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+              יומן
+            </a>
+            <a href="#">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-14 0M12 5V2M12 22v-3"/></svg>
+              הגדרות
+            </a>
+            <div style="margin-top:auto; padding:14px 10px; border-top:1px solid var(--hairline); display:flex; gap:10px; align-items:center">
+              <div class="avatar" style="width:36px; height:36px; border-radius:10px; font-size:13px">שכ</div>
+              <div style="flex:1; min-width:0">
+                <div style="font-size:13px; font-weight:800; color:var(--ink-900)">שירה כהן</div>
+                <div style="font-size:11px; color:var(--ink-500)">עו"ד פלילי · #3214</div>
+              </div>
+            </div>
+          </aside>
+
+          <main class="lwr-main">
+            <header class="lwr-topbar">
+              <div>
+                <div style="font-family:var(--sans); font-size:11px; letter-spacing:.18em; color:var(--navy-600); font-weight:800; text-transform:uppercase; margin-bottom:4px">מרכז תגובה משפטי</div>
+                <h2 style="font-family:var(--serif); font-size:22px; color:var(--ink-900)">בוקר טוב, שירה</h2>
+              </div>
+              <div style="display:flex; gap:10px; align-items:center">
+                <div class="availability-toggle">
+                  <span class="dot"></span>
+                  <span class="lbl">זמין לקבלת קריאות</span>
+                  <span class="switch"></span>
+                </div>
+                <button class="iconbtn" title="התראות"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 0 1-3.4 0"/></svg></button>
+                <button class="cta">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 12a8 8 0 0 1-11 7l-5 1 1-5A8 8 0 1 1 21 12z"/></svg>
+                  צ'אט פעיל
+                </button>
+              </div>
+            </header>
+
+            <div class="lwr-content">
+              <!-- Stats -->
+              <div class="lwr-stats">
+                <div class="stat-card">
+                  <div class="ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/></svg></div>
+                  <div class="lbl">קריאות ממתינות</div>
+                  <div class="val">2</div>
+                  <div class="delta">+1 בשעה האחרונה</div>
+                </div>
+                <div class="stat-card">
+                  <div class="ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v5l3 2"/></svg></div>
+                  <div class="lbl">יעד תגובה</div>
+                  <div class="val">2:00</div>
+                  <div class="delta">בממוצע 1:42</div>
+                </div>
+                <div class="stat-card">
+                  <div class="ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z"/></svg></div>
+                  <div class="lbl">תיקים פעילים</div>
+                  <div class="val">5</div>
+                  <div class="delta">2 דורשים מענה</div>
+                </div>
+                <div class="stat-card">
+                  <div class="ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z"/></svg></div>
+                  <div class="lbl">דירוג</div>
+                  <div class="val">4.93</div>
+                  <div class="delta">128 ביקורות</div>
+                </div>
+              </div>
+
+              <!-- Active calls -->
+              <div class="row-between" style="margin-bottom:14px">
+                <div>
+                  <div class="kicker">תיבת חירום</div>
+                  <h3 class="h-section">קריאות פעילות</h3>
+                  <p class="sub-line" style="margin-bottom:0">פרטי האירוע מתעדכנים בזמן אמת מהאפליקציה של האזרח.</p>
+                </div>
+                <button class="ghost-btn">היסטוריה →</button>
+              </div>
+
+              <div style="display:flex; flex-direction:column; gap:14px">
+                <!-- Active emergency request -->
+                <div class="case-card">
+                  <div class="top">
+                    <div class="pulse-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 8v5m0 4h.01M10.3 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg></div>
+                    <div class="meta">
+                      <div class="t">קריאת חירום · חקירה במשטרה</div>
+                      <div class="s"><span class="badge danger">LIVE</span> פנייה ממשתמש · לפני 47 שניות</div>
+                    </div>
+                    <div class="timer">00:47</div>
+                  </div>
+                  <div class="body">
+                    <div class="case-row"><span class="lbl">משתמש</span><span class="val"><b>אנונימי</b> · 0501***456 · לוקליזציה: רמת גן</span></div>
+                    <div class="case-row"><span class="lbl">תרחיש</span><span class="val">חקירה תחת אזהרה — תחנת רמת גן · "החוקר אמר לי שאני חשוד"</span></div>
+                    <div class="case-row"><span class="lbl">שפה מועדפת</span><span class="val">עברית · רוסית סבירה</span></div>
+                    <div class="case-row"><span class="lbl">ראיות</span><span class="val">3 קבצי קול הועלו לכספת המשותפת · הקלטת חוקר זמינה</span></div>
+                  </div>
+                  <div class="actions">
+                    <button class="cta danger">קבל תיק (קולי)</button>
+                    <button class="cta ghost">צ'אט תחילה</button>
+                    <button class="ghost-btn danger">דלג</button>
+                  </div>
+                </div>
+
+                <!-- Second pending -->
+                <div class="case-card">
+                  <div class="top">
+                    <div class="pulse-icon" style="background:linear-gradient(135deg, #FFB74D, #C58B12); box-shadow:0 6px 18px rgba(197,139,18,.30)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="9"/><path d="M2 12h20"/></svg></div>
+                    <div class="meta">
+                      <div class="t" style="color:#7A5300">בקשת ייעוץ · עצירת תנועה</div>
+                      <div class="s" style="color:#94681A"><span class="badge warn">ממתין</span> פנייה ממשתמש · לפני 3 דקות</div>
+                    </div>
+                    <div class="timer" style="color:var(--warn); border-color:#F2D58E">03:12</div>
+                  </div>
+                  <div class="body">
+                    <div class="case-row"><span class="lbl">משתמש</span><span class="val"><b>אנונימי</b> · 0529***230 · כביש 4 דרום</span></div>
+                    <div class="case-row"><span class="lbl">תרחיש</span><span class="val">בדיקת אלכוהול — "השוטר טוען שעברתי 0.24, אני בכלל לא שתיתי"</span></div>
+                    <div class="case-row"><span class="lbl">תיעוד</span><span class="val">וידאו 1:24 דקות · GPS חתום</span></div>
+                  </div>
+                  <div class="actions">
+                    <button class="cta">קבל תיק</button>
+                    <button class="cta ghost">צ'אט תחילה</button>
+                    <button class="ghost-btn danger">דלג</button>
+                  </div>
+                </div>
+
+                <!-- Empty hint -->
+                <div class="callout info">
+                  <div class="ico"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="9"/><path d="M12 8v5m0 3h.01"/></svg></div>
+                  <div><b>טיפ:</b> השאר את הזמינות פעילה כדי להופיע ראשון בתיעדוף לפי קרבה גיאוגרפית והתמחות. ממוצע התגובה שלך השבוע: <b>1:42 דקות</b> — מצוין.</div>
+                </div>
+              </div>
+            </div>
+          </main>
+        </div>
+      </div>
+    </div>
+
+    <!-- Lawyer Settings -->
+    <div style="margin-top:48px">
+      <div class="device-label">Desktop · Lawyer Settings</div>
+      <div class="desktop">
+        <div class="bar"><i></i><i></i><i></i></div>
+        <div class="canvas">
+          <div class="lwr-layout">
+            <aside class="sidebar">
+              <div style="display:flex; align-items:center; gap:10px; padding:6px 10px 18px; border-bottom:1px solid var(--hairline); margin-bottom:6px">
+                <div class="brand"><div class="crest">V</div><div class="name">VETO</div></div>
+              </div>
+              <a href="#"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l9-7 9 7M5 10v10h14V10"/></svg> לוח בקרה</a>
+              <a href="#"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z"/></svg> תיקים</a>
+              <a href="#" class="active"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-14 0M12 5V2"/></svg> הגדרות</a>
+            </aside>
+            <main class="lwr-main">
+              <header class="lwr-topbar">
+                <div>
+                  <div class="kicker">פרופיל מקצועי</div>
+                  <h2 style="font-family:var(--serif); font-size:22px; color:var(--ink-900)">הגדרות עורך הדין</h2>
+                </div>
+                <button class="cta">שמור שינויים</button>
+              </header>
+
+              <div class="lwr-content">
+                <div class="ls-grid">
+                  <!-- Practice areas -->
+                  <div class="card">
+                    <div class="head"><h3>תחומי התמחות</h3><span class="ann">בחר עד 3 תחומים</span></div>
+                    <div class="body">
+                      <p class="muted text-sm" style="margin:0 0 14px">נשתמש בתחומים שתבחר לתעדף קריאות מתאימות אליך.</p>
+                      <div class="practice-areas">
+                        <span class="area-chip selected">משפט פלילי</span>
+                        <span class="area-chip selected">תעבורה</span>
+                        <span class="area-chip">משפט אזרחי</span>
+                        <span class="area-chip selected">דיני עבודה</span>
+                        <span class="area-chip">דיני משפחה</span>
+                        <span class="area-chip">צרכנות</span>
+                        <span class="area-chip">מקרקעין</span>
+                        <span class="area-chip">חוזים</span>
+                        <span class="area-chip">דיני חברות</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Availability schedule -->
+                  <div class="card">
+                    <div class="head"><h3>שעות זמינות</h3><span class="ann">UTC+2</span></div>
+                    <div class="body">
+                      <p class="muted text-sm" style="margin:0 0 14px">מעבר לשעות אלה תופיע "לא זמין" אוטומטית.</p>
+                      <div style="display:flex; flex-direction:column; gap:8px">
+                        <div style="display:flex; align-items:center; gap:10px; padding:8px 12px; background:var(--surface-2); border-radius:8px">
+                          <span style="flex:1; font-weight:700; font-size:13px">ראשון - חמישי</span>
+                          <span class="muted text-sm">09:00 — 22:00</span>
+                          <button class="ghost-btn" style="height:30px; padding:0 10px; font-size:12px">ערוך</button>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:10px; padding:8px 12px; background:var(--surface-2); border-radius:8px">
+                          <span style="flex:1; font-weight:700; font-size:13px">שישי</span>
+                          <span class="muted text-sm">09:00 — 14:00</span>
+                          <button class="ghost-btn" style="height:30px; padding:0 10px; font-size:12px">ערוך</button>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:10px; padding:8px 12px; background:var(--surface-2); border-radius:8px">
+                          <span style="flex:1; font-weight:700; font-size:13px">שבת</span>
+                          <span class="muted text-sm">לא זמין</span>
+                          <button class="ghost-btn" style="height:30px; padding:0 10px; font-size:12px">ערוך</button>
+                        </div>
+                      </div>
+                      <div class="callout warn" style="margin-top:14px">
+                        <div class="ico"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 8v5m0 4h.01"/><circle cx="12" cy="12" r="9"/></svg></div>
+                        <div>אפשר חירום מחוץ לשעות אלה? הפעל "מצב כוננות" — תקבל קריאות חירום קריטיות בלבד.</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Languages -->
+                  <div class="card">
+                    <div class="head"><h3>שפות עבודה</h3></div>
+                    <div class="body">
+                      <p class="muted text-sm" style="margin:0 0 14px">קריאות בשפות אלה יקבלו עדיפות אצלך.</p>
+                      <div class="practice-areas">
+                        <span class="area-chip selected">עברית · שפת אם</span>
+                        <span class="area-chip selected">אנגלית · שוטף</span>
+                        <span class="area-chip">רוסית · בסיסי</span>
+                        <span class="area-chip">ערבית · בסיסי</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Notifications -->
+                  <div class="card">
+                    <div class="head"><h3>התראות</h3></div>
+                    <div class="body" style="padding:0">
+                      <div style="display:flex; flex-direction:column">
+                        <label style="display:flex; align-items:center; padding:12px 18px; border-bottom:1px solid var(--hairline); gap:14px; cursor:pointer">
+                          <div style="flex:1">
+                            <div style="font-weight:700; font-size:14px; color:var(--ink-900)">קריאת חירום (Push)</div>
+                            <div class="muted text-xs" style="margin-top:2px">בולט גם במצב מושתק</div>
+                          </div>
+                          <span class="availability-toggle" style="padding:0; border:0; box-shadow:none"><span class="switch"></span></span>
+                        </label>
+                        <label style="display:flex; align-items:center; padding:12px 18px; border-bottom:1px solid var(--hairline); gap:14px; cursor:pointer">
+                          <div style="flex:1">
+                            <div style="font-weight:700; font-size:14px; color:var(--ink-900)">SMS גיבוי</div>
+                            <div class="muted text-xs" style="margin-top:2px">אם Push לא הגיע תוך 5 שניות</div>
+                          </div>
+                          <span class="availability-toggle off" style="padding:0; border:0; box-shadow:none"><span class="switch"></span></span>
+                        </label>
+                        <label style="display:flex; align-items:center; padding:12px 18px; gap:14px; cursor:pointer">
+                          <div style="flex:1">
+                            <div style="font-weight:700; font-size:14px; color:var(--ink-900)">שיחת טלפון</div>
+                            <div class="muted text-xs" style="margin-top:2px">לקריאות חירום קריטיות בלבד</div>
+                          </div>
+                          <span class="availability-toggle" style="padding:0; border:0; box-shadow:none"><span class="switch"></span></span>
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </main>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mobile -->
+    <div style="margin-top:48px">
+      <h2 style="font-family:var(--serif); font-size:22px; color:var(--ink-900); margin-bottom:14px">Mobile · Lawyer Dashboard</h2>
+      <div class="stage" style="grid-template-columns:repeat(2,1fr); gap:32px">
+        <div>
+          <div class="device-label">Mobile · Active state</div>
+          <div class="phone tall">
+            <div class="screen">
+              <header class="topbar">
+                <button class="iconbtn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+                <div class="brand"><div class="crest">V</div><div class="name">VETO</div></div>
+                <button class="iconbtn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/></svg></button>
+              </header>
+              <div class="scroll" style="overflow-y:auto">
+                <div class="stack">
+                  <div class="row-between">
+                    <div>
+                      <div class="kicker" style="margin:0">בוקר טוב</div>
+                      <h2 style="font-family:var(--serif); font-size:20px">שירה כהן</h2>
+                    </div>
+                    <div class="availability-toggle" style="padding:5px 10px"><span class="dot"></span><span class="lbl text-xs">זמין</span><span class="switch" style="width:36px; height:20px"></span></div>
+                  </div>
+
+                  <div class="lwr-stats" style="grid-template-columns:1fr 1fr">
+                    <div class="stat-card"><div class="lbl">קריאות</div><div class="val">2</div></div>
+                    <div class="stat-card"><div class="lbl">תגובה ממוצעת</div><div class="val">1:42</div></div>
+                    <div class="stat-card"><div class="lbl">תיקים פעילים</div><div class="val">5</div></div>
+                    <div class="stat-card"><div class="lbl">דירוג</div><div class="val">4.93</div></div>
+                  </div>
+
+                  <div>
+                    <div class="kicker">תיבת חירום</div>
+                    <h3 class="h-section">2 קריאות ממתינות</h3>
+                  </div>
+
+                  <div class="case-card">
+                    <div class="top">
+                      <div class="pulse-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 8v5m0 4h.01M10.3 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg></div>
+                      <div class="meta">
+                        <div class="t" style="font-size:14px">חקירה במשטרה</div>
+                        <div class="s"><span class="badge danger">LIVE</span> 0:47</div>
+                      </div>
+                    </div>
+                    <div class="body">
+                      <div class="case-row"><span class="lbl">משתמש</span><span class="val"><b>אנונימי</b> · רמת גן</span></div>
+                      <div class="case-row"><span class="lbl">תרחיש</span><span class="val">חקירה תחת אזהרה</span></div>
+                    </div>
+                    <div class="actions">
+                      <button class="cta danger" style="flex:1; justify-content:center">קבל תיק</button>
+                      <button class="iconbtn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a8 8 0 0 1-11 7l-5 1 1-5A8 8 0 1 1 21 12z"/></svg></button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <nav class="tabbar">
+                <button class="active"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l9-7 9 7M5 10v10h14V10"/></svg>בית<span class="pip"></span></button>
+                <button><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z"/></svg>תיקים<span class="pip"></span></button>
+                <button><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a8 8 0 0 1-11 7l-5 1 1-5A8 8 0 1 1 21 12z"/></svg>צ'אט<span class="pip"></span></button>
+                <button><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>פרופיל<span class="pip"></span></button>
+              </nav>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="device-label">Mobile · Empty state</div>
+          <div class="phone tall">
+            <div class="screen">
+              <header class="topbar">
+                <button class="iconbtn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+                <div class="brand"><div class="crest">V</div><div class="name">VETO</div></div>
+                <button class="iconbtn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/></svg></button>
+              </header>
+              <div class="scroll" style="overflow-y:auto">
+                <div class="stack">
+                  <div class="row-between">
+                    <div>
+                      <div class="kicker" style="margin:0">היי</div>
+                      <h2 style="font-family:var(--serif); font-size:20px">שירה כהן</h2>
+                    </div>
+                    <div class="availability-toggle off" style="padding:5px 10px"><span class="dot"></span><span class="lbl text-xs">לא זמין</span><span class="switch" style="width:36px; height:20px"></span></div>
+                  </div>
+
+                  <div class="empty" style="padding:48px 16px; background:#fff; border:1px solid var(--hairline); border-radius:var(--r-lg)">
+                    <div class="ico"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/></svg></div>
+                    <h3>אין כעת קריאות פעילות</h3>
+                    <p>ברגע שמשתמש יפעיל SOS ותהיה מוגדר כזמין, הקריאה תופיע כאן.</p>
+                    <button class="cta" style="margin-top:18px">הפעל זמינות</button>
+                  </div>
+
+                  <div class="callout info">
+                    <div class="ico"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="9"/><path d="M12 8v5m0 3h.01"/></svg></div>
+                    <div>השאר את הזמינות פעילה כדי להופיע ראשון בתיעדוף.</div>
+                  </div>
+                </div>
+              </div>
+              <nav class="tabbar">
+                <button class="active"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l9-7 9 7M5 10v10h14V10"/></svg>בית<span class="pip"></span></button>
+                <button><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z"/></svg>תיקים<span class="pip"></span></button>
+                <button><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a8 8 0 0 1-11 7l-5 1 1-5A8 8 0 1 1 21 12z"/></svg>צ'אט<span class="pip"></span></button>
+                <button><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>פרופיל<span class="pip"></span></button>
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="notes">
+      <h3>הערות עיצוב · Lawyer</h3>
+      <ul>
+        <li><b>Sidebar</b> — קבוע 240px בדסקטופ. הקבוצות (תיקים / משרד) מפרידות חזותית.</li>
+        <li><b>Toggle זמינות</b> — בולט. תופס מקום, מחליף צבע (ירוק/אפור), נראה מ-2 מטר.</li>
+        <li><b>4 stat-cards</b> — מספרים ענקיים בסריפי. דקה אבל אינפורמטיבית.</li>
+        <li><b>Case-card</b> — שני "טמפרטורות": LIVE אדום (פעיל בזמן אמת), ממתין כתום (יותר מ-2 דק'). pulse animation על האייקון.</li>
+        <li><b>Lawyer Settings</b> — 4 כרטיסים בגריד 2×2: התמחות, שעות זמינות, שפות, התראות. כל אחד עומד בנפרד.</li>
+        <li><b>Empty state</b> — מציג כשהזמינות כבויה. CTA מיד להפעלה.</li>
+        <li><b>Mobile</b> — sidebar מתחבא ב-hamburger, סטטים 2×2, case cards מצומצמים.</li>
+      </ul>
+    </div>
+  </div>
+</body>
+</html>

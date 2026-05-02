@@ -17,8 +17,8 @@ import 'app_navigator.dart';
 import 'config/app_config.dart';
 import 'core/accessibility/accessibility_settings.dart';
 import 'core/i18n/app_language.dart';
-import 'core/theme/veto_theme.dart';
-import 'core/theme/veto_glass_system.dart';
+import 'core/theme/veto_theme_2026.dart';
+import 'core/theme/veto_tokens_2026.dart';
 import 'screens/login_screen.dart';
 import 'screens/landing_screen.dart';
 import 'screens/lawyer_dashboard.dart';
@@ -86,13 +86,7 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   _installGlobalErrorLogging();
 
-  // Mobile web can freeze under heavy glassmorphism (BackdropFilter blur) on some browsers.
-  // Reduce blur by default on mobile user agents; users still get the same UI structure.
   if (kIsWeb) {
-    // 0 = disable BackdropFilter-heavy effects; this is the most reliable fix for
-    // iOS Safari / low-end Android Chrome freezes on large blurred surfaces.
-    VetoGlassTokens.blurSigma = 0;
-
     // #region agent log (frame timings)
     // Runtime evidence for "silent freeze": logs slow frames to console (no PII).
     // This lets us tell if freezes are build-bound vs raster-bound.
@@ -103,7 +97,8 @@ Future<void> main() async {
         final totalMs = buildMs + rasterMs;
         if (totalMs >= 40) {
           // ignore: avoid_print
-          print('[VETO][perf] slow_frame build=${buildMs}ms raster=${rasterMs}ms total=${totalMs}ms');
+          print(
+              '[VETO][perf] slow_frame build=${buildMs}ms raster=${rasterMs}ms total=${totalMs}ms');
         }
       }
     });
@@ -113,30 +108,31 @@ Future<void> main() async {
   // Global Error Boundary to prevent Red Screen of Death
   ErrorWidget.builder = (FlutterErrorDetails details) {
     return Material(
-      color: VetoGlassTokens.bgBase,
+      color: VetoTokens.paper,
       child: Container(
-        color: VetoGlassTokens.bgBase,
+        color: VetoTokens.paper,
         padding: const EdgeInsets.all(24),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.warning_amber_rounded, color: Color(0xFFF87171), size: 64),
+            const Icon(Icons.warning_amber_rounded,
+                color: VetoTokens.emerg, size: 64),
             const SizedBox(height: 24),
-            const Text(
+            Text(
               'משהו השתבש',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: VetoGlassTokens.textPrimary),
+              style: VetoTokens.headlineMd.copyWith(color: VetoTokens.ink900),
             ),
             const SizedBox(height: 12),
-            const Text(
+            Text(
               'אנחנו עובדים על זה. נסה לרענן את העמוד.',
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 15, color: VetoGlassTokens.textMuted),
+              style: VetoTokens.bodyMd.copyWith(color: VetoTokens.ink500),
             ),
             const SizedBox(height: 24),
             Text(
               details.exceptionAsString(),
               textAlign: TextAlign.center,
-              style: const TextStyle(color: VetoGlassTokens.textSubtle, fontSize: 11),
+              style: VetoTokens.bodyXs.copyWith(color: VetoTokens.ink300),
               maxLines: kIsWeb ? 14 : 5,
               overflow: TextOverflow.ellipsis,
             ),
@@ -239,7 +235,10 @@ class VetoApp extends StatelessWidget {
   Widget build(BuildContext context) {
     final language = provider.Provider.of<AppLanguageController>(context);
     final a11y = provider.Provider.of<AccessibilitySettings>(context);
-    final baseTheme = VetoTheme.glassDark();
+    // 2026 redesign — luxury light theme (replaces glassDark).
+    // Legacy VetoTheme.glassDark() / luxuryLight() remain available during
+    // gradual screen-by-screen migration.
+    final baseTheme = VetoTheme2026.luxuryLight();
 
     return MaterialApp(
       navigatorKey: vetoRootNavigatorKey,

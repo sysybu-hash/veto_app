@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
+import '../core/theme/veto_tokens_2026.dart';
 import 'package:flutter/services.dart';
-
-import '../core/theme/veto_glass_system.dart';
 
 /// Keys must match backend `SPEC_MAP` in `dispatch.socket.js` (Hebrew).
 const kDispatchSpecializationsHe = <String>[
@@ -68,11 +67,12 @@ Future<String?> showDispatchSpecialtySheet(
       child: Container(
         padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
         decoration: BoxDecoration(
-          color: VetoGlassTokens.sheetPanel,
+          color: VetoTokens.surface,
           borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: VetoGlassTokens.glassBorder),
+          border: Border.all(color: VetoTokens.hairline),
           boxShadow: [
-            BoxShadow(color: Colors.black.withValues(alpha: 0.45), blurRadius: 24),
+            BoxShadow(
+                color: Colors.black.withValues(alpha: 0.45), blurRadius: 24),
           ],
         ),
         child: Column(
@@ -82,7 +82,7 @@ Future<String?> showDispatchSpecialtySheet(
               width: 36,
               height: 4,
               decoration: BoxDecoration(
-                color: VetoGlassTokens.glassBorder,
+                color: VetoTokens.hairline,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -94,7 +94,7 @@ Future<String?> showDispatchSpecialtySheet(
                       ? 'Выберите область права'
                       : 'Choose legal practice area',
               style: const TextStyle(
-                color: VetoGlassTokens.textPrimary,
+                color: VetoTokens.ink900,
                 fontSize: 18,
                 fontWeight: FontWeight.w800,
               ),
@@ -106,7 +106,7 @@ Future<String?> showDispatchSpecialtySheet(
                   : langKey == 'ru'
                       ? 'Мы найдём доступного адвоката'
                       : 'We will find an available lawyer in this field',
-              style: const TextStyle(color: VetoGlassTokens.textMuted, fontSize: 13),
+              style: const TextStyle(color: VetoTokens.ink500, fontSize: 13),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 18),
@@ -136,12 +136,13 @@ Future<String?> showDispatchSpecialtySheet(
                       Navigator.pop(ctx, he);
                     },
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 10),
                       decoration: BoxDecoration(
-                        color: VetoGlassTokens.glassFillStrong,
+                        color: VetoTokens.surface,
                         borderRadius: BorderRadius.circular(14),
                         border: Border.all(
-                          color: VetoGlassTokens.neonCyan.withValues(alpha: 0.35),
+                          color: VetoTokens.navy600.withValues(alpha: 0.35),
                         ),
                       ),
                       child: Center(
@@ -149,7 +150,7 @@ Future<String?> showDispatchSpecialtySheet(
                           label,
                           textAlign: TextAlign.center,
                           style: const TextStyle(
-                            color: VetoGlassTokens.textPrimary,
+                            color: VetoTokens.ink900,
                             fontWeight: FontWeight.w700,
                             fontSize: 14,
                             height: 1.2,
@@ -165,8 +166,12 @@ Future<String?> showDispatchSpecialtySheet(
             TextButton(
               onPressed: () => Navigator.pop(ctx, null),
               child: Text(
-                langKey == 'he' ? 'ביטול' : langKey == 'ru' ? 'Отмена' : 'Cancel',
-                style: const TextStyle(color: VetoGlassTokens.textMuted),
+                langKey == 'he'
+                    ? 'ביטול'
+                    : langKey == 'ru'
+                        ? 'Отмена'
+                        : 'Cancel',
+                style: const TextStyle(color: VetoTokens.ink500),
               ),
             ),
           ],
@@ -182,7 +187,11 @@ Future<String?> showCitizenSessionModeSheet(
   String? lawyerName,
 }) {
   final name = lawyerName ??
-      (langKey == 'he' ? 'עורך דין' : langKey == 'ru' ? 'Адвокат' : 'Lawyer');
+      (langKey == 'he'
+          ? 'עורך דין'
+          : langKey == 'ru'
+              ? 'Адвокат'
+              : 'Lawyer');
   return showModalBottomSheet<String>(
     context: context,
     backgroundColor: Colors.transparent,
@@ -196,11 +205,12 @@ Future<String?> showCitizenSessionModeSheet(
       child: Container(
         padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
         decoration: BoxDecoration(
-          color: VetoGlassTokens.sheetPanel,
+          color: VetoTokens.surface,
           borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: VetoGlassTokens.glassBorder),
+          border: Border.all(color: VetoTokens.hairline),
           boxShadow: [
-            BoxShadow(color: Colors.black.withValues(alpha: 0.45), blurRadius: 24),
+            BoxShadow(
+                color: Colors.black.withValues(alpha: 0.45), blurRadius: 24),
           ],
         ),
         child: Column(
@@ -210,7 +220,7 @@ Future<String?> showCitizenSessionModeSheet(
               width: 36,
               height: 4,
               decoration: BoxDecoration(
-                color: VetoGlassTokens.glassBorder,
+                color: VetoTokens.hairline,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -222,7 +232,7 @@ Future<String?> showCitizenSessionModeSheet(
                       ? '$name принял запрос'
                       : '$name accepted your request',
               style: const TextStyle(
-                color: VetoGlassTokens.textPrimary,
+                color: VetoTokens.ink900,
                 fontSize: 17,
                 fontWeight: FontWeight.w800,
               ),
@@ -235,7 +245,7 @@ Future<String?> showCitizenSessionModeSheet(
                   : langKey == 'ru'
                       ? 'Как связаться?'
                       : 'How would you like to connect?',
-              style: const TextStyle(color: VetoGlassTokens.textMuted, fontSize: 13),
+              style: const TextStyle(color: VetoTokens.ink500, fontSize: 13),
             ),
             const SizedBox(height: 18),
             Row(
@@ -249,7 +259,7 @@ Future<String?> showCitizenSessionModeSheet(
                         : langKey == 'ru'
                             ? 'Аудио'
                             : 'Audio',
-                    VetoGlassTokens.neonCyan,
+                    VetoTokens.navy600,
                     'audio',
                   ),
                 ),
@@ -287,8 +297,12 @@ Future<String?> showCitizenSessionModeSheet(
             TextButton(
               onPressed: () => Navigator.pop(ctx, null),
               child: Text(
-                langKey == 'he' ? 'ביטול' : langKey == 'ru' ? 'Отмена' : 'Cancel',
-                style: const TextStyle(color: VetoGlassTokens.textMuted),
+                langKey == 'he'
+                    ? 'ביטול'
+                    : langKey == 'ru'
+                        ? 'Отмена'
+                        : 'Cancel',
+                style: const TextStyle(color: VetoTokens.ink500),
               ),
             ),
           ],
@@ -325,7 +339,7 @@ Widget _sessionModeTile(
           Text(
             label,
             style: const TextStyle(
-              color: VetoGlassTokens.textPrimary,
+              color: VetoTokens.ink900,
               fontWeight: FontWeight.w700,
               fontSize: 13,
             ),

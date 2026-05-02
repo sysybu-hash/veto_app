@@ -1,23 +1,21 @@
 // ============================================================
-//  AdminSettingsScreen.dart — Full Admin Dashboard
-//  VETO Legal Emergency App
+//  AdminSettingsScreen — VETO 2026
+//  Tokens-aligned admin home: quick stats, system status, action tiles.
+//  Behaviour preserved: AdminService.getAdminSettings + counts + fixed-OTP toggle.
 // ============================================================
-
 import 'package:flutter/material.dart';
-
 import 'package:provider/provider.dart';
 
 import '../core/i18n/app_language.dart';
-import '../core/theme/veto_glass_system.dart';
-import '../core/theme/veto_theme.dart';
+import '../core/theme/veto_tokens_2026.dart';
 import '../services/admin_service.dart';
 import '../services/auth_service.dart';
 import '../widgets/app_language_menu.dart';
-import 'admin/all_users_screen.dart';
+import 'admin/admin_i18n.dart';
 import 'admin/all_lawyers_screen.dart';
+import 'admin/all_users_screen.dart';
 import 'admin/emergency_logs_screen.dart';
 import 'admin/pending_lawyers_screen.dart';
-import 'admin/admin_i18n.dart';
 
 class AdminSettingsScreen extends StatefulWidget {
   const AdminSettingsScreen({super.key});
@@ -98,204 +96,159 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       content: Text(msg),
-      backgroundColor: error ? VetoPalette.emergency : VetoPalette.success,
+      backgroundColor: error ? VetoTokens.emerg : VetoTokens.ok,
     ));
   }
 
   @override
   Widget build(BuildContext context) {
     final code = context.watch<AppLanguageController>().code;
-
+    String t(String k) => _t(code, k);
     return Directionality(
       textDirection: AppLanguage.directionOf(code),
       child: Scaffold(
-        backgroundColor: VetoGlassTokens.bgBase,
+        backgroundColor: VetoTokens.paper,
         appBar: AppBar(
-          backgroundColor: const Color(0x18FFFFFF),
-          elevation: 0,
-          shadowColor: Colors.transparent,
-          surfaceTintColor: Colors.transparent,
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new_rounded, color: VetoGlassTokens.textPrimary, size: 20),
+            icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18),
             onPressed: () => Navigator.of(context).pop(),
           ),
-          title: Text(_t(code, 'adminPanel'),
-              style: const TextStyle(color: VetoGlassTokens.textPrimary, fontWeight: FontWeight.w800, fontSize: 18)),
-          centerTitle: true,
+          title: Text(t('adminPanel'), style: VetoTokens.titleLg),
           actions: [
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 8),
-              child: Center(child: AppLanguageMenu(compact: true)),
-            ),
+            const Padding(padding: EdgeInsets.symmetric(horizontal: 8), child: Center(child: AppLanguageMenu(compact: true))),
             if (_loading)
               const Padding(
                 padding: EdgeInsets.all(14),
-                child: SizedBox(
-                  width: 18, height: 18,
-                  child: CircularProgressIndicator(strokeWidth: 2, color: VetoGlassTokens.neonCyan),
-                ),
+                child: SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: VetoTokens.navy600)),
               ),
             IconButton(
-              icon: const Icon(Icons.apps_rounded, color: VetoGlassTokens.textPrimary),
-              tooltip: _t(code, 'openApp'),
+              icon: const Icon(Icons.apps_rounded, size: 18),
+              tooltip: t('openApp'),
               onPressed: () => Navigator.of(context).pushNamed('/veto_screen'),
             ),
             IconButton(
-              icon: const Icon(Icons.refresh_rounded, color: VetoGlassTokens.textPrimary),
-              tooltip: _t(code, 'refresh'),
+              icon: const Icon(Icons.refresh_rounded, size: 18),
+              tooltip: t('refresh'),
               onPressed: _loadAll,
             ),
             IconButton(
-              icon: const Icon(Icons.logout, color: Color(0xFFFF3B3B)),
-              tooltip: _t(code, 'logout'),
+              icon: const Icon(Icons.logout_rounded, size: 18, color: VetoTokens.emerg),
+              tooltip: t('logout'),
               onPressed: () => AuthService().logout(context),
             ),
           ],
-          bottom: const PreferredSize(preferredSize: Size.fromHeight(1), child: Divider(height: 1, color: VetoGlassTokens.glassBorder)),
         ),
-        body: VetoGlassAuroraBackground(
-          child: RefreshIndicator(
+        body: RefreshIndicator(
           onRefresh: _loadAll,
-          color: VetoGlassTokens.neonCyan,
+          color: VetoTokens.navy600,
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.all(20),
             child: Center(
               child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 720),
+                constraints: const BoxConstraints(maxWidth: 760),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    _sectionHeader(_t(code, 'quickStats')),
+                    _section(t('quickStats')),
                     Row(children: [
-                      Expanded(
-                        child: _statCard(_t(code, 'users'), '$_totalUsers',
-                            Icons.group_outlined, VetoPalette.primary),
-                      ),
+                      Expanded(child: _StatCard(label: t('users'), value: '$_totalUsers', icon: Icons.group_outlined, accent: VetoTokens.navy600)),
                       const SizedBox(width: 10),
-                      Expanded(
-                        child: _statCard(_t(code, 'lawyers'), '$_totalLawyers',
-                            Icons.gavel_rounded, VetoPalette.success),
-                      ),
+                      Expanded(child: _StatCard(label: t('lawyers'), value: '$_totalLawyers', icon: Icons.gavel_rounded, accent: VetoTokens.ok)),
                       const SizedBox(width: 10),
-                      Expanded(
-                        child: _statCard(
-                          _t(code, 'pending'),
-                          '$_pendingLawyersCount',
-                          Icons.pending_actions_rounded,
-                          _pendingLawyersCount > 0
-                              ? VetoPalette.emergency
-                              : VetoPalette.textMuted,
-                        ),
-                      ),
+                      Expanded(child: _StatCard(
+                        label: t('pending'), value: '$_pendingLawyersCount',
+                        icon: Icons.pending_actions_rounded,
+                        accent: _pendingLawyersCount > 0 ? VetoTokens.emerg : VetoTokens.ink300,
+                      )),
                     ]),
-                    const SizedBox(height: 32),
+                    const SizedBox(height: 28),
+
                     if (_pendingLawyersCount > 0) ...[
-                      _sectionHeader(_t(code, 'pendingApprovals')),
-                      _actionCard(
-                        '${_t(code, 'pendingApprovalsAction')} ($_pendingLawyersCount ${_t(code, 'pending')})',
-                        Icons.how_to_reg_rounded,
-                        color: VetoPalette.emergency,
+                      _section(t('pendingApprovals')),
+                      _ActionTile(
+                        icon: Icons.how_to_reg_rounded,
+                        accent: VetoTokens.emerg,
+                        title: '${t('pendingApprovalsAction')} ($_pendingLawyersCount ${t('pending')})',
                         badge: _pendingLawyersCount,
                         onTap: () async {
-                          await Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (_) => const PendingLawyersScreen()),
-                          );
+                          await Navigator.push(context, MaterialPageRoute(builder: (_) => const PendingLawyersScreen()));
                           _loadAll();
                         },
                       ),
-                      const SizedBox(height: 32),
+                      const SizedBox(height: 28),
                     ],
-                    _sectionHeader(_t(code, 'systemOverview')),
-                    _infoCard(
-                        _t(code, 'serverStatus'),
-                        _serverStatus.isEmpty ? _t(code, 'loading') : _serverStatus,
-                        statusColor: _serverStatus == 'Online'
-                            ? VetoPalette.success
-                            : VetoPalette.emergency),
-                    _infoCard(
-                        _t(code, 'database'),
-                        _mongoDbStatus.isEmpty ? _t(code, 'loading') : _mongoDbStatus,
-                        statusColor: _mongoDbStatus == 'Connected'
-                            ? VetoPalette.success
-                            : VetoPalette.emergency),
-                    _infoCard(
-                      _t(code, 'appVersion'),
-                      _appVersion.isEmpty ? _t(code, 'unknown') : _appVersion,
+
+                    _section(t('systemOverview')),
+                    _InfoTile(
+                      label: t('serverStatus'),
+                      value: _serverStatus.isEmpty ? t('loading') : _serverStatus,
+                      statusColor: _serverStatus == 'Online' ? VetoTokens.ok : VetoTokens.emerg,
                     ),
-                    const SizedBox(height: 32),
-                    _sectionHeader(
-                      code == 'he' ? 'כלי ניהול' : code == 'ru' ? 'Инструменты' : 'Admin Tools'
+                    _InfoTile(
+                      label: t('database'),
+                      value: _mongoDbStatus.isEmpty ? t('loading') : _mongoDbStatus,
+                      statusColor: _mongoDbStatus == 'Connected' ? VetoTokens.ok : VetoTokens.emerg,
                     ),
-                    _actionCard(
-                      _t(code, 'citizenApp'),
-                      Icons.shield_outlined,
-                      color: VetoPalette.success,
-                      onTap: () =>
-                          Navigator.of(context).pushNamed('/veto_screen'),
+                    _InfoTile(
+                      label: t('appVersion'),
+                      value: _appVersion.isEmpty ? t('unknown') : _appVersion,
                     ),
-                    _actionCard(
-                      code == 'he' ? 'לוח בקרה ראשי' : code == 'ru' ? 'Главная панель' : 'Admin Dashboard',
-                      Icons.dashboard_rounded,
-                      color: VetoPalette.primary,
+                    const SizedBox(height: 28),
+
+                    _section(code == 'he' ? 'כלי ניהול' : code == 'ru' ? 'Инструменты' : 'Admin Tools'),
+                    _ActionTile(
+                      icon: Icons.shield_outlined, accent: VetoTokens.ok,
+                      title: t('citizenApp'),
+                      onTap: () => Navigator.of(context).pushNamed('/veto_screen'),
+                    ),
+                    _ActionTile(
+                      icon: Icons.dashboard_rounded, accent: VetoTokens.navy600,
+                      title: code == 'he' ? 'לוח בקרה ראשי' : code == 'ru' ? 'Главная панель' : 'Admin Dashboard',
                       onTap: () => Navigator.pushNamed(context, '/admin_dashboard'),
                     ),
-                    _actionCard(
-                      code == 'he' ? 'ניהול מנויים' : code == 'ru' ? 'Подписки' : 'Subscription Management',
-                      Icons.subscriptions_rounded,
-                      color: VetoPalette.accentSky,
+                    _ActionTile(
+                      icon: Icons.subscriptions_rounded, accent: VetoTokens.navy500,
+                      title: code == 'he' ? 'ניהול מנויים' : code == 'ru' ? 'Подписки' : 'Subscription Management',
                       onTap: () => Navigator.pushNamed(context, '/admin_subscriptions'),
                     ),
-                    _actionCard(
-                      code == 'he' ? 'הגדרות מערכת' : code == 'ru' ? 'Настройки системы' : 'System Settings',
-                      Icons.settings_rounded,
-                      color: VetoPalette.textMuted,
+                    _ActionTile(
+                      icon: Icons.settings_rounded, accent: VetoTokens.ink500,
+                      title: code == 'he' ? 'הגדרות מערכת' : code == 'ru' ? 'Настройки системы' : 'System Settings',
                       onTap: () => Navigator.pushNamed(context, '/settings'),
                     ),
-                    const SizedBox(height: 32),
-                    _sectionHeader(_t(code, 'userManagement')),
-                    _actionCard(
-                      '${_t(code, 'allUsers')} ($_totalUsers)',
-                      Icons.group_outlined,
+                    const SizedBox(height: 28),
+
+                    _section(t('userManagement')),
+                    _ActionTile(
+                      icon: Icons.group_outlined, accent: VetoTokens.navy600,
+                      title: '${t('allUsers')} ($_totalUsers)',
                       onTap: () async {
-                        await Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (_) => const AllUsersScreen()),
-                        );
+                        await Navigator.push(context, MaterialPageRoute(builder: (_) => const AllUsersScreen()));
                         _loadAll();
                       },
                     ),
-                    _actionCard(
-                      '${_t(code, 'allLawyers')} ($_totalLawyers)',
-                      Icons.gavel_rounded,
+                    _ActionTile(
+                      icon: Icons.gavel_rounded, accent: VetoTokens.navy600,
+                      title: '${t('allLawyers')} ($_totalLawyers)',
                       onTap: () async {
-                        await Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (_) => const AllLawyersScreen()),
-                        );
+                        await Navigator.push(context, MaterialPageRoute(builder: (_) => const AllLawyersScreen()));
                         _loadAll();
                       },
                     ),
-                    _actionCard(
-                      _t(code, 'emergencyLogs'),
-                      Icons.history_rounded,
-                      onTap: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (_) => const EmergencyLogsScreen()),
-                      ),
+                    _ActionTile(
+                      icon: Icons.history_rounded, accent: VetoTokens.navy600,
+                      title: t('emergencyLogs'),
+                      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const EmergencyLogsScreen())),
                     ),
-                    const SizedBox(height: 32),
-                    _sectionHeader(_t(code, 'systemSettings')),
-                    _switchCard(
-                      _t(code, 'fixedOtp'),
-                      _enableFixedOtp,
-                      _t(code, 'fixedOtpHint'),
-                      _toggleFixedOtp,
+                    const SizedBox(height: 28),
+
+                    _section(t('systemSettings')),
+                    _SwitchTile(
+                      title: t('fixedOtp'),
+                      subtitle: t('fixedOtpHint'),
+                      value: _enableFixedOtp,
+                      onChange: _toggleFixedOtp,
                     ),
                     const SizedBox(height: 48),
                   ],
@@ -304,144 +257,161 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
             ),
           ),
         ),
-        ),
       ),
     );
   }
 
-  Widget _sectionHeader(String title) => Padding(
-    padding: const EdgeInsets.only(bottom: 12),
-    child: Row(children: [
-      Container(width: 20, height: 2, decoration: BoxDecoration(
-        gradient: const LinearGradient(colors: [Color(0xFF5B8FFF), Color(0xFF00C9B1)]),
-        borderRadius: BorderRadius.circular(1),
-      )),
-      const SizedBox(width: 8),
-      Text(title.toUpperCase(), style: const TextStyle(
-          color: Color(0xFF5B8FFF), fontSize: 10, fontWeight: FontWeight.w800, letterSpacing: 2.5)),
-    ]),
-  );
-
-  Widget _statCard(String label, String value, IconData icon, Color color) =>
-      ClipRRect(
-        borderRadius: BorderRadius.circular(16),
-        child: Stack(
-          children: [
-            Container(
-              padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 12),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                border: Border.all(color: const Color(0xFFE2E8F8)),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.04),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Column(children: [
-                Icon(icon, color: color, size: 22),
-                const SizedBox(height: 8),
-                Text(value, style: TextStyle(color: color, fontSize: 26, fontWeight: FontWeight.w900)),
-                const SizedBox(height: 3),
-                Text(label, style: const TextStyle(color: Color(0xFF64748B), fontSize: 11)),
-              ]),
-            ),
-            PositionedDirectional(
-              start: 0,
-              top: 0,
-              bottom: 0,
-              child: Container(width: 3, color: color),
-            ),
-          ],
-        ),
-      );
-
-  Widget _infoCard(String label, String value, {Color? statusColor}) =>
-      Container(
-        margin: const EdgeInsets.only(bottom: 8),
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: const Color(0xFFE2E8F8)),
-          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 6, offset: const Offset(0, 2))],
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(label, style: const TextStyle(color: Color(0xFF64748B), fontSize: 13)),
-            Row(children: [
-              if (statusColor != null)
-                Container(
-                  width: 7, height: 7,
-                  margin: const EdgeInsets.only(left: 8, right: 6),
-                  decoration: BoxDecoration(shape: BoxShape.circle, color: statusColor),
-                ),
-              Text(value, style: TextStyle(
-                  color: statusColor ?? const Color(0xFF0F172A),
-                  fontSize: 13, fontWeight: FontWeight.w700)),
-            ]),
-          ],
-        ),
-      );
-
-  Widget _switchCard(String title, bool value, String subtitle, ValueChanged<bool> onChange) =>
-      Container(
-        margin: const EdgeInsets.only(bottom: 8),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: const Color(0xFFE2E8F8)),
-          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 6, offset: const Offset(0, 2))],
-        ),
+  Widget _section(String title) => Padding(
+        padding: const EdgeInsets.only(bottom: 10),
         child: Row(children: [
-          Expanded(
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(title, style: const TextStyle(color: Color(0xFF0F172A), fontSize: 14, fontWeight: FontWeight.w500)),
-              const SizedBox(height: 2),
-              Text(subtitle, style: const TextStyle(color: Color(0xFF64748B), fontSize: 12)),
-            ]),
+          Container(
+            width: 18, height: 2,
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(colors: [VetoTokens.navy600, VetoTokens.navy500]),
+              borderRadius: BorderRadius.circular(1),
+            ),
           ),
-          Switch(value: value, onChanged: onChange, activeThumbColor: const Color(0xFF5B8FFF)),
+          const SizedBox(width: 8),
+          Text(title.toUpperCase(), style: VetoTokens.kicker),
         ]),
       );
+}
 
-  Widget _actionCard(String title, IconData icon, {required VoidCallback onTap, Color? color, int? badge}) =>
-      GestureDetector(
-        onTap: onTap,
-        child: Container(
-          margin: const EdgeInsets.only(bottom: 8),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: color?.withValues(alpha: 0.3) ?? const Color(0xFFE2E8F8)),
-            boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 6, offset: const Offset(0, 2))],
-          ),
-          child: Row(children: [
-            Container(
-              width: 34, height: 34,
-              decoration: BoxDecoration(
-                color: (color ?? const Color(0xFF5B8FFF)).withValues(alpha: 0.10),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Icon(icon, color: color ?? const Color(0xFF5B8FFF), size: 16),
-            ),
-            const SizedBox(width: 12),
-            Expanded(child: Text(title, style: const TextStyle(color: Color(0xFF0F172A), fontSize: 14, fontWeight: FontWeight.w500))),
-            if (badge != null && badge > 0) ...[
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                decoration: BoxDecoration(color: const Color(0xFFFF3B3B), borderRadius: BorderRadius.circular(99)),
-                child: Text('$badge', style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
-              ),
-              const SizedBox(width: 4),
-            ],
-            Icon(Icons.arrow_forward_ios_rounded, color: color ?? const Color(0xFF94A3B8), size: 14),
+// ──────────────────────────────────────────────────────────
+//  Sub-widgets
+// ──────────────────────────────────────────────────────────
+class _StatCard extends StatelessWidget {
+  const _StatCard({required this.label, required this.value, required this.icon, required this.accent});
+  final String label, value;
+  final IconData icon;
+  final Color accent;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 12),
+      decoration: VetoTokens.cardDecoration(),
+      child: Stack(
+        children: [
+          Column(children: [
+            Icon(icon, color: accent, size: 22),
+            const SizedBox(height: 8),
+            Text(value, style: VetoTokens.serif(26, FontWeight.w900, color: accent, height: 1.0)),
+            const SizedBox(height: 4),
+            Text(label, style: VetoTokens.bodyXs.copyWith(color: VetoTokens.ink500)),
           ]),
+          PositionedDirectional(start: -12, top: -18, bottom: -18, child: Container(width: 3, color: accent)),
+        ],
+      ),
+    );
+  }
+}
+
+class _InfoTile extends StatelessWidget {
+  const _InfoTile({required this.label, required this.value, this.statusColor});
+  final String label, value;
+  final Color? statusColor;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      decoration: VetoTokens.cardDecoration(radius: VetoTokens.rMd),
+      child: Row(
+        mainAxisAlignment: MainAxisOptions.spaceBetweenSafe(),
+        children: [
+          Text(label, style: VetoTokens.bodySm.copyWith(color: VetoTokens.ink500)),
+          Row(children: [
+            if (statusColor != null)
+              Container(
+                width: 7, height: 7,
+                margin: const EdgeInsetsDirectional.only(start: 8, end: 6),
+                decoration: BoxDecoration(shape: BoxShape.circle, color: statusColor),
+              ),
+            Text(value, style: VetoTokens.titleSm.copyWith(color: statusColor ?? VetoTokens.ink900)),
+          ]),
+        ],
+      ),
+    );
+  }
+}
+
+class _SwitchTile extends StatelessWidget {
+  const _SwitchTile({required this.title, required this.subtitle, required this.value, required this.onChange});
+  final String title, subtitle;
+  final bool value;
+  final ValueChanged<bool> onChange;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: VetoTokens.cardDecoration(radius: VetoTokens.rMd),
+      child: Row(children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(title, style: VetoTokens.titleSm.copyWith(color: VetoTokens.ink900)),
+              const SizedBox(height: 2),
+              Text(subtitle, style: VetoTokens.bodyXs.copyWith(color: VetoTokens.ink500)),
+            ],
+          ),
         ),
-      );
+        Switch.adaptive(value: value, onChanged: onChange, activeThumbColor: Colors.white, activeTrackColor: VetoTokens.ok),
+      ]),
+    );
+  }
+}
+
+class _ActionTile extends StatelessWidget {
+  const _ActionTile({required this.title, required this.icon, required this.onTap, this.accent, this.badge});
+  final String title;
+  final IconData icon;
+  final VoidCallback onTap;
+  final Color? accent;
+  final int? badge;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = accent ?? VetoTokens.navy600;
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(VetoTokens.rMd),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+        decoration: VetoTokens.cardDecoration(radius: VetoTokens.rMd),
+        child: Row(children: [
+          Container(
+            width: 34, height: 34,
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.10),
+              borderRadius: BorderRadius.circular(VetoTokens.rSm),
+            ),
+            alignment: Alignment.center,
+            child: Icon(icon, color: color, size: 16),
+          ),
+          const SizedBox(width: 12),
+          Expanded(child: Text(title, style: VetoTokens.titleSm.copyWith(color: VetoTokens.ink900))),
+          if (badge != null && badge! > 0) ...[
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+              decoration: BoxDecoration(color: VetoTokens.emerg, borderRadius: BorderRadius.circular(99)),
+              child: Text('$badge', style: VetoTokens.sans(11, FontWeight.w800, color: Colors.white)),
+            ),
+            const SizedBox(width: 6),
+          ],
+          Icon(Icons.chevron_left_rounded, size: 18, color: color),
+        ]),
+      ),
+    );
+  }
+}
+
+// Helper to keep MainAxisAlignment imports tidy in tight files
+class MainAxisOptions {
+  static MainAxisAlignment spaceBetweenSafe() => MainAxisAlignment.spaceBetween;
 }

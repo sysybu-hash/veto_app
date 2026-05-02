@@ -1,0 +1,981 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>VETO · מסך אזרח · 2026 Direction</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@500;700;900&family=Heebo:wght@300;400;500;600;700;800;900&family=Assistant:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  /* ========================================================
+     VETO · 2026 Direction · Citizen page (rev 2)
+     Removed: lawyers nearby strip, security bar
+     Expanded: scenarios (with active-detail panel), rights (rich items)
+     ======================================================== */
+  :root{
+    --navy-900:#0E1F37; --navy-800:#13284A; --navy-700:#1B3A66;
+    --navy-600:#264975; --navy-500:#2E69E7; --navy-400:#5B8BF0;
+    --navy-300:#83B7F8; --navy-100:#D4F1F7;
+    --gold:#B8895C; --gold-soft:#E9D9C2;
+    --paper:#F6F8FB; --paper-2:#EEF2F8; --surface:#FFFFFF;
+    --hairline:#E2E8F0; --hairline-2:#CBD5E1;
+    --ink-900:#0B1830; --ink-700:#27374D; --ink-500:#4A5A75;
+    --ink-300:#7A8AA5; --ink-200:#A6B3C8;
+    --emerg:#D6243A; --emerg-2:#B81B30; --emerg-soft:#FBE7EA;
+    --ok:#2BA374; --warn:#C58B12;
+    --shadow-1:0 1px 2px rgba(11,24,48,.04), 0 8px 24px rgba(11,24,48,.06);
+    --shadow-2:0 2px 4px rgba(11,24,48,.05), 0 18px 48px rgba(11,24,48,.10);
+    --shadow-emerg:0 12px 40px rgba(214,36,58,.28);
+    --r-sm:8px; --r-md:12px; --r-lg:16px; --r-xl:22px; --r-2xl:28px;
+    --serif:'Frank Ruhl Libre', 'Times New Roman', Georgia, serif;
+    --sans:'Heebo','Assistant', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  }
+
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:var(--sans);
+    color:var(--ink-900);
+    background:
+      radial-gradient(1200px 800px at 90% -10%, #E8F0FB 0%, transparent 60%),
+      radial-gradient(900px 600px at -10% 110%, #F0E9DE 0%, transparent 55%),
+      var(--paper);
+    -webkit-font-smoothing:antialiased;
+    text-rendering:optimizeLegibility;
+  }
+  h1,h2,h3,h4{font-family:var(--serif); font-weight:700; letter-spacing:-.01em; margin:0}
+
+  /* ─── Page chrome ─── */
+  .page{ max-width:1480px; margin:0 auto; padding:48px 32px 96px; }
+  .page-header{ display:flex; align-items:baseline; gap:16px; margin-bottom:8px; flex-wrap:wrap }
+  .page-header h1{ font-size:34px; color:var(--ink-900); }
+  .page-header .tag{
+    font-family:var(--sans); font-size:12px; letter-spacing:.18em;
+    color:var(--navy-600); font-weight:700; text-transform:uppercase;
+    background:#fff; padding:6px 12px; border-radius:999px; border:1px solid var(--hairline);
+  }
+  .page-sub{ color:var(--ink-500); font-size:15px; max-width:780px; margin:6px 0 28px; line-height:1.6; }
+  .swatches{
+    display:flex; gap:12px; flex-wrap:wrap; margin:0 0 32px; padding:18px;
+    background:#fff; border-radius:var(--r-lg); border:1px solid var(--hairline);
+    box-shadow:var(--shadow-1);
+  }
+  .sw{display:flex; align-items:center; gap:10px; font-size:12px; color:var(--ink-700)}
+  .sw i{ width:32px; height:32px; border-radius:8px; display:inline-block; border:1px solid rgba(11,24,48,.08); }
+
+  /* ─── Device layout ─── */
+  .stage{
+    display:grid; gap:40px;
+    grid-template-columns: minmax(380px, 0.42fr) minmax(620px, 1fr);
+    align-items:start;
+  }
+  @media (max-width:1100px){ .stage{ grid-template-columns: 1fr; } }
+  .device-label{
+    font-size:11px; letter-spacing:.22em; text-transform:uppercase;
+    color:var(--ink-300); font-weight:700; margin-bottom:10px; padding-right:6px;
+  }
+
+  /* PHONE */
+  .phone{
+    width:100%; max-width:412px;
+    aspect-ratio: 412 / 980;
+    background:#0B1830; border-radius:46px; padding:14px;
+    box-shadow: 0 30px 80px rgba(11,24,48,.18), 0 8px 24px rgba(11,24,48,.10);
+    position:relative;
+  }
+  .phone::after{
+    content:""; position:absolute; top:18px; left:50%; transform:translateX(-50%);
+    width:120px; height:24px; border-radius:14px; background:#0B1830;
+    box-shadow: inset 0 0 0 2px #1A2C49;
+  }
+  .phone .screen{
+    width:100%; height:100%; border-radius:34px; overflow:hidden;
+    background:var(--paper); position:relative;
+    display:flex; flex-direction:column;
+  }
+
+  /* DESKTOP frame */
+  .desktop{
+    width:100%; background:#0B1830; border-radius:18px; padding:14px;
+    box-shadow: 0 30px 80px rgba(11,24,48,.18), 0 8px 24px rgba(11,24,48,.10);
+  }
+  .desktop .bar{ display:flex; gap:6px; padding:0 4px 12px }
+  .desktop .bar i{ width:11px; height:11px; border-radius:50%; background:#26385A }
+  .desktop .bar i:first-child{ background:#FF5F56 }
+  .desktop .bar i:nth-child(2){ background:#FFBD2E }
+  .desktop .bar i:nth-child(3){ background:#27C93F }
+  .desktop .canvas{
+    background:var(--paper); border-radius:10px; overflow:hidden;
+    aspect-ratio: 16 / 11;
+    display:flex; flex-direction:column;
+  }
+
+  /* ─── Topbar ─── */
+  .topbar{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:12px 18px; background:#fff;
+    border-bottom:1px solid var(--hairline);
+  }
+  .desktop .topbar{ padding:14px 28px }
+  .brand{ display:flex; align-items:center; gap:10px }
+  .brand .crest{
+    width:34px; height:34px; border-radius:9px;
+    background: linear-gradient(135deg, var(--navy-700), var(--navy-500));
+    display:grid; place-items:center; color:#fff; font-family:var(--serif); font-weight:900; font-size:15px;
+    box-shadow: 0 6px 14px rgba(38,73,117,.35), inset 0 0 0 1px rgba(255,255,255,.12);
+    letter-spacing:.04em;
+  }
+  .brand .name{ font-family:var(--serif); font-weight:900; font-size:18px; color:var(--ink-900); letter-spacing:.02em }
+  .brand .name em{ font-style:normal; color:var(--navy-600); margin-inline-start:6px; font-weight:500; font-family:var(--sans); font-size:12px; letter-spacing:.16em; text-transform:uppercase }
+  .nav{ display:flex; align-items:center; gap:6px }
+  .nav a{
+    color:var(--ink-700); text-decoration:none; font-size:14px; font-weight:600;
+    padding:8px 12px; border-radius:8px;
+  }
+  .nav a:hover{ background:var(--paper-2); color:var(--ink-900) }
+  .nav a.active{ color:var(--navy-600) }
+  .nav a.active::after{
+    content:""; display:block; height:2px; background:var(--navy-500);
+    margin-top:4px; border-radius:2px;
+  }
+  .iconbtn{
+    width:38px; height:38px; border-radius:10px; border:1px solid var(--hairline);
+    background:#fff; color:var(--ink-700); display:grid; place-items:center;
+    cursor:pointer;
+  }
+  .iconbtn:hover{ border-color:var(--navy-300); color:var(--navy-600) }
+  .lang-pill{
+    display:inline-flex; align-items:center; gap:6px;
+    height:38px; padding:0 12px; border:1px solid var(--hairline);
+    background:#fff; border-radius:999px; font-weight:700; color:var(--ink-700);
+    font-size:13px; cursor:pointer;
+  }
+  .lang-pill .flag{ width:18px; height:13px; border-radius:2px; background:linear-gradient(180deg,#fff 33%,var(--navy-300) 33% 66%,#fff 66%); border:1px solid #ddd }
+  .cta{
+    height:38px; padding:0 16px; border-radius:10px; border:0;
+    background:var(--navy-600); color:#fff; font-weight:700; font-size:13px;
+    box-shadow: 0 6px 16px rgba(38,73,117,.30); cursor:pointer;
+    display:inline-flex; align-items:center; gap:8px;
+  }
+  .cta:hover{ background:var(--navy-700) }
+  .cta.ghost{ background:#fff; color:var(--navy-600); border:1px solid var(--navy-300); box-shadow:none }
+  .cta.danger{ background:var(--emerg); box-shadow:0 6px 16px rgba(214,36,58,.30) }
+
+  /* ─── PHONE topbar ─── */
+  .phone .topbar{ padding:42px 14px 12px }
+  .phone .topbar .name{ font-size:14px }
+  .phone .topbar .name em{ display:none }
+  .phone .topbar .iconbtn{ width:34px; height:34px }
+  .phone .nav-desktop{ display:none }
+
+  /* ─── Content scroll area ─── */
+  .scroll{ flex:1; overflow:hidden; position:relative }
+
+  /* ─── Status pill ─── */
+  .status{
+    display:inline-flex; align-items:center; gap:8px;
+    padding:7px 14px; background:#fff; border:1px solid var(--hairline);
+    border-radius:999px; box-shadow:var(--shadow-1);
+    font-size:12px; font-weight:700; color:var(--ink-700);
+  }
+  .status .dot{ width:7px; height:7px; border-radius:50%; background:var(--ok); box-shadow:0 0 0 3px rgba(43,163,116,.18) }
+  .status .sep{ width:1px; height:12px; background:var(--hairline-2) }
+  .status .ph{ font-family:'Heebo'; font-weight:500; color:var(--ink-300); font-size:11px; direction:ltr }
+  .status .badge-secure{ display:inline-flex; align-items:center; gap:4px; color:var(--navy-600); font-weight:700; }
+
+  /* ─── Section labels ─── */
+  .kicker{
+    font-size:11px; letter-spacing:.18em; text-transform:uppercase;
+    color:var(--navy-600); font-weight:800; margin:0 0 8px;
+  }
+  .h-section{ font-family:var(--serif); font-size:20px; font-weight:700; color:var(--ink-900); margin:0 0 4px }
+  .h-section + .sub-line{ color:var(--ink-500); font-size:13px; margin:0 0 14px; line-height:1.5 }
+
+  /* ─── SOS HERO CARD ─── */
+  .hero{
+    background:#fff; border:1px solid var(--hairline); border-radius:var(--r-2xl);
+    padding:28px 24px; box-shadow:var(--shadow-2); position:relative; overflow:hidden;
+  }
+  .hero::before{
+    content:""; position:absolute; inset:0;
+    background:
+      radial-gradient(420px 220px at 100% 0%, rgba(46,105,231,.08), transparent 60%),
+      radial-gradient(360px 240px at 0% 100%, rgba(214,36,58,.06), transparent 60%);
+    pointer-events:none;
+  }
+  .hero-grid{ display:grid; gap:24px; align-items:center; position:relative }
+  .desktop .hero-grid{ grid-template-columns: 1.05fr .95fr }
+  .hero h2{
+    font-family:var(--serif); font-size:34px; line-height:1.15; color:var(--ink-900);
+    letter-spacing:-.015em;
+  }
+  .hero h2 em{ font-style:normal; color:var(--navy-600) }
+  .hero p.lede{
+    color:var(--ink-500); font-size:15px; line-height:1.65; margin:12px 0 22px;
+    max-width:46ch;
+  }
+  .hero .row{ display:flex; align-items:center; gap:14px; flex-wrap:wrap }
+  .pill-trust{
+    display:inline-flex; align-items:center; gap:8px; font-size:12px; color:var(--ink-700);
+    background:var(--paper-2); border:1px solid var(--hairline); padding:6px 12px; border-radius:999px;
+  }
+
+  /* SOS orb */
+  .sos-stage{ position:relative; display:grid; place-items:center; padding:8px; }
+  .sos-rings{
+    width:300px; height:300px; border-radius:50%;
+    display:grid; place-items:center; position:relative;
+  }
+  .sos-rings::before, .sos-rings::after{
+    content:""; position:absolute; inset:0; border-radius:50%;
+    border:2px solid rgba(214,36,58,.10);
+    animation: pulse 3.2s ease-out infinite;
+  }
+  .sos-rings::after{ animation-delay:1.6s }
+  @keyframes pulse{
+    0%{ transform:scale(.7); opacity:0 }
+    20%{ opacity:.7 }
+    100%{ transform:scale(1.18); opacity:0 }
+  }
+  .sos-orb{
+    width:200px; height:200px; border-radius:50%;
+    background:
+      radial-gradient(120% 120% at 30% 25%, #FF8492 0%, #E5354C 38%, #B81B30 78%);
+    color:#fff; display:grid; place-items:center;
+    box-shadow:
+      var(--shadow-emerg),
+      inset 0 -10px 24px rgba(0,0,0,.18),
+      inset 0 10px 24px rgba(255,255,255,.22);
+    position:relative; cursor:pointer;
+  }
+  .sos-orb::after{
+    content:""; position:absolute; inset:6px; border-radius:50%;
+    background: radial-gradient(60% 50% at 50% 12%, rgba(255,255,255,.55), transparent 60%);
+    pointer-events:none;
+  }
+  .sos-orb .word{
+    font-family:var(--serif); font-weight:900; font-size:48px; letter-spacing:.18em;
+    text-shadow:0 2px 10px rgba(0,0,0,.25);
+  }
+  .sos-orb .sub{ font-size:11px; letter-spacing:.32em; font-weight:700; opacity:.92; margin-top:4px }
+
+  .phone .sos-rings{ width:236px; height:236px }
+  .phone .sos-orb{ width:160px; height:160px }
+  .phone .sos-orb .word{ font-size:38px }
+
+  /* ─── Scenario selector — EXPANDED ─── */
+  .scenarios{
+    display:grid; grid-template-columns: repeat(2, 1fr); gap:10px;
+  }
+  .desktop .scenarios{ grid-template-columns: repeat(3, 1fr) }
+  .scenario{
+    background:#fff; border:1px solid var(--hairline); border-radius:var(--r-md);
+    padding:14px; text-align:start; cursor:pointer; transition:.18s;
+    display:flex; flex-direction:column; gap:8px; min-height:100px;
+  }
+  .scenario:hover{ border-color:var(--navy-300); transform:translateY(-1px); box-shadow:var(--shadow-1) }
+  .scenario.active{
+    border-color:var(--navy-600); box-shadow:0 0 0 4px rgba(46,105,231,.10), var(--shadow-1);
+    background: linear-gradient(180deg, #fff, #F4F8FF);
+  }
+  .scenario .ico{
+    width:34px; height:34px; border-radius:9px;
+    background: var(--paper-2); color:var(--navy-700);
+    display:grid; place-items:center; border:1px solid var(--hairline);
+  }
+  .scenario.active .ico{ background:var(--navy-600); color:#fff; border-color:var(--navy-600) }
+  .scenario .t{ font-weight:800; font-size:13px; color:var(--ink-900) }
+  .scenario .d{ font-size:11px; color:var(--ink-500); line-height:1.4 }
+
+  /* expanded detail panel for the active scenario */
+  .scenario-detail{
+    margin-top:12px;
+    background:#fff; border:1px solid var(--hairline);
+    border-radius:var(--r-lg); overflow:hidden;
+    box-shadow:var(--shadow-1);
+  }
+  .scenario-detail .head{
+    padding:16px 18px; background: linear-gradient(180deg,#FBFCFE,#fff);
+    border-bottom:1px solid var(--hairline);
+    display:flex; align-items:center; gap:12px;
+  }
+  .scenario-detail .head .big-ico{
+    width:42px; height:42px; border-radius:11px;
+    background: linear-gradient(135deg, var(--navy-600), var(--navy-500));
+    color:#fff; display:grid; place-items:center;
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,.15);
+  }
+  .scenario-detail h4{
+    font-family:var(--serif); font-size:18px; color:var(--ink-900); font-weight:700;
+  }
+  .scenario-detail .head .sub{ font-size:12px; color:var(--ink-500); margin-top:2px }
+  .scenario-detail .body{ padding:14px 18px 4px }
+  .sd-block{
+    margin-bottom:12px;
+  }
+  .sd-block .label{
+    font-size:11px; letter-spacing:.16em; text-transform:uppercase;
+    color:var(--navy-600); font-weight:800; margin-bottom:6px;
+  }
+  .sd-block ul{ list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:8px; }
+  .sd-block ul li{
+    display:flex; gap:10px; font-size:13px; color:var(--ink-700); line-height:1.5;
+  }
+  .sd-block ul li::before{
+    content:""; flex-shrink:0; margin-top:7px;
+    width:6px; height:6px; border-radius:50%; background:var(--navy-500);
+  }
+  .sd-warn{
+    margin:6px 18px 14px; padding:12px 14px;
+    background:#FFF5F1; border:1px solid #F8D6CB; border-radius:10px;
+    display:flex; gap:10px; align-items:flex-start;
+    color:#7A2A12; font-size:12.5px; line-height:1.5;
+  }
+  .sd-warn b{ color:#5A1F0E }
+  .sd-warn .ico{
+    flex-shrink:0; width:24px; height:24px; border-radius:7px;
+    background:#F4B59C; color:#5A1F0E; display:grid; place-items:center;
+  }
+  .sd-actions{
+    display:flex; gap:8px; padding:0 18px 16px; flex-wrap:wrap;
+  }
+
+  /* ─── Rights — EXPANDED ─── */
+  .rights{
+    background:#fff; border:1px solid var(--hairline); border-radius:var(--r-lg);
+    overflow:hidden;
+  }
+  .rights .head{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:16px 20px; border-bottom:1px solid var(--hairline);
+    background: linear-gradient(180deg,#FBFCFE,#fff); gap:12px;
+  }
+  .rights .head h3{ font-family:var(--serif); font-size:18px; color:var(--ink-900); font-weight:700; }
+  .rights .head .ann{ display:flex; align-items:center; gap:6px; font-size:11px; color:var(--ink-500); }
+  .rights ul.rich{ list-style:none; margin:0; padding:0 }
+  .rights ul.rich > li{
+    display:grid; grid-template-columns:34px 1fr; column-gap:14px;
+    padding:14px 20px; border-bottom:1px solid var(--hairline);
+  }
+  .rights ul.rich > li:last-child{ border-bottom:0 }
+  .rights ul.rich > li .num{
+    width:30px; height:30px; border-radius:50%;
+    background: linear-gradient(180deg, #fff, var(--paper-2));
+    color:var(--navy-700); font-weight:800;
+    display:grid; place-items:center; font-size:14px; font-family:var(--serif);
+    border:1px solid var(--hairline);
+    box-shadow: inset 0 -1px 0 rgba(11,24,48,.04);
+  }
+  .rights ul.rich > li .body .t{
+    font-family:var(--serif); font-weight:700; font-size:15px; color:var(--ink-900);
+    margin-bottom:4px; line-height:1.3;
+  }
+  .rights ul.rich > li .body .desc{
+    font-size:13px; color:var(--ink-700); line-height:1.6;
+  }
+  .rights ul.rich > li .example{
+    margin-top:8px; padding:9px 12px;
+    background:#F4F8FF; border:1px solid #DCE7FB; border-radius:8px;
+    font-size:12px; color:var(--navy-700); line-height:1.5;
+    display:flex; gap:8px; align-items:flex-start;
+  }
+  .rights ul.rich > li .example b{ color:var(--navy-800) }
+  .rights ul.rich > li .example .ico{
+    flex-shrink:0; width:18px; height:18px; border-radius:5px;
+    background:var(--navy-100); color:var(--navy-700); display:grid; place-items:center;
+  }
+  .rights .foot{
+    display:flex; align-items:center; justify-content:space-between; gap:12px;
+    padding:14px 20px; border-top:1px solid var(--hairline); background:#FBFCFE;
+    flex-wrap:wrap;
+  }
+  .ghost-btn{
+    background:transparent; border:1px solid var(--hairline); color:var(--ink-700);
+    height:36px; padding:0 14px; border-radius:8px; font-weight:700; font-size:13px; cursor:pointer;
+  }
+  .ghost-btn:hover{ border-color:var(--navy-300); color:var(--navy-600) }
+
+  /* ─── Bottom tab bar (mobile) ─── */
+  .tabbar{
+    height:72px; background:#fff; border-top:1px solid var(--hairline);
+    display:grid; grid-template-columns: repeat(4,1fr);
+    padding-bottom:12px;
+  }
+  .tabbar button{
+    background:transparent; border:0; cursor:pointer;
+    display:flex; flex-direction:column; align-items:center; gap:4px;
+    color:var(--ink-300); font-size:11px; font-weight:700;
+    padding-top:10px;
+  }
+  .tabbar button.active{ color:var(--navy-600) }
+  .tabbar button.active .pip{ background:var(--navy-600); width:22px }
+  .tabbar button .pip{
+    width:4px; height:4px; border-radius:2px; background:transparent;
+    margin-top:2px; transition:.2s;
+  }
+
+  /* ─── Desktop main grid ─── */
+  .desktop-main{
+    display:grid; grid-template-columns: 1.15fr 1fr; gap:24px;
+    padding:24px; flex:1; overflow:hidden;
+  }
+  .desktop-main .col-left, .desktop-main .col-right{ display:flex; flex-direction:column; gap:18px; min-width:0 }
+
+  /* ─── Mobile content stack ─── */
+  .stack{
+    padding:18px 16px 24px; display:flex; flex-direction:column; gap:18px;
+    overflow-y:auto;
+  }
+  .center{ display:flex; justify-content:center }
+
+  .row-between{ display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap }
+  svg{ display:block }
+  .muted{ color:var(--ink-500) }
+
+  .notes{
+    margin-top:48px; padding:24px; background:#fff; border:1px solid var(--hairline);
+    border-radius:var(--r-lg); box-shadow:var(--shadow-1);
+  }
+  .notes h3{ font-size:18px; color:var(--ink-900); margin-bottom:10px }
+  .notes ul{ margin:0; padding-inline-start:20px; color:var(--ink-700); line-height:1.85; font-size:14px }
+  .notes ul li b{ color:var(--ink-900) }
+</style>
+</head>
+<body>
+  <div class="page">
+
+    <!-- Page header -->
+    <div class="page-header">
+      <h1>VETO · מסך אזרח</h1>
+      <span class="tag">Direction A · rev 2 · ללא חיפוש עו"ד / שורת אבטחה · תרחישים וזכויות מורחבים</span>
+    </div>
+    <p class="page-sub">
+      עדכון לפי הערותיך — הוסר רצועת "עורכי דין זמינים בקרבת מקום" והוסרה שורת ההצפנה. בורר התרחישים וכרטיס הזכויות
+      הורחבו: כל תרחיש פעיל פותח פאנל פירוט (מה הכי חשוב לדעת, פעולה ראשונה, אזהרת זמן קריטי), וכל זכות מקבלת
+      כותרת + הסבר מלא + דוגמה ישימה.
+    </p>
+
+    <!-- Token swatches -->
+    <div class="swatches">
+      <div class="sw"><i style="background:#0E1F37"></i> Ink 900</div>
+      <div class="sw"><i style="background:#264975"></i> Navy 600 (Brand)</div>
+      <div class="sw"><i style="background:#2E69E7"></i> Navy 500</div>
+      <div class="sw"><i style="background:#83B7F8"></i> Navy 300</div>
+      <div class="sw"><i style="background:#D4F1F7"></i> Navy 100</div>
+      <div class="sw"><i style="background:#B8895C"></i> Gold</div>
+      <div class="sw"><i style="background:#D6243A"></i> Emerg</div>
+      <div class="sw"><i style="background:#F6F8FB; border:1px solid #ddd"></i> Paper</div>
+      <div class="sw"><i style="background:#FFFFFF; border:1px solid #ddd"></i> Surface</div>
+      <div class="sw"><i style="background:#E2E8F0"></i> Hairline</div>
+    </div>
+
+    <!-- Stage -->
+    <div class="stage">
+
+      <!-- ===================== PHONE ===================== -->
+      <div>
+        <div class="device-label">Mobile · 412 × 980</div>
+        <div class="phone">
+          <div class="screen">
+
+            <!-- Topbar -->
+            <header class="topbar">
+              <div style="display:flex; align-items:center; gap:8px">
+                <button class="iconbtn" title="שפה" aria-label="שפה">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg>
+                </button>
+              </div>
+              <div class="brand">
+                <div class="crest">V</div>
+                <div class="name">VETO<em>הגנה משפטית</em></div>
+              </div>
+              <div style="display:flex; align-items:center; gap:6px">
+                <button class="iconbtn" title="נגישות" aria-label="נגישות">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="5" r="2.2"/><path d="M12 7v5m0 0l-4 9m4-9l4 9M7 11h10"/></svg>
+                </button>
+                <button class="iconbtn" title="תפריט" aria-label="תפריט">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+                </button>
+              </div>
+            </header>
+
+            <!-- Scroll content -->
+            <div class="scroll">
+              <div class="stack">
+
+                <!-- Status -->
+                <div class="center">
+                  <div class="status">
+                    <span class="dot"></span>
+                    <span>מחובר · ממתין לאירוע</span>
+                  </div>
+                </div>
+
+                <!-- SOS Hero -->
+                <section class="hero">
+                  <div class="hero-grid">
+                    <div class="sos-stage">
+                      <div class="sos-rings">
+                        <div class="sos-orb">
+                          <div style="text-align:center">
+                            <div class="word">SOS</div>
+                            <div class="sub">עזרה מיידית</div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div style="text-align:center">
+                      <p style="font-family:var(--serif); font-size:18px; line-height:1.35; color:var(--ink-900); margin:0 0 6px">
+                        עורך דין מטעמך — <em style="color:var(--navy-600); font-style:normal">תוך דקות</em>.
+                      </p>
+                      <p class="muted" style="font-size:13px; line-height:1.55; margin:0">
+                        הקש על SOS ועו"ד מתמחה ייצור איתך קשר תוך דקות. תיעוד שיחה מלא, מוצפן וגיבוי לכספת.
+                      </p>
+                    </div>
+                  </div>
+                </section>
+
+                <!-- Scenarios -->
+                <div>
+                  <div class="kicker">מה קורה עכשיו?</div>
+                  <h3 class="h-section">בחר את התרחיש שמתאים לך כעת</h3>
+                  <p class="sub-line">בהתאם לבחירתך נתאים את הזכויות, ההנחיות, וסוג עורך הדין שיוזעק.</p>
+
+                  <div class="scenarios">
+                    <button class="scenario active">
+                      <div class="ico">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l9 4v6c0 5-4 8-9 9-5-1-9-4-9-9V7l9-4z"/></svg>
+                      </div>
+                      <div class="t">חקירה במשטרה</div>
+                      <div class="d">זימון, חקירה תחת אזהרה, מעצר</div>
+                    </button>
+                    <button class="scenario">
+                      <div class="ico">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M2 12h20"/></svg>
+                      </div>
+                      <div class="t">עצירת תנועה</div>
+                      <div class="d">מהירות, אלכוהול, רישיון</div>
+                    </button>
+                    <button class="scenario">
+                      <div class="ico">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7h18M3 12h18M3 17h12"/></svg>
+                      </div>
+                      <div class="t">סכסוך אזרחי</div>
+                      <div class="d">חוזה, נדל"ן, נזיקין</div>
+                    </button>
+                    <button class="scenario">
+                      <div class="ico">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v6H4zM4 14h16v6H4z"/></svg>
+                      </div>
+                      <div class="t">דיני עבודה</div>
+                      <div class="d">פיטורין, זכויות, הטרדה</div>
+                    </button>
+                    <button class="scenario">
+                      <div class="ico">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21V8l9-5 9 5v13M9 21v-7h6v7"/></svg>
+                      </div>
+                      <div class="t">דיני משפחה</div>
+                      <div class="d">גירושין, ילדים, מזונות</div>
+                    </button>
+                    <button class="scenario">
+                      <div class="ico">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18l-2 13H5L3 6zM8 6V4a4 4 0 0 1 8 0v2"/></svg>
+                      </div>
+                      <div class="t">צרכנות</div>
+                      <div class="d">החזר, אחריות, הונאה</div>
+                    </button>
+                  </div>
+
+                  <!-- Active scenario detail -->
+                  <div class="scenario-detail">
+                    <div class="head">
+                      <div class="big-ico">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l9 4v6c0 5-4 8-9 9-5-1-9-4-9-9V7l9-4z"/></svg>
+                      </div>
+                      <div>
+                        <h4>חקירה במשטרה</h4>
+                        <div class="sub">זימון לחקירה · חקירה תחת אזהרה · מעצר ראשוני</div>
+                      </div>
+                    </div>
+                    <div class="body">
+                      <div class="sd-block">
+                        <div class="label">מה הכי חשוב לדעת</div>
+                        <ul>
+                          <li>זימון לחקירה אינו "המלצה" — אבל יש לך זכות להתייעץ עם עו"ד לפני שתגיע.</li>
+                          <li>בחקירה <b>תחת אזהרה</b> כל מילה שתאמר נרשמת ויכולה לשמש נגדך בבית המשפט.</li>
+                          <li>שתיקה אינה הפללה — להפך: זו זכות יסוד מוגנת בחוק.</li>
+                          <li>חוקר חייב לאפשר לך התייעצות עם עורך דין לפני תחילת החקירה.</li>
+                        </ul>
+                      </div>
+                      <div class="sd-block">
+                        <div class="label">פעולה ראשונה</div>
+                        <ul>
+                          <li>אל תענה לשאלות עד שיחה ראשונה עם עו"ד מטעמך.</li>
+                          <li>תעד את שעת ההגעה, שם החוקר, ומספר תיק החקירה.</li>
+                          <li>בקש בכתב את העילה לזימון ואת סעיף החוק הרלוונטי.</li>
+                        </ul>
+                      </div>
+                    </div>
+                    <div class="sd-warn">
+                      <div class="ico">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 8v5m0 4h.01M10.3 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>
+                      </div>
+                      <div><b>זמן קריטי:</b> 60 הדקות הראשונות מקבלות משקל מכריע. הקש SOS עכשיו וקבל ייעוץ ראשוני לפני שתשיב לשאלה הראשונה.</div>
+                    </div>
+                    <div class="sd-actions">
+                      <button class="cta danger" style="height:36px">הזעק עו"ד פלילי עכשיו</button>
+                      <button class="ghost-btn">צפה בכל הזכויות</button>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Rights -->
+                <div class="rights">
+                  <div class="head">
+                    <h3>זכויותיך כעת</h3>
+                    <span class="ann">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v5l3 2"/></svg>
+                      חקירה במשטרה
+                    </span>
+                  </div>
+                  <ul class="rich">
+                    <li>
+                      <span class="num">1</span>
+                      <div class="body">
+                        <div class="t">הזכות להיוועץ עם עורך דין</div>
+                        <div class="desc">זכות יסוד מעוגנת בחוק. זכותך לקבל ייעוץ משפטי לפני, במהלך, ואחרי החקירה — בכל שלב, בלי תלות בחומרת העבירה. אם נמנעת ממך — בקש לתעד זאת בפרוטוקול.</div>
+                        <div class="example"><span class="ico"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span><div><b>דוגמה ישימה:</b> גם בעצירה ברחוב — בקש "אני מבקש לדבר עם עורך דין לפני המשך השיחה". זה מספיק.</div></div>
+                      </div>
+                    </li>
+                    <li>
+                      <span class="num">2</span>
+                      <div class="body">
+                        <div class="t">הזכות לשמור על שתיקה</div>
+                        <div class="desc">אינך חייב להשיב לשאלה שעלולה להפליל אותך. שתיקה <b>אינה</b> מהווה הודאה בעובדות. עם זאת, יש לציין במפורש שאתה בוחר לשמור על שתיקה — ולא פשוט לשתוק.</div>
+                        <div class="example"><span class="ico"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 13l4 4L19 7"/></svg></span><div><b>נוסח מומלץ:</b> "אני שומר על זכות השתיקה ומבקש להתייעץ עם עורך דיני לפני המשך החקירה."</div></div>
+                      </div>
+                    </li>
+                    <li>
+                      <span class="num">3</span>
+                      <div class="body">
+                        <div class="t">הזכות לדעת על מה אתה נחקר</div>
+                        <div class="desc">לפני תחילת החקירה — חוקר חייב להציג בפניך את החשד המיוחס לך, את סעיף החוק הרלוונטי, ולהזהירך אם החקירה תחת אזהרה. אל תוותר על שלב זה.</div>
+                      </div>
+                    </li>
+                    <li>
+                      <span class="num">4</span>
+                      <div class="body">
+                        <div class="t">הזכות לקבל עותק מתועד של ההודעה</div>
+                        <div class="desc">לאחר חתימה על הודעתך — אתה רשאי לקבל עותק. ב-VETO, אם אישרת תיעוד, השיחה נשמרת אוטומטית בכספת המוצפנת שלך — בלתי תלויה במשטרה.</div>
+                      </div>
+                    </li>
+                    <li>
+                      <span class="num">5</span>
+                      <div class="body">
+                        <div class="t">הזכות לסירוב לבדיקה לא חוקית</div>
+                        <div class="desc">חיפוש בגוף, ברכב, או בטלפון — מותנה בעילה חוקית או צו. אם אינך בטוח, בקש להמתין עד הגעת עו"ד. סירוב מסיבה משפטית אינו עבירה.</div>
+                      </div>
+                    </li>
+                  </ul>
+                  <div class="foot">
+                    <button class="ghost-btn">קרא הכל (12 זכויות)</button>
+                    <button class="cta">שלח לעורך דין שלי</button>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+            <!-- Bottom tabs -->
+            <nav class="tabbar">
+              <button class="active">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l9-7 9 7M5 10v10h5v-6h4v6h5V10"/></svg>
+                בית<span class="pip"></span>
+              </button>
+              <button>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a8 8 0 0 1-11 7l-5 1 1-5A8 8 0 1 1 21 12z"/></svg>
+                צ'אט<span class="pip"></span>
+              </button>
+              <button>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z"/></svg>
+                קבצים<span class="pip"></span>
+              </button>
+              <button>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>
+                פרופיל<span class="pip"></span>
+              </button>
+            </nav>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===================== DESKTOP ===================== -->
+      <div>
+        <div class="device-label">Desktop · 1440 wide</div>
+        <div class="desktop">
+          <div class="bar"><i></i><i></i><i></i></div>
+          <div class="canvas">
+
+            <!-- Topbar -->
+            <header class="topbar">
+              <div class="brand">
+                <div class="crest">V</div>
+                <div class="name">VETO<em>הגנה משפטית מיידית</em></div>
+              </div>
+              <nav class="nav">
+                <a class="active" href="#">דף הבית</a>
+                <a href="#">צ'אט עם AI</a>
+                <a href="#">כספת מסמכים</a>
+                <a href="#">יומן משפטי</a>
+                <a href="#">מחברת</a>
+                <a href="#">מפה</a>
+              </nav>
+              <div style="display:flex; align-items:center; gap:8px">
+                <button class="lang-pill"><span class="flag"></span>עברית</button>
+                <button class="iconbtn" title="נגישות">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="5" r="2.2"/><path d="M12 7v5m0 0l-4 9m4-9l4 9M7 11h10"/></svg>
+                </button>
+                <button class="cta">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>
+                  הפרופיל שלי
+                </button>
+              </div>
+            </header>
+
+            <!-- Status sub-bar -->
+            <div style="padding:14px 28px; display:flex; align-items:center; justify-content:space-between; gap:18px; border-bottom:1px solid var(--hairline); background:#FBFCFE">
+              <div class="status">
+                <span class="dot"></span>
+                <span>מחובר · ממתין לאירוע</span>
+              </div>
+              <div style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--ink-500)">
+                <span>זמני תגובה ממוצעים בשעה האחרונה: <b style="color:var(--ink-900)">3:21 דק'</b></span>
+              </div>
+            </div>
+
+            <!-- Hero (full width) -->
+            <div style="padding:24px 28px 0">
+              <section class="hero" style="padding:32px">
+                <div class="hero-grid">
+                  <div>
+                    <div class="kicker">VETO · עזרה משפטית מיידית</div>
+                    <h2 style="margin-top:6px">כשהדקה הראשונה<br/>קובעת את <em>כל היתר</em>.</h2>
+                    <p class="lede">
+                      הקש על כפתור ה-SOS ועורך דין פלילי מתמחה יוצר איתך קשר תוך דקות —
+                      קולי או בווידאו, עם תיעוד שיחה מלא, גיבוי בכספת אישית מוצפנת,
+                      ומסירת כל הראיות לידיך בלבד.
+                    </p>
+                    <div class="row">
+                      <span class="pill-trust">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 13l4 4L19 7"/></svg>
+                        תיעוד שיחה מלא
+                      </span>
+                      <span class="pill-trust">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
+                        כספת מוצפנת E2E
+                      </span>
+                      <span class="pill-trust">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="9"/><path d="M12 8v5l3 2"/></svg>
+                        זמין 24/7
+                      </span>
+                    </div>
+                  </div>
+                  <div class="sos-stage">
+                    <div class="sos-rings">
+                      <div class="sos-orb">
+                        <div style="text-align:center">
+                          <div class="word">SOS</div>
+                          <div class="sub">עזרה מיידית</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </section>
+            </div>
+
+            <!-- Two columns: scenarios + rights -->
+            <div class="desktop-main">
+
+              <!-- LEFT: scenarios + active detail -->
+              <div class="col-left">
+                <div>
+                  <div class="kicker">מה קורה עכשיו?</div>
+                  <h3 class="h-section">בחר את התרחיש שמתאים לך כעת</h3>
+                  <p class="sub-line">בהתאם לבחירתך נתאים את הזכויות, ההנחיות, וסוג עורך הדין שיוזעק.</p>
+                  <div class="scenarios">
+                    <button class="scenario active">
+                      <div class="ico">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l9 4v6c0 5-4 8-9 9-5-1-9-4-9-9V7l9-4z"/></svg>
+                      </div>
+                      <div class="t">חקירה במשטרה</div>
+                      <div class="d">זימון, חקירה תחת אזהרה, מעצר</div>
+                    </button>
+                    <button class="scenario">
+                      <div class="ico">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M2 12h20"/></svg>
+                      </div>
+                      <div class="t">עצירת תנועה</div>
+                      <div class="d">מהירות, אלכוהול, רישיון</div>
+                    </button>
+                    <button class="scenario">
+                      <div class="ico">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7h18M3 12h18M3 17h12"/></svg>
+                      </div>
+                      <div class="t">סכסוך אזרחי</div>
+                      <div class="d">חוזה, נדל"ן, נזיקין</div>
+                    </button>
+                    <button class="scenario">
+                      <div class="ico">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v6H4zM4 14h16v6H4z"/></svg>
+                      </div>
+                      <div class="t">דיני עבודה</div>
+                      <div class="d">פיטורין, זכויות, הטרדה</div>
+                    </button>
+                    <button class="scenario">
+                      <div class="ico">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21V8l9-5 9 5v13M9 21v-7h6v7"/></svg>
+                      </div>
+                      <div class="t">דיני משפחה</div>
+                      <div class="d">גירושין, ילדים, מזונות</div>
+                    </button>
+                    <button class="scenario">
+                      <div class="ico">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18l-2 13H5L3 6zM8 6V4a4 4 0 0 1 8 0v2"/></svg>
+                      </div>
+                      <div class="t">צרכנות</div>
+                      <div class="d">החזר, אחריות, הונאה</div>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Expanded detail -->
+                <div class="scenario-detail">
+                  <div class="head">
+                    <div class="big-ico">
+                      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l9 4v6c0 5-4 8-9 9-5-1-9-4-9-9V7l9-4z"/></svg>
+                    </div>
+                    <div>
+                      <h4>חקירה במשטרה</h4>
+                      <div class="sub">זימון לחקירה · חקירה תחת אזהרה · מעצר ראשוני</div>
+                    </div>
+                  </div>
+                  <div class="body">
+                    <div class="sd-block">
+                      <div class="label">מה הכי חשוב לדעת</div>
+                      <ul>
+                        <li>זימון לחקירה אינו "המלצה" — אבל יש לך זכות להתייעץ עם עו"ד לפני שתגיע.</li>
+                        <li>בחקירה <b>תחת אזהרה</b> כל מילה שתאמר נרשמת ויכולה לשמש נגדך בבית המשפט.</li>
+                        <li>שתיקה אינה הפללה — להפך: זו זכות יסוד מוגנת בחוק.</li>
+                        <li>חוקר חייב לאפשר לך התייעצות עם עורך דין לפני תחילת החקירה.</li>
+                      </ul>
+                    </div>
+                    <div class="sd-block">
+                      <div class="label">פעולה ראשונה</div>
+                      <ul>
+                        <li>אל תענה לשאלות עד שיחה ראשונה עם עו"ד מטעמך.</li>
+                        <li>תעד את שעת ההגעה, שם החוקר, ומספר תיק החקירה.</li>
+                        <li>בקש בכתב את העילה לזימון ואת סעיף החוק הרלוונטי.</li>
+                      </ul>
+                    </div>
+                  </div>
+                  <div class="sd-warn">
+                    <div class="ico">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 8v5m0 4h.01M10.3 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>
+                    </div>
+                    <div><b>זמן קריטי:</b> 60 הדקות הראשונות מקבלות משקל מכריע. הקש SOS עכשיו וקבל ייעוץ ראשוני לפני שתשיב לשאלה הראשונה.</div>
+                  </div>
+                  <div class="sd-actions">
+                    <button class="cta danger" style="height:36px">הזעק עו"ד פלילי עכשיו</button>
+                    <button class="ghost-btn">צפה בכל הזכויות</button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- RIGHT: rights expanded -->
+              <div class="col-right">
+                <div class="rights">
+                  <div class="head">
+                    <h3>זכויותיך כעת</h3>
+                    <span class="ann">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v5l3 2"/></svg>
+                      חקירה במשטרה · עודכן היום
+                    </span>
+                  </div>
+                  <ul class="rich">
+                    <li>
+                      <span class="num">1</span>
+                      <div class="body">
+                        <div class="t">הזכות להיוועץ עם עורך דין</div>
+                        <div class="desc">זכות יסוד מעוגנת בחוק. זכותך לקבל ייעוץ משפטי לפני, במהלך, ואחרי החקירה — בכל שלב, בלי תלות בחומרת העבירה. אם נמנעת ממך — בקש לתעד זאת בפרוטוקול.</div>
+                        <div class="example"><span class="ico"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span><div><b>דוגמה ישימה:</b> גם בעצירה ברחוב — בקש "אני מבקש לדבר עם עורך דין לפני המשך השיחה". זה מספיק.</div></div>
+                      </div>
+                    </li>
+                    <li>
+                      <span class="num">2</span>
+                      <div class="body">
+                        <div class="t">הזכות לשמור על שתיקה</div>
+                        <div class="desc">אינך חייב להשיב לשאלה שעלולה להפליל אותך. שתיקה <b>אינה</b> מהווה הודאה בעובדות. עם זאת, יש לציין במפורש שאתה בוחר לשמור על שתיקה — ולא פשוט לשתוק.</div>
+                        <div class="example"><span class="ico"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 13l4 4L19 7"/></svg></span><div><b>נוסח מומלץ:</b> "אני שומר על זכות השתיקה ומבקש להתייעץ עם עורך דיני לפני המשך החקירה."</div></div>
+                      </div>
+                    </li>
+                    <li>
+                      <span class="num">3</span>
+                      <div class="body">
+                        <div class="t">הזכות לדעת על מה אתה נחקר</div>
+                        <div class="desc">לפני תחילת החקירה — חוקר חייב להציג בפניך את החשד המיוחס לך, את סעיף החוק הרלוונטי, ולהזהירך אם החקירה תחת אזהרה. אל תוותר על שלב זה.</div>
+                      </div>
+                    </li>
+                    <li>
+                      <span class="num">4</span>
+                      <div class="body">
+                        <div class="t">הזכות לקבל עותק מתועד של ההודעה</div>
+                        <div class="desc">לאחר חתימה על הודעתך — אתה רשאי לקבל עותק. ב-VETO, אם אישרת תיעוד, השיחה נשמרת אוטומטית בכספת המוצפנת שלך — בלתי תלויה במשטרה.</div>
+                        <div class="example"><span class="ico"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg></span><div><b>דוגמה ישימה:</b> בסיום החקירה — בקש: "אני מבקש עותק של הודעתי בכתב."</div></div>
+                      </div>
+                    </li>
+                    <li>
+                      <span class="num">5</span>
+                      <div class="body">
+                        <div class="t">הזכות לסירוב לבדיקה לא חוקית</div>
+                        <div class="desc">חיפוש בגוף, ברכב, או בטלפון — מותנה בעילה חוקית או בצו שופט. אם אינך בטוח, בקש להמתין עד הגעת עו"ד. סירוב מסיבה משפטית אינו עבירה.</div>
+                      </div>
+                    </li>
+                    <li>
+                      <span class="num">6</span>
+                      <div class="body">
+                        <div class="t">הזכות לקרוב/בן זוג</div>
+                        <div class="desc">במעצר — זכותך להודיע לבן משפחה או אדם קרוב על מקום ההחזקה, אלא אם נתקבל צו מיוחד הקובע אחרת. בקש זאת באופן מפורש.</div>
+                      </div>
+                    </li>
+                  </ul>
+                  <div class="foot">
+                    <button class="ghost-btn">קרא הכל (12 זכויות)</button>
+                    <button class="cta">שלח לעורך דין שלי</button>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Notes -->
+    <div class="notes">
+      <h3>שינויים ב-rev 2 לפי הערותיך</h3>
+      <ul>
+        <li><b>הוסר</b>: רצועת "עורכי דין זמינים בקרבת מקום" (chips אופקיים). ההתאמה תקרה ברגע ההזעקה ולא מוצגת מראש.</li>
+        <li><b>הוסר</b>: שורת אבטחה ("הגנה משפטית מלאה / E2E"). ההצפנה תוצג רק כשרלוונטי (בכספת ובשיחה עצמה).</li>
+        <li><b>הורחב</b>: 6 תרחישים במקום 4 (חקירה, תעבורה, אזרחי, עבודה, משפחה, צרכנות). כל לחיצה פותחת פאנל פירוט עם: "מה הכי חשוב לדעת", "פעולה ראשונה", ואזהרת זמן קריטי + שני CTA.</li>
+        <li><b>הורחב</b>: זכויות עכשיו עם כותרת + פסקת הסבר + דוגמה/נוסח מומלץ ישים. 6 זכויות מוצגות, רמז ל-12 הכוללות.</li>
+        <li><b>נשמר</b>: פלטה Navy 600, כותרות סריפי, SOS אדום יוקרתי, נייר רגוע — הכיוון הכללי לא השתנה.</li>
+      </ul>
+    </div>
+
+  </div>
+</body>
+</html>

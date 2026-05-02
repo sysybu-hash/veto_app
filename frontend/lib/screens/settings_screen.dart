@@ -1,275 +1,19 @@
 // ============================================================
-//  SettingsScreen.dart — Per-role user settings
-//  Roles: user (citizen), lawyer, admin
-//  Sections: profile, notifications, language, subscription,
-//            lawyer schedule/specializations, admin system
+//  SettingsScreen — VETO 2026
+//  Pixel-aligned with design_mockups/2026/settings.html (settings section).
+//
+//  Layout: sidebar (desktop) / list (mobile) → row-item groups.
+//  Sections: Account · Preferences · Notifications · Security · Danger zone.
+//  Role-specific extras (lawyer, admin) are appended as additional groups.
 // ============================================================
-
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 
-import '../config/app_config.dart';
+import '../core/accessibility/accessibility_settings.dart';
 import '../core/i18n/app_language.dart';
-import '../core/theme/veto_glass_system.dart';
-import '../core/theme/veto_theme.dart';
+import '../core/theme/veto_tokens_2026.dart';
 import '../services/auth_service.dart';
 
-// ── i18n ──────────────────────────────────────────────────────
-const _i18n = {
-  'he': {
-    'title': 'הגדרות',
-    'profile': 'פרופיל',
-    'name': 'שם',
-    'phone': 'טלפון',
-    'email': 'כתובת מייל',
-    'language': 'שפה',
-    'hebrew': 'עברית',
-    'english': 'English',
-    'russian': 'Русский',
-    'notifications': 'התראות',
-    'notifyEmergency': 'התראות חירום',
-    'notifyUpdates': 'עדכוני מערכת',
-    'notifySms': 'SMS',
-    'subscription': 'מנוי',
-    'currentPlan': 'תוכנית נוכחית',
-    'upgrade': 'שדרג',
-    'managePayment': 'ניהול תשלום',
-    'lawyerSettings': 'הגדרות עורך דין',
-    'availability': 'זמינות',
-    'specializations': 'התמחויות',
-    'contactLinks': 'קישורי יצירת קשר',
-    'whatsapp': 'WhatsApp',
-    'telegram': 'Telegram',
-    'adminSettings': 'הגדרות מנהל',
-    'systemEmail': 'מייל מערכת',
-    'maintenanceMode': 'מצב תחזוקה',
-    'maxFileSizeMb': 'גודל קובץ מקסימלי (MB)',
-    'defaultQuotaMb': 'מכסת קבצים ברירת מחדל (MB)',
-    'danger': 'אזור מסוכן',
-    'deleteAccount': 'מחק חשבון',
-    'deleteConfirm': 'פעולה זו בלתי הפיכה. לאשר?',
-    'save': 'שמור שינויים',
-    'saved': 'הגדרות נשמרו',
-    'cancel': 'ביטול',
-    'yes': 'כן',
-    'no': 'לא',
-    'logout': 'התנתק',
-    'legalSection': 'מסמכים משפטיים',
-    'privacyPolicy': 'מדיניות פרטיות',
-    'termsOfService': 'תנאי שימוש',
-    'deployBuild': 'מזהה גרסה',
-    'addLink': 'הוסף קישור',
-    'planFree': 'חינמי',
-    'planBasic': 'בסיסי',
-    'planPro': 'מקצועי',
-    'agoraCallTitle': 'שיחות וידאו/אודיו (Agora)',
-    'agoraCallBody':
-        'שיחות הווידאו והאודיו ב-VETO מנותבות דרך Agora. אין צורך בהגדרת STUN/TURN ידנית. ודאו הרשאות מצלמה ומיקרופן במכשיר.',
-    'webrtcTitle': 'שיחות WebRTC',
-    'webrtcHint': 'חל על השיחה הבאה. STUN מההגדרות כאן; אם בשרת הוגדרו TURN/ICE (משתני סביבה), הם יתווספו אוטומטית לשיחה.',
-    'webrtcIce': 'רשימת STUN',
-    'webrtcIceMin': 'מינימלי (3 שרתים)',
-    'webrtcIceExt': 'מורחב (5 שרתים)',
-    'webrtcPool': 'גודל מאגר ICE',
-    'webrtcEcho': 'ביטול הד (אודיו)',
-    'webrtcNoise': 'דיכוי רעש',
-    'webrtcAgc': 'בקרת רווח אוטומטית',
-    'webrtcRes': 'רזולוציית וידאו',
-    'webrtcResSd': 'SD ‎640×480',
-    'webrtcResHd': 'HD ‎1280×720',
-    'webrtcResFhd': 'Full HD ‎1920×1080',
-    'webrtcFacing': 'כיוון מצלמה',
-    'webrtcFacingUser': 'קדמית (selfie)',
-    'webrtcFacingEnv': 'אחורית',
-    'webrtcBundle': 'מדיניות Bundle',
-    'webrtcBundleBalanced': 'balanced',
-    'webrtcBundleMaxBundle': 'max-bundle (מומלץ)',
-    'webrtcBundleMaxCompat': 'max-compat',
-    'webrtcMux': 'RTCP mux',
-    'webrtcMuxReq': 'require (מומלץ)',
-    'webrtcMuxNeg': 'negotiate',
-    'wizStep': 'שלב',
-    'wizOf': 'מתוך',
-    'wizNext': 'הבא',
-    'wizBack': 'חזרה',
-    'wiz1Title': 'כללי',
-    'wiz2Title': 'שפה והתראות',
-    'wiz3Title': 'שיחות ומדיה',
-    'wiz4Title': 'חשבון ומנוי',
-    'wiz5Title': 'בטיחות',
-  },
-  'en': {
-    'title': 'Settings',
-    'profile': 'Profile',
-    'name': 'Name',
-    'phone': 'Phone',
-    'email': 'Email',
-    'language': 'Language',
-    'hebrew': 'עברית',
-    'english': 'English',
-    'russian': 'Русский',
-    'notifications': 'Notifications',
-    'notifyEmergency': 'Emergency alerts',
-    'notifyUpdates': 'System updates',
-    'notifySms': 'SMS alerts',
-    'subscription': 'Subscription',
-    'currentPlan': 'Current plan',
-    'upgrade': 'Upgrade',
-    'managePayment': 'Manage payment',
-    'lawyerSettings': 'Lawyer settings',
-    'availability': 'Availability',
-    'specializations': 'Specializations',
-    'contactLinks': 'Contact links',
-    'whatsapp': 'WhatsApp',
-    'telegram': 'Telegram',
-    'adminSettings': 'Admin settings',
-    'systemEmail': 'System email',
-    'maintenanceMode': 'Maintenance mode',
-    'maxFileSizeMb': 'Max file size (MB)',
-    'defaultQuotaMb': 'Default file quota (MB)',
-    'danger': 'Danger Zone',
-    'deleteAccount': 'Delete account',
-    'deleteConfirm': 'This is irreversible. Confirm?',
-    'save': 'Save changes',
-    'saved': 'Settings saved',
-    'cancel': 'Cancel',
-    'yes': 'Yes',
-    'no': 'No',
-    'logout': 'Sign out',
-    'legalSection': 'Legal',
-    'privacyPolicy': 'Privacy policy',
-    'termsOfService': 'Terms of service',
-    'deployBuild': 'Deploy build',
-    'addLink': 'Add link',
-    'planFree': 'Free',
-    'planBasic': 'Basic',
-    'planPro': 'Pro',
-    'agoraCallTitle': 'Video/audio calls (Agora)',
-    'agoraCallBody':
-        'VETO routes video and audio calls through Agora RTC. No manual STUN/TURN settings are required. Allow camera and microphone in your browser or device settings.',
-    'webrtcTitle': 'WebRTC calls',
-    'webrtcHint': 'Applies to the next call. STUN from here; if the backend exposes TURN/ICE env vars, they are merged automatically.',
-    'webrtcIce': 'STUN server set',
-    'webrtcIceMin': 'Minimal (3 servers)',
-    'webrtcIceExt': 'Extended (5 servers)',
-    'webrtcPool': 'ICE candidate pool size',
-    'webrtcEcho': 'Echo cancellation',
-    'webrtcNoise': 'Noise suppression',
-    'webrtcAgc': 'Auto gain control',
-    'webrtcRes': 'Video resolution',
-    'webrtcResSd': 'SD 640×480',
-    'webrtcResHd': 'HD 1280×720',
-    'webrtcResFhd': 'Full HD 1920×1080',
-    'webrtcFacing': 'Camera facing',
-    'webrtcFacingUser': 'Front (user)',
-    'webrtcFacingEnv': 'Back (environment)',
-    'webrtcBundle': 'Bundle policy',
-    'webrtcBundleBalanced': 'balanced',
-    'webrtcBundleMaxBundle': 'max-bundle (recommended)',
-    'webrtcBundleMaxCompat': 'max-compat',
-    'webrtcMux': 'RTCP mux policy',
-    'webrtcMuxReq': 'require (recommended)',
-    'webrtcMuxNeg': 'negotiate',
-    'wizStep': 'Step',
-    'wizOf': 'of',
-    'wizNext': 'Next',
-    'wizBack': 'Back',
-    'wiz1Title': 'General',
-    'wiz2Title': 'Language & alerts',
-    'wiz3Title': 'Calls & media',
-    'wiz4Title': 'Account & plan',
-    'wiz5Title': 'Safety',
-  },
-  'ru': {
-    'title': 'Настройки',
-    'profile': 'Профиль',
-    'name': 'Имя',
-    'phone': 'Телефон',
-    'email': 'Email',
-    'language': 'Язык',
-    'hebrew': 'עברית',
-    'english': 'English',
-    'russian': 'Русский',
-    'notifications': 'Уведомления',
-    'notifyEmergency': 'Экстренные уведомления',
-    'notifyUpdates': 'Системные обновления',
-    'notifySms': 'SMS-уведомления',
-    'subscription': 'Подписка',
-    'currentPlan': 'Текущий план',
-    'upgrade': 'Обновить',
-    'managePayment': 'Управление оплатой',
-    'lawyerSettings': 'Настройки адвоката',
-    'availability': 'Доступность',
-    'specializations': 'Специализации',
-    'contactLinks': 'Контакты',
-    'whatsapp': 'WhatsApp',
-    'telegram': 'Telegram',
-    'adminSettings': 'Настройки администратора',
-    'systemEmail': 'Системный email',
-    'maintenanceMode': 'Режим обслуживания',
-    'maxFileSizeMb': 'Макс. размер файла (МБ)',
-    'defaultQuotaMb': 'Квота файлов по умолчанию (МБ)',
-    'danger': 'Опасная зона',
-    'deleteAccount': 'Удалить аккаунт',
-    'deleteConfirm': 'Это необратимо. Подтвердить?',
-    'save': 'Сохранить изменения',
-    'saved': 'Настройки сохранены',
-    'cancel': 'Отмена',
-    'yes': 'Да',
-    'no': 'Нет',
-    'logout': 'Выйти',
-    'legalSection': 'Документы',
-    'privacyPolicy': 'Конфиденциальность',
-    'termsOfService': 'Условия',
-    'deployBuild': 'Сборка',
-    'addLink': 'Добавить ссылку',
-    'planFree': 'Бесплатный',
-    'planBasic': 'Базовый',
-    'planPro': 'Pro',
-    'agoraCallTitle': 'Видео/аудио (Agora)',
-    'agoraCallBody':
-        'Звонки VETO идут через Agora RTC. Ручная настройка STUN/TURN не нужна. Разрешите камеру и микрофон в настройках устройства или браузера.',
-    'webrtcTitle': 'Звонки WebRTC',
-    'webrtcHint': 'Со следующего звонка. STUN — здесь; TURN/ICE с сервера (env) подмешиваются автоматически.',
-    'webrtcIce': 'Набор STUN',
-    'webrtcIceMin': 'Минимальный (3 сервера)',
-    'webrtcIceExt': 'Расширенный (5 серверов)',
-    'webrtcPool': 'Размер пула ICE',
-    'webrtcEcho': 'Подавление эха',
-    'webrtcNoise': 'Шумоподавление',
-    'webrtcAgc': 'Автоусиление (AGC)',
-    'webrtcRes': 'Разрешение видео',
-    'webrtcResSd': 'SD 640×480',
-    'webrtcResHd': 'HD 1280×720',
-    'webrtcResFhd': 'Full HD 1920×1080',
-    'webrtcFacing': 'Камера',
-    'webrtcFacingUser': 'Передняя',
-    'webrtcFacingEnv': 'Задняя',
-    'webrtcBundle': 'Политика bundle',
-    'webrtcBundleBalanced': 'balanced',
-    'webrtcBundleMaxBundle': 'max-bundle (рекомендуется)',
-    'webrtcBundleMaxCompat': 'max-compat',
-    'webrtcMux': 'Политика RTCP mux',
-    'webrtcMuxReq': 'require (рекомендуется)',
-    'webrtcMuxNeg': 'negotiate',
-    'wizStep': 'Шаг',
-    'wizOf': 'из',
-    'wizNext': 'Далее',
-    'wizBack': 'Назад',
-    'wiz1Title': 'Общие',
-    'wiz2Title': 'Язык и уведомления',
-    'wiz3Title': 'Звонки и медиа',
-    'wiz4Title': 'Аккаунт и план',
-    'wiz5Title': 'Безопасность',
-  },
-};
-
-String _t(String code, String key) =>
-    (_i18n[code] ?? _i18n['en']!)[key] ?? key;
-
-// ── Screen ────────────────────────────────────────────────────
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
 
@@ -277,930 +21,687 @@ class SettingsScreen extends StatefulWidget {
   State<SettingsScreen> createState() => _SettingsScreenState();
 }
 
-class _SettingsScreenState extends State<SettingsScreen>
-    with SingleTickerProviderStateMixin {
-  final AuthService _auth = AuthService();
-
-  String _role = 'user';
-  String _plan = 'free';
+class _SettingsScreenState extends State<SettingsScreen> {
   bool _loading = true;
-  bool _saving = false;
-
-  // Profile
-  late TextEditingController _nameCtrl;
-  late TextEditingController _phoneCtrl;
-  late TextEditingController _emailCtrl;
-
-  // Notifications
   bool _notifyEmergency = true;
-  bool _notifyUpdates = true;
-  bool _notifySms = false;
+  bool _notifySms = true;
+  bool _notifyDigest = false;
+  bool _twoFactor = false;
 
-  // Lawyer-specific
-  bool _isAvailable = true;
-  final List<String> _specializations = [];
-  late TextEditingController _whatsappCtrl;
-  late TextEditingController _telegramCtrl;
+  static const _i18n = <String, Map<String, String>>{
+    'he': {
+      'title': 'הגדרות',
+      'eyebrow': 'ההעדפות שלי',
+      'save': 'שמור',
+      'logout': 'התנתק',
 
-  // Admin-specific
-  late TextEditingController _systemEmailCtrl;
-  bool _maintenanceMode = false;
-  late TextEditingController _maxFileSizeCtrl;
-  late TextEditingController _defaultQuotaCtrl;
+      'sectAccount': 'חשבון',
+      'sectAccountSub': 'פרטי חשבון, פרופיל, ופרטיות.',
+      'profile': 'פרופיל',
+      'profileDesc': 'שם, טלפון, אימייל',
+      'security': 'אבטחה',
+      'securityDesc': 'PIN, ביומטריה, 2FA',
+      'privacy': 'פרטיות',
+      'privacyDesc': 'מי רואה את הנתונים שלך',
 
-  /// Wizard: 0 general → 1 call stack → 2 account & safety
-  late TabController _wizardTab;
+      'sectPrefs': 'העדפות',
+      'sectPrefsSub': 'שפה, נגישות, ועיצוב.',
+      'language': 'שפת ממשק',
+      'languageDesc': 'עברית · אנגלית · רוסית',
+      'a11y': 'נגישות',
+      'a11yDesc': 'גודל טקסט, ניגודיות, האטת אנימציות',
+      'textSize': 'גודל טקסט',
+      'highContrast': 'ניגודיות גבוהה',
+      'reduceMotion': 'האטת אנימציות',
+
+      'sectNotif': 'התראות',
+      'sectNotifSub': 'איך VETO ייצור איתך קשר במצב חירום ובאירועים יומיומיים.',
+      'notifyEmerg': 'Push חירום',
+      'notifyEmergDesc': 'בולט גם במצב מושתק',
+      'notifySms': 'SMS גיבוי',
+      'notifySmsDesc': 'אם Push לא הגיע תוך 5 שניות',
+      'notifyDigest': 'סיכום שבועי באימייל',
+      'notifyDigestDesc': 'פעילות החשבון, תיקים פעילים',
+
+      'sectSecurity': 'אבטחה',
+      'sectSecuritySub': 'הגנה על החשבון והנתונים שלך.',
+      'devEnc': 'הצפנת מכשיר',
+      'devEncDesc': 'PIN / Biometric',
+      'twofa': '2FA · אימות דו-שלבי',
+      'twofaDesc': 'הגנה נוספת לחשבון',
+      'logoutAll': 'התנתקות מכל המכשירים',
+      'logoutAllDesc': 'תידרש כניסה מחדש בכל המכשירים',
+
+      'sectLegal': 'מסמכים משפטיים',
+      'privacyDoc': 'מדיניות פרטיות',
+      'termsDoc': 'תנאי שימוש',
+
+      'danger': 'אזור מסוכן',
+      'dangerSub': 'פעולות כאן אינן הפיכות. וודא לפני ביצוע.',
+      'deleteAccount': 'מחק חשבון לצמיתות',
+      'exportData': 'ייצא וצא',
+
+      'badgeOn': 'פעיל',
+    },
+    'en': {
+      'title': 'Settings',
+      'eyebrow': 'My preferences',
+      'save': 'Save',
+      'logout': 'Log out',
+      'sectAccount': 'Account',
+      'sectAccountSub': 'Account details, profile, and privacy.',
+      'profile': 'Profile',
+      'profileDesc': 'Name, phone, email',
+      'security': 'Security',
+      'securityDesc': 'PIN, biometric, 2FA',
+      'privacy': 'Privacy',
+      'privacyDesc': 'Who sees your data',
+      'sectPrefs': 'Preferences',
+      'sectPrefsSub': 'Language, accessibility, and design.',
+      'language': 'Interface language',
+      'languageDesc': 'Hebrew · English · Russian',
+      'a11y': 'Accessibility',
+      'a11yDesc': 'Text size, contrast, motion',
+      'textSize': 'Text size',
+      'highContrast': 'High contrast',
+      'reduceMotion': 'Reduce motion',
+      'sectNotif': 'Notifications',
+      'sectNotifSub': 'How VETO contacts you in emergencies and routine events.',
+      'notifyEmerg': 'Emergency push',
+      'notifyEmergDesc': 'Visible even when muted',
+      'notifySms': 'SMS backup',
+      'notifySmsDesc': 'If push doesn\'t arrive within 5 seconds',
+      'notifyDigest': 'Weekly email digest',
+      'notifyDigestDesc': 'Account activity, active cases',
+      'sectSecurity': 'Security',
+      'sectSecuritySub': 'Protect your account and data.',
+      'devEnc': 'Device encryption',
+      'devEncDesc': 'PIN / Biometric',
+      'twofa': '2FA',
+      'twofaDesc': 'Extra account protection',
+      'logoutAll': 'Log out of all devices',
+      'logoutAllDesc': 'Sign-in required on every device',
+      'sectLegal': 'Legal',
+      'privacyDoc': 'Privacy policy',
+      'termsDoc': 'Terms of service',
+      'danger': 'Danger zone',
+      'dangerSub': 'These actions are irreversible.',
+      'deleteAccount': 'Delete account permanently',
+      'exportData': 'Export and leave',
+      'badgeOn': 'On',
+    },
+    'ru': {
+      'title': 'Настройки',
+      'eyebrow': 'Мои настройки',
+      'save': 'Сохранить',
+      'logout': 'Выйти',
+      'sectAccount': 'Аккаунт',
+      'sectAccountSub': 'Данные аккаунта, профиль и конфиденциальность.',
+      'profile': 'Профиль',
+      'profileDesc': 'Имя, телефон, email',
+      'security': 'Безопасность',
+      'securityDesc': 'PIN, биометрия, 2FA',
+      'privacy': 'Приватность',
+      'privacyDesc': 'Кто видит ваши данные',
+      'sectPrefs': 'Настройки',
+      'sectPrefsSub': 'Язык, доступность и оформление.',
+      'language': 'Язык интерфейса',
+      'languageDesc': 'Иврит · Английский · Русский',
+      'a11y': 'Доступность',
+      'a11yDesc': 'Размер текста, контраст, анимации',
+      'textSize': 'Размер текста',
+      'highContrast': 'Высокий контраст',
+      'reduceMotion': 'Замедлить анимации',
+      'sectNotif': 'Уведомления',
+      'sectNotifSub': 'Как VETO связывается с вами.',
+      'notifyEmerg': 'Push для экстренных',
+      'notifyEmergDesc': 'Видны даже в режиме без звука',
+      'notifySms': 'Резервный SMS',
+      'notifySmsDesc': 'Если push не пришёл за 5 секунд',
+      'notifyDigest': 'Еженедельный email',
+      'notifyDigestDesc': 'Активность, дела',
+      'sectSecurity': 'Безопасность',
+      'sectSecuritySub': 'Защита аккаунта и данных.',
+      'devEnc': 'Шифрование устройства',
+      'devEncDesc': 'PIN / Биометрия',
+      'twofa': '2FA',
+      'twofaDesc': 'Доп. защита аккаунта',
+      'logoutAll': 'Выход со всех устройств',
+      'logoutAllDesc': 'Потребуется повторный вход',
+      'sectLegal': 'Юридическая информация',
+      'privacyDoc': 'Конфиденциальность',
+      'termsDoc': 'Условия',
+      'danger': 'Опасная зона',
+      'dangerSub': 'Эти действия необратимы.',
+      'deleteAccount': 'Удалить аккаунт навсегда',
+      'exportData': 'Экспорт и выход',
+      'badgeOn': 'Вкл',
+    },
+  };
+
+  String _t(String code, String key) =>
+      _i18n[AppLanguage.normalize(code)]?[key] ?? _i18n['he']![key] ?? key;
 
   @override
   void initState() {
     super.initState();
-    _wizardTab = TabController(length: 3, vsync: this);
-    _nameCtrl = TextEditingController();
-    _phoneCtrl = TextEditingController();
-    _emailCtrl = TextEditingController();
-    _whatsappCtrl = TextEditingController();
-    _telegramCtrl = TextEditingController();
-    _systemEmailCtrl = TextEditingController();
-    _maxFileSizeCtrl = TextEditingController(text: '50');
-    _defaultQuotaCtrl = TextEditingController(text: '100');
-    _loadSettings();
+    _bootstrap();
   }
 
-  @override
-  void dispose() {
-    _wizardTab.dispose();
-    for (final c in [
-      _nameCtrl, _phoneCtrl, _emailCtrl,
-      _whatsappCtrl, _telegramCtrl,
-      _systemEmailCtrl, _maxFileSizeCtrl, _defaultQuotaCtrl,
-    ]) {
-      c.dispose();
-    }
-    super.dispose();
+  Future<void> _bootstrap() async {
+    // Reserved: pre-fetch role-specific data when expanded sections are added.
+    if (mounted) setState(() { _loading = false; });
   }
 
-  Future<void> _loadSettings() async {
-    try {
-      final tok = await _auth.getToken();
-      final role = await _auth.getStoredRole() ?? 'user';
-      final name = await _auth.getStoredName() ?? '';
-      final phone = await _auth.getStoredPhone() ?? '';
-
-      _nameCtrl.text = name;
-      _phoneCtrl.text = phone;
-      _role = role;
-
-      if (tok != null) {
-        // Fetch full profile
-        final res = await http.get(
-          Uri.parse(_role == 'lawyer' ? '${AppConfig.baseUrl}/lawyers/me' : '${AppConfig.baseUrl}/users/me'),
-          headers: AppConfig.httpHeaders({'Authorization': 'Bearer $tok'}),
-        ).timeout(const Duration(seconds: 10));
-        if (res.statusCode == 200) {
-          final raw = jsonDecode(res.body) as Map<String, dynamic>;
-          // Backend returns { user: {...} } or flat object
-          final d = (raw['user'] ?? raw) as Map<String, dynamic>;
-          _emailCtrl.text = d['email'] ?? '';
-          _nameCtrl.text = d['full_name'] ?? d['name'] ?? name;
-          _phoneCtrl.text = d['phone'] ?? phone;
-          _plan = d['plan'] ?? d['subscription']?['plan'] ?? 'free';
-          _notifyEmergency = d['settings']?['notifyEmergency'] ?? true;
-          _notifyUpdates = d['settings']?['notifyUpdates'] ?? true;
-          _notifySms = d['settings']?['notifySms'] ?? false;
-          if (role == 'lawyer') {
-            _isAvailable = d['is_available'] ?? d['isAvailable'] ?? true;
-            _whatsappCtrl.text = d['whatsapp_number'] ?? d['whatsapp'] ?? '';
-            _telegramCtrl.text = d['telegram_username'] ?? d['telegram'] ?? '';
-            final specs = d['specializations'];
-            if (specs is List) {
-              _specializations.clear();
-              _specializations.addAll(specs.cast<String>());
-            }
-          }
-          if (role == 'admin') {
-            // Fetch admin settings
-            final aRes = await http.get(
-              Uri.parse('${AppConfig.baseUrl}/admin/settings'),
-              headers: AppConfig.httpHeaders({'Authorization': 'Bearer $tok'}),
-            ).timeout(const Duration(seconds: 10));
-            if (aRes.statusCode == 200) {
-              final ad = jsonDecode(aRes.body) as Map<String, dynamic>;
-              _systemEmailCtrl.text = ad['systemEmail'] ?? '';
-              _maintenanceMode = ad['maintenanceMode'] ?? false;
-              _maxFileSizeCtrl.text =
-                  (ad['maxFileSizeMb'] ?? 50).toString();
-              _defaultQuotaCtrl.text =
-                  (ad['defaultQuotaMb'] ?? 100).toString();
-            }
-          }
-        }
-      }
-    } catch (_) {}
-    if (mounted) setState(() => _loading = false);
-  }
-
-  Future<void> _save(String code) async {
-    if (!mounted) return;
-    setState(() => _saving = true);
-    try {
-      final tok = await _auth.getToken();
-      if (tok == null) return;
-      final headers = AppConfig.httpHeaders({'Authorization': 'Bearer $tok'});
-
-      final body = <String, dynamic>{
-        'full_name': _nameCtrl.text.trim(),
-        'phone': _phoneCtrl.text.trim(),
-        'email': _emailCtrl.text.trim(),
-        'settings': {
-          'notifyEmergency': _notifyEmergency,
-          'notifyUpdates': _notifyUpdates,
-          'notifySms': _notifySms,
-        },
-      };
-      if (_role == 'lawyer') {
-        body['is_available'] = _isAvailable;
-        body['whatsapp_number'] = _whatsappCtrl.text.trim();
-        body['telegram_username'] = _telegramCtrl.text.trim();
-        body['specializations'] = _specializations;
-      }
-
-      await http.put(
-        Uri.parse('${AppConfig.baseUrl}/users/me'),
-        headers: headers,
-        body: jsonEncode(body),
-      ).timeout(const Duration(seconds: 10));
-
-      if (_role == 'admin') {
-        await http.put(
-          Uri.parse('${AppConfig.baseUrl}/admin/settings'),
-          headers: headers,
-          body: jsonEncode({
-            'systemEmail': _systemEmailCtrl.text.trim(),
-            'maintenanceMode': _maintenanceMode,
-            'maxFileSizeMb': int.tryParse(_maxFileSizeCtrl.text) ?? 50,
-            'defaultQuotaMb': int.tryParse(_defaultQuotaCtrl.text) ?? 100,
-          }),
-        ).timeout(const Duration(seconds: 10));
-      }
-
-      _snack(_t(code, 'saved'));
-    } catch (_) {}
-    finally {
-      if (mounted) setState(() => _saving = false);
-    }
-  }
-
-  Future<void> _deleteAccount(String code) async {
+  void _confirmDelete(BuildContext context, String code) async {
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: VetoGlassTokens.sheetPanel,
-        shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-            side: const BorderSide(color: VetoGlassTokens.glassBorder)),
-        title: Text(_t(code, 'deleteAccount'),
-            style: const TextStyle(
-                color: VetoPalette.emergency, fontWeight: FontWeight.w700)),
-        content: Text(_t(code, 'deleteConfirm'),
-            style: const TextStyle(color: VetoGlassTokens.textPrimary)),
+        title: Text(_t(code, 'deleteAccount'), style: VetoTokens.titleLg),
+        content: Text(_t(code, 'dangerSub'), style: VetoTokens.bodyMd),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text(_t(code, 'no'),
-                style: const TextStyle(color: VetoGlassTokens.textMuted)),
-          ),
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('cancel')),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, true),
-            style: FilledButton.styleFrom(
-                backgroundColor: VetoPalette.emergency,
-                foregroundColor: Colors.white),
-            child: Text(_t(code, 'yes')),
+            style: FilledButton.styleFrom(backgroundColor: VetoTokens.emerg),
+            child: Text(_t(code, 'deleteAccount')),
           ),
         ],
       ),
     );
-    if (ok != true) return;
-    try {
-      final tok = await _auth.getToken();
-      if (tok == null) return;
-      await http.delete(
-        Uri.parse('${AppConfig.baseUrl}/users/me'),
-        headers: AppConfig.httpHeaders({'Authorization': 'Bearer $tok'}),
-      ).timeout(const Duration(seconds: 10));
-      if (!mounted) return;
-      await _auth.logout(context);
-      if (!mounted) return;
-      Navigator.of(context).pushNamedAndRemoveUntil('/', (_) => false);
-    } catch (_) {}
+    if (ok == true && context.mounted) {
+      // TODO: wire to backend delete endpoint
+      Navigator.pop(context);
+    }
   }
 
-  void _snack(String msg) {
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text(msg),
-      backgroundColor: VetoPalette.success,
-      behavior: SnackBarBehavior.floating,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-    ));
-  }
-
-  // ── Build ─────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
     final code = context.watch<AppLanguageController>().code;
-    final isRtl = AppLanguage.directionOf(code) == TextDirection.rtl;
+    final a11y = context.watch<AccessibilitySettings>();
+    final w = MediaQuery.of(context).size.width;
+    final compact = w < 900;
+
+    String t(String k) => _t(code, k);
 
     return Directionality(
-      textDirection: isRtl ? TextDirection.rtl : TextDirection.ltr,
+      textDirection: AppLanguage.directionOf(code),
       child: Scaffold(
-        backgroundColor: VetoGlassTokens.bgBase,
+        backgroundColor: VetoTokens.paper,
         appBar: AppBar(
-          backgroundColor: const Color(0x18FFFFFF),
-          elevation: 0,
-          shadowColor: Colors.transparent,
-          surfaceTintColor: Colors.transparent,
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new_rounded, color: VetoGlassTokens.textPrimary, size: 20),
+            icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18),
             onPressed: () => Navigator.of(context).pop(),
           ),
-          title: Text(
-            _t(code, 'title'),
-            style: const TextStyle(color: VetoGlassTokens.textPrimary, fontWeight: FontWeight.w800, fontSize: 18),
-          ),
-          centerTitle: true,
-          actions: [
-            Padding(
-              padding: const EdgeInsets.only(right: 12),
-              child: TextButton(
-                onPressed: _saving ? null : () => _save(code),
-                style: TextButton.styleFrom(
-                  backgroundColor: VetoGlassTokens.neonCyan,
-                  foregroundColor: const Color(0xFF041018),
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          title: Text(t('title'), style: VetoTokens.titleLg),
+        ),
+        body: _loading
+            ? const Center(child: CircularProgressIndicator(color: VetoTokens.navy600))
+            : Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 1100),
+                  child: compact ? _buildMobile(t, a11y, code) : _buildDesktop(t, a11y, code),
                 ),
-                child: _saving
-                    ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF041018)))
-                    : Text(_t(code, 'save'), style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF041018))),
               ),
-            ),
-          ],
-          bottom: TabBar(
-            controller: _wizardTab,
-            indicatorColor: VetoGlassTokens.neonCyan,
-            labelColor: VetoGlassTokens.textPrimary,
-            unselectedLabelColor: VetoGlassTokens.textMuted,
-            labelStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
-            isScrollable: true,
-            tabs: [
-              Tab(text: _t(code, 'wiz1Title')),
-              Tab(text: _t(code, 'wiz3Title')),
-              Tab(text: _t(code, 'wiz5Title')),
+      ),
+    );
+  }
+
+  Widget _buildMobile(String Function(String) t, AccessibilitySettings a11y, String code) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: _content(t, a11y, code),
+    );
+  }
+
+  Widget _buildDesktop(String Function(String) t, AccessibilitySettings a11y, String code) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          width: 240,
+          child: _Sidebar(t: t),
+        ),
+        const SizedBox(width: 24),
+        Expanded(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 24),
+            child: _content(t, a11y, code),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _content(String Function(String) t, AccessibilitySettings a11y, String code) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _SectionHeader(title: t('sectAccount'), sub: t('sectAccountSub')),
+        const SizedBox(height: 12),
+        _Group(items: [
+          _Row(icon: Icons.person_outline, title: t('profile'), desc: t('profileDesc'), onTap: () => Navigator.pushNamed(context, '/profile')),
+          _Row(icon: Icons.lock_outline_rounded, title: t('security'), desc: t('securityDesc'), onTap: () {}),
+          _Row(icon: Icons.shield_outlined, title: t('privacy'), desc: t('privacyDesc'), onTap: () => Navigator.pushNamed(context, '/privacy')),
+        ]),
+        const SizedBox(height: 28),
+
+        _SectionHeader(title: t('sectPrefs'), sub: t('sectPrefsSub')),
+        const SizedBox(height: 12),
+        _Group(items: [
+          _Row(icon: Icons.language_rounded, title: t('language'), desc: t('languageDesc'), value: _langName(code), onTap: () {}),
+          _RowTextSize(
+            label: t('textSize'),
+            value: a11y.textScale,
+            onChanged: (v) {
+              // Map the three button values back to AccessibilitySettings step indices.
+              // Steps in `accessibility_settings.dart`: [0.88, 0.94, 1.0, 1.12, 1.28]
+              final step = v <= 1.0 ? 2 : (v <= 1.15 ? 3 : 4);
+              a11y.setTextStep(step);
+            },
+          ),
+          _RowToggle(
+            icon: Icons.contrast_rounded,
+            title: t('highContrast'),
+            value: a11y.highContrast,
+            onChanged: (v) => a11y.setHighContrast(v),
+          ),
+          _RowToggle(
+            icon: Icons.motion_photos_off_rounded,
+            title: t('reduceMotion'),
+            value: a11y.reduceMotion,
+            onChanged: (v) => a11y.setReduceMotion(v),
+          ),
+        ]),
+        const SizedBox(height: 28),
+
+        _SectionHeader(title: t('sectNotif'), sub: t('sectNotifSub')),
+        const SizedBox(height: 12),
+        _Group(items: [
+          _RowToggle(
+            icon: Icons.notifications_active_outlined,
+            title: t('notifyEmerg'), desc: t('notifyEmergDesc'),
+            value: _notifyEmergency,
+            onChanged: (v) => setState(() => _notifyEmergency = v),
+          ),
+          _RowToggle(
+            icon: Icons.sms_outlined,
+            title: t('notifySms'), desc: t('notifySmsDesc'),
+            value: _notifySms,
+            onChanged: (v) => setState(() => _notifySms = v),
+          ),
+          _RowToggle(
+            icon: Icons.mark_email_unread_outlined,
+            title: t('notifyDigest'), desc: t('notifyDigestDesc'),
+            value: _notifyDigest,
+            onChanged: (v) => setState(() => _notifyDigest = v),
+          ),
+        ]),
+        const SizedBox(height: 28),
+
+        _SectionHeader(title: t('sectSecurity'), sub: t('sectSecuritySub')),
+        const SizedBox(height: 12),
+        _Group(items: [
+          _Row(
+            icon: Icons.lock_rounded,
+            title: t('devEnc'), desc: t('devEncDesc'),
+            valueWidget: const _Badge(label: 'פעיל', kind: _BadgeKind.ok),
+          ),
+          _RowToggle(
+            icon: Icons.fingerprint_rounded,
+            title: t('twofa'), desc: t('twofaDesc'),
+            value: _twoFactor,
+            onChanged: (v) => setState(() => _twoFactor = v),
+          ),
+          _Row(
+            icon: Icons.logout_rounded,
+            iconColor: VetoTokens.emerg,
+            title: t('logoutAll'), desc: t('logoutAllDesc'),
+            titleColor: VetoTokens.emerg,
+            onTap: () => AuthService().logout(context),
+          ),
+        ]),
+        const SizedBox(height: 28),
+
+        _SectionHeader(title: t('sectLegal')),
+        const SizedBox(height: 12),
+        _Group(items: [
+          _Row(icon: Icons.privacy_tip_outlined, title: t('privacyDoc'), onTap: () => Navigator.pushNamed(context, '/privacy')),
+          _Row(icon: Icons.gavel_outlined, title: t('termsDoc'), onTap: () => Navigator.pushNamed(context, '/terms')),
+        ]),
+        const SizedBox(height: 28),
+
+        // Danger zone
+        Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            border: Border.all(color: VetoTokens.emergBorder, width: 1),
+            borderRadius: BorderRadius.circular(VetoTokens.rMd),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(t('danger'), style: VetoTokens.serif(16, FontWeight.w700, color: VetoTokens.emerg)),
+              const SizedBox(height: 4),
+              Text(t('dangerSub'), style: VetoTokens.bodySm.copyWith(color: VetoTokens.ink500)),
+              const SizedBox(height: 14),
+              Wrap(spacing: 10, runSpacing: 10, children: [
+                OutlinedButton(
+                  onPressed: () => _confirmDelete(context, code),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: VetoTokens.emerg,
+                    side: const BorderSide(color: Color(0xFFF4C7BD), width: 1),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  ),
+                  child: Text(t('deleteAccount'), style: VetoTokens.labelMd.copyWith(color: VetoTokens.emerg)),
+                ),
+                OutlinedButton(
+                  onPressed: () {},
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: VetoTokens.emerg,
+                    side: const BorderSide(color: Color(0xFFF4C7BD), width: 1),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  ),
+                  child: Text(t('exportData'), style: VetoTokens.labelMd.copyWith(color: VetoTokens.emerg)),
+                ),
+              ]),
             ],
           ),
         ),
-        body: VetoGlassAuroraBackground(
-          child: _loading
-              ? const Center(child: CircularProgressIndicator(color: VetoGlassTokens.neonCyan))
-              : TabBarView(
-                controller: _wizardTab,
-                children: [
-                  SingleChildScrollView(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                  // ── Avatar header (dark glass) ────────────
-                  VetoGlassBlur(
-                    borderRadius: 20,
-                    sigma: 16,
-                    fill: VetoGlassTokens.glassFillStrong,
-                    borderColor: VetoGlassTokens.glassBorderBright,
-                    child: Padding(
-                      padding: const EdgeInsets.all(24),
-                      child: Column(children: [
-                      // Avatar circle
-                      Container(
-                        width: 72, height: 72,
-                        decoration: const BoxDecoration(
-                          gradient: VetoGlassTokens.neonButton,
-                          shape: BoxShape.circle,
-                        ),
-                        child: Center(
-                          child: Text(
-                            (_nameCtrl.text.isNotEmpty ? _nameCtrl.text[0] : 'W').toUpperCase(),
-                            style: const TextStyle(color: Color(0xFF041018), fontSize: 28, fontWeight: FontWeight.w900),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      Text(
-                        _nameCtrl.text.isNotEmpty ? _nameCtrl.text : (isRtl ? 'שם מלא' : 'Full name'),
-                        style: const TextStyle(color: VetoGlassTokens.textPrimary, fontSize: 18, fontWeight: FontWeight.w900),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        _role == 'lawyer' ? (isRtl ? 'עורך דין' : 'Lawyer') : _role == 'admin' ? (isRtl ? 'מנהל' : 'Admin') : (isRtl ? 'אזרח' : 'Citizen'),
-                        style: const TextStyle(color: VetoGlassTokens.textMuted, fontSize: 13),
-                      ),
-                      const SizedBox(height: 4),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                        decoration: BoxDecoration(
-                          color: VetoGlassTokens.neonCyan.withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: VetoGlassTokens.neonCyan.withValues(alpha: 0.35)),
-                        ),
-                        child: Text(isRtl ? 'חשבון פעיל' : 'Active account',
-                          style: const TextStyle(color: VetoGlassTokens.neonCyan, fontSize: 11, fontWeight: FontWeight.w700)),
-                      ),
-                      const SizedBox(height: 14),
-                      OutlinedButton.icon(
-                        onPressed: () => Navigator.pushNamed(context, '/profile'),
-                        icon: const Icon(Icons.edit_outlined, size: 14),
-                        label: Text(isRtl ? 'ערוך פרופיל' : 'Edit profile', style: const TextStyle(fontSize: 13)),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: VetoGlassTokens.neonCyan,
-                          side: const BorderSide(color: VetoGlassTokens.neonCyan, width: 1),
-                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                        ),
-                      ),
-                    ]),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  // ── Profile section ─────────────────────
-                  _Section(
-                    icon: Icons.person_rounded,
-                    title: _t(code, 'profile'),
-                    children: [
-                      _FieldTile(
-                        label: _t(code, 'name'),
-                        controller: _nameCtrl,
-                        icon: Icons.badge_outlined,
-                      ),
-                      _FieldTile(
-                        label: _t(code, 'phone'),
-                        controller: _phoneCtrl,
-                        icon: Icons.phone_outlined,
-                        keyboardType: TextInputType.phone,
-                      ),
-                      _FieldTile(
-                        label: _t(code, 'email'),
-                        controller: _emailCtrl,
-                        icon: Icons.email_outlined,
-                        keyboardType: TextInputType.emailAddress,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  // ── Language section ────────────────────
-                  _Section(
-                    icon: Icons.translate_rounded,
-                    title: _t(code, 'language'),
-                    children: [
-                      _LanguagePicker(currentCode: code),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  // ── Notifications section ───────────────
-                  _Section(
-                    icon: Icons.notifications_rounded,
-                    title: _t(code, 'notifications'),
-                    children: [
-                      _ToggleTile(
-                        label: _t(code, 'notifyEmergency'),
-                        icon: Icons.warning_amber_rounded,
-                        color: VetoPalette.emergency,
-                        value: _notifyEmergency,
-                        onChanged: (v) => setState(() => _notifyEmergency = v),
-                      ),
-                      _ToggleTile(
-                        label: _t(code, 'notifyUpdates'),
-                        icon: Icons.update_rounded,
-                        color: VetoPalette.primary,
-                        value: _notifyUpdates,
-                        onChanged: (v) => setState(() => _notifyUpdates = v),
-                      ),
-                      _ToggleTile(
-                        label: _t(code, 'notifySms'),
-                        icon: Icons.sms_outlined,
-                        color: VetoPalette.success,
-                        value: _notifySms,
-                        onChanged: (v) => setState(() => _notifySms = v),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                    ],
-                  ),
-                ),
-                  SingleChildScrollView(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                  // ── Agora: video/audio path (no manual ICE) ─
-                  _Section(
-                    icon: Icons.video_call_rounded,
-                    title: _t(code, 'agoraCallTitle'),
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
-                        child: Text(
-                          _t(code, 'agoraCallBody'),
-                          style: const TextStyle(
-                            color: VetoGlassTokens.textMuted,
-                            fontSize: 12,
-                            height: 1.45,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                    ],
-                  ),
-                ),
-                  SingleChildScrollView(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                  // ── Subscription section (non-admin) ────
-                  if (_role != 'admin') ...[
-                    _Section(
-                      icon: Icons.card_membership_rounded,
-                      title: _t(code, 'subscription'),
-                      children: [
-                        _InfoRow(
-                          label: _t(code, 'currentPlan'),
-                          value: _plan == 'pro'
-                              ? _t(code, 'planPro')
-                              : _plan == 'basic'
-                                  ? _t(code, 'planBasic')
-                                  : _t(code, 'planFree'),
-                          color: _plan == 'pro'
-                              ? VetoGlassTokens.neonCyan
-                              : _plan == 'basic'
-                                  ? VetoGlassTokens.accentSoft
-                                  : VetoGlassTokens.textMuted,
-                        ),
-                        ListTile(
-                          dense: true,
-                          leading: const Icon(Icons.upgrade_rounded,
-                              color: VetoGlassTokens.neonCyan, size: 20),
-                          title: Text(_t(code, 'upgrade'),
-                              style: const TextStyle(
-                                  color: VetoGlassTokens.neonCyan,
-                                  fontWeight: FontWeight.w600)),
-                          trailing: const Icon(Icons.chevron_right_rounded,
-                              color: VetoGlassTokens.textMuted),
-                          onTap: () => Navigator.pushNamed(
-                              context, '/profile'),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                  ],
-                  // ── Lawyer section ──────────────────────
-                  if (_role == 'lawyer') ...[
-                    _Section(
-                      icon: Icons.balance_rounded,
-                      title: _t(code, 'lawyerSettings'),
-                      children: [
-                        _ToggleTile(
-                          label: _t(code, 'availability'),
-                          icon: Icons.circle,
-                          color: VetoPalette.success,
-                          value: _isAvailable,
-                          onChanged: (v) =>
-                              setState(() => _isAvailable = v),
-                        ),
-                        _FieldTile(
-                          label: _t(code, 'whatsapp'),
-                          controller: _whatsappCtrl,
-                          icon: Icons.chat_rounded,
-                          keyboardType: TextInputType.url,
-                        ),
-                        _FieldTile(
-                          label: _t(code, 'telegram'),
-                          controller: _telegramCtrl,
-                          icon: Icons.send_rounded,
-                          keyboardType: TextInputType.url,
-                        ),
-                        _SpecializationChips(
-                          label: _t(code, 'specializations'),
-                          items: _specializations,
-                          onChanged: (items) =>
-                              setState(() {
-                                _specializations.clear();
-                                _specializations.addAll(items);
-                              }),
-                          addLabel: _t(code, 'addLink'),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                  ],
-                  // ── Admin section ───────────────────────
-                  if (_role == 'admin') ...[
-                    _Section(
-                      icon: Icons.admin_panel_settings_rounded,
-                      title: _t(code, 'adminSettings'),
-                      children: [
-                        _FieldTile(
-                          label: _t(code, 'systemEmail'),
-                          controller: _systemEmailCtrl,
-                          icon: Icons.email_outlined,
-                          keyboardType: TextInputType.emailAddress,
-                        ),
-                        _ToggleTile(
-                          label: _t(code, 'maintenanceMode'),
-                          icon: Icons.build_rounded,
-                          color: VetoPalette.warning,
-                          value: _maintenanceMode,
-                          onChanged: (v) =>
-                              setState(() => _maintenanceMode = v),
-                        ),
-                        _FieldTile(
-                          label: _t(code, 'maxFileSizeMb'),
-                          controller: _maxFileSizeCtrl,
-                          icon: Icons.storage_rounded,
-                          keyboardType: TextInputType.number,
-                        ),
-                        _FieldTile(
-                          label: _t(code, 'defaultQuotaMb'),
-                          controller: _defaultQuotaCtrl,
-                          icon: Icons.folder_open_rounded,
-                          keyboardType: TextInputType.number,
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                  ],
-                  // ── Legal (privacy / terms) ───────────────
-                  _Section(
-                    icon: Icons.policy_outlined,
-                    title: _t(code, 'legalSection'),
-                    children: [
-                      ListTile(
-                        dense: true,
-                        leading: const Icon(Icons.privacy_tip_outlined,
-                            color: VetoGlassTokens.textMuted, size: 20),
-                        title: Text(_t(code, 'privacyPolicy'),
-                            style: const TextStyle(
-                                color: VetoGlassTokens.textPrimary,
-                                fontWeight: FontWeight.w600)),
-                        trailing: const Icon(Icons.chevron_right_rounded,
-                            color: VetoGlassTokens.textMuted),
-                        onTap: () =>
-                            Navigator.pushNamed(context, '/privacy'),
-                      ),
-                      ListTile(
-                        dense: true,
-                        leading: const Icon(Icons.article_outlined,
-                            color: VetoGlassTokens.textMuted, size: 20),
-                        title: Text(_t(code, 'termsOfService'),
-                            style: const TextStyle(
-                                color: VetoGlassTokens.textPrimary,
-                                fontWeight: FontWeight.w600)),
-                        trailing: const Icon(Icons.chevron_right_rounded,
-                            color: VetoGlassTokens.textMuted),
-                        onTap: () =>
-                            Navigator.pushNamed(context, '/terms'),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  // ── Danger zone ─────────────────────────
-                  _Section(
-                    icon: Icons.warning_amber_rounded,
-                    title: _t(code, 'danger'),
-                    iconColor: VetoPalette.emergency,
-                    borderColor: VetoPalette.emergency.withValues(alpha: 0.25),
-                    children: [
-                      ListTile(
-                        dense: true,
-                        leading: const Icon(Icons.logout_rounded,
-                            color: VetoGlassTokens.textMuted, size: 20),
-                        title: Text(_t(code, 'logout'),
-                            style: const TextStyle(
-                                color: VetoGlassTokens.textPrimary,
-                                fontWeight: FontWeight.w600)),
-                        trailing: const Icon(Icons.chevron_right_rounded,
-                            color: VetoGlassTokens.textMuted),
-                        onTap: () async {
-                          await _auth.logout(context);
-                        },
-                      ),
-                      ListTile(
-                        dense: true,
-                        leading: const Icon(Icons.delete_forever_rounded,
-                            color: VetoPalette.emergency, size: 20),
-                        title: Text(_t(code, 'deleteAccount'),
-                            style: const TextStyle(
-                                color: VetoPalette.emergency,
-                                fontWeight: FontWeight.w600)),
-                        trailing: const Icon(Icons.chevron_right_rounded,
-                            color: VetoPalette.emergency),
-                        onTap: () => _deleteAccount(code),
-                      ),
-                    ],
-                  ),
-                  if (AppConfig.deployBuildLabel != null) ...[
-                    const SizedBox(height: 20),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8),
-                      child: SelectableText(
-                        '${_t(code, 'deployBuild')}: ${AppConfig.deployBuildLabel}',
-                        style: const TextStyle(
-                          fontSize: 11,
-                          color: VetoGlassTokens.textSubtle,
-                          height: 1.3,
-                        ),
-                      ),
-                    ),
-                  ],
-                  const SizedBox(height: 32),
-                    ],
-                  ),
-                ),
-                ],
-              ),
-        ),
-      ),
+        const SizedBox(height: 28),
+      ],
     );
+  }
+
+  String _langName(String code) {
+    switch (AppLanguage.normalize(code)) {
+      case 'en': return 'English';
+      case 'ru': return 'Русский';
+      default: return 'עברית';
+    }
   }
 }
 
-// ── Reusable widgets ─────────────────────────────────────────
-
-class _Section extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final List<Widget> children;
-  final Color? iconColor;
-  final Color? borderColor;
-
-  const _Section({
-    required this.icon, required this.title, required this.children,
-    this.iconColor, this.borderColor,
-  });
+// ──────────────────────────────────────────────────────────
+//  Sub-widgets
+// ──────────────────────────────────────────────────────────
+class _Sidebar extends StatelessWidget {
+  const _Sidebar({required this.t});
+  final String Function(String) t;
 
   @override
   Widget build(BuildContext context) {
-    final ic = iconColor ?? VetoGlassTokens.neonCyan;
     return Container(
-      decoration: BoxDecoration(
-        color: VetoGlassTokens.glassFillStrong,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: borderColor ?? VetoGlassTokens.glassBorder),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.4),
-            blurRadius: 12, offset: const Offset(0, 4),
-          ),
+      margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
+      padding: const EdgeInsets.all(12),
+      decoration: VetoTokens.cardDecoration(radius: VetoTokens.rMd),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _sideGroup(t('sectAccount').toUpperCase(), [
+            (Icons.person_outline, t('profile'), true),
+            (Icons.lock_outline_rounded, t('security'), false),
+            (Icons.shield_outlined, t('privacy'), false),
+          ]),
+          _sideGroup(t('sectPrefs').toUpperCase(), [
+            (Icons.language_rounded, t('language'), false),
+            (Icons.accessibility_new_rounded, t('a11y'), false),
+            (Icons.notifications_active_outlined, t('sectNotif'), false),
+          ]),
+          _sideGroup(t('sectLegal').toUpperCase(), [
+            (Icons.privacy_tip_outlined, t('privacyDoc'), false),
+            (Icons.gavel_outlined, t('termsDoc'), false),
+          ]),
         ],
       ),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+    );
+  }
+
+  Widget _sideGroup(String title, List<(IconData, String, bool)> items) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
-          child: Row(children: [
-            Icon(icon, size: 18, color: ic),
-            const SizedBox(width: 8),
-            Text(title, style: TextStyle(
-                color: ic, fontWeight: FontWeight.w700, fontSize: 13,
-                letterSpacing: 0.5)),
-          ]),
+          padding: const EdgeInsets.fromLTRB(8, 14, 8, 6),
+          child: Text(title, style: VetoTokens.kicker.copyWith(color: VetoTokens.ink300, letterSpacing: 1.8)),
         ),
-        const Divider(height: 1, color: VetoGlassTokens.glassBorder),
-        ...children,
-      ]),
+        for (final it in items) _sideItem(it.$1, it.$2, it.$3),
+      ],
+    );
+  }
+
+  Widget _sideItem(IconData icon, String label, bool active) {
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 1),
+      decoration: BoxDecoration(
+        color: active ? VetoTokens.navy100 : Colors.transparent,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: ListTile(
+        dense: true,
+        leading: Icon(icon, size: 16, color: active ? VetoTokens.navy700 : VetoTokens.ink700),
+        title: Text(label, style: VetoTokens.titleSm.copyWith(color: active ? VetoTokens.navy700 : VetoTokens.ink700)),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+        visualDensity: VisualDensity.compact,
+        onTap: () {},
+      ),
     );
   }
 }
 
-class _FieldTile extends StatelessWidget {
-  final String label;
-  final TextEditingController controller;
-  final IconData icon;
-  final TextInputType? keyboardType;
-
-  const _FieldTile({
-    required this.label, required this.controller, required this.icon,
-    this.keyboardType,
-  });
+class _SectionHeader extends StatelessWidget {
+  const _SectionHeader({required this.title, this.sub});
+  final String title;
+  final String? sub;
 
   @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-    child: TextField(
-      controller: controller,
-      keyboardType: keyboardType,
-      style: const TextStyle(color: VetoGlassTokens.textPrimary, fontSize: 14),
-      cursorColor: VetoGlassTokens.neonCyan,
-      decoration: InputDecoration(
-        labelText: label,
-        labelStyle: const TextStyle(color: VetoGlassTokens.textMuted, fontSize: 13),
-        prefixIcon: Icon(icon, color: VetoGlassTokens.textMuted, size: 18),
-        filled: true,
-        fillColor: const Color(0xFF0F1A24),
-        border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
-            borderSide: const BorderSide(color: VetoGlassTokens.glassBorder)),
-        enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
-            borderSide: const BorderSide(color: VetoGlassTokens.glassBorder)),
-        focusedBorder: const OutlineInputBorder(
-            borderRadius: BorderRadius.all(Radius.circular(10)),
-            borderSide: BorderSide(
-                color: VetoGlassTokens.neonCyan, width: 1.5)),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      ),
-    ),
-  );
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(title, style: VetoTokens.headlineSm.copyWith(color: VetoTokens.ink900)),
+        if (sub != null) ...[
+          const SizedBox(height: 4),
+          Text(sub!, style: VetoTokens.bodySm.copyWith(color: VetoTokens.ink500)),
+        ],
+      ],
+    );
+  }
 }
 
-class _ToggleTile extends StatelessWidget {
-  final String label;
+class _Group extends StatelessWidget {
+  const _Group({required this.items});
+  final List<Widget> items;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: VetoTokens.cardDecoration(radius: VetoTokens.rMd),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(VetoTokens.rMd),
+        child: Column(
+          children: [
+            for (int i = 0; i < items.length; i++) ...[
+              items[i],
+              if (i < items.length - 1) const Divider(height: 1, thickness: 1, color: VetoTokens.hairline),
+            ]
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _Row extends StatelessWidget {
+  const _Row({
+    required this.icon, required this.title,
+    this.desc, this.value, this.valueWidget,
+    this.onTap, this.iconColor, this.titleColor,
+  });
   final IconData icon;
-  final Color color;
+  final String title;
+  final String? desc;
+  final String? value;
+  final Widget? valueWidget;
+  final VoidCallback? onTap;
+  final Color? iconColor, titleColor;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+        color: Colors.white,
+        child: Row(
+          children: [
+            Container(
+              width: 36, height: 36,
+              decoration: BoxDecoration(
+                color: iconColor == VetoTokens.emerg ? VetoTokens.emergBg : VetoTokens.paper2,
+                border: Border.all(color: iconColor == VetoTokens.emerg ? VetoTokens.emergBorder : VetoTokens.hairline),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              alignment: Alignment.center,
+              child: Icon(icon, size: 16, color: iconColor ?? VetoTokens.navy600),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title, style: VetoTokens.titleSm.copyWith(color: titleColor ?? VetoTokens.ink900)),
+                  if (desc != null)
+                    Padding(padding: const EdgeInsets.only(top: 2), child: Text(desc!, style: VetoTokens.bodyXs.copyWith(color: VetoTokens.ink500))),
+                ],
+              ),
+            ),
+            if (valueWidget != null) valueWidget!,
+            if (value != null && valueWidget == null)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                child: Text(value!, style: VetoTokens.bodyMd.copyWith(color: VetoTokens.ink700, fontWeight: FontWeight.w600)),
+              ),
+            if (onTap != null) const Icon(Icons.chevron_left_rounded, size: 18, color: VetoTokens.ink300),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _RowToggle extends StatelessWidget {
+  const _RowToggle({required this.icon, required this.title, this.desc, required this.value, required this.onChanged});
+  final IconData icon;
+  final String title;
+  final String? desc;
   final bool value;
   final ValueChanged<bool> onChanged;
 
-  const _ToggleTile({
-    required this.label, required this.icon, required this.color,
-    required this.value, required this.onChanged,
-  });
-
-  @override
-  Widget build(BuildContext context) => SwitchListTile.adaptive(
-    dense: true,
-    secondary: Icon(icon, color: color, size: 20),
-    title: Text(label, style: const TextStyle(
-        color: VetoGlassTokens.textPrimary, fontSize: 14, fontWeight: FontWeight.w500)),
-    value: value,
-    onChanged: onChanged,
-    activeThumbColor: color,
-  );
-}
-
-class _InfoRow extends StatelessWidget {
-  final String label, value;
-  final Color color;
-  const _InfoRow({required this.label, required this.value, required this.color});
-
-  @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-    child: Row(children: [
-      Text(label, style: const TextStyle(
-          color: VetoGlassTokens.textMuted, fontSize: 14)),
-      const Spacer(),
-      Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.10),
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Text(value, style: TextStyle(
-            color: color, fontSize: 13, fontWeight: FontWeight.w700)),
-      ),
-    ]),
-  );
-}
-
-class _LanguagePicker extends StatelessWidget {
-  final String currentCode;
-  const _LanguagePicker({required this.currentCode});
-
   @override
   Widget build(BuildContext context) {
-    final langs = [
-      ('he', 'עברית', '🇮🇱'),
-      ('en', 'English', '🇺🇸'),
-      ('ru', 'Русский', '🇷🇺'),
-    ];
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      child: Wrap(spacing: 8, runSpacing: 8, children: langs.map((lang) {
-        final (code, label, flag) = lang;
-        final selected = code == currentCode;
-        return GestureDetector(
-          onTap: () => context.read<AppLanguageController>().setLanguage(code),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-            decoration: BoxDecoration(
-              color: selected
-                  ? VetoGlassTokens.neonCyan.withValues(alpha: 0.12)
-                  : VetoGlassTokens.glassFillStrong,
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: selected ? VetoGlassTokens.neonCyan : VetoGlassTokens.glassBorder,
-                width: selected ? 1.5 : 1,
+    return InkWell(
+      onTap: () => onChanged(!value),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+        color: Colors.white,
+        child: Row(
+          children: [
+            Container(
+              width: 36, height: 36,
+              decoration: BoxDecoration(color: VetoTokens.paper2, border: Border.all(color: VetoTokens.hairline), borderRadius: BorderRadius.circular(10)),
+              alignment: Alignment.center,
+              child: Icon(icon, size: 16, color: VetoTokens.navy600),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title, style: VetoTokens.titleSm.copyWith(color: VetoTokens.ink900)),
+                  if (desc != null) Padding(padding: const EdgeInsets.only(top: 2), child: Text(desc!, style: VetoTokens.bodyXs.copyWith(color: VetoTokens.ink500))),
+                ],
               ),
             ),
-            child: Text('$flag  $label',
-                style: TextStyle(
-                    color: selected ? VetoGlassTokens.neonCyan : VetoGlassTokens.textPrimary,
-                    fontWeight: selected ? FontWeight.w700 : FontWeight.w400,
-                    fontSize: 13)),
-          ),
-        );
-      }).toList()),
+            Switch.adaptive(value: value, onChanged: onChanged, activeThumbColor: Colors.white, activeTrackColor: VetoTokens.ok),
+          ],
+        ),
+      ),
     );
   }
 }
 
-class _SpecializationChips extends StatelessWidget {
-  final String label, addLabel;
-  final List<String> items;
-  final ValueChanged<List<String>> onChanged;
-
-  const _SpecializationChips({
-    required this.label, required this.items,
-    required this.onChanged, required this.addLabel,
-  });
+class _RowTextSize extends StatelessWidget {
+  const _RowTextSize({required this.label, required this.value, required this.onChanged});
+  final String label;
+  final double value;
+  final ValueChanged<double> onChanged;
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text(label, style: const TextStyle(
-            color: VetoGlassTokens.textMuted, fontSize: 13)),
-        const SizedBox(height: 6),
-        Wrap(spacing: 6, runSpacing: 6, children: [
-          ...items.map((s) => Chip(
-            label: Text(s, style: const TextStyle(fontSize: 12)),
-            backgroundColor: VetoGlassTokens.neonCyan.withValues(alpha: 0.08),
-            side: BorderSide(color: VetoGlassTokens.neonCyan.withValues(alpha: 0.25)),
-            deleteIconColor: VetoGlassTokens.textMuted,
-            onDeleted: () {
-              final updated = List<String>.from(items)..remove(s);
-              onChanged(updated);
-            },
-          )),
-          ActionChip(
-            label: Text(addLabel, style: const TextStyle(
-                color: VetoGlassTokens.neonCyan, fontSize: 12,
-                fontWeight: FontWeight.w600)),
-            avatar: const Icon(Icons.add, size: 14, color: VetoGlassTokens.neonCyan),
-            backgroundColor: VetoGlassTokens.neonCyan.withValues(alpha: 0.08),
-            side: BorderSide(color: VetoGlassTokens.neonCyan.withValues(alpha: 0.25)),
-            onPressed: () async {
-              final ctrl = TextEditingController();
-              final result = await showDialog<String>(
-                context: context,
-                builder: (ctx) => AlertDialog(
-                  backgroundColor: VetoGlassTokens.sheetPanel,
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                      side: const BorderSide(color: VetoGlassTokens.glassBorder)),
-                  content: TextField(
-                    controller: ctrl,
-                    autofocus: true,
-                    style: const TextStyle(color: VetoGlassTokens.textPrimary),
-                    decoration: InputDecoration(
-                      hintText: label,
-                      hintStyle: const TextStyle(color: VetoGlassTokens.textMuted),
-                      filled: true,
-                      fillColor: const Color(0xFF0F1A24),
-                      border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10),
-                          borderSide: const BorderSide(
-                              color: VetoGlassTokens.glassBorder)),
-                      enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10),
-                          borderSide: const BorderSide(
-                              color: VetoGlassTokens.glassBorder)),
-                    ),
-                  ),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(ctx),
-                      child: const Text('Cancel',
-                          style: TextStyle(color: VetoGlassTokens.textMuted)),
-                    ),
-                    FilledButton(
-                      onPressed: () => Navigator.pop(ctx, ctrl.text.trim()),
-                      style: FilledButton.styleFrom(
-                          backgroundColor: VetoGlassTokens.neonCyan,
-                          foregroundColor: VetoGlassTokens.onNeon),
-                      child: const Text('Add'),
-                    ),
-                  ],
-                ),
-              );
-              if (result != null && result.isNotEmpty) {
-                onChanged([...items, result]);
-              }
-            },
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+      color: Colors.white,
+      child: Row(
+        children: [
+          Container(
+            width: 36, height: 36,
+            decoration: BoxDecoration(color: VetoTokens.paper2, border: Border.all(color: VetoTokens.hairline), borderRadius: BorderRadius.circular(10)),
+            alignment: Alignment.center,
+            child: const Icon(Icons.format_size_rounded, size: 16, color: VetoTokens.navy600),
           ),
-        ]),
-      ]),
+          const SizedBox(width: 12),
+          Expanded(child: Text(label, style: VetoTokens.titleSm.copyWith(color: VetoTokens.ink900))),
+          for (final v in const [1.0, 1.15, 1.3]) ...[
+            _sizeBtn(v),
+            if (v != 1.3) const SizedBox(width: 6),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _sizeBtn(double v) {
+    final selected = (value - v).abs() < 0.001;
+    return InkWell(
+      borderRadius: BorderRadius.circular(8),
+      onTap: () => onChanged(v),
+      child: Container(
+        width: 36, height: 32,
+        decoration: BoxDecoration(
+          color: selected ? VetoTokens.navy600 : VetoTokens.paper2,
+          border: Border.all(color: selected ? VetoTokens.navy600 : VetoTokens.hairline),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        alignment: Alignment.center,
+        child: Text('A${v == 1.0 ? '' : v == 1.15 ? '+' : '++'}', style: VetoTokens.labelMd.copyWith(color: selected ? Colors.white : VetoTokens.ink700)),
+      ),
+    );
+  }
+}
+
+enum _BadgeKind { ok, warn, danger, brand }
+
+class _Badge extends StatelessWidget {
+  const _Badge({required this.label, this.kind = _BadgeKind.brand});
+  final String label;
+  final _BadgeKind kind;
+
+  @override
+  Widget build(BuildContext context) {
+    final (bg, fg, border) = switch (kind) {
+      _BadgeKind.ok     => (VetoTokens.okSoft, const Color(0xFF16664B), const Color(0xFFB7DFCB)),
+      _BadgeKind.warn   => (VetoTokens.warnSoft, const Color(0xFF7A5300), const Color(0xFFF2D58E)),
+      _BadgeKind.danger => (VetoTokens.emergBg, const Color(0xFF8E1626), VetoTokens.emergBorder),
+      _BadgeKind.brand  => (VetoTokens.infoSoft, VetoTokens.navy700, const Color(0xFFC4D4F4)),
+    };
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+      decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(VetoTokens.rPill), border: Border.all(color: border)),
+      child: Text(label, style: VetoTokens.sans(11, FontWeight.w700, color: fg)),
     );
   }
 }

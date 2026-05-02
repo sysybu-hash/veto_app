@@ -1,13 +1,13 @@
 // ============================================================
-//  MapsScreen — Google Maps embedded in-app (no Waze / no new tab)
-//  Web: iframe. iOS/Android: WebView.
+//  MapsScreen — VETO 2026
+//  Tokens-aligned. Embedded Google Maps (iframe / WebView).
+//  Behaviour preserved: Geolocator + maps_embed_export.
 // ============================================================
-
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 
-import '../core/theme/veto_glass_system.dart';
+import '../core/theme/veto_tokens_2026.dart';
 import '../platform/maps_embed_export.dart';
 
 class MapsScreen extends StatefulWidget {
@@ -60,8 +60,7 @@ class _MapsScreenState extends State<MapsScreen> {
     setState(() {
       _embedUrl = url;
       if (kIsWeb) {
-        _webViewId =
-            'google-maps-embed-${hashCode}_${DateTime.now().millisecondsSinceEpoch}';
+        _webViewId = 'google-maps-embed-${hashCode}_${DateTime.now().millisecondsSinceEpoch}';
       }
     });
   }
@@ -69,43 +68,36 @@ class _MapsScreenState extends State<MapsScreen> {
   @override
   Widget build(BuildContext context) {
     final isHe = Localizations.localeOf(context).languageCode == 'he';
-    final title = isHe ? 'מפת Google' : 'Google Maps';
+    final title = isHe ? 'מפה' : 'Map';
 
     return Scaffold(
-      backgroundColor: VetoGlassTokens.bgBase,
+      backgroundColor: VetoTokens.paper,
       appBar: AppBar(
-        backgroundColor: const Color(0x18FFFFFF),
-        elevation: 0,
-        shadowColor: Colors.transparent,
-        surfaceTintColor: Colors.transparent,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: VetoGlassTokens.textPrimary, size: 20),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18),
           onPressed: () => Navigator.of(context).pop(),
         ),
-        title: Text(title, style: const TextStyle(color: VetoGlassTokens.textPrimary, fontWeight: FontWeight.w800, fontSize: 18)),
-        centerTitle: true,
-        bottom: const PreferredSize(
-          preferredSize: Size.fromHeight(1),
-          child: Divider(height: 1, color: VetoGlassTokens.glassBorder),
-        ),
+        title: Text(title, style: VetoTokens.titleLg),
       ),
-      body: VetoGlassAuroraBackground(
-        child: _error != null
-            ? Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(24),
-                  child: Text(_error!,
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(color: VetoGlassTokens.textPrimary)),
+      body: _error != null
+          ? Center(
+              child: Container(
+                margin: const EdgeInsets.all(24),
+                padding: const EdgeInsets.all(20),
+                decoration: VetoTokens.cardDecoration(),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.error_outline_rounded, size: 28, color: VetoTokens.emerg),
+                    const SizedBox(height: 12),
+                    Text(_error!, textAlign: TextAlign.center, style: VetoTokens.bodyMd.copyWith(color: VetoTokens.ink700)),
+                  ],
                 ),
-              )
-            : _embedUrl == null
-                ? const Center(child: CircularProgressIndicator(color: VetoGlassTokens.neonCyan))
-                : buildPlatformMapsEmbed(
-                    kIsWeb ? _webViewId : null,
-                    _embedUrl!,
-                  ),
-      ),
+              ),
+            )
+          : _embedUrl == null
+              ? const Center(child: CircularProgressIndicator(color: VetoTokens.navy600))
+              : buildPlatformMapsEmbed(kIsWeb ? _webViewId : null, _embedUrl!),
     );
   }
 }

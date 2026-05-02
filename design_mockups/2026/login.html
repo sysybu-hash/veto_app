@@ -1,0 +1,599 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>VETO · Login · 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@500;700;900&family=Heebo:wght@300;400;500;600;700;800;900&family=Assistant:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="_veto-2026.css">
+<style>
+  /* Login wizard 3-step layout */
+  .auth-canvas{
+    display:grid; grid-template-columns: 1fr; height:100%;
+    background:var(--paper);
+  }
+  .desktop .auth-canvas{ grid-template-columns: 1.05fr .95fr }
+
+  .auth-side{
+    background: linear-gradient(160deg, var(--navy-700), var(--navy-600));
+    color:#fff; padding:48px 56px;
+    display:flex; flex-direction:column; justify-content:space-between;
+    position:relative; overflow:hidden;
+  }
+  .auth-side::before{
+    content:""; position:absolute; top:-30%; right:-20%;
+    width:80%; height:120%; background: radial-gradient(closest-side, rgba(184,137,92,.20), transparent 70%);
+    pointer-events:none;
+  }
+  .auth-side .top{ position:relative }
+  .auth-side .brand .crest{
+    background:rgba(255,255,255,.12); box-shadow:inset 0 0 0 1px rgba(255,255,255,.18); color:#fff;
+  }
+  .auth-side .brand .name{ color:#fff }
+  .auth-side .brand .name em{ color:#B6D2FB }
+  .auth-side h1{
+    font-family:var(--serif); font-size:42px; line-height:1.1; color:#fff;
+    margin:48px 0 16px; position:relative;
+  }
+  .auth-side h1 em{ font-style:normal; color:var(--gold-soft) }
+  .auth-side p{ color:#C7D5EE; font-size:15px; line-height:1.7; max-width:42ch; position:relative }
+  .auth-side .features{
+    margin-top:36px; display:flex; flex-direction:column; gap:18px; position:relative;
+  }
+  .auth-side .feature-line{
+    display:flex; align-items:flex-start; gap:14px;
+  }
+  .auth-side .feature-line .ico{
+    width:36px; height:36px; border-radius:10px;
+    background:rgba(255,255,255,.10); border:1px solid rgba(255,255,255,.14);
+    color:#B6D2FB; display:grid; place-items:center; flex-shrink:0;
+  }
+  .auth-side .feature-line h4{ font-family:var(--sans); color:#fff; font-size:14px; font-weight:700; margin-bottom:2px }
+  .auth-side .feature-line p{ color:#C7D5EE; font-size:13px; margin:0; max-width:36ch }
+
+  .auth-side .quote{
+    margin-top:auto; padding-top:32px; border-top:1px solid rgba(255,255,255,.16); position:relative;
+  }
+  .auth-side .quote .q{
+    font-family:var(--serif); font-size:18px; color:#fff; line-height:1.5; margin-bottom:14px; font-style:italic;
+  }
+  .auth-side .quote .who{ display:flex; align-items:center; gap:10px }
+  .auth-side .quote .who .av{
+    width:38px; height:38px; border-radius:10px;
+    background:linear-gradient(135deg, #fff, #C7D5EE); color:var(--navy-700);
+    font-family:var(--serif); font-weight:800; font-size:14px;
+    display:grid; place-items:center;
+  }
+  .auth-side .quote .who .nm{ font-size:13px; font-weight:700; color:#fff }
+  .auth-side .quote .who .ro{ font-size:11px; color:#B6D2FB }
+
+  /* Form column */
+  .auth-form-col{
+    padding:32px 28px; display:flex; flex-direction:column; min-height:100%;
+    overflow-y:auto;
+  }
+  .desktop .auth-form-col{ padding:48px 56px }
+  .phone .auth-form-col{ padding:24px 20px }
+
+  .auth-topbar{
+    display:flex; align-items:center; justify-content:space-between; margin-bottom:32px;
+  }
+  .desktop .phone-only{ display:none }
+  .phone .desktop-only{ display:none }
+
+  .stepper{
+    display:flex; align-items:center; gap:8px; margin-bottom:28px;
+  }
+  .step-dot{
+    display:flex; align-items:center; gap:8px;
+    color:var(--ink-300); font-size:12px; font-weight:700;
+  }
+  .step-dot .n{
+    width:24px; height:24px; border-radius:50%;
+    background:var(--paper-2); color:var(--ink-500);
+    display:grid; place-items:center; font-weight:800; font-size:12px;
+    border:1px solid var(--hairline);
+  }
+  .step-dot.active{ color:var(--ink-900) }
+  .step-dot.active .n{ background:var(--navy-600); color:#fff; border-color:var(--navy-600) }
+  .step-dot.done .n{ background:var(--ok); color:#fff; border-color:var(--ok) }
+  .step-dot.done{ color:var(--ink-500) }
+  .stepper .line{ flex:1; height:1px; background:var(--hairline) }
+  .stepper .line.done{ background:var(--ok) }
+
+  .form-block{
+    background:#fff; border:1px solid var(--hairline); border-radius:var(--r-2xl);
+    padding:32px; box-shadow:var(--shadow-2);
+  }
+  .desktop .form-block{ padding:36px }
+  .phone .form-block{ padding:24px 20px; border-radius:var(--r-xl) }
+
+  .form-block .eyebrow{ margin-bottom:8px }
+  .form-block h2{ font-family:var(--serif); font-size:28px; color:var(--ink-900); line-height:1.2; margin-bottom:8px }
+  .form-block .lede{ color:var(--ink-500); font-size:14px; margin:0 0 24px; line-height:1.55 }
+
+  /* Role chooser cards */
+  .role-grid{ display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:18px }
+  .phone .role-grid{ grid-template-columns:1fr; gap:12px }
+  .role-card{
+    background:#fff; border:2px solid var(--hairline); border-radius:var(--r-lg);
+    padding:24px 22px; cursor:pointer; text-align:start;
+    transition:.2s var(--ease); position:relative;
+    display:flex; flex-direction:column; gap:14px;
+  }
+  .role-card:hover{ border-color:var(--navy-300); transform:translateY(-2px); box-shadow:var(--shadow-1) }
+  .role-card.selected{
+    border-color:var(--navy-600);
+    background: linear-gradient(180deg, #fff, #F4F8FF);
+    box-shadow:0 0 0 4px rgba(46,105,231,.12), var(--shadow-1);
+  }
+  .role-card.selected::after{
+    content:"✓"; position:absolute; top:14px; inset-inline-end:14px;
+    width:24px; height:24px; border-radius:50%; background:var(--navy-600); color:#fff;
+    display:grid; place-items:center; font-weight:900; font-size:12px;
+  }
+  .role-card .ico-big{
+    width:52px; height:52px; border-radius:14px;
+    background: linear-gradient(135deg, var(--navy-100), #fff);
+    border:1px solid var(--hairline); color:var(--navy-700);
+    display:grid; place-items:center;
+  }
+  .role-card.selected .ico-big{
+    background: linear-gradient(135deg, var(--navy-600), var(--navy-500));
+    border-color:var(--navy-600); color:#fff;
+  }
+  .role-card h3{ font-family:var(--serif); font-size:18px; color:var(--ink-900); margin-bottom:4px }
+  .role-card p{ color:var(--ink-500); font-size:13px; line-height:1.5; margin:0 }
+
+  /* OTP boxes */
+  .otp-row{ display:flex; gap:8px; justify-content:center; margin:24px 0; direction:ltr }
+  .otp-row .box{
+    width:46px; height:54px; border:1.5px solid var(--hairline); border-radius:10px;
+    background:#fff; font-size:22px; font-weight:800; font-family:var(--serif);
+    color:var(--ink-900); display:grid; place-items:center;
+  }
+  .otp-row .box.active{ border-color:var(--navy-500); box-shadow:0 0 0 4px rgba(46,105,231,.10) }
+  .otp-row .box.filled{ border-color:var(--navy-300); background:var(--surface-2) }
+
+  /* Divider */
+  .or-divider{
+    display:flex; align-items:center; gap:12px; margin:18px 0; color:var(--ink-300); font-size:11px; font-weight:700; letter-spacing:.18em;
+  }
+  .or-divider::before, .or-divider::after{ content:""; flex:1; height:1px; background:var(--hairline) }
+
+  .google-btn{
+    width:100%; height:48px; border-radius:10px; border:1px solid var(--hairline);
+    background:#fff; color:var(--ink-900); font-weight:700; font-size:14px;
+    display:inline-flex; align-items:center; justify-content:center; gap:10px; cursor:pointer;
+  }
+  .google-btn:hover{ border-color:var(--navy-300); background:var(--paper-2) }
+
+  .form-foot{ margin-top:24px; display:flex; align-items:center; justify-content:space-between; gap:12px }
+  .form-foot .secondary{ font-size:12px; color:var(--ink-500) }
+  .form-foot .secondary a{ color:var(--navy-600); text-decoration:none; font-weight:700 }
+
+  .resend-link{
+    display:flex; align-items:center; justify-content:center; gap:8px; margin-top:18px;
+    font-size:12px; color:var(--ink-500);
+  }
+  .resend-link a{ color:var(--navy-600); font-weight:700; text-decoration:none }
+
+  .otp-target{
+    display:flex; align-items:center; gap:10px; padding:12px 14px;
+    background:var(--surface-2); border:1px solid var(--hairline); border-radius:10px;
+    margin-bottom:10px;
+  }
+  .otp-target .ico{
+    width:32px; height:32px; border-radius:9px; background:var(--navy-100); color:var(--navy-700);
+    display:grid; place-items:center; flex-shrink:0;
+  }
+  .otp-target .lbl{ font-size:11px; color:var(--ink-500) }
+  .otp-target .val{ font-size:14px; font-weight:700; color:var(--ink-900); font-family:var(--mono); direction:ltr }
+</style>
+</head>
+<body>
+  <div class="page">
+    <div class="page-header">
+      <h1>VETO · Login / Register Wizard</h1>
+      <span class="tag">2026 · 3 steps · role → profile → OTP</span>
+    </div>
+    <p class="page-sub">
+      אשף כניסה/הרשמה תלת-שלבי. עמודה שמאלית כהה (Navy gradient) עם הצעת ערך + ציטוט; עמודה ימנית בהירה
+      עם הטופס. שלוש המסכים מוצגים זה לצד זה: בחירת תפקיד, פרטי חשבון (טלפון או Google), קוד אימות.
+    </p>
+
+    <!-- Three desktop screens stacked -->
+    <div class="stage full" style="gap:24px">
+      <!-- STEP 1 -->
+      <div>
+        <div class="device-label">Step 1 · Choose role · Desktop</div>
+        <div class="desktop">
+          <div class="bar"><i></i><i></i><i></i></div>
+          <div class="canvas short">
+            <div class="auth-canvas">
+              <aside class="auth-side desktop-only">
+                <div class="top">
+                  <div class="brand">
+                    <div class="crest">V</div>
+                    <div class="name">VETO<em>הגנה משפטית מיידית</em></div>
+                  </div>
+                  <h1>שכבת הגישה<br/>שלך — <em>לכל תפקיד</em></h1>
+                  <p>בחר אם אתה אזרח שמחפש הגנה משפטית, או עורך דין שמצטרף למשרד הדיגיטלי שלנו. הזרימה והמסך יתאימו לתפקיד.</p>
+                  <div class="features">
+                    <div class="feature-line">
+                      <div class="ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 13l4 4L19 7"/></svg></div>
+                      <div><h4>חשבון אחד · כל המכשירים</h4><p>אפליקציה במובייל, דפדפן בדסקטופ — נתונים מסונכרנים תמיד.</p></div>
+                    </div>
+                    <div class="feature-line">
+                      <div class="ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></div>
+                      <div><h4>אבטחה ברמת בנק</h4><p>OTP חד-פעמי, JWT, ואחסון מקומי מוצפן.</p></div>
+                    </div>
+                    <div class="feature-line">
+                      <div class="ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/></svg></div>
+                      <div><h4>שלוש שפות</h4><p>עברית, אנגלית, רוסית — ממשק מלא.</p></div>
+                    </div>
+                  </div>
+                </div>
+                <div class="quote">
+                  <div class="q">"קיבלתי עורך דין על הקו תוך 4 שניות, באמצע הלילה. הוא הסביר לי את הזכויות שלי לפני שאמרתי מילה לחוקר."</div>
+                  <div class="who">
+                    <div class="av">דכ</div>
+                    <div><div class="nm">דניאל כהן</div><div class="ro">משתמש מאז 2025</div></div>
+                  </div>
+                </div>
+              </aside>
+
+              <main class="auth-form-col">
+                <div class="auth-topbar">
+                  <span class="badge brand">כניסה / הרשמה</span>
+                  <button class="lang-pill"><span class="flag"></span>עברית</button>
+                </div>
+
+                <div class="stepper">
+                  <div class="step-dot active"><span class="n">1</span> תפקיד</div>
+                  <span class="line"></span>
+                  <div class="step-dot"><span class="n">2</span> פרטים</div>
+                  <span class="line"></span>
+                  <div class="step-dot"><span class="n">3</span> אימות</div>
+                </div>
+
+                <div class="form-block">
+                  <span class="kicker">בחר תפקיד</span>
+                  <h2>איך נכנסים ל-VETO?</h2>
+                  <p class="lede">הבחירה שלך קובעת את הלוח, הזרימה ושפת העבודה. ניתן לעבור בין תפקידים בעתיד.</p>
+
+                  <div class="role-grid">
+                    <button class="role-card selected">
+                      <div class="ico-big">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>
+                      </div>
+                      <div>
+                        <h3>אזרח</h3>
+                        <p>הנחיה משפטית מיידית, AI, תרחישים, SOS ותיעוד ראיות.</p>
+                      </div>
+                    </button>
+                    <button class="role-card">
+                      <div class="ico-big">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l8 4v6c0 5-3.5 9-8 10-4.5-1-8-5-8-10V6l8-4z"/></svg>
+                      </div>
+                      <div>
+                        <h3>עורך דין</h3>
+                        <p>קבל התראות, שלוט בזמינות וטפל בתיקים בקונסולה.</p>
+                      </div>
+                    </button>
+                  </div>
+
+                  <div class="form-foot">
+                    <span class="secondary">כבר יש לך חשבון? <a href="#">כניסה מהירה</a></span>
+                    <button class="cta lg">המשך →</button>
+                  </div>
+                </div>
+              </main>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 2 -->
+      <div>
+        <div class="device-label">Step 2 · Profile (phone or Google) · Desktop</div>
+        <div class="desktop">
+          <div class="bar"><i></i><i></i><i></i></div>
+          <div class="canvas short">
+            <div class="auth-canvas">
+              <aside class="auth-side desktop-only">
+                <div class="top">
+                  <div class="brand">
+                    <div class="crest">V</div>
+                    <div class="name">VETO<em>הגנה משפטית מיידית</em></div>
+                  </div>
+                  <h1>פרטים שמשמשים<br/>אך ורק <em>לאמת אותך</em></h1>
+                  <p>אנחנו לא שולחים פרסומות, לא מוכרים נתונים, ולא חולקים את המידע שלך עם רשויות. הטלפון משמש רק לאימות.</p>
+                  <div class="features">
+                    <div class="feature-line">
+                      <div class="ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92V21a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 3h4.09a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L9 11.09a16 16 0 0 0 6 6l1.45-1.45a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/></svg></div>
+                      <div><h4>אימות בטלפון</h4><p>OTP חד-פעמי לצורך כניסה — לא נשמרת סיסמה.</p></div>
+                    </div>
+                    <div class="feature-line">
+                      <div class="ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="M22 4L12 14.01l-3-3"/></svg></div>
+                      <div><h4>או Google Sign-In</h4><p>חשבון Google שלך — בלחיצה אחת.</p></div>
+                    </div>
+                  </div>
+                </div>
+              </aside>
+
+              <main class="auth-form-col">
+                <div class="auth-topbar">
+                  <button class="ghost-btn">← חזרה</button>
+                  <button class="lang-pill"><span class="flag"></span>עברית</button>
+                </div>
+                <div class="stepper">
+                  <div class="step-dot done"><span class="n">✓</span> תפקיד</div>
+                  <span class="line done"></span>
+                  <div class="step-dot active"><span class="n">2</span> פרטים</div>
+                  <span class="line"></span>
+                  <div class="step-dot"><span class="n">3</span> אימות</div>
+                </div>
+
+                <div class="form-block">
+                  <span class="kicker">פרטי חשבון</span>
+                  <h2>בוא ניצור לך חשבון</h2>
+                  <p class="lede">אנחנו צריכים שם וטלפון בלבד. ניתן גם להירשם דרך Google.</p>
+
+                  <div class="field">
+                    <label>שם מלא</label>
+                    <input class="input" placeholder="לדוגמה: דניאל כהן" />
+                  </div>
+                  <div class="field">
+                    <label>מספר טלפון</label>
+                    <div class="input-with-ico">
+                      <input class="input" placeholder="0501234567" style="padding-inline-end:42px" />
+                      <span class="ico">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92V21a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 3h4.09a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L9 11.09a16 16 0 0 0 6 6l1.45-1.45a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                      </span>
+                    </div>
+                    <span class="help">נשלח אליך SMS עם קוד אימות חד-פעמי.</span>
+                  </div>
+
+                  <button class="cta lg" style="width:100%; justify-content:center">שלח קוד אימות →</button>
+
+                  <div class="or-divider">או</div>
+
+                  <button class="google-btn">
+                    <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.5 12.27c0-.79-.07-1.55-.2-2.27H12v4.51h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.75h3.57c2.08-1.92 3.27-4.74 3.27-8.3z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.75c-.99.66-2.25 1.06-3.71 1.06-2.86 0-5.29-1.93-6.15-4.53H2.16v2.84A11 11 0 0 0 12 23z"/><path fill="#FBBC05" d="M5.85 14.12A6.6 6.6 0 0 1 5.5 12c0-.74.12-1.45.34-2.12V7.04H2.16a11 11 0 0 0 0 9.92l3.69-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.07.56 4.21 1.64l3.15-3.15C17.45 2.09 14.96 1 12 1A11 11 0 0 0 2.16 7.04l3.69 2.84C6.71 7.31 9.14 5.38 12 5.38z"/></svg>
+                    המשך עם Google
+                  </button>
+
+                  <div class="form-foot" style="margin-top:18px">
+                    <span class="secondary">פרטיות מלאה — <a href="#">קרא יותר</a></span>
+                  </div>
+                </div>
+              </main>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 3 -->
+      <div>
+        <div class="device-label">Step 3 · OTP verification · Desktop</div>
+        <div class="desktop">
+          <div class="bar"><i></i><i></i><i></i></div>
+          <div class="canvas short">
+            <div class="auth-canvas">
+              <aside class="auth-side desktop-only">
+                <div class="top">
+                  <div class="brand">
+                    <div class="crest">V</div>
+                    <div class="name">VETO<em>הגנה משפטית מיידית</em></div>
+                  </div>
+                  <h1>שלחנו לך קוד<br/>בן <em>6 ספרות</em></h1>
+                  <p>הקלד את הקוד שקיבלת ב-SMS או הדבק אותו ישירות. הקוד תקף ל-10 דקות בלבד.</p>
+                </div>
+                <div class="quote">
+                  <div class="q">"זה לא רק עו"ד — זה ידיעה שיש לך גב, גם בשתיים בלילה."</div>
+                  <div class="who">
+                    <div class="av">שכ</div>
+                    <div><div class="nm">שירה כהן</div><div class="ro">עורכת דין · משתמשת מקצועית</div></div>
+                  </div>
+                </div>
+              </aside>
+
+              <main class="auth-form-col">
+                <div class="auth-topbar">
+                  <button class="ghost-btn">← חזרה</button>
+                  <button class="lang-pill"><span class="flag"></span>עברית</button>
+                </div>
+                <div class="stepper">
+                  <div class="step-dot done"><span class="n">✓</span> תפקיד</div>
+                  <span class="line done"></span>
+                  <div class="step-dot done"><span class="n">✓</span> פרטים</div>
+                  <span class="line done"></span>
+                  <div class="step-dot active"><span class="n">3</span> אימות</div>
+                </div>
+
+                <div class="form-block">
+                  <span class="kicker">אימות טלפון</span>
+                  <h2>הזן את קוד האימות</h2>
+                  <p class="lede">שלחנו קוד בן 6 ספרות אל מספר הטלפון שלך:</p>
+
+                  <div class="otp-target">
+                    <div class="ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92V21a2 2 0 0 1-2.18 2A19.79 19.79 0 0 1 2.16 5.18 2 2 0 0 1 4.11 3"/></svg></div>
+                    <div>
+                      <div class="lbl">נשלח אל</div>
+                      <div class="val">+972-50-123-4567</div>
+                    </div>
+                    <button class="ghost-btn" style="margin-inline-start:auto; height:30px; padding:0 10px; font-size:12px">שינוי</button>
+                  </div>
+
+                  <div class="otp-row">
+                    <div class="box filled">8</div>
+                    <div class="box filled">2</div>
+                    <div class="box filled">3</div>
+                    <div class="box active">_</div>
+                    <div class="box">_</div>
+                    <div class="box">_</div>
+                  </div>
+
+                  <button class="cta lg" style="width:100%; justify-content:center">אמת והמשך →</button>
+
+                  <button class="ghost-btn" style="width:100%; margin-top:10px; height:42px">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline; margin-inline-end:8px"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                    הדבק קוד מהקליפבורד
+                  </button>
+
+                  <div class="resend-link">
+                    לא קיבלת? <a href="#">שלח שוב (00:54)</a>
+                  </div>
+                </div>
+              </main>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mobile versions -->
+    <div style="margin-top:48px">
+      <h2 style="font-family:var(--serif); font-size:24px; color:var(--ink-900); margin-bottom:18px">גרסאות מובייל · 3 שלבים</h2>
+      <div class="stage full" style="grid-template-columns:repeat(3, 1fr); gap:32px">
+        <!-- Mobile step 1 -->
+        <div>
+          <div class="device-label">Mobile · Step 1</div>
+          <div class="phone tall">
+            <div class="screen">
+              <div class="auth-form-col">
+                <div class="auth-topbar">
+                  <span class="badge brand">כניסה / הרשמה</span>
+                  <button class="iconbtn" title="שפה" style="width:32px;height:32px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/></svg></button>
+                </div>
+                <div class="stepper">
+                  <div class="step-dot active"><span class="n">1</span></div>
+                  <span class="line"></span>
+                  <div class="step-dot"><span class="n">2</span></div>
+                  <span class="line"></span>
+                  <div class="step-dot"><span class="n">3</span></div>
+                </div>
+                <div class="form-block">
+                  <span class="kicker">בחר תפקיד</span>
+                  <h2>איך נכנסים?</h2>
+                  <p class="lede">הבחירה שלך קובעת את הזרימה והלוח שתראה.</p>
+                  <div class="role-grid">
+                    <button class="role-card selected">
+                      <div class="ico-big"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg></div>
+                      <div><h3>אזרח</h3><p>SOS, AI, תרחישים, ראיות.</p></div>
+                    </button>
+                    <button class="role-card">
+                      <div class="ico-big"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l8 4v6c0 5-3.5 9-8 10-4.5-1-8-5-8-10V6l8-4z"/></svg></div>
+                      <div><h3>עורך דין</h3><p>התראות, זמינות, תיקים.</p></div>
+                    </button>
+                  </div>
+                  <button class="cta lg" style="width:100%; justify-content:center; margin-top:14px">המשך →</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Mobile step 2 -->
+        <div>
+          <div class="device-label">Mobile · Step 2</div>
+          <div class="phone tall">
+            <div class="screen">
+              <div class="auth-form-col">
+                <div class="auth-topbar">
+                  <button class="iconbtn" style="width:32px;height:32px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg></button>
+                  <button class="iconbtn" style="width:32px;height:32px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/></svg></button>
+                </div>
+                <div class="stepper">
+                  <div class="step-dot done"><span class="n">✓</span></div>
+                  <span class="line done"></span>
+                  <div class="step-dot active"><span class="n">2</span></div>
+                  <span class="line"></span>
+                  <div class="step-dot"><span class="n">3</span></div>
+                </div>
+                <div class="form-block">
+                  <span class="kicker">פרטים</span>
+                  <h2>בוא ניצור חשבון</h2>
+                  <p class="lede">שם וטלפון בלבד.</p>
+                  <div class="field">
+                    <label>שם מלא</label>
+                    <input class="input" placeholder="דניאל כהן" />
+                  </div>
+                  <div class="field">
+                    <label>טלפון</label>
+                    <input class="input" placeholder="0501234567" />
+                    <span class="help">נשלח SMS עם קוד</span>
+                  </div>
+                  <button class="cta lg" style="width:100%; justify-content:center">שלח קוד →</button>
+                  <div class="or-divider">או</div>
+                  <button class="google-btn">
+                    <svg width="16" height="16" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.5 12.27c0-.79-.07-1.55-.2-2.27H12v4.51h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.75h3.57c2.08-1.92 3.27-4.74 3.27-8.3z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.75c-.99.66-2.25 1.06-3.71 1.06-2.86 0-5.29-1.93-6.15-4.53H2.16v2.84A11 11 0 0 0 12 23z"/><path fill="#FBBC05" d="M5.85 14.12A6.6 6.6 0 0 1 5.5 12c0-.74.12-1.45.34-2.12V7.04H2.16a11 11 0 0 0 0 9.92l3.69-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.07.56 4.21 1.64l3.15-3.15C17.45 2.09 14.96 1 12 1A11 11 0 0 0 2.16 7.04l3.69 2.84C6.71 7.31 9.14 5.38 12 5.38z"/></svg>
+                    המשך עם Google
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Mobile step 3 -->
+        <div>
+          <div class="device-label">Mobile · Step 3</div>
+          <div class="phone tall">
+            <div class="screen">
+              <div class="auth-form-col">
+                <div class="auth-topbar">
+                  <button class="iconbtn" style="width:32px;height:32px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg></button>
+                  <button class="iconbtn" style="width:32px;height:32px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/></svg></button>
+                </div>
+                <div class="stepper">
+                  <div class="step-dot done"><span class="n">✓</span></div>
+                  <span class="line done"></span>
+                  <div class="step-dot done"><span class="n">✓</span></div>
+                  <span class="line done"></span>
+                  <div class="step-dot active"><span class="n">3</span></div>
+                </div>
+                <div class="form-block">
+                  <span class="kicker">אימות</span>
+                  <h2>הזן קוד</h2>
+                  <p class="lede">קוד 6 ספרות נשלח אליך.</p>
+                  <div class="otp-target">
+                    <div class="ico"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92V21a2 2 0 0 1-2.18 2A19.79 19.79 0 0 1 2.16 5.18 2 2 0 0 1 4.11 3"/></svg></div>
+                    <div><div class="lbl">אל</div><div class="val">+972-50-123-4567</div></div>
+                  </div>
+                  <div class="otp-row" style="gap:6px">
+                    <div class="box filled" style="width:38px; height:46px; font-size:18px">8</div>
+                    <div class="box filled" style="width:38px; height:46px; font-size:18px">2</div>
+                    <div class="box filled" style="width:38px; height:46px; font-size:18px">3</div>
+                    <div class="box active" style="width:38px; height:46px; font-size:18px">_</div>
+                    <div class="box" style="width:38px; height:46px; font-size:18px">_</div>
+                    <div class="box" style="width:38px; height:46px; font-size:18px">_</div>
+                  </div>
+                  <button class="cta lg" style="width:100%; justify-content:center">אמת →</button>
+                  <button class="ghost-btn" style="width:100%; margin-top:10px; height:40px">הדבק קוד</button>
+                  <div class="resend-link">לא קיבלת? <a href="#">שלח שוב (00:54)</a></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="notes">
+      <h3>הערות עיצוב · Login</h3>
+      <ul>
+        <li><b>Two-column</b> בדסקטופ — עמודה כהה עם ערך + ציטוט (תחושת bonafide), עמודה בהירה עם הטופס.</li>
+        <li><b>Stepper</b> תלת-שלבי גלוי כל הזמן — המשתמש יודע איפה הוא נמצא.</li>
+        <li><b>Role cards</b> גדולים ועם state ויזואלי ברור (selected = navy 600 + ✓ floating).</li>
+        <li><b>OTP</b> ב-6 קופסאות ספרתיות, סריפי. כפתור "הדבק קוד מהקליפבורד" — UX ידידותי.</li>
+        <li><b>Mobile</b> — ללא עמודה כהה. ה-stepper הופך לדוטים בלבד (חיסכון במקום).</li>
+        <li><b>Google Sign-In</b> — ללא הסחת דעת. מתחת ל-OR divider, סטנדרטי.</li>
+      </ul>
+    </div>
+  </div>
+</body>
+</html>

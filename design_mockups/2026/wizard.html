@@ -1,0 +1,395 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>VETO · Wizard Shell · 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@500;700;900&family=Heebo:wght@300;400;500;600;700;800;900&family=Assistant:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="_veto-2026.css">
+<style>
+  /* Wizard shell — guided flow */
+  .wiz-shell{
+    display:flex; height:100%; background:var(--paper);
+  }
+  .wiz-progress-rail{
+    width:300px; flex-shrink:0; padding:32px 24px;
+    background: linear-gradient(180deg, var(--ink-900), var(--navy-800));
+    color:#fff; display:flex; flex-direction:column;
+    position:relative; overflow:hidden;
+  }
+  .wiz-progress-rail::before{
+    content:""; position:absolute; inset:0;
+    background:radial-gradient(600px 400px at 100% 0%, rgba(184,137,92,.15), transparent 70%);
+    pointer-events:none;
+  }
+  .phone .wiz-progress-rail{ display:none }
+  .wiz-progress-rail .top{ position:relative; margin-bottom:36px }
+  .wiz-progress-rail .brand .crest{ background:rgba(255,255,255,.12); color:#fff; box-shadow:inset 0 0 0 1px rgba(255,255,255,.18) }
+  .wiz-progress-rail .brand .name{ color:#fff }
+  .wiz-progress-rail h1{ font-family:var(--serif); color:#fff; font-size:22px; margin:24px 0 10px; line-height:1.2 }
+  .wiz-progress-rail h1 em{ font-style:normal; color:var(--gold-soft) }
+  .wiz-progress-rail p{ color:#B6C7E2; font-size:13px; line-height:1.6; margin:0 }
+
+  .wiz-steps{ position:relative; display:flex; flex-direction:column; gap:6px; margin-top:32px }
+  .wiz-step{
+    display:flex; gap:14px; padding:12px 14px; border-radius:12px;
+    border:1px solid transparent; align-items:flex-start;
+  }
+  .wiz-step .num{
+    width:28px; height:28px; border-radius:50%;
+    background:rgba(255,255,255,.10); border:1px solid rgba(255,255,255,.20);
+    color:#B6C7E2; font-family:var(--serif); font-weight:800; font-size:13px;
+    display:grid; place-items:center; flex-shrink:0;
+  }
+  .wiz-step .body{ min-width:0 }
+  .wiz-step .body .t{ font-family:var(--sans); font-weight:700; font-size:13.5px; color:#fff; margin-bottom:3px }
+  .wiz-step .body .d{ font-size:11.5px; color:#B6C7E2; line-height:1.4 }
+  .wiz-step.active{
+    background:rgba(255,255,255,.10); border-color:rgba(255,255,255,.18);
+  }
+  .wiz-step.active .num{ background:var(--gold); border-color:var(--gold); color:#fff }
+  .wiz-step.done .num{ background:var(--ok); border-color:var(--ok); color:#fff }
+  .wiz-step.done .body .t{ color:#B6C7E2 }
+
+  .wiz-rail-foot{
+    margin-top:auto; padding-top:24px; border-top:1px solid rgba(255,255,255,.16);
+    position:relative;
+  }
+  .wiz-rail-foot .save-status{
+    display:flex; align-items:center; gap:8px; color:#B6C7E2; font-size:12px;
+  }
+  .wiz-rail-foot .save-status i{ width:6px; height:6px; border-radius:50%; background:var(--ok); box-shadow:0 0 0 3px rgba(43,163,116,.3) }
+
+  .wiz-content{
+    flex:1; display:flex; flex-direction:column; min-width:0; background:var(--paper);
+  }
+  .wiz-topbar{
+    padding:18px 32px; background:#fff; border-bottom:1px solid var(--hairline);
+    display:flex; align-items:center; justify-content:space-between;
+  }
+  .phone .wiz-topbar{ padding:42px 14px 12px }
+  .wiz-body{
+    flex:1; overflow-y:auto; padding:32px 56px; max-width:920px; width:100%; margin:0 auto;
+  }
+  .phone .wiz-body{ padding:18px 16px }
+  .wiz-foot{
+    padding:18px 32px; background:#fff; border-top:1px solid var(--hairline);
+    display:flex; justify-content:space-between; align-items:center;
+  }
+  .phone .wiz-foot{ padding:14px 16px }
+
+  /* Phone progress */
+  .phone-progress{
+    padding:20px 16px 0; background:#fff;
+  }
+  .phone-progress .bar{
+    height:4px; background:var(--paper-2); border-radius:2px; overflow:hidden;
+    border:1px solid var(--hairline);
+  }
+  .phone-progress .bar i{ display:block; height:100%; width:50%; background:linear-gradient(90deg, var(--navy-500), var(--navy-600)); border-radius:2px }
+  .phone-progress .lbl{ font-size:11px; color:var(--ink-500); margin-top:8px; font-weight:700 }
+  .phone-progress .lbl b{ color:var(--ink-900) }
+
+  /* Quiz cards */
+  .quiz-card{
+    background:#fff; border:1px solid var(--hairline); border-radius:var(--r-2xl);
+    padding:32px; box-shadow:var(--shadow-2);
+  }
+  .phone .quiz-card{ padding:20px; border-radius:var(--r-xl) }
+  .quiz-card h2{ font-family:var(--serif); font-size:30px; line-height:1.2; color:var(--ink-900); margin-bottom:8px }
+  .phone .quiz-card h2{ font-size:22px }
+  .quiz-card .lede{ color:var(--ink-500); font-size:15px; margin:0 0 28px; line-height:1.6 }
+
+  .opt-grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px }
+  .phone .opt-grid{ grid-template-columns:1fr }
+  .opt{
+    background:#fff; border:2px solid var(--hairline); border-radius:var(--r-md);
+    padding:18px 20px; cursor:pointer; transition:.18s;
+    display:flex; gap:14px; align-items:flex-start; text-align:start;
+  }
+  .opt:hover{ border-color:var(--navy-300); transform:translateY(-1px) }
+  .opt.selected{
+    border-color:var(--navy-600); background: linear-gradient(180deg, #fff, #F4F8FF);
+    box-shadow:0 0 0 4px rgba(46,105,231,.10);
+  }
+  .opt .ico{
+    width:44px; height:44px; border-radius:12px;
+    background:var(--paper-2); color:var(--navy-700); border:1px solid var(--hairline);
+    display:grid; place-items:center; flex-shrink:0;
+  }
+  .opt.selected .ico{ background:var(--navy-600); color:#fff; border-color:var(--navy-600) }
+  .opt .text .t{ font-family:var(--serif); font-weight:700; font-size:16px; color:var(--ink-900); margin-bottom:3px }
+  .opt .text .d{ font-size:13px; color:var(--ink-500); line-height:1.5 }
+  .opt .check{
+    width:24px; height:24px; border-radius:50%; background:var(--navy-600); color:#fff;
+    display:grid; place-items:center; font-weight:900; font-size:12px;
+    margin-inline-start:auto; flex-shrink:0; opacity:0;
+  }
+  .opt.selected .check{ opacity:1 }
+</style>
+</head>
+<body>
+  <div class="page">
+    <div class="page-header">
+      <h1>VETO · Wizard Shell · אשף הכרת המוצר</h1>
+      <span class="tag">2026 · Multi-step onboarding · Direction A</span>
+    </div>
+    <p class="page-sub">
+      ה-Wizard Shell — מעטפה לשאלון רב-שלבי שמסיים onboarding ראשוני: התרחיש שאתה צופה (כאזרח), שפת ממשק, אופן יידוע במצב חירום, והעדפות פרטיות. שני עמודות בדסקטופ: רכבת התקדמות כהה משמאל, תוכן בהיר מימין. שמירה אוטומטית.
+    </p>
+
+    <div class="device-label">Desktop · Step 2 of 4 active</div>
+    <div class="desktop">
+      <div class="bar"><i></i><i></i><i></i></div>
+      <div class="canvas">
+        <div class="wiz-shell">
+          <aside class="wiz-progress-rail">
+            <div class="top">
+              <div class="brand"><div class="crest">V</div><div class="name">VETO<em>Wizard</em></div></div>
+              <h1>בוא נכין<br/>את <em>VETO</em><br/>בדיוק לך</h1>
+              <p>4 שאלות קצרות שיעזרו לנו להתאים את המסך, את ההתראות ואת זמן התגובה — בהתאם למה שאתה צריך.</p>
+            </div>
+
+            <div class="wiz-steps">
+              <div class="wiz-step done">
+                <div class="num"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg></div>
+                <div class="body"><div class="t">תפקיד</div><div class="d">אזרח · נבחר</div></div>
+              </div>
+              <div class="wiz-step active">
+                <div class="num">2</div>
+                <div class="body"><div class="t">תרחיש מרכזי</div><div class="d">איזה סוג חירום הכי רלוונטי לך?</div></div>
+              </div>
+              <div class="wiz-step">
+                <div class="num">3</div>
+                <div class="body"><div class="t">העדפות התראות</div><div class="d">איך נדע לאתר אותך מהר?</div></div>
+              </div>
+              <div class="wiz-step">
+                <div class="num">4</div>
+                <div class="body"><div class="t">פרטיות</div><div class="d">מי רואה את הנתונים שלך</div></div>
+              </div>
+            </div>
+
+            <div class="wiz-rail-foot">
+              <div class="save-status"><i></i>נשמר אוטומטית · לפני 4 שניות</div>
+              <button class="ghost-btn" style="width:100%; margin-top:14px; background:transparent; border-color:rgba(255,255,255,.18); color:#fff">
+                שמור וצא
+              </button>
+            </div>
+          </aside>
+
+          <main class="wiz-content">
+            <header class="wiz-topbar">
+              <div>
+                <div class="kicker">שאלה 2 מתוך 4</div>
+                <h2 style="font-family:var(--serif); font-size:20px; color:var(--ink-900)">תרחיש מרכזי</h2>
+              </div>
+              <button class="lang-pill"><span class="flag"></span>עברית</button>
+            </header>
+
+            <div class="wiz-body">
+              <div class="quiz-card">
+                <h2>איזה תרחיש הכי רלוונטי לך?</h2>
+                <p class="lede">בחר את התרחיש שאתה הכי צופה שיקרה — נתאים לך מסך מותאם, זכויות מוקרנות מראש, ועו"ד מתחום ההתמחות הנכון. תוכל לשנות בכל זמן בהגדרות.</p>
+
+                <div class="opt-grid">
+                  <button class="opt selected">
+                    <div class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l9 4v6c0 5-4 8-9 9-5-1-9-4-9-9V7l9-4z"/></svg></div>
+                    <div class="text">
+                      <div class="t">חקירה במשטרה</div>
+                      <div class="d">זימון, חקירה תחת אזהרה, מעצר ראשוני</div>
+                    </div>
+                    <div class="check"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5"><path d="M5 13l4 4L19 7"/></svg></div>
+                  </button>
+                  <button class="opt">
+                    <div class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M2 12h20"/></svg></div>
+                    <div class="text">
+                      <div class="t">עצירת תנועה</div>
+                      <div class="d">בקרת מהירות, אלכוהול, רישיון</div>
+                    </div>
+                    <div class="check"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5"><path d="M5 13l4 4L19 7"/></svg></div>
+                  </button>
+                  <button class="opt">
+                    <div class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7h18M3 12h18M3 17h12"/></svg></div>
+                    <div class="text">
+                      <div class="t">סכסוך אזרחי</div>
+                      <div class="d">חוזה, נדל"ן, נזיקין</div>
+                    </div>
+                    <div class="check"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5"><path d="M5 13l4 4L19 7"/></svg></div>
+                  </button>
+                  <button class="opt">
+                    <div class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v6H4zM4 14h16v6H4z"/></svg></div>
+                    <div class="text">
+                      <div class="t">דיני עבודה</div>
+                      <div class="d">פיטורין, זכויות, הטרדה</div>
+                    </div>
+                    <div class="check"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5"><path d="M5 13l4 4L19 7"/></svg></div>
+                  </button>
+                  <button class="opt">
+                    <div class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21V8l9-5 9 5v13M9 21v-7h6v7"/></svg></div>
+                    <div class="text">
+                      <div class="t">דיני משפחה</div>
+                      <div class="d">גירושין, ילדים, מזונות</div>
+                    </div>
+                    <div class="check"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5"><path d="M5 13l4 4L19 7"/></svg></div>
+                  </button>
+                  <button class="opt">
+                    <div class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18l-2 13H5L3 6zM8 6V4a4 4 0 0 1 8 0v2"/></svg></div>
+                    <div class="text">
+                      <div class="t">צרכנות</div>
+                      <div class="d">החזר, אחריות, הונאה</div>
+                    </div>
+                    <div class="check"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5"><path d="M5 13l4 4L19 7"/></svg></div>
+                  </button>
+                </div>
+
+                <div class="callout info" style="margin-top:24px">
+                  <div class="ico"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="9"/><path d="M12 8v5"/></svg></div>
+                  <div>הבחירה משפיעה על המסך הראשי בלבד. כל שאר התרחישים יישארו זמינים בכל רגע — כפתור SOS לא מבחין בין סוגים.</div>
+                </div>
+              </div>
+            </div>
+
+            <footer class="wiz-foot">
+              <button class="ghost-btn">← חזרה</button>
+              <div class="muted text-xs">השאלה הבאה: העדפות התראות</div>
+              <button class="cta">המשך →</button>
+            </footer>
+          </main>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mobile -->
+    <div style="margin-top:48px">
+      <h2 style="font-family:var(--serif); font-size:22px; margin-bottom:14px">Mobile · Wizard step 2</h2>
+      <div class="stage" style="grid-template-columns:1fr 1fr; gap:32px">
+        <div>
+          <div class="device-label">Mobile · Step 2 active</div>
+          <div class="phone tall">
+            <div class="screen">
+              <header class="topbar">
+                <button class="iconbtn" style="width:32px;height:32px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg></button>
+                <div class="brand"><div class="crest">V</div><div class="name">VETO</div></div>
+                <button class="iconbtn" style="width:32px;height:32px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M6 18L18 6"/></svg></button>
+              </header>
+              <div class="phone-progress">
+                <div class="bar"><i></i></div>
+                <div class="lbl"><b>שאלה 2 מתוך 4</b> · תרחיש מרכזי</div>
+              </div>
+              <div class="scroll" style="overflow-y:auto">
+                <div class="stack">
+                  <div class="quiz-card" style="box-shadow:none; border:0; padding:0">
+                    <h2>איזה תרחיש<br/>הכי רלוונטי לך?</h2>
+                    <p class="lede">בחר את התרחיש שאתה הכי צופה. נתאים לך זכויות, מסך, ותחום עו"ד. תוכל לשנות תמיד.</p>
+                    <div class="opt-grid">
+                      <button class="opt selected">
+                        <div class="ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l9 4v6c0 5-4 8-9 9-5-1-9-4-9-9V7l9-4z"/></svg></div>
+                        <div class="text"><div class="t">חקירה במשטרה</div><div class="d">זימון, אזהרה, מעצר</div></div>
+                        <div class="check"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5"><path d="M5 13l4 4L19 7"/></svg></div>
+                      </button>
+                      <button class="opt">
+                        <div class="ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M2 12h20"/></svg></div>
+                        <div class="text"><div class="t">עצירת תנועה</div><div class="d">מהירות, אלכוהול</div></div>
+                      </button>
+                      <button class="opt">
+                        <div class="ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7h18M3 12h18M3 17h12"/></svg></div>
+                        <div class="text"><div class="t">סכסוך אזרחי</div><div class="d">חוזה, נדל"ן</div></div>
+                      </button>
+                      <button class="opt">
+                        <div class="ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v6H4zM4 14h16v6H4z"/></svg></div>
+                        <div class="text"><div class="t">דיני עבודה</div><div class="d">פיטורין, זכויות</div></div>
+                      </button>
+                    </div>
+                    <button class="ghost-btn" style="width:100%; margin-top:14px; height:42px">עוד 2 תרחישים →</button>
+                  </div>
+                </div>
+              </div>
+              <div class="wiz-foot">
+                <button class="ghost-btn">←</button>
+                <button class="cta lg" style="flex:1; justify-content:center; margin-inline-start:10px">המשך</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="device-label">Mobile · Step 4 (final)</div>
+          <div class="phone tall">
+            <div class="screen">
+              <header class="topbar">
+                <button class="iconbtn" style="width:32px;height:32px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg></button>
+                <div class="brand"><div class="crest">V</div><div class="name">VETO</div></div>
+                <button class="iconbtn" style="width:32px;height:32px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M6 18L18 6"/></svg></button>
+              </header>
+              <div class="phone-progress">
+                <div class="bar"><i style="width:100%"></i></div>
+                <div class="lbl"><b>שאלה 4 מתוך 4</b> · פרטיות</div>
+              </div>
+              <div class="scroll" style="overflow-y:auto">
+                <div class="stack">
+                  <div class="quiz-card" style="box-shadow:none; border:0; padding:0">
+                    <h2>הכל מוכן 👌</h2>
+                    <p class="lede">סיכום ההגדרות שלך — תוכל לשנות בכל זמן.</p>
+
+                    <div style="display:flex; flex-direction:column; gap:10px">
+                      <div style="display:flex; gap:12px; padding:14px; background:#fff; border:1px solid var(--hairline); border-radius:var(--r-md)">
+                        <span class="badge ok"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg></span>
+                        <div style="flex:1">
+                          <div style="font-weight:800; font-size:13px">תפקיד · אזרח</div>
+                          <div class="muted text-xs">מסך שלך מותאם</div>
+                        </div>
+                      </div>
+                      <div style="display:flex; gap:12px; padding:14px; background:#fff; border:1px solid var(--hairline); border-radius:var(--r-md)">
+                        <span class="badge ok"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg></span>
+                        <div style="flex:1">
+                          <div style="font-weight:800; font-size:13px">תרחיש · חקירה במשטרה</div>
+                          <div class="muted text-xs">זכויות מותאמות</div>
+                        </div>
+                      </div>
+                      <div style="display:flex; gap:12px; padding:14px; background:#fff; border:1px solid var(--hairline); border-radius:var(--r-md)">
+                        <span class="badge ok"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg></span>
+                        <div style="flex:1">
+                          <div style="font-weight:800; font-size:13px">התראות · Push + SMS</div>
+                          <div class="muted text-xs">לא תפספס קריאה</div>
+                        </div>
+                      </div>
+                      <div style="display:flex; gap:12px; padding:14px; background:#fff; border:1px solid var(--hairline); border-radius:var(--r-md)">
+                        <span class="badge ok"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg></span>
+                        <div style="flex:1">
+                          <div style="font-weight:800; font-size:13px">פרטיות · אנונימי לעו"ד</div>
+                          <div class="muted text-xs">שם נחשף רק אם תאשר</div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="callout success" style="margin-top:18px">
+                      <div class="ico"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 13l4 4L19 7"/></svg></div>
+                      <div><b>VETO מוכן.</b> כפתור ה-SOS שלך פעיל בכל רגע.</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="wiz-foot">
+                <button class="cta lg" style="flex:1; justify-content:center">סיים והתחל →</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="notes">
+      <h3>הערות עיצוב · Wizard</h3>
+      <ul>
+        <li><b>רכבת התקדמות</b> — עמודה כהה (Navy 800/900) עם כל 4 השלבים. שלב פעיל = מספר זהב, שלב הושלם = ✓ ירוק.</li>
+        <li><b>שאלות גדולות</b> — h2 בסריפי ענק, סבר קצר. אופציות בכרטיסים גדולים עם אייקון, כותרת, תיאור, ✓ נסתר עד בחירה.</li>
+        <li><b>שמירה אוטומטית</b> — נראית בתחתית הרכבת ("נשמר אוטומטית · לפני 4 שניות") — מבטל חרדת אובדן נתונים.</li>
+        <li><b>Mobile</b> — אין רכבת. progress bar אופקי דק עם תווית "שאלה X מתוך 4" + שם השלב.</li>
+        <li><b>Final step</b> — סיכום checklist ירוק. CTA יחיד: "סיים והתחל".</li>
+      </ul>
+    </div>
+  </div>
+</body>
+</html>

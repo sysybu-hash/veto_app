@@ -15,7 +15,8 @@ class CallEntryScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    var args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+    var args =
+        ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
     args ??= callRouteArgsStorageRead();
     if (args == null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {

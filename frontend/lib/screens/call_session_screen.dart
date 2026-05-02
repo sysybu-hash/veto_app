@@ -8,11 +8,11 @@ import 'dart:async';
 import 'package:agora_rtc_engine/agora_rtc_engine.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import '../core/theme/veto_tokens_2026.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 
 import 'in_call_speech.dart';
-import '../core/theme/veto_theme.dart';
 import '../services/agora_service.dart';
 import '../services/socket_service.dart';
 import '../services/vault_save_queue.dart';
@@ -216,7 +216,8 @@ class _CallSessionScreenState extends State<CallSessionScreen>
         waitMs += 250;
       }
       if (!_agora.joined) {
-        throw TimeoutException('Agora media connection timed out waiting to join channel. Please verify token/App ID.');
+        throw TimeoutException(
+            'Agora media connection timed out waiting to join channel. Please verify token/App ID.');
       }
     } catch (e) {
       debugPrint('Agora connection failed: $e. Proceeding to chat fallback.');
@@ -316,13 +317,13 @@ class _CallSessionScreenState extends State<CallSessionScreen>
     required bool useVideoSurface,
   }) {
     if (_agoraFailed || eng == null) {
-      return Center(
+      return const Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.videocam_off, color: Colors.white54, size: 56),
-            const SizedBox(height: 16),
-            const Text(
+            Icon(Icons.videocam_off, color: Colors.white54, size: 56),
+            SizedBox(height: 16),
+            Text(
               'חיבור מדיה לא זמין (מצלמה/מיקרופון).\nתוכל להשתמש בצ׳אט מימין.',
               textAlign: TextAlign.center,
               style: TextStyle(
@@ -392,14 +393,14 @@ class _CallSessionScreenState extends State<CallSessionScreen>
   }) {
     if (_agoraFailed || eng == null || !_agora.joined) {
       return const Center(
-        child: Icon(Icons.videocam_outlined, color: VetoColors.silver),
+        child: Icon(Icons.videocam_outlined, color: VetoTokens.ink500),
       );
     }
 
     if (!useVideoSurface) {
       return const Center(
         child: CircularProgressIndicator(
-          color: VetoColors.silver,
+          color: VetoTokens.ink500,
           strokeWidth: 2,
         ),
       );
@@ -424,16 +425,16 @@ class _CallSessionScreenState extends State<CallSessionScreen>
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
               decoration: BoxDecoration(
-                color: VetoColors.vetoRedSoft,
+                color: VetoTokens.emergSoft,
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(
-                  color: VetoColors.vetoRed.withValues(alpha: 0.3),
+                  color: VetoTokens.emerg.withValues(alpha: 0.3),
                 ),
               ),
               child: const Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.shield, color: VetoColors.vetoRed, size: 14),
+                  Icon(Icons.shield, color: VetoTokens.emerg, size: 14),
                   SizedBox(width: 5),
                   Text(
                     'VETO',
@@ -441,7 +442,7 @@ class _CallSessionScreenState extends State<CallSessionScreen>
                       fontFamily: 'Heebo',
                       fontSize: 12,
                       fontWeight: FontWeight.w800,
-                      color: VetoColors.vetoRed,
+                      color: VetoTokens.emerg,
                       letterSpacing: 1.4,
                     ),
                   ),
@@ -450,11 +451,10 @@ class _CallSessionScreenState extends State<CallSessionScreen>
             ),
             const Spacer(),
             // אינדיקטור איכות רשת בזמן אמת
-            if (quality.isNotEmpty) ...
-              [
-                _NetworkQualityChip(label: quality, rttMs: rtt),
-                const SizedBox(width: 8),
-              ],
+            if (quality.isNotEmpty) ...[
+              _NetworkQualityChip(label: quality, rttMs: rtt),
+              const SizedBox(width: 8),
+            ],
             if (_agora.joined)
               Text(
                 '${(_durationSeconds ~/ 60).toString().padLeft(2, '0')}:'
@@ -506,16 +506,19 @@ class _CallSessionScreenState extends State<CallSessionScreen>
               },
               style: IconButton.styleFrom(
                 backgroundColor: _agora.noiseSuppression
-                    ? VetoColors.vetoRed.withValues(alpha: 0.3)
+                    ? VetoTokens.emerg.withValues(alpha: 0.3)
                     : Colors.white12,
               ),
               icon: Icon(
                 _agora.noiseSuppression
                     ? Icons.noise_aware
                     : Icons.noise_control_off,
-                color: _agora.noiseSuppression ? VetoColors.vetoRed : Colors.white54,
+                color:
+                    _agora.noiseSuppression ? VetoTokens.emerg : Colors.white54,
               ),
-              tooltip: _agora.noiseSuppression ? 'Noise suppression ON' : 'Noise suppression OFF',
+              tooltip: _agora.noiseSuppression
+                  ? 'Noise suppression ON'
+                  : 'Noise suppression OFF',
             ),
             const SizedBox(width: 4),
             if (!kIsWeb)
@@ -527,9 +530,7 @@ class _CallSessionScreenState extends State<CallSessionScreen>
                   backgroundColor: Colors.white12,
                 ),
                 icon: Icon(
-                  _agora.speakerOn
-                      ? Icons.volume_up
-                      : Icons.hearing,
+                  _agora.speakerOn ? Icons.volume_up : Icons.hearing,
                   color: Colors.white,
                 ),
                 tooltip: 'Speaker',
@@ -543,7 +544,7 @@ class _CallSessionScreenState extends State<CallSessionScreen>
               },
               style: IconButton.styleFrom(
                 backgroundColor:
-                    _agora.micPublishMuted ? VetoColors.vetoRed : Colors.white12,
+                    _agora.micPublishMuted ? VetoTokens.emerg : Colors.white12,
               ),
               icon: Icon(
                 _agora.micPublishMuted ? Icons.mic_off : Icons.mic,
@@ -556,13 +557,12 @@ class _CallSessionScreenState extends State<CallSessionScreen>
               IconButton(
                 onPressed: () {
                   unawaited(
-                    _agora
-                        .setVideoPublishMuted(!_agora.videoPublishMuted),
+                    _agora.setVideoPublishMuted(!_agora.videoPublishMuted),
                   );
                 },
                 style: IconButton.styleFrom(
                   backgroundColor: _agora.videoPublishMuted
-                      ? VetoColors.vetoRed
+                      ? VetoTokens.emerg
                       : Colors.white12,
                 ),
                 icon: Icon(
@@ -606,9 +606,7 @@ class _CallSessionScreenState extends State<CallSessionScreen>
                   _agora.screenSharing
                       ? Icons.stop_screen_share
                       : Icons.screen_share,
-                  color: _agora.screenSharing
-                      ? Colors.white
-                      : Colors.white70,
+                  color: _agora.screenSharing ? Colors.white : Colors.white70,
                 ),
                 tooltip: _agora.screenSharing ? 'Stop sharing' : 'Share screen',
               ),
@@ -628,12 +626,12 @@ class _CallSessionScreenState extends State<CallSessionScreen>
           child: Container(
             width: 64,
             height: 64,
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               shape: BoxShape.circle,
-              color: VetoColors.vetoRed,
-              boxShadow: VetoDecorations.vetoGlow(intensity: 0.7),
+              color: VetoTokens.emerg,
+              boxShadow: VetoTokens.shadowEmerg,
             ),
-            child: const Icon(Icons.call_end, color: VetoColors.white, size: 28),
+            child: const Icon(Icons.call_end, color: Colors.white, size: 28),
           ),
         ),
         const SizedBox(height: 4),
@@ -651,14 +649,14 @@ class _CallSessionScreenState extends State<CallSessionScreen>
 
   Widget _sidePanel() {
     return Material(
-      color: VetoColors.surface.withValues(alpha: 0.95),
+      color: VetoTokens.surface.withValues(alpha: 0.95),
       child: Column(
         children: [
           TabBar(
             controller: _sideTabController,
-            labelColor: VetoColors.vetoRed,
-            unselectedLabelColor: VetoColors.silver,
-            indicatorColor: VetoColors.vetoRed,
+            labelColor: VetoTokens.emerg,
+            unselectedLabelColor: VetoTokens.ink500,
+            indicatorColor: VetoTokens.emerg,
             tabs: const [
               Tab(text: 'Chat'),
               Tab(text: 'Caption'),
@@ -673,7 +671,7 @@ class _CallSessionScreenState extends State<CallSessionScreen>
                     : 'After the call, server recording can be transcribed from the vault when available.',
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  color: VetoColors.silver.withValues(alpha: 0.9),
+                  color: VetoTokens.ink500.withValues(alpha: 0.9),
                   fontSize: 10,
                   fontFamily: 'Heebo',
                 ),
@@ -702,7 +700,7 @@ class _CallSessionScreenState extends State<CallSessionScreen>
                   child: Text(
                     'No messages yet. Type below.',
                     style: TextStyle(
-                      color: VetoColors.silver,
+                      color: VetoTokens.ink500,
                       fontFamily: 'Heebo',
                     ),
                   ),
@@ -726,7 +724,7 @@ class _CallSessionScreenState extends State<CallSessionScreen>
                         constraints: const BoxConstraints(maxWidth: 260),
                         decoration: BoxDecoration(
                           color: line.mine
-                              ? VetoColors.vetoRed.withValues(alpha: 0.25)
+                              ? VetoTokens.emerg.withValues(alpha: 0.25)
                               : Colors.white12,
                           borderRadius: BorderRadius.circular(10),
                         ),
@@ -760,7 +758,7 @@ class _CallSessionScreenState extends State<CallSessionScreen>
                   decoration: const InputDecoration(
                     hintText: 'Message…',
                     hintStyle: TextStyle(
-                      color: VetoColors.silver,
+                      color: VetoTokens.ink500,
                     ),
                     border: OutlineInputBorder(),
                     isDense: true,
@@ -774,7 +772,7 @@ class _CallSessionScreenState extends State<CallSessionScreen>
               ),
               IconButton(
                 onPressed: _sendChat,
-                color: VetoColors.vetoRed,
+                color: VetoTokens.emerg,
                 icon: const Icon(Icons.send),
               ),
             ],
@@ -809,8 +807,8 @@ class _CallSessionScreenState extends State<CallSessionScreen>
                 },
           style: FilledButton.styleFrom(
             backgroundColor:
-                s.listening ? VetoColors.vetoRed : VetoColors.surface,
-            foregroundColor: s.listening ? Colors.white : VetoColors.silver,
+                s.listening ? VetoTokens.emerg : VetoTokens.surface,
+            foregroundColor: s.listening ? Colors.white : VetoTokens.ink500,
           ),
           icon: Icon(
             s.listening ? Icons.stop_circle_outlined : Icons.mic,
@@ -840,7 +838,7 @@ class _CallSessionScreenState extends State<CallSessionScreen>
           Text(
             s.partial,
             style: const TextStyle(
-              color: VetoColors.silver,
+              color: VetoTokens.ink500,
               fontSize: 14,
               fontStyle: FontStyle.italic,
             ),
@@ -864,7 +862,7 @@ class _CallSessionScreenState extends State<CallSessionScreen>
           const Text(
             'This is on-device text from your side only (not the peer). Server-side transcription uses the recording when you end the call.',
             style: TextStyle(
-              color: VetoColors.silver,
+              color: VetoTokens.ink500,
               fontSize: 12,
               fontFamily: 'Heebo',
             ),
@@ -925,10 +923,11 @@ class _CallSessionScreenState extends State<CallSessionScreen>
               borderRadius: BorderRadius.circular(10),
               child: Container(
                 decoration: BoxDecoration(
-                  color: VetoColors.surface,
-                  border: Border.all(color: VetoColors.border),
+                  color: VetoTokens.surface,
+                  border: Border.all(color: VetoTokens.hairline),
                 ),
-                child: _localPreview(eng: eng, useVideoSurface: useVideoSurface),
+                child:
+                    _localPreview(eng: eng, useVideoSurface: useVideoSurface),
               ),
             ),
           ),
@@ -1086,11 +1085,16 @@ class _NetworkQualityChip extends StatelessWidget {
 
   Color get _color {
     switch (label) {
-      case 'מעולה': return const Color(0xFF10B981);
-      case 'טובה':  return const Color(0xFF34D399);
-      case 'בינונית': return const Color(0xFFF59E0B);
-      case 'גרועה': return const Color(0xFFEF4444);
-      default: return const Color(0xFFEF4444);
+      case 'מעולה':
+        return const Color(0xFF10B981);
+      case 'טובה':
+        return const Color(0xFF34D399);
+      case 'בינונית':
+        return const Color(0xFFF59E0B);
+      case 'גרועה':
+        return const Color(0xFFEF4444);
+      default:
+        return const Color(0xFFEF4444);
     }
   }
 

@@ -11,8 +11,7 @@ import 'package:provider/provider.dart';
 
 import '../config/app_config.dart';
 import '../core/i18n/app_language.dart';
-import '../core/theme/veto_glass_system.dart';
-import '../core/theme/veto_theme.dart';
+import '../core/theme/veto_tokens_2026.dart';
 import '../services/auth_service.dart';
 
 // ── i18n ──────────────────────────────────────────────────────
@@ -75,19 +74,24 @@ class _Conversation {
   final int unreadCount;
 
   const _Conversation({
-    required this.partnerId, required this.partnerName,
-    required this.partnerRole, this.lastMessage,
-    this.lastAt, required this.unreadCount,
+    required this.partnerId,
+    required this.partnerName,
+    required this.partnerRole,
+    this.lastMessage,
+    this.lastAt,
+    required this.unreadCount,
   });
 
   factory _Conversation.fromJson(Map<String, dynamic> j) => _Conversation(
-    partnerId: j['partnerId'] ?? j['partner_id'] ?? '',
-    partnerName: j['partnerName'] ?? j['partner_name'] ?? '',
-    partnerRole: j['partnerRole'] ?? j['partner_role'] ?? '',
-    lastMessage: j['lastMessage'] as String?,
-    lastAt: j['lastAt'] != null ? DateTime.tryParse(j['lastAt'] as String) : null,
-    unreadCount: (j['unreadCount'] ?? j['unread_count'] ?? 0) as int,
-  );
+        partnerId: j['partnerId'] ?? j['partner_id'] ?? '',
+        partnerName: j['partnerName'] ?? j['partner_name'] ?? '',
+        partnerRole: j['partnerRole'] ?? j['partner_role'] ?? '',
+        lastMessage: j['lastMessage'] as String?,
+        lastAt: j['lastAt'] != null
+            ? DateTime.tryParse(j['lastAt'] as String)
+            : null,
+        unreadCount: (j['unreadCount'] ?? j['unread_count'] ?? 0) as int,
+      );
 }
 
 class _Message {
@@ -96,8 +100,12 @@ class _Message {
   final bool isOwn;
 
   const _Message({
-    required this.id, required this.senderId, required this.senderRole,
-    required this.text, required this.createdAt, required this.isOwn,
+    required this.id,
+    required this.senderId,
+    required this.senderRole,
+    required this.text,
+    required this.createdAt,
+    required this.isOwn,
   });
 
   factory _Message.fromJson(Map<String, dynamic> j, String myId) {
@@ -118,10 +126,10 @@ class _Partner {
   const _Partner({required this.id, required this.name, required this.role});
 
   factory _Partner.fromJson(Map<String, dynamic> j) => _Partner(
-    id: j['_id'] ?? j['id'] ?? '',
-    name: j['full_name'] ?? j['name'] ?? '',
-    role: j['role'] ?? '',
-  );
+        id: j['_id'] ?? j['id'] ?? '',
+        name: j['full_name'] ?? j['name'] ?? '',
+        role: j['role'] ?? '',
+      );
 }
 
 // ── Screen ────────────────────────────────────────────────────
@@ -171,7 +179,8 @@ class _ChatScreenState extends State<ChatScreen> {
     if (widget.initialPartnerId != null) {
       _activePartnerId = widget.initialPartnerId;
       _activePartnerName = widget.initialPartnerName ?? '';
-      WidgetsBinding.instance.addPostFrameCallback((_) => _loadMessages(reset: true));
+      WidgetsBinding.instance
+          .addPostFrameCallback((_) => _loadMessages(reset: true));
     }
   }
 
@@ -193,7 +202,10 @@ class _ChatScreenState extends State<ChatScreen> {
       final decoded = jsonDecode(utf8.decode(base64Url.decode(payload)))
           as Map<String, dynamic>;
       if (!mounted) return;
-      setState(() => _myId = (decoded['userId'] ?? decoded['id'] ?? decoded['sub'] ?? '') as String);
+      setState(() => _myId = (decoded['userId'] ??
+          decoded['id'] ??
+          decoded['sub'] ??
+          '') as String);
     } catch (_) {}
   }
 
@@ -219,20 +231,23 @@ class _ChatScreenState extends State<ChatScreen> {
     try {
       final tok = await _token;
       if (tok == null) return;
-      final res = await http.get(
-        Uri.parse('${AppConfig.baseUrl}/chat/conversations'),
-        headers: AppConfig.httpHeaders({'Authorization': 'Bearer $tok'}),
-      ).timeout(const Duration(seconds: 15));
+      final res = await http
+          .get(
+            Uri.parse('${AppConfig.baseUrl}/chat/conversations'),
+            headers: AppConfig.httpHeaders({'Authorization': 'Bearer $tok'}),
+          )
+          .timeout(const Duration(seconds: 15));
       if (!mounted) return;
       if (res.statusCode == 200) {
         final data = jsonDecode(res.body);
-        final list = data is List ? data : (data['conversations'] ?? data['data'] ?? []);
+        final list =
+            data is List ? data : (data['conversations'] ?? data['data'] ?? []);
         setState(() => _conversations = (list as List)
             .map((e) => _Conversation.fromJson(e as Map<String, dynamic>))
             .toList());
       }
-    } catch (_) {}
-    finally {
+    } catch (_) {
+    } finally {
       if (mounted && !silent) setState(() => _loadingConvs = false);
     }
   }
@@ -244,17 +259,22 @@ class _ChatScreenState extends State<ChatScreen> {
       if (!mounted) return;
       setState(() => _loadingMsgs = true);
     }
-    if (reset) { _page = 1; _hasMore = true; }
+    if (reset) {
+      _page = 1;
+      _hasMore = true;
+    }
 
     try {
       final tok = await _token;
       if (tok == null) return;
       final uri = Uri.parse(
           '${AppConfig.baseUrl}/chat/messages/$_activePartnerId?page=$_page');
-      final res = await http.get(
-        uri,
-        headers: AppConfig.httpHeaders({'Authorization': 'Bearer $tok'}),
-      ).timeout(const Duration(seconds: 15));
+      final res = await http
+          .get(
+            uri,
+            headers: AppConfig.httpHeaders({'Authorization': 'Bearer $tok'}),
+          )
+          .timeout(const Duration(seconds: 15));
       if (!mounted) return;
       if (res.statusCode == 200) {
         final data = jsonDecode(res.body);
@@ -271,11 +291,12 @@ class _ChatScreenState extends State<ChatScreen> {
           _hasMore = parsed.length >= 50;
         });
         if (reset) {
-          WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
+          WidgetsBinding.instance
+              .addPostFrameCallback((_) => _scrollToBottom());
         }
       }
-    } catch (_) {}
-    finally {
+    } catch (_) {
+    } finally {
       if (mounted && !silent) setState(() => _loadingMsgs = false);
     }
   }
@@ -307,24 +328,26 @@ class _ChatScreenState extends State<ChatScreen> {
     try {
       final tok = await _token;
       if (tok == null) return;
-      final res = await http.post(
-        Uri.parse('${AppConfig.baseUrl}/chat/messages'),
-        headers: AppConfig.httpHeaders({'Authorization': 'Bearer $tok'}),
-        body: jsonEncode({'receiver_id': _activePartnerId, 'text': text}),
-      ).timeout(const Duration(seconds: 10));
+      final res = await http
+          .post(
+            Uri.parse('${AppConfig.baseUrl}/chat/messages'),
+            headers: AppConfig.httpHeaders({'Authorization': 'Bearer $tok'}),
+            body: jsonEncode({'receiver_id': _activePartnerId, 'text': text}),
+          )
+          .timeout(const Duration(seconds: 10));
       if (!mounted) return;
       if (res.statusCode == 201 || res.statusCode == 200) {
         final body = jsonDecode(res.body);
         final msg = body['message'] ?? body;
         if (msg is Map) {
-          setState(() => _messages.add(
-              _Message.fromJson(msg as Map<String, dynamic>, _myId)));
+          setState(() => _messages
+              .add(_Message.fromJson(msg as Map<String, dynamic>, _myId)));
         }
         WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
         _loadConversations(silent: true);
       }
-    } catch (_) {}
-    finally {
+    } catch (_) {
+    } finally {
       if (mounted) setState(() => _sending = false);
     }
   }
@@ -335,10 +358,12 @@ class _ChatScreenState extends State<ChatScreen> {
     try {
       final tok = await _token;
       if (tok == null) return;
-      final res = await http.delete(
-        Uri.parse('${AppConfig.baseUrl}/chat/messages/${msg.id}'),
-        headers: AppConfig.httpHeaders({'Authorization': 'Bearer $tok'}),
-      ).timeout(const Duration(seconds: 10));
+      final res = await http
+          .delete(
+            Uri.parse('${AppConfig.baseUrl}/chat/messages/${msg.id}'),
+            headers: AppConfig.httpHeaders({'Authorization': 'Bearer $tok'}),
+          )
+          .timeout(const Duration(seconds: 10));
       if (res.statusCode == 200 || res.statusCode == 204) {
         if (!mounted) return;
         setState(() => _messages.removeWhere((m) => m.id == msg.id));
@@ -387,23 +412,29 @@ class _ChatScreenState extends State<ChatScreen> {
             builder: (_, sc) => Column(children: [
               Container(
                 margin: const EdgeInsets.only(top: 10, bottom: 8),
-                width: 36, height: 4,
+                width: 36,
+                height: 4,
                 decoration: BoxDecoration(
-                    color: VetoPalette.border,
+                    color: VetoTokens.hairline,
                     borderRadius: BorderRadius.circular(2)),
               ),
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
                 child: Text(_t('newChat'),
-                    style: const TextStyle(color: VetoGlassTokens.textPrimary,
-                        fontWeight: FontWeight.w700, fontSize: 17)),
+                    style: const TextStyle(
+                        color: VetoTokens.ink900,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 17)),
               ),
               Expanded(
                 child: loading
                     ? const Center(child: CircularProgressIndicator())
                     : partners.isEmpty
-                        ? Center(child: Text(_t('noPartners'),
-                            style: const TextStyle(color: VetoGlassTokens.textMuted)))
+                        ? Center(
+                            child: Text(_t('noPartners'),
+                                style:
+                                    const TextStyle(color: VetoTokens.ink500)))
                         : ListView.builder(
                             controller: sc,
                             itemCount: partners.length,
@@ -411,18 +442,23 @@ class _ChatScreenState extends State<ChatScreen> {
                               final p = partners[i];
                               return ListTile(
                                 leading: CircleAvatar(
-                                  backgroundColor:
-                                      VetoPalette.primary.withValues(alpha: 0.15),
-                                  child: Text(p.name.isNotEmpty ? p.name[0].toUpperCase() : '?',
+                                  backgroundColor: VetoTokens.navy600
+                                      .withValues(alpha: 0.15),
+                                  child: Text(
+                                      p.name.isNotEmpty
+                                          ? p.name[0].toUpperCase()
+                                          : '?',
                                       style: const TextStyle(
-                                          color: VetoPalette.primary,
+                                          color: VetoTokens.navy600,
                                           fontWeight: FontWeight.w700)),
                                 ),
                                 title: Text(p.name,
-                                    style: const TextStyle(color: VetoGlassTokens.textPrimary)),
+                                    style: const TextStyle(
+                                        color: VetoTokens.ink900)),
                                 subtitle: Text(p.role,
                                     style: const TextStyle(
-                                        color: VetoGlassTokens.textMuted, fontSize: 12)),
+                                        color: VetoTokens.ink500,
+                                        fontSize: 12)),
                                 onTap: () {
                                   Navigator.pop(ctx);
                                   setState(() {
@@ -447,10 +483,12 @@ class _ChatScreenState extends State<ChatScreen> {
     try {
       final tok = await _token;
       if (tok == null) return [];
-      final res = await http.get(
-        Uri.parse('${AppConfig.baseUrl}/chat/partners'),
-        headers: AppConfig.httpHeaders({'Authorization': 'Bearer $tok'}),
-      ).timeout(const Duration(seconds: 10));
+      final res = await http
+          .get(
+            Uri.parse('${AppConfig.baseUrl}/chat/partners'),
+            headers: AppConfig.httpHeaders({'Authorization': 'Bearer $tok'}),
+          )
+          .timeout(const Duration(seconds: 10));
       if (res.statusCode == 200) {
         final data = jsonDecode(res.body);
         final list = data is List ? data : (data['partners'] ?? []);
@@ -471,17 +509,19 @@ class _ChatScreenState extends State<ChatScreen> {
     return Directionality(
       textDirection: isRtl ? TextDirection.rtl : TextDirection.ltr,
       child: Scaffold(
-        backgroundColor: VetoGlassTokens.bgBase,
-        body: VetoGlassAuroraBackground(
+        backgroundColor: VetoTokens.paper,
+        body: Container(
+          decoration: VetoTokens.ambientPageDecoration(),
           child: LayoutBuilder(builder: (_, constraints) {
             final isWide = constraints.maxWidth > 720;
             if (isWide) {
               return Row(children: [
                 SizedBox(width: 320, child: _buildConversationList()),
-                const VerticalDivider(width: 1, color: VetoGlassTokens.glassBorder),
-                Expanded(child: _activePartnerId == null
-                    ? _buildEmptyThread()
-                    : _buildThread()),
+                const VerticalDivider(width: 1, color: VetoTokens.hairline),
+                Expanded(
+                    child: _activePartnerId == null
+                        ? _buildEmptyThread()
+                        : _buildThread()),
               ]);
             }
             if (_activePartnerId != null) {
@@ -497,44 +537,50 @@ class _ChatScreenState extends State<ChatScreen> {
   // ── Conversation list panel ────────────────────────────────────
   Widget _buildConversationList({bool showAppBar = false}) {
     return Scaffold(
-      backgroundColor: VetoGlassTokens.bgBase,
+      backgroundColor: VetoTokens.paper,
       appBar: AppBar(
         backgroundColor: const Color(0x18FFFFFF),
         elevation: 0,
         shadowColor: Colors.transparent,
         surfaceTintColor: Colors.transparent,
-        leading: showAppBar ? null : BackButton(
-          color: VetoGlassTokens.textPrimary,
-          onPressed: () => Navigator.of(context).pop(),
-        ),
+        leading: showAppBar
+            ? null
+            : BackButton(
+                color: VetoTokens.ink900,
+                onPressed: () => Navigator.of(context).pop(),
+              ),
         title: Text(
           _t('title'),
-          style: const TextStyle(color: VetoGlassTokens.textPrimary, fontWeight: FontWeight.w800, fontSize: 18),
+          style: const TextStyle(
+              color: VetoTokens.ink900,
+              fontWeight: FontWeight.w800,
+              fontSize: 18),
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.edit_outlined, color: VetoGlassTokens.neonCyan),
+            icon: const Icon(Icons.edit_outlined, color: VetoTokens.navy600),
             onPressed: _showNewChatPicker,
             tooltip: _t('newChat'),
           ),
         ],
         bottom: const PreferredSize(
           preferredSize: Size.fromHeight(1),
-          child: Divider(height: 1, color: VetoGlassTokens.glassBorder),
+          child: Divider(height: 1, color: VetoTokens.hairline),
         ),
       ),
       body: _loadingConvs
-          ? const Center(child: CircularProgressIndicator(color: VetoGlassTokens.neonCyan))
+          ? const Center(
+              child: CircularProgressIndicator(color: VetoTokens.navy600))
           : _conversations.isEmpty
               ? Center(
                   child: Column(mainAxisSize: MainAxisSize.min, children: [
                     Icon(Icons.chat_bubble_outline_rounded,
                         size: 64,
-                        color: VetoPalette.textSubtle.withValues(alpha: 0.5)),
+                        color: VetoTokens.ink300.withValues(alpha: 0.5)),
                     const SizedBox(height: 16),
                     Text(_t('noConversations'),
                         style: const TextStyle(
-                            color: VetoGlassTokens.textMuted,
+                            color: VetoTokens.ink500,
                             fontSize: 16,
                             fontWeight: FontWeight.w500)),
                     const SizedBox(height: 12),
@@ -543,8 +589,8 @@ class _ChatScreenState extends State<ChatScreen> {
                       icon: const Icon(Icons.add_rounded),
                       label: Text(_t('newChat')),
                       style: FilledButton.styleFrom(
-                          backgroundColor: VetoGlassTokens.neonCyan,
-                          foregroundColor: const Color(0xFF041018),
+                        backgroundColor: VetoTokens.navy600,
+                        foregroundColor: const Color(0xFF041018),
                       ),
                     ),
                   ]),
@@ -554,7 +600,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   child: ListView.separated(
                     itemCount: _conversations.length,
                     separatorBuilder: (_, __) =>
-                        const Divider(height: 1, color: VetoGlassTokens.glassBorder),
+                        const Divider(height: 1, color: VetoTokens.hairline),
                     itemBuilder: (_, i) => _buildConvTile(_conversations[i]),
                   ),
                 ),
@@ -563,41 +609,41 @@ class _ChatScreenState extends State<ChatScreen> {
 
   Widget _buildConvTile(_Conversation c) {
     final isActive = c.partnerId == _activePartnerId;
-    final initial = c.partnerName.isNotEmpty ? c.partnerName[0].toUpperCase() : '?';
+    final initial =
+        c.partnerName.isNotEmpty ? c.partnerName[0].toUpperCase() : '?';
     final ts = c.lastAt != null ? _formatTs(c.lastAt!) : '';
 
     return ListTile(
       selected: isActive,
-      selectedTileColor: VetoGlassTokens.neonCyan.withValues(alpha: 0.12),
+      selectedTileColor: VetoTokens.navy600.withValues(alpha: 0.12),
       tileColor: Colors.transparent,
       leading: CircleAvatar(
-        backgroundColor: VetoGlassTokens.neonCyan.withValues(alpha: 0.15),
+        backgroundColor: VetoTokens.navy600.withValues(alpha: 0.15),
         child: Text(initial,
             style: const TextStyle(
-                color: VetoGlassTokens.neonCyan, fontWeight: FontWeight.w700)),
+                color: VetoTokens.navy600, fontWeight: FontWeight.w700)),
       ),
       title: Row(children: [
         Expanded(
           child: Text(c.partnerName,
               style: const TextStyle(
-                  color: VetoGlassTokens.textPrimary,
+                  color: VetoTokens.ink900,
                   fontWeight: FontWeight.w600,
                   fontSize: 14),
               maxLines: 1,
               overflow: TextOverflow.ellipsis),
         ),
-        Text(ts, style: const TextStyle(color: VetoGlassTokens.textSubtle, fontSize: 11)),
+        Text(ts,
+            style: const TextStyle(color: VetoTokens.ink300, fontSize: 11)),
       ]),
       subtitle: c.lastMessage != null
           ? Text(c.lastMessage!,
               style: TextStyle(
-                  color: c.unreadCount > 0
-                      ? VetoGlassTokens.textPrimary
-                      : VetoGlassTokens.textMuted,
+                  color:
+                      c.unreadCount > 0 ? VetoTokens.ink900 : VetoTokens.ink500,
                   fontSize: 13,
-                  fontWeight: c.unreadCount > 0
-                      ? FontWeight.w600
-                      : FontWeight.normal),
+                  fontWeight:
+                      c.unreadCount > 0 ? FontWeight.w600 : FontWeight.normal),
               maxLines: 1,
               overflow: TextOverflow.ellipsis)
           : null,
@@ -605,7 +651,7 @@ class _ChatScreenState extends State<ChatScreen> {
           ? Container(
               padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
               decoration: BoxDecoration(
-                  color: VetoGlassTokens.neonCyan,
+                  color: VetoTokens.navy600,
                   borderRadius: BorderRadius.circular(20)),
               child: Text('${c.unreadCount}',
                   style: const TextStyle(
@@ -629,12 +675,11 @@ class _ChatScreenState extends State<ChatScreen> {
   Widget _buildEmptyThread() => Center(
         child: Column(mainAxisSize: MainAxisSize.min, children: [
           Icon(Icons.forum_outlined,
-              size: 64,
-              color: VetoPalette.textSubtle.withValues(alpha: 0.4)),
+              size: 64, color: VetoTokens.ink300.withValues(alpha: 0.4)),
           const SizedBox(height: 16),
           Text(_t('selectPartner'),
               style: const TextStyle(
-                  color: VetoPalette.textMuted,
+                  color: VetoTokens.ink500,
                   fontSize: 15,
                   fontWeight: FontWeight.w500)),
           const SizedBox(height: 12),
@@ -643,8 +688,8 @@ class _ChatScreenState extends State<ChatScreen> {
             icon: const Icon(Icons.add_rounded),
             label: Text(_t('newChat')),
             style: FilledButton.styleFrom(
-                backgroundColor: VetoGlassTokens.neonCyan,
-                foregroundColor: const Color(0xFF041018),
+              backgroundColor: VetoTokens.navy600,
+              foregroundColor: const Color(0xFF041018),
             ),
           ),
         ]),
@@ -653,7 +698,7 @@ class _ChatScreenState extends State<ChatScreen> {
   // ── Message thread panel ───────────────────────────────────────
   Widget _buildThread({bool showBackButton = false}) {
     return Scaffold(
-      backgroundColor: VetoGlassTokens.bgBase,
+      backgroundColor: VetoTokens.paper,
       appBar: AppBar(
         backgroundColor: const Color(0x18FFFFFF),
         elevation: 0,
@@ -661,7 +706,8 @@ class _ChatScreenState extends State<ChatScreen> {
         surfaceTintColor: Colors.transparent,
         leading: showBackButton
             ? IconButton(
-                icon: const Icon(Icons.arrow_back_rounded, color: VetoGlassTokens.textPrimary),
+                icon: const Icon(Icons.arrow_back_rounded,
+                    color: VetoTokens.ink900),
                 onPressed: () => setState(() {
                   _activePartnerId = null;
                   _activePartnerName = null;
@@ -671,46 +717,53 @@ class _ChatScreenState extends State<ChatScreen> {
         title: Row(children: [
           CircleAvatar(
             radius: 16,
-            backgroundColor: VetoGlassTokens.neonBlue.withValues(alpha: 0.2),
+            backgroundColor: VetoTokens.navy500.withValues(alpha: 0.2),
             child: Text(
               (_activePartnerName?.isNotEmpty == true)
                   ? _activePartnerName![0].toUpperCase()
                   : '?',
-              style: const TextStyle(color: VetoGlassTokens.neonCyan, fontWeight: FontWeight.w700, fontSize: 14),
+              style: const TextStyle(
+                  color: VetoTokens.navy600,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 14),
             ),
           ),
           const SizedBox(width: 10),
           Expanded(
             child: Text(_activePartnerName ?? '',
-                style: const TextStyle(color: VetoGlassTokens.textPrimary, fontWeight: FontWeight.w700, fontSize: 15),
+                style: const TextStyle(
+                    color: VetoTokens.ink900,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 15),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis),
           ),
         ]),
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh_rounded, color: VetoGlassTokens.textPrimary),
+            icon: const Icon(Icons.refresh_rounded, color: VetoTokens.ink900),
             onPressed: () => _loadMessages(reset: true),
           ),
         ],
         bottom: const PreferredSize(
           preferredSize: Size.fromHeight(1),
-          child: Divider(height: 1, color: VetoGlassTokens.glassBorder),
+          child: Divider(height: 1, color: VetoTokens.hairline),
         ),
       ),
       body: Column(children: [
         // Loading more indicator
         if (_loadingMsgs && _messages.isNotEmpty)
           const LinearProgressIndicator(
-              color: VetoGlassTokens.neonCyan, minHeight: 2),
+              color: VetoTokens.navy600, minHeight: 2),
         // Messages list
         Expanded(
           child: _loadingMsgs && _messages.isEmpty
-              ? const Center(child: CircularProgressIndicator(color: VetoGlassTokens.neonCyan))
+              ? const Center(
+                  child: CircularProgressIndicator(color: VetoTokens.navy600))
               : ListView.builder(
                   controller: _scrollCtrl,
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 12, vertical: 16),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
                   itemCount: _messages.length,
                   itemBuilder: (_, i) {
                     final msg = _messages[i];
@@ -745,14 +798,13 @@ class _ChatScreenState extends State<ChatScreen> {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 12),
       child: Row(children: [
-        const Expanded(child: Divider(color: VetoGlassTokens.glassBorder)),
+        const Expanded(child: Divider(color: VetoTokens.hairline)),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12),
           child: Text(label,
-              style: const TextStyle(
-                  color: VetoGlassTokens.textMuted, fontSize: 11)),
+              style: const TextStyle(color: VetoTokens.ink500, fontSize: 11)),
         ),
-        const Expanded(child: Divider(color: VetoGlassTokens.glassBorder)),
+        const Expanded(child: Divider(color: VetoTokens.hairline)),
       ]),
     );
   }
@@ -771,15 +823,15 @@ class _ChatScreenState extends State<ChatScreen> {
                     backgroundColor: const Color(0xE6121824),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(20),
-                      side: const BorderSide(color: VetoGlassTokens.glassBorder),
+                      side: const BorderSide(color: VetoTokens.hairline),
                     ),
                     title: Text(_t('deleteMsg'),
-                        style: const TextStyle(color: VetoGlassTokens.textPrimary)),
+                        style: const TextStyle(color: VetoTokens.ink900)),
                     actions: [
                       TextButton(
                         onPressed: () => Navigator.pop(ctx),
                         child: const Text('Cancel',
-                            style: TextStyle(color: VetoGlassTokens.textMuted)),
+                            style: TextStyle(color: VetoTokens.ink500)),
                       ),
                       FilledButton(
                         onPressed: () {
@@ -787,7 +839,7 @@ class _ChatScreenState extends State<ChatScreen> {
                           _deleteMessage(msg);
                         },
                         style: FilledButton.styleFrom(
-                            backgroundColor: VetoPalette.emergency),
+                            backgroundColor: VetoTokens.emerg),
                         child: const Text('Delete'),
                       ),
                     ],
@@ -799,45 +851,38 @@ class _ChatScreenState extends State<ChatScreen> {
           constraints: const BoxConstraints(maxWidth: 480),
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
           decoration: BoxDecoration(
-            color: msg.isOwn
-                ? VetoGlassTokens.neonBlue
-                : VetoGlassTokens.glassFillStrong,
+            color: msg.isOwn ? VetoTokens.navy500 : VetoTokens.surface,
             borderRadius: BorderRadius.only(
               topLeft: const Radius.circular(16),
               topRight: const Radius.circular(16),
               bottomLeft: Radius.circular(msg.isOwn ? 16 : 4),
               bottomRight: Radius.circular(msg.isOwn ? 4 : 16),
             ),
-            border: msg.isOwn
-                ? null
-                : Border.all(color: VetoGlassTokens.glassBorder),
+            border: msg.isOwn ? null : Border.all(color: VetoTokens.hairline),
             boxShadow: msg.isOwn
                 ? null
                 : [
                     BoxShadow(
-                      color: VetoGlassTokens.neonCyan.withValues(alpha: 0.06),
+                      color: VetoTokens.navy600.withValues(alpha: 0.06),
                       blurRadius: 12,
                     ),
                   ],
           ),
           child: Column(
-            crossAxisAlignment: msg.isOwn
-                ? CrossAxisAlignment.end
-                : CrossAxisAlignment.start,
+            crossAxisAlignment:
+                msg.isOwn ? CrossAxisAlignment.end : CrossAxisAlignment.start,
             children: [
               Text(msg.text,
                   style: TextStyle(
-                      color: msg.isOwn
-                          ? VetoGlassTokens.textPrimary
-                          : VetoGlassTokens.textPrimary,
+                      color: msg.isOwn ? VetoTokens.ink900 : VetoTokens.ink900,
                       fontSize: 14,
                       height: 1.45)),
               const SizedBox(height: 3),
               Text(time,
                   style: TextStyle(
                       color: msg.isOwn
-                          ? VetoGlassTokens.textPrimary.withValues(alpha: 0.7)
-                          : VetoGlassTokens.textSubtle,
+                          ? VetoTokens.ink900.withValues(alpha: 0.7)
+                          : VetoTokens.ink300,
                       fontSize: 10)),
             ],
           ),
@@ -856,28 +901,27 @@ class _ChatScreenState extends State<ChatScreen> {
       ),
       decoration: const BoxDecoration(
         color: Color(0x18FFFFFF),
-        border: Border(top: BorderSide(color: VetoGlassTokens.glassBorder)),
+        border: Border(top: BorderSide(color: VetoTokens.hairline)),
       ),
       child: Row(children: [
         Expanded(
           child: TextField(
             controller: _msgCtrl,
-            style: const TextStyle(color: VetoGlassTokens.textPrimary, fontSize: 14),
-            cursorColor: VetoGlassTokens.neonCyan,
+            style: const TextStyle(color: VetoTokens.ink900, fontSize: 14),
+            cursorColor: VetoTokens.navy600,
             maxLines: 4,
             minLines: 1,
             textCapitalization: TextCapitalization.sentences,
             decoration: InputDecoration(
               hintText: _t('typeMessage'),
-              hintStyle: const TextStyle(color: VetoGlassTokens.textMuted),
+              hintStyle: const TextStyle(color: VetoTokens.ink500),
               filled: true,
-              fillColor: VetoGlassTokens.glassFill,
+              fillColor: VetoTokens.surface2,
               contentPadding:
                   const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(24),
-                borderSide:
-                    const BorderSide(color: VetoGlassTokens.glassBorder),
+                borderSide: const BorderSide(color: VetoTokens.hairline),
               ),
             ),
             onSubmitted: (_) => _send(),
@@ -889,7 +933,7 @@ class _ChatScreenState extends State<ChatScreen> {
           child: FilledButton(
             onPressed: _sending ? null : _send,
             style: FilledButton.styleFrom(
-              backgroundColor: VetoGlassTokens.neonCyan,
+              backgroundColor: VetoTokens.navy600,
               foregroundColor: const Color(0xFF041018),
               shape: const CircleBorder(),
               padding: const EdgeInsets.all(14),
@@ -901,7 +945,8 @@ class _ChatScreenState extends State<ChatScreen> {
                     height: 18,
                     child: CircularProgressIndicator(
                         strokeWidth: 2, color: Color(0xFF041018)))
-                : const Icon(Icons.send_rounded, size: 18, color: Color(0xFF041018)),
+                : const Icon(Icons.send_rounded,
+                    size: 18, color: Color(0xFF041018)),
           ),
         ),
       ]),

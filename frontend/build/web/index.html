@@ -284,150 +284,10 @@
       }
     })();
   </script>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@flows/js-components/index.css">
-  <script type="module">
-    if (window.__vetoIsMobile) {
-      console.warn("[VETO Flows] disabled on mobile web to prevent freezes");
-    } else {
-    // Flows on Flutter Web:
-    // - Docs order: init() then setupJsComponents() — https://flows.sh/docs/javascript/installation
-    // - Flutter paints a full-viewport layer; keep <flows-floating-blocks> last in <body> with high z-index.
-    // - esm.sh resolves bare imports inside @flows/js-components (e.g. es-toolkit/compat).
-    const ORG_ID = "f674dc3a-2c1b-4561-8d1c-f7f8dbb9b661";
-    const ENV_KEY = "production";
-    const MANUAL_START_BLOCK_KEY = "veto_welcome";
-
-    let _modulesPromise = null;
-    let _componentsSetup = false;
-    let _hostReorderObserver = null;
-    let _hostFlutterTick = null;
-
-    function _flowsHostParent() {
-      return document.querySelector("flt-glass-pane")
-        || document.querySelector("flt-scene-host")
-        || document.body;
-    }
-
-    function _ensureFloatingHostOnTop() {
-      const parent = _flowsHostParent();
-      let el = document.querySelector("flows-floating-blocks");
-      if (!el) {
-        el = document.createElement("flows-floating-blocks");
-      }
-      parent.appendChild(el);
-      el.style.setProperty("position", "fixed", "important");
-      el.style.setProperty("inset", "0", "important");
-      el.style.setProperty("z-index", "2147483647", "important");
-      if (!_hostReorderObserver) {
-        _hostReorderObserver = new MutationObserver(function() {
-          const host = document.querySelector("flows-floating-blocks");
-          if (!host) return;
-          const p = _flowsHostParent();
-          if (p && p.appendChild) {
-            p.appendChild(host);
-            host.style.setProperty("position", "fixed", "important");
-            host.style.setProperty("inset", "0", "important");
-            host.style.setProperty("z-index", "2147483647", "important");
-          }
-        });
-        _hostReorderObserver.observe(document.body, { childList: true, subtree: true });
-      }
-    }
-
-    function _resyncFlowsHostWhileFlutterBoots() {
-      if (_hostFlutterTick) return;
-      let n = 0;
-      _hostFlutterTick = setInterval(function() {
-        n += 1;
-        const host = document.querySelector("flows-floating-blocks");
-        if (host) {
-          const p = _flowsHostParent();
-          if (p && p.appendChild) p.appendChild(host);
-          host.style.setProperty("position", "fixed", "important");
-          host.style.setProperty("inset", "0", "important");
-          host.style.setProperty("z-index", "2147483647", "important");
-        }
-        if (n >= 48) {
-          clearInterval(_hostFlutterTick);
-          _hostFlutterTick = null;
-        }
-      }, 200);
-    }
-
-    async function _loadModules() {
-      if (_modulesPromise) return _modulesPromise;
-      const JS_VER = "1.21.0";
-      const COMPONENTS_VER = "2.7.1";
-      _modulesPromise = (async () => {
-        const { init, startWorkflow } = await import(`https://esm.sh/@flows/js@${JS_VER}`);
-        const { setupJsComponents } = await import(`https://esm.sh/@flows/js-components@${COMPONENTS_VER}`);
-        const components = await import(`https://esm.sh/@flows/js-components@${COMPONENTS_VER}/components`);
-        const tourComponents = await import(`https://esm.sh/@flows/js-components@${COMPONENTS_VER}/tour-components`);
-        const surveyComponents = await import(`https://esm.sh/@flows/js-components@${COMPONENTS_VER}/survey-components`);
-        return { init, startWorkflow, setupJsComponents, components, tourComponents, surveyComponents };
-      })();
-      return _modulesPromise;
-    }
-
-    window.vetoFlows = window.vetoFlows || {};
-    window.vetoFlows.setUser = async function(userId, role, lang) {
-      try {
-        if (!userId) return { ok: false, stage: "no_user" };
-
-        const m = await _loadModules();
-        const isLocal = (location && location.hostname === "localhost") || false;
-
-        m.init({
-          organizationId: ORG_ID,
-          environment: ENV_KEY,
-          userId: String(userId),
-          language: "automatic",
-          debug: isLocal,
-          userProperties: {
-            role: role ? String(role) : "user",
-            app: "veto",
-            ui_lang: lang ? String(lang) : undefined,
-          },
-        });
-
-        if (!_componentsSetup) {
-          m.setupJsComponents({
-            components: { ...m.components },
-            tourComponents: { ...m.tourComponents },
-            surveyComponents: { ...m.surveyComponents },
-          });
-          _componentsSetup = true;
-        }
-
-        _ensureFloatingHostOnTop();
-        _resyncFlowsHostWhileFlutterBoots();
-
-        if (MANUAL_START_BLOCK_KEY && m.startWorkflow) {
-          try {
-            await m.startWorkflow(MANUAL_START_BLOCK_KEY);
-            console.log("[VETO Flows] startWorkflow ok:", MANUAL_START_BLOCK_KEY);
-            return { ok: true, stage: "startWorkflow", key: MANUAL_START_BLOCK_KEY };
-          } catch (e) {
-            console.warn("[VETO Flows] startWorkflow failed:", MANUAL_START_BLOCK_KEY, e);
-            return {
-              ok: false,
-              stage: "startWorkflow",
-              key: MANUAL_START_BLOCK_KEY,
-              error: (e && (e.message || String(e))) || "unknown_error",
-            };
-          }
-        }
-        return { ok: true, stage: "init_only" };
-      } catch (e) {
-        console.warn("[VETO Flows] init failed:", e);
-        return {
-          ok: false,
-          stage: "init",
-          error: (e && (e.message || String(e))) || "unknown_error",
-        };
-      }
-    };
-    } // end mobile guard
+  <!-- Flows JS disabled — was causing continuous MutationObserver + setInterval thrashing on Flutter Web -->
+  <script>
+    window.vetoFlows = { setUser: async function() { return { ok: false, stage: 'disabled' }; } };
+    console.log('[VETO Flows] intentionally disabled for performance');
   </script>
 
   <script>
@@ -466,10 +326,8 @@
         for (let registration of registrations) {
           // Unregister the old Flutter service worker that caches old files
           if (registration.active && registration.active.scriptURL.includes('flutter_service_worker.js')) {
-            console.log('Unregistering old flutter_service_worker.js');
-            registration.unregister().then(() => {
-              window.location.reload(true);
-            });
+            console.log('[VETO SW] Unregistering old flutter_service_worker.js (no reload)');
+            registration.unregister();
           }
         }
       });
@@ -511,22 +369,10 @@
     }
   </script>
 
-  <!-- Flows floating renderer (upgraded by setupJsComponents) -->
-  <script>
-    if (!window.__vetoIsMobile) {
-      document.write("<flows-floating-blocks></flows-floating-blocks>");
-    }
-  </script>
+
 
   <script>
-    // Stable entry for Dart (package:web) — the module above assigns window.vetoFlows.setUser; this
-    // wrapper exists before first login so the closure always calls the live setUser.
-    window.vetoFlowsInvoke = async function(userId, role, lang) {
-      if (!window.vetoFlows || typeof window.vetoFlows.setUser !== "function") {
-        return { ok: false, stage: "not_ready", error: "vetoFlows.setUser missing (Flows module not loaded?)" };
-      }
-      return await window.vetoFlows.setUser(userId, role, lang);
-    };
+    window.vetoFlowsInvoke = async function() { return { ok: false, stage: 'disabled' }; };
   </script>
   <script type="module" src="gemini_live.mjs"></script>
   <script src="flutter_bootstrap.js" defer></script>
