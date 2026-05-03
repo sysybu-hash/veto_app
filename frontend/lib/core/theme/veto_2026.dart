@@ -63,6 +63,17 @@ class V26 {
   static const Color info = Color(0xFF2E69E7);
   static const Color infoSoft = Color(0xFFDCE7FB);
 
+  // ── Call · VETO Bold dark stage ────────────────────────────
+  static const Color callBgTop = Color(0xFF0B1830);
+  static const Color callBgBottom = Color(0xFF05101F);
+  static const Color callGlass = Color.fromRGBO(11, 24, 48, 0.72);
+  static const Color callGlassSoft = Color.fromRGBO(255, 255, 255, 0.06);
+  static const Color callGoldHair = Color(0x47B8895C);
+  static const Color callGoldHairSoft = Color(0x24B8895C);
+  static const Color callDangerRed = Color(0xFFE5354C);
+  static const Color callRecBg = Color.fromRGBO(229, 53, 76, 0.18);
+  static const Color callStatusGreen = Color(0xFF21C07A);
+
   // ── Typography ──────────────────────────────────────────
   /// Serif for headings. Flutter ships Frank Ruhl Libre via Google Fonts;
   /// we register it as a bundled family name but also provide a system
@@ -78,6 +89,10 @@ class V26 {
   static const double rXl = 22;
   static const double r2xl = 28;
   static const double rPill = 999;
+  static const double callRadiusPanel = 18;
+  static const double callRadiusVideo = 20;
+  static const double callRadiusPip = 14;
+  static const double callRadiusBtn = 999;
 
   // ── Spacing ─────────────────────────────────────────────
   static const double s1 = 4;
@@ -329,12 +344,31 @@ class V26Badge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (bg, fg, border) = switch (tone) {
-      V26BadgeTone.brand => (V26.infoSoft, V26.navy700, const Color(0xFFC4D4F4)),
-      V26BadgeTone.ok => (V26.okSoft, const Color(0xFF16664B), const Color(0xFFB7DFCB)),
-      V26BadgeTone.warn => (V26.warnSoft, const Color(0xFF7A5300), const Color(0xFFF2D58E)),
-      V26BadgeTone.danger =>
-        (V26.emergBg, const Color(0xFF8E1626), V26.emergBorder),
-      V26BadgeTone.gold => (V26.goldSoft, V26.goldDeep, const Color(0xFFD4BB99)),
+      V26BadgeTone.brand => (
+          V26.infoSoft,
+          V26.navy700,
+          const Color(0xFFC4D4F4)
+        ),
+      V26BadgeTone.ok => (
+          V26.okSoft,
+          const Color(0xFF16664B),
+          const Color(0xFFB7DFCB)
+        ),
+      V26BadgeTone.warn => (
+          V26.warnSoft,
+          const Color(0xFF7A5300),
+          const Color(0xFFF2D58E)
+        ),
+      V26BadgeTone.danger => (
+          V26.emergBg,
+          const Color(0xFF8E1626),
+          V26.emergBorder
+        ),
+      V26BadgeTone.gold => (
+          V26.goldSoft,
+          V26.goldDeep,
+          const Color(0xFFD4BB99)
+        ),
       V26BadgeTone.neutral => (V26.paper2, V26.ink700, V26.hairline),
     };
     return Container(
@@ -458,28 +492,47 @@ class V26CTA extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (bg, fg, border, shadow) = switch (variant) {
-      V26CtaVariant.primary => (V26.navy600, Colors.white, null, V26.shadowBrand),
-      V26CtaVariant.ghost =>
-        (V26.surface, V26.navy600, V26.navy300, const <BoxShadow>[]),
+      V26CtaVariant.primary => (
+          V26.navy600,
+          Colors.white,
+          null,
+          V26.shadowBrand
+        ),
+      V26CtaVariant.ghost => (
+          V26.surface,
+          V26.navy600,
+          V26.navy300,
+          const <BoxShadow>[]
+        ),
       V26CtaVariant.ghostLight => (
           Colors.transparent,
           Colors.white,
           Colors.white.withValues(alpha: 0.45),
           const <BoxShadow>[],
         ),
-      V26CtaVariant.subtle =>
-        (V26.paper2, V26.navy700, V26.hairline, const <BoxShadow>[]),
+      V26CtaVariant.subtle => (
+          V26.paper2,
+          V26.navy700,
+          V26.hairline,
+          const <BoxShadow>[]
+        ),
       V26CtaVariant.danger => (
           V26.emerg,
           Colors.white,
           null,
-          const [BoxShadow(color: Color(0x4CD6243A), blurRadius: 16, offset: Offset(0, 6))]
+          const [
+            BoxShadow(
+                color: Color(0x4CD6243A), blurRadius: 16, offset: Offset(0, 6))
+          ]
         ),
       V26CtaVariant.gold => (
           V26.gold,
           Colors.white,
           null,
-          const [BoxShadow(color: Color(0x52B8895C), blurRadius: 16, offset: Offset(0, 6))]
+          const [
+            BoxShadow(
+                color: Color(0x52B8895C), blurRadius: 16, offset: Offset(0, 6))
+          ]
         ),
     };
 
@@ -498,8 +551,7 @@ class V26CTA extends StatelessWidget {
           decoration: BoxDecoration(
             color: bg,
             borderRadius: BorderRadius.circular(r),
-            border:
-                border != null ? Border.all(color: border, width: 1) : null,
+            border: border != null ? Border.all(color: border, width: 1) : null,
             boxShadow: shadow,
           ),
           alignment: Alignment.center,
@@ -644,14 +696,10 @@ class V26Status extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (dotColor, halo) = switch (tone) {
-      V26StatusTone.online =>
-        (V26.ok, const Color(0x2E2BA374)),
-      V26StatusTone.busy =>
-        (V26.warn, const Color(0x2EC58B12)),
-      V26StatusTone.offline =>
-        (V26.ink300, const Color(0x00000000)),
-      V26StatusTone.live =>
-        (V26.emerg, const Color(0x33D6243A)),
+      V26StatusTone.online => (V26.ok, const Color(0x2E2BA374)),
+      V26StatusTone.busy => (V26.warn, const Color(0x2EC58B12)),
+      V26StatusTone.offline => (V26.ink300, const Color(0x00000000)),
+      V26StatusTone.live => (V26.emerg, const Color(0x33D6243A)),
     };
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
@@ -748,9 +796,8 @@ class V26RowItem extends StatelessWidget {
                 borderRadius: BorderRadius.circular(10),
               ),
               alignment: Alignment.center,
-              child: Icon(icon,
-                  size: 16,
-                  color: danger ? V26.emerg : V26.navy600),
+              child:
+                  Icon(icon, size: 16, color: danger ? V26.emerg : V26.navy600),
             ),
             const SizedBox(width: 14),
           ],
@@ -924,9 +971,11 @@ class V26Crest extends StatelessWidget {
         ),
         borderRadius: BorderRadius.circular(size * 0.27),
         boxShadow: const [
-          BoxShadow(color: Color(0x59264975), blurRadius: 14, offset: Offset(0, 6)),
+          BoxShadow(
+              color: Color(0x59264975), blurRadius: 14, offset: Offset(0, 6)),
         ],
-        border: Border.all(color: Colors.white.withValues(alpha: 0.12), width: 1),
+        border:
+            Border.all(color: Colors.white.withValues(alpha: 0.12), width: 1),
       ),
       alignment: Alignment.center,
       child: Text(
@@ -1163,8 +1212,8 @@ class V26Sidebar extends StatelessWidget {
                   for (final item in g.items)
                     _SidebarEntry(
                       item: item,
-                      active:
-                          item.active || (activeLabel != null && activeLabel == item.label),
+                      active: item.active ||
+                          (activeLabel != null && activeLabel == item.label),
                     ),
                 ],
               ],
@@ -1221,8 +1270,8 @@ class _SidebarEntry extends StatelessWidget {
                 ),
                 if (item.count != null)
                   Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 7, vertical: 2),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
                     decoration: BoxDecoration(
                       color: active ? V26.navy200 : V26.paper2,
                       borderRadius: BorderRadius.circular(V26.rPill),
@@ -1520,7 +1569,8 @@ class V26Section extends StatelessWidget {
             V26Kicker(kicker!),
             const SizedBox(height: 6),
           ],
-          if (title != null) V26Headline(title!, size: 22, weight: FontWeight.w800),
+          if (title != null)
+            V26Headline(title!, size: 22, weight: FontWeight.w800),
           if (subtitle != null) ...[
             const SizedBox(height: 4),
             Text(
@@ -1593,10 +1643,13 @@ class V26PageHeader extends StatelessWidget {
           spacing: 16,
           runSpacing: 10,
           children: [
-            V26Headline(title, size: titleSize ?? (context.isDesktop ? 34 : 26), weight: FontWeight.w800),
+            V26Headline(title,
+                size: titleSize ?? (context.isDesktop ? 34 : 26),
+                weight: FontWeight.w800),
             if (tag != null)
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
                   color: V26.surface,
                   borderRadius: BorderRadius.circular(V26.rPill),
@@ -1779,7 +1832,8 @@ class V26Tabs extends StatelessWidget {
                 borderRadius: BorderRadius.circular(7),
                 onTap: () => onChanged?.call(i),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
                   decoration: BoxDecoration(
                     color: active ? V26.surface : Colors.transparent,
                     borderRadius: BorderRadius.circular(7),
@@ -1873,17 +1927,19 @@ class VetoScaffold extends StatelessWidget {
     }
 
     final scaffold = Scaffold(
-      backgroundColor: background ?? (backdrop ? Colors.transparent : V26.paper),
+      backgroundColor:
+          background ?? (backdrop ? Colors.transparent : V26.paper),
       extendBodyBehindAppBar: extendBehindAppBar,
       appBar: isDesktop ? null : appBar,
       body: content,
-      bottomNavigationBar: (!isDesktop && navItems != null && navItems!.isNotEmpty)
-          ? V26BottomNav(
-              items: navItems!,
-              currentIndex: currentNavIndex,
-              onChanged: onNavChanged,
-            )
-          : null,
+      bottomNavigationBar:
+          (!isDesktop && navItems != null && navItems!.isNotEmpty)
+              ? V26BottomNav(
+                  items: navItems!,
+                  currentIndex: currentNavIndex,
+                  onChanged: onNavChanged,
+                )
+              : null,
       floatingActionButton: floatingAction,
     );
 
@@ -2069,9 +2125,8 @@ class V26Field extends StatelessWidget {
             fillColor: V26.surface,
             hintText: hint,
             hintStyle: const TextStyle(color: V26.ink300, fontFamily: V26.sans),
-            suffixIcon: icon != null
-                ? Icon(icon, color: V26.ink300, size: 18)
-                : null,
+            suffixIcon:
+                icon != null ? Icon(icon, color: V26.ink300, size: 18) : null,
             contentPadding: EdgeInsets.symmetric(
               horizontal: 14,
               vertical: maxLines > 1 ? 12 : 0,
@@ -2250,24 +2305,19 @@ class V26Stepper extends StatelessWidget {
             ? V26.navy500
             : active
                 ? Colors.white
-                : (onDark
-                    ? Colors.white.withValues(alpha: 0.12)
-                    : V26.paper2);
+                : (onDark ? Colors.white.withValues(alpha: 0.12) : V26.paper2);
         final Color markerFg = done
             ? Colors.white
             : active
                 ? V26.navy700
-                : (onDark
-                    ? Colors.white.withValues(alpha: 0.6)
-                    : V26.ink500);
+                : (onDark ? Colors.white.withValues(alpha: 0.6) : V26.ink500);
         final Color titleColor = onDark
             ? (active || done
                 ? Colors.white
                 : Colors.white.withValues(alpha: 0.7))
             : (active || done ? V26.ink900 : V26.ink500);
-        final Color captionColor = onDark
-            ? Colors.white.withValues(alpha: 0.55)
-            : V26.ink300;
+        final Color captionColor =
+            onDark ? Colors.white.withValues(alpha: 0.55) : V26.ink300;
         return Padding(
           padding: EdgeInsets.only(bottom: isLast ? 0 : 18),
           child: Row(
@@ -2390,8 +2440,7 @@ class V26Table extends StatelessWidget {
                   ci == columns.length - 1
                       ? Expanded(
                           child: Padding(
-                            padding:
-                                const EdgeInsets.symmetric(horizontal: 8),
+                            padding: const EdgeInsets.symmetric(horizontal: 8),
                             child: Text(
                               columns[ci].label.toUpperCase(),
                               textAlign: columns[ci].align,
@@ -2408,8 +2457,7 @@ class V26Table extends StatelessWidget {
                       : SizedBox(
                           width: columns[ci].width,
                           child: Padding(
-                            padding:
-                                const EdgeInsets.symmetric(horizontal: 8),
+                            padding: const EdgeInsets.symmetric(horizontal: 8),
                             child: Text(
                               columns[ci].label.toUpperCase(),
                               textAlign: columns[ci].align,
@@ -2449,9 +2497,8 @@ class V26Table extends StatelessWidget {
                             ),
                           )
                         : SizedBox(
-                            width: ci < columns.length
-                                ? columns[ci].width
-                                : null,
+                            width:
+                                ci < columns.length ? columns[ci].width : null,
                             child: Padding(
                               padding:
                                   const EdgeInsets.symmetric(horizontal: 8),
@@ -2488,8 +2535,7 @@ class V26NavDest {
 ///  Pass [currentIndex] = -1 for routes that aren't in the main
 ///  nav (e.g. `/settings`, `/profile`) so no pill is highlighted.
 /// ════════════════════════════════════════════════════════════
-class V26DesktopNavBar extends StatelessWidget
-    implements PreferredSizeWidget {
+class V26DesktopNavBar extends StatelessWidget implements PreferredSizeWidget {
   final List<V26NavDest> destinations;
 
   /// Index of the active nav item. Use `-1` when none should be highlighted.
@@ -2678,7 +2724,8 @@ class V26AppShell extends StatelessWidget {
     final isWide = width >= desktopBreakpoint;
 
     final Widget scaffold = Scaffold(
-      backgroundColor: background ?? (showBackdrop ? Colors.transparent : V26.paper),
+      backgroundColor:
+          background ?? (showBackdrop ? Colors.transparent : V26.paper),
       appBar: isWide
           ? V26DesktopNavBar(
               destinations: destinations,
@@ -2816,9 +2863,7 @@ class V26PillCTA extends StatelessWidget {
           decoration: BoxDecoration(
             color: bg,
             borderRadius: BorderRadius.circular(V26.rPill),
-            border: borderColor != null
-                ? Border.all(color: borderColor)
-                : null,
+            border: borderColor != null ? Border.all(color: borderColor) : null,
             boxShadow: shadow,
           ),
           child: Row(

@@ -6,9 +6,10 @@
 import 'package:flutter/material.dart';
 
 import '../../core/theme/veto_2026.dart';
+import 'v26_call_stage.dart';
 
 /// Visual style for a [V26CallButton].
-enum V26CallButtonVariant { neutral, active, danger, success }
+enum V26CallButtonVariant { neutral, active, danger, success, goldOutline }
 
 class V26CallButton extends StatelessWidget {
   const V26CallButton({
@@ -32,19 +33,25 @@ class V26CallButton extends StatelessWidget {
     switch (variant) {
       case V26CallButtonVariant.active:
         return (
-          Colors.white.withValues(alpha: 0.22),
-          Colors.white.withValues(alpha: 0.30),
-          Colors.white,
+          V26.gold.withValues(alpha: 0.18),
+          V26.gold.withValues(alpha: 0.72),
+          V26.goldSoft,
         );
       case V26CallButtonVariant.danger:
-        return (V26.emerg, V26.emerg, Colors.white);
+        return (V26.callDangerRed, V26.callDangerRed, Colors.white);
       case V26CallButtonVariant.success:
         return (V26.ok, V26.ok, Colors.white);
+      case V26CallButtonVariant.goldOutline:
+        return (
+          Colors.white.withValues(alpha: 0.08),
+          V26.gold.withValues(alpha: 0.68),
+          V26.goldSoft,
+        );
       case V26CallButtonVariant.neutral:
         return (
-          Colors.white.withValues(alpha: 0.10),
-          Colors.white.withValues(alpha: 0.18),
-          Colors.white,
+          Colors.white.withValues(alpha: 0.06),
+          V26.gold.withValues(alpha: 0.42),
+          V26.goldSoft,
         );
     }
   }
@@ -68,7 +75,7 @@ class V26CallButton extends StatelessWidget {
           boxShadow: variant == V26CallButtonVariant.danger
               ? [
                   BoxShadow(
-                    color: V26.emerg.withValues(alpha: 0.35),
+                    color: V26.callDangerRed.withValues(alpha: 0.45),
                     blurRadius: 24,
                     offset: const Offset(0, 8),
                   ),
@@ -93,28 +100,74 @@ class V26CallControlBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final hasDanger = children.isNotEmpty &&
+        children.last is V26CallButton &&
+        (children.last as V26CallButton).variant == V26CallButtonVariant.danger;
+    final leading =
+        hasDanger ? children.take(children.length - 1).toList() : children;
+    final danger = hasDanger ? children.last : null;
+
     return SafeArea(
       top: false,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Colors.transparent,
-              V26.navy900.withValues(alpha: 0.55),
-            ],
-          ),
-        ),
-        child: SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              for (final c in children) ...[c, const SizedBox(width: 12)],
-              const SizedBox.shrink(),
-            ],
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+        child: V26CallGlassPanel(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          borderRadius: V26.callRadiusPanel,
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final compact = constraints.maxWidth < 420;
+              final buttonSize = compact ? 48.0 : 56.0;
+              final dangerSize = compact ? 62.0 : 72.0;
+              Widget normalize(Widget child) {
+                if (child is V26CallButton) {
+                  return V26CallButton(
+                    icon: child.icon,
+                    onPressed: child.onPressed,
+                    tooltip: child.tooltip,
+                    size: child.variant == V26CallButtonVariant.danger
+                        ? dangerSize
+                        : buttonSize,
+                    iconSize:
+                        child.variant == V26CallButtonVariant.danger ? 28 : 23,
+                    variant: child.variant == V26CallButtonVariant.neutral
+                        ? V26CallButtonVariant.goldOutline
+                        : child.variant,
+                  );
+                }
+                return child;
+              }
+
+              return Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Flexible(
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          for (final c in leading) ...[
+                            normalize(c),
+                            SizedBox(width: compact ? 10 : 14),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ),
+                  if (danger != null) ...[
+                    Container(
+                      width: 1,
+                      height: 42,
+                      margin:
+                          EdgeInsets.symmetric(horizontal: compact ? 10 : 18),
+                      color: V26.gold.withValues(alpha: 0.55),
+                    ),
+                    normalize(danger),
+                  ],
+                ],
+              );
+            },
           ),
         ),
       ),

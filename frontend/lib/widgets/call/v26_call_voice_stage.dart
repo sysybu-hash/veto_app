@@ -7,10 +7,12 @@ import 'package:flutter/material.dart';
 
 import '../../core/theme/veto_2026.dart';
 import 'call_i18n.dart';
+import 'v26_call_stage.dart';
 
 /// Returns up to two initials from [full], preferring the first word.
 String _initials(String full) {
-  final parts = full.trim().split(RegExp(r'\s+')).where((p) => p.isNotEmpty).toList();
+  final parts =
+      full.trim().split(RegExp(r'\s+')).where((p) => p.isNotEmpty).toList();
   if (parts.isEmpty) return '?';
   if (parts.length == 1) {
     final s = parts.first;
@@ -46,92 +48,96 @@ class V26CallVoiceStage extends StatelessWidget {
   Widget build(BuildContext context) {
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
-      child: Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-            decoration: BoxDecoration(
-              color: V26.navy500.withValues(alpha: 0.18),
-              borderRadius: BorderRadius.circular(V26.rPill),
-              border: Border.all(color: V26.navy400.withValues(alpha: 0.4)),
+      child: V26CallGlassPanel(
+        padding: const EdgeInsets.all(22),
+        child: Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+              decoration: BoxDecoration(
+                color: V26.gold.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(V26.rPill),
+                border: Border.all(color: V26.callGoldHair),
+              ),
+              child: Text(
+                CallI18n.voiceHeader.t(language),
+                style: const TextStyle(
+                  color: V26.goldSoft,
+                  fontFamily: V26.sans,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
             ),
-            child: Text(
-              CallI18n.voiceHeader.t(language),
+            const SizedBox(height: 16),
+            Text(
+              peerName,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
               style: const TextStyle(
-                color: V26.navy200,
-                fontFamily: V26.sans,
-                fontSize: 12,
+                color: Colors.white,
+                fontFamily: V26.serif,
+                fontSize: 24,
                 fontWeight: FontWeight.w700,
               ),
             ),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            peerName,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              color: Colors.white,
-              fontFamily: V26.serif,
-              fontSize: 24,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          if (specialization != null && specialization!.isNotEmpty) ...[
-            const SizedBox(height: 4),
+            if (specialization != null && specialization!.isNotEmpty) ...[
+              const SizedBox(height: 4),
+              Text(
+                specialization!,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.62),
+                  fontFamily: V26.sans,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+            const SizedBox(height: 14),
             Text(
-              specialization!,
-              textAlign: TextAlign.center,
+              _formatDuration(durationSec),
               style: const TextStyle(
-                color: V26.navy300,
-                fontFamily: V26.sans,
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
+                color: Colors.white,
+                fontFamily: 'Heebo',
+                fontSize: 32,
+                fontFeatures: [FontFeature.tabularFigures()],
+                fontWeight: FontWeight.w700,
               ),
             ),
-          ],
-          const SizedBox(height: 14),
-          Text(
-            _formatDuration(durationSec),
-            style: const TextStyle(
-              color: Colors.white,
-              fontFamily: 'Heebo',
-              fontSize: 32,
-              fontFeatures: [FontFeature.tabularFigures()],
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          const SizedBox(height: 32),
-          _PulsingAvatar(initials: _initials(peerName)),
-          if (isRecording) ...[
-            const SizedBox(height: 20),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-              decoration: BoxDecoration(
-                color: V26.emerg.withValues(alpha: 0.18),
-                borderRadius: BorderRadius.circular(V26.rPill),
-                border: Border.all(color: V26.emerg.withValues(alpha: 0.4)),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const _BlinkDot(),
-                  const SizedBox(width: 8),
-                  Text(
-                    CallI18n.recordingPill.t(language),
-                    style: const TextStyle(
-                      color: Color(0xFFFFB6BD),
-                      fontFamily: V26.sans,
-                      fontSize: 11,
-                      fontWeight: FontWeight.w700,
+            const SizedBox(height: 32),
+            _PulsingAvatar(initials: _initials(peerName)),
+            if (isRecording) ...[
+              const SizedBox(height: 20),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                decoration: BoxDecoration(
+                  color: V26.callRecBg,
+                  borderRadius: BorderRadius.circular(V26.rPill),
+                  border: Border.all(color: V26.emerg.withValues(alpha: 0.4)),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const _BlinkDot(),
+                    const SizedBox(width: 8),
+                    Text(
+                      CallI18n.recordingPill.t(language),
+                      style: const TextStyle(
+                        color: Color(0xFFFFB6BD),
+                        fontFamily: V26.sans,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }
@@ -184,7 +190,7 @@ class _PulsingAvatarState extends State<_PulsingAvatar>
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     border: Border.all(
-                      color: V26.navy400.withValues(alpha: 0.30 * opacity),
+                      color: V26.gold.withValues(alpha: 0.32 * opacity),
                       width: 2,
                     ),
                   ),
@@ -199,12 +205,12 @@ class _PulsingAvatarState extends State<_PulsingAvatar>
                   gradient: const LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
-                    colors: [V26.navy400, V26.navy500],
+                    colors: [V26.goldDeep, V26.gold],
                   ),
                   borderRadius: BorderRadius.circular(36),
                   boxShadow: [
                     BoxShadow(
-                      color: V26.navy500.withValues(alpha: 0.4),
+                      color: V26.gold.withValues(alpha: 0.32),
                       blurRadius: 32,
                       offset: const Offset(0, 16),
                     ),

@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import '../../core/theme/veto_2026.dart';
 import 'call_i18n.dart';
 import 'v26_call_control_bar.dart';
+import 'v26_call_stage.dart';
 
 class V26CallIncoming extends StatelessWidget {
   const V26CallIncoming({
@@ -38,103 +39,112 @@ class V26CallIncoming extends StatelessWidget {
         const SizedBox(height: 52),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24),
-          child: Column(
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  color: V26.emerg.withValues(alpha: 0.20),
-                  borderRadius: BorderRadius.circular(V26.rPill),
-                  border: Border.all(color: V26.emerg.withValues(alpha: 0.5)),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const _BlinkDot(),
-                    const SizedBox(width: 8),
-                    Text(
-                      CallI18n.incomingBadge.t(language),
-                      style: const TextStyle(
-                        color: Color(0xFFFFB6BD),
-                        fontFamily: V26.sans,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 0.4,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 18),
-              Text(
-                callerName.trim().isEmpty
-                    ? CallI18n.incomingUnknown.t(language)
-                    : callerName,
-                textAlign: TextAlign.center,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontFamily: V26.serif,
-                  fontSize: 24,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              if (specialization != null || distanceLabel != null) ...[
-                const SizedBox(height: 4),
-                Text(
-                  [
-                    if (specialization != null && specialization!.isNotEmpty)
-                      specialization!,
-                    if (distanceLabel != null && distanceLabel!.isNotEmpty)
-                      distanceLabel!,
-                  ].join(' · '),
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    color: V26.navy300,
-                    fontFamily: V26.sans,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
-              const SizedBox(height: 18),
-              if (caseSummary.trim().isNotEmpty)
+          child: V26CallGlassPanel(
+            padding: const EdgeInsets.all(18),
+            child: Column(
+              children: [
                 Container(
-                  padding: const EdgeInsets.all(14),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   constraints: const BoxConstraints(maxWidth: 320),
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.06),
-                    borderRadius: BorderRadius.circular(V26.rLg),
-                    border: Border.all(color: Colors.white.withValues(alpha: 0.14)),
+                    color: V26.emerg.withValues(alpha: 0.20),
+                    borderRadius: BorderRadius.circular(V26.rPill),
+                    border: Border.all(color: V26.emerg.withValues(alpha: 0.5)),
                   ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(
-                        CallI18n.incomingCaseDetails.t(language),
-                        style: const TextStyle(
-                          color: V26.navy200,
-                          fontFamily: V26.sans,
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: 1.2,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        caseSummary,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontFamily: V26.sans,
-                          fontSize: 13.5,
-                          height: 1.55,
+                      const _BlinkDot(),
+                      const SizedBox(width: 8),
+                      Flexible(
+                        child: Text(
+                          CallI18n.incomingBadge.t(language),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: Color(0xFFFFB6BD),
+                            fontFamily: V26.sans,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 0.4,
+                          ),
                         ),
                       ),
                     ],
                   ),
                 ),
-            ],
+                const SizedBox(height: 18),
+                Text(
+                  callerName.trim().isEmpty
+                      ? CallI18n.incomingUnknown.t(language)
+                      : callerName,
+                  textAlign: TextAlign.center,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontFamily: V26.serif,
+                    fontSize: 24,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                if (specialization != null || distanceLabel != null) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    [
+                      if (specialization != null && specialization!.isNotEmpty)
+                        specialization!,
+                      if (distanceLabel != null && distanceLabel!.isNotEmpty)
+                        distanceLabel!,
+                    ].join(' · '),
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      color: V26.navy300,
+                      fontFamily: V26.sans,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 18),
+                if (caseSummary.trim().isNotEmpty)
+                  Container(
+                    padding: const EdgeInsets.all(14),
+                    constraints: const BoxConstraints(maxWidth: 320),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.06),
+                      borderRadius: BorderRadius.circular(V26.rLg),
+                      border: Border.all(color: V26.callGoldHairSoft),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          CallI18n.incomingCaseDetails.t(language),
+                          style: const TextStyle(
+                            color: V26.navy200,
+                            fontFamily: V26.sans,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 1.2,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          caseSummary,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontFamily: V26.sans,
+                            fontSize: 13.5,
+                            height: 1.55,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+              ],
+            ),
           ),
         ),
         const SizedBox(height: 20),
@@ -144,7 +154,7 @@ class V26CallIncoming extends StatelessWidget {
           children: [
             V26CallButton(
               icon: Icons.close_rounded,
-              variant: V26CallButtonVariant.neutral,
+              variant: V26CallButtonVariant.goldOutline,
               size: 60,
               tooltip: CallI18n.incomingDecline.t(language),
               onPressed: onDecline,
@@ -152,7 +162,7 @@ class V26CallIncoming extends StatelessWidget {
             if (onChatFirst != null)
               V26CallButton(
                 icon: Icons.chat_bubble_outline_rounded,
-                variant: V26CallButtonVariant.neutral,
+                variant: V26CallButtonVariant.goldOutline,
                 size: 60,
                 tooltip: CallI18n.incomingChatFirst.t(language),
                 onPressed: onChatFirst,

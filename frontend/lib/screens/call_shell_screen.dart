@@ -37,6 +37,8 @@ import '../widgets/call/v26_call_connecting.dart';
 import '../widgets/call/v26_call_control_bar.dart';
 import '../widgets/call/v26_call_error_sheet.dart';
 import '../widgets/call/v26_call_incoming.dart';
+import '../widgets/call/v26_call_chat_sheet.dart';
+import '../widgets/call/v26_call_security_badge.dart';
 import '../widgets/call/v26_call_side_panel.dart';
 import '../widgets/call/v26_call_stage.dart';
 import '../widgets/call/v26_call_top_bar.dart';
@@ -135,6 +137,7 @@ class _CallShellScreenState extends State<CallShellScreen>
 
   final List<CallChatLine> _chatLines = <CallChatLine>[];
   bool _socketRegistered = false;
+
   /// Prevents duplicate `join-call-room` if `_startConnecting` is ever re-entered.
   bool _joinCallRoomEmitted = false;
   bool _leaving = false;
@@ -224,9 +227,8 @@ class _CallShellScreenState extends State<CallShellScreen>
       if (!_joinCallRoomEmitted) {
         socket.emit('join-call-room', {
           'roomId': args.channelId,
-          'callType': args.chatOnly
-              ? 'chat'
-              : (args.wantVideo ? 'video' : 'audio'),
+          'callType':
+              args.chatOnly ? 'chat' : (args.wantVideo ? 'video' : 'audio'),
         });
         _joinCallRoomEmitted = true;
       }
@@ -385,11 +387,9 @@ class _CallShellScreenState extends State<CallShellScreen>
     final args = _args;
     if (args == null) return;
     final meIsCitizen = args.socketRole == 'user' || args.socketRole == 'admin';
-    final isMine = meIsCitizen
-        ? (from == 'user' || from == 'admin')
-        : from == 'lawyer';
-    setState(() =>
-        _chatLines.add(CallChatLine(text: text, mine: isMine)));
+    final isMine =
+        meIsCitizen ? (from == 'user' || from == 'admin') : from == 'lawyer';
+    setState(() => _chatLines.add(CallChatLine(text: text, mine: isMine)));
   }
 
   void _onTokenRenewed(dynamic raw) {
@@ -500,8 +500,7 @@ class _CallShellScreenState extends State<CallShellScreen>
             onPressed: () => Navigator.pop(ctx, true),
             child: Text(
               CallI18n.endCall.t(lang),
-              style:
-                  const TextStyle(fontFamily: V26.sans, color: Colors.white),
+              style: const TextStyle(fontFamily: V26.sans, color: Colors.white),
             ),
           ),
         ],
@@ -627,8 +626,8 @@ class _CallShellScreenState extends State<CallShellScreen>
         final lang = _args?.language ?? 'he';
         return V26CallErrorSheet(
           language: lang,
-          error: _activeError ??
-              const CallErrorEvent(CallErrorKind.unknown, ''),
+          error:
+              _activeError ?? const CallErrorEvent(CallErrorKind.unknown, ''),
           onRetry: _retryFromError,
           onExit: _endCall,
         );
@@ -639,9 +638,9 @@ class _CallShellScreenState extends State<CallShellScreen>
     final a = _args!;
     final width = MediaQuery.sizeOf(context).width;
     final useWideSide = width >= 900;
-    // Chat-only: the whole stage is the side panel (no Agora video/voice).
-    if (a.chatOnly) {
-      return Column(
+
+    return SafeArea(
+      child: Column(
         children: [
           V26CallTopBar(
             peerName: a.peerLabel,
@@ -649,115 +648,56 @@ class _CallShellScreenState extends State<CallShellScreen>
             durationSec: _agora.durationSec,
             quality: _agora.quality,
             language: a.language,
+            isRecording: true,
           ),
           Expanded(
-            child: Material(
-              color: V26.surface,
-              child: V26CallSidePanel(
-                language: a.language,
-                lines: _chatLines,
-                onSend: _sendChat,
-                captionLines: _speech.lines,
-                captionListening: _speech.listening,
-                captionError: _speech.error,
-                onToggleCaption: () => _speech.toggle(),
-              ),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+              child: a.chatOnly
+                  ? V26CallSidePanel(
+                      language: a.language,
+                      lines: _chatLines,
+                      onSend: _sendChat,
+                      captionLines: _speech.lines,
+                      captionListening: _speech.listening,
+                      captionError: _speech.error,
+                      onToggleCaption: () => _speech.toggle(),
+                    )
+                  : Row(
+                      children: [
+                        Expanded(
+                          child: a.wantVideo
+                              ? _buildVideoStage(a)
+                              : _buildVoiceStage(a),
+                        ),
+                        if (useWideSide) ...[
+                          const SizedBox(width: 14),
+                          SizedBox(
+                            width: 340,
+                            child: V26CallSidePanel(
+                              language: a.language,
+                              lines: _chatLines,
+                              onSend: _sendChat,
+                              captionLines: _speech.lines,
+                              captionListening: _speech.listening,
+                              captionError: _speech.error,
+                              onToggleCaption: () => _speech.toggle(),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
             ),
           ),
           _buildControls(a),
+          V26CallSecurityBadge(language: a.language),
         ],
-      );
-    }
-    return Stack(
-      children: [
-        Positioned.fill(
-          child: a.wantVideo
-              ? _buildVideoStage(a, useWideSide)
-              : _buildVoiceStage(a, useWideSide),
-        ),
-        Positioned(
-          top: 0,
-          left: 0,
-          right: 0,
-          child: V26CallTopBar(
-            peerName: a.peerLabel,
-            specialization: a.peerSpecialization,
-            durationSec: _agora.durationSec,
-            quality: _agora.quality,
-            language: a.language,
-          ),
-        ),
-        Positioned(
-          left: 0,
-          right: 0,
-          bottom: 0,
-          child: _buildControls(a),
-        ),
-        if (useWideSide)
-          Positioned(
-            top: 0,
-            bottom: 0,
-            right: _rtl ? null : 0,
-            left: _rtl ? 0 : null,
-            width: 340,
-            child: Material(
-              elevation: 8,
-              color: V26.surface,
-              child: V26CallSidePanel(
-                language: a.language,
-                lines: _chatLines,
-                onSend: _sendChat,
-                captionLines: _speech.lines,
-                captionListening: _speech.listening,
-                captionError: _speech.error,
-                onToggleCaption: () => _speech.toggle(),
-              ),
-            ),
-          )
-        else if (_panelOpen)
-          Positioned.fill(
-            child: GestureDetector(
-              onTap: () => setState(() => _panelOpen = false),
-              child: Container(
-                color: Colors.black54,
-                alignment: Alignment.bottomCenter,
-                child: GestureDetector(
-                  onTap: () {},
-                  child: SizedBox(
-                    height: MediaQuery.sizeOf(context).height * 0.65,
-                    child: Material(
-                      color: V26.surface,
-                      borderRadius: const BorderRadius.vertical(
-                        top: Radius.circular(20),
-                      ),
-                      child: ClipRRect(
-                        borderRadius: const BorderRadius.vertical(
-                          top: Radius.circular(20),
-                        ),
-                        child: V26CallSidePanel(
-                          language: a.language,
-                          lines: _chatLines,
-                          onSend: _sendChat,
-                          captionLines: _speech.lines,
-                          captionListening: _speech.listening,
-                          captionError: _speech.error,
-                          onToggleCaption: () => _speech.toggle(),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-      ],
+      ),
     );
   }
 
-  Widget _buildVideoStage(_CallArgs a, bool wideSide) {
-    final pipPadEnd = wideSide ? 360.0 : 16.0;
-    final showRemoteVideo =
-        _agora.remoteUid != null && _agora.hasRemoteVideo;
+  Widget _buildVideoStage(_CallArgs a) {
+    final showRemoteVideo = _agora.remoteUid != null && _agora.hasRemoteVideo;
     return Stack(
       children: [
         Positioned.fill(
@@ -768,14 +708,14 @@ class _CallShellScreenState extends State<CallShellScreen>
             hasRemoteVideo: _agora.hasRemoteVideo,
             peerName: a.peerLabel,
             language: a.language,
-            mirrorLocalUntilRemote: a.wantVideo,
+            mirrorLocalUntilRemote: false,
             videoPublishMuted: _agora.videoPublishMuted,
           ),
         ),
         if (showRemoteVideo)
           PositionedDirectional(
-            top: 86,
-            end: pipPadEnd,
+            top: 14,
+            start: 14,
             child: V26CallLocalPip(
               engine: _agora.engine,
               previewOk: _agora.localPreviewOk,
@@ -787,25 +727,41 @@ class _CallShellScreenState extends State<CallShellScreen>
     );
   }
 
-  Widget _buildVoiceStage(_CallArgs a, bool wideSide) {
-    return SafeArea(
-      top: false,
-      child: Padding(
-        padding: EdgeInsetsDirectional.only(
-          top: 78,
-          bottom: 150,
-          start: 16,
-          end: wideSide ? 356 : 16,
-        ),
+  Widget _buildVoiceStage(_CallArgs a) {
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 520),
         child: V26CallVoiceStage(
           peerName: a.peerLabel,
           specialization: a.peerSpecialization,
           durationSec: _agora.durationSec,
-          isRecording: false,
+          isRecording: true,
           language: a.language,
         ),
       ),
     );
+  }
+
+  Future<void> _openMobileChatSheet(_CallArgs a) async {
+    if (_panelOpen) return;
+    setState(() => _panelOpen = true);
+    await showModalBottomSheet<void>(
+      context: context,
+      useSafeArea: true,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      barrierColor: Colors.black.withValues(alpha: 0.62),
+      builder: (_) => V26CallChatSheet(
+        language: a.language,
+        lines: _chatLines,
+        onSend: _sendChat,
+        captionLines: _speech.lines,
+        captionListening: _speech.listening,
+        captionError: _speech.error,
+        onToggleCaption: () => _speech.toggle(),
+      ),
+    );
+    if (mounted) setState(() => _panelOpen = false);
   }
 
   Widget _buildControls(_CallArgs a) {
@@ -834,14 +790,12 @@ class _CallShellScreenState extends State<CallShellScreen>
           tooltip: _agora.micPublishMuted
               ? CallI18n.unmuteMic.t(lang)
               : CallI18n.muteMic.t(lang),
-          onPressed: () =>
-              _agora.setMicPublishMuted(!_agora.micPublishMuted),
+          onPressed: () => _agora.setMicPublishMuted(!_agora.micPublishMuted),
         ),
         if (a.wantVideo)
           V26CallButton(
-            icon: _agora.videoPublishMuted
-                ? Icons.videocam_off
-                : Icons.videocam,
+            icon:
+                _agora.videoPublishMuted ? Icons.videocam_off : Icons.videocam,
             variant: _agora.videoPublishMuted
                 ? V26CallButtonVariant.danger
                 : V26CallButtonVariant.active,
@@ -887,14 +841,16 @@ class _CallShellScreenState extends State<CallShellScreen>
               ? V26CallButtonVariant.active
               : V26CallButtonVariant.neutral,
           tooltip: CallI18n.noiseSuppression.t(lang),
-          onPressed: () =>
-              _agora.setNoiseSuppression(!_agora.noiseSuppression),
+          onPressed: () => _agora.setNoiseSuppression(!_agora.noiseSuppression),
         ),
         if (MediaQuery.sizeOf(context).width < 900)
           V26CallButton(
             icon: Icons.chat_bubble_rounded,
+            variant: _panelOpen
+                ? V26CallButtonVariant.active
+                : V26CallButtonVariant.goldOutline,
             tooltip: CallI18n.openChat.t(lang),
-            onPressed: () => setState(() => _panelOpen = !_panelOpen),
+            onPressed: () => _openMobileChatSheet(a),
           ),
         V26CallButton(
           icon: Icons.call_end_rounded,

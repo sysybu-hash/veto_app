@@ -63,15 +63,17 @@ void main() {
       (tester) async {
     var accepted = false;
     var declined = false;
-    await _pumpTall(tester, _host(V26CallIncoming(
-      language: 'en',
-      callerName: 'Dana L.',
-      caseSummary: 'Arrested near Allenby at 22:40.',
-      specialization: 'Criminal',
-      distanceLabel: '1.2km',
-      onAccept: () => accepted = true,
-      onDecline: () => declined = true,
-    ))); // _pumpTall wrapper already applied to this widget's host
+    await _pumpTall(
+        tester,
+        _host(V26CallIncoming(
+          language: 'en',
+          callerName: 'Dana L.',
+          caseSummary: 'Arrested near Allenby at 22:40.',
+          specialization: 'Criminal',
+          distanceLabel: '1.2km',
+          onAccept: () => accepted = true,
+          onDecline: () => declined = true,
+        ))); // _pumpTall wrapper already applied to this widget's host
     await tester.pump();
     expect(find.text('Dana L.'), findsOneWidget);
     expect(find.text('Arrested near Allenby at 22:40.'), findsOneWidget);
@@ -97,7 +99,7 @@ void main() {
     await tester.pump();
     expect(find.text('Adv. Shir'), findsOneWidget);
     expect(find.text('02:05'), findsOneWidget);
-    expect(find.text('REC'), findsOneWidget);
+    expect(find.text(CallI18n.recordingShort.t('he')), findsOneWidget);
   });
 
   testWidgets('V26VideoPlaceholder displays initials and waiting copy',
@@ -125,14 +127,14 @@ void main() {
     expect(find.text(CallI18n.voiceHeader.t('ru')), findsOneWidget);
   });
 
-  testWidgets(
-      'V26CallErrorSheet translates errInvalidToken to Hebrew message',
+  testWidgets('V26CallErrorSheet translates errInvalidToken to Hebrew message',
       (tester) async {
     var retried = false;
     var exited = false;
     await tester.pumpWidget(_host(V26CallErrorSheet(
       language: 'he',
-      error: const CallErrorEvent(CallErrorKind.tokenInvalid, 'ErrInvalidToken: 42'),
+      error: const CallErrorEvent(
+          CallErrorKind.tokenInvalid, 'ErrInvalidToken: 42'),
       onRetry: () => retried = true,
       onExit: () => exited = true,
     )));
