@@ -402,10 +402,18 @@ module.exports = function initDispatch(io) {
           language: ev.language || 'he',
         };
 
-        const userAgora = buildRtcTokenForUid(roomId, ev.user_id);
+        const userAgora = buildRtcTokenForUid({
+          channelName: roomId,
+          userMongoId: ev.user_id,
+          role:        'publisher',
+        });
         const lawyerAgora = ev.assigned_lawyer_id
-          ? buildRtcTokenForUid(roomId, ev.assigned_lawyer_id)
-          : { token: '', agoraUid: 0 };
+          ? buildRtcTokenForUid({
+              channelName: roomId,
+              userMongoId: ev.assigned_lawyer_id,
+              role:        'publisher',
+            })
+          : { token: '', agoraUid: 0, ttlSec: 0, expiresAt: 0 };
 
         io.to(`user:${ev.user_id}`).emit('session_ready', {
           ...basePayload,
@@ -413,6 +421,7 @@ module.exports = function initDispatch(io) {
           peerName:   lawyer?.full_name || 'Lawyer',
           agoraToken: userAgora.token,
           agoraUid:   userAgora.agoraUid,
+          tokenExpiresAt: userAgora.expiresAt || 0,
         });
 
         if (ev.assigned_lawyer_id) {
@@ -422,8 +431,14 @@ module.exports = function initDispatch(io) {
             lawyerName: lawyer?.full_name,
             agoraToken: lawyerAgora.token,
             agoraUid:   lawyerAgora.agoraUid,
+            tokenExpiresAt: lawyerAgora.expiresAt || 0,
           });
         }
+
+        // Minimal, structured log — never print the token itself.
+        console.log(
+          `📞 session_ready | event=${eventId} | mode=${callType} | uids=${userAgora.agoraUid}/${lawyerAgora.agoraUid} | token=${userAgora.token ? 'yes' : 'none'}`,
+        );
       } catch (err) {
         console.error('citizen_chose_session error:', err);
         socket.emit('veto_error', { message: 'Could not start session.' });

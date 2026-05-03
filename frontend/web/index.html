@@ -383,6 +383,10 @@
     window.vetoFlowsInvoke = async function() { return { ok: false, stage: 'disabled' }; };
   </script>
   <script type="module" src="gemini_live.mjs"></script>
+  <!-- Agora Web SDK — required by agora_rtc_engine 6.2.3+ for Flutter Web RTC.
+       Must load BEFORE flutter_bootstrap.js so AgoraRTC is available when the
+       Dart engine initializes. -->
+  <script src="https://download.agora.io/sdk/release/AgoraRTC_N-4.22.1.js"></script>
   <script src="flutter_bootstrap.js" defer></script>
 </body>
 </html>

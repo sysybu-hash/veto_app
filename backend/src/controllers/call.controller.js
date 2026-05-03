@@ -13,6 +13,7 @@ const EmergencyEvent = require('../models/EmergencyEvent');
 const cloudinary     = require('../config/cloudinary');
 const { getGeminiModelId } = require('../config/gemini.config');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
+const { buildRtcTokenForUid } = require('../services/agoraToken.service');
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
@@ -76,6 +77,54 @@ exports.getIceConfig = (_req, res) => {
     res.json({ iceServers: iceServersFromEnv() });
   } catch {
     res.status(500).json({ error: 'ICE configuration unavailable', iceServers: [] });
+  }
+};
+
+/**
+ * POST /api/calls/:eventId/token
+ *
+ * Issues a fresh Agora RTC token for the authenticated participant. Used by
+ * the Flutter AgoraService when `onTokenPrivilegeWillExpire` fires and during
+ * reconnect-after-drop, so an expired socket payload never stalls a call.
+ *
+ * Access: only the assigned lawyer OR the event owner (citizen).
+ */
+exports.issueAgoraToken = async (req, res, next) => {
+  try {
+    const { eventId } = req.params;
+    const { userId, role } = req.user;
+
+    const event = await EmergencyEvent.findById(eventId)
+      .select('user_id assigned_lawyer_id room_id status')
+      .lean();
+    if (!event) return res.status(404).json({ error: 'Event not found' });
+
+    const uid = String(userId);
+    const isUser   = (role === 'user' || role === 'admin') &&
+      event.user_id?.toString() === uid;
+    const isLawyer = role === 'lawyer' &&
+      event.assigned_lawyer_id?.toString() === uid;
+    if (!isUser && !isLawyer) {
+      return res.status(403).json({ error: 'Not authorized for this call' });
+    }
+
+    const channelName = event.room_id || String(event._id || eventId);
+    const { token, agoraUid, ttlSec, expiresAt } = buildRtcTokenForUid({
+      channelName,
+      userMongoId: uid,
+      role: 'publisher',
+    });
+
+    res.json({
+      success:    true,
+      channelId:  channelName,
+      agoraToken: token,
+      agoraUid,
+      ttlSec,
+      expiresAt,
+    });
+  } catch (err) {
+    next(err);
   }
 };
 
