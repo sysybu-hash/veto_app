@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../core/i18n/app_language.dart';
-import '../core/theme/veto_glass_system.dart';
+import '../core/theme/veto_2026.dart';
 import '../core/theme/veto_theme.dart';
 import '../services/auth_service.dart';
 import '../widgets/app_language_menu.dart';
@@ -133,19 +133,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Directionality(
       textDirection: AppLanguage.directionOf(code),
       child: Scaffold(
-        backgroundColor: VetoGlassTokens.bgBase,
+        backgroundColor: V26.paper,
         appBar: AppBar(
           backgroundColor: const Color(0x18FFFFFF),
           elevation: 0,
           shadowColor: Colors.transparent,
           surfaceTintColor: Colors.transparent,
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new_rounded, color: VetoGlassTokens.textPrimary, size: 20),
+            icon: const Icon(Icons.arrow_back_ios_new_rounded, color: V26.ink900, size: 20),
             onPressed: () => Navigator.of(context).pop(),
           ),
           title: Text(
             _t(code, 'title'),
-            style: const TextStyle(color: VetoGlassTokens.textPrimary, fontWeight: FontWeight.w800, fontSize: 18),
+            style: const TextStyle(color: V26.ink900, fontWeight: FontWeight.w800, fontSize: 18),
           ),
           centerTitle: true,
           actions: const [
@@ -156,14 +156,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ],
           bottom: const PreferredSize(
             preferredSize: Size.fromHeight(1),
-            child: Divider(height: 1, color: VetoGlassTokens.glassBorder),
+            child: Divider(height: 1, color: V26.hairline),
           ),
         ),
-        body: VetoGlassAuroraBackground(
+        body: V26Backdrop(
           child: _loading
             ? const Center(
                 child: CircularProgressIndicator(
-                    color: VetoGlassTokens.neonCyan))
+                    color: V26.navy600))
             : SingleChildScrollView(
                 padding: const EdgeInsets.all(24),
                 child: Center(
@@ -175,30 +175,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         const SizedBox(height: 8),
                         // Avatar
                         Center(
-                          child: Container(
-                            width: 80, height: 80,
-                            decoration: const BoxDecoration(
-                              gradient: VetoGlassTokens.neonButton,
-                              shape: BoxShape.circle,
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Color(0x4000E5FF),
-                                  blurRadius: 20,
-                                  spreadRadius: 0,
-                                ),
-                              ],
-                            ),
-                            child: Center(
-                              child: Text(
-                                _nameCtrl.text.isNotEmpty
-                                    ? _nameCtrl.text[0].toUpperCase()
-                                    : '?',
-                                style: const TextStyle(
-                                  fontSize: 32, fontWeight: FontWeight.w900,
-                                  color: Color(0xFF041018),
-                                ),
-                              ),
-                            ),
+                          child: V26Avatar(
+                            _nameCtrl.text.isNotEmpty
+                                ? _nameCtrl.text[0].toUpperCase()
+                                : '?',
+                            size: V26AvatarSize.xl,
                           ),
                         ),
                         const SizedBox(height: 28),
@@ -219,14 +200,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 16, vertical: 14),
                               decoration: BoxDecoration(
-                                color: const Color(0xFF0F1A24),
+                                color: V26.paper2,
                                 borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: VetoGlassTokens.glassBorder),
+                                border: Border.all(color: V26.hairline),
                               ),
                               child: Text(
                                 _phone ?? '—',
                                 style: const TextStyle(
-                                    color: VetoGlassTokens.textMuted),
+                                    color: V26.ink500),
                               ),
                             ),
                             const SizedBox(height: 20),
@@ -235,9 +216,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 16, vertical: 14),
                               decoration: BoxDecoration(
-                                color: const Color(0xFF0F1A24),
+                                color: V26.paper2,
                                 borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: VetoGlassTokens.glassBorder),
+                                border: Border.all(color: V26.hairline),
                               ),
                               child: Row(
                                 children: [
@@ -248,13 +229,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                             ? Icons.admin_panel_settings_outlined
                                             : Icons.person_outline,
                                     size: 16,
-                                    color: VetoGlassTokens.neonCyan,
+                                    color: V26.navy600,
                                   ),
                                   const SizedBox(width: 8),
                                   Text(
                                     _roleLabel(code, _role),
                                     style: const TextStyle(
-                                        color: VetoGlassTokens.textMuted),
+                                        color: V26.ink500),
                                   ),
                                 ],
                               ),
@@ -265,9 +246,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 16, vertical: 14),
                               decoration: BoxDecoration(
-                                color: const Color(0xFF0F1A24),
+                                color: V26.paper2,
                                 borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: VetoGlassTokens.glassBorder),
+                                border: Border.all(color: V26.hairline),
                               ),
                               child: const Align(
                                 alignment: Alignment.centerLeft,
@@ -287,8 +268,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               style: const TextStyle(fontSize: 13),
                             ),
                             style: OutlinedButton.styleFrom(
-                              foregroundColor: VetoGlassTokens.neonCyan,
-                              side: BorderSide(color: VetoGlassTokens.neonCyan.withValues(alpha: 0.4)),
+                              foregroundColor: V26.navy600,
+                              side: BorderSide(color: V26.navy600.withValues(alpha: 0.4)),
                               padding: const EdgeInsets.symmetric(vertical: 12),
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                             ),
@@ -302,8 +283,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               style: const TextStyle(fontSize: 13),
                             ),
                             style: OutlinedButton.styleFrom(
-                              foregroundColor: VetoGlassTokens.neonCyan,
-                              side: BorderSide(color: VetoGlassTokens.neonCyan.withValues(alpha: 0.4)),
+                              foregroundColor: V26.navy600,
+                              side: BorderSide(color: V26.navy600.withValues(alpha: 0.4)),
                               padding: const EdgeInsets.symmetric(vertical: 12),
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                             ),
@@ -321,7 +302,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             style: const TextStyle(color: Color(0xFF041018)),
                           ),
                           style: FilledButton.styleFrom(
-                            backgroundColor: VetoGlassTokens.neonCyan,
+                            backgroundColor: V26.navy600,
                             foregroundColor: const Color(0xFF041018),
                             padding: const EdgeInsets.symmetric(vertical: 16),
                             textStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
@@ -380,30 +361,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget _sectionLabel(String text) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 7),
-      child: Text(
-        text.toUpperCase(),
-        style: const TextStyle(
-          color: VetoGlassTokens.neonCyan,
-          fontSize: 10,
-          fontWeight: FontWeight.w800,
-          letterSpacing: 2,
-        ),
-      ),
+      child: V26Kicker(text),
     );
   }
 
   Widget _buildCard({required List<Widget> children}) {
-    return VetoGlassBlur(
-      borderRadius: 16,
-      sigma: 14,
-      fill: VetoGlassTokens.glassFillStrong,
-      borderColor: VetoGlassTokens.glassBorder,
-      child: Padding(
-        padding: const EdgeInsets.all(18),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: children,
-        ),
+    return V26Card(
+      padding: const EdgeInsets.all(18),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: children,
       ),
     );
   }

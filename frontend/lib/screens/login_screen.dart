@@ -13,8 +13,8 @@ import 'package:pinput/pinput.dart';
 import 'package:provider/provider.dart';
 
 import '../core/i18n/app_language.dart';
-import '../core/theme/veto_glass_system.dart';
-import '../core/theme/veto_theme.dart';
+import '../core/theme/veto_2026.dart';
+import '../core/theme/veto_2026_auth.dart';
 import '../platform/browser_bridge.dart' as browser_bridge;
 import '../services/auth_service.dart';
 import '../widgets/app_language_menu.dart';
@@ -93,6 +93,57 @@ const _copy = <String, Map<String, String>>{
     'paymentConfirm': 'אשר תשלום',
     'paymentOpenFailed': 'לא ניתן לפתוח PayPal כרגע.',
     'paymentConfirmFailed': 'התשלום טרם אושר. בדוק את לשונית ה-PayPal ונסה שוב.',
+    'invalidPhone': 'הזן מספר טלפון תקין (9–10 ספרות).',
+    'brandTagline': 'הגנה משפטית מיידית',
+    'authSide_role_h1_l1': 'שכבת הגישה',
+    'authSide_role_h1_l2': 'שלך — ',
+    'authSide_role_h1_em': 'לכל תפקיד',
+    'authSide_role_p':
+        'בחר אם אתה אזרח שמחפש הגנה משפטית, או עורך דין שמצטרף למשרד הדיגיטלי שלנו. הזרימה והמסך יתאימו לתפקיד.',
+    'authSide_role_f1t': 'חשבון אחד · כל המכשירים',
+    'authSide_role_f1b':
+        'אפליקציה במובייל, דפדפן בדסקטופ — נתונים מסונכרנים תמיד.',
+    'authSide_role_f2t': 'אבטחה ברמת בנק',
+    'authSide_role_f2b': 'OTP חד-פעמי, JWT, ואחסון מקומי מוצפן.',
+    'authSide_role_f3t': 'שלוש שפות',
+    'authSide_role_f3b': 'עברית, אנגלית, רוסית — ממשק מלא.',
+    'authSide_role_q':
+        '"קיבלתי עורך דין על הקו תוך 4 שניות, באמצע הלילה. הוא הסביר לי את הזכויות שלי לפני שאמרתי מילה לחוקר."',
+    'authSide_role_qi': 'דכ',
+    'authSide_role_qn': 'דניאל כהן',
+    'authSide_role_qr': 'משתמש מאז 2025',
+    'authSide_prof_h1_l1': 'פרטים שמשמשים',
+    'authSide_prof_h1_l2': 'אך ורק ',
+    'authSide_prof_h1_em': 'לאמת אותך',
+    'authSide_prof_p':
+        'אנחנו לא שולחים פרסומות, לא מוכרים נתונים, ולא חולקים את המידע שלך עם רשויות. הטלפון משמש רק לאימות.',
+    'authSide_prof_f1t': 'אימות בטלפון',
+    'authSide_prof_f1b': 'OTP חד-פעמי לצורך כניסה — לא נשמרת סיסמה.',
+    'authSide_prof_f2t': 'או Google Sign-In',
+    'authSide_prof_f2b': 'חשבון Google שלך — בלחיצה אחת.',
+    'authSide_otp_h1_l1': 'שלחנו לך קוד',
+    'authSide_otp_h1_l2': 'בן ',
+    'authSide_otp_h1_em': '6 ספרות',
+    'authSide_otp_p':
+        'הקלד את הקוד שקיבלת ב-SMS או הדבק אותו ישירות. הקוד תקף ל-10 דקות בלבד.',
+    'authSide_otp_q':
+        '"זה לא רק עו״ד — זה ידיעה שיש לך גב, גם בשתיים בלילה."',
+    'authSide_otp_qi': 'שכ',
+    'authSide_otp_qn': 'שירה כהן',
+    'authSide_otp_qr': 'עורכת דין · משתמשת מקצועית',
+    'roleStepKicker': 'בחר תפקיד',
+    'profileStepKicker': 'פרטי חשבון',
+    'profileH2Register': 'בוא ניצור לך חשבון',
+    'profileH2Login': 'התחברות לחשבון',
+    'profileLedeRegister':
+        'אנחנו צריכים שם וטלפון בלבד. ניתן גם להירשם דרך Google.',
+    'profileLedeLogin': 'הזן את מספר הטלפון לקבלת קוד אימות חד-פעמי.',
+    'otpStepKicker': 'אימות טלפון',
+    'otpH2': 'הזן את קוד האימות',
+    'otpLede': 'שלחנו קוד בן 6 ספרות אל מספר הטלפון שלך:',
+    'otpSentLabel': 'נשלח אל',
+    'changePhone': 'שינוי',
+    'secureFootnote': '🔒 מאובטח עם הצפנה מקצה לקצה',
   },
   'en': {
     'eyebrow': 'Sign in / Register',
@@ -156,6 +207,56 @@ const _copy = <String, Map<String, String>>{
     'emailLabel': 'Email address',
     'emailHint': 'name@example.com',
     'pasteOtp': 'Paste code',
+    'brandTagline': 'Immediate legal protection',
+    'authSide_role_h1_l1': 'Your access layer',
+    'authSide_role_h1_l2': '— ',
+    'authSide_role_h1_em': 'for every role',
+    'authSide_role_p':
+        'Choose citizen if you need protection, or lawyer if you join our digital practice. The flow adapts to your role.',
+    'authSide_role_f1t': 'One account · every device',
+    'authSide_role_f1b':
+        'Mobile app or desktop browser — your data stays in sync.',
+    'authSide_role_f2t': 'Bank-grade security',
+    'authSide_role_f2b': 'One-time OTP, JWT, and encrypted local storage.',
+    'authSide_role_f3t': 'Three languages',
+    'authSide_role_f3b': 'Hebrew, English, Russian — full UI.',
+    'authSide_role_q':
+        '"I had a lawyer on the line in four seconds, in the middle of the night — before I said a word to the investigator."',
+    'authSide_role_qi': 'DK',
+    'authSide_role_qn': 'Daniel Cohen',
+    'authSide_role_qr': 'Member since 2025',
+    'authSide_prof_h1_l1': 'Details used',
+    'authSide_prof_h1_l2': 'only ',
+    'authSide_prof_h1_em': 'to verify you',
+    'authSide_prof_p':
+        'No spam, no selling data, no sharing with authorities. Phone is verification only.',
+    'authSide_prof_f1t': 'Phone verification',
+    'authSide_prof_f1b': 'One-time OTP — no saved passwords.',
+    'authSide_prof_f2t': 'Or Google Sign-In',
+    'authSide_prof_f2b': 'Your Google account — one tap.',
+    'authSide_otp_h1_l1': 'We sent a code',
+    'authSide_otp_h1_l2': 'with ',
+    'authSide_otp_h1_em': '6 digits',
+    'authSide_otp_p':
+        'Type the SMS code or paste it. Codes expire in about 10 minutes.',
+    'authSide_otp_q':
+        '"It is not just counsel — it is knowing someone has your back at 2 a.m."',
+    'authSide_otp_qi': 'SK',
+    'authSide_otp_qn': 'Shira Cohen',
+    'authSide_otp_qr': 'Attorney · professional user',
+    'roleStepKicker': 'Choose role',
+    'profileStepKicker': 'Account details',
+    'profileH2Register': 'Let’s create your account',
+    'profileH2Login': 'Sign in to your account',
+    'profileLedeRegister':
+        'We only need name and phone. Google signup is available too.',
+    'profileLedeLogin': 'Enter your phone to receive a one-time verification code.',
+    'otpStepKicker': 'Phone verification',
+    'otpH2': 'Enter the verification code',
+    'otpLede': 'We sent a 6-digit code to your phone:',
+    'otpSentLabel': 'Sent to',
+    'changePhone': 'Change',
+    'secureFootnote': '🔒 Secured with end-to-end encryption',
   },
   'ru': {
     'eyebrow': 'Вход / Регистрация',
@@ -219,6 +320,56 @@ const _copy = <String, Map<String, String>>{
     'emailLabel': 'Адрес электронной почты',
     'emailHint': 'name@example.com',
     'pasteOtp': 'Вставить код',
+    'brandTagline': 'Юридическая защита рядом',
+    'authSide_role_h1_l1': 'Один слой доступа',
+    'authSide_role_h1_l2': 'для ',
+    'authSide_role_h1_em': 'каждой роли',
+    'authSide_role_p':
+        'Выберите гражданина или адвоката — интерфейс и сценарий подстроятся под роль.',
+    'authSide_role_f1t': 'Один аккаунт · все устройства',
+    'authSide_role_f1b':
+        'Телефон или браузер — данные синхронизируются.',
+    'authSide_role_f2t': 'Безопасность как в банке',
+    'authSide_role_f2b': 'OTP, JWT и локальное шифрование.',
+    'authSide_role_f3t': 'Три языка',
+    'authSide_role_f3b': 'Иврит, английский, русский — полный интерфейс.',
+    'authSide_role_q':
+        '"Юрист был на линии через 4 секунды посреди ночи — до того как я заговорил со следователем."',
+    'authSide_role_qi': 'ДК',
+    'authSide_role_qn': 'Даниэль Коэн',
+    'authSide_role_qr': 'Пользователь с 2025',
+    'authSide_prof_h1_l1': 'Данные нужны',
+    'authSide_prof_h1_l2': 'только ',
+    'authSide_prof_h1_em': 'для проверки',
+    'authSide_prof_p':
+        'Без рекламы, без продажи данных, без передачи третьим лицам. Телефон только для входа.',
+    'authSide_prof_f1t': 'Подтверждение телефоном',
+    'authSide_prof_f1b': 'Разовый OTP — пароли не хранятся.',
+    'authSide_prof_f2t': 'Или Google',
+    'authSide_prof_f2b': 'Вход аккаунтом Google в один тап.',
+    'authSide_otp_h1_l1': 'Мы отправили код',
+    'authSide_otp_h1_l2': 'из ',
+    'authSide_otp_h1_em': '6 цифр',
+    'authSide_otp_p':
+        'Введите код из SMS или вставьте его. Код действует около 10 минут.',
+    'authSide_otp_q':
+        '"Это не просто адвокат — это уверенность, что тебя прикроют и в два часа ночи."',
+    'authSide_otp_qi': 'ШК',
+    'authSide_otp_qn': 'Шира Коэн',
+    'authSide_otp_qr': 'Адвокат · профиль пользователя',
+    'roleStepKicker': 'Выберите роль',
+    'profileStepKicker': 'Данные аккаунта',
+    'profileH2Register': 'Создадим ваш аккаунт',
+    'profileH2Login': 'Вход в аккаунт',
+    'profileLedeRegister':
+        'Нужны только имя и телефон. Также можно через Google.',
+    'profileLedeLogin': 'Введите телефон для получения одноразового кода.',
+    'otpStepKicker': 'Подтверждение телефона',
+    'otpH2': 'Введите код подтверждения',
+    'otpLede': 'Мы отправили 6-значный код на ваш номер:',
+    'otpSentLabel': 'Отправлено на',
+    'changePhone': 'Изменить',
+    'secureFootnote': '🔒 Защищено сквозным шифрованием',
   },
 };
 
@@ -226,6 +377,34 @@ String _t(String code, String key) {
   return _copy[AppLanguage.normalize(code)]?[key] ??
       _copy[AppLanguage.hebrew]![key] ??
       key;
+}
+
+const TextStyle _kAuthMktBodyStyle = TextStyle(
+  fontFamily: V26.sans,
+  fontSize: 15,
+  height: 1.7,
+  color: Color(0xFFC7D5EE),
+);
+
+Widget _authMarketingHeadline(String lang, String k1, String k2, String kem) {
+  return Text.rich(
+    TextSpan(
+      style: const TextStyle(
+        fontFamily: V26.serif,
+        fontSize: 36,
+        height: 1.12,
+        color: Colors.white,
+      ),
+      children: [
+        TextSpan(text: '${_t(lang, k1)}\n'),
+        TextSpan(text: _t(lang, k2)),
+        TextSpan(
+          text: _t(lang, kem),
+          style: const TextStyle(color: V26.goldSoft),
+        ),
+      ],
+    ),
+  );
 }
 
 // ?????????????????????????????????????????????????????????????
@@ -503,138 +682,193 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     final lang = context.watch<AppLanguageController>().code;
-    final dir  = AppLanguage.directionOf(lang);
-    // wide layout removed – always centered card
+    final dir = AppLanguage.directionOf(lang);
+    final wide = MediaQuery.sizeOf(context).width >= 900;
+
+    final form = _buildAuthFormColumn(context, lang, wide);
 
     return Directionality(
       textDirection: dir,
       child: Scaffold(
-        backgroundColor: VetoGlassTokens.bgBase,
-        body: VetoGlassAuroraBackground(
-          child: SafeArea(
-            child: Center(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 32),
-                child: Column(children: [
-                  // Top row: back home (start) + language (end)
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      // Back to landing
-                      TextButton.icon(
-                        onPressed: () => Navigator.of(context).pushReplacementNamed('/landing'),
-                        icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 14, color: VetoGlassTokens.neonCyan),
-                        label: Text(
-                          lang == 'he' ? 'דף הבית' : lang == 'ru' ? 'Главная' : 'Home',
-                          style: const TextStyle(color: VetoGlassTokens.neonCyan, fontSize: 13, fontWeight: FontWeight.w600),
-                        ),
-                        style: TextButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6)),
-                      ),
-                      const AppLanguageMenu(compact: true),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  // Frosted card on dark aurora — inner forms keep VetoPalette (dark ink on light frost)
-                  ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 420),
-                    child: VetoGlassBlur(
-                      borderRadius: 24,
-                      sigma: VetoGlassTokens.blurSigma,
-                      fill: VetoGlassTokens.glassFillStrong,
-                      borderColor: VetoGlassTokens.glassBorderBright,
-                      child: Padding(
-                        padding: const EdgeInsets.all(32),
-                        child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-                        // Shield icon + title
-                        Column(children: [
-                          Container(
-                            width: 64, height: 64,
-                            decoration: BoxDecoration(
-                              color: VetoGlassTokens.neonBlue.withValues(alpha: 0.12),
-                              shape: BoxShape.circle,
-                              border: Border.all(color: VetoGlassTokens.neonCyan.withValues(alpha: 0.35), width: 1.5),
-                            ),
-                            child: const Icon(Icons.shield_rounded, color: VetoGlassTokens.neonBlue, size: 32),
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            lang == 'he' ? 'ברוך הבא ל-VETO' : lang == 'ru' ? 'Добро пожаловать в VETO' : 'Welcome to VETO',
-                            style: const TextStyle(color: VetoGlassTokens.textPrimary, fontSize: 22, fontWeight: FontWeight.w900),
-                            textAlign: TextAlign.center,
-                          ),
-                          const SizedBox(height: 6),
-                          Text(
-                            lang == 'he' ? 'הגנה משפטית בהישג יד' : lang == 'ru' ? 'Юридическая защита рядом' : 'Legal protection within reach',
-                            style: const TextStyle(color: VetoGlassTokens.textMuted, fontSize: 14),
-                            textAlign: TextAlign.center,
-                          ),
-                        ]),
-                        const SizedBox(height: 28),
-                        _StepIndicator(
-                          step: _step.index,
-                          labels: [_t(lang,'stepRole'), _t(lang,'stepProfile'), _t(lang,'stepOtp')],
-                        ),
-                        const SizedBox(height: 24),
-                        AnimatedSwitcher(
-                          duration: const Duration(milliseconds: 260),
-                          switchInCurve: Curves.easeOutCubic,
-                          switchOutCurve: Curves.easeInCubic,
-                          child: _buildStep(lang),
-                        ),
-                        if (_error.isNotEmpty) ...[
-                          const SizedBox(height: 12),
-                          _ErrorBanner(message: _error),
-                        ],
-                      ]),
+        backgroundColor: V26.paper,
+        body: V26Backdrop(
+          child: wide
+              ? Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Expanded(
+                      flex: 105,
+                      child: _LoginMarketingSide(step: _step, lang: lang),
                     ),
+                    Expanded(flex: 95, child: form),
+                  ],
+                )
+              : form,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAuthFormColumn(BuildContext context, String lang, bool wide) {
+    final pad = wide
+        ? const EdgeInsets.fromLTRB(56, 48, 56, 40)
+        : const EdgeInsets.fromLTRB(20, 24, 20, 28);
+
+    return SafeArea(
+      child: Align(
+        alignment: Alignment.topCenter,
+        child: SingleChildScrollView(
+          padding: pad,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 520),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _loginTopBar(context, lang, wide),
+                const SizedBox(height: 28),
+                _LoginStepperDots(
+                  stepIndex: _step.index,
+                  labels: [
+                    _t(lang, 'stepRole'),
+                    _t(lang, 'stepProfile'),
+                    _t(lang, 'stepOtp'),
+                  ],
+                ),
+                const SizedBox(height: 28),
+                V26Card(
+                  lift: true,
+                  radius: wide ? V26.r2xl : V26.rXl,
+                  padding: EdgeInsets.all(wide ? 36 : 22),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 260),
+                        switchInCurve: Curves.easeOutCubic,
+                        switchOutCurve: Curves.easeInCubic,
+                        child: _buildStep(lang),
+                      ),
+                      if (_error.isNotEmpty) ...[
+                        const SizedBox(height: 12),
+                        _ErrorBanner(message: _error),
+                      ],
+                    ],
                   ),
                 ),
-                  const SizedBox(height: 20),
-                  Text(
-                    lang == 'he' ? '🔒 מאובטח עם הצפנה מקצה לקצה' : lang == 'ru' ? '🔒 Защищено сквозным шифрованием' : '🔒 Secured with end-to-end encryption',
-                    style: const TextStyle(color: VetoGlassTokens.textMuted, fontSize: 12),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 10),
-                  Wrap(
-                    alignment: WrapAlignment.center,
-                    spacing: 4,
-                    runSpacing: 0,
-                    children: [
-                      TextButton(
-                        onPressed: () => Navigator.pushNamed(context, '/privacy'),
-                        child: Text(
-                          lang == 'he' ? 'מדיניות פרטיות' : lang == 'ru' ? 'Конфиденциальность' : 'Privacy',
-                          style: const TextStyle(
-                            color: VetoGlassTokens.neonCyan,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                          ),
+                const SizedBox(height: 22),
+                Text(
+                  _t(lang, 'secureFootnote'),
+                  style: const TextStyle(color: V26.ink300, fontSize: 12),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 10),
+                Wrap(
+                  alignment: WrapAlignment.center,
+                  spacing: 4,
+                  runSpacing: 0,
+                  children: [
+                    TextButton(
+                      onPressed: () => Navigator.pushNamed(context, '/privacy'),
+                      child: Text(
+                        lang == 'he'
+                            ? 'מדיניות פרטיות'
+                            : lang == 'ru'
+                                ? 'Конфиденциальность'
+                                : 'Privacy',
+                        style: const TextStyle(
+                          color: V26.navy600,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
                         ),
                       ),
-                      Text(
-                        lang == 'he' ? '·' : '·',
-                        style: const TextStyle(color: VetoGlassTokens.textMuted, fontSize: 12),
-                      ),
-                      TextButton(
-                        onPressed: () => Navigator.pushNamed(context, '/terms'),
-                        child: Text(
-                          lang == 'he' ? 'תנאי שימוש' : lang == 'ru' ? 'Условия' : 'Terms',
-                          style: const TextStyle(
-                            color: VetoGlassTokens.neonCyan,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                          ),
+                    ),
+                    const Text(
+                      '·',
+                      style: TextStyle(color: V26.ink300, fontSize: 12),
+                    ),
+                    TextButton(
+                      onPressed: () => Navigator.pushNamed(context, '/terms'),
+                      child: Text(
+                        lang == 'he'
+                            ? 'תנאי שימוש'
+                            : lang == 'ru'
+                                ? 'Условия'
+                                : 'Terms',
+                        style: const TextStyle(
+                          color: V26.navy600,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
                         ),
                       ),
-                    ],
-                  ),
-                ]),
-              ),
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
         ),
       ),
+    );
+  }
+
+  Widget _loginTopBar(BuildContext context, String lang, bool wide) {
+    Widget backBtn(VoidCallback onTap) {
+      return TextButton.icon(
+        onPressed: onTap,
+        icon: const Icon(Icons.arrow_back_ios_new_rounded,
+            size: 14, color: V26.navy600),
+        label: Text(
+          _t(lang, 'back'),
+          style: const TextStyle(
+            color: V26.navy600,
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        style: TextButton.styleFrom(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+        ),
+      );
+    }
+
+    final Widget left = switch (_step) {
+      _Step.role when wide => V26Badge(
+          _t(lang, 'eyebrow'),
+          tone: V26BadgeTone.brand,
+        ),
+      _Step.role => TextButton.icon(
+          onPressed: () =>
+              Navigator.of(context).pushReplacementNamed('/landing'),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded,
+              size: 14, color: V26.navy600),
+          label: Text(
+            lang == 'he'
+                ? 'דף הבית'
+                : lang == 'ru'
+                    ? 'Главная'
+                    : 'Home',
+            style: const TextStyle(
+              color: V26.navy600,
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          style: TextButton.styleFrom(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+          ),
+        ),
+      _Step.profile =>
+        backBtn(() => setState(() => _step = _Step.role)),
+      _Step.otp =>
+        backBtn(() => setState(() => _step = _Step.profile)),
+    };
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        left,
+        const AppLanguageMenu(compact: true),
+      ],
     );
   }
 
@@ -648,39 +882,70 @@ class _LoginScreenState extends State<LoginScreen> {
 
   // ?? Step 1: Role ?????????????????????????????????????????????
   Widget _roleStep(String lang) {
-    return Column(
-      key: const ValueKey('role'),
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Text(_t(lang, 'chooseRole'),
-            style: const TextStyle(color: VetoGlassTokens.textPrimary, fontSize: 22, fontWeight: FontWeight.w800)),
-        const SizedBox(height: 6),
-        Text(_t(lang, 'chooseRoleBody'),
-            style: const TextStyle(color: VetoGlassTokens.textMuted, fontSize: 13, height: 1.6)),
-        const SizedBox(height: 20),
-        Row(children: [
-          Expanded(child: _RoleCard(
-            selected: _role == 'user',
-            icon: Icons.person_search_outlined,
-            title: _t(lang, 'citizenTitle'),
-            body: _t(lang, 'citizenBody'),
-            onTap: () => setState(() => _role = 'user'),
-          )),
-          const SizedBox(width: 12),
-          Expanded(child: _RoleCard(
-            selected: _role == 'lawyer',
-            icon: Icons.gavel_rounded,
-            title: _t(lang, 'lawyerTitle'),
-            body: _t(lang, 'lawyerBody'),
-            onTap: () => setState(() => _role = 'lawyer'),
-          )),
-        ]),
-        const SizedBox(height: 20),
-        FilledButton(
-          onPressed: () => setState(() => _step = _Step.profile),
-          child: Text(_t(lang, 'next')),
-        ),
-      ],
+    return LayoutBuilder(
+      builder: (context, c) {
+        final stack = c.maxWidth < 440;
+        final citizen = _RoleCard(
+          selected: _role == 'user',
+          icon: Icons.person_outline_rounded,
+          title: _t(lang, 'citizenTitle'),
+          body: _t(lang, 'citizenBody'),
+          onTap: () => setState(() => _role = 'user'),
+        );
+        final lawyer = _RoleCard(
+          selected: _role == 'lawyer',
+          icon: Icons.gavel_rounded,
+          title: _t(lang, 'lawyerTitle'),
+          body: _t(lang, 'lawyerBody'),
+          onTap: () => setState(() => _role = 'lawyer'),
+        );
+        return Column(
+          key: const ValueKey('role'),
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            V26Kicker(_t(lang, 'roleStepKicker')),
+            const SizedBox(height: 8),
+            V26Headline(_t(lang, 'chooseRole'), size: 28),
+            const SizedBox(height: 8),
+            Text(
+              _t(lang, 'chooseRoleBody'),
+              style: const TextStyle(
+                color: V26.ink500,
+                fontSize: 14,
+                height: 1.55,
+              ),
+            ),
+            const SizedBox(height: 22),
+            if (stack)
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  citizen,
+                  const SizedBox(height: 12),
+                  lawyer,
+                ],
+              )
+            else
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(child: citizen),
+                  const SizedBox(width: 14),
+                  Expanded(child: lawyer),
+                ],
+              ),
+            const SizedBox(height: 22),
+            V26CTA(
+              _t(lang, 'next'),
+              variant: V26CtaVariant.primary,
+              large: true,
+              expanded: true,
+              icon: Icons.arrow_forward_rounded,
+              onPressed: () => setState(() => _step = _Step.profile),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -694,11 +959,31 @@ class _LoginScreenState extends State<LoginScreen> {
           loginLabel: _t(lang, 'login'),
           registerLabel: _t(lang, 'register'),
           isRegister: _registerMode,
-          onChanged: (v) => setState(() { _registerMode = v; _error = ''; }),
+          onChanged: (v) => setState(() {
+            _registerMode = v;
+            _error = '';
+          }),
         ),
         const SizedBox(height: 20),
-        Text(_t(lang, 'profileTitle'),
-            style: const TextStyle(color: VetoGlassTokens.textPrimary, fontSize: 22, fontWeight: FontWeight.w800)),
+        V26Kicker(_t(lang, 'profileStepKicker')),
+        const SizedBox(height: 8),
+        V26Headline(
+          _registerMode
+              ? _t(lang, 'profileH2Register')
+              : _t(lang, 'profileH2Login'),
+          size: 28,
+        ),
+        const SizedBox(height: 8),
+        Text(
+          _registerMode
+              ? _t(lang, 'profileLedeRegister')
+              : _t(lang, 'profileLedeLogin'),
+          style: const TextStyle(
+            color: V26.ink500,
+            fontSize: 14,
+            height: 1.55,
+          ),
+        ),
         const SizedBox(height: 18),
         if (_registerMode) ...[
           _VetoField(
@@ -718,7 +1003,6 @@ class _LoginScreenState extends State<LoginScreen> {
             onSubmitted: (_) => FocusScope.of(context).nextFocus(),
           ),
           const SizedBox(height: 12),
-          const SizedBox(height: 12),
         ],
         _PhoneRow(
           controller: _phoneCtrl,
@@ -728,20 +1012,29 @@ class _LoginScreenState extends State<LoginScreen> {
           onSubmitted: _loading ? null : (_) => _continueFromProfile(),
         ),
         const SizedBox(height: 20),
-        Row(children: [
-          Expanded(child: OutlinedButton(
-            onPressed: () => setState(() => _step = _Step.role),
-            child: Text(_t(lang, 'back')),
-          )),
-          const SizedBox(width: 10),
-          Expanded(child: FilledButton(
-            onPressed: _loading ? null : _continueFromProfile,
-            child: _loading
-                ? const SizedBox(width: 18, height: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2))
-                : Text(_t(lang, 'sendOtp')),
-          )),
-        ]),
+        Row(
+          children: [
+            Expanded(
+              child: V26CTA(
+                _t(lang, 'back'),
+                variant: V26CtaVariant.ghost,
+                large: true,
+                expanded: true,
+                onPressed: () => setState(() => _step = _Step.role),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: V26CTA(
+                _t(lang, 'sendOtp'),
+                expanded: true,
+                large: true,
+                loading: _loading,
+                onPressed: _continueFromProfile,
+              ),
+            ),
+          ],
+        ),
         const SizedBox(height: 20),
         _OrDivider(label: _t(lang, 'orDivider')),
         const SizedBox(height: 16),
@@ -757,13 +1050,19 @@ class _LoginScreenState extends State<LoginScreen> {
   // ?? Step 3: OTP ??????????????????????????????????????????????
   Widget _otpStep(String lang) {
     final defaultTheme = PinTheme(
-      width: 50,
+      width: 48,
       height: 58,
-      textStyle: const TextStyle(color: VetoGlassTokens.textPrimary, fontSize: 24, fontWeight: FontWeight.w700),
+      textStyle: const TextStyle(
+        fontFamily: V26.serif,
+        color: V26.ink900,
+        fontSize: 26,
+        fontWeight: FontWeight.w800,
+      ),
       decoration: BoxDecoration(
-        color: const Color(0xFF0F1A24),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: VetoGlassTokens.glassBorder),
+        color: V26.surface,
+        borderRadius: BorderRadius.circular(V26.rMd),
+        border: Border.all(color: V26.hairline),
+        boxShadow: V26.shadow1,
       ),
     );
 
@@ -771,63 +1070,153 @@ class _LoginScreenState extends State<LoginScreen> {
       key: const ValueKey('otp'),
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(_t(lang, 'otpTitle'),
-            style: const TextStyle(color: VetoGlassTokens.textPrimary, fontSize: 22, fontWeight: FontWeight.w800)),
-        const SizedBox(height: 6),
-        Wrap(crossAxisAlignment: WrapCrossAlignment.center, children: [
-          Text(_t(lang, 'otpSentTo'),
-              style: const TextStyle(color: VetoGlassTokens.textMuted, fontSize: 14)),
-          const SizedBox(width: 4),
-          Text(_fullPhone, textDirection: TextDirection.ltr,
-              style: const TextStyle(color: VetoGlassTokens.neonCyan, fontSize: 14, fontWeight: FontWeight.w600)),
-        ]),
+        V26Kicker(_t(lang, 'otpStepKicker')),
+        const SizedBox(height: 8),
+        V26Headline(_t(lang, 'otpH2'), size: 28),
+        const SizedBox(height: 8),
+        Text(
+          _t(lang, 'otpLede'),
+          style: const TextStyle(
+            color: V26.ink500,
+            fontSize: 14,
+            height: 1.55,
+          ),
+        ),
+        const SizedBox(height: 14),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          decoration: BoxDecoration(
+            color: V26.surface2,
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: V26.hairline),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(9),
+                  color: V26.navy100,
+                ),
+                alignment: Alignment.center,
+                child: const Icon(Icons.phone_iphone_rounded,
+                    size: 16, color: V26.navy700),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      _t(lang, 'otpSentLabel'),
+                      style: const TextStyle(
+                        fontSize: 11,
+                        color: V26.ink500,
+                      ),
+                    ),
+                    Text(
+                      _fullPhone,
+                      textDirection: TextDirection.ltr,
+                      style: const TextStyle(
+                        fontFamily: V26.sans,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w800,
+                        color: V26.ink900,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              TextButton(
+                onPressed: () => setState(() => _step = _Step.profile),
+                child: Text(
+                  _t(lang, 'changePhone'),
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w800,
+                    fontSize: 12,
+                    color: V26.navy600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
         const SizedBox(height: 22),
-        Center(child: Directionality(
-          textDirection: TextDirection.ltr,
-          child: Pinput(
-            controller: _otpCtrl,
-            length: 6,
-            defaultPinTheme: defaultTheme,
-            focusedPinTheme: defaultTheme.copyWith(
-              decoration: defaultTheme.decoration?.copyWith(
-                border: Border.all(color: VetoGlassTokens.neonCyan, width: 1.5),
+        Center(
+          child: Directionality(
+            textDirection: TextDirection.ltr,
+            child: Pinput(
+              controller: _otpCtrl,
+              length: 6,
+              defaultPinTheme: defaultTheme,
+              focusedPinTheme: defaultTheme.copyWith(
+                decoration: defaultTheme.decoration?.copyWith(
+                  border: Border.all(color: V26.navy500, width: 1.5),
+                  boxShadow: [
+                    BoxShadow(
+                      color: V26.navy500.withValues(alpha: 0.12),
+                      blurRadius: 0,
+                      spreadRadius: 4,
+                    ),
+                  ],
+                ),
+              ),
+              onChanged: (_) {
+                if (_error.isNotEmpty) setState(() => _error = '');
+              },
+              onCompleted: _verifyOtp,
+            ),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Center(
+          child: TextButton.icon(
+            icon: const Icon(Icons.content_paste_rounded,
+                size: 16, color: V26.navy600),
+            label: Text(
+              _t(lang, 'pasteOtp'),
+              style: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+                color: V26.navy600,
               ),
             ),
-            onChanged: (_) { if (_error.isNotEmpty) setState(() => _error = ''); },
-            onCompleted: _verifyOtp,
+            onPressed: () async {
+              final data = await Clipboard.getData(Clipboard.kTextPlain);
+              final text = (data?.text ?? '').replaceAll(RegExp(r'\D'), '');
+              if (text.length >= 6) {
+                final code = text.substring(0, 6);
+                _otpCtrl.text = code;
+                await _verifyOtp(code);
+              }
+            },
           ),
-        )),
-        const SizedBox(height: 8),
-        // Paste from clipboard button
-        Center(child: TextButton.icon(
-          icon: const Icon(Icons.content_paste_rounded, size: 16),
-          label: Text(_t(lang, 'pasteOtp'),
-              style: const TextStyle(fontSize: 13)),
-          onPressed: () async {
-            final data = await Clipboard.getData(Clipboard.kTextPlain);
-            final text = (data?.text ?? '').replaceAll(RegExp(r'\D'), '');
-            if (text.length >= 6) {
-              final code = text.substring(0, 6);
-              _otpCtrl.text = code;
-              await _verifyOtp(code);
-            }
-          },
-        )),
+        ),
         const SizedBox(height: 18),
-        Row(children: [
-          Expanded(child: OutlinedButton(
-            onPressed: _loading ? null : () => setState(() => _step = _Step.profile),
-            child: Text(_t(lang, 'back')),
-          )),
-          const SizedBox(width: 10),
-          Expanded(child: FilledButton(
-            onPressed: _loading ? null : _submitOtp,
-            child: _loading
-                ? const SizedBox(width: 18, height: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2))
-                : Text(_t(lang, 'verify')),
-          )),
-        ]),
+        Row(
+          children: [
+            Expanded(
+              child: V26CTA(
+                _t(lang, 'back'),
+                variant: V26CtaVariant.ghost,
+                large: true,
+                expanded: true,
+                onPressed: () => setState(() => _step = _Step.profile),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: V26CTA(
+                _t(lang, 'verify'),
+                expanded: true,
+                large: true,
+                loading: _loading,
+                onPressed: _submitOtp,
+              ),
+            ),
+          ],
+        ),
       ],
     );
   }
@@ -835,40 +1224,216 @@ class _LoginScreenState extends State<LoginScreen> {
 
 // ── Reusable widgets ───────────────────────────────────────
 
-class _StepIndicator extends StatelessWidget {
-  final int step;
+class _LoginMarketingSide extends StatelessWidget {
+  final _Step step;
+  final String lang;
+
+  const _LoginMarketingSide({required this.step, required this.lang});
+
+  @override
+  Widget build(BuildContext context) {
+    switch (step) {
+      case _Step.role:
+        return V26AuthNavyPanel(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      V26AuthBrandRow(tagline: _t(lang, 'brandTagline')),
+                      const SizedBox(height: 40),
+                      _authMarketingHeadline(lang, 'authSide_role_h1_l1',
+                          'authSide_role_h1_l2', 'authSide_role_h1_em'),
+                      const SizedBox(height: 16),
+                      Text(_t(lang, 'authSide_role_p'),
+                          style: _kAuthMktBodyStyle),
+                      const SizedBox(height: 36),
+                      V26AuthFeatureLine(
+                        icon: Icons.devices_rounded,
+                        title: _t(lang, 'authSide_role_f1t'),
+                        body: _t(lang, 'authSide_role_f1b'),
+                      ),
+                      const SizedBox(height: 18),
+                      V26AuthFeatureLine(
+                        icon: Icons.lock_outline_rounded,
+                        title: _t(lang, 'authSide_role_f2t'),
+                        body: _t(lang, 'authSide_role_f2b'),
+                      ),
+                      const SizedBox(height: 18),
+                      V26AuthFeatureLine(
+                        icon: Icons.language_rounded,
+                        title: _t(lang, 'authSide_role_f3t'),
+                        body: _t(lang, 'authSide_role_f3b'),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              V26AuthQuote(
+                quote: _t(lang, 'authSide_role_q'),
+                initials: _t(lang, 'authSide_role_qi'),
+                name: _t(lang, 'authSide_role_qn'),
+                role: _t(lang, 'authSide_role_qr'),
+              ),
+            ],
+          ),
+        );
+      case _Step.profile:
+        return V26AuthNavyPanel(
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                V26AuthBrandRow(tagline: _t(lang, 'brandTagline')),
+                const SizedBox(height: 40),
+                _authMarketingHeadline(lang, 'authSide_prof_h1_l1',
+                    'authSide_prof_h1_l2', 'authSide_prof_h1_em'),
+                const SizedBox(height: 16),
+                Text(_t(lang, 'authSide_prof_p'), style: _kAuthMktBodyStyle),
+                const SizedBox(height: 36),
+                V26AuthFeatureLine(
+                  icon: Icons.phone_in_talk_outlined,
+                  title: _t(lang, 'authSide_prof_f1t'),
+                  body: _t(lang, 'authSide_prof_f1b'),
+                ),
+                const SizedBox(height: 18),
+                V26AuthFeatureLine(
+                  icon: Icons.login_rounded,
+                  title: _t(lang, 'authSide_prof_f2t'),
+                  body: _t(lang, 'authSide_prof_f2b'),
+                ),
+                const SizedBox(height: 48),
+              ],
+            ),
+          ),
+        );
+      case _Step.otp:
+        return V26AuthNavyPanel(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      V26AuthBrandRow(tagline: _t(lang, 'brandTagline')),
+                      const SizedBox(height: 40),
+                      _authMarketingHeadline(lang, 'authSide_otp_h1_l1',
+                          'authSide_otp_h1_l2', 'authSide_otp_h1_em'),
+                      const SizedBox(height: 16),
+                      Text(_t(lang, 'authSide_otp_p'),
+                          style: _kAuthMktBodyStyle),
+                    ],
+                  ),
+                ),
+              ),
+              V26AuthQuote(
+                quote: _t(lang, 'authSide_otp_q'),
+                initials: _t(lang, 'authSide_otp_qi'),
+                name: _t(lang, 'authSide_otp_qn'),
+                role: _t(lang, 'authSide_otp_qr'),
+              ),
+            ],
+          ),
+        );
+    }
+  }
+}
+
+class _LoginStepperDots extends StatelessWidget {
+  final int stepIndex;
   final List<String> labels;
-  const _StepIndicator({required this.step, required this.labels});
+
+  const _LoginStepperDots({
+    required this.stepIndex,
+    required this.labels,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Row(
-      children: List.generate(labels.length, (i) {
-        final active = i <= step;
-        return Expanded(
-          child: Padding(
-            padding: EdgeInsets.only(left: i > 0 ? 6 : 0),
-            child: Column(children: [
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 220),
-                height: 3,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(999),
-                  color: active ? VetoGlassTokens.neonCyan : VetoGlassTokens.glassBorder,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        for (int i = 0; i < labels.length; i++) ...[
+          _LoginStepDotCluster(
+            index: i,
+            stepIndex: stepIndex,
+            label: labels[i],
+          ),
+          if (i < labels.length - 1)
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 6),
+                child: Container(
+                  height: 1,
+                  color: stepIndex > i ? V26.ok : V26.hairline,
                 ),
               ),
-              const SizedBox(height: 6),
-              Text(labels[i],
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: active ? VetoGlassTokens.neonCyan : VetoGlassTokens.textSubtle,
-                    fontSize: 11,
-                    fontWeight: active ? FontWeight.w700 : FontWeight.w500,
-                  )),
-            ]),
+            ),
+        ],
+      ],
+    );
+  }
+}
+
+class _LoginStepDotCluster extends StatelessWidget {
+  final int index;
+  final int stepIndex;
+  final String label;
+
+  const _LoginStepDotCluster({
+    required this.index,
+    required this.stepIndex,
+    required this.label,
+  });
+
+  bool get done => stepIndex > index;
+  bool get active => stepIndex == index;
+
+  @override
+  Widget build(BuildContext context) {
+    final showCheck = done;
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 24,
+          height: 24,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: showCheck ? V26.ok : (active ? V26.navy600 : V26.paper2),
+            border: Border.all(
+              color: showCheck ? V26.ok : (active ? V26.navy600 : V26.hairline),
+              width: 1,
+            ),
           ),
-        );
-      }),
+          child: Text(
+            showCheck ? '✓' : '${index + 1}',
+            style: TextStyle(
+              fontFamily: V26.sans,
+              fontSize: showCheck ? 11 : 12,
+              fontWeight: FontWeight.w800,
+              height: 1,
+              color: showCheck || active ? Colors.white : V26.ink500,
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Text(
+          label,
+          style: TextStyle(
+            fontFamily: V26.sans,
+            fontSize: 12,
+            fontWeight: FontWeight.w700,
+            color: active ? V26.ink900 : (done ? V26.ink500 : V26.ink300),
+          ),
+        ),
+      ],
     );
   }
 }
@@ -890,9 +1455,9 @@ class _ModeTabs extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: VetoGlassTokens.glassFill,
+        color: V26.paper2,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: VetoGlassTokens.glassBorder),
+        border: Border.all(color: V26.hairline),
       ),
       padding: const EdgeInsets.all(4),
       child: Row(children: [
@@ -911,25 +1476,31 @@ class _Tab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Expanded(child: InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(10),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
-        padding: const EdgeInsets.symmetric(vertical: 11),
-        decoration: BoxDecoration(
-          color: selected ? VetoGlassTokens.neonCyan : Colors.transparent,
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Text(label,
+    return Expanded(
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(V26.rSm),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          decoration: BoxDecoration(
+            color: selected ? V26.surface : Colors.transparent,
+            borderRadius: BorderRadius.circular(V26.rSm),
+            boxShadow: selected ? V26.shadow1 : null,
+          ),
+          child: Text(
+            label,
             textAlign: TextAlign.center,
             style: TextStyle(
-              color: selected ? const Color(0xFF041018) : VetoGlassTokens.textMuted,
-              fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-              fontSize: 14,
-            )),
+              fontFamily: V26.sans,
+              color: selected ? V26.navy700 : V26.ink500,
+              fontWeight: FontWeight.w700,
+              fontSize: 13,
+            ),
+          ),
+        ),
       ),
-    ));
+    );
   }
 }
 
@@ -940,55 +1511,119 @@ class _RoleCard extends StatelessWidget {
   final String body;
   final VoidCallback onTap;
   const _RoleCard({
-    required this.selected, required this.icon, required this.title,
-    required this.body, required this.onTap,
+    required this.selected,
+    required this.icon,
+    required this.title,
+    required this.body,
+    required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: BorderRadius.circular(V26.rLg),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.fromLTRB(22, 24, 22, 24),
         decoration: BoxDecoration(
-          color: selected
-              ? VetoGlassTokens.neonCyan.withValues(alpha: 0.10)
-              : VetoGlassTokens.glassFill,
-          borderRadius: BorderRadius.circular(20),
-          border: selected
-              ? Border(
-                  // Flutter requires uniform border colors when borderRadius is set.
-                  left: BorderSide(
-                    color: VetoGlassTokens.neonCyan.withValues(alpha: 0.35),
-                    width: 3,
-                  ),
-                  top: BorderSide(
-                    color: VetoGlassTokens.neonCyan.withValues(alpha: 0.35),
-                    width: 1,
-                  ),
-                  right: BorderSide(
-                    color: VetoGlassTokens.neonCyan.withValues(alpha: 0.35),
-                    width: 1,
-                  ),
-                  bottom: BorderSide(
-                    color: VetoGlassTokens.neonCyan.withValues(alpha: 0.35),
-                    width: 1,
-                  ),
+          gradient: selected
+              ? const LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [V26.surface, Color(0xFFF4F8FF)],
                 )
-              : Border.all(color: VetoGlassTokens.glassBorder),
+              : null,
+          color: selected ? null : V26.surface,
+          borderRadius: BorderRadius.circular(V26.rLg),
+          border: Border.all(
+            color: selected ? V26.navy600 : V26.hairline,
+            width: 2,
+          ),
+          boxShadow: selected
+              ? [
+                  BoxShadow(
+                    color: V26.navy500.withValues(alpha: 0.12),
+                    blurRadius: 0,
+                    spreadRadius: 4,
+                  ),
+                  ...V26.shadow1,
+                ]
+              : null,
         ),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Icon(icon, color: selected ? VetoGlassTokens.neonCyan : VetoGlassTokens.textMuted, size: 24),
-          const SizedBox(height: 12),
-          Text(title, style: TextStyle(
-              color: selected ? VetoGlassTokens.neonCyan : VetoGlassTokens.textPrimary,
-              fontSize: 16, fontWeight: FontWeight.w800)),
-          const SizedBox(height: 6),
-          Text(body, style: const TextStyle(
-              color: VetoGlassTokens.textMuted, fontSize: 13, height: 1.5)),
-        ]),
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  width: 52,
+                  height: 52,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(14),
+                    gradient: LinearGradient(
+                      colors: selected
+                          ? [V26.navy600, V26.navy500]
+                          : [V26.navy100, V26.surface],
+                    ),
+                    border: Border.all(
+                      color: selected ? V26.navy600 : V26.hairline,
+                    ),
+                  ),
+                  alignment: Alignment.center,
+                  child: Icon(
+                    icon,
+                    size: 22,
+                    color: selected ? Colors.white : V26.navy700,
+                  ),
+                ),
+                const SizedBox(height: 14),
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontFamily: V26.serif,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w800,
+                    color: V26.ink900,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  body,
+                  style: const TextStyle(
+                    fontFamily: V26.sans,
+                    color: V26.ink500,
+                    fontSize: 13,
+                    height: 1.5,
+                  ),
+                ),
+              ],
+            ),
+            if (selected)
+              PositionedDirectional(
+                top: 0,
+                end: 0,
+                child: Container(
+                  width: 24,
+                  height: 24,
+                  decoration: const BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: V26.navy600,
+                  ),
+                  alignment: Alignment.center,
+                  child: const Text(
+                    '✓',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }
@@ -1015,12 +1650,30 @@ class _VetoField extends StatelessWidget {
       textInputAction: action,
       keyboardType: keyboardType,
       onSubmitted: onSubmitted,
-      style: const TextStyle(color: VetoGlassTokens.textPrimary),
-      cursorColor: VetoGlassTokens.neonCyan,
+      style: const TextStyle(
+        fontFamily: V26.sans,
+        color: V26.ink900,
+        fontWeight: FontWeight.w600,
+      ),
+      cursorColor: V26.navy500,
       decoration: InputDecoration(
+        filled: true,
+        fillColor: V26.surface2,
         labelText: label,
         hintText: hint,
-        prefixIcon: Icon(icon, size: 20, color: VetoGlassTokens.textMuted),
+        prefixIcon: Icon(icon, size: 20, color: V26.ink300),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(V26.rMd),
+          borderSide: const BorderSide(color: V26.hairline),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(V26.rMd),
+          borderSide: const BorderSide(color: V26.hairline),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(V26.rMd),
+          borderSide: const BorderSide(color: V26.navy500, width: 1.5),
+        ),
       ),
     );
   }
@@ -1040,19 +1693,29 @@ class _PhoneRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Text(label, style: const TextStyle(
-          color: VetoGlassTokens.textMuted, fontSize: 12, fontWeight: FontWeight.w600)),
+      Text(label,
+          style: const TextStyle(
+              color: V26.ink500,
+              fontSize: 12,
+              fontWeight: FontWeight.w700)),
       const SizedBox(height: 8),
       Row(children: [
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
           decoration: BoxDecoration(
-            color: const Color(0xFF0F1A24),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: VetoGlassTokens.glassBorder),
+            color: V26.paper2,
+            borderRadius: BorderRadius.circular(V26.rMd),
+            border: Border.all(color: V26.hairline),
           ),
-          child: Text(countryCode, textDirection: TextDirection.ltr,
-              style: const TextStyle(color: VetoGlassTokens.textPrimary, fontWeight: FontWeight.w700)),
+          child: Text(
+            countryCode,
+            textDirection: TextDirection.ltr,
+            style: const TextStyle(
+              fontFamily: V26.sans,
+              color: V26.ink900,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
         ),
         const SizedBox(width: 8),
         Expanded(child: TextField(
@@ -1062,12 +1725,31 @@ class _PhoneRow extends StatelessWidget {
           textDirection: TextDirection.ltr,
           maxLength: 10,
           onSubmitted: onSubmitted,
-          style: const TextStyle(color: VetoGlassTokens.textPrimary),
-          cursorColor: VetoGlassTokens.neonCyan,
+          style: const TextStyle(
+            fontFamily: V26.sans,
+            color: V26.ink900,
+            fontWeight: FontWeight.w600,
+          ),
+          cursorColor: V26.navy500,
           decoration: InputDecoration(
+            filled: true,
+            fillColor: V26.surface2,
             hintText: hint,
             counterText: '',
-            prefixIcon: const Icon(Icons.phone_iphone_rounded, size: 18, color: VetoGlassTokens.textMuted),
+            prefixIcon:
+                const Icon(Icons.phone_iphone_rounded, size: 18, color: V26.ink300),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(V26.rMd),
+              borderSide: const BorderSide(color: V26.hairline),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(V26.rMd),
+              borderSide: const BorderSide(color: V26.hairline),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(V26.rMd),
+              borderSide: const BorderSide(color: V26.navy500, width: 1.5),
+            ),
           ),
         )),
       ]),
@@ -1082,13 +1764,17 @@ class _OrDivider extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(children: [
-      const Expanded(child: Divider(color: VetoGlassTokens.glassBorder)),
+      const Expanded(child: Divider(color: V26.hairline)),
       Padding(
         padding: const EdgeInsets.symmetric(horizontal: 14),
-        child: Text(label, style: const TextStyle(
-            color: VetoGlassTokens.textSubtle, fontSize: 12, fontWeight: FontWeight.w600)),
+        child: Text(label,
+            style: const TextStyle(
+                color: V26.ink300,
+                fontSize: 11,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 1.8)),
       ),
-      const Expanded(child: Divider(color: VetoGlassTokens.glassBorder)),
+      const Expanded(child: Divider(color: V26.hairline)),
     ]);
   }
 }
@@ -1108,18 +1794,23 @@ class _GoogleButton extends StatelessWidget {
         duration: const Duration(milliseconds: 180),
         padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
         decoration: BoxDecoration(
-          color: VetoGlassTokens.glassFill,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: VetoGlassTokens.glassBorder),
+          color: V26.surface,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: V26.hairline),
         ),
         child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
           SizedBox(
-            width: 22, height: 22,
+            width: 22,
+            height: 22,
             child: CustomPaint(painter: _GoogleLogoPainter()),
           ),
           const SizedBox(width: 10),
-          Text(label, style: const TextStyle(
-              color: VetoGlassTokens.textPrimary, fontWeight: FontWeight.w600, fontSize: 14)),
+          Text(label,
+              style: const TextStyle(
+                  fontFamily: V26.sans,
+                  color: V26.ink900,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 14)),
         ]),
       ),
     );
@@ -1175,15 +1866,15 @@ class _ErrorBanner extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: VetoPalette.emergency.withValues(alpha: 0.12),
+        color: V26.emerg.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: VetoPalette.emergency.withValues(alpha: 0.3)),
+        border: Border.all(color: V26.emerg.withValues(alpha: 0.3)),
       ),
       child: Row(children: [
-        const Icon(Icons.error_outline_rounded, color: VetoPalette.emergency, size: 18),
+        const Icon(Icons.error_outline_rounded, color: V26.emerg, size: 18),
         const SizedBox(width: 8),
         Expanded(child: Text(message,
-            style: const TextStyle(color: VetoPalette.emergency, fontSize: 13, height: 1.4))),
+            style: const TextStyle(color: V26.emerg, fontSize: 13, height: 1.4))),
       ]),
     );
   }
@@ -1215,38 +1906,38 @@ class _OtpCodeDialogState extends State<_OtpCodeDialog> {
     return Directionality(
       textDirection: AppLanguage.directionOf(widget.code),
       child: AlertDialog(
-        backgroundColor: const Color(0xE6121824),
+        backgroundColor: V26.surface,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
-          side: const BorderSide(color: VetoGlassTokens.glassBorder),
+          side: const BorderSide(color: V26.hairline),
         ),
         title: Text(_t(widget.code, 'otpDialogTitle'),
-            style: const TextStyle(color: VetoGlassTokens.textPrimary, fontWeight: FontWeight.w800)),
+            style: const TextStyle(color: V26.ink900, fontWeight: FontWeight.w800)),
         content: Column(mainAxisSize: MainAxisSize.min, children: [
           Text(_t(widget.code, 'otpDialogBody'),
-              style: const TextStyle(color: VetoGlassTokens.textMuted, height: 1.5)),
+              style: const TextStyle(color: V26.ink500, height: 1.5)),
           const SizedBox(height: 16),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
             decoration: BoxDecoration(
-              color: VetoGlassTokens.glassFill,
+              color: V26.surface2,
               borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: VetoGlassTokens.neonCyan.withValues(alpha: 0.4)),
+              border: Border.all(color: V26.navy600.withValues(alpha: 0.4)),
             ),
             child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
               Text(widget.otp, style: const TextStyle(
-                  color: VetoGlassTokens.neonCyan, fontSize: 34,
+                  color: V26.navy600, fontSize: 34,
                   fontWeight: FontWeight.w900, letterSpacing: 8)),
               const SizedBox(width: 12),
               AnimatedSwitcher(
                 duration: const Duration(milliseconds: 200),
                 child: _copied
                     ? const Icon(Icons.check_circle_rounded,
-                        key: ValueKey('check'), color: VetoPalette.success, size: 24)
+                        key: ValueKey('check'), color: V26.ok, size: 24)
                     : IconButton(
                         key: const ValueKey('copy'),
                         icon: const Icon(Icons.copy_rounded,
-                            color: VetoGlassTokens.neonCyan, size: 22),
+                            color: V26.navy600, size: 22),
                         tooltip: _t(widget.code, 'copyCode'),
                         onPressed: _copy,
                       ),
@@ -1256,7 +1947,7 @@ class _OtpCodeDialogState extends State<_OtpCodeDialog> {
           if (_copied) ...[
             const SizedBox(height: 8),
             Text(_t(widget.code, 'copied'),
-                style: const TextStyle(color: VetoPalette.success, fontSize: 13)),
+                style: const TextStyle(color: V26.ok, fontSize: 13)),
           ],
         ]),
         actions: [
@@ -1283,19 +1974,19 @@ class _PendingApprovalDialog extends StatelessWidget {
     return Directionality(
       textDirection: AppLanguage.directionOf(code),
       child: AlertDialog(
-        backgroundColor: const Color(0xE6121824),
+        backgroundColor: V26.surface,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
-          side: const BorderSide(color: VetoGlassTokens.glassBorder),
+          side: const BorderSide(color: V26.hairline),
         ),
         title: Row(children: [
-          const Icon(Icons.hourglass_empty_rounded, color: VetoPalette.warning, size: 22),
+          const Icon(Icons.hourglass_empty_rounded, color: V26.warn, size: 22),
           const SizedBox(width: 10),
           Expanded(child: Text(_t(code, 'pendingTitle'),
-              style: const TextStyle(color: VetoGlassTokens.textPrimary, fontWeight: FontWeight.w800))),
+              style: const TextStyle(color: V26.ink900, fontWeight: FontWeight.w800))),
         ]),
         content: Text(_t(code, 'pendingBody'),
-            style: const TextStyle(color: VetoGlassTokens.textMuted, height: 1.6)),
+            style: const TextStyle(color: V26.ink500, height: 1.6)),
         actions: [
           FilledButton(
             onPressed: () => Navigator.of(context).pop(),

@@ -48,7 +48,7 @@ veto_legal/
 
 - `lib/core/i18n/app_language.dart` — locale controller (he / en / ru)
 - `lib/core/accessibility/accessibility_settings.dart` — text scale, contrast, motion
-- `lib/core/theme/veto_theme.dart`, `veto_glass_system.dart`, `future_surface.dart` — glass UI
+- `lib/core/theme/veto_2026.dart` — VETO 2026 design tokens (`V26`), `V26Backdrop`, `V26Card`, shared painters; `veto_theme.dart` — `ThemeData`; `future_surface.dart` — named surfaces (`FutureBackdrop`, `GlassPanel`) aligned with V26
 
 ### Platform & Web
 

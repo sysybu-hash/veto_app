@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+
 import '../services/ai_service.dart';
 import '../core/i18n/app_language.dart';
-import '../core/theme/veto_glass_system.dart';
+import '../core/theme/veto_2026.dart';
 
 class AiChatDialog extends StatefulWidget {
   final String code;
@@ -65,36 +66,39 @@ class _AiChatDialogState extends State<AiChatDialog> {
         child: SizedBox(
           width: 400,
           height: 500,
-          child: VetoGlassBlur(
-            borderRadius: 24,
-            sigma: VetoGlassTokens.blurSigma,
-            fill: VetoGlassTokens.glassFillStrong,
-            borderColor: VetoGlassTokens.glassBorderBright,
+          child: V26Card(
+            lift: true,
+            radius: V26.r2xl,
+            padding: EdgeInsets.zero,
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
                 children: [
                   Row(
                     children: [
-                      const Icon(Icons.auto_awesome, color: VetoGlassTokens.neonCyan),
+                      const Icon(Icons.auto_awesome, color: V26.navy600),
                       const SizedBox(width: 8),
                       Text(
-                        widget.code == 'he' ? 'סייען VETO' : widget.code == 'ru' ? 'Ассистент VETO' : 'VETO Assistant',
+                        widget.code == 'he'
+                            ? 'סייען VETO'
+                            : widget.code == 'ru'
+                                ? 'Ассистент VETO'
+                                : 'VETO Assistant',
                         style: const TextStyle(
                           fontWeight: FontWeight.w800,
                           fontSize: 18,
                           letterSpacing: 0.2,
-                          color: VetoGlassTokens.textPrimary,
+                          color: V26.ink900,
                         ),
                       ),
                       const Spacer(),
                       IconButton(
-                        icon: const Icon(Icons.close, color: VetoGlassTokens.textPrimary),
+                        icon: const Icon(Icons.close, color: V26.ink900),
                         onPressed: () => Navigator.pop(context),
                       ),
                     ],
                   ),
-                  const Divider(height: 18, color: Color(0x28FFFFFF)),
+                  const Divider(height: 18, color: V26.hairline),
                   Expanded(
                     child: ListView.builder(
                       itemCount: _messages.length,
@@ -102,20 +106,31 @@ class _AiChatDialogState extends State<AiChatDialog> {
                         final m = _messages[i];
                         final isUser = m['role'] == 'user';
                         return Align(
-                          alignment: isUser ? AlignmentDirectional.centerEnd : AlignmentDirectional.centerStart,
+                          alignment: isUser
+                              ? AlignmentDirectional.centerEnd
+                              : AlignmentDirectional.centerStart,
                           child: Container(
                             margin: const EdgeInsets.symmetric(vertical: 4),
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 8),
                             decoration: BoxDecoration(
-                              gradient: isUser ? VetoGlassTokens.neonButton : null,
-                              color: isUser ? null : VetoGlassTokens.glassFill,
+                              gradient: isUser
+                                  ? const LinearGradient(
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                      colors: [V26.navy700, V26.navy500],
+                                    )
+                                  : null,
+                              color: isUser ? null : V26.surface2,
                               borderRadius: BorderRadius.circular(14),
-                              border: isUser ? null : Border.all(color: VetoGlassTokens.glassBorder),
+                              border: isUser
+                                  ? null
+                                  : Border.all(color: V26.hairline),
                             ),
                             child: Text(
                               m['text'] ?? '',
                               style: TextStyle(
-                                color: isUser ? VetoGlassTokens.onNeon : VetoGlassTokens.textPrimary,
+                                color: isUser ? Colors.white : V26.ink900,
                                 height: 1.45,
                                 fontWeight: FontWeight.w500,
                               ),
@@ -127,8 +142,9 @@ class _AiChatDialogState extends State<AiChatDialog> {
                   ),
                   if (_loading)
                     const Padding(
-                      padding: EdgeInsets.all(8.0),
-                      child: CircularProgressIndicator(color: VetoGlassTokens.neonCyan),
+                      padding: EdgeInsets.all(8),
+                      child:
+                          CircularProgressIndicator(color: V26.navy600),
                     ),
                   const SizedBox(height: 8),
                   Row(
@@ -136,24 +152,36 @@ class _AiChatDialogState extends State<AiChatDialog> {
                       Expanded(
                         child: TextField(
                           controller: _ctrl,
-                          style: const TextStyle(color: VetoGlassTokens.textPrimary, fontSize: 14),
+                          style: const TextStyle(
+                              color: V26.ink900, fontSize: 14),
                           decoration: InputDecoration(
-                            hintText: widget.code == 'he' ? 'הקלד הודעה...' : widget.code == 'ru' ? 'Введите сообщение...' : 'Type a message...',
-                            hintStyle: const TextStyle(color: VetoGlassTokens.textMuted),
+                            hintText: widget.code == 'he'
+                                ? 'הקלד הודעה...'
+                                : widget.code == 'ru'
+                                    ? 'Введите сообщение...'
+                                    : 'Type a message...',
+                            hintStyle:
+                                const TextStyle(color: V26.ink500),
                             filled: true,
-                            fillColor: VetoGlassTokens.glassFill,
-                            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                            fillColor: V26.surface2,
+                            contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 10),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(14),
-                              borderSide: const BorderSide(color: VetoGlassTokens.glassBorder),
+                              borderSide:
+                                  const BorderSide(color: V26.hairline),
                             ),
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(14),
-                              borderSide: const BorderSide(color: VetoGlassTokens.glassBorder),
+                              borderSide:
+                                  const BorderSide(color: V26.hairline),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(14),
-                              borderSide: BorderSide(color: VetoGlassTokens.neonCyan.withValues(alpha: 0.7), width: 1.2),
+                              borderSide: BorderSide(
+                                color: V26.navy600.withValues(alpha: 0.7),
+                                width: 1.2,
+                              ),
                             ),
                           ),
                           onSubmitted: (_) => _send(),
@@ -168,15 +196,20 @@ class _AiChatDialogState extends State<AiChatDialog> {
                           height: 44,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            gradient: VetoGlassTokens.neonButton,
+                            gradient: const LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: [V26.navy700, V26.navy500],
+                            ),
                             boxShadow: [
                               BoxShadow(
-                                color: VetoGlassTokens.neonCyan.withValues(alpha: 0.25),
+                                color:
+                                    V26.navy600.withValues(alpha: 0.25),
                                 blurRadius: 18,
                               ),
                             ],
                           ),
-                          child: const Icon(Icons.send, color: VetoGlassTokens.onNeon),
+                          child: const Icon(Icons.send, color: Colors.white),
                         ),
                       ),
                     ],

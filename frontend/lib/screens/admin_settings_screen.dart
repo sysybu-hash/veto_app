@@ -8,11 +8,11 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../core/i18n/app_language.dart';
-import '../core/theme/veto_glass_system.dart';
+import '../core/theme/veto_2026.dart';
 import '../core/theme/veto_theme.dart';
 import '../services/admin_service.dart';
 import '../services/auth_service.dart';
-import '../widgets/app_language_menu.dart';
+import 'admin/_shell.dart';
 import 'admin/all_users_screen.dart';
 import 'admin/all_lawyers_screen.dart';
 import 'admin/emergency_logs_screen.dart';
@@ -108,55 +108,36 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
 
     return Directionality(
       textDirection: AppLanguage.directionOf(code),
-      child: Scaffold(
-        backgroundColor: VetoGlassTokens.bgBase,
-        appBar: AppBar(
-          backgroundColor: const Color(0x18FFFFFF),
-          elevation: 0,
-          shadowColor: Colors.transparent,
-          surfaceTintColor: Colors.transparent,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new_rounded, color: VetoGlassTokens.textPrimary, size: 20),
-            onPressed: () => Navigator.of(context).pop(),
-          ),
-          title: Text(_t(code, 'adminPanel'),
-              style: const TextStyle(color: VetoGlassTokens.textPrimary, fontWeight: FontWeight.w800, fontSize: 18)),
-          centerTitle: true,
-          actions: [
+      child: AdminShell(
+        active: AdminSection.settings,
+        title: _t(code, 'adminPanel'),
+        onRefresh: _loadAll,
+        actions: [
+          if (_loading)
             const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 8),
-              child: Center(child: AppLanguageMenu(compact: true)),
-            ),
-            if (_loading)
-              const Padding(
-                padding: EdgeInsets.all(14),
-                child: SizedBox(
-                  width: 18, height: 18,
-                  child: CircularProgressIndicator(strokeWidth: 2, color: VetoGlassTokens.neonCyan),
-                ),
+              padding: EdgeInsets.all(14),
+              child: SizedBox(
+                width: 18,
+                height: 18,
+                child: CircularProgressIndicator(
+                    strokeWidth: 2, color: V26.navy600),
               ),
-            IconButton(
-              icon: const Icon(Icons.apps_rounded, color: VetoGlassTokens.textPrimary),
-              tooltip: _t(code, 'openApp'),
-              onPressed: () => Navigator.of(context).pushNamed('/veto_screen'),
             ),
-            IconButton(
-              icon: const Icon(Icons.refresh_rounded, color: VetoGlassTokens.textPrimary),
-              tooltip: _t(code, 'refresh'),
-              onPressed: _loadAll,
-            ),
-            IconButton(
-              icon: const Icon(Icons.logout, color: Color(0xFFFF3B3B)),
-              tooltip: _t(code, 'logout'),
-              onPressed: () => AuthService().logout(context),
-            ),
-          ],
-          bottom: const PreferredSize(preferredSize: Size.fromHeight(1), child: Divider(height: 1, color: VetoGlassTokens.glassBorder)),
-        ),
-        body: VetoGlassAuroraBackground(
+          IconButton(
+            icon: const Icon(Icons.apps_rounded, color: V26.ink700),
+            tooltip: _t(code, 'openApp'),
+            onPressed: () => Navigator.of(context).pushNamed('/veto_screen'),
+          ),
+          IconButton(
+            icon: const Icon(Icons.logout, color: V26.emerg),
+            tooltip: _t(code, 'logout'),
+            onPressed: () => AuthService().logout(context),
+          ),
+        ],
+        body: V26Backdrop(
           child: RefreshIndicator(
           onRefresh: _loadAll,
-          color: VetoGlassTokens.neonCyan,
+          color: V26.navy600,
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
             padding: const EdgeInsets.all(24),

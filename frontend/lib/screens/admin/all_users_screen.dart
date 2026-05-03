@@ -3,10 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/i18n/app_language.dart';
-import '../../core/theme/veto_glass_system.dart';
+import '../../core/theme/veto_2026.dart';
 import '../../core/theme/veto_theme.dart';
 import '../../services/admin_service.dart';
-import '../../widgets/app_language_menu.dart';
+import '_shell.dart';
 import 'admin_i18n.dart';
 
 class AllUsersScreen extends StatefulWidget {
@@ -45,13 +45,13 @@ class _AllUsersScreenState extends State<AllUsersScreen> {
       builder: (ctx) => Directionality(
         textDirection: AppLanguage.directionOf(code),
         child: AlertDialog(
-          backgroundColor: VetoGlassTokens.sheetPanel,
+          backgroundColor: V26.surface,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
-            side: const BorderSide(color: VetoGlassTokens.glassBorder),
+            side: const BorderSide(color: V26.hairline),
           ),
           title: Text(id == null ? _t(code, 'addUser') : _t(code, 'editUser'),
-              style: const TextStyle(color: VetoGlassTokens.textPrimary)),
+              style: const TextStyle(color: V26.ink900)),
           content: SingleChildScrollView(
             child: Column(mainAxisSize: MainAxisSize.min, children: [
               _field(nameCtrl,  _t(code, 'fullName'),    Icons.badge_outlined),
@@ -62,8 +62,8 @@ class _AllUsersScreenState extends State<AllUsersScreen> {
               StatefulBuilder(builder: (_, ss) => Column(children: [
                 DropdownButtonFormField<String>(
                   initialValue: role,
-                  dropdownColor: VetoGlassTokens.menuPanel,
-                  style: const TextStyle(color: VetoGlassTokens.textPrimary),
+                  dropdownColor: V26.surface,
+                  style: const TextStyle(color: V26.ink900),
                   decoration: _dec(_t(code, 'role'), Icons.shield_outlined),
                   items: [
                     DropdownMenuItem(value: 'user',  child: Text(_t(code, 'citizen'))),
@@ -74,8 +74,8 @@ class _AllUsersScreenState extends State<AllUsersScreen> {
                 const SizedBox(height: 10),
                 DropdownButtonFormField<String>(
                   initialValue: lang,
-                  dropdownColor: VetoGlassTokens.menuPanel,
-                  style: const TextStyle(color: VetoGlassTokens.textPrimary),
+                  dropdownColor: V26.surface,
+                  style: const TextStyle(color: V26.ink900),
                   decoration: _dec(_t(code, 'language'), Icons.language),
                   items: const [
                     DropdownMenuItem(value: 'he', child: Text('עברית')),
@@ -92,9 +92,9 @@ class _AllUsersScreenState extends State<AllUsersScreen> {
                   activeThumbColor: VetoPalette.success,
                   activeTrackColor: VetoPalette.success.withValues(alpha: 0.5),
                   title: Text(_t(code, 'manualExempt'),
-                      style: const TextStyle(color: VetoGlassTokens.textPrimary, fontSize: 14)),
+                      style: const TextStyle(color: V26.ink900, fontSize: 14)),
                   subtitle: Text(_t(code, 'manualExemptHint'),
-                      style: const TextStyle(color: VetoGlassTokens.textMuted, fontSize: 12)),
+                      style: const TextStyle(color: V26.ink500, fontSize: 12)),
                 ),
               ])),
             ]),
@@ -103,8 +103,8 @@ class _AllUsersScreenState extends State<AllUsersScreen> {
             TextButton(onPressed: () => Navigator.pop(ctx), child: Text(_t(code, 'cancel'))),
             FilledButton(
               style: FilledButton.styleFrom(
-                backgroundColor: VetoGlassTokens.neonCyan,
-                foregroundColor: VetoGlassTokens.onNeon,
+                backgroundColor: V26.navy600,
+                foregroundColor: Colors.white,
               ),
               onPressed: () async {
                 final body = {
@@ -143,14 +143,14 @@ class _AllUsersScreenState extends State<AllUsersScreen> {
       builder: (ctx) => Directionality(
         textDirection: AppLanguage.directionOf(code),
         child: AlertDialog(
-          backgroundColor: VetoGlassTokens.sheetPanel,
+          backgroundColor: V26.surface,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
-            side: const BorderSide(color: VetoGlassTokens.glassBorder),
+            side: const BorderSide(color: V26.hairline),
           ),
-          title: Text(_t(code, 'deleteUser'), style: const TextStyle(color: VetoGlassTokens.textPrimary)),
+          title: Text(_t(code, 'deleteUser'), style: const TextStyle(color: V26.ink900)),
           content: Text('${_t(code, 'deleteUserConfirm')}\n$name',
-              style: const TextStyle(color: VetoGlassTokens.textMuted)),
+              style: const TextStyle(color: V26.ink500)),
           actions: [
             TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(_t(code, 'cancel'))),
             FilledButton(
@@ -172,42 +172,21 @@ class _AllUsersScreenState extends State<AllUsersScreen> {
 
     return Directionality(
       textDirection: AppLanguage.directionOf(code),
-      child: Scaffold(
-        backgroundColor: VetoGlassTokens.bgBase,
-        appBar: AppBar(
-          backgroundColor: const Color(0x18FFFFFF),
-          elevation: 0,
-          shadowColor: Colors.transparent,
-          surfaceTintColor: Colors.transparent,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new_rounded, color: VetoGlassTokens.textPrimary, size: 20),
-            onPressed: () => Navigator.of(context).pop(),
-          ),
-          title: Text(
-            '${_t(code, 'users')} (${_loading ? _t(code, 'loading') : _users.length})',
-            style: const TextStyle(color: VetoGlassTokens.textPrimary, fontWeight: FontWeight.w800, fontSize: 17),
-          ),
-          centerTitle: true,
-          actions: [
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 8),
-              child: Center(child: AppLanguageMenu(compact: true)),
-            ),
-            IconButton(icon: const Icon(Icons.refresh, color: VetoGlassTokens.textPrimary), onPressed: _load, tooltip: _t(code, 'refresh')),
-          ],
-          bottom: const PreferredSize(preferredSize: Size.fromHeight(1), child: Divider(height: 1, color: VetoGlassTokens.glassBorder)),
-        ),
-        floatingActionButton: FloatingActionButton.extended(
+      child: AdminShell(
+        active: AdminSection.users,
+        title: '${_t(code, 'users')} (${_loading ? _t(code, 'loading') : _users.length})',
+        onRefresh: _load,
+        floatingAction: FloatingActionButton.extended(
           onPressed: () => _showForm(),
-          backgroundColor: VetoGlassTokens.neonBlue,
+          backgroundColor: V26.navy500,
           icon: const Icon(Icons.person_add_rounded),
           label: Text(_t(code, 'addUser')),
         ),
-        body: VetoGlassAuroraBackground(
+        body: V26Backdrop(
           child: _loading
-            ? const Center(child: CircularProgressIndicator(color: VetoGlassTokens.neonCyan))
+            ? const Center(child: CircularProgressIndicator(color: V26.navy600))
             : _users.isEmpty
-                ? Center(child: Text(_t(code, 'noUsers'), style: const TextStyle(color: VetoGlassTokens.textMuted)))
+                ? Center(child: Text(_t(code, 'noUsers'), style: const TextStyle(color: V26.ink500)))
                 : ListView.separated(
                     padding: const EdgeInsets.fromLTRB(16, 16, 16, 80),
                     itemCount: _users.length,
@@ -219,36 +198,36 @@ class _AllUsersScreenState extends State<AllUsersScreen> {
                       return Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                         decoration: BoxDecoration(
-                          color: VetoGlassTokens.glassFillStrong,
+                          color: V26.surface,
                           borderRadius: BorderRadius.circular(12),
                           border: const Border(
-                            left: BorderSide(color: VetoGlassTokens.neonCyan, width: 3),
-                            top: BorderSide(color: VetoGlassTokens.glassBorder),
-                            right: BorderSide(color: VetoGlassTokens.glassBorder),
-                            bottom: BorderSide(color: VetoGlassTokens.glassBorder),
+                            left: BorderSide(color: V26.navy600, width: 3),
+                            top: BorderSide(color: V26.hairline),
+                            right: BorderSide(color: V26.hairline),
+                            bottom: BorderSide(color: V26.hairline),
                           ),
                           boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.2), blurRadius: 16, offset: const Offset(0, 6))],
                         ),
                         child: Row(children: [
                           CircleAvatar(
                             radius: 20,
-                            backgroundColor: VetoGlassTokens.neonCyan.withValues(alpha: 0.15),
+                            backgroundColor: V26.navy600.withValues(alpha: 0.15),
                             child: Text(
                               ((u['full_name'] as String?) ?? '?').isNotEmpty
                                   ? (u['full_name'] as String).characters.first : '?',
-                              style: const TextStyle(color: VetoGlassTokens.neonCyan, fontWeight: FontWeight.bold),
+                              style: const TextStyle(color: V26.navy600, fontWeight: FontWeight.bold),
                             ),
                           ),
                           const SizedBox(width: 12),
                           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                             Text(u['full_name'] ?? _t(code, 'noName'),
-                                style: const TextStyle(color: VetoGlassTokens.textPrimary, fontWeight: FontWeight.w600)),
+                                style: const TextStyle(color: V26.ink900, fontWeight: FontWeight.w600)),
                             Text(u['phone'] ?? '', textDirection: TextDirection.ltr,
-                                style: const TextStyle(color: VetoGlassTokens.textMuted, fontSize: 12)),
+                                style: const TextStyle(color: V26.ink500, fontSize: 12)),
                             Text(AdminStrings.roleLabel(code, u['role']?.toString()),
-                                style: const TextStyle(color: VetoGlassTokens.textSubtle, fontSize: 11)),
+                                style: const TextStyle(color: V26.ink300, fontSize: 11)),
                             Text(AdminStrings.languageLabel(code, u['preferred_language']?.toString()),
-                              style: const TextStyle(color: VetoGlassTokens.accentSoft, fontSize: 11)),
+                              style: const TextStyle(color: V26.navy500, fontSize: 11)),
                           ])),
                           Container(
                             margin: const EdgeInsets.only(left: 4),
@@ -272,7 +251,7 @@ class _AllUsersScreenState extends State<AllUsersScreen> {
                                   style: const TextStyle(color: VetoPalette.success, fontSize: 10)),
                             ),
                           IconButton(
-                            icon: const Icon(Icons.edit_outlined, size: 20, color: VetoGlassTokens.neonCyan),
+                            icon: const Icon(Icons.edit_outlined, size: 20, color: V26.navy600),
                             onPressed: () => _showForm(user: Map<String, dynamic>.from(u as Map)),
                             tooltip: _t(code, 'edit'),
                           ),
@@ -294,25 +273,25 @@ class _AllUsersScreenState extends State<AllUsersScreen> {
       {TextDirection dir = TextDirection.rtl}) =>
       TextField(
         controller: ctrl, textDirection: dir,
-        style: const TextStyle(color: VetoGlassTokens.textPrimary),
-        cursorColor: VetoGlassTokens.neonCyan,
+        style: const TextStyle(color: V26.ink900),
+        cursorColor: V26.navy600,
         decoration: _dec(label, icon),
       );
 
   InputDecoration _dec(String label, IconData ico) => InputDecoration(
     labelText: label,
-    labelStyle: const TextStyle(color: VetoGlassTokens.textMuted),
-    prefixIcon: Icon(ico, color: VetoGlassTokens.textMuted, size: 18),
+    labelStyle: const TextStyle(color: V26.ink500),
+    prefixIcon: Icon(ico, color: V26.ink500, size: 18),
     filled: true,
     fillColor: const Color(0xFF0F1A24),
     border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(10),
-        borderSide: const BorderSide(color: VetoGlassTokens.glassBorder)),
+        borderSide: const BorderSide(color: V26.hairline)),
     enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(10),
-        borderSide: const BorderSide(color: VetoGlassTokens.glassBorder)),
+        borderSide: const BorderSide(color: V26.hairline)),
     focusedBorder: const OutlineInputBorder(
         borderRadius: BorderRadius.all(Radius.circular(10)),
-        borderSide: BorderSide(color: VetoGlassTokens.neonCyan, width: 1.5)),
+        borderSide: BorderSide(color: V26.navy600, width: 1.5)),
   );
 }

@@ -14,7 +14,7 @@ import 'package:provider/provider.dart';
 
 import '../config/app_config.dart';
 import '../core/i18n/app_language.dart';
-import '../core/theme/veto_glass_system.dart';
+import '../core/theme/veto_2026.dart';
 import '../core/theme/veto_theme.dart';
 import '../services/auth_service.dart';
 import '../services/vault_save_queue.dart';
@@ -317,20 +317,20 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: VetoGlassTokens.sheetPanel,
-        title: Text(_l.newFolder, style: const TextStyle(color: VetoGlassTokens.textPrimary)),
+        backgroundColor: V26.surface,
+        title: Text(_l.newFolder, style: const TextStyle(color: V26.ink900)),
         content: TextField(
           controller: ctrl,
           decoration: InputDecoration(
             labelText: _l.folderName,
-            labelStyle: const TextStyle(color: VetoGlassTokens.textMuted),
+            labelStyle: const TextStyle(color: V26.ink500),
           ),
-          style: const TextStyle(color: VetoGlassTokens.textPrimary),
+          style: const TextStyle(color: V26.ink900),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: Text(_l.cancel, style: const TextStyle(color: VetoGlassTokens.textMuted)),
+            child: Text(_l.cancel, style: const TextStyle(color: V26.ink500)),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, true),
@@ -371,13 +371,13 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: VetoGlassTokens.sheetPanel,
-        title: Text(_l.deleteFolder, style: const TextStyle(color: VetoGlassTokens.textPrimary)),
-        content: Text(_l.deleteFolderConfirm, style: const TextStyle(color: VetoGlassTokens.textMuted)),
+        backgroundColor: V26.surface,
+        title: Text(_l.deleteFolder, style: const TextStyle(color: V26.ink900)),
+        content: Text(_l.deleteFolderConfirm, style: const TextStyle(color: V26.ink500)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: Text(_l.cancel, style: const TextStyle(color: VetoGlassTokens.textMuted)),
+            child: Text(_l.cancel, style: const TextStyle(color: V26.ink500)),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, true),
@@ -421,15 +421,15 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
       context: context,
       builder: (ctx) {
         return AlertDialog(
-          backgroundColor: VetoGlassTokens.sheetPanel,
-          title: Text(_l.moveToFolder, style: const TextStyle(color: VetoGlassTokens.textPrimary, fontSize: 16)),
+          backgroundColor: V26.surface,
+          title: Text(_l.moveToFolder, style: const TextStyle(color: V26.ink900, fontSize: 16)),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 ListTile(
-                  leading: const Icon(Icons.home_outlined, color: VetoGlassTokens.neonCyan),
-                  title: Text(_l.rootVault, style: const TextStyle(color: VetoGlassTokens.textPrimary)),
+                  leading: const Icon(Icons.home_outlined, color: V26.navy600),
+                  title: Text(_l.rootVault, style: const TextStyle(color: V26.ink900)),
                   onTap: () {
                     targetId = 'ROOT';
                     Navigator.pop(ctx);
@@ -440,10 +440,10 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
                     return const SizedBox.shrink();
                   }
                   return ListTile(
-                    leading: const Icon(Icons.folder_outlined, color: VetoGlassTokens.textMuted),
+                    leading: const Icon(Icons.folder_outlined, color: V26.ink500),
                     title: Text(
                       g.name,
-                      style: const TextStyle(color: VetoGlassTokens.textPrimary),
+                      style: const TextStyle(color: V26.ink900),
                       maxLines: 1,
                     ),
                     onTap: () {
@@ -461,7 +461,7 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
                 targetId = '__cancel__';
                 Navigator.pop(ctx);
               },
-              child: Text(_l.cancel, style: const TextStyle(color: VetoGlassTokens.textMuted)),
+              child: Text(_l.cancel, style: const TextStyle(color: V26.ink500)),
             ),
           ],
         );
@@ -592,26 +592,26 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
     showDialog<void>(
       context: context,
       builder: (ctx) => Dialog(
-        backgroundColor: VetoGlassTokens.sheetPanel,
+        backgroundColor: V26.surface,
         shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20),
-            side: const BorderSide(color: VetoGlassTokens.glassBorder)),
+            side: const BorderSide(color: V26.hairline)),
         insetPadding: const EdgeInsets.all(20),
         child: Column(mainAxisSize: MainAxisSize.min, children: [
           // Header
           Container(
             padding: const EdgeInsets.fromLTRB(16, 14, 8, 14),
             decoration: const BoxDecoration(
-                border: Border(bottom: BorderSide(color: VetoGlassTokens.glassBorder))),
+                border: Border(bottom: BorderSide(color: V26.hairline))),
             child: Row(children: [
               Icon(file.icon, color: file.typeColor, size: 20),
               const SizedBox(width: 8),
               Expanded(child: Text(file.name,
-                  style: const TextStyle(color: VetoGlassTokens.textPrimary,
+                  style: const TextStyle(color: V26.ink900,
                       fontWeight: FontWeight.w700, fontSize: 14),
                   maxLines: 1, overflow: TextOverflow.ellipsis)),
               IconButton(
-                icon: const Icon(Icons.close_rounded, color: VetoGlassTokens.textMuted),
+                icon: const Icon(Icons.close_rounded, color: V26.ink500),
                 onPressed: () => Navigator.pop(ctx),
                 padding: EdgeInsets.zero,
                 constraints: const BoxConstraints(),
@@ -630,7 +630,7 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
                   errorBuilder: (_, __, ___) => const Padding(
                     padding: EdgeInsets.all(32),
                     child: Icon(Icons.broken_image_outlined,
-                        size: 80, color: VetoGlassTokens.textMuted),
+                        size: 80, color: V26.ink500),
                   ),
                 ),
               ),
@@ -644,17 +644,17 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
             child: Row(children: [
-              const Icon(Icons.storage_rounded, size: 12, color: VetoGlassTokens.textMuted),
+              const Icon(Icons.storage_rounded, size: 12, color: V26.ink500),
               const SizedBox(width: 4),
               Text(file.sizeLabel,
-                  style: const TextStyle(color: VetoGlassTokens.textMuted, fontSize: 12)),
+                  style: const TextStyle(color: V26.ink500, fontSize: 12)),
               const SizedBox(width: 16),
               const Icon(Icons.calendar_today_outlined,
-                  size: 12, color: VetoGlassTokens.textMuted),
+                  size: 12, color: V26.ink500),
               const SizedBox(width: 4),
               Text(
                 '${file.uploadedAt.day}/${file.uploadedAt.month}/${file.uploadedAt.year}',
-                style: const TextStyle(color: VetoGlassTokens.textMuted, fontSize: 12),
+                style: const TextStyle(color: V26.ink500, fontSize: 12),
               ),
             ]),
           ),
@@ -676,8 +676,8 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
                   icon: const Icon(Icons.open_in_new_rounded, size: 16),
                   label: const Text('Open in new tab'),
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: VetoGlassTokens.neonCyan,
-                    side: const BorderSide(color: VetoGlassTokens.neonCyan),
+                    foregroundColor: V26.navy600,
+                    side: const BorderSide(color: V26.navy600),
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10)),
                   ),
@@ -847,17 +847,17 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: VetoGlassTokens.sheetPanel,
+        backgroundColor: V26.surface,
         shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
-            side: const BorderSide(color: VetoGlassTokens.glassBorder)),
+            side: const BorderSide(color: V26.hairline)),
         title: Text(_l.deleteConfirm,
-            style: const TextStyle(color: VetoGlassTokens.textPrimary, fontWeight: FontWeight.w700)),
+            style: const TextStyle(color: V26.ink900, fontWeight: FontWeight.w700)),
         content: Text(file.name,
-            style: const TextStyle(color: VetoGlassTokens.textMuted)),
+            style: const TextStyle(color: V26.ink500)),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx, false),
-              child: Text(_l.cancel, style: const TextStyle(color: VetoGlassTokens.textMuted))),
+              child: Text(_l.cancel, style: const TextStyle(color: V26.ink500))),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: FilledButton.styleFrom(
@@ -887,41 +887,41 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
     final newName = await showDialog<String>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: VetoGlassTokens.sheetPanel,
+        backgroundColor: V26.surface,
         shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
-            side: const BorderSide(color: VetoGlassTokens.glassBorder)),
+            side: const BorderSide(color: V26.hairline)),
         title: Text(_l.rename,
-            style: const TextStyle(color: VetoGlassTokens.textPrimary, fontWeight: FontWeight.w700)),
+            style: const TextStyle(color: V26.ink900, fontWeight: FontWeight.w700)),
         content: TextField(
           controller: ctrl,
           autofocus: true,
-          style: const TextStyle(color: VetoGlassTokens.textPrimary),
-          cursorColor: VetoGlassTokens.neonCyan,
+          style: const TextStyle(color: V26.ink900),
+          cursorColor: V26.navy600,
           decoration: InputDecoration(
             hintText: _l.fileName,
-            hintStyle: const TextStyle(color: VetoGlassTokens.textMuted),
+            hintStyle: const TextStyle(color: V26.ink500),
             filled: true,
             fillColor: const Color(0xFF0F1A24),
             border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(10),
-                borderSide: const BorderSide(color: VetoGlassTokens.glassBorder)),
+                borderSide: const BorderSide(color: V26.hairline)),
             enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(10),
-                borderSide: const BorderSide(color: VetoGlassTokens.glassBorder)),
+                borderSide: const BorderSide(color: V26.hairline)),
             focusedBorder: const OutlineInputBorder(
                 borderRadius: BorderRadius.all(Radius.circular(10)),
-                borderSide: BorderSide(color: VetoGlassTokens.neonCyan, width: 1.5)),
+                borderSide: BorderSide(color: V26.navy600, width: 1.5)),
           ),
         ),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx),
-              child: Text(_l.cancel, style: const TextStyle(color: VetoGlassTokens.textMuted))),
+              child: Text(_l.cancel, style: const TextStyle(color: V26.ink500))),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, ctrl.text.trim()),
             style: FilledButton.styleFrom(
-                backgroundColor: VetoGlassTokens.neonCyan,
-                foregroundColor: VetoGlassTokens.onNeon),
+                backgroundColor: V26.navy600,
+                foregroundColor: Colors.white),
             child: Text(_l.save),
           ),
         ],
@@ -952,41 +952,41 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
     final name = await showDialog<String>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: VetoGlassTokens.sheetPanel,
+        backgroundColor: V26.surface,
         shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
-            side: const BorderSide(color: VetoGlassTokens.glassBorder)),
+            side: const BorderSide(color: V26.hairline)),
         title: Text(_l.createCase,
-            style: const TextStyle(color: VetoGlassTokens.textPrimary, fontWeight: FontWeight.w700)),
+            style: const TextStyle(color: V26.ink900, fontWeight: FontWeight.w700)),
         content: TextField(
           controller: ctrl,
           autofocus: true,
-          style: const TextStyle(color: VetoGlassTokens.textPrimary),
-          cursorColor: VetoGlassTokens.neonCyan,
+          style: const TextStyle(color: V26.ink900),
+          cursorColor: V26.navy600,
           decoration: InputDecoration(
             hintText: _l.caseName,
-            hintStyle: const TextStyle(color: VetoGlassTokens.textMuted),
+            hintStyle: const TextStyle(color: V26.ink500),
             filled: true,
             fillColor: const Color(0xFF0F1A24),
             border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(10),
-                borderSide: const BorderSide(color: VetoGlassTokens.glassBorder)),
+                borderSide: const BorderSide(color: V26.hairline)),
             enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(10),
-                borderSide: const BorderSide(color: VetoGlassTokens.glassBorder)),
+                borderSide: const BorderSide(color: V26.hairline)),
             focusedBorder: const OutlineInputBorder(
                 borderRadius: BorderRadius.all(Radius.circular(10)),
-                borderSide: BorderSide(color: VetoGlassTokens.neonCyan, width: 1.5)),
+                borderSide: BorderSide(color: V26.navy600, width: 1.5)),
           ),
         ),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx),
-              child: Text(_l.cancel, style: const TextStyle(color: VetoGlassTokens.textMuted))),
+              child: Text(_l.cancel, style: const TextStyle(color: V26.ink500))),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, ctrl.text.trim()),
             style: FilledButton.styleFrom(
-                backgroundColor: VetoGlassTokens.neonCyan,
-                foregroundColor: VetoGlassTokens.onNeon),
+                backgroundColor: V26.navy600,
+                foregroundColor: Colors.white),
             child: Text(_l.save),
           ),
         ],
@@ -1013,41 +1013,41 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
     final name = await showDialog<String>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: VetoGlassTokens.sheetPanel,
+        backgroundColor: V26.surface,
         shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
-            side: const BorderSide(color: VetoGlassTokens.glassBorder)),
+            side: const BorderSide(color: V26.hairline)),
         title: Text(_l.rename,
-            style: const TextStyle(color: VetoGlassTokens.textPrimary, fontWeight: FontWeight.w700)),
+            style: const TextStyle(color: V26.ink900, fontWeight: FontWeight.w700)),
         content: TextField(
           controller: ctrl,
           autofocus: true,
-          style: const TextStyle(color: VetoGlassTokens.textPrimary),
-          cursorColor: VetoGlassTokens.neonCyan,
+          style: const TextStyle(color: V26.ink900),
+          cursorColor: V26.navy600,
           decoration: InputDecoration(
             hintText: _l.caseName,
-            hintStyle: const TextStyle(color: VetoGlassTokens.textMuted),
+            hintStyle: const TextStyle(color: V26.ink500),
             filled: true,
             fillColor: const Color(0xFF0F1A24),
             border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(10),
-                borderSide: const BorderSide(color: VetoGlassTokens.glassBorder)),
+                borderSide: const BorderSide(color: V26.hairline)),
             enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(10),
-                borderSide: const BorderSide(color: VetoGlassTokens.glassBorder)),
+                borderSide: const BorderSide(color: V26.hairline)),
             focusedBorder: const OutlineInputBorder(
                 borderRadius: BorderRadius.all(Radius.circular(10)),
-                borderSide: BorderSide(color: VetoGlassTokens.neonCyan, width: 1.5)),
+                borderSide: BorderSide(color: V26.navy600, width: 1.5)),
           ),
         ),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx),
-              child: Text(_l.cancel, style: const TextStyle(color: VetoGlassTokens.textMuted))),
+              child: Text(_l.cancel, style: const TextStyle(color: V26.ink500))),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, ctrl.text.trim()),
             style: FilledButton.styleFrom(
-                backgroundColor: VetoGlassTokens.neonCyan,
-                foregroundColor: VetoGlassTokens.onNeon),
+                backgroundColor: V26.navy600,
+                foregroundColor: Colors.white),
             child: Text(_l.save),
           ),
         ],
@@ -1073,17 +1073,17 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: VetoGlassTokens.sheetPanel,
+        backgroundColor: V26.surface,
         shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
-            side: const BorderSide(color: VetoGlassTokens.glassBorder)),
+            side: const BorderSide(color: V26.hairline)),
         title: Text(_l.deleteCase,
-            style: const TextStyle(color: VetoGlassTokens.textPrimary, fontWeight: FontWeight.w700)),
+            style: const TextStyle(color: V26.ink900, fontWeight: FontWeight.w700)),
         content: Text(_l.deleteCaseConfirm,
-            style: const TextStyle(color: VetoGlassTokens.textMuted)),
+            style: const TextStyle(color: V26.ink500)),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx, false),
-              child: Text(_l.cancel, style: const TextStyle(color: VetoGlassTokens.textMuted))),
+              child: Text(_l.cancel, style: const TextStyle(color: V26.ink500))),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: FilledButton.styleFrom(
@@ -1153,7 +1153,7 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Material(
-        color: VetoGlassTokens.glassBorder.withValues(alpha: 0.25),
+        color: V26.hairline.withValues(alpha: 0.25),
         borderRadius: BorderRadius.circular(12),
         child: InkWell(
           onTap: j.error == null
@@ -1178,14 +1178,14 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
                       size: 18,
                       color: j.error != null
                           ? VetoPalette.emergency
-                          : VetoGlassTokens.neonCyan,
+                          : V26.navy600,
                     ),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
                         j.label,
                         style: const TextStyle(
-                          color: VetoGlassTokens.textPrimary,
+                          color: V26.ink900,
                           fontWeight: FontWeight.w700,
                         ),
                         maxLines: 1,
@@ -1196,7 +1196,7 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
                       IconButton(
                         onPressed: () => q.dismissJob(j.id),
                         icon: const Icon(Icons.close, size: 18),
-                        color: VetoGlassTokens.textMuted,
+                        color: V26.ink500,
                         padding: EdgeInsets.zero,
                         constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
                       ),
@@ -1208,7 +1208,7 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
                   style: TextStyle(
                     color: j.error != null
                         ? VetoPalette.emergency
-                        : VetoGlassTokens.textMuted,
+                        : V26.ink500,
                     fontSize: 12,
                   ),
                   maxLines: 2,
@@ -1221,8 +1221,8 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
                     child: LinearProgressIndicator(
                       value: j.progress,
                       minHeight: 4,
-                      backgroundColor: VetoGlassTokens.glassBorder,
-                      color: VetoGlassTokens.neonCyan,
+                      backgroundColor: V26.hairline,
+                      color: V26.navy600,
                     ),
                   ),
                 ],
@@ -1243,36 +1243,36 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
     return Directionality(
       textDirection: isRtl ? TextDirection.rtl : TextDirection.ltr,
       child: Scaffold(
-        backgroundColor: VetoGlassTokens.bgBase,
+        backgroundColor: V26.paper,
         appBar: AppBar(
-          backgroundColor: const Color(0x18FFFFFF),
+          backgroundColor: const Color(0xFFFFFFFF),
           elevation: 0,
           shadowColor: Colors.transparent,
           surfaceTintColor: Colors.transparent,
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new_rounded, color: VetoGlassTokens.textPrimary, size: 20),
+            icon: const Icon(Icons.arrow_back_ios_new_rounded, color: V26.ink900, size: 20),
             onPressed: () => Navigator.of(context).pop(),
           ),
-          title: Text(_l.title, style: const TextStyle(color: VetoGlassTokens.textPrimary, fontWeight: FontWeight.w800, fontSize: 18)),
+          title: Text(_l.title, style: const TextStyle(color: V26.ink900, fontWeight: FontWeight.w800, fontSize: 18)),
           centerTitle: true,
           actions: [
             if (kIsWeb)
               IconButton(
-                icon: const Icon(Icons.photo_camera_outlined, color: VetoGlassTokens.textPrimary),
+                icon: const Icon(Icons.photo_camera_outlined, color: V26.ink900),
                 onPressed: _uploading ? null : _captureFromCamera,
                 tooltip: 'Capture from camera',
               ),
             IconButton(
-              icon: const Icon(Icons.refresh_rounded, color: VetoGlassTokens.textPrimary),
+              icon: const Icon(Icons.refresh_rounded, color: V26.ink900),
               onPressed: _load,
               tooltip: 'Refresh',
             ),
           ],
           bottom: TabBar(
             controller: _tabController,
-            indicatorColor: VetoGlassTokens.neonCyan,
-            labelColor: VetoGlassTokens.neonCyan,
-            unselectedLabelColor: VetoGlassTokens.textMuted,
+            indicatorColor: V26.navy600,
+            labelColor: V26.navy600,
+            unselectedLabelColor: V26.ink500,
             tabs: [
               Tab(text: _l.allFiles),
               Tab(text: _l.legalCase),
@@ -1281,19 +1281,19 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
         ),
         floatingActionButton: FloatingActionButton.extended(
           onPressed: _uploading ? null : _pickFile,
-          backgroundColor: _uploading ? VetoGlassTokens.textMuted.withValues(alpha: 0.35) : VetoGlassTokens.neonBlue,
+          backgroundColor: _uploading ? V26.ink500.withValues(alpha: 0.35) : V26.navy500,
           icon: _uploading
               ? const SizedBox(width: 20, height: 20,
                   child: CircularProgressIndicator(
-                      strokeWidth: 2, color: VetoGlassTokens.onNeon))
-              : const Icon(Icons.upload_file_rounded, color: VetoGlassTokens.onNeon),
+                      strokeWidth: 2, color: Colors.white))
+              : const Icon(Icons.upload_file_rounded, color: Colors.white),
           label: Text(_uploading ? _l.uploading : _l.upload,
-              style: const TextStyle(color: VetoGlassTokens.onNeon, fontWeight: FontWeight.w700)),
+              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
         ),
-        body: VetoGlassAuroraBackground(
+        body: V26Backdrop(
           child: Stack(children: [
           _loading
-              ? const Center(child: CircularProgressIndicator(color: VetoGlassTokens.neonCyan))
+              ? const Center(child: CircularProgressIndicator(color: V26.navy600))
               : Column(children: [
                   _buildCallSaveBanners(),
                   _buildQuotaBar(),
@@ -1310,23 +1310,23 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
           if (_isDragging)
             IgnorePointer(
               child: Container(
-                color: VetoGlassTokens.neonCyan.withValues(alpha: 0.12),
+                color: V26.navy600.withValues(alpha: 0.12),
                 child: Center(
                   child: Column(mainAxisSize: MainAxisSize.min, children: [
                     Container(
                       padding: const EdgeInsets.all(24),
                       decoration: BoxDecoration(
-                        color: VetoGlassTokens.neonBlue.withValues(alpha: 0.2),
+                        color: V26.navy500.withValues(alpha: 0.2),
                         shape: BoxShape.circle,
-                        border: Border.all(color: VetoGlassTokens.neonCyan, width: 2),
+                        border: Border.all(color: V26.navy600, width: 2),
                       ),
                       child: const Icon(Icons.upload_file_rounded,
-                          size: 60, color: VetoGlassTokens.neonCyan),
+                          size: 60, color: V26.navy600),
                     ),
                     const SizedBox(height: 20),
                     Text(_l.dropFilesHere,
                         textAlign: TextAlign.center,
-                        style: const TextStyle(color: VetoGlassTokens.neonCyan,
+                        style: const TextStyle(color: V26.navy600,
                             fontSize: 22, fontWeight: FontWeight.w700)),
                   ]),
                 ),
@@ -1352,10 +1352,10 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: VetoGlassTokens.neonCyan.withValues(alpha: 0.45),
+                color: V26.navy600.withValues(alpha: 0.45),
                 width: 1.5,
               ),
-              color: VetoGlassTokens.glassFill.withValues(alpha: 0.6),
+              color: V26.surface.withValues(alpha: 0.6),
             ),
             child: Row(
               children: [
@@ -1363,11 +1363,11 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: VetoGlassTokens.neonBlue.withValues(alpha: 0.2),
+                    color: V26.navy500.withValues(alpha: 0.2),
                   ),
                   child: const Icon(
                     Icons.cloud_upload_rounded,
-                    color: VetoGlassTokens.neonCyan,
+                    color: V26.navy600,
                     size: 28,
                   ),
                 ),
@@ -1379,7 +1379,7 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
                       Text(
                         _l.uploadZoneTitle,
                         style: const TextStyle(
-                          color: VetoGlassTokens.textPrimary,
+                          color: V26.ink900,
                           fontSize: 16,
                           fontWeight: FontWeight.w800,
                         ),
@@ -1388,7 +1388,7 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
                       Text(
                         _l.uploadZoneHint,
                         style: const TextStyle(
-                          color: VetoGlassTokens.textMuted,
+                          color: V26.ink500,
                           fontSize: 12,
                           height: 1.35,
                         ),
@@ -1398,7 +1398,7 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
                 ),
                 const Icon(
                   Icons.chevron_right,
-                  color: VetoGlassTokens.textSubtle,
+                  color: V26.ink300,
                 ),
               ],
             ),
@@ -1418,19 +1418,19 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
       decoration: const BoxDecoration(
-        color: VetoGlassTokens.glassFillStrong,
-        border: Border(bottom: BorderSide(color: VetoGlassTokens.glassBorder)),
+        color: V26.surface,
+        border: Border(bottom: BorderSide(color: V26.hairline)),
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Row(children: [
           Text(_l.usageOf,
-              style: const TextStyle(color: VetoGlassTokens.textMuted, fontSize: 13)),
+              style: const TextStyle(color: V26.ink500, fontSize: 13)),
           Text('${_usedMb.toStringAsFixed(1)} ${_l.used}${_l.quota}',
               style: TextStyle(
                   color: color, fontSize: 13, fontWeight: FontWeight.w700)),
           const Spacer(),
           Text('${_files.length} ${_l.files}',
-              style: const TextStyle(color: VetoGlassTokens.textSubtle, fontSize: 12)),
+              style: const TextStyle(color: V26.ink300, fontSize: 12)),
         ]),
         const SizedBox(height: 6),
         ClipRRect(
@@ -1475,14 +1475,14 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
           Center(
             child: Column(mainAxisSize: MainAxisSize.min, children: [
               Icon(Icons.folder_open_outlined,
-                  size: 64, color: VetoGlassTokens.textSubtle.withValues(alpha: 0.5)),
+                  size: 64, color: V26.ink300.withValues(alpha: 0.5)),
               const SizedBox(height: 16),
               Text(_l.noFiles,
-                  style: const TextStyle(color: VetoGlassTokens.textMuted,
+                  style: const TextStyle(color: V26.ink500,
                       fontSize: 16, fontWeight: FontWeight.w500)),
               const SizedBox(height: 8),
               Text(_l.upload,
-                  style: const TextStyle(color: VetoGlassTokens.textSubtle, fontSize: 13)),
+                  style: const TextStyle(color: V26.ink300, fontSize: 13)),
             ]),
           ),
         ],
@@ -1555,7 +1555,7 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
             if (i > 0)
               const Padding(
                 padding: EdgeInsets.symmetric(horizontal: 4),
-                child: Icon(Icons.chevron_right, size: 16, color: VetoGlassTokens.textMuted),
+                child: Icon(Icons.chevron_right, size: 16, color: V26.ink500),
               ),
             InkWell(
               onTap: i < _folderPath.length - 1
@@ -1574,8 +1574,8 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
                   (i == 0 && _folderPath[i].name.isEmpty) ? _l.rootVault : _folderPath[i].name,
                   style: TextStyle(
                     color: i == _folderPath.length - 1
-                        ? VetoGlassTokens.neonCyan
-                        : VetoGlassTokens.textPrimary,
+                        ? V26.navy600
+                        : V26.ink900,
                     fontWeight: i == _folderPath.length - 1 ? FontWeight.w700 : FontWeight.w500,
                     fontSize: 13,
                   ),
@@ -1595,13 +1595,13 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
         child: Row(children: [
           Expanded(child: Text(_l.caseFiles,
               style: const TextStyle(
-                  color: VetoGlassTokens.textPrimary, fontWeight: FontWeight.w700, fontSize: 16))),
+                  color: V26.ink900, fontWeight: FontWeight.w700, fontSize: 16))),
           TextButton.icon(
             onPressed: _createCase,
             icon: const Icon(Icons.create_new_folder_outlined,
-                size: 18, color: VetoGlassTokens.neonCyan),
+                size: 18, color: V26.navy600),
             label: Text(_l.createCase,
-                style: const TextStyle(color: VetoGlassTokens.neonCyan, fontWeight: FontWeight.w600)),
+                style: const TextStyle(color: V26.navy600, fontWeight: FontWeight.w600)),
           ),
         ]),
       ),
@@ -1610,10 +1610,10 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
           child: Center(
             child: Column(mainAxisSize: MainAxisSize.min, children: [
               Icon(Icons.cases_outlined,
-                  size: 64, color: VetoGlassTokens.textSubtle.withValues(alpha: 0.5)),
+                  size: 64, color: V26.ink300.withValues(alpha: 0.5)),
               const SizedBox(height: 16),
               Text(_l.createCase,
-                  style: const TextStyle(color: VetoGlassTokens.textMuted,
+                  style: const TextStyle(color: V26.ink500,
                       fontSize: 15, fontWeight: FontWeight.w600)),
             ]),
           ),
@@ -1641,7 +1641,7 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
   Future<void> _showAddToCase(_VaultFile file) async {
     final selected = await showModalBottomSheet<_LegalCase>(
       context: context,
-      backgroundColor: VetoGlassTokens.sheetPanel,
+      backgroundColor: V26.surface,
       shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
       builder: (ctx) => Column(mainAxisSize: MainAxisSize.min, children: [
@@ -1649,21 +1649,21 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
           margin: const EdgeInsets.only(top: 10, bottom: 8),
           width: 36, height: 4,
           decoration: BoxDecoration(
-            color: VetoGlassTokens.glassBorder,
+            color: V26.hairline,
             borderRadius: BorderRadius.circular(2),
           ),
         ),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
           child: Text(_l.addToCase,
-              style: const TextStyle(color: VetoGlassTokens.textPrimary,
+              style: const TextStyle(color: V26.ink900,
                   fontWeight: FontWeight.w700, fontSize: 16)),
         ),
         ..._cases.map((c) => ListTile(
-          leading: const Icon(Icons.cases_rounded, color: VetoGlassTokens.neonCyan),
-          title: Text(c.name, style: const TextStyle(color: VetoGlassTokens.textPrimary)),
+          leading: const Icon(Icons.cases_rounded, color: V26.navy600),
+          title: Text(c.name, style: const TextStyle(color: V26.ink900)),
           subtitle: Text('${c.fileIds.length} ${_l.files}',
-              style: const TextStyle(color: VetoGlassTokens.textMuted, fontSize: 12)),
+              style: const TextStyle(color: V26.ink500, fontSize: 12)),
           onTap: () => Navigator.pop(ctx, c),
         )),
         const SizedBox(height: 12),
@@ -1697,7 +1697,7 @@ class _FolderListTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: VetoGlassTokens.glassFillStrong,
+      color: V26.surface,
       borderRadius: BorderRadius.circular(14),
       child: InkWell(
         onTap: onOpen,
@@ -1706,17 +1706,17 @@ class _FolderListTile extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: VetoGlassTokens.glassBorder),
+            border: Border.all(color: V26.hairline),
           ),
           child: Row(
             children: [
-              const Icon(Icons.folder_rounded, color: VetoGlassTokens.neonCyan, size: 30),
+              const Icon(Icons.folder_rounded, color: V26.navy600, size: 30),
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
                   name,
                   style: const TextStyle(
-                    color: VetoGlassTokens.textPrimary,
+                    color: V26.ink900,
                     fontWeight: FontWeight.w700,
                     fontSize: 15,
                   ),
@@ -1762,9 +1762,9 @@ class _FileCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: VetoGlassTokens.glassFillStrong,
+        color: V26.surface,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: VetoGlassTokens.glassBorder),
+        border: Border.all(color: V26.hairline),
         boxShadow: [BoxShadow(
             color: Colors.black.withValues(alpha: 0.25),
             blurRadius: 20, offset: const Offset(0, 8))],
@@ -1784,18 +1784,18 @@ class _FileCard extends StatelessWidget {
           Expanded(child: Column(
             crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text(file.name, style: const TextStyle(
-                  color: VetoGlassTokens.textPrimary, fontWeight: FontWeight.w700,
+                  color: V26.ink900, fontWeight: FontWeight.w700,
                   fontSize: 14), maxLines: 1, overflow: TextOverflow.ellipsis),
               const SizedBox(height: 2),
               Text('${file.sizeLabel}  ·  '
                   '${file.uploadedAt.day}/${file.uploadedAt.month}/${file.uploadedAt.year}',
-                  style: const TextStyle(color: VetoGlassTokens.textMuted, fontSize: 12)),
+                  style: const TextStyle(color: V26.ink500, fontSize: 12)),
             ],
           )),
           if (onPreview != null)
             IconButton(
               icon: const Icon(Icons.visibility_outlined, size: 18),
-              color: VetoGlassTokens.textMuted,
+              color: V26.ink500,
               onPressed: onPreview,
               padding: EdgeInsets.zero,
               constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
@@ -1826,16 +1826,16 @@ class _FileCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: VetoGlassTokens.neonCyan.withValues(alpha: 0.08),
+              color: V26.navy600.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: VetoGlassTokens.neonCyan.withValues(alpha: 0.25)),
+              border: Border.all(color: V26.navy600.withValues(alpha: 0.25)),
             ),
             child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              const Icon(Icons.auto_awesome, size: 14, color: VetoGlassTokens.neonCyan),
+              const Icon(Icons.auto_awesome, size: 14, color: V26.navy600),
               const SizedBox(width: 6),
               Expanded(child: Text(file.aiSummary!,
                   style: const TextStyle(
-                      color: VetoGlassTokens.textPrimary, fontSize: 12, height: 1.5),
+                      color: V26.ink900, fontSize: 12, height: 1.5),
                   maxLines: 3, overflow: TextOverflow.ellipsis)),
             ]),
           ),
@@ -1848,7 +1848,7 @@ class _FileCard extends StatelessWidget {
                 ? Icons.hourglass_empty_rounded
                 : Icons.auto_awesome,
             label: isAnalyzing ? l.analyzing : l.aiBtn,
-            color: VetoGlassTokens.neonCyan,
+            color: V26.navy600,
             onTap: isAnalyzing ? null : onAnalyze,
           ),
           _ActionChip(
@@ -1862,14 +1862,14 @@ class _FileCard extends StatelessWidget {
           _ActionChip(
             icon: Icons.edit_note_rounded,
             label: l.rename,
-            color: VetoGlassTokens.textSubtle,
+            color: V26.ink300,
             onTap: onRename,
           ),
           if (onAddToCase != null)
             _ActionChip(
               icon: Icons.cases_rounded,
               label: l.addToCase,
-              color: VetoGlassTokens.accentSoft,
+              color: V26.navy700,
               onTap: onAddToCase!,
             ),
           if (onMoveToFolder != null)
@@ -1947,9 +1947,9 @@ class _CaseCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: VetoGlassTokens.glassFillStrong,
+        color: V26.surface,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: VetoGlassTokens.glassBorder),
+        border: Border.all(color: V26.hairline),
         boxShadow: [BoxShadow(
             color: Colors.black.withValues(alpha: 0.25),
             blurRadius: 20, offset: const Offset(0, 8))],
@@ -1960,28 +1960,28 @@ class _CaseCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: VetoGlassTokens.neonCyan.withValues(alpha: 0.1),
+              color: V26.navy600.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(10),
             ),
             child: const Icon(Icons.cases_rounded,
-                color: VetoGlassTokens.neonCyan, size: 22),
+                color: V26.navy600, size: 22),
           ),
           const SizedBox(width: 12),
           Expanded(child: Column(
             crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text(legalCase.name, style: const TextStyle(
-                  color: VetoGlassTokens.textPrimary, fontWeight: FontWeight.w700,
+                  color: V26.ink900, fontWeight: FontWeight.w700,
                   fontSize: 15)),
               const SizedBox(height: 2),
               Text(
                 '${files.length} ${l.files}  ·  '
                 '${legalCase.createdAt.day}/${legalCase.createdAt.month}/${legalCase.createdAt.year}',
-                style: const TextStyle(color: VetoGlassTokens.textMuted, fontSize: 12),
+                style: const TextStyle(color: V26.ink500, fontSize: 12),
               ),
             ],
           )),
           IconButton(
-            icon: const Icon(Icons.edit_note_rounded, size: 18, color: VetoGlassTokens.textMuted),
+            icon: const Icon(Icons.edit_note_rounded, size: 18, color: V26.ink500),
             onPressed: onRename,
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(minWidth: 32, minHeight: 12),
@@ -1995,7 +1995,7 @@ class _CaseCard extends StatelessWidget {
         ]),
         if (files.isNotEmpty) ...[
           const SizedBox(height: 12),
-          const Divider(height: 1, color: VetoGlassTokens.glassBorder),
+          const Divider(height: 1, color: V26.hairline),
           const SizedBox(height: 8),
           ...files.take(3).map((f) => Padding(
             padding: const EdgeInsets.symmetric(vertical: 3),
@@ -2003,10 +2003,10 @@ class _CaseCard extends StatelessWidget {
               Icon(f.icon, size: 14, color: f.typeColor),
               const SizedBox(width: 8),
               Expanded(child: Text(f.name,
-                  style: const TextStyle(color: VetoGlassTokens.textMuted, fontSize: 12),
+                  style: const TextStyle(color: V26.ink500, fontSize: 12),
                   maxLines: 1, overflow: TextOverflow.ellipsis)),
               Text(f.sizeLabel,
-                  style: const TextStyle(color: VetoGlassTokens.textSubtle, fontSize: 11)),
+                  style: const TextStyle(color: V26.ink300, fontSize: 11)),
             ]),
           )),
           if (files.length > 3)
@@ -2014,7 +2014,7 @@ class _CaseCard extends StatelessWidget {
               padding: const EdgeInsets.only(top: 4),
               child: Text('+${files.length - 3} more',
                   style: const TextStyle(
-                      color: VetoGlassTokens.neonCyan, fontSize: 12,
+                      color: V26.navy600, fontSize: 12,
                       fontWeight: FontWeight.w600)),
             ),
         ],

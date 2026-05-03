@@ -10,6 +10,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart' as provider;
 
@@ -18,7 +19,7 @@ import 'config/app_config.dart';
 import 'core/accessibility/accessibility_settings.dart';
 import 'core/i18n/app_language.dart';
 import 'core/theme/veto_theme.dart';
-import 'core/theme/veto_glass_system.dart';
+import 'core/theme/veto_2026.dart';
 import 'screens/login_screen.dart';
 import 'screens/landing_screen.dart';
 import 'screens/lawyer_dashboard.dart';
@@ -86,13 +87,24 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   _installGlobalErrorLogging();
 
-  // Mobile web can freeze under heavy glassmorphism (BackdropFilter blur) on some browsers.
-  // Reduce blur by default on mobile user agents; users still get the same UI structure.
-  if (kIsWeb) {
-    // 0 = disable BackdropFilter-heavy effects; this is the most reliable fix for
-    // iOS Safari / low-end Android Chrome freezes on large blurred surfaces.
-    VetoGlassTokens.blurSigma = 0;
+  // 2026 design system uses Frank Ruhl Libre for headlines. Preload via
+  // google_fonts so any TextStyle with `fontFamily: 'Frank Ruhl Libre'`
+  // resolves once the font is cached. This is fire-and-forget so the
+  // first frame is never blocked by font fetching.
+  GoogleFonts.config.allowRuntimeFetching = true;
+  unawaited(() async {
+    try {
+      // Warm the font cache — the returned TextStyle is discarded; this
+      // is only for the side-effect of registering the family name.
+      GoogleFonts.frankRuhlLibre();
+      GoogleFonts.frankRuhlLibre(fontWeight: FontWeight.w700);
+      GoogleFonts.frankRuhlLibre(fontWeight: FontWeight.w800);
+      GoogleFonts.frankRuhlLibre(fontWeight: FontWeight.w900);
+    } catch (_) {}
+  }());
 
+  // Mobile web: optional frame timing log (build vs raster).
+  if (kIsWeb) {
     // #region agent log (frame timings)
     // Runtime evidence for "silent freeze": logs slow frames to console (no PII).
     // This lets us tell if freezes are build-bound vs raster-bound.
@@ -113,30 +125,43 @@ Future<void> main() async {
   // Global Error Boundary to prevent Red Screen of Death
   ErrorWidget.builder = (FlutterErrorDetails details) {
     return Material(
-      color: VetoGlassTokens.bgBase,
+      color: V26.paper,
       child: Container(
-        color: VetoGlassTokens.bgBase,
+        color: V26.paper,
         padding: const EdgeInsets.all(24),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.warning_amber_rounded, color: Color(0xFFF87171), size: 64),
+            const Icon(Icons.warning_amber_rounded, color: Color(0xFFD6243A), size: 56),
             const SizedBox(height: 24),
             const Text(
               'משהו השתבש',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: VetoGlassTokens.textPrimary),
+              style: TextStyle(
+                fontFamily: 'Frank Ruhl Libre',
+                fontSize: 22,
+                fontWeight: FontWeight.w800,
+                color: V26.ink900,
+              ),
             ),
             const SizedBox(height: 12),
             const Text(
               'אנחנו עובדים על זה. נסה לרענן את העמוד.',
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 15, color: VetoGlassTokens.textMuted),
+              style: TextStyle(
+                fontFamily: 'Heebo',
+                fontSize: 14,
+                color: V26.ink500,
+              ),
             ),
             const SizedBox(height: 24),
             Text(
               details.exceptionAsString(),
               textAlign: TextAlign.center,
-              style: const TextStyle(color: VetoGlassTokens.textSubtle, fontSize: 11),
+              style: const TextStyle(
+                fontFamily: 'Heebo',
+                color: V26.ink300,
+                fontSize: 11,
+              ),
               maxLines: kIsWeb ? 14 : 5,
               overflow: TextOverflow.ellipsis,
             ),
@@ -239,7 +264,7 @@ class VetoApp extends StatelessWidget {
   Widget build(BuildContext context) {
     final language = provider.Provider.of<AppLanguageController>(context);
     final a11y = provider.Provider.of<AccessibilitySettings>(context);
-    final baseTheme = VetoTheme.glassDark();
+    final baseTheme = VetoTheme.luxury2026();
 
     return MaterialApp(
       navigatorKey: vetoRootNavigatorKey,
