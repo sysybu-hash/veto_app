@@ -70,36 +70,49 @@ class _MapsScreenState extends State<MapsScreen> {
   Widget build(BuildContext context) {
     final isHe = Localizations.localeOf(context).languageCode == 'he';
     final title = isHe ? 'מפת Google' : 'Google Maps';
+    final langCode = isHe ? 'he' : 'en';
+    final isWide =
+        MediaQuery.sizeOf(context).width >= V26AppShell.desktopBreakpoint;
 
-    return Scaffold(
-      backgroundColor: V26.paper,
-      appBar: AppBar(
-        backgroundColor: V26.surface,
-        elevation: 0,
-        shadowColor: Colors.transparent,
-        surfaceTintColor: Colors.transparent,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded,
-              color: V26.ink900, size: 20),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-        title: Text(
-          title,
-          style: const TextStyle(
-            fontFamily: V26.serif,
-            color: V26.ink900,
-            fontWeight: FontWeight.w800,
-            fontSize: 18,
-            letterSpacing: -0.2,
+    return Directionality(
+      textDirection: isHe ? TextDirection.rtl : TextDirection.ltr,
+      child: V26AppShell(
+        destinations: isWide
+            ? V26CitizenNav.destinations(langCode)
+            : V26CitizenNav.bottomDestinations(langCode),
+        currentIndex: isWide ? 5 /* מפה */ : 0,
+        onDestinationSelected: (i) {
+          final routes =
+              isWide ? V26CitizenNav.routes : V26CitizenNav.bottomRoutes;
+          V26CitizenNav.go(context, routes[i], current: '/maps');
+        },
+        desktopStatusText: title,
+        mobileAppBar: AppBar(
+          backgroundColor: V26.surface,
+          elevation: 0,
+          shadowColor: Colors.transparent,
+          surfaceTintColor: Colors.transparent,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back_ios_new_rounded,
+                color: V26.ink900, size: 20),
+            onPressed: () => Navigator.of(context).maybePop(),
+          ),
+          title: Text(
+            title,
+            style: const TextStyle(
+              fontFamily: V26.serif,
+              color: V26.ink900,
+              fontWeight: FontWeight.w800,
+              fontSize: 18,
+              letterSpacing: -0.2,
+            ),
+          ),
+          centerTitle: true,
+          bottom: const PreferredSize(
+            preferredSize: Size.fromHeight(1),
+            child: Divider(height: 1, color: V26.hairline),
           ),
         ),
-        centerTitle: true,
-        bottom: const PreferredSize(
-          preferredSize: Size.fromHeight(1),
-          child: Divider(height: 1, color: V26.hairline),
-        ),
-      ),
-      body: V26Backdrop(
         child: _error != null
             ? Center(
                 child: Padding(

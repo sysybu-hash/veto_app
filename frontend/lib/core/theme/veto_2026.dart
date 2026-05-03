@@ -2460,3 +2460,467 @@ class V26Table extends StatelessWidget {
     );
   }
 }
+
+/// ════════════════════════════════════════════════════════════
+///  V26NavDest — one destination in the 2026 app shell.
+///  Mirrors `<a class="nav">...` from `2026/citizen.html:726-733`.
+/// ════════════════════════════════════════════════════════════
+class V26NavDest {
+  final String label;
+  final IconData icon;
+  final int? badge;
+  const V26NavDest({
+    required this.label,
+    required this.icon,
+    this.badge,
+  });
+}
+
+/// ════════════════════════════════════════════════════════════
+///  V26DesktopNavBar — top pill-nav for wide viewports.
+///  Mirrors `.topbar + .nav` from `2026/citizen.html`.
+/// ════════════════════════════════════════════════════════════
+class V26DesktopNavBar extends StatelessWidget
+    implements PreferredSizeWidget {
+  final List<V26NavDest> destinations;
+  final int currentIndex;
+  final ValueChanged<int>? onSelected;
+  final Widget? brand;
+  final List<Widget> trailing;
+  final String? statusText;
+
+  const V26DesktopNavBar({
+    super.key,
+    required this.destinations,
+    required this.currentIndex,
+    this.onSelected,
+    this.brand,
+    this.trailing = const [],
+    this.statusText,
+  });
+
+  @override
+  Size get preferredSize => Size.fromHeight(statusText != null ? 112 : 72);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        color: V26.surface,
+        border: Border(bottom: BorderSide(color: V26.hairline)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SizedBox(
+            height: 72,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Row(
+                children: [
+                  brand ?? const V26BrandLogo(eyebrow: 'הגנה משפטית מיידית'),
+                  const SizedBox(width: 28),
+                  Expanded(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: [
+                        for (int i = 0; i < destinations.length; i++)
+                          Padding(
+                            padding: EdgeInsetsDirectional.only(
+                                end: i < destinations.length - 1 ? 4 : 0),
+                            child: _V26DesktopNavLink(
+                              dest: destinations[i],
+                              active: i == currentIndex,
+                              onTap: () => onSelected?.call(i),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  ...trailing,
+                ],
+              ),
+            ),
+          ),
+          if (statusText != null)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              decoration: const BoxDecoration(
+                color: V26.surface2,
+                border: Border(top: BorderSide(color: V26.hairline)),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 8,
+                    height: 8,
+                    decoration: const BoxDecoration(
+                      color: V26.ok,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    statusText!,
+                    style: const TextStyle(
+                      fontFamily: V26.sans,
+                      fontSize: 12,
+                      color: V26.ink500,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _V26DesktopNavLink extends StatelessWidget {
+  final V26NavDest dest;
+  final bool active;
+  final VoidCallback? onTap;
+  const _V26DesktopNavLink({
+    required this.dest,
+    required this.active,
+    this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(10),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                dest.label,
+                style: TextStyle(
+                  fontFamily: V26.sans,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: active ? V26.navy600 : V26.ink700,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Container(
+                width: active ? 24 : 0,
+                height: 2,
+                decoration: BoxDecoration(
+                  color: V26.navy600,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// ════════════════════════════════════════════════════════════
+///  V26AppShell — unified responsive shell for every screen.
+///   - Wide (>=1080px): top pill-nav + optional status strip (citizen.html).
+///   - Narrow:         AppBar (optional) + bottom tab bar (legacy mobile).
+/// ════════════════════════════════════════════════════════════
+class V26AppShell extends StatelessWidget {
+  final List<V26NavDest> destinations;
+  final int currentIndex;
+  final ValueChanged<int>? onDestinationSelected;
+  final Widget child;
+  final PreferredSizeWidget? mobileAppBar;
+  final String? desktopStatusText;
+  final List<Widget> desktopTrailing;
+  final Widget? floatingAction;
+  final Color? background;
+  final bool showBackdrop;
+  final Widget? desktopBrand;
+
+  const V26AppShell({
+    super.key,
+    required this.destinations,
+    required this.currentIndex,
+    required this.child,
+    this.onDestinationSelected,
+    this.mobileAppBar,
+    this.desktopStatusText,
+    this.desktopTrailing = const [],
+    this.floatingAction,
+    this.background,
+    this.showBackdrop = true,
+    this.desktopBrand,
+  });
+
+  static const double desktopBreakpoint = 1080;
+
+  @override
+  Widget build(BuildContext context) {
+    final width = MediaQuery.sizeOf(context).width;
+    final isWide = width >= desktopBreakpoint;
+
+    final Widget scaffold = Scaffold(
+      backgroundColor: background ?? (showBackdrop ? Colors.transparent : V26.paper),
+      appBar: isWide
+          ? V26DesktopNavBar(
+              destinations: destinations,
+              currentIndex: currentIndex,
+              onSelected: onDestinationSelected,
+              statusText: desktopStatusText,
+              trailing: desktopTrailing,
+              brand: desktopBrand,
+            )
+          : mobileAppBar,
+      body: child,
+      bottomNavigationBar: isWide
+          ? null
+          : V26BottomNav(
+              items: destinations
+                  .map((d) => V26NavItem(
+                        label: d.label,
+                        icon: d.icon,
+                        count: d.badge,
+                      ))
+                  .toList(),
+              currentIndex: currentIndex,
+              onChanged: onDestinationSelected,
+            ),
+      floatingActionButton: floatingAction,
+    );
+
+    if (!showBackdrop) return scaffold;
+    return V26Backdrop(child: scaffold);
+  }
+}
+
+/// ════════════════════════════════════════════════════════════
+///  V26LangPill — the small flag+language toggle seen in 2026/*.
+/// ════════════════════════════════════════════════════════════
+class V26LangPill extends StatelessWidget {
+  final String label;
+  final VoidCallback? onTap;
+
+  const V26LangPill({super.key, required this.label, this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(V26.rPill),
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+          decoration: BoxDecoration(
+            color: V26.surface,
+            border: Border.all(color: V26.hairline),
+            borderRadius: BorderRadius.circular(V26.rPill),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 14,
+                height: 10,
+                decoration: BoxDecoration(
+                  color: V26.navy100,
+                  borderRadius: BorderRadius.circular(2),
+                  border: Border.all(color: V26.navy300),
+                ),
+              ),
+              const SizedBox(width: 7),
+              Text(
+                label,
+                style: const TextStyle(
+                  fontFamily: V26.sans,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: V26.ink700,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// ════════════════════════════════════════════════════════════
+///  V26PillCTA — compact pill call-to-action matching .cta in 2026/*.
+/// ════════════════════════════════════════════════════════════
+class V26PillCTA extends StatelessWidget {
+  final String label;
+  final IconData? icon;
+  final VoidCallback? onTap;
+  final bool danger;
+  final bool ghost;
+
+  const V26PillCTA({
+    super.key,
+    required this.label,
+    this.icon,
+    this.onTap,
+    this.danger = false,
+    this.ghost = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final Color bg;
+    final Color fg;
+    final Color? borderColor;
+    final List<BoxShadow> shadow;
+    if (ghost) {
+      bg = V26.surface;
+      fg = V26.navy700;
+      borderColor = V26.hairline;
+      shadow = const [];
+    } else if (danger) {
+      bg = V26.emerg;
+      fg = Colors.white;
+      borderColor = null;
+      shadow = V26.shadowEmerg;
+    } else {
+      bg = V26.navy600;
+      fg = Colors.white;
+      borderColor = null;
+      shadow = V26.shadowBrand;
+    }
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(V26.rPill),
+        onTap: onTap,
+        child: Container(
+          height: 38,
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          decoration: BoxDecoration(
+            color: bg,
+            borderRadius: BorderRadius.circular(V26.rPill),
+            border: borderColor != null
+                ? Border.all(color: borderColor)
+                : null,
+            boxShadow: shadow,
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (icon != null) ...[
+                Icon(icon, size: 14, color: fg),
+                const SizedBox(width: 6),
+              ],
+              Text(
+                label,
+                style: TextStyle(
+                  fontFamily: V26.sans,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w800,
+                  color: fg,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// ════════════════════════════════════════════════════════════
+///  V26CitizenNav — the 6 desktop nav destinations for citizens.
+///  Mirrors `<nav class="nav">` from `2026/citizen.html:726-733`.
+///  Screens use the same list so the active index stays consistent.
+/// ════════════════════════════════════════════════════════════
+class V26CitizenNav {
+  V26CitizenNav._();
+
+  /// Route names (must match `main.dart` routes).
+  static const List<String> routes = <String>[
+    '/veto_screen',
+    '/chat',
+    '/files_vault',
+    '/legal_calendar',
+    '/legal_notebook',
+    '/maps',
+  ];
+
+  /// Build the 6 nav destinations for the current locale.
+  static List<V26NavDest> destinations(String langCode) {
+    final he = langCode == 'he';
+    final ru = langCode == 'ru';
+    return [
+      V26NavDest(
+        label: he ? 'דף הבית' : (ru ? 'Главная' : 'Home'),
+        icon: Icons.home_rounded,
+      ),
+      V26NavDest(
+        label: he ? 'צ\'אט AI' : (ru ? 'AI-чат' : 'AI Chat'),
+        icon: Icons.chat_bubble_rounded,
+      ),
+      V26NavDest(
+        label: he ? 'כספת מסמכים' : (ru ? 'Хранилище' : 'Vault'),
+        icon: Icons.lock_rounded,
+      ),
+      V26NavDest(
+        label: he ? 'יומן משפטי' : (ru ? 'Юр. календарь' : 'Calendar'),
+        icon: Icons.event_note_rounded,
+      ),
+      V26NavDest(
+        label: he ? 'מחברת' : (ru ? 'Блокнот' : 'Notebook'),
+        icon: Icons.edit_note_rounded,
+      ),
+      V26NavDest(
+        label: he ? 'מפה' : (ru ? 'Карта' : 'Map'),
+        icon: Icons.map_rounded,
+      ),
+    ];
+  }
+
+  /// The 4 bottom-tab destinations for narrow viewports (citizen bottom bar).
+  static List<V26NavDest> bottomDestinations(String langCode) {
+    final he = langCode == 'he';
+    final ru = langCode == 'ru';
+    return [
+      V26NavDest(
+        label: he ? 'בית' : (ru ? 'Главная' : 'Home'),
+        icon: Icons.home_rounded,
+      ),
+      V26NavDest(
+        label: he ? 'צ\'אט' : (ru ? 'Чат' : 'Chat'),
+        icon: Icons.chat_bubble_rounded,
+      ),
+      V26NavDest(
+        label: he ? 'קבצים' : (ru ? 'Файлы' : 'Files'),
+        icon: Icons.folder_rounded,
+      ),
+      V26NavDest(
+        label: he ? 'פרופיל' : (ru ? 'Профиль' : 'Profile'),
+        icon: Icons.person_rounded,
+      ),
+    ];
+  }
+
+  /// Routes for the bottom 4 tabs, in the same order as [bottomDestinations].
+  static const List<String> bottomRoutes = <String>[
+    '/veto_screen',
+    '/chat',
+    '/files_vault',
+    '/profile',
+  ];
+
+  /// Navigate to one of the [routes] (or [bottomRoutes]) from [current].
+  /// Uses `pushReplacementNamed` so we don't stack identical shells.
+  static void go(BuildContext context, String target, {String? current}) {
+    if (target == current) return;
+    Navigator.of(context).pushReplacementNamed(target);
+  }
+}

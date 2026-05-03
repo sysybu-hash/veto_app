@@ -61,11 +61,11 @@ class _L {
 }
 
 const _he = _L(
-  title: 'כספת הקבצים שלי', upload: 'העלה קובץ', uploading: 'מעלה...',
+  title: 'הכספת שלך', upload: 'העלה קובץ', uploading: 'מעלה...',
   analyzing: 'AI מנתח...', deleteConfirm: 'למחוק את הקובץ?',
   delete: 'מחק', share: 'שתף עם עו"ד', revoke: 'בטל גישה',
   analyze: 'נתח עם AI', noFiles: 'אין קבצים עדיין',
-  usageOf: 'בשימוש: ', used: 'MB', quota: ' / 100 MB',
+  usageOf: 'בשימוש: ', used: 'GB', quota: ' / 10 GB',
   legalCase: 'תיק משפטי', caseName: 'שם התיק',
   createCase: 'צור תיק', addToCase: 'הוסף לתיק', files: 'קבצים',
   allFiles: 'כל הקבצים', caseFiles: 'קבצי התיק',
@@ -88,11 +88,11 @@ const _he = _L(
 );
 
 const _en = _L(
-  title: 'My File Vault', upload: 'Upload File', uploading: 'Uploading...',
+  title: 'Your Vault', upload: 'Upload File', uploading: 'Uploading...',
   analyzing: 'AI analyzing...', deleteConfirm: 'Delete this file?',
   delete: 'Delete', share: 'Share with Lawyer', revoke: 'Revoke Access',
   analyze: 'Analyze with AI', noFiles: 'No files yet',
-  usageOf: 'Used: ', used: 'MB', quota: ' / 100 MB',
+  usageOf: 'Used: ', used: 'GB', quota: ' / 10 GB',
   legalCase: 'Legal Case', caseName: 'Case name',
   createCase: 'Create Case', addToCase: 'Add to Case', files: 'files',
   allFiles: 'All Files', caseFiles: 'Case Files',
@@ -119,7 +119,7 @@ const _ru = _L(
   analyzing: 'AI анализирует...', deleteConfirm: 'Удалить файл?',
   delete: 'Удалить', share: 'Поделиться с адвокатом', revoke: 'Закрыть доступ',
   analyze: 'Анализ AI', noFiles: 'Файлов пока нет',
-  usageOf: 'Использовано: ', used: 'МБ', quota: ' / 100 МБ',
+  usageOf: 'Использовано: ', used: 'ГБ', quota: ' / 10 ГБ',
   legalCase: 'Юридическое дело', caseName: 'Название дела',
   createCase: 'Создать дело', addToCase: 'Добавить в дело', files: 'файлов',
   allFiles: 'Все файлы', caseFiles: 'Файлы дела',
@@ -268,9 +268,36 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
   VaultSaveQueue? _queue;
   void Function()? _queueListRefresh;
 
+  /// VETO 2026 — 10 GB tier (mirrors `2026/vault.html`).
+  /// Value is in MB for backwards compat with existing upload checks.
   double get _usedMb =>
       _files.fold(0.0, (s, f) => s + f.sizeBytes) / (1024 * 1024);
-  double get _quotaMb => 100.0;
+  double get _quotaMb => 10 * 1024.0; // 10 GB
+  double get _usedGb => _usedMb / 1024.0;
+  double get _quotaGb => _quotaMb / 1024.0;
+
+  /// Which category tab is active in the new 2026 layout.
+  /// 0 = all · 1 = documents · 2 = audio · 3 = video · 4 = images
+  int _category = 0;
+
+  Iterable<_VaultFile> _filteredByCategory(Iterable<_VaultFile> files) {
+    switch (_category) {
+      case 1: // documents
+        return files.where((f) =>
+            f.type.contains('pdf') ||
+            f.type.contains('word') ||
+            f.type.contains('document') ||
+            f.type.contains('text/'));
+      case 2: // audio
+        return files.where((f) => f.type.startsWith('audio/'));
+      case 3: // video
+        return files.where((f) => f.type.startsWith('video/'));
+      case 4: // images
+        return files.where((f) => f.type.startsWith('image/'));
+      default:
+        return files;
+    }
+  }
 
   String? get _currentFolderId =>
       _folderPath.isEmpty ? null : _folderPath.last.id;
@@ -367,6 +394,7 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
     }
   }
 
+  // ignore: unused_element
   Future<void> _removeFolder(_VaultFolder f) async {
     final confirm = await showDialog<bool>(
       context: context,
@@ -947,6 +975,7 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
   }
 
 
+  // ignore: unused_element
   Future<void> _createCase() async {
     final ctrl = TextEditingController();
     final name = await showDialog<String>(
@@ -1239,105 +1268,597 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
   Widget build(BuildContext context) {
     final code = context.watch<AppLanguageController>().code;
     final isRtl = AppLanguage.directionOf(code) == TextDirection.rtl;
+    final isWide = MediaQuery.sizeOf(context).width >= V26AppShell.desktopBreakpoint;
+
+    final uploadLabel = _uploading ? _l.uploading : _l.upload;
 
     return Directionality(
       textDirection: isRtl ? TextDirection.rtl : TextDirection.ltr,
-      child: Scaffold(
-        backgroundColor: V26.paper,
-        appBar: AppBar(
-          backgroundColor: const Color(0xFFFFFFFF),
+      child: V26AppShell(
+        destinations: isWide
+            ? V26CitizenNav.destinations(code)
+            : V26CitizenNav.bottomDestinations(code),
+        currentIndex: isWide ? 2 /* כספת */ : 2 /* קבצים */,
+        onDestinationSelected: (i) {
+          final routes = isWide
+              ? V26CitizenNav.routes
+              : V26CitizenNav.bottomRoutes;
+          V26CitizenNav.go(context, routes[i], current: '/files_vault');
+        },
+        desktopStatusText: code == 'he'
+            ? 'מאובטח · מוצפן E2E · נשמר במכשיר ובכספת מוצפנת'
+            : (code == 'ru'
+                ? 'Безопасно · E2E шифрование'
+                : 'Secured · E2E encrypted · stored on-device & in encrypted vault'),
+        desktopTrailing: [
+          V26IconBtn(
+            icon: Icons.search_rounded,
+            onTap: () {},
+            tooltip: code == 'he' ? 'חיפוש' : 'Search',
+          ),
+          const SizedBox(width: 8),
+          V26PillCTA(
+            label: uploadLabel,
+            icon: _uploading ? Icons.hourglass_empty_rounded : Icons.add,
+            onTap: _uploading ? null : _pickFile,
+          ),
+        ],
+        mobileAppBar: AppBar(
+          backgroundColor: V26.surface,
           elevation: 0,
           shadowColor: Colors.transparent,
           surfaceTintColor: Colors.transparent,
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new_rounded, color: V26.ink900, size: 20),
-            onPressed: () => Navigator.of(context).pop(),
+            icon: const Icon(Icons.arrow_back_ios_new_rounded,
+                color: V26.ink900, size: 20),
+            onPressed: () => Navigator.of(context).maybePop(),
           ),
-          title: Text(_l.title, style: const TextStyle(color: V26.ink900, fontWeight: FontWeight.w800, fontSize: 18)),
+          title: Text(
+            _l.title,
+            style: const TextStyle(
+              color: V26.ink900,
+              fontFamily: V26.serif,
+              fontWeight: FontWeight.w800,
+              fontSize: 18,
+            ),
+          ),
           centerTitle: true,
           actions: [
             if (kIsWeb)
               IconButton(
-                icon: const Icon(Icons.photo_camera_outlined, color: V26.ink900),
+                icon: const Icon(Icons.photo_camera_outlined,
+                    color: V26.ink700),
                 onPressed: _uploading ? null : _captureFromCamera,
                 tooltip: 'Capture from camera',
               ),
             IconButton(
-              icon: const Icon(Icons.refresh_rounded, color: V26.ink900),
+              icon: const Icon(Icons.refresh_rounded, color: V26.ink700),
               onPressed: _load,
               tooltip: 'Refresh',
             ),
           ],
-          bottom: TabBar(
-            controller: _tabController,
-            indicatorColor: V26.navy600,
-            labelColor: V26.navy600,
-            unselectedLabelColor: V26.ink500,
-            tabs: [
-              Tab(text: _l.allFiles),
-              Tab(text: _l.legalCase),
-            ],
-          ),
         ),
-        floatingActionButton: FloatingActionButton.extended(
-          onPressed: _uploading ? null : _pickFile,
-          backgroundColor: _uploading ? V26.ink500.withValues(alpha: 0.35) : V26.navy500,
-          icon: _uploading
-              ? const SizedBox(width: 20, height: 20,
-                  child: CircularProgressIndicator(
-                      strokeWidth: 2, color: Colors.white))
-              : const Icon(Icons.upload_file_rounded, color: Colors.white),
-          label: Text(_uploading ? _l.uploading : _l.upload,
-              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
-        ),
-        body: V26Backdrop(
-          child: Stack(children: [
-          _loading
-              ? const Center(child: CircularProgressIndicator(color: V26.navy600))
-              : Column(children: [
-                  _buildCallSaveBanners(),
-                  _buildQuotaBar(),
-                  Expanded(
-                    child: TabBarView(
-                      controller: _tabController,
+        floatingAction: isWide
+            ? null
+            : FloatingActionButton.extended(
+                onPressed: _uploading ? null : _pickFile,
+                backgroundColor: _uploading
+                    ? V26.ink500.withValues(alpha: 0.35)
+                    : V26.navy600,
+                icon: _uploading
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                            strokeWidth: 2, color: Colors.white),
+                      )
+                    : const Icon(Icons.upload_file_rounded, color: Colors.white),
+                label: Text(
+                  uploadLabel,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+        child: Stack(
+          children: [
+            _loading
+                ? const Center(
+                    child: CircularProgressIndicator(color: V26.navy600))
+                : _build2026Body(),
+            if (_isDragging)
+              IgnorePointer(
+                child: Container(
+                  color: V26.navy600.withValues(alpha: 0.08),
+                  child: Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        _buildAllFilesTab(),
-                        _buildCasesTab(),
+                        Container(
+                          padding: const EdgeInsets.all(24),
+                          decoration: BoxDecoration(
+                            color: V26.navy500.withValues(alpha: 0.2),
+                            shape: BoxShape.circle,
+                            border:
+                                Border.all(color: V26.navy600, width: 2),
+                          ),
+                          child: const Icon(Icons.upload_file_rounded,
+                              size: 60, color: V26.navy600),
+                        ),
+                        const SizedBox(height: 20),
+                        Text(
+                          _l.dropFilesHere,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            color: V26.navy600,
+                            fontSize: 22,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
                       ],
                     ),
                   ),
-                ]),
-          if (_isDragging)
-            IgnorePointer(
-              child: Container(
-                color: V26.navy600.withValues(alpha: 0.12),
-                child: Center(
-                  child: Column(mainAxisSize: MainAxisSize.min, children: [
-                    Container(
-                      padding: const EdgeInsets.all(24),
-                      decoration: BoxDecoration(
-                        color: V26.navy500.withValues(alpha: 0.2),
-                        shape: BoxShape.circle,
-                        border: Border.all(color: V26.navy600, width: 2),
-                      ),
-                      child: const Icon(Icons.upload_file_rounded,
-                          size: 60, color: V26.navy600),
-                    ),
-                    const SizedBox(height: 20),
-                    Text(_l.dropFilesHere,
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(color: V26.navy600,
-                            fontSize: 22, fontWeight: FontWeight.w700)),
-                  ]),
                 ),
               ),
-            ),
-        ]),
+          ],
         ),
       ),
     );
   }
 
+  // ── VETO 2026 body (matches `2026/vault.html`) ──────────────
+  Widget _build2026Body() {
+    final code = context.read<AppLanguageController>().code;
+    final isWide =
+        MediaQuery.sizeOf(context).width >= V26AppShell.desktopBreakpoint;
+
+    // Compose main content scroll area.
+    return SingleChildScrollView(
+      padding: EdgeInsets.symmetric(
+        horizontal: isWide ? 28 : 16,
+        vertical: isWide ? 24 : 12,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildCallSaveBanners(),
+          // Header (kicker + headline + sub-line + tabs)
+          _buildVaultHeader(code, isWide),
+          const SizedBox(height: 18),
+          // Storage indicator card
+          _buildStorageCard(code),
+          const SizedBox(height: 18),
+          // Folder breadcrumb (if not at root)
+          if (_folderPath.length > 1) ...[
+            _buildFolderBreadcrumb(),
+            const SizedBox(height: 12),
+          ],
+          // Subfolders strip
+          if (_subfolders.isNotEmpty) ...[
+            _buildFoldersStrip(),
+            const SizedBox(height: 18),
+          ],
+          // File grid
+          _build2026Grid(isWide),
+          const SizedBox(height: 28),
+          // Cases section — kept as secondary area
+          if (_cases.isNotEmpty) ...[
+            _buildCasesSection(code),
+            const SizedBox(height: 40),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildVaultHeader(String code, bool isWide) {
+    final he = code == 'he';
+    final ru = code == 'ru';
+    final kicker = he
+        ? 'מאובטח · מוצפן E2E'
+        : (ru ? 'Безопасно · E2E' : 'Secured · E2E Encrypted');
+    final subline = he
+        ? '${_files.length} קבצים · ${_usedGb.toStringAsFixed(1)} GB מתוך ${_quotaGb.toStringAsFixed(0)} GB · נשמר אך ורק במכשיר ובכספת המוצפנת שלך'
+        : (ru
+            ? '${_files.length} файлов · ${_usedGb.toStringAsFixed(1)} GB из ${_quotaGb.toStringAsFixed(0)} GB · хранится только на устройстве и в зашифрованном хранилище'
+            : '${_files.length} files · ${_usedGb.toStringAsFixed(1)} GB of ${_quotaGb.toStringAsFixed(0)} GB · stored only on your device and in your encrypted vault');
+
+    final tabLabels = he
+        ? const ['הכל', 'מסמכים', 'שמע', 'וידאו', 'תמונות']
+        : (ru
+            ? const ['Все', 'Документы', 'Аудио', 'Видео', 'Фото']
+            : const ['All', 'Documents', 'Audio', 'Video', 'Photos']);
+
+    final headerText = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        V26Kicker(kicker),
+        const SizedBox(height: 4),
+        V26Headline(_l.title, size: isWide ? 26 : 22, weight: FontWeight.w800),
+        const SizedBox(height: 6),
+        Text(
+          subline,
+          style: const TextStyle(
+            fontFamily: V26.sans,
+            fontSize: 13,
+            color: V26.ink500,
+            height: 1.45,
+          ),
+        ),
+      ],
+    );
+
+    final tabs = V26Tabs(
+      labels: tabLabels,
+      current: _category,
+      onChanged: (i) => setState(() => _category = i),
+    );
+
+    if (isWide) {
+      return Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(child: headerText),
+          const SizedBox(width: 20),
+          Align(alignment: Alignment.centerRight, child: tabs),
+        ],
+      );
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        headerText,
+        const SizedBox(height: 14),
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: tabs,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildStorageCard(String code) {
+    final pct = (_usedMb / _quotaMb).clamp(0.0, 1.0);
+    final he = code == 'he';
+    final ru = code == 'ru';
+    final usedLabel = he
+        ? '${_usedGb.toStringAsFixed(1)} GB מנוצל מתוך ${_quotaGb.toStringAsFixed(0)} GB'
+        : (ru
+            ? '${_usedGb.toStringAsFixed(1)} GB из ${_quotaGb.toStringAsFixed(0)} GB'
+            : '${_usedGb.toStringAsFixed(1)} GB of ${_quotaGb.toStringAsFixed(0)} GB used');
+    final subLabel = he
+        ? '${_files.length} קבצים · הצפנה AES-256 בכל קובץ'
+        : (ru
+            ? '${_files.length} файлов · AES-256 шифрование'
+            : '${_files.length} files · AES-256 per-file encryption');
+    final upgrade = he
+        ? 'שדרג תוכנית'
+        : (ru ? 'Обновить план' : 'Upgrade plan');
+
+    return V26Card(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [V26.navy500, V26.navy400],
+                  ),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                alignment: Alignment.center,
+                child: const Icon(Icons.lock_rounded,
+                    color: Colors.white, size: 20),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      usedLabel,
+                      style: const TextStyle(
+                        fontFamily: V26.sans,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w800,
+                        color: V26.ink900,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      subLabel,
+                      style: const TextStyle(
+                        fontFamily: V26.sans,
+                        fontSize: 12,
+                        color: V26.ink500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              V26PillCTA(label: upgrade, ghost: true, onTap: () {}),
+            ],
+          ),
+          const SizedBox(height: 12),
+          V26Progress(value: pct, height: 6),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFoldersStrip() {
+    return SizedBox(
+      height: 56,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        itemCount: _subfolders.length + 1,
+        separatorBuilder: (_, __) => const SizedBox(width: 8),
+        itemBuilder: (_, i) {
+          if (i == _subfolders.length) {
+            return OutlinedButton.icon(
+              onPressed: _createSubfolder,
+              icon: const Icon(Icons.create_new_folder_outlined, size: 16),
+              label: Text(_l.newFolder),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: V26.navy600,
+                side: const BorderSide(color: V26.hairline),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10)),
+              ),
+            );
+          }
+          final fo = _subfolders[i];
+          return InkWell(
+            onTap: () => _openFolder(fo),
+            borderRadius: BorderRadius.circular(12),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              decoration: BoxDecoration(
+                color: V26.surface,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: V26.hairline),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.folder_rounded,
+                      color: V26.navy600, size: 20),
+                  const SizedBox(width: 8),
+                  Text(
+                    fo.name,
+                    style: const TextStyle(
+                      fontFamily: V26.sans,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: V26.ink900,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _build2026Grid(bool isWide) {
+    final here = _filteredByCategory(_filesHere).toList();
+    if (here.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 40),
+        child: V26Empty(
+          icon: Icons.folder_open_outlined,
+          title: _l.noFiles,
+          description: _l.upload,
+          action: V26PillCTA(
+            label: _l.upload,
+            icon: Icons.add,
+            onTap: _uploading ? null : _pickFile,
+          ),
+        ),
+      );
+    }
+    final cross = isWide ? 4 : 2;
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: cross,
+        mainAxisSpacing: 14,
+        crossAxisSpacing: 14,
+        childAspectRatio: isWide ? 1.15 : 0.95,
+      ),
+      itemCount: here.length,
+      itemBuilder: (_, i) {
+        final f = here[i];
+        return _Vault2026FileCard(
+          file: f,
+          l: _l,
+          onTap: () => _showPreview(f),
+          onMenu: () => _showFileActions(f),
+          onLongPress: () => _showFileActions(f),
+        );
+      },
+    );
+  }
+
+  Widget _buildCasesSection(String code) {
+    final he = code == 'he';
+    final ru = code == 'ru';
+    final title = he
+        ? 'תיקים משפטיים'
+        : (ru ? 'Юридические дела' : 'Legal cases');
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            V26Kicker(he ? 'תיקי תיעוד' : (ru ? 'Дела' : 'Case files')),
+          ],
+        ),
+        const SizedBox(height: 6),
+        V26Headline(title, size: 20, weight: FontWeight.w800),
+        const SizedBox(height: 12),
+        ..._cases.map(
+          (c) => Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: _CaseCard(
+              legalCase: c,
+              files: _files.where((f) => f.caseId == c.id).toList(),
+              l: _l,
+              onRename: () => _renameCase(c),
+              onDelete: () => _deleteCase(c),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _showFileActions(_VaultFile f) async {
+    await showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: V26.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) {
+        return SafeArea(
+          top: false,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                margin: const EdgeInsets.symmetric(vertical: 10),
+                width: 36,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: V26.hairline,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+                child: Text(
+                  f.name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontFamily: V26.serif,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w800,
+                    color: V26.ink900,
+                  ),
+                ),
+              ),
+              const Divider(height: 1, color: V26.hairline),
+              ListTile(
+                leading: Icon(
+                  _analyzing && _activeFileId == f.id
+                      ? Icons.hourglass_empty_rounded
+                      : Icons.auto_awesome,
+                  color: V26.navy600,
+                ),
+                title: Text(
+                  _analyzing && _activeFileId == f.id
+                      ? _l.analyzing
+                      : _l.aiBtn,
+                  style: const TextStyle(color: V26.ink900),
+                ),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _analyzeFile(f);
+                },
+              ),
+              ListTile(
+                leading: Icon(
+                  f.lawyerAccess
+                      ? Icons.lock_rounded
+                      : Icons.lock_open_rounded,
+                  color: f.lawyerAccess ? VetoPalette.warning : V26.ok,
+                ),
+                title: Text(
+                  f.lawyerAccess ? _l.revoke : _l.share,
+                  style: const TextStyle(color: V26.ink900),
+                ),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _toggleLawyerAccess(f);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.drive_file_rename_outline,
+                    color: V26.ink500),
+                title: Text(_l.rename,
+                    style: const TextStyle(color: V26.ink900)),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _renameFile(f);
+                },
+              ),
+              if (_folders.isNotEmpty ||
+                  (f.folderId != null && f.folderId!.isNotEmpty))
+                ListTile(
+                  leading:
+                      const Icon(Icons.drive_folder_upload, color: V26.ink500),
+                  title: Text(_l.moveToFolder,
+                      style: const TextStyle(color: V26.ink900)),
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    unawaited(_moveFileToFolder(f));
+                  },
+                ),
+              if (_cases.isNotEmpty && f.caseId == null)
+                ListTile(
+                  leading: const Icon(Icons.inventory_2_outlined,
+                      color: V26.ink500),
+                  title: Text(_l.addToCase,
+                      style: const TextStyle(color: V26.ink900)),
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    _showAddToCase(f);
+                  },
+                ),
+              if (f.caseId != null)
+                ListTile(
+                  leading: const Icon(Icons.unarchive_outlined,
+                      color: V26.ink500),
+                  title: Text(_l.removeFromCase,
+                      style: const TextStyle(color: V26.ink900)),
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    _removeFromCase(f);
+                  },
+                ),
+              ListTile(
+                leading: const Icon(Icons.delete_outline_rounded,
+                    color: VetoPalette.emergency),
+                title: Text(_l.delete,
+                    style:
+                        const TextStyle(color: VetoPalette.emergency)),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _deleteFile(f);
+                },
+              ),
+              const SizedBox(height: 4),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  // ignore: unused_element
   Widget _buildUploadZoneCard() {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
@@ -1408,144 +1929,6 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
     );
   }
 
-  Widget _buildQuotaBar() {
-    final pct = (_usedMb / _quotaMb).clamp(0.0, 1.0);
-    final color = pct > 0.9
-        ? VetoPalette.emergency
-        : pct > 0.7
-            ? VetoPalette.warning
-            : VetoPalette.success;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-      decoration: const BoxDecoration(
-        color: V26.surface,
-        border: Border(bottom: BorderSide(color: V26.hairline)),
-      ),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Row(children: [
-          Text(_l.usageOf,
-              style: const TextStyle(color: V26.ink500, fontSize: 13)),
-          Text('${_usedMb.toStringAsFixed(1)} ${_l.used}${_l.quota}',
-              style: TextStyle(
-                  color: color, fontSize: 13, fontWeight: FontWeight.w700)),
-          const Spacer(),
-          Text('${_files.length} ${_l.files}',
-              style: const TextStyle(color: V26.ink300, fontSize: 12)),
-        ]),
-        const SizedBox(height: 6),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(4),
-          child: LinearProgressIndicator(
-            value: pct,
-            minHeight: 6,
-            backgroundColor: const Color(0xFF0F1A24),
-            valueColor: AlwaysStoppedAnimation(color),
-          ),
-        ),
-      ]),
-    );
-  }
-
-  Widget _buildAllFilesTab() {
-    final subs = _subfolders;
-    final here = _filesHere;
-    final isEmpty = subs.isEmpty && here.isEmpty;
-    if (isEmpty) {
-      return ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          _buildFolderBreadcrumb(),
-          const SizedBox(height: 8),
-          _buildUploadZoneCard(),
-          Row(
-            children: [
-              FilledButton.tonal(
-                onPressed: _createSubfolder,
-                child: Text(_l.newFolder),
-              ),
-              const SizedBox(width: 8),
-              if (_folderPath.length > 1)
-                OutlinedButton(
-                  onPressed: _goFolderUp,
-                  child: Text(_l.goUp),
-                ),
-            ],
-          ),
-          const SizedBox(height: 32),
-          Center(
-            child: Column(mainAxisSize: MainAxisSize.min, children: [
-              Icon(Icons.folder_open_outlined,
-                  size: 64, color: V26.ink300.withValues(alpha: 0.5)),
-              const SizedBox(height: 16),
-              Text(_l.noFiles,
-                  style: const TextStyle(color: V26.ink500,
-                      fontSize: 16, fontWeight: FontWeight.w500)),
-              const SizedBox(height: 8),
-              Text(_l.upload,
-                  style: const TextStyle(color: V26.ink300, fontSize: 13)),
-            ]),
-          ),
-        ],
-      );
-    }
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        _buildFolderBreadcrumb(),
-        const SizedBox(height: 8),
-        _buildUploadZoneCard(),
-        Row(
-          children: [
-            FilledButton.tonal(
-              onPressed: _createSubfolder,
-              child: Text(_l.newFolder),
-            ),
-            const SizedBox(width: 8),
-            if (_folderPath.length > 1)
-              OutlinedButton(
-                onPressed: _goFolderUp,
-                child: Text(_l.goUp),
-              ),
-          ],
-        ),
-        const SizedBox(height: 8),
-        ...subs.map(
-          (fo) => Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child: _FolderListTile(
-              name: fo.name,
-              l: _l,
-              onOpen: () => _openFolder(fo),
-              onDelete: () => _removeFolder(fo),
-            ),
-          ),
-        ),
-        if (here.isNotEmpty) const SizedBox(height: 4),
-        ...here.map(
-          (f) => Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child: _FileCard(
-              file: f,
-              l: _l,
-              isAnalyzing: _analyzing && _activeFileId == f.id,
-              onAnalyze: () => _analyzeFile(f),
-              onDelete: () => _deleteFile(f),
-              onToggleAccess: () => _toggleLawyerAccess(f),
-              onRename: () => _renameFile(f),
-              onAddToCase: _cases.isEmpty ? null : () => _showAddToCase(f),
-              onRemoveFromCase: f.caseId == null ? null : () => _removeFromCase(f),
-              onMoveToFolder: (_folders.isNotEmpty ||
-                      (f.folderId != null && f.folderId!.isNotEmpty))
-                  ? () => unawaited(_moveFileToFolder(f))
-                  : null,
-              onPreview: () => _showPreview(f),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
   Widget _buildFolderBreadcrumb() {
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
@@ -1586,56 +1969,6 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
         ],
       ),
     );
-  }
-
-  Widget _buildCasesTab() {
-    return Column(children: [
-      Padding(
-        padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-        child: Row(children: [
-          Expanded(child: Text(_l.caseFiles,
-              style: const TextStyle(
-                  color: V26.ink900, fontWeight: FontWeight.w700, fontSize: 16))),
-          TextButton.icon(
-            onPressed: _createCase,
-            icon: const Icon(Icons.create_new_folder_outlined,
-                size: 18, color: V26.navy600),
-            label: Text(_l.createCase,
-                style: const TextStyle(color: V26.navy600, fontWeight: FontWeight.w600)),
-          ),
-        ]),
-      ),
-      if (_cases.isEmpty)
-        Expanded(
-          child: Center(
-            child: Column(mainAxisSize: MainAxisSize.min, children: [
-              Icon(Icons.cases_outlined,
-                  size: 64, color: V26.ink300.withValues(alpha: 0.5)),
-              const SizedBox(height: 16),
-              Text(_l.createCase,
-                  style: const TextStyle(color: V26.ink500,
-                      fontSize: 15, fontWeight: FontWeight.w600)),
-            ]),
-          ),
-        )
-      else
-        Expanded(
-          child: ListView.separated(
-            padding: const EdgeInsets.all(16),
-            itemCount: _cases.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 10),
-            itemBuilder: (context, i) {
-              final c = _cases[i];
-              final caseFiles = _files.where((f) => f.caseId == c.id).toList();
-              return _CaseCard(
-                legalCase: c, files: caseFiles, l: _l,
-                onRename: () => _renameCase(c),
-                onDelete: () => _deleteCase(c),
-              );
-            },
-          ),
-        ),
-    ]);
   }
 
   Future<void> _showAddToCase(_VaultFile file) async {
@@ -1683,6 +2016,7 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
   }
 }
 
+// ignore: unused_element
 class _FolderListTile extends StatelessWidget {
   const _FolderListTile({
     required this.name,
@@ -1742,6 +2076,7 @@ class _FolderListTile extends StatelessWidget {
 }
 
 // ── File card widget ─────────────────────────────────────────
+// ignore: unused_element
 class _FileCard extends StatelessWidget {
   final _VaultFile file;
   final _L l;
@@ -1754,7 +2089,14 @@ class _FileCard extends StatelessWidget {
     required this.file, required this.l, required this.isAnalyzing,
     required this.onAnalyze, required this.onDelete,
     required this.onToggleAccess, required this.onRename,
-    this.onAddToCase, this.onRemoveFromCase, this.onMoveToFolder, this.onPreview,
+    // ignore: unused_element_parameter
+    this.onAddToCase,
+    // ignore: unused_element_parameter
+    this.onRemoveFromCase,
+    // ignore: unused_element_parameter
+    this.onMoveToFolder,
+    // ignore: unused_element_parameter
+    this.onPreview,
   });
 
   @override
@@ -2019,6 +2361,200 @@ class _CaseCard extends StatelessWidget {
             ),
         ],
       ]),
+    );
+  }
+}
+
+// ════════════════════════════════════════════════════════════
+//  _Vault2026FileCard — matches `.file-card` in `2026/vault.html`.
+//  Vertical card: icon tile · name · meta · badges.
+// ════════════════════════════════════════════════════════════
+class _Vault2026FileCard extends StatelessWidget {
+  final _VaultFile file;
+  final _L l;
+  final VoidCallback? onTap;
+  final VoidCallback? onMenu;
+  final VoidCallback? onLongPress;
+
+  const _Vault2026FileCard({
+    required this.file,
+    required this.l,
+    this.onTap,
+    this.onMenu,
+    this.onLongPress,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final (icoBg, icoFg) = _iconColors(file);
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(V26.rLg),
+        onTap: onTap,
+        onLongPress: onLongPress,
+        child: Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: V26.surface,
+            borderRadius: BorderRadius.circular(V26.rLg),
+            border: Border.all(color: V26.hairline),
+            boxShadow: V26.shadow1,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: icoBg,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    alignment: Alignment.center,
+                    child: Icon(file.icon, size: 20, color: icoFg),
+                  ),
+                  const Spacer(),
+                  IconButton(
+                    onPressed: onMenu,
+                    icon: const Icon(Icons.more_horiz,
+                        color: V26.ink500, size: 18),
+                    padding: EdgeInsets.zero,
+                    visualDensity: VisualDensity.compact,
+                    constraints:
+                        const BoxConstraints(minWidth: 28, minHeight: 28),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              Text(
+                file.name,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontFamily: V26.sans,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w800,
+                  color: V26.ink900,
+                  height: 1.3,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                '${file.sizeLabel}  ·  ${_timeAgo(file.uploadedAt)}',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontFamily: V26.sans,
+                  fontSize: 11,
+                  color: V26.ink500,
+                ),
+              ),
+              if (_badges().isNotEmpty) ...[
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 4,
+                  runSpacing: 4,
+                  children: _badges(),
+                ),
+              ] else
+                const SizedBox(height: 8),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  List<Widget> _badges() {
+    final out = <Widget>[];
+    if (file.type.startsWith('audio/')) {
+      out.add(const _BadgePill(label: 'תיעוד שיחה', bg: V26.infoSoft, fg: V26.info));
+    }
+    if (file.type.startsWith('image/') || file.type.startsWith('video/')) {
+      out.add(const _BadgePill(
+          label: 'חתום GPS', bg: V26.goldSoft, fg: V26.goldDeep));
+    }
+    if (file.type.contains('pdf')) {
+      // Treat PDFs as potentially "signed" — show badge if filename hints.
+      if (file.name.toLowerCase().contains('signed') ||
+          file.name.contains('חתום')) {
+        out.add(const _BadgePill(label: 'חתום', bg: V26.okSoft, fg: V26.ok));
+      }
+    }
+    if (file.lawyerAccess) {
+      out.add(_BadgePill(
+          label: l.lawyerAccess, bg: V26.infoSoft, fg: V26.info));
+    }
+    if (file.caseId != null) {
+      out.add(_BadgePill(
+          label: l.legalCase, bg: V26.paper2, fg: V26.navy600));
+    }
+    return out;
+  }
+
+  static (Color, Color) _iconColors(_VaultFile f) {
+    if (f.type.contains('pdf')) {
+      return (V26.emergSoft, V26.emerg2);
+    }
+    if (f.type.startsWith('audio/')) {
+      return (V26.infoSoft, V26.info);
+    }
+    if (f.type.startsWith('video/')) {
+      return (V26.navy100, V26.navy600);
+    }
+    if (f.type.startsWith('image/')) {
+      return (V26.goldSoft, V26.goldDeep);
+    }
+    return (V26.paper2, V26.navy600);
+  }
+
+  static String _timeAgo(DateTime dt) {
+    final diff = DateTime.now().difference(dt);
+    if (diff.inDays >= 30) {
+      return 'לפני ${(diff.inDays / 30).floor()} חודש';
+    }
+    if (diff.inDays >= 7) {
+      return 'לפני ${(diff.inDays / 7).floor()} שבועות';
+    }
+    if (diff.inDays >= 1) {
+      return diff.inDays == 1 ? 'אתמול' : 'לפני ${diff.inDays} ימים';
+    }
+    if (diff.inHours >= 1) return 'לפני ${diff.inHours} שעות';
+    if (diff.inMinutes >= 1) return 'לפני ${diff.inMinutes} דק\'';
+    return 'הרגע';
+  }
+}
+
+class _BadgePill extends StatelessWidget {
+  final String label;
+  final Color bg;
+  final Color fg;
+  const _BadgePill({required this.label, required this.bg, required this.fg});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(V26.rPill),
+        border: Border.all(color: fg.withValues(alpha: 0.18)),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontFamily: V26.sans,
+          fontSize: 10,
+          fontWeight: FontWeight.w800,
+          color: fg,
+          letterSpacing: 0.2,
+        ),
+      ),
     );
   }
 }

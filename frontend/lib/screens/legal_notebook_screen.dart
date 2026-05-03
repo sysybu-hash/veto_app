@@ -37,34 +37,77 @@ class _LegalNotebookScreenState extends State<LegalNotebookScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: V26.paper,
-      appBar: AppBar(
-        backgroundColor: V26.surface,
-        foregroundColor: V26.ink900,
-        elevation: 0,
-        title: const Text(
-          'מחברת (Enterprise)',
-          style: TextStyle(
-            fontFamily: V26.serif,
-            color: V26.ink900,
-            fontWeight: FontWeight.w800,
-            fontSize: 18,
-            letterSpacing: -0.2,
+    final isWide =
+        MediaQuery.sizeOf(context).width >= V26AppShell.desktopBreakpoint;
+    return Directionality(
+      textDirection: TextDirection.rtl,
+      child: V26AppShell(
+        destinations: isWide
+            ? V26CitizenNav.destinations('he')
+            : V26CitizenNav.bottomDestinations('he'),
+        currentIndex: isWide ? 4 /* מחברת */ : 0,
+        onDestinationSelected: (i) {
+          final routes =
+              isWide ? V26CitizenNav.routes : V26CitizenNav.bottomRoutes;
+          V26CitizenNav.go(context, routes[i], current: '/legal_notebook');
+        },
+        desktopStatusText: 'מחברת משפטית · Enterprise',
+        desktopTrailing: [
+          V26IconBtn(
+            icon: Icons.refresh,
+            tooltip: 'רענון',
+            onTap: _load ? null : _reload,
           ),
-        ),
-        bottom: const PreferredSize(
-          preferredSize: Size.fromHeight(1),
-          child: Divider(height: 1, color: V26.hairline),
-        ),
-        actions: [
-          IconButton(
-            onPressed: _load ? null : _reload,
-            icon: const Icon(Icons.refresh, color: V26.ink700),
+          const SizedBox(width: 8),
+          V26PillCTA(
+            label: 'מחברת חדשה',
+            icon: Icons.add,
+            onTap: () async {
+              await _api.create();
+              await _reload();
+            },
           ),
         ],
-      ),
-      body: V26Backdrop(
+        mobileAppBar: AppBar(
+          backgroundColor: V26.surface,
+          foregroundColor: V26.ink900,
+          elevation: 0,
+          title: const Text(
+            'מחברת משפטית',
+            style: TextStyle(
+              fontFamily: V26.serif,
+              color: V26.ink900,
+              fontWeight: FontWeight.w800,
+              fontSize: 18,
+              letterSpacing: -0.2,
+            ),
+          ),
+          bottom: const PreferredSize(
+            preferredSize: Size.fromHeight(1),
+            child: Divider(height: 1, color: V26.hairline),
+          ),
+          actions: [
+            IconButton(
+              onPressed: _load ? null : _reload,
+              icon: const Icon(Icons.refresh, color: V26.ink700),
+            ),
+          ],
+        ),
+        floatingAction: isWide
+            ? null
+            : FloatingActionButton.extended(
+                onPressed: () async {
+                  await _api.create();
+                  await _reload();
+                },
+                backgroundColor: V26.navy600,
+                foregroundColor: Colors.white,
+                icon: const Icon(Icons.add),
+                label: const Text('מחברת',
+                    style: TextStyle(
+                        fontFamily: V26.sans, fontWeight: FontWeight.w700)),
+                heroTag: 'nb_ent_fab',
+              ),
         child: _load
             ? const Center(
                 child: CircularProgressIndicator(color: V26.navy600))
@@ -147,18 +190,6 @@ class _LegalNotebookScreenState extends State<LegalNotebookScreen> {
                   );
                 },
               ),
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () async {
-          await _api.create();
-          await _reload();
-        },
-        backgroundColor: V26.navy600,
-        foregroundColor: Colors.white,
-        icon: const Icon(Icons.add),
-        label: const Text('מחברת',
-            style: TextStyle(fontFamily: V26.sans, fontWeight: FontWeight.w700)),
-        heroTag: 'nb_ent_fab',
       ),
     );
   }

@@ -129,23 +129,46 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final code = context.watch<AppLanguageController>().code;
+    final isWide =
+        MediaQuery.sizeOf(context).width >= V26AppShell.desktopBreakpoint;
 
     return Directionality(
       textDirection: AppLanguage.directionOf(code),
-      child: Scaffold(
-        backgroundColor: V26.paper,
-        appBar: AppBar(
-          backgroundColor: const Color(0x18FFFFFF),
+      child: V26AppShell(
+        destinations: isWide
+            ? V26CitizenNav.destinations(code)
+            : V26CitizenNav.bottomDestinations(code),
+        currentIndex: isWide ? 0 /* dummy */ : 3 /* פרופיל */,
+        onDestinationSelected: (i) {
+          final routes = isWide
+              ? V26CitizenNav.routes
+              : V26CitizenNav.bottomRoutes;
+          V26CitizenNav.go(context, routes[i], current: '/profile');
+        },
+        desktopStatusText: _t(code, 'title'),
+        desktopTrailing: const [
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 12),
+            child: Center(child: AppLanguageMenu(compact: true)),
+          ),
+        ],
+        mobileAppBar: AppBar(
+          backgroundColor: V26.surface,
           elevation: 0,
           shadowColor: Colors.transparent,
           surfaceTintColor: Colors.transparent,
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new_rounded, color: V26.ink900, size: 20),
-            onPressed: () => Navigator.of(context).pop(),
+            icon: const Icon(Icons.arrow_back_ios_new_rounded,
+                color: V26.ink900, size: 20),
+            onPressed: () => Navigator.of(context).maybePop(),
           ),
           title: Text(
             _t(code, 'title'),
-            style: const TextStyle(color: V26.ink900, fontWeight: FontWeight.w800, fontSize: 18),
+            style: const TextStyle(
+                color: V26.ink900,
+                fontFamily: V26.serif,
+                fontWeight: FontWeight.w800,
+                fontSize: 18),
           ),
           centerTitle: true,
           actions: const [
@@ -159,8 +182,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             child: Divider(height: 1, color: V26.hairline),
           ),
         ),
-        body: V26Backdrop(
-          child: _loading
+        child: _loading
             ? const Center(
                 child: CircularProgressIndicator(
                     color: V26.navy600))
@@ -330,7 +352,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                 ),
               ),
-        ),
       ),
     );
   }
