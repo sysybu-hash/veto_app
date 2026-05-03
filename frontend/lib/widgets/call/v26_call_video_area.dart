@@ -81,8 +81,10 @@ class V26VideoPlaceholder extends StatelessWidget {
   }
 }
 
-/// The core video surface. Uses [AgoraVideoView] once there's a remote uid
-/// and the remote has started publishing; falls back to placeholder otherwise.
+/// The core video surface. Uses [AgoraVideoView] for the remote when their
+/// stream is decoding; until then, with [mirrorLocalUntilRemote], fills the
+/// stage with the **local** camera so Web/solo testers are not stuck on an
+/// empty placeholder (two `uid: 0` views are not allowed — hide PIP in that case).
 class V26CallVideoArea extends StatelessWidget {
   const V26CallVideoArea({
     super.key,
@@ -92,6 +94,8 @@ class V26CallVideoArea extends StatelessWidget {
     required this.hasRemoteVideo,
     required this.peerName,
     required this.language,
+    this.mirrorLocalUntilRemote = false,
+    this.videoPublishMuted = false,
   });
 
   final RtcEngine? engine;
@@ -100,33 +104,96 @@ class V26CallVideoArea extends StatelessWidget {
   final bool hasRemoteVideo;
   final String peerName;
   final String language;
+  final bool mirrorLocalUntilRemote;
+  final bool videoPublishMuted;
 
   @override
   Widget build(BuildContext context) {
     final eng = engine;
     final uid = remoteUid;
-    if (eng == null || uid == null || !hasRemoteVideo) {
-      return Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [V26.navy700, V26.ink900],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
+    final showRemote = eng != null && uid != null && hasRemoteVideo;
+    if (showRemote) {
+      return ColoredBox(
+        color: Colors.black,
+        child: AgoraVideoView(
+          key: ValueKey('remote-$uid'),
+          controller: VideoViewController.remote(
+            rtcEngine: eng,
+            canvas: VideoCanvas(
+              uid: uid,
+              renderMode: RenderModeType.renderModeHidden,
+            ),
+            connection: RtcConnection(channelId: channelId),
           ),
         ),
-        child: V26VideoPlaceholder(peerName: peerName, language: language),
+      );
+    }
+    if (mirrorLocalUntilRemote && eng != null && !videoPublishMuted) {
+      return Stack(
+        fit: StackFit.expand,
+        children: [
+          ColoredBox(
+            color: Colors.black,
+            child: AgoraVideoView(
+              key: const ValueKey('local-full'),
+              controller: VideoViewController(
+                rtcEngine: eng,
+                canvas: const VideoCanvas(
+                  uid: 0,
+                  renderMode: RenderModeType.renderModeHidden,
+                  mirrorMode: VideoMirrorModeType.videoMirrorModeEnabled,
+                ),
+              ),
+            ),
+          ),
+          if (uid != null && !hasRemoteVideo)
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: IgnorePointer(
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Colors.transparent,
+                        Colors.black.withValues(alpha: 0.55),
+                      ],
+                    ),
+                  ),
+                  child: SafeArea(
+                    top: false,
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 24, 16, 20),
+                      child: Text(
+                        CallI18n.waitingForPeerVideo.t(language),
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          color: Colors.white70,
+                          fontFamily: V26.sans,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+        ],
       );
     }
     return Container(
-      color: Colors.black,
-      child: AgoraVideoView(
-        key: ValueKey('remote-$uid'),
-        controller: VideoViewController.remote(
-          rtcEngine: eng,
-          canvas: VideoCanvas(uid: uid),
-          connection: RtcConnection(channelId: channelId),
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [V26.navy700, V26.ink900],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
       ),
+      child: V26VideoPlaceholder(peerName: peerName, language: language),
     );
   }
 }
@@ -178,12 +245,16 @@ class V26CallLocalPip extends StatelessWidget {
           ],
         ),
       );
-    } else if (eng != null && previewOk) {
+    } else if (eng != null && !videoMuted && (previewOk || kIsWeb)) {
       body = AgoraVideoView(
         key: const ValueKey('local-pip'),
         controller: VideoViewController(
           rtcEngine: eng,
-          canvas: const VideoCanvas(uid: 0),
+          canvas: const VideoCanvas(
+            uid: 0,
+            renderMode: RenderModeType.renderModeHidden,
+            mirrorMode: VideoMirrorModeType.videoMirrorModeEnabled,
+          ),
         ),
       );
     } else {

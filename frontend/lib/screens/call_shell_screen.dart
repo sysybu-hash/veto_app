@@ -748,6 +748,8 @@ class _CallShellScreenState extends State<CallShellScreen>
 
   Widget _buildVideoStage(_CallArgs a, bool wideSide) {
     final pipPadEnd = wideSide ? 360.0 : 16.0;
+    final showRemoteVideo =
+        _agora.remoteUid != null && _agora.hasRemoteVideo;
     return Stack(
       children: [
         Positioned.fill(
@@ -758,18 +760,21 @@ class _CallShellScreenState extends State<CallShellScreen>
             hasRemoteVideo: _agora.hasRemoteVideo,
             peerName: a.peerLabel,
             language: a.language,
+            mirrorLocalUntilRemote: a.wantVideo,
+            videoPublishMuted: _agora.videoPublishMuted,
           ),
         ),
-        PositionedDirectional(
-          top: 86,
-          end: pipPadEnd,
-          child: V26CallLocalPip(
-            engine: _agora.engine,
-            previewOk: _agora.localPreviewOk,
-            language: a.language,
-            videoMuted: _agora.videoPublishMuted,
+        if (showRemoteVideo)
+          PositionedDirectional(
+            top: 86,
+            end: pipPadEnd,
+            child: V26CallLocalPip(
+              engine: _agora.engine,
+              previewOk: _agora.localPreviewOk,
+              language: a.language,
+              videoMuted: _agora.videoPublishMuted,
+            ),
           ),
-        ),
       ],
     );
   }
