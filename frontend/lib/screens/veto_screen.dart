@@ -1763,16 +1763,16 @@ class _VetoScreenState extends State<VetoScreen> {
 
   Widget _heroHeadlineDesktop() {
     if (_langKey == 'he') {
-      return Text.rich(
+      return const Text.rich(
         TextSpan(
-          style: const TextStyle(
+          style: TextStyle(
             fontFamily: V26.serif,
             fontSize: 30,
             height: 1.18,
             color: V26.ink900,
             fontWeight: FontWeight.w700,
           ),
-          children: const [
+          children: [
             TextSpan(text: 'כשהדקה הראשונה\nקובעת את '),
             TextSpan(
               text: 'כל היתר',
@@ -1785,10 +1785,10 @@ class _VetoScreenState extends State<VetoScreen> {
       );
     }
     if (_langKey == 'ru') {
-      return Text(
+      return const Text(
         'Когда первая минута решает всё остальное.',
         textAlign: TextAlign.start,
-        style: const TextStyle(
+        style: TextStyle(
           fontFamily: V26.serif,
           fontSize: 28,
           height: 1.2,
@@ -1797,16 +1797,16 @@ class _VetoScreenState extends State<VetoScreen> {
         ),
       );
     }
-    return Text.rich(
+    return const Text.rich(
       TextSpan(
-        style: const TextStyle(
+        style: TextStyle(
           fontFamily: V26.serif,
           fontSize: 28,
           height: 1.2,
           color: V26.ink900,
           fontWeight: FontWeight.w700,
         ),
-        children: const [
+        children: [
           TextSpan(text: 'When the first minute decides '),
           TextSpan(
             text: 'everything else',
@@ -1821,16 +1821,16 @@ class _VetoScreenState extends State<VetoScreen> {
 
   Widget _heroHeadlineMobile() {
     if (_langKey == 'he') {
-      return Text.rich(
+      return const Text.rich(
         TextSpan(
-          style: const TextStyle(
+          style: TextStyle(
             fontFamily: V26.serif,
             fontSize: 17,
             height: 1.35,
             color: V26.ink900,
             fontWeight: FontWeight.w600,
           ),
-          children: const [
+          children: [
             TextSpan(text: 'עורך דין מטעמך — '),
             TextSpan(
               text: 'תוך דקות',
@@ -1843,16 +1843,16 @@ class _VetoScreenState extends State<VetoScreen> {
       );
     }
     if (_langKey == 'ru') {
-      return Text.rich(
+      return const Text.rich(
         TextSpan(
-          style: const TextStyle(
+          style: TextStyle(
             fontFamily: V26.serif,
             fontSize: 17,
             height: 1.35,
             color: V26.ink900,
             fontWeight: FontWeight.w600,
           ),
-          children: const [
+          children: [
             TextSpan(text: 'Адвокат на вашей стороне — '),
             TextSpan(
               text: 'за минуты',
@@ -1864,16 +1864,16 @@ class _VetoScreenState extends State<VetoScreen> {
         textAlign: TextAlign.center,
       );
     }
-    return Text.rich(
+    return const Text.rich(
       TextSpan(
-        style: const TextStyle(
+        style: TextStyle(
           fontFamily: V26.serif,
           fontSize: 17,
           height: 1.35,
           color: V26.ink900,
           fontWeight: FontWeight.w600,
         ),
-        children: const [
+        children: [
           TextSpan(text: 'A lawyer on your side — '),
           TextSpan(
             text: 'in minutes',
