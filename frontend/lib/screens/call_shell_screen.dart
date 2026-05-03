@@ -135,6 +135,8 @@ class _CallShellScreenState extends State<CallShellScreen>
 
   final List<CallChatLine> _chatLines = <CallChatLine>[];
   bool _socketRegistered = false;
+  /// Prevents duplicate `join-call-room` if `_startConnecting` is ever re-entered.
+  bool _joinCallRoomEmitted = false;
   bool _leaving = false;
   bool _remoteHangup = false;
   int _connectElapsed = 0;
@@ -219,12 +221,15 @@ class _CallShellScreenState extends State<CallShellScreen>
         return;
       }
       _registerSockets();
-      socket.emit('join-call-room', {
-        'roomId': args.channelId,
-        'callType': args.chatOnly
-            ? 'chat'
-            : (args.wantVideo ? 'video' : 'audio'),
-      });
+      if (!_joinCallRoomEmitted) {
+        socket.emit('join-call-room', {
+          'roomId': args.channelId,
+          'callType': args.chatOnly
+              ? 'chat'
+              : (args.wantVideo ? 'video' : 'audio'),
+        });
+        _joinCallRoomEmitted = true;
+      }
 
       // Chat-only: skip Agora entirely, transition to active as soon as the
       // socket reports the peer is ready (chat-ready) — or after the join
@@ -405,6 +410,7 @@ class _CallShellScreenState extends State<CallShellScreen>
   Future<void> _endCall({bool fromRemote = false}) async {
     if (_leaving) return;
     _leaving = true;
+    _joinCallRoomEmitted = false;
     _connectTicker?.cancel();
     _joinWatchdog?.cancel();
     _unregisterSockets();
@@ -542,6 +548,7 @@ class _CallShellScreenState extends State<CallShellScreen>
   Future<void> _retryFromError() async {
     final args = _args;
     if (args == null) return;
+    _joinCallRoomEmitted = false;
     setState(() {
       _activeError = null;
       _phase = CallShellPhase.connecting;
