@@ -166,15 +166,23 @@ class V26CallVideoArea extends StatelessWidget {
                   child: SafeArea(
                     top: false,
                     child: Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 24, 16, 20),
+                      padding: EdgeInsets.fromLTRB(
+                        16,
+                        24,
+                        16,
+                        MediaQuery.of(context).padding.bottom + 112,
+                      ),
                       child: Text(
                         CallI18n.waitingForPeerVideo.t(language),
                         textAlign: TextAlign.center,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
                           color: Colors.white70,
                           fontFamily: V26.sans,
-                          fontSize: 14,
+                          fontSize: 13,
                           fontWeight: FontWeight.w600,
+                          height: 1.25,
                         ),
                       ),
                     ),

@@ -99,9 +99,9 @@ class CallI18n {
     ru: 'Ожидание собеседника…',
   );
   static const waitingForPeerVideo = CallCopy(
-    he: 'ממתין לווידאו של הצד השני…',
-    en: 'Waiting for the other party’s video…',
-    ru: 'Ждём видео собеседника…',
+    he: 'ממתין לווידאו מרוחק…',
+    en: 'Waiting for remote video…',
+    ru: 'Ждём удалённое видео…',
   );
   static const cameraLabel = CallCopy(he: 'המצלמה שלך', en: 'Your camera', ru: 'Ваша камера');
   static const cameraOffLabel = CallCopy(
