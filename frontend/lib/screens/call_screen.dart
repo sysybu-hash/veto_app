@@ -9,7 +9,7 @@ import 'dart:developer' as developer;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../core/theme/veto_theme.dart';
+import '../core/theme/veto_2026.dart';
 import '../services/socket_service.dart';
 import '../services/vault_save_queue.dart';
 
@@ -327,7 +327,7 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
     return Container(
       width: double.infinity,
       height: double.infinity,
-      decoration: VetoDecorations.gradientBg(),
+      decoration: const BoxDecoration(color: V26.paper),
       child: Column(
         children: [
           Expanded(
@@ -548,12 +548,12 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: VetoColors.error.withValues(alpha: 0.45)),
+        border: Border.all(color: V26.emerg.withValues(alpha: 0.45)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.error_outline_rounded, color: VetoColors.error, size: 32),
+          const Icon(Icons.error_outline_rounded, color: V26.emerg, size: 32),
           const SizedBox(height: 10),
           Text(msg, textAlign: TextAlign.center, style: const TextStyle(color: Colors.white70)),
           const SizedBox(height: 16),
@@ -574,14 +574,14 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              color: VetoColors.vetoRedSoft,
+              color: V26.emergBg,
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: VetoColors.vetoRed.withValues(alpha: 0.3)),
+              border: Border.all(color: V26.emerg.withValues(alpha: 0.3)),
             ),
             child: const Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.shield, color: VetoColors.vetoRed, size: 14),
+                Icon(Icons.shield, color: V26.emerg, size: 14),
                 SizedBox(width: 6),
                 Text(
                   'VETO',
@@ -589,7 +589,7 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
                     fontFamily: 'Heebo',
                     fontSize: 12,
                     fontWeight: FontWeight.w800,
-                    color: VetoColors.vetoRed,
+                    color: V26.emerg,
                     letterSpacing: 2,
                   ),
                 ),
@@ -611,9 +611,9 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
-                color: VetoColors.success.withValues(alpha: 0.15),
+                color: V26.ok.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: VetoColors.success.withValues(alpha: 0.3)),
+                border: Border.all(color: V26.ok.withValues(alpha: 0.3)),
               ),
               child: Text(
                 _formattedChatDuration,
@@ -621,7 +621,7 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
                   fontFamily: 'Heebo',
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
-                  color: VetoColors.success,
+                  color: V26.ok,
                 ),
               ),
             ),
@@ -643,10 +643,21 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
               height: 72,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: VetoColors.vetoRed,
-                boxShadow: VetoDecorations.vetoGlow(intensity: 0.8),
+                color: V26.emerg,
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFFFF3B3B).withValues(alpha: 0.36),
+                    blurRadius: 32,
+                    spreadRadius: 3.2,
+                  ),
+                  BoxShadow(
+                    color: const Color(0xFFFF3B3B).withValues(alpha: 0.16),
+                    blurRadius: 64,
+                    spreadRadius: 9.6,
+                  ),
+                ],
               ),
-              child: const Icon(Icons.call_end, color: VetoColors.white, size: 32),
+              child: const Icon(Icons.call_end, color: Colors.white, size: 32),
             ),
           ),
           const SizedBox(height: 8),
@@ -655,7 +666,7 @@ class _CallScreenState extends State<CallScreen> with TickerProviderStateMixin {
             style: const TextStyle(
               fontFamily: 'Heebo',
               fontSize: 12,
-              color: VetoColors.silverDim,
+              color: V26.ink200,
             ),
           ),
         ],

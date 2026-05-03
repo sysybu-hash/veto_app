@@ -660,7 +660,7 @@ class V26OptGrid extends StatelessWidget {
     }
     return LayoutBuilder(
       builder: (context, constraints) {
-        final columnCount = 2;
+        const columnCount = 2;
         final itemW = (constraints.maxWidth - gap * (columnCount - 1)) /
             columnCount;
         final rows = <Widget>[];

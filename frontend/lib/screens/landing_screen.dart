@@ -1529,7 +1529,7 @@ class _PricingSection extends StatelessWidget {
         const SizedBox(height: 8),
         Text(
           t(code, 'pricingIntro'),
-          style: TextStyle(
+          style: const TextStyle(
             fontFamily: V26.sans,
             fontSize: 14,
             height: 1.5,
