@@ -117,7 +117,7 @@
 ### URL אחד, שירות אחד (פרודקשן)
 
 - **הדומיין הציבורי** של API מופיע ב־**Render → Web Service** תחת **Settings** (Default **onrender.com** hostname) או **Custom Domains**.  
-  ה־`PUBLIC_API_BASE` / `VETO_PUBLIC_BASE` (אם בשימוש), **GitHub Actions** `VETO_API_BASE` ([`.github/workflows/deploy.yml`](../.github/workflows/deploy.yml)), וה־`AppConfig` ב־[app_config.dart](../frontend/lib/config/app_config.dart) חייבים **לאותו origin** כמו **Public URL** ב־Render (למשל `https://veto-app-new.onrender.com` — בלי `/api`). שם השירות ב־Render (למשל `veto_legal`) **לא** תמיד שווה לתת־הדומיין ב־`onrender.com` — תמיד לבדוק ב־Dashboard.
+  ה־`PUBLIC_API_BASE` / `VETO_PUBLIC_BASE` (אם בשימוש), **GitHub Actions** `VETO_API_BASE` (ב־[`.github/workflows/ci.yml`](../.github/workflows/ci.yml) — job `deploy-vercel`), וה־`AppConfig` ב־[app_config.dart](../frontend/lib/config/app_config.dart) חייבים **לאותו origin** כמו **Public URL** ב־Render (למשל `https://veto-app-new.onrender.com` — בלי `/api`). שם השירות ב־Render (למשל `veto_legal`) **לא** תמיד שווה לתת־הדומיין ב־`onrender.com` — תמיד לבדוק ב־Dashboard.
 - **ללא שני “Live”** לאותו מוצר: אם יש **שני** Web Services שמייצרים API (למשל שריט ישן + Blueprint מ־`render.yaml`), בחר אחד לפרוד, העתק env, וכבה/מחק את השני — אחרת לקוחות/בניית web עלולה לפנות ל־**URL הלא־נכון**.
 
 ---
