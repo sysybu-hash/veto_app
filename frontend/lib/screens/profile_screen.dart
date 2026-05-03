@@ -512,7 +512,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  // ── Subscription block (static copy, CTA → /admin_subscriptions) ──
+  // ── Subscription block: admins → console; everyone else → app settings ──
   Widget _buildSubscriptionBlock(String code) {
     return V26Card(
       padding: const EdgeInsets.all(18),
@@ -550,8 +550,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
             alignment: AlignmentDirectional.centerStart,
             child: V26CTA(
               _t(code, 'subscriptionCta'),
-              onPressed: () =>
-                  Navigator.pushNamed(context, '/admin_subscriptions'),
+              onPressed: () {
+                if (_role == 'admin') {
+                  Navigator.pushNamed(context, '/admin_subscriptions');
+                } else {
+                  Navigator.pushNamed(context, '/settings');
+                }
+              },
               variant: V26CtaVariant.ghost,
             ),
           ),
