@@ -13,4 +13,11 @@ void main() {
     await tester.pump(const Duration(seconds: 1));
     expect(find.byType(OnboardingWizardScreen), findsOneWidget);
   });
+
+  testWidgets('wizard step 1 shows both citizen and lawyer tiles', (tester) async {
+    await pumpVetoTestApp(tester, initialRoute: '/wizard_home');
+    await tester.pumpAndSettle();
+    expect(find.text('אזרח'), findsWidgets);
+    expect(find.text('עו״ד'), findsWidgets);
+  });
 }

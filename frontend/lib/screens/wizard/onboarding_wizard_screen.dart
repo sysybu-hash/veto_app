@@ -635,37 +635,46 @@ class _OnboardingWizardScreenState extends State<OnboardingWizardScreen> {
       padding: compact
           ? const EdgeInsets.fromLTRB(16, 18, 16, 18)
           : const EdgeInsets.fromLTRB(56, 32, 56, 32),
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 920),
-          child: V26QuizCard(
-            title: _buildQuestionHeadline(code),
-            lede: _buildQuestionLede(code),
-            compact: compact,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                V26OptGrid(
-                  compact: compact,
-                  options: [
-                    for (final o in opts)
-                      V26OptTile(
-                        icon: o.icon,
-                        title: o.t(code),
-                        description: o.d(code),
-                        selected: selected == o.id,
-                        onTap: () => _select(o.id),
-                      ),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          const maxCard = 920.0;
+          final cardWidth = constraints.maxWidth > maxCard
+              ? maxCard
+              : constraints.maxWidth;
+          return Align(
+            alignment: Alignment.topCenter,
+            child: SizedBox(
+              width: cardWidth,
+              child: V26QuizCard(
+                title: _buildQuestionHeadline(code),
+                lede: _buildQuestionLede(code),
+                compact: compact,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    V26OptGrid(
+                      compact: compact,
+                      options: [
+                        for (final o in opts)
+                          V26OptTile(
+                            icon: o.icon,
+                            title: o.t(code),
+                            description: o.d(code),
+                            selected: selected == o.id,
+                            onTap: () => _select(o.id),
+                          ),
+                      ],
+                    ),
+                    if (_step == 2) ...[
+                      const SizedBox(height: 24),
+                      _calloutInfo(code),
+                    ],
                   ],
                 ),
-                if (_step == 2) ...[
-                  const SizedBox(height: 24),
-                  _calloutInfo(code),
-                ],
-              ],
+              ),
             ),
-          ),
-        ),
+          );
+        },
       ),
     );
   }
@@ -824,32 +833,41 @@ class _OnboardingWizardScreenState extends State<OnboardingWizardScreen> {
       padding: compact
           ? const EdgeInsets.fromLTRB(16, 18, 16, 18)
           : const EdgeInsets.fromLTRB(56, 32, 56, 32),
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 920),
-          child: V26QuizCard(
-            title: code == 'he'
-                ? 'הכל מוכן'
-                : (code == 'ru' ? 'Всё готово' : 'All set'),
-            lede: code == 'he'
-                ? 'סיכום ההגדרות שלך — תוכל לשנות בכל זמן.'
-                : (code == 'ru'
-                    ? 'Сводка настроек — можно поменять позже.'
-                    : 'Summary of your settings — change any time.'),
-            compact: compact,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                for (int i = 0; i < items.length; i++) ...[
-                  if (i > 0) const SizedBox(height: 10),
-                  _summaryTile(items[i]),
-                ],
-                const SizedBox(height: 18),
-                _calloutSuccess(code),
-              ],
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          const maxCard = 920.0;
+          final cardWidth = constraints.maxWidth > maxCard
+              ? maxCard
+              : constraints.maxWidth;
+          return Align(
+            alignment: Alignment.topCenter,
+            child: SizedBox(
+              width: cardWidth,
+              child: V26QuizCard(
+                title: code == 'he'
+                    ? 'הכל מוכן'
+                    : (code == 'ru' ? 'Всё готово' : 'All set'),
+                lede: code == 'he'
+                    ? 'סיכום ההגדרות שלך — תוכל לשנות בכל זמן.'
+                    : (code == 'ru'
+                        ? 'Сводка настроек — можно поменять позже.'
+                        : 'Summary of your settings — change any time.'),
+                compact: compact,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    for (int i = 0; i < items.length; i++) ...[
+                      if (i > 0) const SizedBox(height: 10),
+                      _summaryTile(items[i]),
+                    ],
+                    const SizedBox(height: 18),
+                    _calloutSuccess(code),
+                  ],
+                ),
+              ),
             ),
-          ),
-        ),
+          );
+        },
       ),
     );
   }

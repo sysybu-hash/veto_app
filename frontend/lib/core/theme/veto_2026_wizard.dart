@@ -349,6 +349,7 @@ class _WizardRailStepTile extends StatelessWidget {
                 const SizedBox(height: 3),
                 Text(
                   subtitle,
+                  softWrap: true,
                   style: const TextStyle(
                     fontFamily: V26.sans,
                     fontSize: 11.5,
@@ -673,18 +674,35 @@ class V26OptGrid extends StatelessWidget {
             ],
           );
         }
-        final itemW = (maxW - gap * (columnCount - 1)) / columnCount;
-        // Use Wrap instead of IntrinsicHeight + Row — the latter can mis-measure
-        // in scroll/RTL contexts so only the first column paints (e.g. role step).
-        return Wrap(
-          spacing: gap,
-          runSpacing: gap,
-          children: [
-            for (final o in options)
-              SizedBox(
-                width: itemW,
-                child: o,
+        final rows = <Widget>[];
+        for (int i = 0; i < options.length; i += columnCount) {
+          final rowChildren = <Widget>[];
+          for (int j = 0; j < columnCount; j++) {
+            if (j > 0) rowChildren.add(SizedBox(width: gap));
+            final idx = i + j;
+            rowChildren.add(
+              Expanded(
+                child: idx < options.length
+                    ? options[idx]
+                    : const SizedBox.shrink(),
               ),
+            );
+          }
+          rows.add(
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: rowChildren,
+            ),
+          );
+        }
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            for (int r = 0; r < rows.length; r++) ...[
+              if (r > 0) SizedBox(height: gap),
+              rows[r],
+            ],
           ],
         );
       },
