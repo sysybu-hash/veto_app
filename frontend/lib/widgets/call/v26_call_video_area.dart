@@ -92,6 +92,7 @@ class V26CallVideoArea extends StatelessWidget {
     super.key,
     required this.engine,
     required this.channelId,
+    required this.localUid,
     required this.remoteUid,
     required this.hasRemoteVideo,
     required this.peerName,
@@ -102,6 +103,10 @@ class V26CallVideoArea extends StatelessWidget {
 
   final RtcEngine? engine;
   final String channelId;
+  /// Must match the uid used in [RtcEngine.joinChannel] so the Web renderer
+  /// binds the remote canvas to the correct connection (channelId alone is
+  /// not always enough for Agora Web / Iris).
+  final int localUid;
   final int? remoteUid;
   final bool hasRemoteVideo;
   final String peerName;
@@ -132,7 +137,10 @@ class V26CallVideoArea extends StatelessWidget {
               uid: uid,
               renderMode: RenderModeType.renderModeHidden,
             ),
-            connection: RtcConnection(channelId: channelId),
+            connection: RtcConnection(
+              channelId: channelId,
+              localUid: localUid == 0 ? null : localUid,
+            ),
           ),
         ),
       );

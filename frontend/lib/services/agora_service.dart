@@ -443,6 +443,10 @@ class AgoraService extends ChangeNotifier {
     return RtcEngineEventHandler(
       onJoinChannelSuccess: (RtcConnection conn, int elapsed) {
         _retryAttempts = 0;
+        final lu = conn.localUid;
+        if (lu != null && lu != 0) {
+          _localUid = lu;
+        }
         _setPhase(CallConnectionPhase.connected);
         if (kIsWeb && _wantsVideo && !_videoMuted) {
           unawaited(_webStartPreviewSafe());
@@ -450,6 +454,10 @@ class AgoraService extends ChangeNotifier {
       },
       onRejoinChannelSuccess: (RtcConnection conn, int elapsed) {
         _retryAttempts = 0;
+        final lu = conn.localUid;
+        if (lu != null && lu != 0) {
+          _localUid = lu;
+        }
         _setPhase(CallConnectionPhase.connected);
         if (kIsWeb && _wantsVideo && !_videoMuted) {
           unawaited(_webStartPreviewSafe());
@@ -462,6 +470,7 @@ class AgoraService extends ChangeNotifier {
         }
         _remoteUid = remoteUid;
         notifyListeners();
+        unawaited(_ensureRemoteVideoSubscribed(remoteUid));
       },
       onUserOffline:
           (RtcConnection conn, int remoteUid, UserOfflineReasonType reason) {
@@ -669,6 +678,36 @@ class AgoraService extends ChangeNotifier {
         _emitError(CallErrorKind.connectionFailed, 'retry: $err');
       }
     });
+  }
+
+  /// Web (and some native stacks) occasionally miss the default subscribe
+  /// path until the subscriber explicitly resumes the remote video track.
+  Future<void> _ensureRemoteVideoSubscribed(int remoteUid) async {
+    final eng = _engine;
+    if (eng == null) return;
+    try {
+      await eng.muteRemoteVideoStream(uid: remoteUid, mute: false);
+    } catch (err, st) {
+      developer.log(
+        'muteRemoteVideoStream',
+        name: 'VETO.Agora',
+        error: err,
+        stackTrace: st,
+      );
+    }
+    try {
+      await eng.setRemoteVideoStreamType(
+        uid: remoteUid,
+        streamType: VideoStreamType.videoStreamHigh,
+      );
+    } catch (err, st) {
+      developer.log(
+        'setRemoteVideoStreamType',
+        name: 'VETO.Agora',
+        error: err,
+        stackTrace: st,
+      );
+    }
   }
 
   Future<void> _webStartPreviewSafe() async {
