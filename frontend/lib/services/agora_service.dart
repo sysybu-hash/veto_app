@@ -474,13 +474,14 @@ class AgoraService extends ChangeNotifier {
         }
         switch (state) {
           case RemoteVideoState.remoteVideoStateStarting:
+            // Do not treat "starting" as playable — the UI would swap to the
+            // remote [AgoraVideoView] before any frame exists → black stage on
+            // Web while the local PIP still shows (looks like "no video").
+            break;
           case RemoteVideoState.remoteVideoStateDecoding:
           case RemoteVideoState.remoteVideoStateFrozen:
             _remoteVideoPlaying = true;
-            if (state == RemoteVideoState.remoteVideoStateDecoding ||
-                state == RemoteVideoState.remoteVideoStateFrozen) {
-              _remoteVideoHadRenderableFrame = true;
-            }
+            _remoteVideoHadRenderableFrame = true;
             break;
           case RemoteVideoState.remoteVideoStateFailed:
             _remoteVideoPlaying = false;
