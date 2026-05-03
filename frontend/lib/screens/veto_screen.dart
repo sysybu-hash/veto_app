@@ -1119,27 +1119,34 @@ class _VetoScreenState extends State<VetoScreen> {
       );
     }
 
-    // Mobile: keep legacy bottom-nav shell (4 tabs + hamburger appBar).
+    // Mobile: use V26AppShell so the bottom bar matches the five canonical
+    // citizen destinations (Home · Chat · Files · Map · Profile). The Home
+    // tab stays local to this screen; every other destination navigates to
+    // its dedicated route. The existing app-bar (brand + hamburger) rides on
+    // as `mobileAppBar`.
     return Directionality(
       textDirection: isRtl ? TextDirection.rtl : TextDirection.ltr,
-      child: Scaffold(
-        backgroundColor: V26.paper,
-        extendBodyBehindAppBar: true,
-        appBar: _buildAppBar(isAdmin),
-        body: V26Backdrop(
-          child: SafeArea(
-            child: RepaintBoundary(
-              child: _tab == 0
-                  ? _buildWizardTab(isAdmin, isRtl)
-                  : _tab == 1
-                      ? _buildChatTab(isRtl)
-                      : _tab == 2
-                          ? _buildFilesTab(isRtl)
-                          : _buildProfileTab(isRtl),
-            ),
+      child: V26AppShell(
+        destinations: V26CitizenNav.bottomDestinations(_langKey),
+        currentIndex: 0, // בית — this is the home hub
+        onDestinationSelected: (i) {
+          final routes = V26CitizenNav.bottomRoutes;
+          if (i == 0) return; // already on Home
+          Navigator.of(context)
+              .pushReplacementNamed(routes[i.clamp(0, routes.length - 1)]);
+        },
+        mobileAppBar: _buildAppBar(isAdmin),
+        child: SafeArea(
+          child: RepaintBoundary(
+            child: _tab == 0
+                ? _buildWizardTab(isAdmin, isRtl)
+                : _tab == 1
+                    ? _buildChatTab(isRtl)
+                    : _tab == 2
+                        ? _buildFilesTab(isRtl)
+                        : _buildProfileTab(isRtl),
           ),
         ),
-        bottomNavigationBar: _buildNavBar(isRtl),
       ),
     );
   }
@@ -1415,58 +1422,6 @@ class _VetoScreenState extends State<VetoScreen> {
         ),
       );
 
-  // ── Bottom Nav: 4 tabs ─────────────────────────────────────
-  Widget _buildNavBar(bool isRtl) => Container(
-        decoration: BoxDecoration(
-          color: V26.surface,
-          border: const Border(top: BorderSide(color: V26.hairline)),
-          boxShadow: [
-            BoxShadow(
-              color: V26.ink900.withValues(alpha: 0.06),
-              blurRadius: 18,
-              offset: const Offset(0, -4),
-            ),
-          ],
-        ),
-        child: NavigationBar(
-          height: 68,
-          selectedIndex: _tab,
-          backgroundColor: Colors.transparent,
-          surfaceTintColor: Colors.transparent,
-          indicatorColor: V26.navy600.withValues(alpha: 0.12),
-          labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
-          onDestinationSelected: (i) => setState(() => _tab = i),
-          destinations: [
-            NavigationDestination(
-              icon: const Icon(Icons.home_outlined, color: V26.ink500, size: 24),
-              selectedIcon:
-                  const Icon(Icons.home_rounded, color: V26.navy600, size: 24),
-              label: isRtl ? 'בית' : 'Home',
-            ),
-            NavigationDestination(
-              icon: const Icon(Icons.chat_bubble_outline_rounded,
-                  color: V26.ink500, size: 24),
-              selectedIcon: const Icon(Icons.chat_bubble_rounded,
-                  color: V26.navy600, size: 24),
-              label: isRtl ? "צ'אט" : 'Chat',
-            ),
-            NavigationDestination(
-              icon: const Icon(Icons.folder_outlined, color: V26.ink500, size: 24),
-              selectedIcon:
-                  const Icon(Icons.folder_rounded, color: V26.navy600, size: 24),
-              label: isRtl ? 'קבצים' : 'Files',
-            ),
-            NavigationDestination(
-              icon: const Icon(Icons.person_outline_rounded,
-                  color: V26.ink500, size: 24),
-              selectedIcon:
-                  const Icon(Icons.person_rounded, color: V26.navy600, size: 24),
-              label: isRtl ? 'פרופיל' : 'Profile',
-            ),
-          ],
-        ),
-      );
-
   // ── Files tab placeholder (routes to file vault) ───────────
   Widget _buildFilesTab(bool isRtl) => Center(
     child: Column(mainAxisSize: MainAxisSize.min, children: [
@@ -1545,7 +1500,7 @@ class _VetoScreenState extends State<VetoScreen> {
         builder: (context, constraints) {
           final w = constraints.maxWidth;
           final compact = w < 600;
-          final isDesktop = w >= 900;
+          final isDesktop = w >= V26AppShell.desktopBreakpoint;
           final hPad = compact ? 14.0 : (isDesktop ? 32.0 : 20.0);
           final maxW = compact
               ? double.infinity
@@ -1613,75 +1568,41 @@ class _VetoScreenState extends State<VetoScreen> {
       );
 
   // ── Status badge pill (2026 surface) ───────────────────────
-  Widget _statusBadge() => Center(
-    child: Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
-      decoration: BoxDecoration(
-        color: V26.surface,
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(
-          color: (_isDispatching ? V26.emerg : V26.navy500).withValues(alpha: 0.45),
-          width: 1.5,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: (_isDispatching ? V26.emerg : V26.navy500).withValues(alpha: 0.18),
-            blurRadius: 18,
-          ),
-          BoxShadow(color: V26.ink900.withValues(alpha: 0.06), blurRadius: 12),
+  Widget _statusBadge() {
+    final text = _isDispatching
+        ? (_langKey == 'he'
+            ? 'מחובר · שיגור פעיל'
+            : _langKey == 'ru'
+                ? 'Активно · Диспетчеризация'
+                : 'Connected · Dispatching')
+        : (_langKey == 'he'
+            ? 'מחובר · ממתין לאירוע'
+            : _langKey == 'ru'
+                ? 'Подключено · Ожидание'
+                : 'Connected · Standby');
+    final tone =
+        _isDispatching ? V26StatusTone.live : V26StatusTone.online;
+    return Center(
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          V26Status(text, tone: tone),
+          if (_phone.isNotEmpty) ...[
+            const SizedBox(width: 10),
+            Text(
+              _phone,
+              style: const TextStyle(
+                fontFamily: V26.sans,
+                color: V26.ink500,
+                fontSize: 11,
+              ),
+              textDirection: TextDirection.ltr,
+            ),
+          ],
         ],
       ),
-      child: Row(mainAxisSize: MainAxisSize.min, children: [
-        Icon(
-          Icons.shield_rounded,
-          size: 16,
-          color: _isDispatching ? V26.emerg : V26.navy600,
-        ),
-        const SizedBox(width: 8),
-        Container(
-          width: 7,
-          height: 7,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: _isDispatching ? V26.emerg : V26.ok,
-            boxShadow: [
-              BoxShadow(
-                color: (_isDispatching ? V26.emerg : V26.ok).withValues(alpha: 0.55),
-                blurRadius: 5,
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(width: 7),
-        Text(
-          _isDispatching
-              ? (_langKey == 'he'
-                  ? 'מחובר | שיגור פעיל'
-                  : _langKey == 'ru'
-                      ? 'Активно | Диспетчеризация'
-                      : 'Connected | Dispatching')
-              : (_langKey == 'he'
-                  ? 'מחובר | ממתין לאירוע'
-                  : _langKey == 'ru'
-                      ? 'Подключено | Ожидание'
-                      : 'Connected | Standby'),
-          style: TextStyle(
-            color: _isDispatching ? V26.emerg : V26.ink900,
-            fontWeight: FontWeight.w700,
-            fontSize: 13,
-          ),
-        ),
-        if (_phone.isNotEmpty) ...[
-          const SizedBox(width: 10),
-          Text(
-            _phone,
-            style: const TextStyle(color: V26.ink500, fontSize: 11),
-            textDirection: TextDirection.ltr,
-          ),
-        ],
-      ]),
-    ),
-  );
+    );
+  }
 
   // ── Citizen hero (aligned with 2026/citizen.html rev 2) ─────────
   Widget _citizenHero2026(bool compact, bool isDesktop) {

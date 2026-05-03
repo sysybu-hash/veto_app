@@ -11,7 +11,6 @@ import 'package:provider/provider.dart';
 import '../config/app_config.dart';
 import '../core/i18n/app_language.dart';
 import '../core/theme/veto_2026.dart';
-import '../core/theme/veto_theme.dart';
 import '../services/auth_service.dart';
 import 'admin/_shell.dart';
 
@@ -82,6 +81,16 @@ const _i18n = {
     'logOtpFail': 'OTP נכשל',
     'logGoogle': 'Google כניסה',
     'logGoogleFail': 'Google נכשל',
+    'retry': 'נסה שוב',
+    'renewalsThisMonth': 'חידושים החודש',
+    'arpu': 'ARPU',
+    'mrrBadge': 'MRR',
+    'newPlan': '+ תוכנית חדשה',
+    'plansTitle': 'תוכניות מחיר',
+    'premiumMonthly': 'פרימיום חודשי',
+    'premiumYearly': 'פרימיום שנתי',
+    'freeTier': 'חינם',
+    'newPlanHint': 'יצירת תוכנית חדשה — בקרוב',
   },
   'en': {
     'title': 'Users & Subscriptions',
@@ -148,6 +157,16 @@ const _i18n = {
     'logOtpFail': 'OTP Failed',
     'logGoogle': 'Google Login',
     'logGoogleFail': 'Google Failed',
+    'retry': 'Try again',
+    'renewalsThisMonth': 'Renewals this month',
+    'arpu': 'ARPU',
+    'mrrBadge': 'MRR',
+    'newPlan': '+ New plan',
+    'plansTitle': 'Plans',
+    'premiumMonthly': 'Premium monthly',
+    'premiumYearly': 'Premium yearly',
+    'freeTier': 'Free',
+    'newPlanHint': 'New plan creation — coming soon',
   },
   'ru': {
     'title': 'Пользователи и подписки',
@@ -214,6 +233,16 @@ const _i18n = {
     'logOtpFail': 'OTP ошибка',
     'logGoogle': 'Вход Google',
     'logGoogleFail': 'Google ошибка',
+    'retry': 'Повторить',
+    'renewalsThisMonth': 'Продления в этом месяце',
+    'arpu': 'ARPU',
+    'mrrBadge': 'MRR',
+    'newPlan': '+ Новый тариф',
+    'plansTitle': 'Тарифы',
+    'premiumMonthly': 'Премиум (месяц)',
+    'premiumYearly': 'Премиум (год)',
+    'freeTier': 'Бесплатно',
+    'newPlanHint': 'Новый тариф — скоро',
   },
 };
 
@@ -264,14 +293,14 @@ class _Sub {
 
   Color get statusColor {
     switch (status) {
-      case 'active': return VetoPalette.success;
-      case 'free': return VetoPalette.accentSky;
-      case 'trial': return VetoPalette.accentSky;
-      case 'expired': return VetoPalette.warning;
-      case 'cancelled': return VetoPalette.emergency;
-      case 'no_subscription': return VetoPalette.textMuted;
-      case 'unverified': return VetoPalette.textMuted;
-      default: return VetoPalette.textMuted;
+      case 'active': return V26.ok;
+      case 'free': return V26.navy500;
+      case 'trial': return V26.navy500;
+      case 'expired': return V26.warn;
+      case 'cancelled': return V26.emerg;
+      case 'no_subscription': return V26.ink500;
+      case 'unverified': return V26.ink500;
+      default: return V26.ink500;
     }
   }
 
@@ -356,6 +385,8 @@ class _SubscriptionAdminScreenState
 
   double _monthlyRevenue = 0;
   double _totalRevenue = 0;
+  int _renewalsThisMonth = 0;
+  double _arpu = 0;
   String? _loadError;
 
   @override
@@ -410,10 +441,23 @@ class _SubscriptionAdminScreenState
         final list = data['users'] ?? data['subscriptions'] ?? (data is List ? data : []);
         _subs = (list as List).map((e) => _Sub.fromJson(e as Map<String, dynamic>)).toList();
         final now = DateTime.now();
-        _totalRevenue = _subs.where((s) => s.amount > 0).fold(0, (s, x) => s + x.amount);
+        _totalRevenue = _subs.where((s) => s.amount > 0).fold(0.0, (s, x) => s + x.amount);
         _monthlyRevenue = _subs
-            .where((s) => s.status == 'active' && s.startDate?.month == now.month)
-            .fold(0, (s, x) => s + x.amount);
+            .where((s) =>
+                s.status == 'active' &&
+                s.startDate != null &&
+                s.startDate!.month == now.month &&
+                s.startDate!.year == now.year)
+            .fold(0.0, (s, x) => s + x.amount);
+        _renewalsThisMonth = _subs
+            .where((s) =>
+                s.status == 'active' &&
+                s.startDate != null &&
+                s.startDate!.month == now.month &&
+                s.startDate!.year == now.year)
+            .length;
+        final activePaying = _subs.where((s) => s.status == 'active').length;
+        _arpu = activePaying > 0 ? _monthlyRevenue / activePaying : 0;
       } else {
         _loadError = 'שגיאת שרת: ${usersRes.statusCode}';
       }
@@ -713,7 +757,7 @@ class _SubscriptionAdminScreenState
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       content: Text(msg),
-      backgroundColor: ok ? VetoPalette.success : VetoPalette.emergency,
+      backgroundColor: ok ? V26.ok : V26.emerg,
       behavior: SnackBarBehavior.floating,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
     ));
@@ -753,19 +797,19 @@ class _SubscriptionAdminScreenState
                     padding: const EdgeInsets.all(24),
                     child: Column(mainAxisSize: MainAxisSize.min, children: [
                       const Icon(Icons.cloud_off_rounded,
-                          size: 48, color: VetoPalette.emergency),
+                          size: 48, color: V26.emerg),
                       const SizedBox(height: 12),
                       Text(_loadError!,
                           style: const TextStyle(
-                              color: VetoPalette.emergency, fontSize: 14),
+                              color: V26.emerg, fontSize: 14),
                           textAlign: TextAlign.center),
                       const SizedBox(height: 16),
                       FilledButton.icon(
                         onPressed: _load,
                         icon: const Icon(Icons.refresh_rounded),
-                        label: const Text('נסה שוב'),
+                        label: Text(_t(code, 'retry')),
                         style: FilledButton.styleFrom(
-                            backgroundColor: VetoPalette.primary),
+                            backgroundColor: V26.navy600),
                       ),
                     ]),
                   ))
@@ -783,38 +827,147 @@ class _SubscriptionAdminScreenState
 
   Widget _buildUsersTab(String code, int activeCount, int freeCount, int expiredCount) {
     return Column(children: [
-      // ── Summary bar ─────────────────────────────────────────
+      // ── Summary: MRR + 3 KPIs + plan list (₪) ─────────────────
       Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: const BoxDecoration(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [Color(0xFF0D1520), Color(0xFF121B2A)],
+            colors: [V26.navy900, V26.navy900.withValues(alpha: 0.88)],
           ),
-          border: Border(
+          border: const Border(
             bottom: BorderSide(color: V26.hairline),
           ),
         ),
-        child: Column(children: [
-          Row(children: [
-            _StatChip(icon: Icons.trending_up_rounded, color: VetoPalette.success,
-                label: _t(code, 'monthly'), value: '\$${_monthlyRevenue.toStringAsFixed(0)}'),
-            const SizedBox(width: 10),
-            _StatChip(icon: Icons.account_balance_wallet_rounded, color: const Color(0xFF5B8FFF),
-                label: _t(code, 'allTime'), value: '\$${_totalRevenue.toStringAsFixed(0)}'),
-          ]),
-          const SizedBox(height: 8),
-          Row(children: [
-            _CountBadge(_t(code, 'total'), _subs.length, const Color(0xFF64748B)),
-            const SizedBox(width: 8),
-            _CountBadge(_t(code, 'active'), activeCount, VetoPalette.success),
-            const SizedBox(width: 8),
-            _CountBadge('Free', freeCount, const Color(0xFF5B8FFF)),
-            const SizedBox(width: 8),
-            _CountBadge(_t(code, 'expired'), expiredCount, VetoPalette.warning),
-          ]),
-        ]),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                V26Badge(_t(code, 'mrrBadge'), tone: V26BadgeTone.gold),
+                const SizedBox(width: 10),
+                Text(
+                  '₪${_monthlyRevenue.toStringAsFixed(0)}',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 22,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                const Spacer(),
+                V26PillCTA(
+                  label: _t(code, 'newPlan'),
+                  icon: Icons.add_rounded,
+                  onTap: () => _snack(_t(code, 'newPlanHint')),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: _StatChip(
+                    icon: Icons.verified_user_outlined,
+                    color: V26.ok,
+                    label: _t(code, 'active'),
+                    value: '$activeCount',
+                    onDark: true,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: _StatChip(
+                    icon: Icons.autorenew_rounded,
+                    color: V26.goldDeep,
+                    label: _t(code, 'renewalsThisMonth'),
+                    value: '$_renewalsThisMonth',
+                    onDark: true,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: _StatChip(
+                    icon: Icons.analytics_outlined,
+                    color: V26.navy500,
+                    label: _t(code, 'arpu'),
+                    value: '₪${_arpu.toStringAsFixed(0)}',
+                    onDark: true,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Text(
+              _t(code, 'plansTitle'),
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.55),
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 0.6,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Expanded(
+                  child: _PlanPriceCell(
+                    label: _t(code, 'premiumMonthly'),
+                    price: '₪99',
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: _PlanPriceCell(
+                    label: _t(code, 'premiumYearly'),
+                    price: '₪899',
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: _PlanPriceCell(
+                    label: _t(code, 'freeTier'),
+                    price: '₪0',
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                Expanded(
+                  child: _StatChip(
+                    icon: Icons.account_balance_wallet_rounded,
+                    color: V26.navy500,
+                    label: _t(code, 'allTime'),
+                    value: '₪${_totalRevenue.toStringAsFixed(0)}',
+                    onDark: true,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: _StatChip(
+                    icon: Icons.groups_outlined,
+                    color: V26.ink500,
+                    label: _t(code, 'total'),
+                    value: '${_subs.length}',
+                    onDark: true,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              runSpacing: 6,
+              children: [
+                _CountBadge(_t(code, 'active'), activeCount, V26.ok),
+                _CountBadge(_t(code, 'statusFree'), freeCount, V26.navy500),
+                _CountBadge(_t(code, 'expired'), expiredCount, V26.warn),
+              ],
+            ),
+          ],
+        ),
       ),
       // ── Search ──────────────────────────────────────────────
       Container(
@@ -847,7 +1000,7 @@ class _SubscriptionAdminScreenState
       Expanded(
         child: _filtered.isEmpty
             ? Center(child: Text(_t(code, 'noSubs'),
-                style: const TextStyle(color: VetoPalette.textMuted, fontSize: 15)))
+                style: const TextStyle(color: V26.ink500, fontSize: 15)))
             : ListView.separated(
                 padding: const EdgeInsets.all(14),
                 itemCount: _filtered.length,
@@ -892,7 +1045,7 @@ class _SubscriptionAdminScreenState
   Widget _buildLogsTab(String code) {
     if (_logs.isEmpty) {
       return Center(child: Text(_t(code, 'noLogs'),
-          style: const TextStyle(color: VetoPalette.textMuted)));
+          style: const TextStyle(color: V26.ink500)));
     }
     return ListView.separated(
       padding: const EdgeInsets.all(14),
@@ -911,7 +1064,7 @@ class _LogCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = log.success ? VetoPalette.success : VetoPalette.emergency;
+    final color = log.success ? V26.ok : V26.emerg;
     final ts = '${log.createdAt.day}/${log.createdAt.month}/${log.createdAt.year} '
         '${log.createdAt.hour.toString().padLeft(2,'0')}:${log.createdAt.minute.toString().padLeft(2,'0')}';
     return Container(
@@ -935,11 +1088,11 @@ class _LogCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 decoration: BoxDecoration(
-                  color: VetoPalette.primary.withValues(alpha: 0.1),
+                  color: V26.navy600.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(log.role!, style: const TextStyle(
-                    color: VetoPalette.primary, fontSize: 10, fontWeight: FontWeight.w600)),
+                    color: V26.navy600, fontSize: 10, fontWeight: FontWeight.w600)),
               ),
             const Spacer(),
             Text(ts, style: const TextStyle(color: V26.ink500, fontSize: 11)),
@@ -953,7 +1106,7 @@ class _LogCard extends StatelessWidget {
           if (log.errorMsg != null) ...[
             const SizedBox(height: 2),
             Text(log.errorMsg!,
-                style: const TextStyle(color: VetoPalette.emergency, fontSize: 11)),
+                style: const TextStyle(color: V26.emerg, fontSize: 11)),
           ],
         ])),
       ]),
@@ -990,10 +1143,10 @@ class _SubCard extends StatelessWidget {
         Row(children: [
           CircleAvatar(
             radius: 18,
-            backgroundColor: VetoPalette.primary.withValues(alpha: 0.12),
+            backgroundColor: V26.navy600.withValues(alpha: 0.12),
             child: Text(sub.userName.isNotEmpty ? sub.userName[0].toUpperCase() : '?',
                 style: const TextStyle(
-                    color: VetoPalette.primary, fontWeight: FontWeight.w700)),
+                    color: V26.navy600, fontWeight: FontWeight.w700)),
           ),
           const SizedBox(width: 10),
           Expanded(child: Column(
@@ -1024,18 +1177,18 @@ class _SubCard extends StatelessWidget {
         // Plan + dates + amount
         Wrap(spacing: 14, runSpacing: 4, children: [
           _InfoPill(Icons.card_membership_rounded, sub.planLabel(code),
-              VetoPalette.accentSky),
+              V26.navy500),
           if (sub.amount > 0)
-            _InfoPill(Icons.attach_money_rounded,
-                '\$${sub.amount.toStringAsFixed(2)}', VetoPalette.success),
+            _InfoPill(Icons.payments_rounded,
+                '₪${sub.amount.toStringAsFixed(2)}', V26.ok),
           if (sub.startDate != null)
             _InfoPill(Icons.calendar_today_outlined,
                 '${sub.startDate!.day}/${sub.startDate!.month}/${sub.startDate!.year}',
-                VetoPalette.textMuted),
+                V26.ink500),
           if (sub.endDate != null)
             _InfoPill(Icons.event_rounded,
                 '→ ${sub.endDate!.day}/${sub.endDate!.month}/${sub.endDate!.year}',
-                VetoPalette.warning),
+                V26.warn),
         ]),
         const SizedBox(height: 10),
         // Action buttons
@@ -1043,29 +1196,29 @@ class _SubCard extends StatelessWidget {
           _ActionBtn(
               label: _t(code, 'edit'),
               icon: Icons.edit_outlined,
-              color: VetoPalette.info,
+              color: V26.navy600,
               onTap: onEdit),
           _ActionBtn(
               label: _t(code, 'delete'),
               icon: Icons.delete_outline_rounded,
-              color: VetoPalette.emergency,
+              color: V26.emerg,
               onTap: onDelete),
           if (sub.status != 'active')
             _ActionBtn(
                 label: _t(code, 'activate'),
                 icon: Icons.check_circle_outline_rounded,
-                color: VetoPalette.success,
+                color: V26.ok,
                 onTap: onActivate),
           if (sub.status == 'active')
             _ActionBtn(
                 label: _t(code, 'cancel'),
                 icon: Icons.cancel_outlined,
-                color: VetoPalette.emergency,
+                color: V26.emerg,
                 onTap: onCancel),
           _ActionBtn(
               label: _t(code, 'extend'),
               icon: Icons.add_circle_outline_rounded,
-              color: VetoPalette.accentSky,
+              color: V26.navy500,
               onTap: onExtend),
         ]),
       ]),
@@ -1120,28 +1273,100 @@ class _StatChip extends StatelessWidget {
   final IconData icon;
   final Color color;
   final String label, value;
-  const _StatChip({required this.icon, required this.color,
-      required this.label, required this.value});
+  final bool onDark;
+  const _StatChip({
+    required this.icon,
+    required this.color,
+    required this.label,
+    required this.value,
+    this.onDark = false,
+  });
 
   @override
-  Widget build(BuildContext context) => Expanded(child: Container(
-    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-    decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.08),
+  Widget build(BuildContext context) {
+    final labelColor = onDark
+        ? Colors.white.withValues(alpha: 0.65)
+        : V26.ink500;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: onDark ? 0.14 : 0.08),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: color.withValues(alpha: 0.20)),
-    ),
-    child: Row(children: [
-      Icon(icon, color: color, size: 18),
-      const SizedBox(width: 8),
-      Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text(value, style: TextStyle(color: color,
-            fontSize: 16, fontWeight: FontWeight.w900)),
-        Text(label, style: const TextStyle(
-            color: V26.ink500, fontSize: 11)),
-      ]),
-    ]),
-  ));
+        border: Border.all(color: color.withValues(alpha: onDark ? 0.35 : 0.20)),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: color, size: 18),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  value,
+                  style: TextStyle(
+                    color: color,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w900,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                Text(
+                  label,
+                  style: TextStyle(color: labelColor, fontSize: 11),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PlanPriceCell extends StatelessWidget {
+  final String label;
+  final String price;
+  const _PlanPriceCell({required this.label, required this.price});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.06),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            price,
+            style: const TextStyle(
+              color: V26.goldDeep,
+              fontSize: 15,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            label,
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.72),
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+            ),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class _CountBadge extends StatelessWidget {

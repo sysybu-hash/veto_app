@@ -7,7 +7,6 @@ import 'package:provider/provider.dart';
 
 import '../core/i18n/app_language.dart';
 import '../core/theme/veto_2026.dart';
-import '../core/theme/veto_theme.dart';
 import '../services/auth_service.dart';
 import '../services/fcm_user_service.dart';
 import '../services/push_service.dart';
@@ -178,7 +177,7 @@ class _LawyerDashboardState extends State<LawyerDashboard> {
                     ? 'Нет связи с сервером. Проверьте сеть.'
                     : 'Cannot reach the server. Check your connection.',
           ),
-          backgroundColor: VetoPalette.emergency,
+          backgroundColor: V26.emerg,
         ),
       );
     }
@@ -210,7 +209,7 @@ class _LawyerDashboardState extends State<LawyerDashboard> {
                       : 'Waiting for the client to choose session type…',
             ),
             duration: const Duration(seconds: 5),
-            backgroundColor: VetoPalette.info,
+            backgroundColor: V26.navy600,
           ),
         );
         return;
@@ -284,7 +283,7 @@ class _LawyerDashboardState extends State<LawyerDashboard> {
     });
     SocketService().emit('lawyer_availability', {'available': false});
     _showSnack(_t(context.read<AppLanguageController>().code, 'accepted'),
-        background: VetoPalette.success);
+        background: V26.ok);
   }
 
   void _rejectCase(Map<String, dynamic> alert) {
@@ -419,7 +418,7 @@ class _LawyerDashboardState extends State<LawyerDashboard> {
             title: Row(
               children: [
                 const Icon(Icons.notifications_active_rounded,
-                    color: VetoPalette.emergency),
+                    color: V26.emerg),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
@@ -455,7 +454,7 @@ class _LawyerDashboardState extends State<LawyerDashboard> {
                   _acceptCase(alert);
                 },
                 style: FilledButton.styleFrom(
-                  backgroundColor: VetoPalette.success,
+                  backgroundColor: V26.ok,
                   foregroundColor: Colors.white,
                 ),
                 child: Text(_t(code, 'accept')),

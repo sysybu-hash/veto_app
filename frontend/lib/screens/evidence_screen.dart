@@ -14,18 +14,18 @@ import 'package:flutter/services.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:permission_handler/permission_handler.dart';
 
-import '../core/theme/veto_theme.dart';
+import '../core/theme/veto_2026.dart';
 import '../platform/browser_bridge.dart' as browser_bridge;
 import '../services/upload_service.dart';
 
 // ── Brand palette (shared across the app) ─────────────────
 class _C {
-  static const bg        = VetoPalette.bg;
-  static const silver    = VetoPalette.textMuted;
-  static const silverDim = VetoPalette.textSubtle;
-  static const white     = VetoPalette.text;
-  static const accept    = VetoPalette.success;
-  static const uploading = VetoPalette.info;
+  static const bg        = V26.navy900;
+  static const silver    = V26.ink500;
+  static const silverDim = V26.ink300;
+  static const white     = Colors.white;
+  static const accept    = V26.ok;
+  static const uploading = V26.navy500;
 }
 
 // ── i18n strings ──────────────────────────────────────────

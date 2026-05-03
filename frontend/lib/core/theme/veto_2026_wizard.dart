@@ -438,3 +438,359 @@ class V26WizardPhoneProgress extends StatelessWidget {
     );
   }
 }
+
+/// ════════════════════════════════════════════════════════════
+///  V26QuizCard — white card that wraps a wizard step.
+///  Mirrors `.quiz-card` (padding 32/20, r-2xl/r-xl, shadow-2).
+/// ════════════════════════════════════════════════════════════
+class V26QuizCard extends StatelessWidget {
+  final String title;
+  final String? lede;
+  final Widget child;
+  final bool compact;
+
+  const V26QuizCard({
+    super.key,
+    required this.title,
+    required this.child,
+    this.lede,
+    this.compact = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: V26.surface,
+        border: Border.all(color: V26.hairline),
+        borderRadius: BorderRadius.circular(compact ? V26.rXl : V26.r2xl),
+        boxShadow: V26.shadow2,
+      ),
+      padding: EdgeInsets.all(compact ? 20 : 32),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            title,
+            style: TextStyle(
+              fontFamily: V26.serif,
+              fontSize: compact ? 22 : 30,
+              height: 1.2,
+              fontWeight: FontWeight.w900,
+              color: V26.ink900,
+            ),
+          ),
+          if (lede != null) ...[
+            const SizedBox(height: 8),
+            Text(
+              lede!,
+              style: const TextStyle(
+                fontFamily: V26.sans,
+                fontSize: 15,
+                height: 1.6,
+                color: V26.ink500,
+              ),
+            ),
+          ],
+          SizedBox(height: compact ? 20 : 28),
+          child,
+        ],
+      ),
+    );
+  }
+}
+
+/// ════════════════════════════════════════════════════════════
+///  V26OptTile — single selectable option (role / scenario / alerts / privacy).
+///  Mirrors `.opt` / `.opt.selected` in `2026/wizard.html`.
+/// ════════════════════════════════════════════════════════════
+class V26OptTile extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String description;
+  final bool selected;
+  final VoidCallback? onTap;
+
+  const V26OptTile({
+    super.key,
+    required this.icon,
+    required this.title,
+    required this.description,
+    this.selected = false,
+    this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(V26.rMd),
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          padding: const EdgeInsets.fromLTRB(20, 18, 20, 18),
+          decoration: BoxDecoration(
+            gradient: selected
+                ? const LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [V26.surface, V26.paper2],
+                  )
+                : null,
+            color: selected ? null : V26.surface,
+            border: Border.all(
+              color: selected ? V26.navy600 : V26.hairline,
+              width: 2,
+            ),
+            borderRadius: BorderRadius.circular(V26.rMd),
+            boxShadow: selected
+                ? [
+                    BoxShadow(
+                      color: V26.navy600.withValues(alpha: 0.10),
+                      blurRadius: 0,
+                      spreadRadius: 4,
+                    ),
+                  ]
+                : null,
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: selected ? V26.navy600 : V26.paper2,
+                  border: Border.all(
+                    color: selected ? V26.navy600 : V26.hairline,
+                  ),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                alignment: Alignment.center,
+                child: Icon(
+                  icon,
+                  size: 20,
+                  color: selected ? Colors.white : V26.navy700,
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        fontFamily: V26.serif,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: V26.ink900,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      description,
+                      style: const TextStyle(
+                        fontFamily: V26.sans,
+                        fontSize: 13,
+                        height: 1.5,
+                        color: V26.ink500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 10),
+              AnimatedOpacity(
+                duration: const Duration(milliseconds: 180),
+                opacity: selected ? 1 : 0,
+                child: Container(
+                  width: 24,
+                  height: 24,
+                  decoration: const BoxDecoration(
+                    color: V26.navy600,
+                    shape: BoxShape.circle,
+                  ),
+                  alignment: Alignment.center,
+                  child: const Icon(
+                    Icons.check_rounded,
+                    size: 14,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// ════════════════════════════════════════════════════════════
+///  V26OptGrid — 2-col (desktop) / 1-col (phone) option grid.
+///  Mirrors `.opt-grid` with the phone `grid-template-columns:1fr`.
+/// ════════════════════════════════════════════════════════════
+class V26OptGrid extends StatelessWidget {
+  final List<Widget> options;
+  final bool compact;
+  final double gap;
+
+  const V26OptGrid({
+    super.key,
+    required this.options,
+    this.compact = false,
+    this.gap = 12,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (compact) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          for (int i = 0; i < options.length; i++) ...[
+            if (i > 0) SizedBox(height: gap),
+            options[i],
+          ],
+        ],
+      );
+    }
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final columnCount = 2;
+        final itemW = (constraints.maxWidth - gap * (columnCount - 1)) /
+            columnCount;
+        final rows = <Widget>[];
+        for (int i = 0; i < options.length; i += columnCount) {
+          final pair = <Widget>[];
+          for (int j = 0; j < columnCount; j++) {
+            if (i + j < options.length) {
+              pair.add(SizedBox(width: itemW, child: options[i + j]));
+            } else {
+              pair.add(SizedBox(width: itemW));
+            }
+            if (j < columnCount - 1) pair.add(SizedBox(width: gap));
+          }
+          rows.add(Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: pair,
+          ));
+          if (i + columnCount < options.length) rows.add(SizedBox(height: gap));
+        }
+        return IntrinsicHeight(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: rows,
+          ),
+        );
+      },
+    );
+  }
+}
+
+/// ════════════════════════════════════════════════════════════
+///  V26WizFoot — bottom navigation bar with back / next CTAs.
+///  Mirrors `.wiz-foot` in `2026/wizard.html`.
+/// ════════════════════════════════════════════════════════════
+class V26WizFoot extends StatelessWidget {
+  final String? backLabel;
+  final VoidCallback? onBack;
+  final String nextLabel;
+  final VoidCallback? onNext;
+  final String? hint;
+  final bool compact;
+  final bool nextDanger;
+
+  const V26WizFoot({
+    super.key,
+    required this.nextLabel,
+    this.backLabel,
+    this.onBack,
+    this.onNext,
+    this.hint,
+    this.compact = false,
+    this.nextDanger = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: compact
+          ? const EdgeInsets.symmetric(horizontal: 16, vertical: 14)
+          : const EdgeInsets.symmetric(horizontal: 32, vertical: 18),
+      decoration: const BoxDecoration(
+        color: V26.surface,
+        border: Border(top: BorderSide(color: V26.hairline)),
+      ),
+      child: Row(
+        children: [
+          if (backLabel != null)
+            _V26GhostBtn(label: backLabel!, onTap: onBack)
+          else
+            const SizedBox.shrink(),
+          if (!compact && hint != null) ...[
+            const SizedBox(width: 16),
+            Expanded(
+              child: Center(
+                child: Text(
+                  hint!,
+                  style: const TextStyle(
+                    fontFamily: V26.sans,
+                    fontSize: 12,
+                    color: V26.ink500,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ),
+          ] else
+            const Spacer(),
+          V26PillCTA(
+            label: nextLabel,
+            onTap: onNext,
+            danger: nextDanger,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _V26GhostBtn extends StatelessWidget {
+  final String label;
+  final VoidCallback? onTap;
+  const _V26GhostBtn({required this.label, this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(V26.rPill),
+        onTap: onTap,
+        child: Container(
+          height: 38,
+          padding: const EdgeInsets.symmetric(horizontal: 14),
+          decoration: BoxDecoration(
+            color: V26.surface,
+            border: Border.all(color: V26.hairline),
+            borderRadius: BorderRadius.circular(V26.rPill),
+          ),
+          alignment: Alignment.center,
+          child: Text(
+            label,
+            style: const TextStyle(
+              fontFamily: V26.sans,
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              color: V26.ink700,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}

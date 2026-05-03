@@ -12,7 +12,6 @@ import 'package:provider/provider.dart';
 import '../config/app_config.dart';
 import '../core/i18n/app_language.dart';
 import '../core/theme/veto_2026.dart';
-import '../core/theme/veto_theme.dart';
 import '../services/auth_service.dart';
 import 'admin/_shell.dart';
 
@@ -393,10 +392,10 @@ class _AdminDashboardState extends State<AdminDashboard> {
           final ev = _recentEvents[i];
           final status = ev['status'] ?? 'open';
           final statusColor = status == 'resolved'
-              ? VetoPalette.success
+              ? V26.ok
               : status == 'dispatched'
-                  ? VetoPalette.accentSky
-                  : VetoPalette.emergency;
+                  ? V26.navy500
+                  : V26.emerg;
           final statusLabel = status == 'resolved'
               ? _t(code, 'resolvedStatus')
               : status == 'dispatched'

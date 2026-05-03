@@ -12,7 +12,6 @@ import 'package:provider/provider.dart';
 import '../config/app_config.dart';
 import '../core/i18n/app_language.dart';
 import '../core/theme/veto_2026.dart';
-import '../core/theme/veto_theme.dart';
 import '../services/auth_service.dart';
 
 // ── i18n ──────────────────────────────────────────────────────
@@ -344,7 +343,7 @@ class _LawyerSettingsScreenState extends State<LawyerSettingsScreen> {
             borderRadius: BorderRadius.circular(16),
             side: const BorderSide(color: V26.hairline)),
         title: Text(_t(code, 'deleteAccount'),
-            style: const TextStyle(color: VetoPalette.emergency, fontWeight: FontWeight.w700)),
+            style: const TextStyle(color: V26.emerg, fontWeight: FontWeight.w700)),
         content: Text(_t(code, 'deleteConfirm'),
             style: const TextStyle(color: V26.ink900)),
         actions: [
@@ -356,7 +355,7 @@ class _LawyerSettingsScreenState extends State<LawyerSettingsScreen> {
           FilledButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: FilledButton.styleFrom(
-                backgroundColor: VetoPalette.emergency, foregroundColor: Colors.white),
+                backgroundColor: V26.emerg, foregroundColor: Colors.white),
             child: Text(_t(code, 'yes')),
           ),
         ],
@@ -390,7 +389,7 @@ class _LawyerSettingsScreenState extends State<LawyerSettingsScreen> {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       content: Text(msg),
-      backgroundColor: VetoPalette.success,
+      backgroundColor: V26.ok,
       behavior: SnackBarBehavior.floating,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
     ));
@@ -452,7 +451,7 @@ class _LawyerSettingsScreenState extends State<LawyerSettingsScreen> {
                         label: _t(code, 'availableNow'),
                         subtitle: _t(code, 'availableDesc'),
                         icon: Icons.wifi_tethering_rounded,
-                        color: VetoPalette.success,
+                        color: V26.ok,
                         value: _isAvailable,
                         onChanged: (v) => setState(() => _isAvailable = v),
                       ),
@@ -577,21 +576,21 @@ class _LawyerSettingsScreenState extends State<LawyerSettingsScreen> {
                       _ToggleTile(
                         label: 'עברית',
                         icon: Icons.language_rounded,
-                        color: VetoPalette.primary,
+                        color: V26.navy600,
                         value: _langHe,
                         onChanged: (v) => setState(() => _langHe = v),
                       ),
                       _ToggleTile(
                         label: 'English',
                         icon: Icons.language_rounded,
-                        color: VetoPalette.primary,
+                        color: V26.navy600,
                         value: _langEn,
                         onChanged: (v) => setState(() => _langEn = v),
                       ),
                       _ToggleTile(
                         label: 'Русский',
                         icon: Icons.language_rounded,
-                        color: VetoPalette.primary,
+                        color: V26.navy600,
                         value: _langRu,
                         onChanged: (v) => setState(() => _langRu = v),
                       ),
@@ -606,28 +605,28 @@ class _LawyerSettingsScreenState extends State<LawyerSettingsScreen> {
                       _ToggleTile(
                         label: _t(code, 'notifyEmergency'),
                         icon: Icons.warning_amber_rounded,
-                        color: VetoPalette.emergency,
+                        color: V26.emerg,
                         value: _notifyEmergency,
                         onChanged: (v) => setState(() => _notifyEmergency = v),
                       ),
                       _ToggleTile(
                         label: _t(code, 'notifyNewCase'),
                         icon: Icons.folder_open_rounded,
-                        color: VetoPalette.success,
+                        color: V26.ok,
                         value: _notifyNewCase,
                         onChanged: (v) => setState(() => _notifyNewCase = v),
                       ),
                       _ToggleTile(
                         label: _t(code, 'notifyUpdates'),
                         icon: Icons.update_rounded,
-                        color: VetoPalette.primary,
+                        color: V26.navy600,
                         value: _notifyUpdates,
                         onChanged: (v) => setState(() => _notifyUpdates = v),
                       ),
                       _ToggleTile(
                         label: _t(code, 'notifySms'),
                         icon: Icons.sms_outlined,
-                        color: VetoPalette.info,
+                        color: V26.navy600,
                         value: _notifySms,
                         onChanged: (v) => setState(() => _notifySms = v),
                       ),
@@ -667,7 +666,7 @@ class _LawyerSettingsScreenState extends State<LawyerSettingsScreen> {
                       _ActionTile(
                         label: _t(code, 'deleteAccount'),
                         icon: Icons.delete_forever_rounded,
-                        color: VetoPalette.emergency,
+                        color: V26.emerg,
                         onTap: () => _deleteAccount(code),
                       ),
                     ],
@@ -944,7 +943,7 @@ class _ScheduleRow extends StatelessWidget {
         Switch(
           value: schedule.open,
           onChanged: (v) { schedule.open = v; onChanged(); },
-          activeThumbColor: VetoPalette.success,
+          activeThumbColor: V26.ok,
           materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
         ),
         if (!schedule.open)

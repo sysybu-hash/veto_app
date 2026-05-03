@@ -13,7 +13,6 @@ import 'package:provider/provider.dart';
 import '../config/app_config.dart';
 import '../core/i18n/app_language.dart';
 import '../core/theme/veto_2026.dart';
-import '../core/theme/veto_theme.dart';
 import '../services/auth_service.dart';
 
 // ── i18n ──────────────────────────────────────────────────────
@@ -460,7 +459,7 @@ class _SettingsScreenState extends State<SettingsScreen>
             side: const BorderSide(color: V26.hairline)),
         title: Text(_t(code, 'deleteAccount'),
             style: const TextStyle(
-                color: VetoPalette.emergency, fontWeight: FontWeight.w700)),
+                color: V26.emerg, fontWeight: FontWeight.w700)),
         content: Text(_t(code, 'deleteConfirm'),
             style: const TextStyle(color: V26.ink900)),
         actions: [
@@ -472,7 +471,7 @@ class _SettingsScreenState extends State<SettingsScreen>
           FilledButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: FilledButton.styleFrom(
-                backgroundColor: VetoPalette.emergency,
+                backgroundColor: V26.emerg,
                 foregroundColor: Colors.white),
             child: Text(_t(code, 'yes')),
           ),
@@ -498,7 +497,7 @@ class _SettingsScreenState extends State<SettingsScreen>
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       content: Text(msg),
-      backgroundColor: VetoPalette.success,
+      backgroundColor: V26.ok,
       behavior: SnackBarBehavior.floating,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
     ));
@@ -519,7 +518,7 @@ class _SettingsScreenState extends State<SettingsScreen>
         appBar: isWide
             ? V26DesktopNavBar(
                 destinations: V26CitizenNav.destinations(code),
-                currentIndex: 0,
+                currentIndex: -1,
                 onSelected: (i) => V26CitizenNav.go(
                     context, V26CitizenNav.routes[i],
                     current: '/settings'),
@@ -696,21 +695,21 @@ class _SettingsScreenState extends State<SettingsScreen>
                       _ToggleTile(
                         label: _t(code, 'notifyEmergency'),
                         icon: Icons.warning_amber_rounded,
-                        color: VetoPalette.emergency,
+                        color: V26.emerg,
                         value: _notifyEmergency,
                         onChanged: (v) => setState(() => _notifyEmergency = v),
                       ),
                       _ToggleTile(
                         label: _t(code, 'notifyUpdates'),
                         icon: Icons.update_rounded,
-                        color: VetoPalette.primary,
+                        color: V26.navy600,
                         value: _notifyUpdates,
                         onChanged: (v) => setState(() => _notifyUpdates = v),
                       ),
                       _ToggleTile(
                         label: _t(code, 'notifySms'),
                         icon: Icons.sms_outlined,
-                        color: VetoPalette.success,
+                        color: V26.ok,
                         value: _notifySms,
                         onChanged: (v) => setState(() => _notifySms = v),
                       ),
@@ -797,7 +796,7 @@ class _SettingsScreenState extends State<SettingsScreen>
                         _ToggleTile(
                           label: _t(code, 'availability'),
                           icon: Icons.circle,
-                          color: VetoPalette.success,
+                          color: V26.ok,
                           value: _isAvailable,
                           onChanged: (v) =>
                               setState(() => _isAvailable = v),
@@ -843,7 +842,7 @@ class _SettingsScreenState extends State<SettingsScreen>
                         _ToggleTile(
                           label: _t(code, 'maintenanceMode'),
                           icon: Icons.build_rounded,
-                          color: VetoPalette.warning,
+                          color: V26.warn,
                           value: _maintenanceMode,
                           onChanged: (v) =>
                               setState(() => _maintenanceMode = v),
@@ -902,8 +901,8 @@ class _SettingsScreenState extends State<SettingsScreen>
                   _Section(
                     icon: Icons.warning_amber_rounded,
                     title: _t(code, 'danger'),
-                    iconColor: VetoPalette.emergency,
-                    borderColor: VetoPalette.emergency.withValues(alpha: 0.25),
+                    iconColor: V26.emerg,
+                    borderColor: V26.emerg.withValues(alpha: 0.25),
                     children: [
                       ListTile(
                         dense: true,
@@ -922,13 +921,13 @@ class _SettingsScreenState extends State<SettingsScreen>
                       ListTile(
                         dense: true,
                         leading: const Icon(Icons.delete_forever_rounded,
-                            color: VetoPalette.emergency, size: 20),
+                            color: V26.emerg, size: 20),
                         title: Text(_t(code, 'deleteAccount'),
                             style: const TextStyle(
-                                color: VetoPalette.emergency,
+                                color: V26.emerg,
                                 fontWeight: FontWeight.w600)),
                         trailing: const Icon(Icons.chevron_right_rounded,
-                            color: VetoPalette.emergency),
+                            color: V26.emerg),
                         onTap: () => _deleteAccount(code),
                       ),
                     ],
