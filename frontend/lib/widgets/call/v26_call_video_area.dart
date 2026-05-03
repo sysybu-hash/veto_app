@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/theme/veto_2026.dart';
 import 'call_i18n.dart';
+import 'v26_web_local_preview.dart';
 
 /// Sits in the middle of the video stage when the remote peer has not yet
 /// published video.
@@ -266,32 +267,18 @@ class V26CallLocalPip extends StatelessWidget {
   Widget build(BuildContext context) {
     Widget body;
     final eng = engine;
+    final fallback = _LocalPreviewFallback(
+      language: language,
+      videoMuted: videoMuted,
+      previewOk: previewOk,
+    );
     if (videoMuted) {
-      body = Container(
-        color: V26.navy700,
-        alignment: Alignment.center,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.videocam_off,
-              color: Colors.white.withValues(alpha: 0.7),
-              size: 24,
-            ),
-            const SizedBox(height: 6),
-            Text(
-              CallI18n.cameraOffLabel.t(language),
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.7),
-                fontFamily: V26.sans,
-                fontSize: 10,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ],
-        ),
-      );
+      body = fallback;
+    } else if (kIsWeb) {
+      // Agora Web can fail to render a second local `AgoraVideoView` while the
+      // remote view is active. A tiny getUserMedia preview keeps the self-PIP
+      // reliable and does not affect the Agora published camera track.
+      body = V26WebLocalPreview(fallback: fallback);
     } else if (eng != null && !videoMuted && (previewOk || kIsWeb)) {
       body = SizedBox.expand(
         child: AgoraVideoView(
@@ -307,20 +294,7 @@ class V26CallLocalPip extends StatelessWidget {
         ),
       );
     } else {
-      body = Container(
-        color: V26.navy700,
-        alignment: Alignment.center,
-        child: Text(
-          CallI18n.cameraLabel.t(language),
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            color: Colors.white.withValues(alpha: 0.5),
-            fontFamily: V26.sans,
-            fontSize: 11,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-      );
+      body = fallback;
     }
     return Container(
       width: kIsWeb ? 154 : 126,
@@ -341,6 +315,60 @@ class V26CallLocalPip extends StatelessWidget {
         borderRadius: BorderRadius.circular(V26.callRadiusPip - 1),
         child: body,
       ),
+    );
+  }
+}
+
+class _LocalPreviewFallback extends StatelessWidget {
+  const _LocalPreviewFallback({
+    required this.language,
+    required this.videoMuted,
+    required this.previewOk,
+  });
+
+  final String language;
+  final bool videoMuted;
+  final bool previewOk;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: V26.navy700,
+      alignment: Alignment.center,
+      child: videoMuted
+          ? Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.videocam_off,
+                  color: Colors.white.withValues(alpha: 0.7),
+                  size: 24,
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  CallI18n.cameraOffLabel.t(language),
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.7),
+                    fontFamily: V26.sans,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            )
+          : Text(
+              previewOk
+                  ? CallI18n.cameraLabel.t(language)
+                  : CallI18n.cameraLabel.t(language),
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.5),
+                fontFamily: V26.sans,
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
     );
   }
 }
