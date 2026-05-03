@@ -187,12 +187,72 @@ class _LegalCalendarScreenState extends State<LegalCalendarScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: V26.paper,
-      appBar: AppBar(
-        backgroundColor: V26.paper,
+    final isWide =
+        MediaQuery.sizeOf(context).width >= V26AppShell.desktopBreakpoint;
+    return Directionality(
+      textDirection: TextDirection.rtl,
+      child: V26AppShell(
+      destinations: isWide
+          ? V26CitizenNav.destinations('he')
+          : V26CitizenNav.bottomDestinations('he'),
+      currentIndex: isWide ? 3 /* יומן */ : 0,
+      onDestinationSelected: (i) {
+        final routes = isWide
+            ? V26CitizenNav.routes
+            : V26CitizenNav.bottomRoutes;
+        V26CitizenNav.go(context, routes[i], current: '/legal_calendar');
+      },
+      desktopStatusText: 'יומן משפטי · $_m/$_y',
+      desktopTrailing: [
+        V26IconBtn(
+          icon: Icons.refresh_rounded,
+          tooltip: 'רענון',
+          onTap: _loading ? null : _load,
+        ),
+        const SizedBox(width: 8),
+        V26IconBtn(
+          icon: Icons.chevron_right,
+          tooltip: 'חודש קודם',
+          onTap: _loading
+              ? null
+              : () {
+                  if (_m == 1) {
+                    _m = 12;
+                    _y--;
+                  } else {
+                    _m--;
+                  }
+                  unawaited(_load());
+                },
+        ),
+        const SizedBox(width: 8),
+        V26IconBtn(
+          icon: Icons.chevron_left,
+          tooltip: 'חודש הבא',
+          onTap: _loading
+              ? null
+              : () {
+                  if (_m == 12) {
+                    _m = 1;
+                    _y++;
+                  } else {
+                    _m++;
+                  }
+                  unawaited(_load());
+                },
+        ),
+      ],
+      mobileAppBar: AppBar(
+        backgroundColor: V26.surface,
         foregroundColor: V26.ink900,
-        title: const Text('יומן משפטי'),
+        elevation: 0,
+        title: Text(
+          'יומן משפטי · $_m/$_y',
+          style: const TextStyle(
+            fontFamily: V26.serif,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
         actions: [
           IconButton(
             tooltip: 'רענון',
@@ -212,13 +272,7 @@ class _LegalCalendarScreenState extends State<LegalCalendarScreen> {
                     }
                     unawaited(_load());
                   },
-            icon: const Icon(Icons.chevron_left),
-          ),
-          Center(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8),
-              child: Text('$_m/$_y', style: const TextStyle(fontWeight: FontWeight.w800)),
-            ),
+            icon: const Icon(Icons.chevron_right),
           ),
           IconButton(
             tooltip: 'חודש הבא',
@@ -233,11 +287,19 @@ class _LegalCalendarScreenState extends State<LegalCalendarScreen> {
                     }
                     unawaited(_load());
                   },
-            icon: const Icon(Icons.chevron_right),
+            icon: const Icon(Icons.chevron_left),
           ),
         ],
       ),
-      body: _loading
+      floatingAction: FloatingActionButton.extended(
+        onPressed: _add,
+        backgroundColor: V26.navy600,
+        icon: const Icon(Icons.add, color: Colors.white),
+        label: const Text('אירוע',
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
+        heroTag: 'legal_cal_fab',
+      ),
+      child: _loading
           ? const Center(child: CircularProgressIndicator())
           : Column(
               children: [
@@ -296,12 +358,6 @@ class _LegalCalendarScreenState extends State<LegalCalendarScreen> {
                 ),
               ],
             ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _add,
-        backgroundColor: V26.navy600,
-        icon: const Icon(Icons.add),
-        label: const Text('אירוע'),
-        heroTag: 'legal_cal_fab',
       ),
     );
   }

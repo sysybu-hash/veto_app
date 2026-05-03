@@ -509,12 +509,30 @@ class _SettingsScreenState extends State<SettingsScreen>
   Widget build(BuildContext context) {
     final code = context.watch<AppLanguageController>().code;
     final isRtl = AppLanguage.directionOf(code) == TextDirection.rtl;
+    final isWide =
+        MediaQuery.sizeOf(context).width >= V26AppShell.desktopBreakpoint;
 
     return Directionality(
       textDirection: isRtl ? TextDirection.rtl : TextDirection.ltr,
       child: Scaffold(
         backgroundColor: V26.paper,
-        appBar: AppBar(
+        appBar: isWide
+            ? V26DesktopNavBar(
+                destinations: V26CitizenNav.destinations(code),
+                currentIndex: 0,
+                onSelected: (i) => V26CitizenNav.go(
+                    context, V26CitizenNav.routes[i],
+                    current: '/settings'),
+                statusText: _t(code, 'title'),
+                trailing: [
+                  V26PillCTA(
+                    label: _t(code, 'save'),
+                    icon: Icons.check,
+                    onTap: _saving ? null : () => _save(code),
+                  ),
+                ],
+              )
+            : AppBar(
           backgroundColor: V26.surface,
           elevation: 0,
           shadowColor: Colors.transparent,

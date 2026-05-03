@@ -467,32 +467,47 @@ class _ChatScreenState extends State<ChatScreen> {
   Widget build(BuildContext context) {
     final code = context.watch<AppLanguageController>().code;
     final isRtl = AppLanguage.directionOf(code) == TextDirection.rtl;
+    final isWideTop =
+        MediaQuery.sizeOf(context).width >= V26AppShell.desktopBreakpoint;
 
+    // Desktop: use 2026 pill-nav app shell and split-view below.
+    if (isWideTop) {
+      return Directionality(
+        textDirection: isRtl ? TextDirection.rtl : TextDirection.ltr,
+        child: V26AppShell(
+          destinations: V26CitizenNav.destinations(code),
+          currentIndex: 1, // צ'אט AI
+          onDestinationSelected: (i) {
+            V26CitizenNav.go(context, V26CitizenNav.routes[i],
+                current: '/chat');
+          },
+          desktopStatusText: isRtl
+              ? 'שיחות פעילות · מוצפן E2E'
+              : 'Active conversations · E2E encrypted',
+          child: Row(
+            children: [
+              SizedBox(width: 340, child: _buildConversationList()),
+              const VerticalDivider(width: 1, color: V26.hairline),
+              Expanded(
+                child: _activePartnerId == null
+                    ? _buildEmptyThread()
+                    : _buildThread(),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    // Narrow: legacy layout (thread or conversation list).
     return Directionality(
       textDirection: isRtl ? TextDirection.rtl : TextDirection.ltr,
       child: Scaffold(
         backgroundColor: V26.paper,
         body: V26Backdrop(
-          child: LayoutBuilder(builder: (_, constraints) {
-            // Single 900px breakpoint per VETO 2026 spec — matches the rest
-            // of the app (sidebars, dashboards, admin shell).
-            final isWide = constraints.maxWidth >= 900;
-            if (isWide) {
-              return Row(children: [
-                SizedBox(width: 320, child: _buildConversationList()),
-                const VerticalDivider(width: 1, color: V26.hairline),
-                Expanded(
-                  child: _activePartnerId == null
-                      ? _buildEmptyThread()
-                      : _buildThread(),
-                ),
-              ]);
-            }
-            if (_activePartnerId != null) {
-              return _buildThread(showBackButton: true);
-            }
-            return _buildConversationList(showAppBar: true);
-          }),
+          child: _activePartnerId != null
+              ? _buildThread(showBackButton: true)
+              : _buildConversationList(showAppBar: true),
         ),
       ),
     );

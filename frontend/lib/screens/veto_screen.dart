@@ -1051,7 +1051,75 @@ class _VetoScreenState extends State<VetoScreen> {
     // #endregion agent log (perf build)
     final bool isAdmin = _role == 'admin' || _phone.contains('525640021') || _phone.contains('506400030');
     final bool isRtl = _langKey == 'he';
-    // Tab indices: 0=home, 1=chat, 2=files, 3=profile
+    final bool isWide =
+        MediaQuery.sizeOf(context).width >= V26AppShell.desktopBreakpoint;
+
+    // Desktop uses the 2026 pill-nav shell and renders the wizard/home
+    // directly (other routes navigate to their dedicated screens).
+    if (isWide) {
+      return Directionality(
+        textDirection: isRtl ? TextDirection.rtl : TextDirection.ltr,
+        child: V26AppShell(
+          destinations: V26CitizenNav.destinations(_langKey),
+          currentIndex: 0, // דף הבית
+          onDestinationSelected: (i) {
+            const routes = V26CitizenNav.routes;
+            V26CitizenNav.go(context, routes[i], current: '/veto_screen');
+          },
+          desktopStatusText: _langKey == 'he'
+              ? 'מחובר · ממתין לאירוע · זמני תגובה ממוצעים 3:21 דק\''
+              : (_langKey == 'ru'
+                  ? 'Подключено · ожидание события · среднее время 3:21'
+                  : 'Connected · ready · average response 3:21'),
+          desktopTrailing: [
+            V26LangPill(
+              label: _langKey == 'he'
+                  ? 'עברית'
+                  : (_langKey == 'ru' ? 'Русский' : 'English'),
+              onTap: () {
+                final next = _langKey == 'he'
+                    ? 'en'
+                    : _langKey == 'ru'
+                        ? 'he'
+                        : 'ru';
+                setState(() => _langKey = next);
+              },
+            ),
+            const SizedBox(width: 8),
+            V26IconBtn(
+              icon: Icons.accessibility_new_rounded,
+              onTap: () => showAccessibilitySheet(context),
+              tooltip: _langKey == 'he' ? 'נגישות' : 'Accessibility',
+            ),
+            const SizedBox(width: 8),
+            V26PillCTA(
+              label: _langKey == 'he'
+                  ? 'הפרופיל שלי'
+                  : (_langKey == 'ru' ? 'Мой профиль' : 'My Profile'),
+              icon: Icons.person_rounded,
+              onTap: () => Navigator.pushNamed(context, '/profile'),
+            ),
+            if (isAdmin) ...[
+              const SizedBox(width: 8),
+              V26IconBtn(
+                icon: Icons.admin_panel_settings_outlined,
+                onTap: () =>
+                    Navigator.pushNamed(context, '/admin_settings'),
+                tooltip: 'Admin',
+              ),
+            ],
+          ],
+          child: SafeArea(
+            top: false,
+            child: RepaintBoundary(
+              child: _buildWizardTab(isAdmin, isRtl),
+            ),
+          ),
+        ),
+      );
+    }
+
+    // Mobile: keep legacy bottom-nav shell (4 tabs + hamburger appBar).
     return Directionality(
       textDirection: isRtl ? TextDirection.rtl : TextDirection.ltr,
       child: Scaffold(
