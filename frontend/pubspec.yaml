@@ -32,8 +32,12 @@ dependencies:
   # ── Socket.io (real-time dispatch) ──────────────────────────
   socket_io_client: ^2.0.3+1
 
-  # ── Agora RTC (optional stable path for video; configure App ID) ──
-  agora_rtc_engine: ^6.3.2
+  # ── Agora RTC (video/audio; configure AGORA_APP_ID + AGORA_APP_CERTIFICATE)
+  # Pinned to ^6.5.3 — pub's solver forbids 6.6.x while
+  # `flutter_secure_storage_windows: ^4.1.0` demands `ffi ^2.0.0` and
+  # `agora_rtc_engine 6.6.x` demands `ffi ^1.1.2`. Upgrade once
+  # secure_storage publishes a release with `ffi ^1.x` support.
+  agora_rtc_engine: ^6.5.3
 
   # ── Permissions ─────────────────────────────────────────────
   permission_handler: ^11.3.0

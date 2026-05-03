@@ -3,14 +3,36 @@
 //  VETO Legal Emergency App
 //
 //  - Room join/leave, chat messages, call end, lawyer availability
+//  - 30s "peer missing" timeout → both sides get `call-timeout`
+//  - `call-renew-token` → server re-issues an Agora RTC token
 //  - SDP/ICE (legacy WebRTC) removed — use Agora for A/V
 // ============================================================
 
 const EmergencyEvent = require('../models/EmergencyEvent');
 const Lawyer         = require('../models/Lawyer');
+const { buildRtcTokenForUid } = require('../services/agoraToken.service');
 
-// In-memory call rooms: roomId → { participants: Set<socketId>, callType, startedAt }
+/** Milliseconds to wait for the second participant before both sides are
+ *  notified that the peer never showed up. */
+const JOIN_TIMEOUT_MS = 30 * 1000;
+
+/**
+ * In-memory map of active call rooms.
+ * @type {Map<string, {
+ *   participants: Set<string>,
+ *   callType: 'video'|'audio'|'chat',
+ *   startedAt: Date,
+ *   joinTimer: NodeJS.Timeout | null,
+ * }>}
+ */
 const callRooms = new Map();
+
+function clearJoinTimer(room) {
+  if (room && room.joinTimer) {
+    clearTimeout(room.joinTimer);
+    room.joinTimer = null;
+  }
+}
 
 module.exports = function initCallSignaling(io) {
 
@@ -40,17 +62,21 @@ module.exports = function initCallSignaling(io) {
           return socket.emit('call-error', { message: 'Not authorized for this call.' });
         }
 
-        const normalizedType = callType === 'chat' ? 'chat' : callType === 'audio' ? 'audio' : 'video';
+        const normalizedType = callType === 'chat'
+          ? 'chat'
+          : callType === 'audio' ? 'audio' : 'video';
 
         const roomKey = `call:${roomId}`;
         socket.join(roomKey);
 
         if (!callRooms.has(roomId)) {
-          callRooms.set(roomId, {
+          const initialRoom = {
             participants: new Set(),
             callType: normalizedType,
             startedAt: new Date(),
-          });
+            joinTimer: null,
+          };
+          callRooms.set(roomId, initialRoom);
           await EmergencyEvent.findByIdAndUpdate(roomId, {
             status: 'in_progress',
             call_type: normalizedType,
@@ -70,14 +96,107 @@ module.exports = function initCallSignaling(io) {
           isCaller: roomSockets.size === 1,
         });
 
-        if (normalizedType === 'chat' && roomSockets.size === 2) {
-          io.in(roomKey).emit('chat-ready', { roomId });
+        if (roomSockets.size >= 2) {
+          // Second participant is in — cancel the pending "peer missing" timer.
+          clearJoinTimer(room);
+          if (normalizedType === 'chat') {
+            io.in(roomKey).emit('chat-ready', { roomId });
+          }
+        } else if (roomSockets.size === 1 && !room.joinTimer) {
+          // First participant: arm the 30-second timer. If the peer never
+          // joins we tell both the waiting socket AND (best-effort) the
+          // absent side's user / lawyer room that the call timed out.
+          room.joinTimer = setTimeout(async () => {
+            const live = callRooms.get(roomId);
+            if (!live) return;
+            clearJoinTimer(live);
+            // Still only 1 socket? Emit timeout.
+            const sockets = await io.in(`call:${roomId}`).allSockets();
+            if (sockets.size >= 2) return;
+
+            const reason = 'peer_no_answer';
+            io.in(`call:${roomId}`).emit('call-timeout', { roomId, reason });
+            // Best-effort broadcast to the absent side's user:/ lawyer: rooms
+            // so push/socket clients that never made it to the call room can
+            // clean up their UI too.
+            try {
+              const ev = await EmergencyEvent.findById(roomId)
+                .select('user_id assigned_lawyer_id')
+                .lean();
+              if (ev?.user_id) {
+                io.to(`user:${ev.user_id}`).emit('call-timeout', { roomId, reason });
+              }
+              if (ev?.assigned_lawyer_id) {
+                io.to(`lawyer:${ev.assigned_lawyer_id}`).emit('call-timeout', { roomId, reason });
+              }
+            } catch (_) { /* ignore */ }
+
+            // Mark event as timed-out so history reflects reality.
+            await EmergencyEvent.findOneAndUpdate(
+              { _id: roomId, status: { $in: ['accepted', 'in_progress'] } },
+              {
+                $set: {
+                  status:       'completed',
+                  completed_at: new Date(),
+                  timed_out:    true,
+                },
+              },
+            ).catch(() => {});
+
+            callRooms.delete(roomId);
+          }, JOIN_TIMEOUT_MS);
         }
 
-        console.log(`📞 [Call] ${role} ${userId} joined room:${roomId} | participants: ${roomSockets.size} | mode=${normalizedType}`);
+        console.log(
+          `📞 join-call-room | ${role} ${uid} | room=${roomId} | peers=${roomSockets.size} | mode=${normalizedType}`,
+        );
       } catch (err) {
         console.error('[Call] join-call-room error:', err);
         socket.emit('call-error', { message: 'Failed to join call room.' });
+      }
+    });
+
+    // ════════════════════════════════════════════════════════════
+    //  call-renew-token
+    //  Payload: { roomId }
+    //  The engine’s onTokenPrivilegeWillExpire fires a few seconds
+    //  before expiry; client asks the server for a fresh RTC token
+    //  and passes it straight to engine.renewToken(...).
+    // ════════════════════════════════════════════════════════════
+    socket.on('call-renew-token', async ({ roomId }) => {
+      try {
+        const event = await EmergencyEvent.findById(roomId)
+          .select('user_id assigned_lawyer_id room_id')
+          .lean();
+        if (!event) return socket.emit('call-error', { message: 'Event not found.' });
+
+        const uid = userId?.toString();
+        const isUser =
+          (role === 'user' || role === 'admin') &&
+          event.user_id?.toString() === uid;
+        const isLawyer =
+          role === 'lawyer' && event.assigned_lawyer_id?.toString() === uid;
+        if (!isUser && !isLawyer) {
+          return socket.emit('call-error', { message: 'Not authorized.' });
+        }
+
+        const channelName = event.room_id || String(roomId);
+        const { token, agoraUid, expiresAt } = buildRtcTokenForUid({
+          channelName,
+          userMongoId: uid,
+          role:        'publisher',
+        });
+
+        socket.emit('call-token-renewed', {
+          roomId,
+          channelId:  channelName,
+          agoraToken: token,
+          agoraUid,
+          tokenExpiresAt: expiresAt || 0,
+        });
+      } catch (err) {
+        console.error('[Call] call-renew-token error:', err);
+        socket.emit('call-error', { message: 'Could not renew token.' });
       }
     });
 
@@ -125,6 +244,7 @@ module.exports = function initCallSignaling(io) {
 
         const room = callRooms.get(roomId);
         if (room) {
+          clearJoinTimer(room);
           room.participants.delete(socket.id);
           if (room.participants.size === 0) {
             callRooms.delete(roomId);
@@ -147,7 +267,7 @@ module.exports = function initCallSignaling(io) {
           }).catch(console.error);
         }
 
-        console.log(`📞 [Call] Call ended | room=${roomId} | by=${role} | ${duration}s`);
+        console.log(`📞 call-ended | room=${roomId} | by=${role} | ${duration}s`);
       } catch (err) {
         console.error('[Call] call-ended error:', err);
       }
@@ -163,6 +283,7 @@ module.exports = function initCallSignaling(io) {
             role,
           });
           if (room.participants.size === 0) {
+            clearJoinTimer(room);
             callRooms.delete(roomId);
             void (async () => {
               try {

@@ -113,6 +113,25 @@ class CallApiService {
     return data['transcript']?.toString();
   }
 
+  /// Issues / renews an Agora RTC token for [eventId] via
+  /// `POST /api/calls/:eventId/token` (see `agoraToken.service.js`).
+  /// Returns a JSON map with `agoraToken`, `agoraUid`, `channelId`,
+  /// `ttlSec`, `expiresAt` — or `null` when the server refuses.
+  Future<Map<String, dynamic>?> fetchFreshAgoraToken(String eventId) async {
+    final token = await _auth.getToken();
+    if (token == null || eventId.isEmpty) return null;
+    final response = await http.post(
+      Uri.parse('${AppConfig.baseUrl}/calls/$eventId/token'),
+      headers: AppConfig.httpHeaders({'Authorization': 'Bearer $token'}),
+    );
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      return null;
+    }
+    final decoded = jsonDecode(response.body);
+    if (decoded is! Map) return null;
+    return Map<String, dynamic>.from(decoded);
+  }
+
   Future<String?> transcribeRecording({
     required String eventId,
     required Uint8List bytes,

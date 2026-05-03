@@ -29,6 +29,9 @@ router.get('/ice-config', protect, callCtrl.getIceConfig);
 // GET  /api/calls/:eventId          — Get call details
 router.get('/:eventId', protect, callCtrl.getCallDetails);
 
+// POST /api/calls/:eventId/token    — Issue / renew a fresh Agora RTC token
+router.post('/:eventId/token', protect, callCtrl.issueAgoraToken);
+
 // POST /api/calls/:eventId/recording — Upload recording file
 router.post('/:eventId/recording', protect, upload.single('recording'), callCtrl.uploadRecording);
 
