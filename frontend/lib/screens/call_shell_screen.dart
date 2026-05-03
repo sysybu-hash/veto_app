@@ -708,7 +708,7 @@ class _CallShellScreenState extends State<CallShellScreen>
             hasRemoteVideo: _agora.hasRemoteVideo,
             peerName: a.peerLabel,
             language: a.language,
-            mirrorLocalUntilRemote: false,
+            mirrorLocalUntilRemote: _agora.remoteUid == null,
             videoPublishMuted: _agora.videoPublishMuted,
           ),
         ),
