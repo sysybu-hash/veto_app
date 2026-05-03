@@ -7,7 +7,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 
-import '../core/theme/veto_glass_system.dart';
+import '../core/theme/veto_2026.dart';
 import '../platform/maps_embed_export.dart';
 
 class MapsScreen extends StatefulWidget {
@@ -72,35 +72,51 @@ class _MapsScreenState extends State<MapsScreen> {
     final title = isHe ? 'מפת Google' : 'Google Maps';
 
     return Scaffold(
-      backgroundColor: VetoGlassTokens.bgBase,
+      backgroundColor: V26.paper,
       appBar: AppBar(
-        backgroundColor: const Color(0x18FFFFFF),
+        backgroundColor: V26.surface,
         elevation: 0,
         shadowColor: Colors.transparent,
         surfaceTintColor: Colors.transparent,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: VetoGlassTokens.textPrimary, size: 20),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded,
+              color: V26.ink900, size: 20),
           onPressed: () => Navigator.of(context).pop(),
         ),
-        title: Text(title, style: const TextStyle(color: VetoGlassTokens.textPrimary, fontWeight: FontWeight.w800, fontSize: 18)),
+        title: Text(
+          title,
+          style: const TextStyle(
+            fontFamily: V26.serif,
+            color: V26.ink900,
+            fontWeight: FontWeight.w800,
+            fontSize: 18,
+            letterSpacing: -0.2,
+          ),
+        ),
         centerTitle: true,
         bottom: const PreferredSize(
           preferredSize: Size.fromHeight(1),
-          child: Divider(height: 1, color: VetoGlassTokens.glassBorder),
+          child: Divider(height: 1, color: V26.hairline),
         ),
       ),
-      body: VetoGlassAuroraBackground(
+      body: V26Backdrop(
         child: _error != null
             ? Center(
                 child: Padding(
                   padding: const EdgeInsets.all(24),
-                  child: Text(_error!,
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(color: VetoGlassTokens.textPrimary)),
+                  child: Text(
+                    _error!,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontFamily: V26.sans,
+                      color: V26.ink700,
+                    ),
+                  ),
                 ),
               )
             : _embedUrl == null
-                ? const Center(child: CircularProgressIndicator(color: VetoGlassTokens.neonCyan))
+                ? const Center(
+                    child: CircularProgressIndicator(color: V26.navy600))
                 : buildPlatformMapsEmbed(
                     kIsWeb ? _webViewId : null,
                     _embedUrl!,

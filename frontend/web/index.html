@@ -121,12 +121,20 @@
         });
       });
 
-      // Heartbeat: if these stop appearing before you manually refresh, we likely hit a main-thread stall.
-      var hb = 0;
-      setInterval(function () {
-        hb += 1;
-        send('HB', 'heartbeat', { n: hb, vis: document.visibilityState });
-      }, 2000);
+      // Heartbeat: only when explicitly enabled (avoids spamming production console / DevTools).
+      // Enable: ?veto_dbg=1 in URL or localStorage.setItem('veto_dbg','1')
+      try {
+        var dbg =
+          (typeof location !== 'undefined' && /[?&]veto_dbg=1(?:&|$)/.test(location.search)) ||
+          (localStorage.getItem('veto_dbg') === '1');
+        if (dbg) {
+          var hb = 0;
+          setInterval(function () {
+            hb += 1;
+            send('HB', 'heartbeat', { n: hb, vis: document.visibilityState });
+          }, 2000);
+        }
+      } catch (_) {}
 
       // Long tasks observer (main-thread stalls)
       try {

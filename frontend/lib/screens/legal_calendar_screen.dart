@@ -8,7 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../config/app_config.dart';
-import '../core/theme/veto_glass_system.dart';
+import '../core/theme/veto_2026.dart';
 import '../services/calendar_api_service.dart';
 
 class LegalCalendarScreen extends StatefulWidget {
@@ -74,33 +74,33 @@ class _LegalCalendarScreenState extends State<LegalCalendarScreen> {
         return StatefulBuilder(
           builder: (context, setS) {
             return AlertDialog(
-              backgroundColor: VetoGlassTokens.glassFillStrong,
-              title: const Text('אירוע חדש', style: TextStyle(color: VetoGlassTokens.textPrimary)),
+              backgroundColor: V26.surface,
+              title: const Text('אירוע חדש', style: TextStyle(color: V26.ink900)),
               content: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     TextField(
                       controller: titleCtrl,
-                      style: const TextStyle(color: VetoGlassTokens.textPrimary),
+                      style: const TextStyle(color: V26.ink900),
                       decoration: const InputDecoration(
                         labelText: 'כותרת',
-                        labelStyle: TextStyle(color: VetoGlassTokens.textMuted),
+                        labelStyle: TextStyle(color: V26.ink500),
                       ),
                     ),
                     TextField(
                       controller: addrCtrl,
-                      style: const TextStyle(color: VetoGlassTokens.textPrimary),
+                      style: const TextStyle(color: V26.ink900),
                       decoration: const InputDecoration(
                         labelText: 'כתובת (לניווט)',
-                        labelStyle: TextStyle(color: VetoGlassTokens.textMuted),
+                        labelStyle: TextStyle(color: V26.ink500),
                       ),
                     ),
                     const SizedBox(height: 8),
                     ListTile(
                       title: Text(
                         'התחלה: ${pickedStart.toLocal().toString().substring(0, 16)}',
-                        style: const TextStyle(color: VetoGlassTokens.textMuted, fontSize: 13),
+                        style: const TextStyle(color: V26.ink500, fontSize: 13),
                       ),
                       onTap: () async {
                         final d = await showDatePicker(
@@ -125,7 +125,7 @@ class _LegalCalendarScreenState extends State<LegalCalendarScreen> {
                     ListTile(
                       title: Text(
                         'סיום: ${pickedEnd.toLocal().toString().substring(0, 16)}',
-                        style: const TextStyle(color: VetoGlassTokens.textMuted, fontSize: 13),
+                        style: const TextStyle(color: V26.ink500, fontSize: 13),
                       ),
                       onTap: () async {
                         final d = await showDatePicker(
@@ -188,10 +188,10 @@ class _LegalCalendarScreenState extends State<LegalCalendarScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: VetoGlassTokens.bgBase,
+      backgroundColor: V26.paper,
       appBar: AppBar(
-        backgroundColor: VetoGlassTokens.bgBase,
-        foregroundColor: VetoGlassTokens.textPrimary,
+        backgroundColor: V26.paper,
+        foregroundColor: V26.ink900,
         title: const Text('יומן משפטי'),
         actions: [
           IconButton(
@@ -243,15 +243,15 @@ class _LegalCalendarScreenState extends State<LegalCalendarScreen> {
               children: [
                 if (_icalHint != null && _icalHint!.isNotEmpty)
                   Material(
-                    color: VetoGlassTokens.glassFillStrong,
+                    color: V26.surface,
                     child: ListTile(
                       title: const Text(
                         'iCal (לסנכרון)',
-                        style: TextStyle(color: VetoGlassTokens.textPrimary, fontSize: 14),
+                        style: TextStyle(color: V26.ink900, fontSize: 14),
                       ),
                       subtitle: Text(
                         _icalDisplay(_icalHint),
-                        style: const TextStyle(color: VetoGlassTokens.textMuted, fontSize: 11),
+                        style: const TextStyle(color: V26.ink500, fontSize: 11),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -260,7 +260,7 @@ class _LegalCalendarScreenState extends State<LegalCalendarScreen> {
                 Expanded(
                   child: _items.isEmpty
                       ? const Center(
-                          child: Text('אין אירועים בחודש', style: TextStyle(color: VetoGlassTokens.textMuted)),
+                          child: Text('אין אירועים בחודש', style: TextStyle(color: V26.ink500)),
                         )
                       : ListView.separated(
                           padding: const EdgeInsets.all(12),
@@ -272,22 +272,22 @@ class _LegalCalendarScreenState extends State<LegalCalendarScreen> {
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),
                               ),
-                              tileColor: VetoGlassTokens.glassFillStrong,
+                              tileColor: V26.surface,
                               title: Text(
                                 e.title,
-                                style: const TextStyle(color: VetoGlassTokens.textPrimary, fontWeight: FontWeight.w700),
+                                style: const TextStyle(color: V26.ink900, fontWeight: FontWeight.w700),
                               ),
                               subtitle: Text(
                                 '${e.start.toString().substring(0, 16)} — ${e.end.toString().substring(0, 16)}'
                                 '${e.locationAddress.isNotEmpty ? '\n${e.locationAddress}' : ''}'
                                     .trim(),
-                                style: const TextStyle(color: VetoGlassTokens.textMuted, fontSize: 12),
+                                style: const TextStyle(color: V26.ink500, fontSize: 12),
                               ),
                               isThreeLine: e.locationAddress.isNotEmpty,
                               trailing: e.locationAddress.isEmpty
                                   ? null
                                   : IconButton(
-                                      icon: const Icon(Icons.map_outlined, color: VetoGlassTokens.accentSoft),
+                                      icon: const Icon(Icons.map_outlined, color: V26.navy600),
                                       onPressed: () => _openMaps(e.locationAddress),
                                     ),
                             );
@@ -298,7 +298,7 @@ class _LegalCalendarScreenState extends State<LegalCalendarScreen> {
             ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _add,
-        backgroundColor: VetoGlassTokens.accentSoft,
+        backgroundColor: V26.navy600,
         icon: const Icon(Icons.add),
         label: const Text('אירוע'),
         heroTag: 'legal_cal_fab',

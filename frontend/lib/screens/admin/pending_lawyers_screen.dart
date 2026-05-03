@@ -3,10 +3,10 @@
 import 'package:provider/provider.dart';
 
 import '../../core/i18n/app_language.dart';
-import '../../core/theme/veto_glass_system.dart';
+import '../../core/theme/veto_2026.dart';
 import '../../core/theme/veto_theme.dart';
 import '../../services/admin_service.dart';
-import '../../widgets/app_language_menu.dart';
+import '_shell.dart';
 import 'admin_i18n.dart';
 
 class PendingLawyersScreen extends StatefulWidget {
@@ -53,18 +53,18 @@ class _PendingLawyersScreenState extends State<PendingLawyersScreen> {
       builder: (_) => Directionality(
         textDirection: AppLanguage.directionOf(code),
         child: AlertDialog(
-          backgroundColor: VetoGlassTokens.sheetPanel,
+          backgroundColor: V26.surface,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
-            side: const BorderSide(color: VetoGlassTokens.glassBorder),
+            side: const BorderSide(color: V26.hairline),
           ),
-          title: Text(_t(code, 'rejectRequest'), style: const TextStyle(color: VetoGlassTokens.textPrimary)),
+          title: Text(_t(code, 'rejectRequest'), style: const TextStyle(color: V26.ink900)),
           content: Text('${_t(code, 'rejectRequestConfirm')}\n$name',
-              style: const TextStyle(color: VetoGlassTokens.textMuted)),
+              style: const TextStyle(color: V26.ink500)),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context, false),
-              child: Text(_t(code, 'cancel'), style: const TextStyle(color: VetoGlassTokens.textMuted)),
+              child: Text(_t(code, 'cancel'), style: const TextStyle(color: V26.ink500)),
             ),
             TextButton(
               onPressed: () => Navigator.pop(context, true),
@@ -90,32 +90,13 @@ class _PendingLawyersScreenState extends State<PendingLawyersScreen> {
 
     return Directionality(
       textDirection: AppLanguage.directionOf(code),
-      child: Scaffold(
-        backgroundColor: VetoGlassTokens.bgBase,
-        appBar: AppBar(
-          backgroundColor: const Color(0x18FFFFFF),
-          elevation: 0,
-          shadowColor: Colors.transparent,
-          surfaceTintColor: Colors.transparent,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new_rounded, color: VetoGlassTokens.textPrimary, size: 20),
-            onPressed: () => Navigator.of(context).pop(),
-          ),
-          title: Text(_t(code, 'pendingLawyersTitle'),
-              style: const TextStyle(color: VetoGlassTokens.textPrimary, fontWeight: FontWeight.w800, fontSize: 18)),
-          centerTitle: true,
-          actions: [
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 8),
-              child: Center(child: AppLanguageMenu(compact: true)),
-            ),
-            IconButton(icon: const Icon(Icons.refresh_rounded, color: VetoGlassTokens.textPrimary), onPressed: _load, tooltip: _t(code, 'refresh')),
-          ],
-          bottom: const PreferredSize(preferredSize: Size.fromHeight(1), child: Divider(height: 1, color: VetoGlassTokens.glassBorder)),
-        ),
-        body: VetoGlassAuroraBackground(
+      child: AdminShell(
+        active: AdminSection.pending,
+        title: _t(code, 'pendingLawyersTitle'),
+        onRefresh: _load,
+        body: V26Backdrop(
           child: _loading
-            ? const Center(child: CircularProgressIndicator(color: VetoGlassTokens.neonCyan))
+            ? const Center(child: CircularProgressIndicator(color: V26.navy600))
             : _lawyers.isEmpty
                 ? Center(
                     child: Column(
@@ -126,7 +107,7 @@ class _PendingLawyersScreenState extends State<PendingLawyersScreen> {
                         const SizedBox(height: 16),
                         Text(
                           _t(code, 'noPendingLawyers'),
-                          style: const TextStyle(color: VetoGlassTokens.textMuted, fontSize: 16),
+                          style: const TextStyle(color: V26.ink500, fontSize: 16),
                         ),
                       ],
                     ),
@@ -141,20 +122,20 @@ class _PendingLawyersScreenState extends State<PendingLawyersScreen> {
                       final name = l['full_name'] ?? '\u2014';
                       final phone = l['phone'] ?? '\u2014';
                       final email = l['email'] ?? '';
-                        final license = l['license_number'] ?? '—';
+                        final license = l['license_number'] ?? '�';
                       final exp = l['years_of_experience']?.toString() ?? '0';
                       final specs =
-                          (l['specializations'] as List?)?.join(', ') ?? '—';
+                          (l['specializations'] as List?)?.join(', ') ?? '�';
 
                       return Container(
                         decoration: BoxDecoration(
-                          color: VetoGlassTokens.glassFillStrong,
+                          color: V26.surface,
                           borderRadius: BorderRadius.circular(12),
                           border: const Border(
                             left: BorderSide(color: VetoPalette.warning, width: 3),
-                            top: BorderSide(color: VetoGlassTokens.glassBorder),
-                            right: BorderSide(color: VetoGlassTokens.glassBorder),
-                            bottom: BorderSide(color: VetoGlassTokens.glassBorder),
+                            top: BorderSide(color: V26.hairline),
+                            right: BorderSide(color: V26.hairline),
+                            bottom: BorderSide(color: V26.hairline),
                           ),
                         ),
                         padding: const EdgeInsets.all(16),
@@ -163,13 +144,13 @@ class _PendingLawyersScreenState extends State<PendingLawyersScreen> {
                           children: [
                             Row(children: [
                               const Icon(Icons.gavel_rounded,
-                                  color: VetoGlassTokens.neonCyan, size: 20),
+                                  color: V26.navy600, size: 20),
                               const SizedBox(width: 8),
                               Expanded(
                                 child: Text(
                                   name,
                                   style: const TextStyle(
-                                    color: VetoGlassTokens.textPrimary,
+                                    color: V26.ink900,
                                     fontSize: 16,
                                     fontWeight: FontWeight.w600,
                                   ),
@@ -224,12 +205,12 @@ class _PendingLawyersScreenState extends State<PendingLawyersScreen> {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 2),
       child: Row(children: [
-        Icon(icon, size: 14, color: VetoGlassTokens.textMuted),
+        Icon(icon, size: 14, color: V26.ink500),
         const SizedBox(width: 6),
         Expanded(
           child: Text(
             text,
-            style: const TextStyle(color: VetoGlassTokens.textMuted, fontSize: 13),
+            style: const TextStyle(color: V26.ink500, fontSize: 13),
             overflow: TextOverflow.ellipsis,
           ),
         ),

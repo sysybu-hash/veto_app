@@ -1,0 +1,391 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>VETO · Settings & Profile · 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@500;700;900&family=Heebo:wght@300;400;500;600;700;800;900&family=Assistant:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="_veto-2026.css">
+<style>
+  .set-grid{ display:grid; grid-template-columns:240px 1fr; gap:0; height:100% }
+  .phone .set-grid{ grid-template-columns:1fr }
+  .phone .set-side{ display:none }
+  .set-side{ background:#fff; border-inline-end:1px solid var(--hairline); padding:24px 16px; flex-shrink:0; overflow-y:auto }
+  .set-side .group{ font-size:10px; color:var(--ink-300); letter-spacing:.18em; text-transform:uppercase; font-weight:800; padding:14px 8px 6px }
+  .set-side a{
+    display:flex; align-items:center; gap:10px; padding:9px 12px; border-radius:8px;
+    color:var(--ink-700); text-decoration:none; font-size:13px; font-weight:600;
+  }
+  .set-side a:hover{ background:var(--paper-2); color:var(--ink-900) }
+  .set-side a.active{ background:var(--navy-100); color:var(--navy-700) }
+
+  .set-content{ flex:1; overflow-y:auto; padding:32px 40px; max-width:920px; width:100%; margin:0 auto }
+  .phone .set-content{ padding:18px 16px }
+
+  .set-section{ margin-bottom:36px }
+  .set-section .head h2{ font-family:var(--serif); font-size:24px; color:var(--ink-900); margin-bottom:4px }
+  .set-section .head p{ color:var(--ink-500); font-size:13px; margin:0 0 18px }
+
+  .row-item{
+    display:flex; align-items:center; gap:14px; padding:16px 18px;
+    background:#fff; border:1px solid var(--hairline);
+    border-bottom:0;
+  }
+  .row-item:first-child{ border-radius:var(--r-md) var(--r-md) 0 0 }
+  .row-item:last-child{ border-radius:0 0 var(--r-md) var(--r-md); border-bottom:1px solid var(--hairline) }
+  .row-item .ico{
+    width:36px; height:36px; border-radius:10px;
+    background:var(--paper-2); border:1px solid var(--hairline); color:var(--navy-600);
+    display:grid; place-items:center; flex-shrink:0;
+  }
+  .row-item .body{ flex:1; min-width:0 }
+  .row-item .body .t{ font-weight:700; font-size:14px; color:var(--ink-900) }
+  .row-item .body .d{ font-size:12px; color:var(--ink-500); margin-top:2px }
+  .row-item .val{ font-size:13px; color:var(--ink-700); font-weight:600 }
+  .row-item .chevron{ color:var(--ink-300) }
+  .row-item:hover{ background:var(--surface-2); cursor:pointer }
+  .row-item.danger:hover .body .t{ color:var(--emerg) }
+
+  /* Toggle */
+  .ts{ width:44px; height:24px; border-radius:12px; background:var(--ok); position:relative; cursor:pointer; flex-shrink:0; transition:.2s }
+  .ts::after{ content:""; position:absolute; top:2px; right:2px; width:20px; height:20px; border-radius:50%; background:#fff; box-shadow:0 2px 6px rgba(0,0,0,.18); transition:.2s }
+  .ts.off{ background:var(--ink-200) }
+  .ts.off::after{ right:auto; left:2px }
+
+  .profile-stat{
+    display:flex; gap:14px;
+  }
+  .profile-stat .v{
+    flex:1; background:#fff; border:1px solid var(--hairline); border-radius:var(--r-md);
+    padding:14px; text-align:center;
+  }
+  .profile-stat .v .num{ font-family:var(--serif); font-size:22px; font-weight:800; color:var(--ink-900) }
+  .profile-stat .v .lbl{ font-size:11px; color:var(--ink-500); margin-top:4px; letter-spacing:.04em }
+</style>
+</head>
+<body>
+  <div class="page">
+    <div class="page-header">
+      <h1>VETO · הגדרות + פרופיל</h1>
+      <span class="tag">2026 · Settings · Profile · 2 screens</span>
+    </div>
+    <p class="page-sub">
+      שני המסכים האישיים: פרופיל (תצוגה וניהול חשבון אישי) והגדרות (שפה, נגישות, התראות, פרטיות, אבטחה). מבנה sidebar קלאסי בדסקטופ, עומק שני בלבד במובייל.
+    </p>
+
+    <!-- Profile -->
+    <h2 style="font-family:var(--serif); font-size:22px; margin-bottom:14px">1. פרופיל</h2>
+    <div class="device-label">Desktop · Profile</div>
+    <div class="desktop">
+      <div class="bar"><i></i><i></i><i></i></div>
+      <div class="canvas">
+        <header class="topbar">
+          <div class="brand"><div class="crest">V</div><div class="name">VETO<em>פרופיל</em></div></div>
+          <nav class="nav"><a href="#">דף הבית</a><a href="#">צ'אט</a><a href="#">כספת</a><a class="active" href="#">פרופיל</a></nav>
+          <div style="display:flex; gap:8px"><button class="ghost-btn">ערוך פרופיל</button></div>
+        </header>
+
+        <div style="flex:1; overflow-y:auto; padding:32px 40px; max-width:920px; width:100%; margin:0 auto">
+          <!-- Profile hero -->
+          <div style="display:flex; gap:24px; align-items:center; padding:28px; background:linear-gradient(180deg, var(--surface-2), #fff); border:1px solid var(--hairline); border-radius:var(--r-2xl); box-shadow:var(--shadow-1); margin-bottom:24px">
+            <div class="avatar xl">דכ</div>
+            <div style="flex:1">
+              <h2 style="font-family:var(--serif); font-size:28px; color:var(--ink-900)">דניאל כהן</h2>
+              <div class="muted text-sm" style="margin-top:4px">+972-50-123-4567 · daniel@example.com</div>
+              <div style="display:flex; gap:6px; margin-top:10px; flex-wrap:wrap">
+                <span class="badge brand">משתמש פרימיום</span>
+                <span class="badge gold">חבר מאז 2025</span>
+                <span class="badge ok">חשבון מאומת</span>
+              </div>
+            </div>
+            <div style="text-align:end">
+              <div class="muted text-xs" style="margin-bottom:6px">סטטוס מנוי</div>
+              <div style="font-weight:800; color:var(--ink-900)">פעיל · עד 04.01.2026</div>
+              <button class="cta" style="margin-top:10px">חידוש מנוי</button>
+            </div>
+          </div>
+
+          <!-- Profile stats -->
+          <div class="profile-stat" style="margin-bottom:24px">
+            <div class="v"><div class="num">3</div><div class="lbl">תיקים פעילים</div></div>
+            <div class="v"><div class="num">142</div><div class="lbl">קבצים בכספת</div></div>
+            <div class="v"><div class="num">8</div><div class="lbl">ייעוצי AI</div></div>
+            <div class="v"><div class="num">2</div><div class="lbl">שיחות עם עו"ד</div></div>
+          </div>
+
+          <!-- Account info -->
+          <div class="set-section">
+            <div class="head">
+              <h2>פרטים אישיים</h2>
+              <p>נתונים אלה משמשים לאמת אותך בלבד. לא מועברים לעורכי דין ללא אישורך המפורש.</p>
+            </div>
+            <div>
+              <div class="row-item">
+                <div class="ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg></div>
+                <div class="body"><div class="t">שם מלא</div><div class="d">מופיע במסמכים שאתה חותם</div></div>
+                <div class="val">דניאל כהן</div>
+                <span class="chevron"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></span>
+              </div>
+              <div class="row-item">
+                <div class="ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92V21a2 2 0 0 1-2.18 2"/></svg></div>
+                <div class="body"><div class="t">טלפון</div><div class="d">לכניסה ול-OTP</div></div>
+                <div class="val" style="direction:ltr">+972-50-123-4567</div>
+                <span class="chevron"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></span>
+              </div>
+              <div class="row-item">
+                <div class="ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v16H4z"/><path d="M22 6l-10 7L2 6"/></svg></div>
+                <div class="body"><div class="t">אימייל</div><div class="d">להתראות גיבוי וקבלות</div></div>
+                <div class="val">daniel@example.com</div>
+                <span class="chevron"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Settings -->
+    <h2 style="font-family:var(--serif); font-size:22px; margin:48px 0 14px">2. הגדרות (Citizen)</h2>
+    <div class="device-label">Desktop · Settings</div>
+    <div class="desktop">
+      <div class="bar"><i></i><i></i><i></i></div>
+      <div class="canvas tall">
+        <div class="set-grid">
+          <aside class="set-side">
+            <div style="padding:6px 8px 18px; border-bottom:1px solid var(--hairline); margin-bottom:8px">
+              <div class="brand"><div class="crest">V</div><div class="name">VETO<em>הגדרות</em></div></div>
+            </div>
+            <div class="group">חשבון</div>
+            <a href="#" class="active"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg> פרופיל</a>
+            <a href="#"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg> אבטחה</a>
+            <a href="#"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l8 4v6c0 5-3.5 9-8 10-4.5-1-8-5-8-10V6l8-4z"/></svg> פרטיות</a>
+            <div class="group">העדפות</div>
+            <a href="#"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/></svg> שפה</a>
+            <a href="#"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="5" r="2.2"/><path d="M12 7v5m0 0l-4 9m4-9l4 9M7 11h10"/></svg> נגישות</a>
+            <a href="#"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/></svg> התראות</a>
+            <div class="group">מנוי</div>
+            <a href="#"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg> מנוי ותשלום</a>
+            <a href="#"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg> חשבוניות</a>
+          </aside>
+
+          <main class="set-content">
+            <div class="set-section">
+              <div class="head">
+                <h2>שפה ואזור</h2>
+                <p>שפת הממשק, פורמט תאריך, וכיוון טקסט.</p>
+              </div>
+              <div>
+                <div class="row-item">
+                  <div class="ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/></svg></div>
+                  <div class="body"><div class="t">שפת ממשק</div><div class="d">Hebrew · RTL</div></div>
+                  <div class="val">עברית</div>
+                  <span class="chevron"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></span>
+                </div>
+                <div class="row-item">
+                  <div class="ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 10h18"/></svg></div>
+                  <div class="body"><div class="t">פורמט תאריך</div></div>
+                  <div class="val">DD.MM.YYYY</div>
+                  <span class="chevron"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></span>
+                </div>
+              </div>
+            </div>
+
+            <div class="set-section">
+              <div class="head">
+                <h2>נגישות</h2>
+                <p>גודל טקסט, ניגודיות, האטת אנימציות.</p>
+              </div>
+              <div>
+                <div class="row-item">
+                  <div class="ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg></div>
+                  <div class="body"><div class="t">גודל טקסט</div><div class="d">100% (רגיל)</div></div>
+                  <div class="val">A · A+ · A++</div>
+                  <span class="chevron"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></span>
+                </div>
+                <div class="row-item">
+                  <div class="ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 3v18"/></svg></div>
+                  <div class="body"><div class="t">ניגודיות גבוהה</div><div class="d">לטקסט קריא יותר</div></div>
+                  <span class="ts off"></span>
+                </div>
+                <div class="row-item">
+                  <div class="ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg></div>
+                  <div class="body"><div class="t">האטת אנימציות</div><div class="d">prefers-reduced-motion</div></div>
+                  <span class="ts off"></span>
+                </div>
+              </div>
+            </div>
+
+            <div class="set-section">
+              <div class="head">
+                <h2>התראות</h2>
+                <p>איך VETO ייצור איתך קשר במצב חירום ובאירועים יומיומיים.</p>
+              </div>
+              <div>
+                <div class="row-item">
+                  <div class="ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/></svg></div>
+                  <div class="body"><div class="t">Push Notifications</div><div class="d">חירום + הודעות חדשות מעו"ד</div></div>
+                  <span class="ts"></span>
+                </div>
+                <div class="row-item">
+                  <div class="ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a4 4 0 0 1-4 4H7l-4 4V5a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"/></svg></div>
+                  <div class="body"><div class="t">SMS גיבוי</div><div class="d">אם Push לא הגיע תוך 5 שניות</div></div>
+                  <span class="ts"></span>
+                </div>
+                <div class="row-item">
+                  <div class="ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v16H4z"/></svg></div>
+                  <div class="body"><div class="t">סיכום שבועי באימייל</div><div class="d">פעילות החשבון, תיקים פעילים</div></div>
+                  <span class="ts off"></span>
+                </div>
+              </div>
+            </div>
+
+            <div class="set-section">
+              <div class="head">
+                <h2>אבטחה</h2>
+                <p>הגנה על החשבון והנתונים שלך.</p>
+              </div>
+              <div>
+                <div class="row-item">
+                  <div class="ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></div>
+                  <div class="body"><div class="t">הצפנת מכשיר</div><div class="d">PIN / Biometric</div></div>
+                  <span class="badge ok">פעיל</span>
+                </div>
+                <div class="row-item">
+                  <div class="ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-14 0"/></svg></div>
+                  <div class="body"><div class="t">2FA · אימות דו-שלבי</div><div class="d">הגנה נוספת לחשבון</div></div>
+                  <span class="ts off"></span>
+                </div>
+                <div class="row-item danger">
+                  <div class="ico" style="background:var(--emerg-bg); color:var(--emerg); border-color:var(--emerg-border)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 17l5-5-5-5M21 12H9M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/></svg></div>
+                  <div class="body"><div class="t" style="color:var(--emerg)">התנתקות מכל המכשירים</div><div class="d">תידרש כניסה מחדש בכל המכשירים</div></div>
+                  <span class="chevron"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></span>
+                </div>
+              </div>
+            </div>
+
+            <div style="margin-top:48px; padding:24px; background:#fff; border:1px solid var(--emerg-border); border-radius:var(--r-md)">
+              <h3 style="font-family:var(--serif); color:var(--emerg); font-size:16px; margin-bottom:6px">אזור מסוכן</h3>
+              <p class="muted text-sm" style="margin:0 0 14px">פעולות כאן אינן הפיכות. וודא לפני ביצוע.</p>
+              <div style="display:flex; gap:10px; flex-wrap:wrap">
+                <button class="ghost-btn danger">מחק חשבון לצמיתות</button>
+                <button class="ghost-btn danger">ייצא וצא</button>
+              </div>
+            </div>
+          </main>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mobile -->
+    <div style="margin-top:48px">
+      <h2 style="font-family:var(--serif); font-size:22px; margin-bottom:14px">Mobile</h2>
+      <div class="stage" style="grid-template-columns:1fr 1fr; gap:32px">
+        <div>
+          <div class="device-label">Mobile · Profile</div>
+          <div class="phone tall">
+            <div class="screen">
+              <header class="topbar">
+                <button class="iconbtn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg></button>
+                <div class="brand"><div class="crest">V</div><div class="name">VETO</div></div>
+                <button class="iconbtn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button>
+              </header>
+              <div class="scroll" style="overflow-y:auto">
+                <div class="stack">
+                  <div style="display:flex; flex-direction:column; align-items:center; gap:14px; padding:24px 0; background:linear-gradient(180deg, var(--surface-2), #fff); border:1px solid var(--hairline); border-radius:var(--r-2xl)">
+                    <div class="avatar lg">דכ</div>
+                    <div style="text-align:center">
+                      <h2 style="font-family:var(--serif); font-size:22px">דניאל כהן</h2>
+                      <div class="muted text-xs" style="margin-top:4px">+972-50-123-4567</div>
+                      <div style="margin-top:10px"><span class="badge brand">פרימיום</span> <span class="badge gold">חבר 2025</span></div>
+                    </div>
+                  </div>
+
+                  <div class="profile-stat" style="display:grid; grid-template-columns:1fr 1fr; gap:8px">
+                    <div class="v"><div class="num">3</div><div class="lbl">תיקים</div></div>
+                    <div class="v"><div class="num">142</div><div class="lbl">קבצים</div></div>
+                    <div class="v"><div class="num">8</div><div class="lbl">ייעוצים</div></div>
+                    <div class="v"><div class="num">2</div><div class="lbl">שיחות</div></div>
+                  </div>
+
+                  <div>
+                    <div class="row-item">
+                      <div class="ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/></svg></div>
+                      <div class="body"><div class="t">שם מלא</div></div>
+                      <span class="chevron"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></span>
+                    </div>
+                    <div class="row-item">
+                      <div class="ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="10" width="16" height="11" rx="2"/></svg></div>
+                      <div class="body"><div class="t">אבטחה</div></div>
+                      <span class="chevron"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></span>
+                    </div>
+                    <div class="row-item">
+                      <div class="ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/></svg></div>
+                      <div class="body"><div class="t">מנוי ותשלום</div></div>
+                      <span class="chevron"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <nav class="tabbar">
+                <button><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l9-7 9 7M5 10v10h14V10"/></svg>בית<span class="pip"></span></button>
+                <button><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a8 8 0 0 1-11 7l-5 1 1-5A8 8 0 1 1 21 12z"/></svg>צ'אט<span class="pip"></span></button>
+                <button><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="10" width="16" height="11" rx="2"/></svg>כספת<span class="pip"></span></button>
+                <button class="active"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/></svg>פרופיל<span class="pip"></span></button>
+              </nav>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="device-label">Mobile · Settings list</div>
+          <div class="phone tall">
+            <div class="screen">
+              <header class="topbar">
+                <button class="iconbtn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg></button>
+                <div class="brand"><div class="crest">V</div><div class="name">הגדרות</div></div>
+                <button class="iconbtn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></button>
+              </header>
+              <div class="scroll" style="overflow-y:auto">
+                <div class="stack">
+                  <div>
+                    <div class="kicker" style="padding:0 4px 8px">חשבון</div>
+                    <div>
+                      <div class="row-item"><div class="ico"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/></svg></div><div class="body"><div class="t">פרופיל</div></div><span class="chevron"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></span></div>
+                      <div class="row-item"><div class="ico"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="10" width="16" height="11" rx="2"/></svg></div><div class="body"><div class="t">אבטחה</div></div><span class="chevron"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></span></div>
+                      <div class="row-item"><div class="ico"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l8 4v6"/></svg></div><div class="body"><div class="t">פרטיות</div></div><span class="chevron"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></span></div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <div class="kicker" style="padding:0 4px 8px">העדפות</div>
+                    <div>
+                      <div class="row-item"><div class="ico"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/></svg></div><div class="body"><div class="t">שפה</div></div><div class="val">עברית</div><span class="chevron"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></span></div>
+                      <div class="row-item"><div class="ico"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="5" r="2.2"/></svg></div><div class="body"><div class="t">נגישות</div></div><span class="chevron"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></span></div>
+                      <div class="row-item"><div class="ico"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 1 0-12 0"/></svg></div><div class="body"><div class="t">התראות</div></div><span class="ts" style="margin-inline-start:auto"></span></div>
+                    </div>
+                  </div>
+
+                  <button class="ghost-btn danger" style="width:100%; height:46px">התנתק</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="notes">
+      <h3>הערות עיצוב · Settings & Profile</h3>
+      <ul>
+        <li><b>Profile hero</b> — אווטר ענקי (96px), שם בסריפי, תגיות (Premium, חבר מאז, מאומת), CTA חידוש מנוי.</li>
+        <li><b>Stats grid</b> — 4 מספרים יבשים. תיקים, קבצים, ייעוצים, שיחות.</li>
+        <li><b>Settings sidebar</b> — קבוצות (חשבון, העדפות, מנוי). הקבוצה הפעילה = רקע Navy 100.</li>
+        <li><b>Row items</b> — קבוצות חיבור עם border-radius בקצוות בלבד (גוש מאוחד). אייקון, כותרת, ערך/Toggle, chevron.</li>
+        <li><b>אזור מסוכן</b> — בורדר אדום, פעולות לא הפיכות מובלטות.</li>
+      </ul>
+    </div>
+  </div>
+</body>
+</html>

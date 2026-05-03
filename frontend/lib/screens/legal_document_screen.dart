@@ -7,7 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../core/i18n/app_language.dart';
-import '../core/theme/veto_glass_system.dart';
+import '../core/theme/veto_2026.dart';
 
 /// Which legal document to show.
 enum LegalDocKind {
@@ -58,13 +58,13 @@ class LegalDocumentScreen extends StatelessWidget {
     final body = _bodies[lang]?[kind] ?? _bodies['en']![kind]!;
 
     return Scaffold(
-      backgroundColor: VetoGlassTokens.bgBase,
+      backgroundColor: V26.paper,
       appBar: AppBar(
-        backgroundColor: VetoGlassTokens.glassFill,
+        backgroundColor: V26.surface,
         elevation: 0,
-        title: Text(title, style: const TextStyle(color: VetoGlassTokens.textPrimary, fontWeight: FontWeight.w800)),
+        title: Text(title, style: const TextStyle(color: V26.ink900, fontWeight: FontWeight.w800)),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: VetoGlassTokens.textPrimary),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: V26.ink900),
           onPressed: () => Navigator.of(context).maybePop(),
         ),
       ),
@@ -74,7 +74,7 @@ class LegalDocumentScreen extends StatelessWidget {
           child: SelectableText(
             body,
             style: const TextStyle(
-              color: VetoGlassTokens.textPrimary,
+              color: V26.ink900,
               fontSize: 15,
               height: 1.55,
             ),

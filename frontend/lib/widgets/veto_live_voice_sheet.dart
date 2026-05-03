@@ -6,7 +6,7 @@ import 'package:provider/provider.dart';
 
 import '../config/veto_live_audio_prefs.dart';
 import '../core/i18n/app_language.dart';
-import '../core/theme/veto_glass_system.dart';
+import '../core/theme/veto_2026.dart';
 
 class VetoLiveVoiceSheet extends StatefulWidget {
   const VetoLiveVoiceSheet({super.key});
@@ -45,7 +45,7 @@ class _VetoLiveVoiceSheetState extends State<VetoLiveVoiceSheet> {
       return const Padding(
         padding: EdgeInsets.all(32),
         child: Center(
-          child: CircularProgressIndicator(color: VetoGlassTokens.neonCyan),
+          child: CircularProgressIndicator(color: V26.navy600),
         ),
       );
     }
@@ -54,7 +54,7 @@ class _VetoLiveVoiceSheetState extends State<VetoLiveVoiceSheet> {
         padding: const EdgeInsets.all(24),
         child: Text(
           t.webOnly,
-          style: const TextStyle(color: VetoGlassTokens.textPrimary),
+          style: const TextStyle(color: V26.ink900),
         ),
       );
     }
@@ -76,7 +76,7 @@ class _VetoLiveVoiceSheetState extends State<VetoLiveVoiceSheet> {
                 height: 4,
                 margin: const EdgeInsets.only(bottom: 16),
                 decoration: BoxDecoration(
-                  color: VetoGlassTokens.glassBorder,
+                  color: V26.hairline,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -85,7 +85,7 @@ class _VetoLiveVoiceSheetState extends State<VetoLiveVoiceSheet> {
               t.title,
               textAlign: TextAlign.center,
               style: const TextStyle(
-                color: VetoGlassTokens.textPrimary,
+                color: V26.ink900,
                 fontSize: 18,
                 fontWeight: FontWeight.w800,
               ),
@@ -95,7 +95,7 @@ class _VetoLiveVoiceSheetState extends State<VetoLiveVoiceSheet> {
               t.hint,
               textAlign: TextAlign.center,
               style: const TextStyle(
-                color: VetoGlassTokens.textMuted,
+                color: V26.ink500,
                 fontSize: 13,
                 height: 1.35,
               ),
@@ -104,7 +104,7 @@ class _VetoLiveVoiceSheetState extends State<VetoLiveVoiceSheet> {
             Text(
               t.voiceLabel,
               style: const TextStyle(
-                color: VetoGlassTokens.textSubtle,
+                color: V26.ink300,
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
               ),
@@ -113,9 +113,9 @@ class _VetoLiveVoiceSheetState extends State<VetoLiveVoiceSheet> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12),
               decoration: BoxDecoration(
-                color: VetoGlassTokens.glassFill,
+                color: V26.surface2,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: VetoGlassTokens.glassBorder),
+                border: Border.all(color: V26.hairline),
               ),
               child: DropdownButtonHideUnderline(
                 child: DropdownButton<String>(
@@ -123,7 +123,7 @@ class _VetoLiveVoiceSheetState extends State<VetoLiveVoiceSheet> {
                   value: VetoLiveAudioPrefs.normalizeVoice(_voice),
                   dropdownColor: const Color(0xFF0B1220),
                   style: const TextStyle(
-                    color: VetoGlassTokens.textPrimary,
+                    color: V26.ink900,
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
                   ),
@@ -145,7 +145,7 @@ class _VetoLiveVoiceSheetState extends State<VetoLiveVoiceSheet> {
             Text(
               t.gainLabel,
               style: const TextStyle(
-                color: VetoGlassTokens.textSubtle,
+                color: V26.ink300,
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
               ),
@@ -155,20 +155,20 @@ class _VetoLiveVoiceSheetState extends State<VetoLiveVoiceSheet> {
                 const Icon(
                   Icons.volume_mute,
                   size: 20,
-                  color: VetoGlassTokens.textMuted,
+                  color: V26.ink500,
                 ),
                 Expanded(
                   child: Slider(
                     value: _gain,
                     onChanged: (g) => setState(() => _gain = g),
-                    activeColor: VetoGlassTokens.neonCyan,
-                    inactiveColor: VetoGlassTokens.glassBorder,
+                    activeColor: V26.navy600,
+                    inactiveColor: V26.hairline,
                   ),
                 ),
                 const Icon(
                   Icons.volume_up,
                   size: 20,
-                  color: VetoGlassTokens.textMuted,
+                  color: V26.ink500,
                 ),
               ],
             ),
@@ -236,7 +236,7 @@ class _VetoLiveVoiceCopy {
 Future<String?> showVetoLiveVoiceSheet(BuildContext context) {
   return showModalBottomSheet<String>(
     context: context,
-    backgroundColor: VetoGlassTokens.bgBase,
+    backgroundColor: V26.paper,
     isScrollControlled: true,
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(20)),

@@ -1,0 +1,373 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>VETO · Legal Tools · 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@500;700;900&family=Heebo:wght@300;400;500;600;700;800;900&family=Assistant:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="_veto-2026.css">
+<style>
+  /* Calendar */
+  .cal-grid{
+    display:grid; grid-template-columns:repeat(7, 1fr); gap:1px;
+    background:var(--hairline); border:1px solid var(--hairline);
+    border-radius:var(--r-md); overflow:hidden;
+  }
+  .cal-cell{
+    background:#fff; min-height:80px; padding:8px; position:relative;
+    cursor:pointer; transition:.15s;
+  }
+  .cal-cell:hover{ background:var(--surface-2) }
+  .cal-cell.muted{ color:var(--ink-300) }
+  .cal-cell .d{ font-family:var(--serif); font-size:14px; font-weight:700; color:var(--ink-900) }
+  .cal-cell.muted .d{ color:var(--ink-200) }
+  .cal-cell.today .d{ color:#fff }
+  .cal-cell.today::before{
+    content:""; position:absolute; top:6px; right:6px;
+    width:24px; height:24px; border-radius:50%; background:var(--navy-600);
+  }
+  .cal-cell.today .d{ position:relative; z-index:1; padding:0 4px 0 0 }
+  .cal-cell .ev{
+    margin-top:6px; padding:3px 6px; border-radius:5px; font-size:10px; font-weight:700;
+    background:var(--info-soft); color:var(--navy-700); border:1px solid #C4D4F4;
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  }
+  .cal-cell .ev + .ev{ margin-top:3px }
+  .cal-cell .ev.danger{ background:var(--emerg-bg); color:#7A2A12; border-color:var(--emerg-border) }
+  .cal-cell .ev.gold{ background:var(--gold-soft); color:var(--gold-deep); border-color:#D4BB99 }
+  .cal-cell .ev.success{ background:var(--ok-soft); color:#16664B; border-color:#B7DFCB }
+  .cal-head{
+    display:grid; grid-template-columns:repeat(7,1fr);
+    background:var(--surface-2); border:1px solid var(--hairline);
+    border-bottom:0; border-radius:var(--r-md) var(--r-md) 0 0;
+  }
+  .cal-head .day{
+    padding:10px; text-align:center; font-size:11px; letter-spacing:.06em;
+    color:var(--ink-500); font-weight:700; text-transform:uppercase;
+  }
+  .cal-grid{ border-radius:0 0 var(--r-md) var(--r-md); border-top:0 }
+
+  /* Notebook */
+  .nb-layout{ display:flex; height:100% }
+  .desktop .nb-list{ width:280px; border-inline-end:1px solid var(--hairline); flex-shrink:0; background:#fff }
+  .phone .nb-list{ display:none }
+  .nb-list .item{
+    padding:14px 18px; border-bottom:1px solid var(--hairline); cursor:pointer;
+  }
+  .nb-list .item:hover{ background:var(--surface-2) }
+  .nb-list .item.active{ background:var(--navy-100); border-inline-start:3px solid var(--navy-600) }
+  .nb-list .item .t{ font-family:var(--serif); font-weight:700; font-size:14px; color:var(--ink-900); margin-bottom:4px }
+  .nb-list .item .p{ font-size:11px; color:var(--ink-500); overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
+  .nb-list .item .tm{ font-size:10px; color:var(--ink-300); margin-top:4px }
+  .nb-editor{
+    flex:1; display:flex; flex-direction:column; min-width:0; background:#fff;
+  }
+  .nb-editor .toolbar{
+    padding:14px 24px; border-bottom:1px solid var(--hairline);
+    display:flex; align-items:center; gap:8px; background:var(--surface-2);
+  }
+  .nb-editor .body{
+    flex:1; padding:32px 56px; overflow-y:auto;
+    max-width:760px; margin:0 auto; width:100%;
+  }
+  .phone .nb-editor .body{ padding:18px 18px }
+  .nb-title{
+    font-family:var(--serif); font-size:32px; font-weight:800; color:var(--ink-900);
+    border:0; outline:0; width:100%; margin-bottom:8px; background:transparent;
+  }
+  .nb-meta{ font-size:11px; color:var(--ink-500); margin-bottom:24px; display:flex; gap:14px }
+  .nb-content{ font-family:var(--serif); font-size:16px; line-height:1.85; color:var(--ink-800) }
+  .nb-content h2{ font-family:var(--serif); font-size:22px; margin:24px 0 10px; color:var(--ink-900) }
+  .nb-content p{ margin:0 0 14px }
+  .nb-content blockquote{
+    border-inline-start:3px solid var(--navy-500); padding:8px 16px;
+    background:var(--info-soft); margin:14px 0; font-style:italic; color:var(--navy-800);
+    border-radius:0 8px 8px 0;
+  }
+  .nb-content code{
+    background:var(--paper-2); padding:2px 6px; border-radius:4px; font-family:var(--mono); font-size:14px;
+  }
+
+  /* Legal document */
+  .doc-page{
+    background:#fff; max-width:780px; margin:24px auto;
+    padding:60px 72px; box-shadow:var(--shadow-2);
+    border:1px solid var(--hairline); border-radius:var(--r-md);
+    font-family:var(--serif); line-height:1.85;
+  }
+  .phone .doc-page{ padding:32px 24px; margin:14px }
+  .doc-page h1{
+    font-family:var(--serif); font-size:32px; text-align:center;
+    color:var(--ink-900); margin-bottom:8px; letter-spacing:-.01em;
+  }
+  .doc-page .doc-meta{
+    text-align:center; font-family:var(--sans); font-size:12px; color:var(--ink-500);
+    margin-bottom:32px; padding-bottom:18px; border-bottom:1px solid var(--hairline);
+  }
+  .doc-page h2{ font-family:var(--serif); font-size:22px; color:var(--ink-900); margin:28px 0 12px }
+  .doc-page p{ font-size:15px; color:var(--ink-800); margin:0 0 14px }
+  .doc-page ol, .doc-page ul{ font-size:15px; color:var(--ink-800); margin:0 0 14px; padding-inline-start:24px }
+  .doc-page ol li, .doc-page ul li{ margin-bottom:8px }
+</style>
+</head>
+<body>
+  <div class="page">
+    <div class="page-header">
+      <h1>VETO · יומן משפטי · מחברת · מסמך משפטי</h1>
+      <span class="tag">2026 · Legal Calendar · Notebook · Document Reader</span>
+    </div>
+    <p class="page-sub">
+      שלושת הכלים המשפטיים: יומן (אירועים/דיונים/פגישות), מחברת (Enterprise — תיעוד אישי בזמן אמת), וקורא מסמכים (פרטיות/תנאים).
+    </p>
+
+    <!-- Calendar -->
+    <h2 style="font-family:var(--serif); font-size:22px; margin-bottom:14px">1. יומן משפטי</h2>
+    <div class="device-label">Desktop · Legal Calendar</div>
+    <div class="desktop">
+      <div class="bar"><i></i><i></i><i></i></div>
+      <div class="canvas">
+        <header class="topbar">
+          <div class="brand"><div class="crest">V</div><div class="name">VETO<em>יומן משפטי</em></div></div>
+          <nav class="nav">
+            <a href="#">דף הבית</a>
+            <a class="active" href="#">יומן</a>
+            <a href="#">מחברת</a>
+            <a href="#">כספת</a>
+          </nav>
+          <div style="display:flex; gap:8px"><button class="cta"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg> אירוע חדש</button></div>
+        </header>
+
+        <div style="padding:24px 28px; flex:1; overflow-y:auto">
+          <div class="row-between" style="margin-bottom:18px">
+            <div>
+              <div class="kicker">דצמבר 2025</div>
+              <h2 style="font-family:var(--serif); font-size:30px">החודש שלך</h2>
+            </div>
+            <div style="display:flex; gap:8px; align-items:center">
+              <button class="iconbtn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg></button>
+              <span style="font-weight:800; font-size:14px; padding:0 8px">דצמבר 2025</span>
+              <button class="iconbtn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></button>
+              <div class="tabs" style="margin-inline-start:14px">
+                <button>יום</button>
+                <button>שבוע</button>
+                <button class="active">חודש</button>
+              </div>
+            </div>
+          </div>
+
+          <div style="display:grid; grid-template-columns:1fr 280px; gap:24px">
+            <div>
+              <div class="cal-head">
+                <div class="day">א'</div><div class="day">ב'</div><div class="day">ג'</div><div class="day">ד'</div><div class="day">ה'</div><div class="day">ו'</div><div class="day">שבת</div>
+              </div>
+              <div class="cal-grid">
+                <div class="cal-cell muted"><div class="d">30</div></div>
+                <div class="cal-cell"><div class="d">1</div></div>
+                <div class="cal-cell"><div class="d">2</div><div class="ev">פגישה · עו"ד שירה</div></div>
+                <div class="cal-cell"><div class="d">3</div></div>
+                <div class="cal-cell today"><div class="d">4</div><div class="ev danger">חקירה במשטרה · 14:00</div><div class="ev">ייעוץ · עו"ד שירה</div></div>
+                <div class="cal-cell"><div class="d">5</div></div>
+                <div class="cal-cell muted"><div class="d">6</div></div>
+
+                <div class="cal-cell muted"><div class="d">7</div></div>
+                <div class="cal-cell"><div class="d">8</div><div class="ev gold">דיון בבית משפט</div></div>
+                <div class="cal-cell"><div class="d">9</div></div>
+                <div class="cal-cell"><div class="d">10</div></div>
+                <div class="cal-cell"><div class="d">11</div><div class="ev success">חתימה על ייפוי</div></div>
+                <div class="cal-cell"><div class="d">12</div></div>
+                <div class="cal-cell muted"><div class="d">13</div></div>
+
+                <div class="cal-cell muted"><div class="d">14</div></div>
+                <div class="cal-cell"><div class="d">15</div></div>
+                <div class="cal-cell"><div class="d">16</div><div class="ev">סיכום תיק</div></div>
+                <div class="cal-cell"><div class="d">17</div></div>
+                <div class="cal-cell"><div class="d">18</div></div>
+                <div class="cal-cell"><div class="d">19</div></div>
+                <div class="cal-cell muted"><div class="d">20</div></div>
+
+                <div class="cal-cell muted"><div class="d">21</div></div>
+                <div class="cal-cell"><div class="d">22</div></div>
+                <div class="cal-cell"><div class="d">23</div></div>
+                <div class="cal-cell"><div class="d">24</div></div>
+                <div class="cal-cell"><div class="d">25</div></div>
+                <div class="cal-cell"><div class="d">26</div></div>
+                <div class="cal-cell muted"><div class="d">27</div></div>
+              </div>
+            </div>
+
+            <aside>
+              <div class="card">
+                <div class="head"><h3>היום · 4 דצמבר</h3></div>
+                <div class="body" style="padding:0">
+                  <div style="padding:14px 18px; border-bottom:1px solid var(--hairline)">
+                    <div style="display:flex; gap:10px; align-items:flex-start">
+                      <div style="width:4px; align-self:stretch; background:var(--emerg); border-radius:2px"></div>
+                      <div>
+                        <div style="font-family:var(--serif); font-weight:700; color:var(--ink-900)">חקירה במשטרה</div>
+                        <div class="muted text-xs" style="margin-top:2px">14:00 · תחנת רמת גן · עם עו"ד שירה</div>
+                        <span class="badge danger" style="margin-top:6px">בעוד 2 שעות</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div style="padding:14px 18px">
+                    <div style="display:flex; gap:10px; align-items:flex-start">
+                      <div style="width:4px; align-self:stretch; background:var(--navy-500); border-radius:2px"></div>
+                      <div>
+                        <div style="font-family:var(--serif); font-weight:700; color:var(--ink-900)">ייעוץ · עו"ד שירה</div>
+                        <div class="muted text-xs" style="margin-top:2px">19:00 · שיחת וידאו</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </aside>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Notebook -->
+    <h2 style="font-family:var(--serif); font-size:22px; margin:48px 0 14px">2. מחברת משפטית (Enterprise)</h2>
+    <div class="device-label">Desktop · Legal Notebook</div>
+    <div class="desktop">
+      <div class="bar"><i></i><i></i><i></i></div>
+      <div class="canvas">
+        <div class="nb-layout">
+          <aside class="nb-list">
+            <div style="padding:18px 18px 14px; border-bottom:1px solid var(--hairline); display:flex; justify-content:space-between; align-items:center">
+              <h3 style="font-family:var(--serif); font-size:16px">המחברת שלי</h3>
+              <button class="iconbtn" style="width:32px; height:32px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg></button>
+            </div>
+            <div style="overflow-y:auto">
+              <div class="item active">
+                <div class="t">תיק חקירה — סיכום ראשוני</div>
+                <div class="p">בתאריך 4 בדצמבר 2025, קיבלתי זימון לחקירה תחת אזהרה...</div>
+                <div class="tm">היום · 14:23</div>
+              </div>
+              <div class="item">
+                <div class="t">שאלות לעורך הדין</div>
+                <div class="p">1. מה הסטטוס של התיק? 2. איך לפעול אם השוטר...</div>
+                <div class="tm">אתמול · 22:14</div>
+              </div>
+              <div class="item">
+                <div class="t">רשימת ראיות</div>
+                <div class="p">- הקלטת חקירה (14:32 דק') - צילום זימון - סרטון מהאירוע...</div>
+                <div class="tm">3 ימים</div>
+              </div>
+              <div class="item">
+                <div class="t">חוזה שכירות — הערות</div>
+                <div class="p">סעיף 14 בעייתי, סעיף 22 מעורפל...</div>
+                <div class="tm">שבוע</div>
+              </div>
+            </div>
+          </aside>
+          <main class="nb-editor">
+            <div class="toolbar">
+              <button class="iconbtn sm" title="כותרת"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 4v16M18 4v16M6 12h12"/></svg></button>
+              <button class="iconbtn sm" title="מודגש"><b style="font-size:12px">B</b></button>
+              <button class="iconbtn sm" title="נטוי"><i style="font-size:12px">I</i></button>
+              <span style="width:1px; height:18px; background:var(--hairline); margin:0 4px"></span>
+              <button class="iconbtn sm"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><circle cx="4" cy="6" r="1"/><circle cx="4" cy="12" r="1"/><circle cx="4" cy="18" r="1"/></svg></button>
+              <button class="iconbtn sm"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></button>
+              <span style="width:1px; height:18px; background:var(--hairline); margin:0 4px"></span>
+              <button class="iconbtn sm"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a4 4 0 0 1-4 4H7l-4 4V5a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"/></svg></button>
+              <span style="margin-inline-start:auto; display:flex; gap:8px">
+                <span class="badge brand"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg> נשמר</span>
+                <button class="cta" style="height:32px">שתף עם עו"ד</button>
+              </span>
+            </div>
+            <div class="body">
+              <input class="nb-title" value="תיק חקירה — סיכום ראשוני" />
+              <div class="nb-meta">
+                <span>נוצר: 04.12.2025 · 14:23</span>
+                <span>·</span>
+                <span>עודכן: לפני דקה</span>
+                <span>·</span>
+                <span>4 תגיות</span>
+              </div>
+              <div class="nb-content">
+                <p>בתאריך <b>4 בדצמבר 2025</b>, קיבלתי זימון לחקירה תחת אזהרה בתחנת רמת גן. הזימון לא ציין את העילה.</p>
+                <h2>פעולות שביצעתי</h2>
+                <ol>
+                  <li>תיעדתי את הזימון בצילום ובסריקה — נשמר בכספת.</li>
+                  <li>פתחתי תיק VETO — שובצה עו"ד שירה כהן (פלילי).</li>
+                  <li>ניסחנו ביחד מכתב בקשה לקבלת העילה בכתב.</li>
+                </ol>
+                <h2>זכויות שהובהרו לי</h2>
+                <blockquote>
+                  הזכות להיוועץ עם עורך דין לפני ובמהלך החקירה — בכל שלב.
+                </blockquote>
+                <p>שיחת ייעוץ נוספת מתוכננת ל-<code>19:00</code> היום.</p>
+              </div>
+            </div>
+          </main>
+        </div>
+      </div>
+    </div>
+
+    <!-- Legal Document -->
+    <h2 style="font-family:var(--serif); font-size:22px; margin:48px 0 14px">3. קורא מסמך משפטי (פרטיות / תנאים)</h2>
+    <div class="device-label">Desktop · Legal Document Reader</div>
+    <div class="desktop">
+      <div class="bar"><i></i><i></i><i></i></div>
+      <div class="canvas tall">
+        <header class="topbar">
+          <div style="display:flex; align-items:center; gap:14px">
+            <button class="iconbtn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg></button>
+            <div class="brand"><div class="crest">V</div><div class="name">VETO</div></div>
+          </div>
+          <div class="tabs">
+            <button class="active">פרטיות</button>
+            <button>תנאי שימוש</button>
+          </div>
+          <div style="display:flex; gap:8px">
+            <button class="iconbtn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button>
+            <button class="iconbtn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></button>
+          </div>
+        </header>
+
+        <div style="flex:1; overflow-y:auto; background:var(--paper)">
+          <div class="doc-page">
+            <h1>מדיניות פרטיות</h1>
+            <div class="doc-meta">VETO LEGAL · עודכן 04 בדצמבר 2025 · גרסה 3.2</div>
+
+            <p>VETO Legal ("אנחנו", "החברה") מחויבת להגנה מלאה על פרטיות המשתמשים. מסמך זה מתאר אילו נתונים נאספים, מתי, וכיצד הם משמשים אותנו. אנא קרא בעיון.</p>
+
+            <h2>1. עקרון יסוד — פרטיות לפני הכל</h2>
+            <p>אנחנו <b>לא</b> מוכרים נתונים. אנחנו <b>לא</b> משתמשים בנתונים לפרסום ממוקד. אנחנו <b>לא</b> חולקים מידע עם רשויות אכיפה — אלא בצו שופט מפורש, ועם הודעה למשתמש כאשר זה אפשרי משפטית.</p>
+
+            <h2>2. נתונים שאנו אוספים</h2>
+            <ul>
+              <li><b>פרטי חשבון</b>: שם, מספר טלפון, שפת ממשק.</li>
+              <li><b>תוכן שיחות וקבצים</b>: נשמר אך ורק בכספת המוצפנת שלך, על המכשיר. לא מועתק לשרתים.</li>
+              <li><b>מטא-נתונים תפעוליים</b>: זמני התחברות, גרסת אפליקציה, סוג מכשיר — לאבחון תקלות בלבד.</li>
+              <li><b>מיקום</b>: רק בשעת SOS, לצורך התאמה לעו"ד הקרוב. נמחק מיד לאחר החיבור.</li>
+            </ul>
+
+            <h2>3. הצפנה</h2>
+            <p>כל הנתונים הרגישים מוצפנים ב-AES-256 על המכשיר. שיחות מוצפנות End-to-End. למפתחות אין גישה — גם לעובדי VETO אין יכולת לפענח את התוכן.</p>
+
+            <h2>4. זכויותיך</h2>
+            <ol>
+              <li>הזכות לקבל את כל הנתונים שלך בקובץ אחד תוך 30 יום מבקשתך.</li>
+              <li>הזכות למחוק את חשבונך — מחיקה מלאה תוך 7 ימים, ללא גיבוי.</li>
+              <li>הזכות לדעת אם בקשה ממשטרה הוגשה לגבי נתוניך (כשזה חוקי).</li>
+            </ol>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="notes">
+      <h3>הערות עיצוב · Legal Tools</h3>
+      <ul>
+        <li><b>יומן</b> — חודשי בגריד 7×6, אירועים בצבעים שונים: אדום=חירום/חקירה, כחול=ייעוץ, זהב=דיון, ירוק=הושלם. עמודה צדדית "היום".</li>
+        <li><b>מחברת</b> — Markdown editor פשוט. שמירה אוטומטית. נכתב בסריפי לתחושת מסמך משפטי-קלאסי.</li>
+        <li><b>Document reader</b> — כמו עמוד דפוס: 780px רוחב, 60px padding, ירידות שורה רחבות, אפילו עם רקע נייר עדין. Tabs פרטיות/תנאים.</li>
+      </ul>
+    </div>
+  </div>
+</body>
+</html>

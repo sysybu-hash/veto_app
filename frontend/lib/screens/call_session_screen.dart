@@ -12,7 +12,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 
 import 'in_call_speech.dart';
-import '../core/theme/veto_theme.dart';
+import '../core/theme/veto_2026.dart';
 import '../services/agora_service.dart';
 import '../services/socket_service.dart';
 import '../services/vault_save_queue.dart';
@@ -52,6 +52,20 @@ class CallSessionScreen extends StatefulWidget {
 
 class _CallSessionScreenState extends State<CallSessionScreen>
     with TickerProviderStateMixin {
+  /// RTL layout for Hebrew / Arabic call args (video stage chrome + wide chat side).
+  bool get _rtl => widget.language == 'he' || widget.language == 'ar';
+
+  String _str({required String en, required String he, String? ru}) {
+    switch (widget.language) {
+      case 'he':
+        return he;
+      case 'ru':
+        return ru ?? en;
+      default:
+        return en;
+    }
+  }
+
   late final AgoraService _agora;
   bool _starting = true;
   String? _startError;
@@ -70,6 +84,7 @@ class _CallSessionScreenState extends State<CallSessionScreen>
 
   late final InCallSpeech _inCallSpeech;
   late TabController _sideTabController;
+  Timer? _bootstrapWatchdog;
 
   Map<String, dynamic> _socketMap(dynamic raw) {
     if (raw is Map) return Map<String, dynamic>.from(raw);
@@ -156,6 +171,20 @@ class _CallSessionScreenState extends State<CallSessionScreen>
     });
     _inCallSpeech.setLanguageCode(widget.language);
     _sideTabController = TabController(length: 2, vsync: this);
+    _bootstrapWatchdog = Timer(const Duration(seconds: 85), () {
+      if (!mounted || !_starting) return;
+      debugPrint('[VETO][CallSession] watchdog: forcing end of loading state');
+      setState(() {
+        _starting = false;
+        _startError ??= _str(
+          en: 'Connection took too long. Check login, network, camera/mic permission, and try again.',
+          he: 'החיבור ארך יותר מדי. וודא התחברות, רשת והרשאות מצלמה/מיקרופון ונסה שוב.',
+          ru: 'Подключение слишком долгое. Проверьте вход, сеть и доступ к камере/микрофону.',
+        );
+        _agoraFailed = true;
+      });
+      unawaited(_agora.leaveChannelAndRelease());
+    });
     unawaited(_bootstrap());
   }
 
@@ -184,8 +213,11 @@ class _CallSessionScreenState extends State<CallSessionScreen>
       final socket = SocketService();
       final online = await socket.ensureConnected(role: widget.socketRole);
       if (!online) {
-        _startError =
-            'Could not connect to the server. Check your network and try again.';
+        _startError = _str(
+          en: 'Could not connect to the server. Check your network and try again.',
+          he: 'אין חיבור לשרת. בדוק רשת ונסה שוב.',
+          ru: 'Не удалось подключиться к серверу. Проверьте сеть.',
+        );
         return;
       }
       _registerCallSockets();
@@ -202,12 +234,20 @@ class _CallSessionScreenState extends State<CallSessionScreen>
           await _agora.setSpeakerOn(true);
         } catch (_) {}
       }
-      await _agora.joinChannel(
-        channelId: widget.channelId,
-        token: widget.token,
-        uid: widget.agoraUid,
-        publishVideo: widget.wantVideo,
-      );
+      // Web: joinChannel can hang indefinitely if WebRTC/camera is blocked — always cap wait time.
+      await _agora
+          .joinChannel(
+            channelId: widget.channelId,
+            token: widget.token,
+            uid: widget.agoraUid,
+            publishVideo: widget.wantVideo,
+          )
+          .timeout(
+            const Duration(seconds: 40),
+            onTimeout: () => throw TimeoutException(
+              'Agora joinChannel exceeded 40s (often camera/mic permission or token).',
+            ),
+          );
 
       // Wait for Agora to fully join the channel
       int waitMs = 0;
@@ -216,12 +256,15 @@ class _CallSessionScreenState extends State<CallSessionScreen>
         waitMs += 250;
       }
       if (!_agora.joined) {
-        throw TimeoutException('Agora media connection timed out waiting to join channel. Please verify token/App ID.');
+        throw TimeoutException(
+            'Agora media connection timed out waiting to join channel. Please verify token/App ID.');
       }
     } catch (e) {
       debugPrint('Agora connection failed: $e. Proceeding to chat fallback.');
       _agoraFailed = true;
     } finally {
+      _bootstrapWatchdog?.cancel();
+      _bootstrapWatchdog = null;
       if (mounted) setState(() => _starting = false);
     }
   }
@@ -251,6 +294,54 @@ class _CallSessionScreenState extends State<CallSessionScreen>
     _chatInput.clear();
   }
 
+  Future<void> _confirmSystemBack() async {
+    if (_leaving || _starting) return;
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: V26.surface,
+        surfaceTintColor: Colors.transparent,
+        title: Text(
+          _str(en: 'Leave call?', he: 'לצאת מהשיחה?', ru: 'Покинуть звонок?'),
+          style: const TextStyle(
+            fontFamily: V26.serif,
+            color: V26.ink900,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        content: Text(
+          _str(
+            en: 'The session will end for both sides.',
+            he: 'השיחה תיסגר לשני הצדדים.',
+            ru: 'Сессия завершится для обеих сторон.',
+          ),
+          style: const TextStyle(fontFamily: V26.sans, color: V26.ink500),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(
+              _str(en: 'Cancel', he: 'ביטול', ru: 'Отмена'),
+              style: const TextStyle(color: V26.ink500, fontFamily: V26.sans),
+            ),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: V26.emerg,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(
+              _str(en: 'End call', he: 'סיים שיחה', ru: 'Завершить'),
+              style: const TextStyle(fontFamily: V26.sans),
+            ),
+          ),
+        ],
+      ),
+    );
+    if (ok == true && mounted) await _endCall();
+  }
+
   Future<void> _endCall() async {
     if (_leaving) return;
     _leaving = true;
@@ -277,31 +368,41 @@ class _CallSessionScreenState extends State<CallSessionScreen>
   }
 
   Widget _buildWaitingForEngine() {
+    final webMsg = _str(
+      en: 'Connecting to media (browser)… If this stays stuck, allow camera/microphone for this site.',
+      he: 'מתחבר למדיה (דפדפן)… אם נשאר כך — אשר מצלמה ומיקרופן בהרשאות האתר',
+      ru: 'Подключение к медиа… Если зависло — разрешите камеру и микрофон для сайта.',
+    );
+    final nativeMsg = _str(
+      en: 'Preparing call…',
+      he: 'מכין שיחה…',
+      ru: 'Подготовка звонка…',
+    );
     if (kIsWeb) {
-      return const Center(
+      return Center(
         child: Padding(
-          padding: EdgeInsets.all(24),
+          padding: const EdgeInsets.all(24),
           child: Text(
-            'מתחבר למדיה (דפדפן)… אם נשאר כך — בדקו מצלמה/מיקרופן בהרשאות האתר',
+            webMsg,
             textAlign: TextAlign.center,
-            style: TextStyle(
+            style: const TextStyle(
               color: Colors.white70,
-              fontFamily: 'Heebo',
+              fontFamily: V26.sans,
               fontSize: 16,
             ),
           ),
         ),
       );
     }
-    return const Center(
+    return Center(
       child: Padding(
-        padding: EdgeInsets.all(24),
+        padding: const EdgeInsets.all(24),
         child: Text(
-          'מכין שיחה…',
+          nativeMsg,
           textAlign: TextAlign.center,
-          style: TextStyle(
+          style: const TextStyle(
             color: Colors.white70,
-            fontFamily: 'Heebo',
+            fontFamily: V26.sans,
             fontSize: 16,
           ),
         ),
@@ -316,18 +417,23 @@ class _CallSessionScreenState extends State<CallSessionScreen>
     required bool useVideoSurface,
   }) {
     if (_agoraFailed || eng == null) {
+      final msg = _str(
+        en: 'Media unavailable (camera/microphone).\nYou can still use the chat panel.',
+        he: 'חיבור מדיה לא זמין (מצלמה/מיקרופון).\nאפשר להמשיך בצ׳אט בלוח הצד.',
+        ru: 'Медиа недоступно (камера/микрофон).\nМожно пользоваться чатом на панели.',
+      );
       return Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             const Icon(Icons.videocam_off, color: Colors.white54, size: 56),
             const SizedBox(height: 16),
-            const Text(
-              'חיבור מדיה לא זמין (מצלמה/מיקרופון).\nתוכל להשתמש בצ׳אט מימין.',
+            Text(
+              msg,
               textAlign: TextAlign.center,
-              style: TextStyle(
+              style: const TextStyle(
                 color: Colors.white,
-                fontFamily: 'Heebo',
+                fontFamily: V26.sans,
                 fontSize: 16,
                 fontWeight: FontWeight.w500,
               ),
@@ -337,6 +443,11 @@ class _CallSessionScreenState extends State<CallSessionScreen>
       );
     }
     if (remote == null) {
+      final wait = _str(
+        en: 'Waiting for ${widget.peerLabel}…',
+        he: 'ממתין ל־${widget.peerLabel}…',
+        ru: 'Ожидание: ${widget.peerLabel}…',
+      );
       return Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -344,10 +455,11 @@ class _CallSessionScreenState extends State<CallSessionScreen>
             const Icon(Icons.person_search, color: Colors.white54, size: 56),
             const SizedBox(height: 16),
             Text(
-              'Waiting for ${widget.peerLabel}…',
+              wait,
+              textAlign: TextAlign.center,
               style: const TextStyle(
                 color: Colors.white,
-                fontFamily: 'Heebo',
+                fontFamily: V26.sans,
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
               ),
@@ -357,18 +469,23 @@ class _CallSessionScreenState extends State<CallSessionScreen>
       );
     }
     if (!useVideoSurface) {
-      return const Center(
+      final prep = _str(
+        en: 'Preparing video view (browser)…',
+        he: 'מכין תצוגת וידאו (דפדפן)…',
+        ru: 'Подготовка видео (браузер)…',
+      );
+      return Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            CircularProgressIndicator(color: Colors.white54),
-            SizedBox(height: 20),
+            const CircularProgressIndicator(color: Colors.white54),
+            const SizedBox(height: 20),
             Text(
-              'מכין תצוגת וידאו (דפדפן)…',
+              prep,
               textAlign: TextAlign.center,
-              style: TextStyle(
+              style: const TextStyle(
                 color: Colors.white70,
-                fontFamily: 'Heebo',
+                fontFamily: V26.sans,
                 fontSize: 16,
               ),
             ),
@@ -392,14 +509,14 @@ class _CallSessionScreenState extends State<CallSessionScreen>
   }) {
     if (_agoraFailed || eng == null || !_agora.joined) {
       return const Center(
-        child: Icon(Icons.videocam_outlined, color: VetoColors.silver),
+        child: Icon(Icons.videocam_outlined, color: V26.ink300),
       );
     }
 
     if (!useVideoSurface) {
       return const Center(
         child: CircularProgressIndicator(
-          color: VetoColors.silver,
+          color: V26.navy300,
           strokeWidth: 2,
         ),
       );
@@ -424,25 +541,24 @@ class _CallSessionScreenState extends State<CallSessionScreen>
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
               decoration: BoxDecoration(
-                color: VetoColors.vetoRedSoft,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(
-                  color: VetoColors.vetoRed.withValues(alpha: 0.3),
-                ),
+                color: V26.navy800.withValues(alpha: 0.92),
+                borderRadius: BorderRadius.circular(V26.rSm),
+                border: Border.all(color: V26.gold.withValues(alpha: 0.35)),
+                boxShadow: V26.shadow1,
               ),
-              child: const Row(
+              child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.shield, color: VetoColors.vetoRed, size: 14),
-                  SizedBox(width: 5),
+                  const Icon(Icons.shield_rounded, color: V26.gold, size: 14),
+                  const SizedBox(width: 5),
                   Text(
                     'VETO',
                     style: TextStyle(
-                      fontFamily: 'Heebo',
+                      fontFamily: V26.serif,
                       fontSize: 12,
                       fontWeight: FontWeight.w800,
-                      color: VetoColors.vetoRed,
-                      letterSpacing: 1.4,
+                      color: Colors.white.withValues(alpha: 0.95),
+                      letterSpacing: 1.2,
                     ),
                   ),
                 ],
@@ -450,17 +566,16 @@ class _CallSessionScreenState extends State<CallSessionScreen>
             ),
             const Spacer(),
             // אינדיקטור איכות רשת בזמן אמת
-            if (quality.isNotEmpty) ...
-              [
-                _NetworkQualityChip(label: quality, rttMs: rtt),
-                const SizedBox(width: 8),
-              ],
+            if (quality.isNotEmpty) ...[
+              _NetworkQualityChip(label: quality, rttMs: rtt),
+              const SizedBox(width: 8),
+            ],
             if (_agora.joined)
               Text(
                 '${(_durationSeconds ~/ 60).toString().padLeft(2, '0')}:'
                 '${(_durationSeconds % 60).toString().padLeft(2, '0')}',
                 style: TextStyle(
-                  fontFamily: 'Heebo',
+                  fontFamily: V26.sans,
                   fontSize: 14,
                   color: Colors.white.withValues(alpha: 0.85),
                 ),
@@ -473,7 +588,7 @@ class _CallSessionScreenState extends State<CallSessionScreen>
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
                   color: Colors.white,
-                  fontFamily: 'Heebo',
+                  fontFamily: V26.sans,
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
                 ),
@@ -506,16 +621,24 @@ class _CallSessionScreenState extends State<CallSessionScreen>
               },
               style: IconButton.styleFrom(
                 backgroundColor: _agora.noiseSuppression
-                    ? VetoColors.vetoRed.withValues(alpha: 0.3)
-                    : Colors.white12,
+                    ? V26.navy500.withValues(alpha: 0.45)
+                    : const Color(0x26FFFFFF),
               ),
               icon: Icon(
                 _agora.noiseSuppression
                     ? Icons.noise_aware
                     : Icons.noise_control_off,
-                color: _agora.noiseSuppression ? VetoColors.vetoRed : Colors.white54,
+                color: _agora.noiseSuppression ? V26.navy200 : Colors.white54,
               ),
-              tooltip: _agora.noiseSuppression ? 'Noise suppression ON' : 'Noise suppression OFF',
+              tooltip: _agora.noiseSuppression
+                  ? _str(
+                      en: 'Noise suppression on',
+                      he: 'דיכוי רעשים פעיל',
+                      ru: 'Шумоподавление вкл.')
+                  : _str(
+                      en: 'Noise suppression off',
+                      he: 'דיכוי רעשים כבוי',
+                      ru: 'Шумоподавление выкл.'),
             ),
             const SizedBox(width: 4),
             if (!kIsWeb)
@@ -524,15 +647,13 @@ class _CallSessionScreenState extends State<CallSessionScreen>
                   unawaited(_agora.setSpeakerOn(!_agora.speakerOn));
                 },
                 style: IconButton.styleFrom(
-                  backgroundColor: Colors.white12,
+                  backgroundColor: const Color(0x26FFFFFF),
                 ),
                 icon: Icon(
-                  _agora.speakerOn
-                      ? Icons.volume_up
-                      : Icons.hearing,
+                  _agora.speakerOn ? Icons.volume_up : Icons.hearing,
                   color: Colors.white,
                 ),
-                tooltip: 'Speaker',
+                tooltip: _str(en: 'Speaker', he: 'רמקול', ru: 'Динамик'),
               ),
             if (!kIsWeb) const SizedBox(width: 4),
             IconButton(
@@ -542,28 +663,28 @@ class _CallSessionScreenState extends State<CallSessionScreen>
                 );
               },
               style: IconButton.styleFrom(
-                backgroundColor:
-                    _agora.micPublishMuted ? VetoColors.vetoRed : Colors.white12,
+                backgroundColor: _agora.micPublishMuted
+                    ? V26.emerg.withValues(alpha: 0.85)
+                    : const Color(0x26FFFFFF),
               ),
               icon: Icon(
                 _agora.micPublishMuted ? Icons.mic_off : Icons.mic,
                 color: Colors.white,
               ),
-              tooltip: 'Microphone',
+              tooltip: _str(en: 'Microphone', he: 'מיקרופון', ru: 'Микрофон'),
             ),
             if (widget.wantVideo) ...[
               const SizedBox(width: 4),
               IconButton(
                 onPressed: () {
                   unawaited(
-                    _agora
-                        .setVideoPublishMuted(!_agora.videoPublishMuted),
+                    _agora.setVideoPublishMuted(!_agora.videoPublishMuted),
                   );
                 },
                 style: IconButton.styleFrom(
                   backgroundColor: _agora.videoPublishMuted
-                      ? VetoColors.vetoRed
-                      : Colors.white12,
+                      ? V26.emerg.withValues(alpha: 0.9)
+                      : const Color(0x26FFFFFF),
                 ),
                 icon: Icon(
                   _agora.videoPublishMuted
@@ -571,7 +692,7 @@ class _CallSessionScreenState extends State<CallSessionScreen>
                       : Icons.videocam,
                   color: Colors.white,
                 ),
-                tooltip: 'Camera',
+                tooltip: _str(en: 'Camera', he: 'מצלמה', ru: 'Камера'),
               ),
             ],
             if (widget.wantVideo && !kIsWeb) ...[
@@ -581,13 +702,14 @@ class _CallSessionScreenState extends State<CallSessionScreen>
                   unawaited(_agora.switchCamera());
                 },
                 style: IconButton.styleFrom(
-                  backgroundColor: Colors.white12,
+                  backgroundColor: const Color(0x26FFFFFF),
                 ),
                 icon: const Icon(
                   Icons.cameraswitch,
                   color: Colors.white,
                 ),
-                tooltip: 'Flip camera',
+                tooltip: _str(
+                    en: 'Flip camera', he: 'החלפת מצלמה', ru: 'Сменить камеру'),
               ),
             ],
             // שיתוף מסך (Web only)
@@ -598,19 +720,23 @@ class _CallSessionScreenState extends State<CallSessionScreen>
                   unawaited(_agora.toggleScreenShare());
                 },
                 style: IconButton.styleFrom(
-                  backgroundColor: _agora.screenSharing
-                      ? const Color(0xFF10B981)
-                      : Colors.white12,
+                  backgroundColor:
+                      _agora.screenSharing ? V26.ok : const Color(0x26FFFFFF),
                 ),
                 icon: Icon(
                   _agora.screenSharing
                       ? Icons.stop_screen_share
                       : Icons.screen_share,
-                  color: _agora.screenSharing
-                      ? Colors.white
-                      : Colors.white70,
+                  color: _agora.screenSharing ? Colors.white : Colors.white70,
                 ),
-                tooltip: _agora.screenSharing ? 'Stop sharing' : 'Share screen',
+                tooltip: _agora.screenSharing
+                    ? _str(
+                        en: 'Stop sharing', he: 'עצור שיתוף', ru: 'Остановить')
+                    : _str(
+                        en: 'Share screen',
+                        he: 'שיתוף מסך',
+                        ru: 'Поделиться экраном',
+                      ),
               ),
             ],
           ],
@@ -628,19 +754,19 @@ class _CallSessionScreenState extends State<CallSessionScreen>
           child: Container(
             width: 64,
             height: 64,
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               shape: BoxShape.circle,
-              color: VetoColors.vetoRed,
-              boxShadow: VetoDecorations.vetoGlow(intensity: 0.7),
+              color: V26.emerg,
+              boxShadow: V26.shadowEmerg,
             ),
-            child: const Icon(Icons.call_end, color: VetoColors.white, size: 28),
+            child: const Icon(Icons.call_end, color: Colors.white, size: 28),
           ),
         ),
         const SizedBox(height: 4),
         Text(
-          'End',
+          _str(en: 'End', he: 'סיום', ru: 'Конец'),
           style: TextStyle(
-            fontFamily: 'Heebo',
+            fontFamily: V26.sans,
             fontSize: 11,
             color: Colors.white.withValues(alpha: 0.75),
           ),
@@ -650,45 +776,67 @@ class _CallSessionScreenState extends State<CallSessionScreen>
   }
 
   Widget _sidePanel() {
-    return Material(
-      color: VetoColors.surface.withValues(alpha: 0.95),
-      child: Column(
-        children: [
-          TabBar(
-            controller: _sideTabController,
-            labelColor: VetoColors.vetoRed,
-            unselectedLabelColor: VetoColors.silver,
-            indicatorColor: VetoColors.vetoRed,
-            tabs: const [
-              Tab(text: 'Chat'),
-              Tab(text: 'Caption'),
-            ],
-          ),
-          if (widget.eventId.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.fromLTRB(8, 4, 8, 0),
-              child: Text(
-                kIsWeb
-                    ? 'Server recording may be enabled; transcript can run after the call ends.'
-                    : 'After the call, server recording can be transcribed from the vault when available.',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: VetoColors.silver.withValues(alpha: 0.9),
-                  fontSize: 10,
-                  fontFamily: 'Heebo',
-                ),
-              ),
-            ),
-          Expanded(
-            child: TabBarView(
+    return Directionality(
+      textDirection: _rtl ? TextDirection.rtl : TextDirection.ltr,
+      child: Material(
+        color: V26.surface,
+        elevation: 0,
+        child: Column(
+          children: [
+            TabBar(
               controller: _sideTabController,
-              children: [
-                _chatTab(),
-                _captionTab(),
+              labelColor: V26.navy600,
+              unselectedLabelColor: V26.ink300,
+              indicatorColor: V26.gold,
+              labelStyle: const TextStyle(
+                fontFamily: V26.sans,
+                fontWeight: FontWeight.w700,
+                fontSize: 13,
+              ),
+              unselectedLabelStyle: const TextStyle(
+                fontFamily: V26.sans,
+                fontWeight: FontWeight.w600,
+                fontSize: 13,
+              ),
+              tabs: [
+                Tab(text: _str(en: 'Chat', he: 'צ׳אט', ru: 'Чат')),
+                Tab(text: _str(en: 'Caption', he: 'כיתוב', ru: 'Субтитры')),
               ],
             ),
-          ),
-        ],
+            if (widget.eventId.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(8, 4, 8, 0),
+                child: Text(
+                  kIsWeb
+                      ? _str(
+                          en: 'Server recording may be enabled; transcript can run after the call ends.',
+                          he: 'אם יש הקלטה בשרת, תמלול יתאפשר מהכספת לאחר השיחה.',
+                          ru: 'При записи на сервере расшифровка может быть в хранилище после звонка.',
+                        )
+                      : _str(
+                          en: 'After the call, server recording can be transcribed from the vault when available.',
+                          he: 'לאחר השיחה ניתן לתמלל הקלטת שרת מהכספת כשקיימת.',
+                          ru: 'После звонка расшифровка записи сервера — из хранилища, если доступна.',
+                        ),
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: V26.ink300,
+                    fontSize: 10,
+                    fontFamily: V26.sans,
+                  ),
+                ),
+              ),
+            Expanded(
+              child: TabBarView(
+                controller: _sideTabController,
+                children: [
+                  _chatTab(),
+                  _captionTab(),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -698,12 +846,16 @@ class _CallSessionScreenState extends State<CallSessionScreen>
       children: [
         Expanded(
           child: _chatLines.isEmpty
-              ? const Center(
+              ? Center(
                   child: Text(
-                    'No messages yet. Type below.',
-                    style: TextStyle(
-                      color: VetoColors.silver,
-                      fontFamily: 'Heebo',
+                    _str(
+                      en: 'No messages yet. Type below.',
+                      he: 'אין הודעות. כתוב למטה.',
+                      ru: 'Пока нет сообщений. Введите текст ниже.',
+                    ),
+                    style: const TextStyle(
+                      color: V26.ink300,
+                      fontFamily: V26.sans,
                     ),
                   ),
                 )
@@ -715,8 +867,12 @@ class _CallSessionScreenState extends State<CallSessionScreen>
                     final line = _chatLines[i];
                     return Align(
                       alignment: line.mine
-                          ? Alignment.centerRight
-                          : Alignment.centerLeft,
+                          ? (_rtl
+                              ? Alignment.centerLeft
+                              : Alignment.centerRight)
+                          : (_rtl
+                              ? Alignment.centerRight
+                              : Alignment.centerLeft),
                       child: Container(
                         margin: const EdgeInsets.symmetric(vertical: 3),
                         padding: const EdgeInsets.symmetric(
@@ -725,16 +881,15 @@ class _CallSessionScreenState extends State<CallSessionScreen>
                         ),
                         constraints: const BoxConstraints(maxWidth: 260),
                         decoration: BoxDecoration(
-                          color: line.mine
-                              ? VetoColors.vetoRed.withValues(alpha: 0.25)
-                              : Colors.white12,
+                          color: line.mine ? V26.infoSoft : V26.paper2,
                           borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: V26.hairline),
                         ),
                         child: Text(
                           line.text,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontFamily: 'Heebo',
+                          style: TextStyle(
+                            color: line.mine ? V26.ink900 : V26.ink700,
+                            fontFamily: V26.sans,
                             fontSize: 14,
                           ),
                         ),
@@ -745,7 +900,10 @@ class _CallSessionScreenState extends State<CallSessionScreen>
         ),
         Container(
           padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
-          color: Colors.black26,
+          decoration: const BoxDecoration(
+            color: V26.paper,
+            border: Border(top: BorderSide(color: V26.hairline)),
+          ),
           child: Row(
             children: [
               Expanded(
@@ -754,17 +912,30 @@ class _CallSessionScreenState extends State<CallSessionScreen>
                   minLines: 1,
                   maxLines: 3,
                   style: const TextStyle(
-                    color: Colors.white,
-                    fontFamily: 'Heebo',
+                    color: V26.ink900,
+                    fontFamily: V26.sans,
                   ),
-                  decoration: const InputDecoration(
-                    hintText: 'Message…',
-                    hintStyle: TextStyle(
-                      color: VetoColors.silver,
+                  decoration: InputDecoration(
+                    hintText:
+                        _str(en: 'Message…', he: 'הודעה…', ru: 'Сообщение…'),
+                    hintStyle: const TextStyle(
+                      color: V26.ink300,
                     ),
-                    border: OutlineInputBorder(),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(V26.rSm),
+                      borderSide: const BorderSide(color: V26.hairline),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(V26.rSm),
+                      borderSide: const BorderSide(color: V26.hairline),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(V26.rSm),
+                      borderSide:
+                          const BorderSide(color: V26.navy500, width: 1.5),
+                    ),
                     isDense: true,
-                    contentPadding: EdgeInsets.symmetric(
+                    contentPadding: const EdgeInsets.symmetric(
                       horizontal: 10,
                       vertical: 8,
                     ),
@@ -774,8 +945,8 @@ class _CallSessionScreenState extends State<CallSessionScreen>
               ),
               IconButton(
                 onPressed: _sendChat,
-                color: VetoColors.vetoRed,
-                icon: const Icon(Icons.send),
+                color: V26.navy600,
+                icon: const Icon(Icons.send_rounded),
               ),
             ],
           ),
@@ -793,11 +964,15 @@ class _CallSessionScreenState extends State<CallSessionScreen>
           Padding(
             padding: const EdgeInsets.only(bottom: 8),
             child: Text(
-              'בדפדפן אין כתוביות מקומיות; אחרי השיחה — תמלול דרך Vault כשההקלטה בשרת קיימת. באפליקיית מובייל אפשר כאן תמלול מקומי.',
-              style: TextStyle(
-                color: Colors.orange.shade200,
+              _str(
+                en: 'Live captions are limited in the browser. After the call, vault transcription may apply when server recording exists. On mobile you can use local live caption here.',
+                he: 'בדפדפן כתוביות חיות מוגבלות; אחרי השיחה — תמלול מהכספת כשיש הקלטת שרת. במובייל אפשר תמלול מקומי כאן.',
+                ru: 'В браузере субтитры ограничены; после звонка — расшифровка из хранилища при записи на сервере.',
+              ),
+              style: const TextStyle(
+                color: V26.warn,
                 fontSize: 12,
-                fontFamily: 'Heebo',
+                fontFamily: V26.sans,
               ),
             ),
           ),
@@ -808,30 +983,41 @@ class _CallSessionScreenState extends State<CallSessionScreen>
                   unawaited(s.toggle());
                 },
           style: FilledButton.styleFrom(
-            backgroundColor:
-                s.listening ? VetoColors.vetoRed : VetoColors.surface,
-            foregroundColor: s.listening ? Colors.white : VetoColors.silver,
+            backgroundColor: s.listening ? V26.emerg : V26.paper2,
+            foregroundColor: s.listening ? Colors.white : V26.ink700,
           ),
           icon: Icon(
             s.listening ? Icons.stop_circle_outlined : Icons.mic,
           ),
           label: Text(
             kIsWeb
-                ? 'מידע על תמלול'
+                ? _str(
+                    en: 'About transcription',
+                    he: 'מידע על תמלול',
+                    ru: 'О расшифровке',
+                  )
                 : (s.listening
-                    ? 'Stop live caption'
-                    : 'Start local live caption'),
-            style: const TextStyle(fontFamily: 'Heebo'),
+                    ? _str(
+                        en: 'Stop live caption',
+                        he: 'עצור כיתוב חי',
+                        ru: 'Остановить субтитры',
+                      )
+                    : _str(
+                        en: 'Start live caption',
+                        he: 'התחל כיתוב חי',
+                        ru: 'Запустить субтитры',
+                      )),
+            style: const TextStyle(fontFamily: V26.sans),
           ),
         ),
         if (s.error != null) ...[
           const SizedBox(height: 8),
           Text(
             s.error!,
-            style: TextStyle(
-              color: Colors.orange.shade200,
+            style: const TextStyle(
+              color: V26.warn,
               fontSize: 12,
-              fontFamily: 'Heebo',
+              fontFamily: V26.sans,
             ),
           ),
         ],
@@ -840,9 +1026,10 @@ class _CallSessionScreenState extends State<CallSessionScreen>
           Text(
             s.partial,
             style: const TextStyle(
-              color: VetoColors.silver,
+              color: V26.ink300,
               fontSize: 14,
               fontStyle: FontStyle.italic,
+              fontFamily: V26.sans,
             ),
           ),
           const SizedBox(height: 8),
@@ -853,20 +1040,24 @@ class _CallSessionScreenState extends State<CallSessionScreen>
             child: Text(
               '• $line',
               style: const TextStyle(
-                color: Colors.white,
+                color: V26.ink900,
                 fontSize: 14,
-                fontFamily: 'Heebo',
+                fontFamily: V26.sans,
                 height: 1.3,
               ),
             ),
           ),
         if (s.lines.isEmpty && s.partial.isEmpty && s.error == null)
-          const Text(
-            'This is on-device text from your side only (not the peer). Server-side transcription uses the recording when you end the call.',
-            style: TextStyle(
-              color: VetoColors.silver,
+          Text(
+            _str(
+              en: 'On-device text from your side only (not the peer). Server transcription uses the recording after you end the call.',
+              he: 'טקסט מקומי מהצד שלך בלבד (לא מהצד השני). תמלול שרת משתמש בהקלטה אחרי סיום השיחה.',
+              ru: 'Только локальный текст с вашей стороны. Серверная расшифровка — после записи.',
+            ),
+            style: const TextStyle(
+              color: V26.ink300,
               fontSize: 12,
-              fontFamily: 'Heebo',
+              fontFamily: V26.sans,
             ),
           ),
       ],
@@ -902,12 +1093,20 @@ class _CallSessionScreenState extends State<CallSessionScreen>
                 const SizedBox(height: 16),
                 Text(
                   remote != null
-                      ? 'Audio — ${widget.peerLabel}'
-                      : 'Waiting for ${widget.peerLabel}…',
+                      ? _str(
+                          en: 'Voice — ${widget.peerLabel}',
+                          he: 'קול — ${widget.peerLabel}',
+                          ru: 'Аудио — ${widget.peerLabel}',
+                        )
+                      : _str(
+                          en: 'Waiting for ${widget.peerLabel}…',
+                          he: 'ממתין ל־${widget.peerLabel}…',
+                          ru: 'Ожидание: ${widget.peerLabel}…',
+                        ),
                   textAlign: TextAlign.center,
                   style: const TextStyle(
                     color: Colors.white,
-                    fontFamily: 'Heebo',
+                    fontFamily: V26.sans,
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
                   ),
@@ -918,17 +1117,20 @@ class _CallSessionScreenState extends State<CallSessionScreen>
         if (widget.wantVideo)
           Positioned(
             top: 64,
-            right: 10,
+            right: _rtl ? null : 10,
+            left: _rtl ? 10 : null,
             width: 90,
             height: 120,
             child: ClipRRect(
               borderRadius: BorderRadius.circular(10),
               child: Container(
                 decoration: BoxDecoration(
-                  color: VetoColors.surface,
-                  border: Border.all(color: VetoColors.border),
+                  color: V26.surface,
+                  border: Border.all(color: V26.hairline),
+                  boxShadow: V26.shadow1,
                 ),
-                child: _localPreview(eng: eng, useVideoSurface: useVideoSurface),
+                child:
+                    _localPreview(eng: eng, useVideoSurface: useVideoSurface),
               ),
             ),
           ),
@@ -953,10 +1155,10 @@ class _CallSessionScreenState extends State<CallSessionScreen>
                     child: Text(
                       _agora.errorMessage ?? '',
                       textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: Colors.orange.shade200,
+                      style: const TextStyle(
+                        color: V26.warnSoft,
                         fontSize: 11,
-                        fontFamily: 'Heebo',
+                        fontFamily: V26.sans,
                       ),
                     ),
                   ),
@@ -975,6 +1177,7 @@ class _CallSessionScreenState extends State<CallSessionScreen>
 
   @override
   void dispose() {
+    _bootstrapWatchdog?.cancel();
     _sideTabController.dispose();
     _webVideoGateTimer?.cancel();
     _durationTimer?.cancel();
@@ -1001,77 +1204,101 @@ class _CallSessionScreenState extends State<CallSessionScreen>
     final w = MediaQuery.sizeOf(context).width;
     final useWideSide = w >= 900;
 
-    return Scaffold(
-      backgroundColor: Colors.black,
-      body: Stack(
-        children: [
-          Positioned.fill(
-            child: Container(color: const Color(0xFF0A0E17)),
-          ),
-          if (_starting)
-            const Positioned.fill(
-              child: Center(
-                child: CircularProgressIndicator(color: Colors.white54),
-              ),
-            )
-          else if (_startError != null)
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (bool didPop, dynamic result) async {
+        if (didPop) return;
+        await _confirmSystemBack();
+      },
+      child: Scaffold(
+        backgroundColor: V26.navy900,
+        body: Stack(
+          children: [
             Positioned.fill(
-              child: Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(24),
-                  child: Text(
-                    _startError!,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      color: Colors.white70,
-                      fontFamily: 'Heebo',
-                    ),
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      V26.navy900,
+                      V26.navy900.withValues(alpha: 0.98),
+                      const Color(0xFF05070E),
+                    ],
                   ),
                 ),
               ),
-            )
-          else if ((eng == null || !_agora.joined) && !_agoraFailed)
-            Positioned.fill(child: _buildWaitingForEngine())
-          else if (useWideSide)
-            Positioned.fill(
-              child: Row(
-                children: [
-                  Expanded(
-                    child: _buildVideoStage(
-                      eng,
-                      remote: remote,
-                      channel: channel,
-                      useVideoSurface: useVideoSurface,
-                    ),
-                  ),
-                  SizedBox(
-                    width: 320,
-                    child: _sidePanel(),
-                  ),
-                ],
-              ),
-            )
-          else
-            Positioned.fill(
-              child: Column(
-                children: [
-                  Expanded(
-                    child: _buildVideoStage(
-                      eng,
-                      remote: remote,
-                      channel: channel,
-                      useVideoSurface: useVideoSurface,
-                    ),
-                  ),
-                  SizedBox(
-                    height: (MediaQuery.sizeOf(context).height * 0.38)
-                        .clamp(220.0, 420.0),
-                    child: _sidePanel(),
-                  ),
-                ],
-              ),
             ),
-        ],
+            if (_starting)
+              Positioned.fill(
+                child: Center(
+                  child: CircularProgressIndicator(
+                    color: V26.gold.withValues(alpha: 0.9),
+                  ),
+                ),
+              )
+            else if (_startError != null)
+              Positioned.fill(
+                child: Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Text(
+                      _startError!,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        fontFamily: V26.sans,
+                      ),
+                    ),
+                  ),
+                ),
+              )
+            else if ((eng == null || !_agora.joined) && !_agoraFailed)
+              Positioned.fill(child: _buildWaitingForEngine())
+            else if (useWideSide)
+              Positioned.fill(
+                child: Directionality(
+                  textDirection: _rtl ? TextDirection.rtl : TextDirection.ltr,
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: _buildVideoStage(
+                          eng,
+                          remote: remote,
+                          channel: channel,
+                          useVideoSurface: useVideoSurface,
+                        ),
+                      ),
+                      SizedBox(
+                        width: 320,
+                        child: _sidePanel(),
+                      ),
+                    ],
+                  ),
+                ),
+              )
+            else
+              Positioned.fill(
+                child: Column(
+                  children: [
+                    Expanded(
+                      child: _buildVideoStage(
+                        eng,
+                        remote: remote,
+                        channel: channel,
+                        useVideoSurface: useVideoSurface,
+                      ),
+                    ),
+                    SizedBox(
+                      height: (MediaQuery.sizeOf(context).height * 0.38)
+                          .clamp(220.0, 420.0),
+                      child: _sidePanel(),
+                    ),
+                  ],
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }
@@ -1086,11 +1313,16 @@ class _NetworkQualityChip extends StatelessWidget {
 
   Color get _color {
     switch (label) {
-      case 'מעולה': return const Color(0xFF10B981);
-      case 'טובה':  return const Color(0xFF34D399);
-      case 'בינונית': return const Color(0xFFF59E0B);
-      case 'גרועה': return const Color(0xFFEF4444);
-      default: return const Color(0xFFEF4444);
+      case 'מעולה':
+        return const Color(0xFF10B981);
+      case 'טובה':
+        return const Color(0xFF34D399);
+      case 'בינונית':
+        return const Color(0xFFF59E0B);
+      case 'גרועה':
+        return const Color(0xFFEF4444);
+      default:
+        return const Color(0xFFEF4444);
     }
   }
 
@@ -1118,7 +1350,7 @@ class _NetworkQualityChip extends StatelessWidget {
               color: _color,
               fontSize: 11,
               fontWeight: FontWeight.w600,
-              fontFamily: 'Heebo',
+              fontFamily: V26.sans,
             ),
           ),
         ],

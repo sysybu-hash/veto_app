@@ -1,0 +1,507 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>VETO · Landing · 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@500;700;900&family=Heebo:wght@300;400;500;600;700;800;900&family=Assistant:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="_veto-2026.css">
+<style>
+  /* Landing-specific composition */
+  .landing-page{ display:flex; flex-direction:column; height:100% }
+
+  /* Hero */
+  .hero-landing{
+    padding:48px 28px 32px;
+    background:
+      radial-gradient(800px 360px at 92% 0%, rgba(46,105,231,.10), transparent 65%),
+      radial-gradient(600px 320px at 0% 100%, rgba(184,137,92,.10), transparent 60%);
+  }
+  .desktop .hero-landing{ padding:64px 56px 44px }
+  .phone .hero-landing{ padding:24px 20px 28px }
+  .hero-grid-l{ display:grid; gap:32px; align-items:center }
+  .desktop .hero-grid-l{ grid-template-columns: 1.05fr .95fr; gap:48px }
+
+  .eyebrow{
+    display:inline-flex; align-items:center; gap:8px;
+    font-size:11px; letter-spacing:.18em; text-transform:uppercase;
+    color:var(--navy-600); font-weight:800;
+    background:#fff; padding:7px 14px; border-radius:var(--r-pill);
+    border:1px solid var(--hairline); box-shadow:var(--shadow-1);
+    margin-bottom:18px;
+  }
+  .eyebrow .dot{ width:6px; height:6px; border-radius:50%; background:var(--ok); box-shadow:0 0 0 3px rgba(43,163,116,.18) }
+  .hero-title{
+    font-family:var(--serif); font-size:54px; line-height:1.05; color:var(--ink-900);
+    letter-spacing:-.02em; margin-bottom:18px;
+  }
+  .desktop .hero-title{ font-size:64px }
+  .phone .hero-title{ font-size:34px; line-height:1.1 }
+  .hero-title em{ font-style:normal; color:var(--navy-600); position:relative }
+  .hero-title em::after{
+    content:""; display:block; height:6px; background:var(--gold-soft); border-radius:4px;
+    margin-top:-10px; opacity:.7;
+  }
+  .hero-body{
+    font-size:17px; line-height:1.65; color:var(--ink-500); margin-bottom:28px;
+    max-width:48ch;
+  }
+  .phone .hero-body{ font-size:14px }
+  .hero-row{ display:flex; gap:12px; align-items:center; flex-wrap:wrap; margin-bottom:24px }
+
+  .proof-row{ display:flex; gap:24px; flex-wrap:wrap; padding-top:18px; border-top:1px solid var(--hairline) }
+  .proof{ display:flex; align-items:center; gap:10px }
+  .proof .num{
+    font-family:var(--serif); font-size:24px; font-weight:800; color:var(--ink-900); line-height:1;
+  }
+  .proof .lbl{ font-size:11px; color:var(--ink-500); line-height:1.3; max-width:14ch }
+
+  /* Hero visual: device with SOS */
+  .hero-visual{
+    position:relative; aspect-ratio: 1 / 1; display:grid; place-items:center;
+  }
+  .hero-visual::before{
+    content:""; position:absolute; inset:8%;
+    border-radius:50%;
+    background: radial-gradient(closest-side, rgba(46,105,231,.10), transparent 70%);
+  }
+  .mini-device{
+    width:78%; aspect-ratio:9/16; background:#0B1830; border-radius:32px; padding:8px;
+    box-shadow: 0 30px 80px rgba(11,24,48,.22), 0 8px 24px rgba(11,24,48,.12);
+    position:relative;
+  }
+  .mini-device::after{
+    content:""; position:absolute; top:14px; left:50%; transform:translateX(-50%);
+    width:80px; height:16px; border-radius:10px; background:#0B1830; box-shadow:inset 0 0 0 2px #1A2C49;
+  }
+  .mini-device .mini-screen{
+    width:100%; height:100%; border-radius:24px; background:var(--paper); overflow:hidden;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px;
+    padding:32px 12px;
+  }
+  .mini-orb{
+    width:130px; height:130px; border-radius:50%;
+    background: radial-gradient(120% 120% at 30% 25%, #FF8492 0%, #E5354C 38%, #B81B30 78%);
+    box-shadow: var(--shadow-emerg), inset 0 -10px 24px rgba(0,0,0,.18), inset 0 10px 24px rgba(255,255,255,.22);
+    color:#fff; display:grid; place-items:center; position:relative;
+  }
+  .mini-orb::after{
+    content:""; position:absolute; inset:6px; border-radius:50%;
+    background:radial-gradient(60% 50% at 50% 12%, rgba(255,255,255,.55), transparent 60%);
+  }
+  .mini-orb .w{ font-family:var(--serif); font-size:30px; font-weight:900; letter-spacing:.18em }
+  .mini-stat{ font-size:11px; color:var(--ink-500); letter-spacing:.04em }
+  .mini-stat b{ color:var(--ink-900) }
+
+  /* Feature row */
+  .features-l{
+    padding:32px 28px; display:grid; gap:14px;
+    grid-template-columns:1fr;
+  }
+  .desktop .features-l{ padding:32px 56px; grid-template-columns:repeat(3,1fr); gap:18px }
+  .phone .features-l{ padding:24px 20px; grid-template-columns:1fr; gap:12px }
+  .feature{
+    background:#fff; border:1px solid var(--hairline); border-radius:var(--r-lg);
+    padding:22px; box-shadow:var(--shadow-1);
+  }
+  .feature .ico-lg{
+    width:48px; height:48px; border-radius:14px; margin-bottom:14px;
+    background: linear-gradient(135deg, #fff, var(--navy-100));
+    border:1px solid var(--hairline); color:var(--navy-700);
+    display:grid; place-items:center;
+    box-shadow:var(--shadow-1);
+  }
+  .feature h3{ font-family:var(--serif); font-size:18px; color:var(--ink-900); margin-bottom:6px }
+  .feature p{ color:var(--ink-500); font-size:13.5px; line-height:1.55; margin:0 }
+
+  /* Stack (3-step flow) */
+  .stack-l{
+    margin:24px 28px; padding:32px 28px;
+    background:#fff; border:1px solid var(--hairline); border-radius:var(--r-2xl);
+    box-shadow:var(--shadow-2);
+  }
+  .desktop .stack-l{ margin:24px 56px; padding:48px 56px }
+  .phone .stack-l{ margin:24px 20px; padding:24px 20px }
+  .stack-grid{ display:grid; gap:18px; grid-template-columns:1fr }
+  .desktop .stack-grid{ grid-template-columns:repeat(3,1fr); gap:24px }
+  .stack-step{ display:flex; flex-direction:column; gap:10px; position:relative }
+  .stack-step .num{
+    font-family:var(--serif); font-size:54px; font-weight:900; color:var(--navy-600);
+    line-height:1; opacity:.16;
+  }
+  .stack-step h4{ font-family:var(--serif); font-size:18px; color:var(--ink-900) }
+  .stack-step p{ color:var(--ink-500); font-size:13.5px; line-height:1.6; margin:0 }
+  .stack-step::before{
+    content:""; position:absolute; top:34px; right:-18px;
+    width:24px; height:1px; background:var(--hairline-2);
+  }
+  .stack-step:last-child::before{ display:none }
+
+  /* Stats strip */
+  .stats-l{
+    display:grid; grid-template-columns:repeat(2,1fr); gap:1px; background:var(--hairline);
+    border:1px solid var(--hairline); border-radius:var(--r-lg); margin:0 28px; overflow:hidden;
+  }
+  .desktop .stats-l{ grid-template-columns:repeat(4,1fr); margin:0 56px }
+  .phone .stats-l{ margin:0 20px }
+  .stat-cell{ background:#fff; padding:22px 18px; text-align:center }
+  .stat-cell .n{ font-family:var(--serif); font-size:32px; font-weight:800; color:var(--ink-900); line-height:1 }
+  .stat-cell .l{ font-size:11px; color:var(--ink-500); margin-top:8px; letter-spacing:.06em }
+
+  /* Pricing */
+  .pricing-l{
+    margin:32px 28px; padding:32px;
+    background: linear-gradient(180deg, #fff, var(--surface-2));
+    border:1px solid var(--hairline); border-radius:var(--r-2xl);
+    box-shadow:var(--shadow-2);
+    display:grid; gap:24px; grid-template-columns:1fr;
+  }
+  .desktop .pricing-l{ margin:32px 56px; padding:48px; grid-template-columns: 1fr 1.2fr; align-items:center }
+  .phone .pricing-l{ margin:24px 20px; padding:24px }
+  .pricing-l h2{ font-family:var(--serif); font-size:32px; color:var(--ink-900); margin-bottom:8px }
+  .desktop .pricing-l h2{ font-size:38px }
+  .pricing-l .price{ display:flex; align-items:baseline; gap:6px; margin:14px 0 18px }
+  .pricing-l .price .v{ font-family:var(--serif); font-size:54px; font-weight:900; color:var(--navy-600); line-height:1 }
+  .pricing-l .price .p{ color:var(--ink-500); font-size:14px; font-weight:600 }
+  .pricing-l ul{ list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:10px }
+  .pricing-l ul li{ display:flex; gap:10px; font-size:14px; color:var(--ink-700); line-height:1.5 }
+  .pricing-l ul li .ico{
+    flex-shrink:0; width:22px; height:22px; border-radius:7px;
+    background:var(--ok-soft); color:#16664B; display:grid; place-items:center;
+  }
+
+  /* CTA strip */
+  .cta-strip{
+    margin:24px 28px 0; padding:32px;
+    background: linear-gradient(135deg, var(--navy-700), var(--navy-600));
+    color:#fff; border-radius:var(--r-2xl); position:relative; overflow:hidden;
+  }
+  .desktop .cta-strip{ margin:24px 56px 0; padding:48px 56px }
+  .phone .cta-strip{ margin:24px 20px 0; padding:24px }
+  .cta-strip::before{
+    content:""; position:absolute; top:-40%; right:-20%;
+    width:60%; height:160%; background:radial-gradient(closest-side, rgba(184,137,92,.20), transparent 70%);
+  }
+  .cta-strip h2{
+    font-family:var(--serif); font-size:30px; color:#fff; margin-bottom:8px; position:relative;
+  }
+  .desktop .cta-strip h2{ font-size:36px }
+  .cta-strip p{ color:#C7D5EE; font-size:14px; line-height:1.6; max-width:50ch; margin:0 0 18px; position:relative }
+  .cta-strip .row{ display:flex; gap:10px; flex-wrap:wrap; position:relative }
+  .cta-strip .cta.gold{ background:var(--gold) }
+
+  /* Footer */
+  .footer-l{
+    padding:32px 28px; border-top:1px solid var(--hairline);
+    display:flex; flex-direction:column; gap:10px;
+  }
+  .desktop .footer-l{ padding:32px 56px; flex-direction:row; align-items:center; justify-content:space-between }
+  .phone .footer-l{ padding:24px 20px }
+  .footer-l .links{ display:flex; gap:18px; flex-wrap:wrap }
+  .footer-l a{ color:var(--ink-500); text-decoration:none; font-size:12px; font-weight:600 }
+  .footer-l a:hover{ color:var(--navy-600) }
+  .footer-l .copy{ color:var(--ink-500); font-size:12px }
+</style>
+</head>
+<body>
+  <div class="page">
+    <div class="page-header">
+      <h1>VETO · Landing</h1>
+      <span class="tag">2026 · Direction A · Pango-inspired</span>
+    </div>
+    <p class="page-sub">
+      דף הבית הציבורי. Hero יוקרתי-מקצועי בהשראת Pango: כותרת סריפי גדולה עם הדגשה Navy, fundament לבן רגוע, ויזואל
+      "מכשיר-בתוך-מכשיר" עם כפתור SOS חי. בהמשך — שלוש תכונות, רצף שלוש שלבים, סטטיסטיקות, תמחור, CTA כהה
+      בסיום, ופוטר. דסקטופ ומובייל זה לצד זה.
+    </p>
+
+    <div class="stage">
+      <!-- ═════════ MOBILE ═════════ -->
+      <div>
+        <div class="device-label">Mobile · 412 × 920</div>
+        <div class="phone tall">
+          <div class="screen">
+            <header class="topbar">
+              <button class="iconbtn" title="שפה">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/></svg>
+              </button>
+              <div class="brand">
+                <div class="crest">V</div>
+                <div class="name">VETO</div>
+              </div>
+              <button class="iconbtn" title="תפריט">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+              </button>
+            </header>
+
+            <div class="scroll" style="overflow-y:auto">
+              <div class="landing-page">
+                <section class="hero-landing">
+                  <div class="hero-grid-l">
+                    <div>
+                      <span class="eyebrow"><span class="dot"></span>זמין 24/7</span>
+                      <h1 class="hero-title">ההגנה המשפטית<br/>שלך — תמיד <em>בהישג יד</em></h1>
+                      <p class="hero-body">VETO מחבר אותך לעורך דין מתמחה תוך שניות בכל מצב חירום, עם תיעוד שיחה מלא וכספת מוצפנת.</p>
+                      <div class="hero-row">
+                        <button class="cta lg danger">לחץ SOS</button>
+                        <button class="cta lg ghost">גלה עוד</button>
+                      </div>
+                      <div class="proof-row">
+                        <div class="proof"><span class="num">4.9</span><span class="lbl">דירוג ממשתמשים</span></div>
+                        <div class="proof"><span class="num">3"</span><span class="lbl">זמן חיבור ממוצע</span></div>
+                      </div>
+                    </div>
+                    <div class="hero-visual">
+                      <div class="mini-device">
+                        <div class="mini-screen">
+                          <div class="mini-orb"><div style="text-align:center"><div class="w">SOS</div></div></div>
+                          <div class="mini-stat">חיבור ב-<b>3 שניות</b></div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </section>
+
+                <section class="features-l">
+                  <div class="feature">
+                    <div class="ico-lg"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h7l-1 8 10-12h-7l1-8z"/></svg></div>
+                    <h3>הגנה מיידית</h3>
+                    <p>חיבור לעורך דין מתמחה תוך שניות, בכל מצב חירום משפטי — חקירה, עצירה, סכסוך.</p>
+                  </div>
+                  <div class="feature">
+                    <div class="ico-lg"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a8 8 0 0 1-11 7l-5 1 1-5A8 8 0 1 1 21 12z"/></svg></div>
+                    <h3>קשר ישיר עם עו"ד</h3>
+                    <p>קולי, וידאו או טקסט — הבחירה שלך. תיעוד שיחה מלא, נשמר אך ורק בכספת המוצפנת שלך.</p>
+                  </div>
+                  <div class="feature">
+                    <div class="ico-lg"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></div>
+                    <h3>פרטיות מלאה</h3>
+                    <p>הצפנה End-to-End, גיבוי בכספת אישית, וגישה רק לידיך — לא לחברה ולא לרשויות.</p>
+                  </div>
+                </section>
+
+                <div class="stats-l">
+                  <div class="stat-cell"><div class="n">24/7</div><div class="l">הגנה משפטית</div></div>
+                  <div class="stat-cell"><div class="n">Real</div><div class="l">עורכי דין אמיתיים</div></div>
+                  <div class="stat-cell"><div class="n">+3</div><div class="l">שפות נתמכות</div></div>
+                  <div class="stat-cell"><div class="n">Live</div><div class="l">שיגור בזמן אמת</div></div>
+                </div>
+
+                <section class="stack-l">
+                  <div class="kicker" style="text-align:center">איך זה עובד</div>
+                  <h2 style="font-family:var(--serif); font-size:24px; text-align:center; margin-bottom:20px; color:var(--ink-900)">רצף תגובה אחד</h2>
+                  <div class="stack-grid">
+                    <div class="stack-step">
+                      <div class="num">01</div>
+                      <h4>זיהוי מצב</h4>
+                      <p>נחקרים, עצורים, או מעורבים בתאונה? המערכת מתאימה מענה מיידי.</p>
+                    </div>
+                    <div class="stack-step">
+                      <div class="num">02</div>
+                      <h4>שיחה עם AI</h4>
+                      <p>הסוכן מסדר את הידע, מחדד שאלות, ומכוון לצעד המשפטי הבא.</p>
+                    </div>
+                    <div class="stack-step">
+                      <div class="num">03</div>
+                      <h4>חיבור אנושי</h4>
+                      <p>אם נדרש עו"ד — המשרד מזניק איש מקצוע זמין עם עדיפות לשפה הרלוונטית.</p>
+                    </div>
+                  </div>
+                </section>
+
+                <section class="pricing-l">
+                  <div>
+                    <span class="badge brand">מנוי חודשי</span>
+                    <h2>שכבת הגנה תמידית</h2>
+                    <div class="price"><span class="v">₪19.90</span><span class="p">/ לחודש</span></div>
+                    <button class="cta lg" style="margin-top:8px">התחל עכשיו</button>
+                  </div>
+                  <ul>
+                    <li><span class="ico"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg></span>עוזר AI משפטי ללא הגבלה</li>
+                    <li><span class="ico"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg></span>תרחישים, זכויות ותיעוד ראיות</li>
+                    <li><span class="ico"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg></span>שיגור עו"ד באירוע חי לפי שימוש</li>
+                    <li><span class="ico"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg></span>כספת מוצפנת לשמירת מסמכים</li>
+                  </ul>
+                </section>
+
+                <section class="cta-strip">
+                  <h2>בונים שכבת הגנה<br/>לפני שהאירוע מתחיל</h2>
+                  <p>ההרשמה קצרה. מהרגע שהיא מסתיימת, כל חירום משפטי מקבל מסך ברור ומוכן לפעולה.</p>
+                  <div class="row">
+                    <button class="cta lg gold">לעבור לאשף</button>
+                  </div>
+                </section>
+
+                <footer class="footer-l">
+                  <div class="copy">VETO LEGAL · מערכת תגובה משפטית חכמה</div>
+                  <div class="links">
+                    <a href="#">פרטיות</a>
+                    <a href="#">תנאי שימוש</a>
+                    <a href="#">צור קשר</a>
+                  </div>
+                </footer>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═════════ DESKTOP ═════════ -->
+      <div>
+        <div class="device-label">Desktop · 1440 wide</div>
+        <div class="desktop">
+          <div class="bar"><i></i><i></i><i></i></div>
+          <div class="canvas tall">
+            <header class="topbar">
+              <div class="brand">
+                <div class="crest">V</div>
+                <div class="name">VETO<em>הגנה משפטית מיידית</em></div>
+              </div>
+              <nav class="nav">
+                <a class="active" href="#">בית</a>
+                <a href="#">תכונות</a>
+                <a href="#">תמחור</a>
+                <a href="#">איך זה עובד</a>
+                <a href="#">צור קשר</a>
+              </nav>
+              <div style="display:flex; align-items:center; gap:8px">
+                <button class="lang-pill"><span class="flag"></span>עברית</button>
+                <button class="ghost-btn">כניסה</button>
+                <button class="cta">הרשמה</button>
+              </div>
+            </header>
+
+            <div style="overflow-y:auto; flex:1">
+              <section class="hero-landing">
+                <div class="hero-grid-l">
+                  <div>
+                    <span class="eyebrow"><span class="dot"></span>VETO · זמין 24/7 בכל הארץ</span>
+                    <h1 class="hero-title">ההגנה המשפטית<br/>שלך — תמיד <em>בהישג יד</em></h1>
+                    <p class="hero-body">VETO מחבר אותך לעורך דין מתמחה תוך שניות בכל מצב חירום, עם תיעוד שיחה מלא, גיבוי לכספת אישית מוצפנת, ומסירת כל הראיות לידיך בלבד.</p>
+                    <div class="hero-row">
+                      <button class="cta lg danger">לחץ SOS עכשיו</button>
+                      <button class="cta lg ghost">איך זה עובד →</button>
+                    </div>
+                    <div class="proof-row">
+                      <div class="proof"><span class="num">4.9</span><span class="lbl">/5 דירוג ממשתמשים</span></div>
+                      <div class="proof"><span class="num">3"</span><span class="lbl">זמן חיבור ממוצע</span></div>
+                      <div class="proof"><span class="num">+200</span><span class="lbl">עורכי דין רשומים</span></div>
+                    </div>
+                  </div>
+                  <div class="hero-visual">
+                    <div class="mini-device">
+                      <div class="mini-screen">
+                        <div class="mini-orb"><div style="text-align:center"><div class="w">SOS</div></div></div>
+                        <div class="mini-stat">חיבור ב-<b>3 שניות</b> · עו"ד פלילי זמין</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              <section class="features-l">
+                <div class="feature">
+                  <div class="ico-lg"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h7l-1 8 10-12h-7l1-8z"/></svg></div>
+                  <h3>הגנה מיידית</h3>
+                  <p>חיבור לעורך דין מתמחה תוך שניות, בכל מצב חירום משפטי — חקירה במשטרה, עצירת תנועה, סכסוך אזרחי.</p>
+                </div>
+                <div class="feature">
+                  <div class="ico-lg"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a8 8 0 0 1-11 7l-5 1 1-5A8 8 0 1 1 21 12z"/></svg></div>
+                  <h3>קשר ישיר עם עו"ד</h3>
+                  <p>קולי, וידאו או טקסט — הבחירה שלך. תיעוד שיחה מלא, נשמר אך ורק בכספת המוצפנת שלך.</p>
+                </div>
+                <div class="feature">
+                  <div class="ico-lg"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></div>
+                  <h3>פרטיות מלאה</h3>
+                  <p>הצפנה End-to-End, גיבוי בכספת אישית, וגישה רק לידיך — לא לחברה ולא לרשויות.</p>
+                </div>
+              </section>
+
+              <div class="stats-l">
+                <div class="stat-cell"><div class="n">24/7</div><div class="l">הגנה משפטית</div></div>
+                <div class="stat-cell"><div class="n">Real</div><div class="l">עורכי דין אמיתיים</div></div>
+                <div class="stat-cell"><div class="n">+3</div><div class="l">שפות נתמכות</div></div>
+                <div class="stat-cell"><div class="n">Live</div><div class="l">שיגור בזמן אמת</div></div>
+              </div>
+
+              <section class="stack-l">
+                <div class="kicker" style="text-align:center">איך זה עובד</div>
+                <h2 style="font-family:var(--serif); font-size:36px; text-align:center; margin-bottom:32px; color:var(--ink-900); letter-spacing:-.02em">רצף תגובה אחד</h2>
+                <div class="stack-grid">
+                  <div class="stack-step">
+                    <div class="num">01</div>
+                    <h4>זיהוי מצב</h4>
+                    <p>עוצרים, נחקרים, עצורים או מעורבים בתאונה? המערכת מתאימה מענה מיידי לסיטואציה הספציפית.</p>
+                  </div>
+                  <div class="stack-step">
+                    <div class="num">02</div>
+                    <h4>שיחה עם AI</h4>
+                    <p>הסוכן מסדר את הידע, מחדד שאלות, ומכוון לצעד המשפטי הבא בשפה שנוחה לך.</p>
+                  </div>
+                  <div class="stack-step">
+                    <div class="num">03</div>
+                    <h4>חיבור אנושי</h4>
+                    <p>אם נדרש עורך דין — המשרד מזניק איש מקצוע זמין עם עדיפות לשפה ולתחום הרלוונטי.</p>
+                  </div>
+                </div>
+              </section>
+
+              <section class="pricing-l">
+                <div>
+                  <span class="badge brand">מנוי חודשי</span>
+                  <h2>שכבת הגנה תמידית</h2>
+                  <p style="color:var(--ink-500); font-size:14px; line-height:1.6; margin:6px 0 0">השקיפו פעם אחת — וקבלו הגנה משפטית מלאה לכל השנה, בלי הפתעות.</p>
+                  <div class="price"><span class="v">₪19.90</span><span class="p">/ לחודש</span></div>
+                  <button class="cta lg" style="margin-top:8px">התחל עכשיו →</button>
+                </div>
+                <ul>
+                  <li><span class="ico"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg></span>עוזר AI משפטי ללא הגבלה — שאל כל שאלה, קבל תשובה מיידית.</li>
+                  <li><span class="ico"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg></span>תרחישים מותאמים — חקירה, תעבורה, אזרחי, עבודה, משפחה, צרכנות.</li>
+                  <li><span class="ico"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg></span>שיגור עורך דין באירוע חי — לפי שימוש, ללא תוספות נסתרות.</li>
+                  <li><span class="ico"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg></span>כספת מוצפנת — מסמכים, ראיות ושיחות, רק בידיך.</li>
+                  <li><span class="ico"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg></span>תמיכה בעברית, אנגלית ורוסית — 24/7.</li>
+                </ul>
+              </section>
+
+              <section class="cta-strip">
+                <h2>בונים שכבת הגנה<br/>לפני שהאירוע מתחיל</h2>
+                <p>ההרשמה קצרה. מהרגע שהיא מסתיימת, כל חירום משפטי מקבל מסך ברור ומוכן לפעולה.</p>
+                <div class="row">
+                  <button class="cta lg gold">לעבור לאשף</button>
+                  <button class="cta lg ghost" style="background:transparent; color:#fff; border-color:rgba(255,255,255,.4)">דבר עם איש מכירות</button>
+                </div>
+              </section>
+
+              <footer class="footer-l">
+                <div class="copy">VETO LEGAL · מערכת תגובה משפטית חכמה, מהירה ורב-לשונית</div>
+                <div class="links">
+                  <a href="#">מדיניות פרטיות</a>
+                  <a href="#">תנאי שימוש</a>
+                  <a href="#">צור קשר</a>
+                  <a href="#">קריירה</a>
+                </div>
+              </footer>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="notes">
+      <h3>הערות עיצוב · Landing</h3>
+      <ul>
+        <li><b>Hero</b>: כותרת ענקית בסריפי, "בהישג יד" בצבע Navy עם קו זהב עדין מתחת — ההיילייט הוויזואלי היחיד.</li>
+        <li><b>Visual צד</b>: "מכשיר-בתוך-מכשיר" — מציג את כפתור ה-SOS האמיתי. מעביר את המוצר באופן ברור.</li>
+        <li><b>Stack 1-2-3</b>: מספרים ענקיים בסריפי כקישוט (16% opacity) — תחושת מסמך משפטי-קלאסי.</li>
+        <li><b>Stats</b>: רשת 4 תאים על קווי-שיער. נקייה, לא צועקת.</li>
+        <li><b>Pricing</b>: כרטיס בודד ענק. אין "שלוש מדרגות" — VETO מציע מנוי אחד.</li>
+        <li><b>CTA strip</b>: היחיד עם רקע כהה (Navy 700→600) + מבטא זהב — מסכם את הדף.</li>
+        <li><b>Mobile</b>: אותם בלוקים, אנכית, עם hero compact יותר.</li>
+      </ul>
+    </div>
+  </div>
+</body>
+</html>

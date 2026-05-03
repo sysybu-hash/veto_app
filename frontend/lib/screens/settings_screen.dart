@@ -12,7 +12,7 @@ import 'package:provider/provider.dart';
 
 import '../config/app_config.dart';
 import '../core/i18n/app_language.dart';
-import '../core/theme/veto_glass_system.dart';
+import '../core/theme/veto_2026.dart';
 import '../core/theme/veto_theme.dart';
 import '../services/auth_service.dart';
 
@@ -454,20 +454,20 @@ class _SettingsScreenState extends State<SettingsScreen>
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: VetoGlassTokens.sheetPanel,
+        backgroundColor: V26.surface,
         shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
-            side: const BorderSide(color: VetoGlassTokens.glassBorder)),
+            side: const BorderSide(color: V26.hairline)),
         title: Text(_t(code, 'deleteAccount'),
             style: const TextStyle(
                 color: VetoPalette.emergency, fontWeight: FontWeight.w700)),
         content: Text(_t(code, 'deleteConfirm'),
-            style: const TextStyle(color: VetoGlassTokens.textPrimary)),
+            style: const TextStyle(color: V26.ink900)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
             child: Text(_t(code, 'no'),
-                style: const TextStyle(color: VetoGlassTokens.textMuted)),
+                style: const TextStyle(color: V26.ink500)),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, true),
@@ -513,44 +513,50 @@ class _SettingsScreenState extends State<SettingsScreen>
     return Directionality(
       textDirection: isRtl ? TextDirection.rtl : TextDirection.ltr,
       child: Scaffold(
-        backgroundColor: VetoGlassTokens.bgBase,
+        backgroundColor: V26.paper,
         appBar: AppBar(
-          backgroundColor: const Color(0x18FFFFFF),
+          backgroundColor: V26.surface,
           elevation: 0,
           shadowColor: Colors.transparent,
           surfaceTintColor: Colors.transparent,
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new_rounded, color: VetoGlassTokens.textPrimary, size: 20),
+            icon: const Icon(Icons.arrow_back_ios_new_rounded,
+                color: V26.ink900, size: 20),
             onPressed: () => Navigator.of(context).pop(),
           ),
           title: Text(
             _t(code, 'title'),
-            style: const TextStyle(color: VetoGlassTokens.textPrimary, fontWeight: FontWeight.w800, fontSize: 18),
+            style: const TextStyle(
+              fontFamily: V26.serif,
+              color: V26.ink900,
+              fontWeight: FontWeight.w800,
+              fontSize: 18,
+              letterSpacing: -0.2,
+            ),
           ),
           centerTitle: true,
           actions: [
             Padding(
-              padding: const EdgeInsets.only(right: 12),
-              child: TextButton(
-                onPressed: _saving ? null : () => _save(code),
-                style: TextButton.styleFrom(
-                  backgroundColor: VetoGlassTokens.neonCyan,
-                  foregroundColor: const Color(0xFF041018),
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              padding: const EdgeInsetsDirectional.only(end: 12),
+              child: Center(
+                child: V26CTA(
+                  _t(code, 'save'),
+                  onPressed: _saving ? null : () => _save(code),
+                  loading: _saving,
                 ),
-                child: _saving
-                    ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF041018)))
-                    : Text(_t(code, 'save'), style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF041018))),
               ),
             ),
           ],
           bottom: TabBar(
             controller: _wizardTab,
-            indicatorColor: VetoGlassTokens.neonCyan,
-            labelColor: VetoGlassTokens.textPrimary,
-            unselectedLabelColor: VetoGlassTokens.textMuted,
-            labelStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
+            indicatorColor: V26.navy600,
+            labelColor: V26.navy700,
+            unselectedLabelColor: V26.ink500,
+            labelStyle: const TextStyle(
+              fontFamily: V26.sans,
+              fontWeight: FontWeight.w700,
+              fontSize: 12,
+            ),
             isScrollable: true,
             tabs: [
               Tab(text: _t(code, 'wiz1Title')),
@@ -559,9 +565,9 @@ class _SettingsScreenState extends State<SettingsScreen>
             ],
           ),
         ),
-        body: VetoGlassAuroraBackground(
+        body: V26Backdrop(
           child: _loading
-              ? const Center(child: CircularProgressIndicator(color: VetoGlassTokens.neonCyan))
+              ? const Center(child: CircularProgressIndicator(color: V26.navy600))
               : TabBarView(
                 controller: _wizardTab,
                 children: [
@@ -571,11 +577,11 @@ class _SettingsScreenState extends State<SettingsScreen>
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                   // ── Avatar header (dark glass) ────────────
-                  VetoGlassBlur(
-                    borderRadius: 20,
-                    sigma: 16,
-                    fill: VetoGlassTokens.glassFillStrong,
-                    borderColor: VetoGlassTokens.glassBorderBright,
+                  V26Card(
+                    radius: 20,
+                    padding: EdgeInsets.zero,
+                    color: V26.surface,
+                    borderColor: V26.hairline2,
                     child: Padding(
                       padding: const EdgeInsets.all(24),
                       child: Column(children: [
@@ -583,7 +589,7 @@ class _SettingsScreenState extends State<SettingsScreen>
                       Container(
                         width: 72, height: 72,
                         decoration: const BoxDecoration(
-                          gradient: VetoGlassTokens.neonButton,
+                          gradient: V26.brandButtonGradient,
                           shape: BoxShape.circle,
                         ),
                         child: Center(
@@ -596,23 +602,23 @@ class _SettingsScreenState extends State<SettingsScreen>
                       const SizedBox(height: 12),
                       Text(
                         _nameCtrl.text.isNotEmpty ? _nameCtrl.text : (isRtl ? 'שם מלא' : 'Full name'),
-                        style: const TextStyle(color: VetoGlassTokens.textPrimary, fontSize: 18, fontWeight: FontWeight.w900),
+                        style: const TextStyle(color: V26.ink900, fontSize: 18, fontWeight: FontWeight.w900),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         _role == 'lawyer' ? (isRtl ? 'עורך דין' : 'Lawyer') : _role == 'admin' ? (isRtl ? 'מנהל' : 'Admin') : (isRtl ? 'אזרח' : 'Citizen'),
-                        style: const TextStyle(color: VetoGlassTokens.textMuted, fontSize: 13),
+                        style: const TextStyle(color: V26.ink500, fontSize: 13),
                       ),
                       const SizedBox(height: 4),
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                         decoration: BoxDecoration(
-                          color: VetoGlassTokens.neonCyan.withValues(alpha: 0.12),
+                          color: V26.navy600.withValues(alpha: 0.12),
                           borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: VetoGlassTokens.neonCyan.withValues(alpha: 0.35)),
+                          border: Border.all(color: V26.navy600.withValues(alpha: 0.35)),
                         ),
                         child: Text(isRtl ? 'חשבון פעיל' : 'Active account',
-                          style: const TextStyle(color: VetoGlassTokens.neonCyan, fontSize: 11, fontWeight: FontWeight.w700)),
+                          style: const TextStyle(color: V26.navy600, fontSize: 11, fontWeight: FontWeight.w700)),
                       ),
                       const SizedBox(height: 14),
                       OutlinedButton.icon(
@@ -620,8 +626,8 @@ class _SettingsScreenState extends State<SettingsScreen>
                         icon: const Icon(Icons.edit_outlined, size: 14),
                         label: Text(isRtl ? 'ערוך פרופיל' : 'Edit profile', style: const TextStyle(fontSize: 13)),
                         style: OutlinedButton.styleFrom(
-                          foregroundColor: VetoGlassTokens.neonCyan,
-                          side: const BorderSide(color: VetoGlassTokens.neonCyan, width: 1),
+                          foregroundColor: V26.navy600,
+                          side: const BorderSide(color: V26.navy600, width: 1),
                           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                         ),
@@ -711,7 +717,7 @@ class _SettingsScreenState extends State<SettingsScreen>
                         child: Text(
                           _t(code, 'agoraCallBody'),
                           style: const TextStyle(
-                            color: VetoGlassTokens.textMuted,
+                            color: V26.ink500,
                             fontSize: 12,
                             height: 1.45,
                           ),
@@ -742,21 +748,21 @@ class _SettingsScreenState extends State<SettingsScreen>
                                   ? _t(code, 'planBasic')
                                   : _t(code, 'planFree'),
                           color: _plan == 'pro'
-                              ? VetoGlassTokens.neonCyan
+                              ? V26.navy600
                               : _plan == 'basic'
-                                  ? VetoGlassTokens.accentSoft
-                                  : VetoGlassTokens.textMuted,
+                                  ? V26.navy700
+                                  : V26.ink500,
                         ),
                         ListTile(
                           dense: true,
                           leading: const Icon(Icons.upgrade_rounded,
-                              color: VetoGlassTokens.neonCyan, size: 20),
+                              color: V26.navy600, size: 20),
                           title: Text(_t(code, 'upgrade'),
                               style: const TextStyle(
-                                  color: VetoGlassTokens.neonCyan,
+                                  color: V26.navy600,
                                   fontWeight: FontWeight.w600)),
                           trailing: const Icon(Icons.chevron_right_rounded,
-                              color: VetoGlassTokens.textMuted),
+                              color: V26.ink500),
                           onTap: () => Navigator.pushNamed(
                               context, '/profile'),
                         ),
@@ -848,26 +854,26 @@ class _SettingsScreenState extends State<SettingsScreen>
                       ListTile(
                         dense: true,
                         leading: const Icon(Icons.privacy_tip_outlined,
-                            color: VetoGlassTokens.textMuted, size: 20),
+                            color: V26.ink500, size: 20),
                         title: Text(_t(code, 'privacyPolicy'),
                             style: const TextStyle(
-                                color: VetoGlassTokens.textPrimary,
+                                color: V26.ink900,
                                 fontWeight: FontWeight.w600)),
                         trailing: const Icon(Icons.chevron_right_rounded,
-                            color: VetoGlassTokens.textMuted),
+                            color: V26.ink500),
                         onTap: () =>
                             Navigator.pushNamed(context, '/privacy'),
                       ),
                       ListTile(
                         dense: true,
                         leading: const Icon(Icons.article_outlined,
-                            color: VetoGlassTokens.textMuted, size: 20),
+                            color: V26.ink500, size: 20),
                         title: Text(_t(code, 'termsOfService'),
                             style: const TextStyle(
-                                color: VetoGlassTokens.textPrimary,
+                                color: V26.ink900,
                                 fontWeight: FontWeight.w600)),
                         trailing: const Icon(Icons.chevron_right_rounded,
-                            color: VetoGlassTokens.textMuted),
+                            color: V26.ink500),
                         onTap: () =>
                             Navigator.pushNamed(context, '/terms'),
                       ),
@@ -884,13 +890,13 @@ class _SettingsScreenState extends State<SettingsScreen>
                       ListTile(
                         dense: true,
                         leading: const Icon(Icons.logout_rounded,
-                            color: VetoGlassTokens.textMuted, size: 20),
+                            color: V26.ink500, size: 20),
                         title: Text(_t(code, 'logout'),
                             style: const TextStyle(
-                                color: VetoGlassTokens.textPrimary,
+                                color: V26.ink900,
                                 fontWeight: FontWeight.w600)),
                         trailing: const Icon(Icons.chevron_right_rounded,
-                            color: VetoGlassTokens.textMuted),
+                            color: V26.ink500),
                         onTap: () async {
                           await _auth.logout(context);
                         },
@@ -917,7 +923,7 @@ class _SettingsScreenState extends State<SettingsScreen>
                         '${_t(code, 'deployBuild')}: ${AppConfig.deployBuildLabel}',
                         style: const TextStyle(
                           fontSize: 11,
-                          color: VetoGlassTokens.textSubtle,
+                          color: V26.ink300,
                           height: 1.3,
                         ),
                       ),
@@ -951,12 +957,12 @@ class _Section extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final ic = iconColor ?? VetoGlassTokens.neonCyan;
+    final ic = iconColor ?? V26.navy600;
     return Container(
       decoration: BoxDecoration(
-        color: VetoGlassTokens.glassFillStrong,
+        color: V26.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: borderColor ?? VetoGlassTokens.glassBorder),
+        border: Border.all(color: borderColor ?? V26.hairline),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.4),
@@ -975,7 +981,7 @@ class _Section extends StatelessWidget {
                 letterSpacing: 0.5)),
           ]),
         ),
-        const Divider(height: 1, color: VetoGlassTokens.glassBorder),
+        const Divider(height: 1, color: V26.hairline),
         ...children,
       ]),
     );
@@ -999,24 +1005,24 @@ class _FieldTile extends StatelessWidget {
     child: TextField(
       controller: controller,
       keyboardType: keyboardType,
-      style: const TextStyle(color: VetoGlassTokens.textPrimary, fontSize: 14),
-      cursorColor: VetoGlassTokens.neonCyan,
+      style: const TextStyle(color: V26.ink900, fontSize: 14),
+      cursorColor: V26.navy600,
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: const TextStyle(color: VetoGlassTokens.textMuted, fontSize: 13),
-        prefixIcon: Icon(icon, color: VetoGlassTokens.textMuted, size: 18),
+        labelStyle: const TextStyle(color: V26.ink500, fontSize: 13),
+        prefixIcon: Icon(icon, color: V26.ink500, size: 18),
         filled: true,
         fillColor: const Color(0xFF0F1A24),
         border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(10),
-            borderSide: const BorderSide(color: VetoGlassTokens.glassBorder)),
+            borderSide: const BorderSide(color: V26.hairline)),
         enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(10),
-            borderSide: const BorderSide(color: VetoGlassTokens.glassBorder)),
+            borderSide: const BorderSide(color: V26.hairline)),
         focusedBorder: const OutlineInputBorder(
             borderRadius: BorderRadius.all(Radius.circular(10)),
             borderSide: BorderSide(
-                color: VetoGlassTokens.neonCyan, width: 1.5)),
+                color: V26.navy600, width: 1.5)),
         contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       ),
     ),
@@ -1040,7 +1046,7 @@ class _ToggleTile extends StatelessWidget {
     dense: true,
     secondary: Icon(icon, color: color, size: 20),
     title: Text(label, style: const TextStyle(
-        color: VetoGlassTokens.textPrimary, fontSize: 14, fontWeight: FontWeight.w500)),
+        color: V26.ink900, fontSize: 14, fontWeight: FontWeight.w500)),
     value: value,
     onChanged: onChanged,
     activeThumbColor: color,
@@ -1057,7 +1063,7 @@ class _InfoRow extends StatelessWidget {
     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
     child: Row(children: [
       Text(label, style: const TextStyle(
-          color: VetoGlassTokens.textMuted, fontSize: 14)),
+          color: V26.ink500, fontSize: 14)),
       const Spacer(),
       Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
@@ -1094,17 +1100,17 @@ class _LanguagePicker extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
             decoration: BoxDecoration(
               color: selected
-                  ? VetoGlassTokens.neonCyan.withValues(alpha: 0.12)
-                  : VetoGlassTokens.glassFillStrong,
+                  ? V26.navy600.withValues(alpha: 0.12)
+                  : V26.surface,
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
-                color: selected ? VetoGlassTokens.neonCyan : VetoGlassTokens.glassBorder,
+                color: selected ? V26.navy600 : V26.hairline,
                 width: selected ? 1.5 : 1,
               ),
             ),
             child: Text('$flag  $label',
                 style: TextStyle(
-                    color: selected ? VetoGlassTokens.neonCyan : VetoGlassTokens.textPrimary,
+                    color: selected ? V26.navy600 : V26.ink900,
                     fontWeight: selected ? FontWeight.w700 : FontWeight.w400,
                     fontSize: 13)),
           ),
@@ -1130,14 +1136,14 @@ class _SpecializationChips extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Text(label, style: const TextStyle(
-            color: VetoGlassTokens.textMuted, fontSize: 13)),
+            color: V26.ink500, fontSize: 13)),
         const SizedBox(height: 6),
         Wrap(spacing: 6, runSpacing: 6, children: [
           ...items.map((s) => Chip(
             label: Text(s, style: const TextStyle(fontSize: 12)),
-            backgroundColor: VetoGlassTokens.neonCyan.withValues(alpha: 0.08),
-            side: BorderSide(color: VetoGlassTokens.neonCyan.withValues(alpha: 0.25)),
-            deleteIconColor: VetoGlassTokens.textMuted,
+            backgroundColor: V26.navy600.withValues(alpha: 0.08),
+            side: BorderSide(color: V26.navy600.withValues(alpha: 0.25)),
+            deleteIconColor: V26.ink500,
             onDeleted: () {
               final updated = List<String>.from(items)..remove(s);
               onChanged(updated);
@@ -1145,50 +1151,50 @@ class _SpecializationChips extends StatelessWidget {
           )),
           ActionChip(
             label: Text(addLabel, style: const TextStyle(
-                color: VetoGlassTokens.neonCyan, fontSize: 12,
+                color: V26.navy600, fontSize: 12,
                 fontWeight: FontWeight.w600)),
-            avatar: const Icon(Icons.add, size: 14, color: VetoGlassTokens.neonCyan),
-            backgroundColor: VetoGlassTokens.neonCyan.withValues(alpha: 0.08),
-            side: BorderSide(color: VetoGlassTokens.neonCyan.withValues(alpha: 0.25)),
+            avatar: const Icon(Icons.add, size: 14, color: V26.navy600),
+            backgroundColor: V26.navy600.withValues(alpha: 0.08),
+            side: BorderSide(color: V26.navy600.withValues(alpha: 0.25)),
             onPressed: () async {
               final ctrl = TextEditingController();
               final result = await showDialog<String>(
                 context: context,
                 builder: (ctx) => AlertDialog(
-                  backgroundColor: VetoGlassTokens.sheetPanel,
+                  backgroundColor: V26.surface,
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16),
-                      side: const BorderSide(color: VetoGlassTokens.glassBorder)),
+                      side: const BorderSide(color: V26.hairline)),
                   content: TextField(
                     controller: ctrl,
                     autofocus: true,
-                    style: const TextStyle(color: VetoGlassTokens.textPrimary),
+                    style: const TextStyle(color: V26.ink900),
                     decoration: InputDecoration(
                       hintText: label,
-                      hintStyle: const TextStyle(color: VetoGlassTokens.textMuted),
+                      hintStyle: const TextStyle(color: V26.ink500),
                       filled: true,
                       fillColor: const Color(0xFF0F1A24),
                       border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(10),
                           borderSide: const BorderSide(
-                              color: VetoGlassTokens.glassBorder)),
+                              color: V26.hairline)),
                       enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(10),
                           borderSide: const BorderSide(
-                              color: VetoGlassTokens.glassBorder)),
+                              color: V26.hairline)),
                     ),
                   ),
                   actions: [
                     TextButton(
                       onPressed: () => Navigator.pop(ctx),
                       child: const Text('Cancel',
-                          style: TextStyle(color: VetoGlassTokens.textMuted)),
+                          style: TextStyle(color: V26.ink500)),
                     ),
                     FilledButton(
                       onPressed: () => Navigator.pop(ctx, ctrl.text.trim()),
                       style: FilledButton.styleFrom(
-                          backgroundColor: VetoGlassTokens.neonCyan,
-                          foregroundColor: VetoGlassTokens.onNeon),
+                          backgroundColor: V26.navy600,
+                          foregroundColor: Colors.white),
                       child: const Text('Add'),
                     ),
                   ],

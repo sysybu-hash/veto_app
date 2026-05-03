@@ -10,9 +10,10 @@ import 'package:provider/provider.dart';
 
 import '../config/app_config.dart';
 import '../core/i18n/app_language.dart';
-import '../core/theme/veto_glass_system.dart';
+import '../core/theme/veto_2026.dart';
 import '../core/theme/veto_theme.dart';
 import '../services/auth_service.dart';
+import 'admin/_shell.dart';
 
 // ── i18n ──────────────────────────────────────────────────────
 const _i18n = {
@@ -494,14 +495,14 @@ class _SubscriptionAdminScreenState
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setDlg) => AlertDialog(
-          backgroundColor: VetoGlassTokens.sheetPanel,
+          backgroundColor: V26.surface,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
-            side: const BorderSide(color: VetoGlassTokens.glassBorder),
+            side: const BorderSide(color: V26.hairline),
           ),
           title: Text(_t(code, 'edit'),
               style: const TextStyle(
-                  color: VetoGlassTokens.textPrimary, fontWeight: FontWeight.w800)),
+                  color: V26.ink900, fontWeight: FontWeight.w800)),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -509,89 +510,89 @@ class _SubscriptionAdminScreenState
               children: [
                 TextField(
                   controller: nameCtrl,
-                  cursorColor: VetoGlassTokens.neonCyan,
+                  cursorColor: V26.navy600,
                   decoration: InputDecoration(
                     labelText: _t(code, 'fullName'),
-                    labelStyle: const TextStyle(color: VetoGlassTokens.textMuted),
+                    labelStyle: const TextStyle(color: V26.ink500),
                     filled: true,
                     fillColor: const Color(0xFF0F1A24),
                     border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10),
-                        borderSide: const BorderSide(color: VetoGlassTokens.glassBorder)),
+                        borderSide: const BorderSide(color: V26.hairline)),
                     enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10),
-                        borderSide: const BorderSide(color: VetoGlassTokens.glassBorder)),
+                        borderSide: const BorderSide(color: V26.hairline)),
                   ),
-                  style: const TextStyle(color: VetoGlassTokens.textPrimary),
+                  style: const TextStyle(color: V26.ink900),
                 ),
                 TextField(
                   controller: phoneCtrl,
-                  cursorColor: VetoGlassTokens.neonCyan,
+                  cursorColor: V26.navy600,
                   decoration: InputDecoration(
                     labelText: _t(code, 'phoneLabel'),
-                    labelStyle: const TextStyle(color: VetoGlassTokens.textMuted),
+                    labelStyle: const TextStyle(color: V26.ink500),
                     filled: true,
                     fillColor: const Color(0xFF0F1A24),
                     border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10),
-                        borderSide: const BorderSide(color: VetoGlassTokens.glassBorder)),
+                        borderSide: const BorderSide(color: V26.hairline)),
                     enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10),
-                        borderSide: const BorderSide(color: VetoGlassTokens.glassBorder)),
+                        borderSide: const BorderSide(color: V26.hairline)),
                   ),
-                  style: const TextStyle(color: VetoGlassTokens.textPrimary),
+                  style: const TextStyle(color: V26.ink900),
                   keyboardType: TextInputType.phone,
                 ),
                 TextField(
                   controller: emailCtrl,
-                  cursorColor: VetoGlassTokens.neonCyan,
+                  cursorColor: V26.navy600,
                   decoration: InputDecoration(
                     labelText: _t(code, 'emailLabel'),
-                    labelStyle: const TextStyle(color: VetoGlassTokens.textMuted),
+                    labelStyle: const TextStyle(color: V26.ink500),
                     filled: true,
                     fillColor: const Color(0xFF0F1A24),
                     border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10),
-                        borderSide: const BorderSide(color: VetoGlassTokens.glassBorder)),
+                        borderSide: const BorderSide(color: V26.hairline)),
                     enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10),
-                        borderSide: const BorderSide(color: VetoGlassTokens.glassBorder)),
+                        borderSide: const BorderSide(color: V26.hairline)),
                   ),
-                  style: const TextStyle(color: VetoGlassTokens.textPrimary),
+                  style: const TextStyle(color: V26.ink900),
                   keyboardType: TextInputType.emailAddress,
                 ),
                 const SizedBox(height: 8),
                 ListTile(
                   contentPadding: EdgeInsets.zero,
                   title: Text(_t(code, 'subscribed'),
-                      style: const TextStyle(color: VetoGlassTokens.textPrimary, fontSize: 14)),
+                      style: const TextStyle(color: V26.ink900, fontSize: 14)),
                   trailing: Switch(
                     value: subscribed,
                     onChanged: (v) => setDlg(() => subscribed = v),
-                    activeTrackColor: VetoGlassTokens.neonCyan.withValues(alpha: 0.4),
-                    activeThumbColor: VetoGlassTokens.neonCyan,
+                    activeTrackColor: V26.navy600.withValues(alpha: 0.4),
+                    activeThumbColor: V26.navy600,
                   ),
                 ),
                 ListTile(
                   contentPadding: EdgeInsets.zero,
                   title: Text(_t(code, 'manualExempt'),
-                      style: const TextStyle(color: VetoGlassTokens.textPrimary, fontSize: 14)),
+                      style: const TextStyle(color: V26.ink900, fontSize: 14)),
                   trailing: Switch(
                     value: manual,
                     onChanged: (v) => setDlg(() => manual = v),
-                    activeTrackColor: VetoGlassTokens.neonCyan.withValues(alpha: 0.4),
-                    activeThumbColor: VetoGlassTokens.neonCyan,
+                    activeTrackColor: V26.navy600.withValues(alpha: 0.4),
+                    activeThumbColor: V26.navy600,
                   ),
                 ),
                 ListTile(
                   contentPadding: EdgeInsets.zero,
                   title: Text(_t(code, 'accountEnabled'),
-                      style: const TextStyle(color: VetoGlassTokens.textPrimary, fontSize: 14)),
+                      style: const TextStyle(color: V26.ink900, fontSize: 14)),
                   trailing: Switch(
                     value: active,
                     onChanged: (v) => setDlg(() => active = v),
-                    activeTrackColor: VetoGlassTokens.neonCyan.withValues(alpha: 0.4),
-                    activeThumbColor: VetoGlassTokens.neonCyan,
+                    activeTrackColor: V26.navy600.withValues(alpha: 0.4),
+                    activeThumbColor: V26.navy600,
                   ),
                 ),
                 Row(children: [
@@ -605,7 +606,7 @@ class _SubscriptionAdminScreenState
                                   '${x.day}/${x.month}/${x.year}';
                             }(),
                       style: const TextStyle(
-                          color: VetoGlassTokens.textMuted, fontSize: 13),
+                          color: V26.ink500, fontSize: 13),
                     ),
                   ),
                   TextButton(
@@ -633,13 +634,13 @@ class _SubscriptionAdminScreenState
             TextButton(
               onPressed: () => Navigator.pop(ctx, false),
               child: Text(_t(code, 'no'),
-                  style: const TextStyle(color: VetoGlassTokens.textMuted)),
+                  style: const TextStyle(color: V26.ink500)),
             ),
             FilledButton(
               onPressed: () => Navigator.pop(ctx, true),
               style: FilledButton.styleFrom(
-                backgroundColor: VetoGlassTokens.neonCyan,
-                foregroundColor: VetoGlassTokens.onNeon,
+                backgroundColor: V26.navy600,
+                foregroundColor: Colors.white,
               ),
               child: Text(_t(code, 'save')),
             ),
@@ -683,24 +684,24 @@ class _SubscriptionAdminScreenState
       await showDialog<bool>(
         context: context,
         builder: (ctx) => AlertDialog(
-          backgroundColor: VetoGlassTokens.sheetPanel,
+          backgroundColor: V26.surface,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
-            side: const BorderSide(color: VetoGlassTokens.glassBorder),
+            side: const BorderSide(color: V26.hairline),
           ),
           content: Text(msg,
-              style: const TextStyle(color: VetoGlassTokens.textPrimary, fontSize: 15)),
+              style: const TextStyle(color: V26.ink900, fontSize: 15)),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx, false),
               child: Text(_t(context.read<AppLanguageController>().code, 'no'),
-                  style: const TextStyle(color: VetoGlassTokens.textMuted)),
+                  style: const TextStyle(color: V26.ink500)),
             ),
             FilledButton(
               onPressed: () => Navigator.pop(ctx, true),
               style: FilledButton.styleFrom(
-                backgroundColor: VetoGlassTokens.neonCyan,
-                foregroundColor: VetoGlassTokens.onNeon,
+                backgroundColor: V26.navy600,
+                foregroundColor: Colors.white,
               ),
               child: Text(_t(context.read<AppLanguageController>().code, 'yes')),
             ),
@@ -730,38 +731,23 @@ class _SubscriptionAdminScreenState
 
     return Directionality(
       textDirection: isRtl ? TextDirection.rtl : TextDirection.ltr,
-      child: Scaffold(
-        backgroundColor: VetoGlassTokens.bgBase,
-        appBar: AppBar(
-          backgroundColor: const Color(0x18FFFFFF),
-          elevation: 0,
-          shadowColor: Colors.transparent,
-          surfaceTintColor: Colors.transparent,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new_rounded, color: VetoGlassTokens.textPrimary, size: 20),
-            onPressed: () => Navigator.of(context).pop(),
-          ),
-          title: Text(_t(code, 'title'),
-              style: const TextStyle(color: VetoGlassTokens.textPrimary, fontWeight: FontWeight.w800, fontSize: 18)),
-          centerTitle: true,
-          actions: [
-            IconButton(icon: const Icon(Icons.refresh_rounded, color: VetoGlassTokens.textPrimary), onPressed: _load,
-                tooltip: _t(code, 'refresh')),
+      child: AdminShell(
+        active: AdminSection.subscriptions,
+        title: _t(code, 'title'),
+        onRefresh: _load,
+        bottom: TabBar(
+          controller: _tabController,
+          labelColor: V26.navy600,
+          unselectedLabelColor: V26.ink500,
+          indicatorColor: V26.navy600,
+          tabs: [
+            Tab(text: _t(code, 'tabUsers'), icon: const Icon(Icons.people_rounded, size: 18)),
+            Tab(text: _t(code, 'tabLogs'), icon: const Icon(Icons.history_rounded, size: 18)),
           ],
-          bottom: TabBar(
-            controller: _tabController,
-            labelColor: VetoGlassTokens.neonCyan,
-            unselectedLabelColor: VetoGlassTokens.textMuted,
-            indicatorColor: VetoGlassTokens.neonCyan,
-            tabs: [
-              Tab(text: _t(code, 'tabUsers'), icon: const Icon(Icons.people_rounded, size: 18)),
-              Tab(text: _t(code, 'tabLogs'), icon: const Icon(Icons.history_rounded, size: 18)),
-            ],
-          ),
         ),
-        body: VetoGlassAuroraBackground(
+        body: V26Backdrop(
           child: _loading
-            ? const Center(child: CircularProgressIndicator(color: VetoGlassTokens.neonCyan))
+            ? const Center(child: CircularProgressIndicator(color: V26.navy600))
             : _loadError != null
                 ? Center(child: Padding(
                     padding: const EdgeInsets.all(24),
@@ -807,7 +793,7 @@ class _SubscriptionAdminScreenState
             colors: [Color(0xFF0D1520), Color(0xFF121B2A)],
           ),
           border: Border(
-            bottom: BorderSide(color: VetoGlassTokens.glassBorder),
+            bottom: BorderSide(color: V26.hairline),
           ),
         ),
         child: Column(children: [
@@ -832,32 +818,32 @@ class _SubscriptionAdminScreenState
       ),
       // ── Search ──────────────────────────────────────────────
       Container(
-        color: VetoGlassTokens.glassFillStrong,
+        color: V26.surface,
         padding: const EdgeInsets.fromLTRB(14, 0, 14, 10),
         child: TextField(
           controller: _searchCtrl,
-          style: const TextStyle(color: VetoGlassTokens.textPrimary, fontSize: 14),
-          cursorColor: VetoGlassTokens.neonCyan,
+          style: const TextStyle(color: V26.ink900, fontSize: 14),
+          cursorColor: V26.navy600,
           decoration: InputDecoration(
             hintText: _t(code, 'search'),
-            hintStyle: const TextStyle(color: VetoGlassTokens.textMuted),
-            prefixIcon: const Icon(Icons.search_rounded, color: VetoGlassTokens.textMuted, size: 20),
+            hintStyle: const TextStyle(color: V26.ink500),
+            prefixIcon: const Icon(Icons.search_rounded, color: V26.ink500, size: 20),
             filled: true,
             fillColor: const Color(0xFF0F1A24),
             contentPadding: const EdgeInsets.symmetric(vertical: 10),
             border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(10),
-                borderSide: const BorderSide(color: VetoGlassTokens.glassBorder)),
+                borderSide: const BorderSide(color: V26.hairline)),
             enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(10),
-                borderSide: const BorderSide(color: VetoGlassTokens.glassBorder)),
+                borderSide: const BorderSide(color: V26.hairline)),
             focusedBorder: const OutlineInputBorder(
                 borderRadius: BorderRadius.all(Radius.circular(10)),
-                borderSide: BorderSide(color: VetoGlassTokens.neonCyan, width: 1.5)),
+                borderSide: BorderSide(color: V26.navy600, width: 1.5)),
           ),
         ),
       ),
-      const Divider(height: 1, color: VetoGlassTokens.glassBorder),
+      const Divider(height: 1, color: V26.hairline),
       Expanded(
         child: _filtered.isEmpty
             ? Center(child: Text(_t(code, 'noSubs'),
@@ -931,9 +917,9 @@ class _LogCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
-        color: VetoGlassTokens.glassFillStrong,
+        color: V26.surface,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: VetoGlassTokens.glassBorder),
+        border: Border.all(color: V26.hairline),
         boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.2), blurRadius: 12, offset: const Offset(0, 4))],
       ),
       child: Row(children: [
@@ -956,12 +942,12 @@ class _LogCard extends StatelessWidget {
                     color: VetoPalette.primary, fontSize: 10, fontWeight: FontWeight.w600)),
               ),
             const Spacer(),
-            Text(ts, style: const TextStyle(color: VetoGlassTokens.textMuted, fontSize: 11)),
+            Text(ts, style: const TextStyle(color: V26.ink500, fontSize: 11)),
           ]),
           if (log.phone != null || log.email != null) ...[
             const SizedBox(height: 2),
             Text(log.phone ?? log.email ?? '',
-                style: const TextStyle(color: VetoGlassTokens.textSubtle, fontSize: 12),
+                style: const TextStyle(color: V26.ink300, fontSize: 12),
                 textDirection: TextDirection.ltr),
           ],
           if (log.errorMsg != null) ...[
@@ -992,9 +978,9 @@ class _SubCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: VetoGlassTokens.glassFillStrong,
+        color: V26.surface,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: VetoGlassTokens.glassBorder),
+        border: Border.all(color: V26.hairline),
         boxShadow: [BoxShadow(
             color: Colors.black.withValues(alpha: 0.22),
             blurRadius: 20, offset: const Offset(0, 8))],
@@ -1014,11 +1000,11 @@ class _SubCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text(sub.userName.isNotEmpty ? sub.userName : sub.userEmail,
                 style: const TextStyle(
-                    color: VetoGlassTokens.textPrimary, fontWeight: FontWeight.w700,
+                    color: V26.ink900, fontWeight: FontWeight.w700,
                     fontSize: 14)),
             Text(sub.userEmail,
                 style: const TextStyle(
-                    color: VetoGlassTokens.textMuted, fontSize: 12)),
+                    color: V26.ink500, fontSize: 12)),
           ])),
           // Status badge
           Container(
@@ -1152,7 +1138,7 @@ class _StatChip extends StatelessWidget {
         Text(value, style: TextStyle(color: color,
             fontSize: 16, fontWeight: FontWeight.w900)),
         Text(label, style: const TextStyle(
-            color: VetoGlassTokens.textMuted, fontSize: 11)),
+            color: V26.ink500, fontSize: 11)),
       ]),
     ]),
   ));

@@ -4,7 +4,6 @@
 // ============================================================
 
 import 'dart:convert';
-import 'dart:ui' show ImageFilter;
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -12,9 +11,10 @@ import 'package:provider/provider.dart';
 
 import '../config/app_config.dart';
 import '../core/i18n/app_language.dart';
-import '../core/theme/veto_glass_system.dart';
+import '../core/theme/veto_2026.dart';
 import '../core/theme/veto_theme.dart';
 import '../services/auth_service.dart';
+import 'admin/_shell.dart';
 
 // ── i18n ──────────────────────────────────────────────────────
 const _i18n = {
@@ -207,212 +207,89 @@ class _AdminDashboardState extends State<AdminDashboard> {
     final code = context.watch<AppLanguageController>().code;
     final isRtl = AppLanguage.directionOf(code) == TextDirection.rtl;
 
-    final navItems = [
-      (Icons.home_rounded,             isRtl ? 'לוח בקרה' : 'Dashboard',     '/admin_dashboard'),
-      (Icons.people_alt_rounded,       isRtl ? 'כל המשתמשים' : 'Users',       '/admin_users'),
-      (Icons.balance_rounded,          isRtl ? 'עורכי דין' : 'Lawyers',       '/admin_lawyers'),
-      (Icons.pending_actions_rounded,  isRtl ? 'ממתינים לאישור' : 'Pending',  '/admin_pending'),
-      (Icons.warning_amber_rounded,    isRtl ? 'יומן חירום' : 'Emergencies',  '/admin_logs'),
-      (Icons.credit_card_rounded,      isRtl ? 'מנויים' : 'Subscriptions',    '/admin_subscriptions'),
-      (Icons.settings_rounded,         isRtl ? 'הגדרות' : 'Settings',         '/admin_settings'),
-    ];
-
     return Directionality(
       textDirection: isRtl ? TextDirection.rtl : TextDirection.ltr,
-      child: Scaffold(
-        backgroundColor: VetoGlassTokens.bgBase,
-        body: Stack(
-          children: [
-            const Positioned.fill(child: CustomPaint(painter: VetoFluidBackgroundPainter())),
-            Row(
-              children: [
-            // ── RIGHT SIDEBAR (matches mockup) ─────────────────
-            ClipRect(
-              child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
-                child: Container(
-                  width: 220,
-                  decoration: BoxDecoration(
-                    color: VetoGlassTokens.glassFillStrong,
-                    border: Border(
-                      left: isRtl ? BorderSide.none : BorderSide(color: Colors.white.withValues(alpha: 0.12)),
-                      right: isRtl ? BorderSide(color: Colors.white.withValues(alpha: 0.12)) : BorderSide.none,
-                    ),
-                    boxShadow: [
-                      BoxShadow(color: VetoGlassTokens.neonBlue.withValues(alpha: 0.12), blurRadius: 16),
-                    ],
-                  ),
-              child: Column(children: [
-                // Logo header
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-                  decoration: BoxDecoration(
-                    border: Border(bottom: BorderSide(color: Colors.white.withValues(alpha: 0.1))),
-                  ),
-                  child: Row(children: [
-                    Container(
-                      width: 34, height: 34,
-                      decoration: BoxDecoration(
-                        gradient: VetoGlassTokens.neonButton,
-                        borderRadius: BorderRadius.circular(8),
-                        boxShadow: [
-                          BoxShadow(color: VetoGlassTokens.neonCyan.withValues(alpha: 0.35), blurRadius: 10),
-                        ],
-                      ),
-                      child: const Icon(Icons.shield_rounded, color: VetoGlassTokens.onNeon, size: 18),
-                    ),
-                    const SizedBox(width: 10),
-                    Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                      const Text('VETO', style: TextStyle(color: VetoGlassTokens.textPrimary, fontSize: 15, fontWeight: FontWeight.w900, letterSpacing: 2)),
-                      Text(isRtl ? 'פאנל ניהול' : 'Admin Panel', style: const TextStyle(color: VetoGlassTokens.textMuted, fontSize: 11)),
-                    ]),
-                  ]),
-                ),
-                // Nav section header
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
-                  child: Align(
-                    alignment: AlignmentDirectional.centerStart,
-                    child: Text(isRtl ? 'ניהול' : 'ADMIN', style: const TextStyle(color: VetoGlassTokens.textMuted, fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 1.5)),
-                  ),
-                ),
-                // Nav items
-                Expanded(
-                  child: ListView(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    children: navItems.map((item) {
-                      final isDashboard = item.$3 == '/admin_dashboard';
-                      return Container(
-                        margin: const EdgeInsets.only(bottom: 2),
-                        decoration: BoxDecoration(
-                          color: isDashboard ? VetoGlassTokens.neonCyan.withValues(alpha: 0.12) : Colors.transparent,
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: ListTile(
-                          dense: true,
-                          leading: Icon(item.$1, color: isDashboard ? VetoGlassTokens.neonCyan : VetoGlassTokens.textSecondary, size: 20),
-                          title: Text(item.$2, style: TextStyle(
-                            color: isDashboard ? VetoGlassTokens.neonCyan : VetoGlassTokens.textSecondary,
-                            fontSize: 14, fontWeight: isDashboard ? FontWeight.w700 : FontWeight.w500,
-                          )),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                          onTap: () { if (!isDashboard) Navigator.pushNamed(context, item.$3); },
-                        ),
-                      );
-                    }).toList(),
-                  ),
-                ),
-              ]),
-                ),
-              ),
-            ),
-
-            // ── MAIN CONTENT ───────────────────────────────────
-            Expanded(
-              child: Column(children: [
-                // Top bar
-                ClipRect(
-                  child: BackdropFilter(
-                    filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-                    child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-                  decoration: BoxDecoration(
-                    color: VetoGlassTokens.glassFillStrong,
-                    border: Border(bottom: BorderSide(color: Colors.white.withValues(alpha: 0.1))),
-                    boxShadow: [BoxShadow(color: VetoGlassTokens.neonBlue.withValues(alpha: 0.1), blurRadius: 12)],
-                  ),
-                  child: Row(children: [
-                    // Bell + Admin info
-                    const Icon(Icons.notifications_outlined, color: VetoGlassTokens.textMuted, size: 22),
-                    const SizedBox(width: 8),
-                    Container(
-                      width: 32, height: 32,
-                      decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.1), shape: BoxShape.circle),
-                      child: const Icon(Icons.person_outline, color: VetoGlassTokens.textPrimary, size: 18),
-                    ),
-                    const SizedBox(width: 8),
-                    Text(isRtl ? 'מנהל' : 'Admin', style: const TextStyle(color: VetoGlassTokens.textPrimary, fontWeight: FontWeight.w600, fontSize: 14)),
-                    const Spacer(),
-                    // Search bar
-                    SizedBox(
-                      width: 220,
-                      child: TextField(
-                        decoration: InputDecoration(
-                          hintText: isRtl ? 'חיפוש...' : 'Search...',
-                          prefixIcon: const Icon(Icons.search, size: 18),
-                          isDense: true,
-                          contentPadding: const EdgeInsets.symmetric(vertical: 10),
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.14))),
-                          filled: true, fillColor: Colors.white.withValues(alpha: 0.08),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    IconButton(icon: const Icon(Icons.refresh_rounded, color: VetoGlassTokens.textMuted), onPressed: _loadAll, tooltip: _t(code,'refresh')),
-                  ]),
+      child: AdminShell(
+        active: AdminSection.dashboard,
+        title: isRtl ? 'לוח בקרה' : 'Dashboard',
+        onRefresh: _loadAll,
+        body: V26Backdrop(
+          child: _loading
+              ? const Center(child: CircularProgressIndicator(color: V26.navy600))
+              : RefreshIndicator(
+                  onRefresh: _loadAll,
+                  child: SingleChildScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        LayoutBuilder(builder: (ctx, bc) {
+                          final cols = bc.maxWidth > 700 ? 4 : 2;
+                          // Content needs ~120px height (icon row + spacing +
+                          // value + label + paddings). Keep the aspect ratio
+                          // ≤ 1.25 so even narrow 4-col cells render cleanly.
+                          return GridView.count(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            crossAxisCount: cols,
+                            childAspectRatio: bc.maxWidth > 700 ? 1.25 : 1.15,
+                            crossAxisSpacing: 12,
+                            mainAxisSpacing: 12,
+                            children: [
+                              _KpiCard(
+                                  icon: Icons.trending_up_rounded,
+                                  color: const Color(0xFF22C55E),
+                                  label: isRtl ? 'הכנסות החודש' : 'Monthly Revenue',
+                                  value: '₪45,230',
+                                  badge: '+12%',
+                                  badgeColor: const Color(0xFF22C55E)),
+                              _KpiCard(
+                                  icon: Icons.people_alt_rounded,
+                                  color: V26.navy600,
+                                  label: isRtl ? 'משתמשים רשומים' : 'Registered Users',
+                                  value: _totalUsers.toString()),
+                              _KpiCard(
+                                  icon: Icons.balance_rounded,
+                                  color: const Color(0xFF38BDF8),
+                                  label: isRtl ? 'עורכי דין פעילים' : 'Active Lawyers',
+                                  value: _activeLawyers.toString()),
+                              _KpiCard(
+                                  icon: Icons.pending_actions_rounded,
+                                  color: const Color(0xFFF59E0B),
+                                  label: isRtl ? 'ממתינים לאישור' : 'Pending Approval',
+                                  value: _pendingLawyers.toString()),
+                            ],
+                          );
+                        }),
+                        const SizedBox(height: 20),
+                        LayoutBuilder(builder: (ctx, bc) {
+                          if (bc.maxWidth > 640) {
+                            return Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Expanded(
+                                    flex: 3,
+                                    child: _buildActivityPanel(code, isRtl)),
+                                const SizedBox(width: 16),
+                                Expanded(
+                                    flex: 2,
+                                    child: _buildHealthPanel(code, isRtl)),
+                              ],
+                            );
+                          }
+                          return Column(
+                            children: [
+                              _buildActivityPanel(code, isRtl),
+                              const SizedBox(height: 16),
+                              _buildHealthPanel(code, isRtl),
+                            ],
+                          );
+                        }),
+                      ],
                     ),
                   ),
                 ),
-
-                // Body
-                Expanded(
-                  child: _loading
-                      ? const Center(child: CircularProgressIndicator(color: VetoGlassTokens.neonCyan))
-                      : RefreshIndicator(
-                          onRefresh: _loadAll,
-                          child: SingleChildScrollView(
-                            physics: const AlwaysScrollableScrollPhysics(),
-                            padding: const EdgeInsets.all(20),
-                            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                              // 4 KPI cards
-                              LayoutBuilder(builder: (ctx, bc) {
-                                final cols = bc.maxWidth > 700 ? 4 : bc.maxWidth > 480 ? 2 : 2;
-                                return GridView.count(
-                                  shrinkWrap: true,
-                                  physics: const NeverScrollableScrollPhysics(),
-                                  crossAxisCount: cols,
-                                  childAspectRatio: bc.maxWidth > 700 ? 1.9 : 1.6,
-                                  crossAxisSpacing: 12,
-                                  mainAxisSpacing: 12,
-                                  children: [
-                                    _KpiCard(icon: Icons.trending_up_rounded, color: const Color(0xFF22C55E),
-                                      label: isRtl ? 'הכנסות החודש' : 'Monthly Revenue', value: '₪45,230',
-                                      badge: '+12%', badgeColor: const Color(0xFF22C55E)),
-                                    _KpiCard(icon: Icons.people_alt_rounded, color: VetoGlassTokens.neonCyan,
-                                      label: isRtl ? 'משתמשים רשומים' : 'Registered Users', value: _totalUsers.toString()),
-                                    _KpiCard(icon: Icons.balance_rounded, color: const Color(0xFF38BDF8),
-                                      label: isRtl ? 'עורכי דין פעילים' : 'Active Lawyers', value: _activeLawyers.toString()),
-                                    _KpiCard(icon: Icons.pending_actions_rounded, color: const Color(0xFFF59E0B),
-                                      label: isRtl ? 'ממתינים לאישור' : 'Pending Approval', value: _pendingLawyers.toString()),
-                                  ],
-                                );
-                              }),
-                              const SizedBox(height: 20),
-
-                              // Recent activity + health side by side
-                              LayoutBuilder(builder: (ctx, bc) {
-                                if (bc.maxWidth > 640) {
-                                  return Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                                    Expanded(flex: 3, child: _buildActivityPanel(code, isRtl)),
-                                    const SizedBox(width: 16),
-                                    Expanded(flex: 2, child: _buildHealthPanel(code, isRtl)),
-                                  ]);
-                                }
-                                return Column(children: [
-                                  _buildActivityPanel(code, isRtl),
-                                  const SizedBox(height: 16),
-                                  _buildHealthPanel(code, isRtl),
-                                ]);
-                              }),
-                            ]),
-                          ),
-                        ),
-                ),
-              ]),
-            ),
-              ],
-            ),
-          ],
         ),
       ),
     );
@@ -422,16 +299,16 @@ class _AdminDashboardState extends State<AdminDashboard> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: VetoGlassTokens.glassFillStrong,
+        color: V26.surface,
         borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: VetoGlassTokens.glassBorder),
+        border: Border.all(color: V26.hairline),
         boxShadow: [
-          BoxShadow(color: VetoGlassTokens.neonBlue.withValues(alpha: 0.1), blurRadius: 16, offset: const Offset(0, 6)),
+          BoxShadow(color: V26.navy500.withValues(alpha: 0.1), blurRadius: 16, offset: const Offset(0, 6)),
         ],
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Text(isRtl ? 'פעילות אחרונה' : 'Recent Activity',
-          style: const TextStyle(color: VetoGlassTokens.textPrimary, fontSize: 16, fontWeight: FontWeight.w800)),
+          style: const TextStyle(color: V26.ink900, fontSize: 16, fontWeight: FontWeight.w800)),
         const SizedBox(height: 16),
         _buildActivityFeed(code),
       ]),
@@ -442,16 +319,16 @@ class _AdminDashboardState extends State<AdminDashboard> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: VetoGlassTokens.glassFillStrong,
+        color: V26.surface,
         borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: VetoGlassTokens.glassBorder),
+        border: Border.all(color: V26.hairline),
         boxShadow: [
-          BoxShadow(color: VetoGlassTokens.neonBlue.withValues(alpha: 0.1), blurRadius: 16, offset: const Offset(0, 6)),
+          BoxShadow(color: V26.navy500.withValues(alpha: 0.1), blurRadius: 16, offset: const Offset(0, 6)),
         ],
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Text(isRtl ? 'בריאות המערכת' : 'System Health',
-          style: const TextStyle(color: VetoGlassTokens.textPrimary, fontSize: 16, fontWeight: FontWeight.w800)),
+          style: const TextStyle(color: V26.ink900, fontSize: 16, fontWeight: FontWeight.w800)),
         const SizedBox(height: 16),
         _buildHealthBar('API', _backendStatus),
         const SizedBox(height: 10),
@@ -468,7 +345,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
     final color = good ? const Color(0xFF22C55E) : const Color(0xFFFF3B3B);
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       Row(children: [
-        Expanded(child: Text(label, style: const TextStyle(color: VetoGlassTokens.textMuted, fontSize: 13, fontWeight: FontWeight.w600))),
+        Expanded(child: Text(label, style: const TextStyle(color: V26.ink500, fontSize: 13, fontWeight: FontWeight.w600))),
         Text(good ? 'Online' : 'Offline', style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.w600)),
       ]),
       const SizedBox(height: 6),
@@ -489,20 +366,20 @@ class _AdminDashboardState extends State<AdminDashboard> {
       return Container(
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
-            color: VetoGlassTokens.glassFillStrong,
+            color: V26.surface,
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: VetoGlassTokens.glassBorder)),
+            border: Border.all(color: V26.hairline)),
         child: Center(
           child: Text(_t(code, 'noActivity'),
-              style: const TextStyle(color: VetoGlassTokens.textMuted, fontSize: 14)),
+              style: const TextStyle(color: V26.ink500, fontSize: 14)),
         ),
       );
     }
     return Container(
       decoration: BoxDecoration(
-        color: VetoGlassTokens.glassFillStrong,
+        color: V26.surface,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: VetoGlassTokens.glassBorder),
+        border: Border.all(color: V26.hairline),
         boxShadow: [BoxShadow(
             color: Colors.black.withValues(alpha: 0.2),
             blurRadius: 16, offset: const Offset(0, 6))],
@@ -511,7 +388,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
         itemCount: _recentEvents.length,
-        separatorBuilder: (_, __) => const Divider(height: 1, color: VetoGlassTokens.glassBorder),
+        separatorBuilder: (_, __) => const Divider(height: 1, color: V26.hairline),
         itemBuilder: (context, i) {
           final ev = _recentEvents[i];
           final status = ev['status'] ?? 'open';
@@ -545,13 +422,13 @@ class _AdminDashboardState extends State<AdminDashboard> {
                 crossAxisAlignment: CrossAxisAlignment.start, children: [
                   Text(ev['scenario'] ?? ev['type'] ?? 'Emergency',
                       style: const TextStyle(
-                          color: VetoGlassTokens.textPrimary, fontWeight: FontWeight.w600,
+                          color: V26.ink900, fontWeight: FontWeight.w600,
                           fontSize: 14)),
                   if (dt != null)
                     Text(
                       '${dt.day}/${dt.month}/${dt.year}  ${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}',
                       style: const TextStyle(
-                          color: VetoGlassTokens.textMuted, fontSize: 11),
+                          color: V26.ink500, fontSize: 11),
                     ),
                 ],
               )),
@@ -592,9 +469,9 @@ class _KpiCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: VetoGlassTokens.glassFillStrong,
+        color: V26.surface,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: VetoGlassTokens.glassBorder),
+        border: Border.all(color: V26.hairline),
         boxShadow: [
           BoxShadow(
             color: color.withValues(alpha: 0.15),
@@ -603,40 +480,54 @@ class _KpiCard extends StatelessWidget {
           ),
         ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Row(children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.10),
-                  borderRadius: BorderRadius.circular(8)),
-              child: Icon(icon, color: color, size: 18),
-            ),
-            const Spacer(),
-            if (badge != null)
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
-                decoration: BoxDecoration(
-                  color: (badgeColor ?? color).withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(20),
+      // FittedBox keeps the card visually correct at its natural size but
+      // gracefully shrinks the content block when it lands in a tight grid
+      // cell (tests on 800x600, 4-col narrow layouts, large font scaling).
+      child: FittedBox(
+        fit: BoxFit.scaleDown,
+        alignment: AlignmentDirectional.topStart,
+        child: SizedBox(
+          width: 180,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                      color: color.withValues(alpha: 0.10),
+                      borderRadius: BorderRadius.circular(8)),
+                  child: Icon(icon, color: color, size: 18),
                 ),
-                child: Text(badge!, style: TextStyle(color: badgeColor ?? color, fontSize: 11, fontWeight: FontWeight.w700)),
-              ),
-          ]),
-          const SizedBox(height: 10),
-          Text(value,
-              style: const TextStyle(
-                  color: VetoGlassTokens.textPrimary,
-                  fontWeight: FontWeight.w900,
-                  fontSize: 22)),
-          const SizedBox(height: 2),
-          Text(label,
-              style: const TextStyle(
-                  color: VetoGlassTokens.textMuted, fontSize: 12)),
-        ],
+                const Spacer(),
+                if (badge != null)
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: (badgeColor ?? color).withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(badge!,
+                        style: TextStyle(
+                            color: badgeColor ?? color,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700)),
+                  ),
+              ]),
+              const SizedBox(height: 10),
+              Text(value,
+                  style: const TextStyle(
+                      color: V26.ink900,
+                      fontWeight: FontWeight.w900,
+                      fontSize: 22)),
+              const SizedBox(height: 2),
+              Text(label,
+                  style: const TextStyle(color: V26.ink500, fontSize: 12)),
+            ],
+          ),
+        ),
       ),
     );
   }

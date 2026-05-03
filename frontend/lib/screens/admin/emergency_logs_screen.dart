@@ -3,10 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/i18n/app_language.dart';
-import '../../core/theme/veto_glass_system.dart';
-import '../../core/theme/veto_theme.dart';
+import '../../core/theme/veto_2026.dart';
 import '../../services/admin_service.dart';
-import '../../widgets/app_language_menu.dart';
+import '_shell.dart';
 import 'admin_i18n.dart';
 
 String? _mongoEventId(dynamic ev) {
@@ -47,23 +46,23 @@ class _EmergencyLogsScreenState extends State<EmergencyLogsScreen> {
     switch (s) {
       case 'completed':
       case 'resolved':
-        return VetoPalette.success;
+        return V26.ok;
       case 'cancelled':
-        return VetoPalette.textMuted;
+        return V26.ink500;
       case 'failed':
-        return VetoPalette.emergency;
+        return V26.emerg;
       case 'accepted':
-        return VetoPalette.success;
+        return V26.ok;
       case 'in_progress':
       case 'pending':
-        return VetoPalette.warning;
+        return V26.warn;
       case 'documentation':
-        return VetoPalette.primary;
+        return V26.navy600;
       case 'dispatching':
       case 'active':
-        return VetoPalette.emergency;
+        return V26.emerg;
       default:
-        return VetoPalette.textMuted;
+        return V26.ink500;
     }
   }
 
@@ -94,19 +93,19 @@ class _EmergencyLogsScreenState extends State<EmergencyLogsScreen> {
       builder: (ctx) => Directionality(
         textDirection: AppLanguage.directionOf(code),
         child: AlertDialog(
-          backgroundColor: VetoGlassTokens.sheetPanel,
+          backgroundColor: V26.surface,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
-            side: const BorderSide(color: VetoGlassTokens.glassBorder),
+            side: const BorderSide(color: V26.hairline),
           ),
-          title: Text(_t(code, 'changeStatus'), style: const TextStyle(color: VetoGlassTokens.textPrimary)),
+          title: Text(_t(code, 'changeStatus'), style: const TextStyle(color: V26.ink900)),
           content: StatefulBuilder(
             builder: (_, ss) => DropdownButton<String>(
               isExpanded: true,
               value: selected,
-              dropdownColor: VetoGlassTokens.menuPanel,
-              style: const TextStyle(color: VetoGlassTokens.textPrimary, fontSize: 14),
-              underline: Container(height: 1, color: VetoGlassTokens.glassBorder),
+              dropdownColor: V26.surface,
+              style: const TextStyle(color: V26.ink900, fontSize: 14),
+              underline: Container(height: 1, color: V26.hairline),
               items: AdminStrings.emergencyEventStatuses
                   .map(
                     (v) => DropdownMenuItem<String>(
@@ -124,11 +123,11 @@ class _EmergencyLogsScreenState extends State<EmergencyLogsScreen> {
             TextButton(
                 onPressed: () => Navigator.pop(ctx, false),
                 child: Text(_t(code, 'cancel'),
-                    style: const TextStyle(color: VetoGlassTokens.textMuted))),
+                    style: const TextStyle(color: V26.ink500))),
             FilledButton(
                 style: FilledButton.styleFrom(
-                  backgroundColor: VetoGlassTokens.neonCyan,
-                  foregroundColor: VetoGlassTokens.onNeon,
+                  backgroundColor: V26.navy600,
+                  foregroundColor: Colors.white,
                 ),
                 onPressed: () => Navigator.pop(ctx, true),
                 child: Text(_t(code, 'save'))),
@@ -163,22 +162,22 @@ class _EmergencyLogsScreenState extends State<EmergencyLogsScreen> {
       builder: (ctx) => Directionality(
         textDirection: AppLanguage.directionOf(code),
         child: AlertDialog(
-          backgroundColor: VetoGlassTokens.sheetPanel,
+          backgroundColor: V26.surface,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
-            side: const BorderSide(color: VetoGlassTokens.glassBorder),
+            side: const BorderSide(color: V26.hairline),
           ),
-          title: Text(_t(code, 'deleteEvent'), style: const TextStyle(color: VetoGlassTokens.textPrimary)),
+          title: Text(_t(code, 'deleteEvent'), style: const TextStyle(color: V26.ink900)),
           content: Text(_t(code, 'deleteEventConfirm'),
-              style: const TextStyle(color: VetoGlassTokens.textMuted)),
+              style: const TextStyle(color: V26.ink500)),
           actions: [
             TextButton(
                 onPressed: () => Navigator.pop(ctx, false),
                 child: Text(_t(code, 'cancel'),
-                    style: const TextStyle(color: VetoGlassTokens.textMuted))),
+                    style: const TextStyle(color: V26.ink500))),
             FilledButton(
               style: FilledButton.styleFrom(
-                  backgroundColor: VetoPalette.emergency, foregroundColor: Colors.white),
+                  backgroundColor: V26.emerg, foregroundColor: Colors.white),
               onPressed: () => Navigator.pop(ctx, true),
               child: Text(_t(code, 'delete')),
             ),
@@ -195,39 +194,18 @@ class _EmergencyLogsScreenState extends State<EmergencyLogsScreen> {
 
     return Directionality(
       textDirection: AppLanguage.directionOf(code),
-      child: Scaffold(
-        backgroundColor: VetoGlassTokens.bgBase,
-        appBar: AppBar(
-          backgroundColor: const Color(0x18FFFFFF),
-          elevation: 0,
-          shadowColor: Colors.transparent,
-          surfaceTintColor: Colors.transparent,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new_rounded, color: VetoGlassTokens.textPrimary, size: 20),
-            onPressed: () => Navigator.of(context).pop(),
-          ),
-          title: Text(
-            '${_t(code, 'emergencyLogs')} (${_loading ? _t(code, 'loading') : _events.length})',
-            style: const TextStyle(color: VetoGlassTokens.textPrimary, fontWeight: FontWeight.w800, fontSize: 17),
-          ),
-          centerTitle: true,
-          actions: [
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 8),
-              child: Center(child: AppLanguageMenu(compact: true)),
-            ),
-            IconButton(icon: const Icon(Icons.refresh, color: VetoGlassTokens.textPrimary), onPressed: _load, tooltip: _t(code, 'refresh')),
-          ],
-          bottom: const PreferredSize(preferredSize: Size.fromHeight(1), child: Divider(height: 1, color: VetoGlassTokens.glassBorder)),
-        ),
-        body: VetoGlassAuroraBackground(
+      child: AdminShell(
+        active: AdminSection.logs,
+        title: '${_t(code, 'emergencyLogs')} (${_loading ? _t(code, 'loading') : _events.length})',
+        onRefresh: _load,
+        body: V26Backdrop(
           child: _loading
-            ? const Center(child: CircularProgressIndicator(color: VetoGlassTokens.neonCyan))
+            ? const Center(child: CircularProgressIndicator(color: V26.navy600))
             : _events.isEmpty
                 ? Center(child: Column(mainAxisSize: MainAxisSize.min, children: [
-                    const Icon(Icons.check_circle_outline, color: VetoPalette.success, size: 48),
+                    const Icon(Icons.check_circle_outline, color: V26.ok, size: 48),
                     const SizedBox(height: 12),
-                    Text(_t(code, 'noEmergencyEvents'), style: const TextStyle(color: VetoGlassTokens.textMuted)),
+                    Text(_t(code, 'noEmergencyEvents'), style: const TextStyle(color: V26.ink500)),
                   ]))
                 : ListView.separated(
                     padding: const EdgeInsets.all(16),
@@ -242,13 +220,13 @@ class _EmergencyLogsScreenState extends State<EmergencyLogsScreen> {
                       return Container(
                         padding: const EdgeInsets.all(14),
                         decoration: BoxDecoration(
-                          color: VetoGlassTokens.glassFillStrong,
+                          color: V26.surface,
                           borderRadius: BorderRadius.circular(12),
                           border: Border(
                             left: BorderSide(color: _sc(status), width: 3),
-                            top: const BorderSide(color: VetoGlassTokens.glassBorder),
-                            right: const BorderSide(color: VetoGlassTokens.glassBorder),
-                            bottom: const BorderSide(color: VetoGlassTokens.glassBorder),
+                            top: const BorderSide(color: V26.hairline),
+                            right: const BorderSide(color: V26.hairline),
+                            bottom: const BorderSide(color: V26.hairline),
                           ),
                           boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.25), blurRadius: 20, offset: const Offset(0, 8))],
                         ),
@@ -260,7 +238,7 @@ class _EmergencyLogsScreenState extends State<EmergencyLogsScreen> {
                               user != null
                                   ? (user['full_name'] ?? user['phone'] ?? _t(code, 'unknown'))
                                   : _t(code, 'unknown'),
-                              style: const TextStyle(color: VetoGlassTokens.textPrimary, fontWeight: FontWeight.w600),
+                              style: const TextStyle(color: V26.ink900, fontWeight: FontWeight.w600),
                             )),
                             // Status badge — tap to change
                             GestureDetector(
@@ -280,20 +258,20 @@ class _EmergencyLogsScreenState extends State<EmergencyLogsScreen> {
                               ),
                             ),
                             IconButton(
-                              icon: const Icon(Icons.delete_outline, size: 20, color: VetoPalette.emergency),
+                              icon: const Icon(Icons.delete_outline, size: 20, color: V26.emerg),
                               onPressed: eid.isEmpty ? null : () => _confirmDelete(eid),
                             ),
                           ]),
                           const SizedBox(height: 6),
                           Text(_fmt(e['triggered_at']?.toString()),
-                              style: const TextStyle(color: VetoGlassTokens.textMuted, fontSize: 12)),
+                              style: const TextStyle(color: V26.ink500, fontSize: 12)),
                           if (lawyer != null) ...[
                             const SizedBox(height: 4),
                             Row(children: [
-                              const Icon(Icons.gavel_rounded, color: VetoGlassTokens.accentSoft, size: 14),
+                              const Icon(Icons.gavel_rounded, color: V26.navy500, size: 14),
                               const SizedBox(width: 4),
                               Text('${_t(code, 'lawyerPrefix')}: ${lawyer['full_name'] ?? lawyer['phone'] ?? ""}',
-                                  style: const TextStyle(color: VetoGlassTokens.accentSoft, fontSize: 12)),
+                                  style: const TextStyle(color: V26.navy500, fontSize: 12)),
                             ]),
                           ],
                         ]),
