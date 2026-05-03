@@ -707,6 +707,7 @@ class _CallShellScreenState extends State<CallShellScreen>
           child: V26CallVideoArea(
             engine: _agora.engine,
             channelId: a.channelId,
+            localUid: _agora.localUid,
             remoteUid: _agora.remoteUid,
             hasRemoteVideo: _agora.hasRemoteVideo,
             peerName: a.peerLabel,
