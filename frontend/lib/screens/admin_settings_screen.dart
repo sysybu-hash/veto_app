@@ -468,12 +468,12 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
           Container(
               width: 20,
               height: 2,
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(colors: [
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(colors: [
                   V26.navy500,
                   V26.ok,
                 ]),
-                borderRadius: BorderRadius.circular(1),
+                borderRadius: BorderRadius.all(Radius.circular(1)),
               )),
           const SizedBox(width: 8),
           Text(title.toUpperCase(),

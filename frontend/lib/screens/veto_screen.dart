@@ -19,7 +19,6 @@ import '../config/veto_live_audio_prefs.dart';
 import '../core/i18n/app_language.dart';
 import '../platform/browser_bridge.dart' as browser_bridge;
 import '../core/theme/veto_2026.dart';
-import '../core/theme/veto_theme.dart';
 import '../widgets/app_language_menu.dart';
 import '../widgets/accessibility_toolbar.dart';
 import '../widgets/dispatch_sheets.dart';
@@ -48,7 +47,7 @@ class _VetoScreenState extends State<VetoScreen> {
   static int _buildCount = 0;
   // #endregion agent log (perf counters)
   // ── Navigation
-  int _tab = 0;
+  final int _tab = 0;
   // ── Core state
   String _role = '', _phone = '';
   String _langKey = 'he';
@@ -1130,7 +1129,7 @@ class _VetoScreenState extends State<VetoScreen> {
         destinations: V26CitizenNav.bottomDestinations(_langKey),
         currentIndex: 0, // בית — this is the home hub
         onDestinationSelected: (i) {
-          final routes = V26CitizenNav.bottomRoutes;
+          const routes = V26CitizenNav.bottomRoutes;
           if (i == 0) return; // already on Home
           Navigator.of(context)
               .pushReplacementNamed(routes[i.clamp(0, routes.length - 1)]);
@@ -1980,7 +1979,25 @@ class _VetoScreenState extends State<VetoScreen> {
               Container(
                 width: orbSize,
                 height: orbSize,
-                decoration: VetoDecorations.light3DOrb(active: _isDispatching),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: _isDispatching
+                        ? const [Color(0xFFFF6B6B), Color(0xFFFF3B3B), Color(0xFFB91C1C)]
+                        : const [Color(0xFFFF9494), Color(0xFFFF4D4D), Color(0xFFD92D2D)],
+                    stops: const [0.0, 0.5, 1.0],
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFFFF3B3B).withValues(alpha: 0.4),
+                      blurRadius: 40,
+                      spreadRadius: 4,
+                      offset: const Offset(0, 16),
+                    ),
+                  ],
+                ),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
