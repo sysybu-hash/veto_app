@@ -6,6 +6,8 @@
 // ============================================================
 
 // ignore: avoid_web_libraries_in_flutter, deprecated_member_use
+import 'dart:async';
+
 import 'dart:html' as html;
 
 class CallPermissionsResult {
@@ -39,6 +41,9 @@ Future<CallPermissionsResult> requestCallPermissions({required bool wantVideo}) 
         track.stop();
       } catch (_) {}
     }
+    // Let the browser fully release devices before Agora opens its own
+    // getUserMedia (avoids black preview / empty tracks on Chrome).
+    await Future<void>.delayed(const Duration(milliseconds: 160));
     return CallPermissionsResult(
       microphoneGranted: true,
       cameraGranted: !wantVideo || true,
@@ -53,6 +58,7 @@ Future<CallPermissionsResult> requestCallPermissions({required bool wantVideo}) 
             track.stop();
           } catch (_) {}
         }
+        await Future<void>.delayed(const Duration(milliseconds: 160));
         return const CallPermissionsResult(
           microphoneGranted: true,
           cameraGranted: false,

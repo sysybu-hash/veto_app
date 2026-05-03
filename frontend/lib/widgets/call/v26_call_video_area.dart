@@ -115,15 +115,17 @@ class V26CallVideoArea extends StatelessWidget {
     if (showRemote) {
       return ColoredBox(
         color: Colors.black,
-        child: AgoraVideoView(
-          key: ValueKey('remote-$uid'),
-          controller: VideoViewController.remote(
-            rtcEngine: eng,
-            canvas: VideoCanvas(
-              uid: uid,
-              renderMode: RenderModeType.renderModeHidden,
+        child: SizedBox.expand(
+          child: AgoraVideoView(
+            key: ValueKey('remote-$uid'),
+            controller: VideoViewController.remote(
+              rtcEngine: eng,
+              canvas: VideoCanvas(
+                uid: uid,
+                renderMode: RenderModeType.renderModeHidden,
+              ),
+              connection: RtcConnection(channelId: channelId),
             ),
-            connection: RtcConnection(channelId: channelId),
           ),
         ),
       );
@@ -134,14 +136,16 @@ class V26CallVideoArea extends StatelessWidget {
         children: [
           ColoredBox(
             color: Colors.black,
-            child: AgoraVideoView(
-              key: const ValueKey('local-full'),
-              controller: VideoViewController(
-                rtcEngine: eng,
-                canvas: const VideoCanvas(
-                  uid: 0,
-                  renderMode: RenderModeType.renderModeHidden,
-                  mirrorMode: VideoMirrorModeType.videoMirrorModeEnabled,
+            child: SizedBox.expand(
+              child: AgoraVideoView(
+                key: const ValueKey('local-full'),
+                controller: VideoViewController(
+                  rtcEngine: eng,
+                  canvas: const VideoCanvas(
+                    uid: 0,
+                    renderMode: RenderModeType.renderModeHidden,
+                    mirrorMode: VideoMirrorModeType.videoMirrorModeEnabled,
+                  ),
                 ),
               ),
             ),
@@ -254,14 +258,16 @@ class V26CallLocalPip extends StatelessWidget {
         ),
       );
     } else if (eng != null && !videoMuted && (previewOk || kIsWeb)) {
-      body = AgoraVideoView(
-        key: const ValueKey('local-pip'),
-        controller: VideoViewController(
-          rtcEngine: eng,
-          canvas: const VideoCanvas(
-            uid: 0,
-            renderMode: RenderModeType.renderModeHidden,
-            mirrorMode: VideoMirrorModeType.videoMirrorModeEnabled,
+      body = SizedBox.expand(
+        child: AgoraVideoView(
+          key: const ValueKey('local-pip'),
+          controller: VideoViewController(
+            rtcEngine: eng,
+            canvas: const VideoCanvas(
+              uid: 0,
+              renderMode: RenderModeType.renderModeHidden,
+              mirrorMode: VideoMirrorModeType.videoMirrorModeEnabled,
+            ),
           ),
         ),
       );

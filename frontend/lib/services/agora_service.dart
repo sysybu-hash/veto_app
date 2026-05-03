@@ -661,14 +661,33 @@ class AgoraService extends ChangeNotifier {
     final eng = _engine;
     if (eng == null || !kIsWeb) return;
     try {
+      if (_wantsVideo && !_videoMuted) {
+        try {
+          await eng.enableLocalVideo(true);
+        } catch (_) {}
+      }
       await eng.startPreview();
       _localPreviewOk = true;
+      await Future<void>.delayed(const Duration(milliseconds: 120));
       if (_wantsVideo && !_videoMuted) {
-        await eng.updateChannelMediaOptions(
-          const ChannelMediaOptions(
-            publishCameraTrack: true,
-          ),
-        );
+        try {
+          await eng.updateChannelMediaOptions(
+            const ChannelMediaOptions(
+              publishCameraTrack: true,
+              publishMicrophoneTrack: true,
+              autoSubscribeAudio: true,
+              autoSubscribeVideo: true,
+            ),
+          );
+        } catch (e2, st2) {
+          developer.log(
+            'web updateChannelMediaOptions',
+            name: 'VETO.Agora',
+            error: e2,
+            stackTrace: st2,
+          );
+          _emitError(CallErrorKind.mediaUnavailable, 'web publish: $e2');
+        }
       }
       notifyListeners();
     } catch (err, st) {
