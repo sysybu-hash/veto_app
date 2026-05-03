@@ -383,11 +383,9 @@
     window.vetoFlowsInvoke = async function() { return { ok: false, stage: 'disabled' }; };
   </script>
   <script type="module" src="gemini_live.mjs"></script>
-  <!-- Agora Web RTC (agora_rtc_engine web / alpha):
-       1) Agora Web SDK 4.x (global AgoraRTC)
-       2) iris-web bridge — REQUIRED for Flutter web; without it joinChannel never completes.
-       Versions must match agora_rtc_engine README (6.5.x): n450_w4220_0.8.6. -->
-  <script src="https://download.agora.io/sdk/release/AgoraRTC_N-4.22.1.js"></script>
+  <!-- Agora Web RTC (agora_rtc_engine web / alpha): load ONLY iris-web-rtc (official example).
+       Do NOT add AgoraRTC_N-*.js separately — iris bundles the matching Web SDK; loading both
+       creates duplicate globals (two [lock-safari-1], unstable WS / video). -->
   <script src="https://download.agora.io/sdk/release/iris-web-rtc_n450_w4220_0.8.6.js"></script>
   <script src="flutter_bootstrap.js" defer></script>
 </body>
