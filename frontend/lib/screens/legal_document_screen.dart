@@ -56,27 +56,138 @@ class LegalDocumentScreen extends StatelessWidget {
     final lang = AppLanguage.normalize(code);
     final title = _titles[lang]?[kind] ?? _titles['en']![kind]!;
     final body = _bodies[lang]?[kind] ?? _bodies['en']![kind]!;
+    final privacyLbl = _titles[lang]?[LegalDocKind.privacy] ??
+        _titles['en']![LegalDocKind.privacy]!;
+    final termsLbl =
+        _titles[lang]?[LegalDocKind.terms] ?? _titles['en']![LegalDocKind.terms]!;
 
     return Scaffold(
       backgroundColor: V26.paper,
       appBar: AppBar(
         backgroundColor: V26.surface,
         elevation: 0,
-        title: Text(title, style: const TextStyle(color: V26.ink900, fontWeight: FontWeight.w800)),
+        shadowColor: Colors.transparent,
+        surfaceTintColor: Colors.transparent,
+        title: Text(
+          title,
+          style: const TextStyle(
+            fontFamily: V26.serif,
+            color: V26.ink900,
+            fontSize: 18,
+            fontWeight: FontWeight.w800,
+            letterSpacing: -0.2,
+          ),
+        ),
+        centerTitle: true,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new_rounded, color: V26.ink900),
           onPressed: () => Navigator.of(context).maybePop(),
         ),
+        bottom: const PreferredSize(
+          preferredSize: Size.fromHeight(1),
+          child: Divider(height: 1, color: V26.hairline),
+        ),
       ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(20, 16, 20, 40),
-          child: SelectableText(
-            body,
-            style: const TextStyle(
-              color: V26.ink900,
-              fontSize: 15,
-              height: 1.55,
+      body: V26Backdrop(
+        child: SafeArea(
+          child: Align(
+            alignment: Alignment.topCenter,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 780),
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(20, 16, 20, 40),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        color: V26.paper2,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: V26.hairline),
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: _DocTab(
+                              label: privacyLbl,
+                              active: kind == LegalDocKind.privacy,
+                              onTap: () => Navigator.of(context)
+                                  .pushReplacementNamed('/privacy'),
+                            ),
+                          ),
+                          Expanded(
+                            child: _DocTab(
+                              label: termsLbl,
+                              active: kind == LegalDocKind.terms,
+                              onTap: () => Navigator.of(context)
+                                  .pushReplacementNamed('/terms'),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        fontFamily: V26.serif,
+                        color: V26.ink900,
+                        fontSize: 32,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -0.4,
+                        height: 1.15,
+                      ),
+                    ),
+                    const SizedBox(height: 18),
+                    SelectableText(
+                      body,
+                      style: const TextStyle(
+                        fontFamily: V26.serif,
+                        color: V26.ink900,
+                        fontSize: 16,
+                        height: 1.7,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _DocTab extends StatelessWidget {
+  final String label;
+  final bool active;
+  final VoidCallback onTap;
+  const _DocTab({required this.label, required this.active, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(7),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+          decoration: BoxDecoration(
+            color: active ? V26.surface : Colors.transparent,
+            borderRadius: BorderRadius.circular(7),
+            boxShadow: active ? V26.shadow1 : null,
+          ),
+          alignment: Alignment.center,
+          child: Text(
+            label,
+            style: TextStyle(
+              fontFamily: V26.sans,
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              color: active ? V26.navy700 : V26.ink500,
             ),
           ),
         ),
