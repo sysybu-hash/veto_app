@@ -1,14 +1,13 @@
 // ============================================================
 //  in_call_permissions_web.dart — Flutter Web branch.
-//  Uses `navigator.mediaDevices.getUserMedia` to surface the
-//  browser prompt BEFORE Agora initializes, so failures come
-//  back with actionable errors instead of a silent join hang.
+//  Uses `navigator.mediaDevices.getUserMedia` (package:web) to
+//  surface the browser prompt BEFORE Agora initializes.
 // ============================================================
 
-// ignore: avoid_web_libraries_in_flutter, deprecated_member_use
 import 'dart:async';
+import 'dart:js_interop';
 
-import 'dart:html' as html;
+import 'package:web/web.dart';
 
 class CallPermissionsResult {
   const CallPermissionsResult({
@@ -21,43 +20,38 @@ class CallPermissionsResult {
   bool get allGranted => microphoneGranted && cameraGranted;
 }
 
-Future<CallPermissionsResult> requestCallPermissions({required bool wantVideo}) async {
-  final mediaDevices = html.window.navigator.mediaDevices;
-  if (mediaDevices == null) {
-    return const CallPermissionsResult(
-      microphoneGranted: false,
-      cameraGranted: false,
-    );
+void _stopAllTracks(MediaStream stream) {
+  for (final track in stream.getTracks().toDart) {
+    try {
+      track.stop();
+    } catch (_) {}
   }
-  final constraints = <String, dynamic>{
-    'audio': true,
-    if (wantVideo) 'video': true,
-  };
+}
+
+Future<CallPermissionsResult> requestCallPermissions({required bool wantVideo}) async {
+  final mediaDevices = window.navigator.mediaDevices;
   try {
-    final stream = await mediaDevices.getUserMedia(constraints);
-    // Stop all tracks immediately — Agora will request its own streams.
-    for (final track in stream.getTracks()) {
-      try {
-        track.stop();
-      } catch (_) {}
+    if (wantVideo) {
+      final stream = await mediaDevices
+          .getUserMedia(MediaStreamConstraints(audio: true.toJS, video: true.toJS))
+          .toDart;
+      _stopAllTracks(stream);
+    } else {
+      final stream =
+          await mediaDevices.getUserMedia(MediaStreamConstraints(audio: true.toJS)).toDart;
+      _stopAllTracks(stream);
     }
-    // Let the browser fully release devices before Agora opens its own
-    // getUserMedia (avoids black preview / empty tracks on Chrome).
     await Future<void>.delayed(const Duration(milliseconds: 160));
     return CallPermissionsResult(
       microphoneGranted: true,
-      cameraGranted: !wantVideo || true,
+      cameraGranted: wantVideo,
     );
   } catch (_) {
-    // Fallback: audio-only retry when the video grab was rejected.
     if (wantVideo) {
       try {
-        final stream = await mediaDevices.getUserMedia({'audio': true});
-        for (final track in stream.getTracks()) {
-          try {
-            track.stop();
-          } catch (_) {}
-        }
+        final stream =
+            await mediaDevices.getUserMedia(MediaStreamConstraints(audio: true.toJS)).toDart;
+        _stopAllTracks(stream);
         await Future<void>.delayed(const Duration(milliseconds: 160));
         return const CallPermissionsResult(
           microphoneGranted: true,
