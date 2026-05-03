@@ -15,7 +15,6 @@ import 'package:provider/provider.dart';
 import '../config/app_config.dart';
 import '../core/i18n/app_language.dart';
 import '../core/theme/veto_2026.dart';
-import '../core/theme/veto_theme.dart';
 import '../services/auth_service.dart';
 import '../services/vault_save_queue.dart';
 import '../platform/browser_bridge.dart' as browser_bridge;
@@ -197,11 +196,11 @@ class _VaultFile {
   }
 
   Color get typeColor {
-    if (type.startsWith('image/')) return VetoPalette.accentSky;
+    if (type.startsWith('image/')) return V26.navy500;
     if (type.startsWith('video/')) return const Color(0xFF2ECC71);
-    if (type.startsWith('audio/')) return VetoPalette.accentSky;
-    if (type.contains('pdf')) return VetoPalette.emergency;
-    return VetoPalette.textMuted;
+    if (type.startsWith('audio/')) return V26.navy500;
+    if (type.contains('pdf')) return V26.emerg;
+    return V26.ink500;
   }
 }
 
@@ -409,7 +408,7 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
           ),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, true),
-            style: FilledButton.styleFrom(backgroundColor: VetoPalette.emergency, foregroundColor: Colors.white),
+            style: FilledButton.styleFrom(backgroundColor: V26.emerg, foregroundColor: Colors.white),
             child: Text(_l.delete),
           ),
         ],
@@ -889,7 +888,7 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
           FilledButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: FilledButton.styleFrom(
-                backgroundColor: VetoPalette.emergency, foregroundColor: Colors.white),
+                backgroundColor: V26.emerg, foregroundColor: Colors.white),
             child: Text(_l.delete),
           ),
         ],
@@ -1116,7 +1115,7 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
           FilledButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: FilledButton.styleFrom(
-                backgroundColor: VetoPalette.emergency, foregroundColor: Colors.white),
+                backgroundColor: V26.emerg, foregroundColor: Colors.white),
             child: Text(_l.deleteCase),
           ),
         ],
@@ -1156,7 +1155,7 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       content: Text(msg),
-      backgroundColor: isError ? VetoPalette.emergency : VetoPalette.success,
+      backgroundColor: isError ? V26.emerg : V26.ok,
       behavior: SnackBarBehavior.floating,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
     ));
@@ -1206,7 +1205,7 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
                               : Icons.cloud_upload_outlined),
                       size: 18,
                       color: j.error != null
-                          ? VetoPalette.emergency
+                          ? V26.emerg
                           : V26.navy600,
                     ),
                     const SizedBox(width: 8),
@@ -1236,7 +1235,7 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
                   j.error ?? j.statusLine,
                   style: TextStyle(
                     color: j.error != null
-                        ? VetoPalette.emergency
+                        ? V26.emerg
                         : V26.ink500,
                     fontSize: 12,
                   ),
@@ -1784,7 +1783,7 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
                   f.lawyerAccess
                       ? Icons.lock_rounded
                       : Icons.lock_open_rounded,
-                  color: f.lawyerAccess ? VetoPalette.warning : V26.ok,
+                  color: f.lawyerAccess ? V26.warn : V26.ok,
                 ),
                 title: Text(
                   f.lawyerAccess ? _l.revoke : _l.share,
@@ -1841,10 +1840,10 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
                 ),
               ListTile(
                 leading: const Icon(Icons.delete_outline_rounded,
-                    color: VetoPalette.emergency),
+                    color: V26.emerg),
                 title: Text(_l.delete,
                     style:
-                        const TextStyle(color: VetoPalette.emergency)),
+                        const TextStyle(color: V26.emerg)),
                 onTap: () {
                   Navigator.pop(ctx);
                   _deleteFile(f);
@@ -2063,7 +2062,7 @@ class _FolderListTile extends StatelessWidget {
                 child: Text(l.openFolder),
               ),
               IconButton(
-                icon: const Icon(Icons.delete_outline, color: VetoPalette.emergency, size: 20),
+                icon: const Icon(Icons.delete_outline, color: V26.emerg, size: 20),
                 onPressed: onDelete,
                 tooltip: l.deleteFolder,
               ),
@@ -2148,16 +2147,16 @@ class _FileCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
               decoration: BoxDecoration(
-                color: VetoPalette.success.withValues(alpha: 0.10),
+                color: V26.ok.withValues(alpha: 0.10),
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: VetoPalette.success.withValues(alpha: 0.3)),
+                border: Border.all(color: V26.ok.withValues(alpha: 0.3)),
               ),
               child: Row(mainAxisSize: MainAxisSize.min, children: [
                 const Icon(Icons.lock_open_rounded,
-                    size: 11, color: VetoPalette.success),
+                    size: 11, color: V26.ok),
                 const SizedBox(width: 3),
                 Text(l.lawyerAccess, style: const TextStyle(
-                    color: VetoPalette.success, fontSize: 10,
+                    color: V26.ok, fontSize: 10,
                     fontWeight: FontWeight.w600)),
               ]),
             ),
@@ -2198,7 +2197,7 @@ class _FileCard extends StatelessWidget {
                 ? Icons.lock_rounded
                 : Icons.lock_open_rounded,
             label: file.lawyerAccess ? l.revoke : l.share,
-            color: file.lawyerAccess ? VetoPalette.warning : VetoPalette.success,
+            color: file.lawyerAccess ? V26.warn : V26.ok,
             onTap: onToggleAccess,
           ),
           _ActionChip(
@@ -2218,20 +2217,20 @@ class _FileCard extends StatelessWidget {
             _ActionChip(
               icon: Icons.drive_file_move_rounded,
               label: l.moveToFolder,
-              color: VetoPalette.info,
+              color: V26.navy600,
               onTap: onMoveToFolder!,
             ),
           _ActionChip(
             icon: Icons.delete_outline_rounded,
             label: l.delete,
-            color: VetoPalette.emergency,
+            color: V26.emerg,
             onTap: onDelete,
           ),
           if (file.caseId != null)
             _ActionChip(
               icon: Icons.link_off_rounded,
               label: l.removeFromCase,
-              color: VetoPalette.warning,
+              color: V26.warn,
               onTap: onRemoveFromCase,
             ),
         ]),
@@ -2329,7 +2328,7 @@ class _CaseCard extends StatelessWidget {
             constraints: const BoxConstraints(minWidth: 32, minHeight: 12),
           ),
           IconButton(
-            icon: const Icon(Icons.delete_outline_rounded, size: 18, color: VetoPalette.emergency),
+            icon: const Icon(Icons.delete_outline_rounded, size: 18, color: V26.emerg),
             onPressed: onDelete,
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(minWidth: 32, minHeight: 12),

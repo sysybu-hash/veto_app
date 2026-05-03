@@ -9,7 +9,6 @@ import 'package:provider/provider.dart';
 
 import '../core/i18n/app_language.dart';
 import '../core/theme/veto_2026.dart';
-import '../core/theme/veto_theme.dart';
 import '../services/admin_service.dart';
 import '../services/auth_service.dart';
 import 'admin/_shell.dart';
@@ -35,6 +34,11 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
   int _pendingLawyersCount = 0;
   int _totalUsers = 0;
   int _totalLawyers = 0;
+
+  double _dispatchTimeoutSec = 45;
+  double _dispatchRadiusKm = 15;
+  double _dispatchMaxLawyers = 4;
+  bool _maintenanceMode = false;
 
   final AdminService _adminService = AdminService();
 
@@ -98,7 +102,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       content: Text(msg),
-      backgroundColor: error ? VetoPalette.emergency : VetoPalette.success,
+      backgroundColor: error ? V26.emerg : V26.ok,
     ));
   }
 
@@ -143,7 +147,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
             padding: const EdgeInsets.all(24),
             child: Center(
               child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 720),
+                constraints: const BoxConstraints(maxWidth: 1120),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
@@ -151,12 +155,12 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                     Row(children: [
                       Expanded(
                         child: _statCard(_t(code, 'users'), '$_totalUsers',
-                            Icons.group_outlined, VetoPalette.primary),
+                            Icons.group_outlined, V26.navy600),
                       ),
                       const SizedBox(width: 10),
                       Expanded(
                         child: _statCard(_t(code, 'lawyers'), '$_totalLawyers',
-                            Icons.gavel_rounded, VetoPalette.success),
+                            Icons.gavel_rounded, V26.ok),
                       ),
                       const SizedBox(width: 10),
                       Expanded(
@@ -165,8 +169,8 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                           '$_pendingLawyersCount',
                           Icons.pending_actions_rounded,
                           _pendingLawyersCount > 0
-                              ? VetoPalette.emergency
-                              : VetoPalette.textMuted,
+                              ? V26.emerg
+                              : V26.ink500,
                         ),
                       ),
                     ]),
@@ -176,7 +180,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                       _actionCard(
                         '${_t(code, 'pendingApprovalsAction')} ($_pendingLawyersCount ${_t(code, 'pending')})',
                         Icons.how_to_reg_rounded,
-                        color: VetoPalette.emergency,
+                        color: V26.emerg,
                         badge: _pendingLawyersCount,
                         onTap: () async {
                           await Navigator.push(
@@ -189,19 +193,52 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                       ),
                       const SizedBox(height: 32),
                     ],
+                    LayoutBuilder(
+                      builder: (ctx, c) {
+                        final wide = c.maxWidth >= 900;
+                        final dispatch = _dispatchCard(code);
+                        final comm = _communicationCard(code);
+                        final row = wide
+                            ? Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Expanded(child: dispatch),
+                                  const SizedBox(width: 16),
+                                  Expanded(child: comm),
+                                ],
+                              )
+                            : Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  dispatch,
+                                  const SizedBox(height: 12),
+                                  comm,
+                                ],
+                              );
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            row,
+                            const SizedBox(height: 12),
+                            _maintenanceCard(code),
+                            const SizedBox(height: 32),
+                          ],
+                        );
+                      },
+                    ),
                     _sectionHeader(_t(code, 'systemOverview')),
                     _infoCard(
                         _t(code, 'serverStatus'),
                         _serverStatus.isEmpty ? _t(code, 'loading') : _serverStatus,
                         statusColor: _serverStatus == 'Online'
-                            ? VetoPalette.success
-                            : VetoPalette.emergency),
+                            ? V26.ok
+                            : V26.emerg),
                     _infoCard(
                         _t(code, 'database'),
                         _mongoDbStatus.isEmpty ? _t(code, 'loading') : _mongoDbStatus,
                         statusColor: _mongoDbStatus == 'Connected'
-                            ? VetoPalette.success
-                            : VetoPalette.emergency),
+                            ? V26.ok
+                            : V26.emerg),
                     _infoCard(
                       _t(code, 'appVersion'),
                       _appVersion.isEmpty ? _t(code, 'unknown') : _appVersion,
@@ -213,27 +250,21 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                     _actionCard(
                       _t(code, 'citizenApp'),
                       Icons.shield_outlined,
-                      color: VetoPalette.success,
+                      color: V26.ok,
                       onTap: () =>
                           Navigator.of(context).pushNamed('/veto_screen'),
                     ),
                     _actionCard(
                       code == 'he' ? 'לוח בקרה ראשי' : code == 'ru' ? 'Главная панель' : 'Admin Dashboard',
                       Icons.dashboard_rounded,
-                      color: VetoPalette.primary,
+                      color: V26.navy600,
                       onTap: () => Navigator.pushNamed(context, '/admin_dashboard'),
                     ),
                     _actionCard(
                       code == 'he' ? 'ניהול מנויים' : code == 'ru' ? 'Подписки' : 'Subscription Management',
                       Icons.subscriptions_rounded,
-                      color: VetoPalette.accentSky,
+                      color: V26.navy500,
                       onTap: () => Navigator.pushNamed(context, '/admin_subscriptions'),
-                    ),
-                    _actionCard(
-                      code == 'he' ? 'הגדרות מערכת' : code == 'ru' ? 'Настройки системы' : 'System Settings',
-                      Icons.settings_rounded,
-                      color: VetoPalette.textMuted,
-                      onTap: () => Navigator.pushNamed(context, '/settings'),
                     ),
                     const SizedBox(height: 32),
                     _sectionHeader(_t(code, 'userManagement')),
@@ -290,43 +321,190 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
     );
   }
 
+  Widget _dispatchCard(String code) {
+    return V26Card(
+      lift: true,
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            _t(code, 'dispatchingTitle'),
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w800,
+              color: V26.ink900,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Text(_t(code, 'dispatchTimeoutSec'),
+              style: const TextStyle(color: V26.ink500, fontSize: 12)),
+          Slider(
+            value: _dispatchTimeoutSec,
+            min: 15,
+            max: 180,
+            divisions: 33,
+            label: '${_dispatchTimeoutSec.round()}s',
+            activeColor: V26.navy600,
+            onChanged: (v) => setState(() => _dispatchTimeoutSec = v),
+          ),
+          Text(_t(code, 'dispatchRadiusKm'),
+              style: const TextStyle(color: V26.ink500, fontSize: 12)),
+          Slider(
+            value: _dispatchRadiusKm,
+            min: 3,
+            max: 60,
+            divisions: 19,
+            label: '${_dispatchRadiusKm.round()} km',
+            activeColor: V26.navy600,
+            onChanged: (v) => setState(() => _dispatchRadiusKm = v),
+          ),
+          Text(_t(code, 'dispatchMaxLawyers'),
+              style: const TextStyle(color: V26.ink500, fontSize: 12)),
+          Slider(
+            value: _dispatchMaxLawyers,
+            min: 1,
+            max: 12,
+            divisions: 11,
+            label: '${_dispatchMaxLawyers.round()}',
+            activeColor: V26.navy600,
+            onChanged: (v) => setState(() => _dispatchMaxLawyers = v),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _communicationCard(String code) {
+    Widget row(String labelKey) => Padding(
+          padding: const EdgeInsets.symmetric(vertical: 6),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  _t(code, labelKey),
+                  style: const TextStyle(
+                    color: V26.ink900,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 13,
+                  ),
+                ),
+              ),
+              V26Badge(_t(code, 'badgeActive'), tone: V26BadgeTone.ok),
+            ],
+          ),
+        );
+    return V26Card(
+      lift: true,
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            _t(code, 'commTitle'),
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w800,
+              color: V26.ink900,
+            ),
+          ),
+          const SizedBox(height: 8),
+          row('commTwilio'),
+          row('commAgora'),
+          row('commFcm'),
+          row('commGemini'),
+        ],
+      ),
+    );
+  }
+
+  Widget _maintenanceCard(String code) {
+    return V26Card(
+      lift: true,
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            _t(code, 'maintenanceTitle'),
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w800,
+              color: V26.ink900,
+            ),
+          ),
+          const SizedBox(height: 4),
+          SwitchListTile(
+            contentPadding: EdgeInsets.zero,
+            title: Text(_t(code, 'maintenanceMode'),
+                style: const TextStyle(
+                    color: V26.ink900, fontWeight: FontWeight.w600)),
+            subtitle: Text(_t(code, 'maintenanceHint'),
+                style: const TextStyle(color: V26.ink500, fontSize: 12)),
+            value: _maintenanceMode,
+            onChanged: (v) => setState(() => _maintenanceMode = v),
+            activeThumbColor: V26.navy600,
+          ),
+          Align(
+            alignment: AlignmentDirectional.centerStart,
+            child: OutlinedButton.icon(
+              onPressed: () => _snack(_t(code, 'cacheResetSnack')),
+              icon: const Icon(Icons.cleaning_services_outlined, size: 18),
+              label: Text(_t(code, 'cacheReset')),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: V26.navy700,
+                side: const BorderSide(color: V26.hairline),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _sectionHeader(String title) => Padding(
-    padding: const EdgeInsets.only(bottom: 12),
-    child: Row(children: [
-      Container(width: 20, height: 2, decoration: BoxDecoration(
-        gradient: const LinearGradient(colors: [Color(0xFF5B8FFF), Color(0xFF00C9B1)]),
-        borderRadius: BorderRadius.circular(1),
-      )),
-      const SizedBox(width: 8),
-      Text(title.toUpperCase(), style: const TextStyle(
-          color: Color(0xFF5B8FFF), fontSize: 10, fontWeight: FontWeight.w800, letterSpacing: 2.5)),
-    ]),
-  );
+        padding: const EdgeInsets.only(bottom: 12),
+        child: Row(children: [
+          Container(
+              width: 20,
+              height: 2,
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(colors: [
+                  V26.navy500,
+                  V26.ok,
+                ]),
+                borderRadius: BorderRadius.circular(1),
+              )),
+          const SizedBox(width: 8),
+          Text(title.toUpperCase(),
+              style: const TextStyle(
+                  color: V26.navy600,
+                  fontSize: 10,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 2.5)),
+        ]),
+      );
 
   Widget _statCard(String label, String value, IconData icon, Color color) =>
       ClipRRect(
         borderRadius: BorderRadius.circular(16),
         child: Stack(
           children: [
-            Container(
+            V26Card(
+              radius: 16,
               padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 12),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                border: Border.all(color: const Color(0xFFE2E8F8)),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.04),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
+              lift: false,
               child: Column(children: [
                 Icon(icon, color: color, size: 22),
                 const SizedBox(height: 8),
-                Text(value, style: TextStyle(color: color, fontSize: 26, fontWeight: FontWeight.w900)),
+                Text(value,
+                    style: TextStyle(
+                        color: color,
+                        fontSize: 26,
+                        fontWeight: FontWeight.w900)),
                 const SizedBox(height: 3),
-                Text(label, style: const TextStyle(color: Color(0xFF64748B), fontSize: 11)),
+                Text(label,
+                    style: const TextStyle(color: V26.ink500, fontSize: 11)),
               ]),
             ),
             PositionedDirectional(
@@ -339,90 +517,113 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
         ),
       );
 
-  Widget _infoCard(String label, String value, {Color? statusColor}) =>
-      Container(
-        margin: const EdgeInsets.only(bottom: 8),
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: const Color(0xFFE2E8F8)),
-          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 6, offset: const Offset(0, 2))],
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(label, style: const TextStyle(color: Color(0xFF64748B), fontSize: 13)),
-            Row(children: [
-              if (statusColor != null)
-                Container(
-                  width: 7, height: 7,
-                  margin: const EdgeInsets.only(left: 8, right: 6),
-                  decoration: BoxDecoration(shape: BoxShape.circle, color: statusColor),
-                ),
-              Text(value, style: TextStyle(
-                  color: statusColor ?? const Color(0xFF0F172A),
-                  fontSize: 13, fontWeight: FontWeight.w700)),
-            ]),
-          ],
+  Widget _infoCard(String label, String value, {Color? statusColor}) => Padding(
+        padding: const EdgeInsets.only(bottom: 8),
+        child: V26Card(
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(label,
+                  style: const TextStyle(color: V26.ink500, fontSize: 13)),
+              Row(children: [
+                if (statusColor != null)
+                  Container(
+                    width: 7,
+                    height: 7,
+                    margin: const EdgeInsetsDirectional.only(start: 8, end: 6),
+                    decoration:
+                        BoxDecoration(shape: BoxShape.circle, color: statusColor),
+                  ),
+                Text(value,
+                    style: TextStyle(
+                        color: statusColor ?? V26.ink900,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700)),
+              ]),
+            ],
+          ),
         ),
       );
 
   Widget _switchCard(String title, bool value, String subtitle, ValueChanged<bool> onChange) =>
-      Container(
-        margin: const EdgeInsets.only(bottom: 8),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: const Color(0xFFE2E8F8)),
-          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 6, offset: const Offset(0, 2))],
+      Padding(
+        padding: const EdgeInsets.only(bottom: 8),
+        child: V26Card(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          child: Row(children: [
+            Expanded(
+              child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(title,
+                        style: const TextStyle(
+                            color: V26.ink900,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500)),
+                    const SizedBox(height: 2),
+                    Text(subtitle,
+                        style: const TextStyle(color: V26.ink500, fontSize: 12)),
+                  ]),
+            ),
+            Switch(
+                value: value,
+                onChanged: onChange,
+                activeThumbColor: V26.navy600),
+          ]),
         ),
-        child: Row(children: [
-          Expanded(
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(title, style: const TextStyle(color: Color(0xFF0F172A), fontSize: 14, fontWeight: FontWeight.w500)),
-              const SizedBox(height: 2),
-              Text(subtitle, style: const TextStyle(color: Color(0xFF64748B), fontSize: 12)),
-            ]),
-          ),
-          Switch(value: value, onChanged: onChange, activeThumbColor: const Color(0xFF5B8FFF)),
-        ]),
       );
 
-  Widget _actionCard(String title, IconData icon, {required VoidCallback onTap, Color? color, int? badge}) =>
-      GestureDetector(
-        onTap: onTap,
-        child: Container(
-          margin: const EdgeInsets.only(bottom: 8),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: color?.withValues(alpha: 0.3) ?? const Color(0xFFE2E8F8)),
-            boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 6, offset: const Offset(0, 2))],
-          ),
-          child: Row(children: [
-            Container(
-              width: 34, height: 34,
-              decoration: BoxDecoration(
-                color: (color ?? const Color(0xFF5B8FFF)).withValues(alpha: 0.10),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Icon(icon, color: color ?? const Color(0xFF5B8FFF), size: 16),
+  Widget _actionCard(String title, IconData icon,
+          {required VoidCallback onTap, Color? color, int? badge}) =>
+      Padding(
+        padding: const EdgeInsets.only(bottom: 8),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(V26.rLg),
+            onTap: onTap,
+            child: V26Card(
+              onTap: null,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              borderColor: color?.withValues(alpha: 0.35) ?? V26.hairline,
+              child: Row(children: [
+                Container(
+                  width: 34,
+                  height: 34,
+                  decoration: BoxDecoration(
+                    color: (color ?? V26.navy500).withValues(alpha: 0.10),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(icon, color: color ?? V26.navy500, size: 16),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                    child: Text(title,
+                        style: const TextStyle(
+                            color: V26.ink900,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500))),
+                if (badge != null && badge > 0) ...[
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    decoration: BoxDecoration(
+                        color: V26.emerg,
+                        borderRadius: BorderRadius.circular(99)),
+                    child: Text('$badge',
+                        style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold)),
+                  ),
+                  const SizedBox(width: 4),
+                ],
+                Icon(Icons.arrow_forward_ios_rounded,
+                    color: color ?? V26.ink300, size: 14),
+              ]),
             ),
-            const SizedBox(width: 12),
-            Expanded(child: Text(title, style: const TextStyle(color: Color(0xFF0F172A), fontSize: 14, fontWeight: FontWeight.w500))),
-            if (badge != null && badge > 0) ...[
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                decoration: BoxDecoration(color: const Color(0xFFFF3B3B), borderRadius: BorderRadius.circular(99)),
-                child: Text('$badge', style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
-              ),
-              const SizedBox(width: 4),
-            ],
-            Icon(Icons.arrow_forward_ios_rounded, color: color ?? const Color(0xFF94A3B8), size: 14),
-          ]),
+          ),
         ),
       );
 }

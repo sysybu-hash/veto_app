@@ -4,7 +4,6 @@ import 'package:provider/provider.dart';
 
 import '../core/i18n/app_language.dart';
 import '../core/theme/veto_2026.dart';
-import '../core/theme/veto_theme.dart';
 import '../services/auth_service.dart';
 import '../widgets/app_language_menu.dart';
 
@@ -35,6 +34,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
       'save': 'שמור שינויים',
       'logout': 'התנתק',
       'language': 'שפת ממשק',
+      'badgePremium': 'פרימיום',
+      'badgeSince': 'מאז 2025',
+      'badgeVerified': 'מאומת',
+      'statCases': 'תיקים',
+      'statFiles': 'קבצים',
+      'statDays': 'ימים ב-VETO',
+      'subscriptionTitle': 'המנוי שלך',
+      'subscriptionBody':
+          'פרימיום חודשי · ₪19.90 לחודש · חיוב בתאריך ה-15 לחודש',
+      'subscriptionCta': 'נהל מנוי',
     },
     'en': {
       'title': 'Profile',
@@ -48,6 +57,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
       'save': 'Save changes',
       'logout': 'Log out',
       'language': 'Interface language',
+      'badgePremium': 'Premium',
+      'badgeSince': 'Since 2025',
+      'badgeVerified': 'Verified',
+      'statCases': 'Cases',
+      'statFiles': 'Files',
+      'statDays': 'Days on VETO',
+      'subscriptionTitle': 'Your subscription',
+      'subscriptionBody':
+          'Premium Monthly · ₪19.90/mo · renews on the 15th',
+      'subscriptionCta': 'Manage subscription',
     },
     'ru': {
       'title': 'Профиль',
@@ -61,6 +80,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
       'save': 'Сохранить изменения',
       'logout': 'Выйти',
       'language': 'Язык интерфейса',
+      'badgePremium': 'Премиум',
+      'badgeSince': 'С 2025',
+      'badgeVerified': 'Верифицирован',
+      'statCases': 'Дела',
+      'statFiles': 'Файлы',
+      'statDays': 'Дней в VETO',
+      'subscriptionTitle': 'Ваша подписка',
+      'subscriptionBody':
+          'Премиум ежемесячно · ₪19.90/мес · списание 15 числа',
+      'subscriptionCta': 'Управлять подпиской',
     },
   };
 
@@ -93,7 +122,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     setState(() => _saving = false);
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       content: Text(ok ? _t(code, 'saved') : _t(code, 'saveError')),
-      backgroundColor: ok ? VetoPalette.success : VetoPalette.emergency,
+      backgroundColor: ok ? V26.ok : V26.emerg,
     ));
   }
 
@@ -138,7 +167,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         destinations: isWide
             ? V26CitizenNav.destinations(code)
             : V26CitizenNav.bottomDestinations(code),
-        currentIndex: isWide ? 0 /* dummy */ : 3 /* פרופיל */,
+        currentIndex: isWide ? -1 : 4 /* פרופיל */,
         onDestinationSelected: (i) {
           final routes = isWide
               ? V26CitizenNav.routes
@@ -195,16 +224,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         const SizedBox(height: 8),
-                        // Avatar
-                        Center(
-                          child: V26Avatar(
-                            _nameCtrl.text.isNotEmpty
-                                ? _nameCtrl.text[0].toUpperCase()
-                                : '?',
-                            size: V26AvatarSize.xl,
-                          ),
-                        ),
-                        const SizedBox(height: 28),
+                        _buildHero(code),
+                        const SizedBox(height: 20),
+                        _buildStatsStrip(code),
+                        const SizedBox(height: 20),
+                        _buildSubscriptionBlock(code),
+                        const SizedBox(height: 20),
                         _buildCard(
                           children: [
                             _sectionLabel(_t(code, 'name')),
@@ -338,10 +363,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           icon: const Icon(Icons.logout_rounded, size: 18),
                           label: Text(_t(code, 'logout')),
                           style: OutlinedButton.styleFrom(
-                            foregroundColor: VetoPalette.emergency,
+                            foregroundColor: V26.emerg,
                             side: BorderSide(
-                                color: VetoPalette.emergency
-                                    .withValues(alpha: 0.4)),
+                                color: V26.emerg.withValues(alpha: 0.4)),
                             padding: const EdgeInsets.symmetric(vertical: 14),
                             shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12)),
@@ -392,6 +416,146 @@ class _ProfileScreenState extends State<ProfileScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: children,
+      ),
+    );
+  }
+
+  // ── Hero: avatar + name + 3 V26Badge chips (Premium · Since 2025 · Verified)
+  Widget _buildHero(String code) {
+    final name = _nameCtrl.text.isNotEmpty
+        ? _nameCtrl.text
+        : (_phone ?? _roleLabel(code, _role));
+    final avatarInitial =
+        _nameCtrl.text.isNotEmpty ? _nameCtrl.text[0].toUpperCase() : '?';
+    return V26Card(
+      padding: const EdgeInsets.fromLTRB(20, 24, 20, 22),
+      child: Column(
+        children: [
+          V26Avatar(avatarInitial, size: V26AvatarSize.xl),
+          const SizedBox(height: 14),
+          Text(
+            name,
+            style: const TextStyle(
+              fontFamily: V26.serif,
+              fontSize: 22,
+              fontWeight: FontWeight.w800,
+              color: V26.ink900,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 4),
+          Text(
+            _roleLabel(code, _role),
+            style: const TextStyle(
+              fontFamily: V26.sans,
+              fontSize: 13,
+              color: V26.ink500,
+            ),
+          ),
+          const SizedBox(height: 14),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            alignment: WrapAlignment.center,
+            children: [
+              V26Badge(_t(code, 'badgePremium'), tone: V26BadgeTone.gold),
+              V26Badge(_t(code, 'badgeSince'), tone: V26BadgeTone.neutral),
+              V26Badge(_t(code, 'badgeVerified'), tone: V26BadgeTone.ok),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ── Stats strip: 3 numbers (cases · files · days) ──
+  Widget _buildStatsStrip(String code) {
+    Widget cell(String num, String label) => Expanded(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                num,
+                style: const TextStyle(
+                  fontFamily: V26.serif,
+                  fontSize: 22,
+                  fontWeight: FontWeight.w900,
+                  color: V26.navy600,
+                  height: 1.05,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                label,
+                style: const TextStyle(
+                  fontFamily: V26.sans,
+                  fontSize: 11,
+                  color: V26.ink500,
+                  letterSpacing: 0.4,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        );
+    return V26Card(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 18),
+      child: Row(
+        children: [
+          cell('0', _t(code, 'statCases')),
+          Container(width: 1, height: 32, color: V26.hairline),
+          cell('0', _t(code, 'statFiles')),
+          Container(width: 1, height: 32, color: V26.hairline),
+          cell('—', _t(code, 'statDays')),
+        ],
+      ),
+    );
+  }
+
+  // ── Subscription block (static copy, CTA → /admin_subscriptions) ──
+  Widget _buildSubscriptionBlock(String code) {
+    return V26Card(
+      padding: const EdgeInsets.all(18),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.workspace_premium_rounded,
+                  color: V26.gold, size: 20),
+              const SizedBox(width: 8),
+              Text(
+                _t(code, 'subscriptionTitle'),
+                style: const TextStyle(
+                  fontFamily: V26.serif,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w800,
+                  color: V26.ink900,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            _t(code, 'subscriptionBody'),
+            style: const TextStyle(
+              fontFamily: V26.sans,
+              fontSize: 13,
+              height: 1.5,
+              color: V26.ink500,
+            ),
+          ),
+          const SizedBox(height: 14),
+          Align(
+            alignment: AlignmentDirectional.centerStart,
+            child: V26CTA(
+              _t(code, 'subscriptionCta'),
+              onPressed: () =>
+                  Navigator.pushNamed(context, '/admin_subscriptions'),
+              variant: V26CtaVariant.ghost,
+            ),
+          ),
+        ],
       ),
     );
   }

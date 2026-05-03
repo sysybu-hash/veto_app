@@ -4,7 +4,6 @@ import 'package:provider/provider.dart';
 
 import '../../core/i18n/app_language.dart';
 import '../../core/theme/veto_2026.dart';
-import '../../core/theme/veto_theme.dart';
 import '../../services/admin_service.dart';
 import '_shell.dart';
 import 'admin_i18n.dart';
@@ -89,8 +88,8 @@ class _AllUsersScreenState extends State<AllUsersScreen> {
                   value: manuallyAdded,
                   onChanged: (v) => ss(() => manuallyAdded = v),
                   contentPadding: EdgeInsets.zero,
-                  activeThumbColor: VetoPalette.success,
-                  activeTrackColor: VetoPalette.success.withValues(alpha: 0.5),
+                  activeThumbColor: V26.ok,
+                  activeTrackColor: V26.ok.withValues(alpha: 0.5),
                   title: Text(_t(code, 'manualExempt'),
                       style: const TextStyle(color: V26.ink900, fontSize: 14)),
                   subtitle: Text(_t(code, 'manualExemptHint'),
@@ -124,7 +123,7 @@ class _AllUsersScreenState extends State<AllUsersScreen> {
                 } else if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                     content: Text(_t(code, 'saveUserFailed')),
-                    backgroundColor: VetoPalette.emergency,
+                    backgroundColor: V26.emerg,
                   ));
                 }
               },
@@ -155,7 +154,7 @@ class _AllUsersScreenState extends State<AllUsersScreen> {
             TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(_t(code, 'cancel'))),
             FilledButton(
               style: FilledButton.styleFrom(
-                  backgroundColor: VetoPalette.emergency, foregroundColor: Colors.white),
+                  backgroundColor: V26.emerg, foregroundColor: Colors.white),
               onPressed: () => Navigator.pop(ctx, true),
               child: Text(_t(code, 'delete')),
             ),
@@ -233,22 +232,22 @@ class _AllUsersScreenState extends State<AllUsersScreen> {
                             margin: const EdgeInsets.only(left: 4),
                             padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
                             decoration: BoxDecoration(
-                              color: (verified ? VetoPalette.success : VetoPalette.warning).withValues(alpha: 0.15),
+                              color: (verified ? V26.ok : V26.warn).withValues(alpha: 0.15),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(verified ? _t(code, 'verified') : _t(code, 'unverified'),
-                                style: TextStyle(color: verified ? VetoPalette.success : VetoPalette.warning, fontSize: 10)),
+                                style: TextStyle(color: verified ? V26.ok : V26.warn, fontSize: 10)),
                           ),
                           if (u['manually_added'] == true)
                             Container(
                               margin: const EdgeInsets.only(left: 4),
                               padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
                               decoration: BoxDecoration(
-                                color: VetoPalette.success.withValues(alpha: 0.15),
+                                color: V26.ok.withValues(alpha: 0.15),
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Text(_t(code, 'exempt'),
-                                  style: const TextStyle(color: VetoPalette.success, fontSize: 10)),
+                                  style: const TextStyle(color: V26.ok, fontSize: 10)),
                             ),
                           IconButton(
                             icon: const Icon(Icons.edit_outlined, size: 20, color: V26.navy600),
@@ -256,7 +255,7 @@ class _AllUsersScreenState extends State<AllUsersScreen> {
                             tooltip: _t(code, 'edit'),
                           ),
                           IconButton(
-                            icon: const Icon(Icons.delete_outline, size: 20, color: VetoPalette.emergency),
+                            icon: const Icon(Icons.delete_outline, size: 20, color: V26.emerg),
                             onPressed: () => _confirmDelete(uid, u['full_name']?.toString() ?? ''),
                             tooltip: _t(code, 'delete'),
                           ),

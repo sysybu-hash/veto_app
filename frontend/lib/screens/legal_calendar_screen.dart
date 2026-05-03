@@ -5,9 +5,11 @@
 import 'dart:async' show unawaited;
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../config/app_config.dart';
+import '../core/i18n/app_language.dart';
 import '../core/theme/veto_2026.dart';
 import '../services/calendar_api_service.dart';
 
@@ -187,22 +189,28 @@ class _LegalCalendarScreenState extends State<LegalCalendarScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final code = context.watch<AppLanguageController>().code;
     final isWide =
         MediaQuery.sizeOf(context).width >= V26AppShell.desktopBreakpoint;
+    final statusText = code == 'he'
+        ? 'יומן משפטי · $_m/$_y'
+        : (code == 'ru'
+            ? 'Юр. календарь · $_m/$_y'
+            : 'Legal calendar · $_m/$_y');
     return Directionality(
-      textDirection: TextDirection.rtl,
+      textDirection: AppLanguage.directionOf(code),
       child: V26AppShell(
       destinations: isWide
-          ? V26CitizenNav.destinations('he')
-          : V26CitizenNav.bottomDestinations('he'),
-      currentIndex: isWide ? 3 /* יומן */ : 0,
+          ? V26CitizenNav.destinations(code)
+          : V26CitizenNav.bottomDestinations(code),
+      currentIndex: isWide ? 3 /* יומן */ : -1,
       onDestinationSelected: (i) {
         final routes = isWide
             ? V26CitizenNav.routes
             : V26CitizenNav.bottomRoutes;
         V26CitizenNav.go(context, routes[i], current: '/legal_calendar');
       },
-      desktopStatusText: 'יומן משפטי · $_m/$_y',
+      desktopStatusText: statusText,
       desktopTrailing: [
         V26IconBtn(
           icon: Icons.refresh_rounded,

@@ -6,9 +6,12 @@
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:provider/provider.dart';
 
+import '../core/i18n/app_language.dart';
 import '../core/theme/veto_2026.dart';
 import '../platform/maps_embed_export.dart';
+import '../widgets/app_language_menu.dart';
 
 class MapsScreen extends StatefulWidget {
   const MapsScreen({super.key});
@@ -30,7 +33,9 @@ class _MapsScreenState extends State<MapsScreen> {
 
   Future<void> _initMap() async {
     if (!mounted) return;
-    final hl = Localizations.localeOf(context).languageCode;
+    // Use app language (he/en/ru) instead of OS locale so Russian users
+    // get Russian labels on the embed.
+    final hl = context.read<AppLanguageController>().code;
 
     double lat = 32.0853;
     double lng = 34.7818;
@@ -68,25 +73,32 @@ class _MapsScreenState extends State<MapsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isHe = Localizations.localeOf(context).languageCode == 'he';
-    final title = isHe ? 'מפת Google' : 'Google Maps';
-    final langCode = isHe ? 'he' : 'en';
+    final code = context.watch<AppLanguageController>().code;
+    final title = code == 'he'
+        ? 'מפת Google'
+        : (code == 'ru' ? 'Карты Google' : 'Google Maps');
     final isWide =
         MediaQuery.sizeOf(context).width >= V26AppShell.desktopBreakpoint;
 
     return Directionality(
-      textDirection: isHe ? TextDirection.rtl : TextDirection.ltr,
+      textDirection: AppLanguage.directionOf(code),
       child: V26AppShell(
         destinations: isWide
-            ? V26CitizenNav.destinations(langCode)
-            : V26CitizenNav.bottomDestinations(langCode),
-        currentIndex: isWide ? 5 /* מפה */ : 0,
+            ? V26CitizenNav.destinations(code)
+            : V26CitizenNav.bottomDestinations(code),
+        currentIndex: isWide ? 5 /* מפה */ : 3 /* Map in bottom */,
         onDestinationSelected: (i) {
           final routes =
               isWide ? V26CitizenNav.routes : V26CitizenNav.bottomRoutes;
           V26CitizenNav.go(context, routes[i], current: '/maps');
         },
         desktopStatusText: title,
+        desktopTrailing: const [
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 12),
+            child: Center(child: AppLanguageMenu(compact: true)),
+          ),
+        ],
         mobileAppBar: AppBar(
           backgroundColor: V26.surface,
           elevation: 0,

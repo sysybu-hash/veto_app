@@ -289,4 +289,73 @@ class AuthService {
     if (!context.mounted) return;
     Navigator.of(context).pushReplacementNamed('/login');
   }
+
+  // ── Onboarding (2026 wizard) ────────────────────────────────
+  // Local-first implementation: persist flags + preferences in secure storage
+  // and best-effort push to the server via PUT /users/me. Back-compat safe —
+  // if the backend doesn't know the fields, the local copy is still the
+  // source of truth for routing.
+
+  Future<bool> getOnboarded() async {
+    final v = await _storage.read(key: 'veto_onboarded');
+    return v == 'true';
+  }
+
+  Future<void> setOnboarded(bool value) async {
+    await _storage.write(
+      key: 'veto_onboarded',
+      value: value ? 'true' : 'false',
+    );
+  }
+
+  Future<Map<String, String>> getOnboardingPreferences() async {
+    return <String, String>{
+      'scenario': await _storage.read(key: 'veto_pref_scenario') ?? '',
+      'alerts': await _storage.read(key: 'veto_pref_alerts') ?? '',
+      'privacy': await _storage.read(key: 'veto_pref_privacy') ?? '',
+    };
+  }
+
+  Future<bool> saveOnboarding({
+    required String scenario,
+    required String alerts,
+    required String privacy,
+  }) async {
+    await _storage.write(key: 'veto_pref_scenario', value: scenario);
+    await _storage.write(key: 'veto_pref_alerts', value: alerts);
+    await _storage.write(key: 'veto_pref_privacy', value: privacy);
+    await setOnboarded(true);
+
+    try {
+      final token = await getToken();
+      if (token == null) return true; // local save is enough for now
+      final role = await getStoredRole();
+      final baseUrl = AppConfig.baseUrl;
+      final endpoint = role == 'lawyer'
+          ? '$baseUrl/lawyers/me'
+          : '$baseUrl/users/me';
+      final payload = <String, dynamic>{
+        'onboarded': true,
+        'preferences': <String, String>{
+          'scenario': scenario,
+          'alerts': alerts,
+          'privacy': privacy,
+        },
+      };
+      final response = await http
+          .put(
+            Uri.parse(endpoint),
+            headers:
+                AppConfig.httpHeaders({'Authorization': 'Bearer $token'}),
+            body: jsonEncode(payload),
+          )
+          .timeout(const Duration(seconds: 10));
+      // 200 on success, 4xx is fine — backend may ignore unknown fields
+      // and we still treat the local save as authoritative.
+      return response.statusCode >= 200 && response.statusCode < 500;
+    } catch (e) {
+      debugPrint('saveOnboarding server push failed: $e');
+      return true; // local save succeeded
+    }
+  }
 }

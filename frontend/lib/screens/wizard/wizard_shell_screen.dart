@@ -486,7 +486,8 @@ class _WizardShellScreenState extends State<WizardShellScreen> {
     final titles = _wizardTitles(lang);
     final subtitles = _wizardSubtitles(lang);
     final rail = _railMarketing(lang);
-    final wide = MediaQuery.sizeOf(context).width >= 900;
+    final wide =
+        MediaQuery.sizeOf(context).width >= V26AppShell.desktopBreakpoint;
 
     return Directionality(
       textDirection: AppLanguage.directionOf(lang),

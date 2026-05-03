@@ -4,7 +4,6 @@ import 'package:provider/provider.dart';
 
 import '../../core/i18n/app_language.dart';
 import '../../core/theme/veto_2026.dart';
-import '../../core/theme/veto_theme.dart';
 import '../../services/admin_service.dart';
 import '_shell.dart';
 import 'admin_i18n.dart';
@@ -41,7 +40,7 @@ class _PendingLawyersScreenState extends State<PendingLawyersScreen> {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       content: Text(ok ? '${_t(code, 'approveSuccess')}: $name' : _t(code, 'approveError')),
-      backgroundColor: ok ? VetoPalette.success : VetoPalette.emergency,
+      backgroundColor: ok ? V26.ok : V26.emerg,
     ));
     if (ok) _load();
   }
@@ -68,7 +67,7 @@ class _PendingLawyersScreenState extends State<PendingLawyersScreen> {
             ),
             TextButton(
               onPressed: () => Navigator.pop(context, true),
-              child: Text(_t(code, 'reject'), style: const TextStyle(color: VetoPalette.emergency)),
+              child: Text(_t(code, 'reject'), style: const TextStyle(color: V26.emerg)),
             ),
           ],
         ),
@@ -79,7 +78,7 @@ class _PendingLawyersScreenState extends State<PendingLawyersScreen> {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       content: Text(ok ? '${_t(code, 'rejectSuccess')}: $name' : _t(code, 'rejectError')),
-      backgroundColor: ok ? VetoPalette.success : VetoPalette.emergency,
+      backgroundColor: ok ? V26.ok : V26.emerg,
     ));
     if (ok) _load();
   }
@@ -103,7 +102,7 @@ class _PendingLawyersScreenState extends State<PendingLawyersScreen> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         const Icon(Icons.check_circle_outline_rounded,
-                            size: 64, color: VetoPalette.success),
+                            size: 64, color: V26.ok),
                         const SizedBox(height: 16),
                         Text(
                           _t(code, 'noPendingLawyers'),
@@ -132,7 +131,7 @@ class _PendingLawyersScreenState extends State<PendingLawyersScreen> {
                           color: V26.surface,
                           borderRadius: BorderRadius.circular(12),
                           border: const Border(
-                            left: BorderSide(color: VetoPalette.warning, width: 3),
+                            left: BorderSide(color: V26.warn, width: 3),
                             top: BorderSide(color: V26.hairline),
                             right: BorderSide(color: V26.hairline),
                             bottom: BorderSide(color: V26.hairline),
@@ -173,8 +172,8 @@ class _PendingLawyersScreenState extends State<PendingLawyersScreen> {
                                   icon: const Icon(Icons.close_rounded, size: 16),
                                   label: Text(_t(code, 'reject')),
                                   style: OutlinedButton.styleFrom(
-                                    foregroundColor: VetoPalette.emergency,
-                                    side: const BorderSide(color: VetoPalette.emergency),
+                                    foregroundColor: V26.emerg,
+                                    side: const BorderSide(color: V26.emerg),
                                   ),
                                 ),
                               ),
@@ -185,7 +184,7 @@ class _PendingLawyersScreenState extends State<PendingLawyersScreen> {
                                   icon: const Icon(Icons.check_rounded, size: 16),
                                   label: Text(_t(code, 'approve')),
                                   style: ElevatedButton.styleFrom(
-                                    backgroundColor: VetoPalette.success,
+                                    backgroundColor: V26.ok,
                                     foregroundColor: Colors.white,
                                   ),
                                 ),

@@ -16,6 +16,7 @@ const _kSmokeRoutes = <String>[
   '/privacy',
   '/terms',
   '/wizard_home',
+  '/emergency_wizard',
   '/veto_screen',
   '/profile',
   '/admin_settings',

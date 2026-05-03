@@ -4,7 +4,6 @@ import 'package:provider/provider.dart';
 
 import '../../core/i18n/app_language.dart';
 import '../../core/theme/veto_2026.dart';
-import '../../core/theme/veto_theme.dart';
 import '../../services/admin_service.dart';
 import '_shell.dart';
 import 'admin_i18n.dart';
@@ -107,7 +106,7 @@ class _AllLawyersScreenState extends State<AllLawyersScreen> {
                 } else if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                     content: Text(_t(code, 'saveLawyerFailed')),
-                    backgroundColor: VetoPalette.emergency,
+                    backgroundColor: V26.emerg,
                   ));
                 }
               },
@@ -137,7 +136,7 @@ class _AllLawyersScreenState extends State<AllLawyersScreen> {
             TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(_t(code, 'cancel'))),
             FilledButton(
               style: FilledButton.styleFrom(
-                  backgroundColor: VetoPalette.emergency, foregroundColor: Colors.white),
+                  backgroundColor: V26.emerg, foregroundColor: Colors.white),
               onPressed: () => Navigator.pop(ctx, true),
               child: Text(_t(code, 'delete')),
             ),
@@ -210,22 +209,22 @@ class _AllLawyersScreenState extends State<AllLawyersScreen> {
                             margin: const EdgeInsets.only(left: 4),
                             padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
                             decoration: BoxDecoration(
-                              color: (available ? VetoPalette.success : VetoPalette.textMuted).withValues(alpha: 0.15),
+                              color: (available ? V26.ok : V26.ink500).withValues(alpha: 0.15),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(available ? _t(code, 'available') : _t(code, 'unavailable'),
-                                style: TextStyle(color: available ? VetoPalette.success : VetoPalette.textMuted, fontSize: 10)),
+                                style: TextStyle(color: available ? V26.ok : V26.ink500, fontSize: 10)),
                           ),
                           if (l['is_approved'] != true)
                             Container(
                               margin: const EdgeInsets.only(left: 4),
                               padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
                               decoration: BoxDecoration(
-                                color: VetoPalette.warning.withValues(alpha: 0.15),
+                                color: V26.warn.withValues(alpha: 0.15),
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Text(_t(code, 'pendingSingle'),
-                                  style: const TextStyle(color: VetoPalette.warning, fontSize: 10)),
+                                  style: const TextStyle(color: V26.warn, fontSize: 10)),
                             ),
                           IconButton(
                             icon: const Icon(Icons.edit_outlined, size: 20, color: V26.navy600),
@@ -233,7 +232,7 @@ class _AllLawyersScreenState extends State<AllLawyersScreen> {
                             tooltip: _t(code, 'edit'),
                           ),
                           IconButton(
-                            icon: const Icon(Icons.delete_outline, size: 20, color: VetoPalette.emergency),
+                            icon: const Icon(Icons.delete_outline, size: 20, color: V26.emerg),
                             onPressed: () => _confirmDelete(lid, l['full_name']?.toString() ?? ''),
                             tooltip: _t(code, 'delete'),
                           ),

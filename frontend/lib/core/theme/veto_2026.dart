@@ -433,7 +433,7 @@ class V26Headline extends StatelessWidget {
 /// ════════════════════════════════════════════════════════════
 ///  V26CTA — primary / ghost / subtle / danger / gold button.
 /// ════════════════════════════════════════════════════════════
-enum V26CtaVariant { primary, ghost, subtle, danger, gold }
+enum V26CtaVariant { primary, ghost, ghostLight, subtle, danger, gold }
 
 class V26CTA extends StatelessWidget {
   final String label;
@@ -461,6 +461,12 @@ class V26CTA extends StatelessWidget {
       V26CtaVariant.primary => (V26.navy600, Colors.white, null, V26.shadowBrand),
       V26CtaVariant.ghost =>
         (V26.surface, V26.navy600, V26.navy300, const <BoxShadow>[]),
+      V26CtaVariant.ghostLight => (
+          Colors.transparent,
+          Colors.white,
+          Colors.white.withValues(alpha: 0.45),
+          const <BoxShadow>[],
+        ),
       V26CtaVariant.subtle =>
         (V26.paper2, V26.navy700, V26.hairline, const <BoxShadow>[]),
       V26CtaVariant.danger => (
@@ -2479,10 +2485,14 @@ class V26NavDest {
 /// ════════════════════════════════════════════════════════════
 ///  V26DesktopNavBar — top pill-nav for wide viewports.
 ///  Mirrors `.topbar + .nav` from `2026/citizen.html`.
+///  Pass [currentIndex] = -1 for routes that aren't in the main
+///  nav (e.g. `/settings`, `/profile`) so no pill is highlighted.
 /// ════════════════════════════════════════════════════════════
 class V26DesktopNavBar extends StatelessWidget
     implements PreferredSizeWidget {
   final List<V26NavDest> destinations;
+
+  /// Index of the active nav item. Use `-1` when none should be highlighted.
   final int currentIndex;
   final ValueChanged<int>? onSelected;
   final Widget? brand;
@@ -2885,7 +2895,8 @@ class V26CitizenNav {
     ];
   }
 
-  /// The 4 bottom-tab destinations for narrow viewports (citizen bottom bar).
+  /// The 5 bottom-tab destinations for narrow viewports (citizen bottom bar).
+  /// Map is kept accessible on phones to match `2026/vault.html:371-404`.
   static List<V26NavDest> bottomDestinations(String langCode) {
     final he = langCode == 'he';
     final ru = langCode == 'ru';
@@ -2903,17 +2914,22 @@ class V26CitizenNav {
         icon: Icons.folder_rounded,
       ),
       V26NavDest(
+        label: he ? 'מפה' : (ru ? 'Карта' : 'Map'),
+        icon: Icons.map_rounded,
+      ),
+      V26NavDest(
         label: he ? 'פרופיל' : (ru ? 'Профиль' : 'Profile'),
         icon: Icons.person_rounded,
       ),
     ];
   }
 
-  /// Routes for the bottom 4 tabs, in the same order as [bottomDestinations].
+  /// Routes for the bottom 5 tabs, in the same order as [bottomDestinations].
   static const List<String> bottomRoutes = <String>[
     '/veto_screen',
     '/chat',
     '/files_vault',
+    '/maps',
     '/profile',
   ];
 

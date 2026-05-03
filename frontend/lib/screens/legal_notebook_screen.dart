@@ -3,7 +3,9 @@
 // ============================================================
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
+import '../core/i18n/app_language.dart';
 import '../core/theme/veto_2026.dart';
 import '../services/legal_notebook_api_service.dart';
 
@@ -37,21 +39,27 @@ class _LegalNotebookScreenState extends State<LegalNotebookScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final code = context.watch<AppLanguageController>().code;
     final isWide =
         MediaQuery.sizeOf(context).width >= V26AppShell.desktopBreakpoint;
+    final statusText = code == 'he'
+        ? 'מחברת משפטית · Enterprise'
+        : (code == 'ru'
+            ? 'Юр. блокнот · Enterprise'
+            : 'Legal notebook · Enterprise');
     return Directionality(
-      textDirection: TextDirection.rtl,
+      textDirection: AppLanguage.directionOf(code),
       child: V26AppShell(
         destinations: isWide
-            ? V26CitizenNav.destinations('he')
-            : V26CitizenNav.bottomDestinations('he'),
-        currentIndex: isWide ? 4 /* מחברת */ : 0,
+            ? V26CitizenNav.destinations(code)
+            : V26CitizenNav.bottomDestinations(code),
+        currentIndex: isWide ? 4 /* מחברת */ : -1,
         onDestinationSelected: (i) {
           final routes =
               isWide ? V26CitizenNav.routes : V26CitizenNav.bottomRoutes;
           V26CitizenNav.go(context, routes[i], current: '/legal_notebook');
         },
-        desktopStatusText: 'מחברת משפטית · Enterprise',
+        desktopStatusText: statusText,
         desktopTrailing: [
           V26IconBtn(
             icon: Icons.refresh,

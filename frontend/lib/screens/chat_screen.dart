@@ -12,7 +12,6 @@ import 'package:provider/provider.dart';
 import '../config/app_config.dart';
 import '../core/i18n/app_language.dart';
 import '../core/theme/veto_2026.dart';
-import '../core/theme/veto_theme.dart';
 import '../services/auth_service.dart';
 
 // ── i18n ──────────────────────────────────────────────────────
@@ -389,7 +388,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 margin: const EdgeInsets.only(top: 10, bottom: 8),
                 width: 36, height: 4,
                 decoration: BoxDecoration(
-                    color: VetoPalette.border,
+                    color: V26.hairline,
                     borderRadius: BorderRadius.circular(2)),
               ),
               Padding(
@@ -412,10 +411,10 @@ class _ChatScreenState extends State<ChatScreen> {
                               return ListTile(
                                 leading: CircleAvatar(
                                   backgroundColor:
-                                      VetoPalette.primary.withValues(alpha: 0.15),
+                                      V26.navy600.withValues(alpha: 0.15),
                                   child: Text(p.name.isNotEmpty ? p.name[0].toUpperCase() : '?',
                                       style: const TextStyle(
-                                          color: VetoPalette.primary,
+                                          color: V26.navy600,
                                           fontWeight: FontWeight.w700)),
                                 ),
                                 title: Text(p.name,
@@ -549,7 +548,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   child: Column(mainAxisSize: MainAxisSize.min, children: [
                     Icon(Icons.chat_bubble_outline_rounded,
                         size: 64,
-                        color: VetoPalette.textSubtle.withValues(alpha: 0.5)),
+                        color: V26.ink300.withValues(alpha: 0.5)),
                     const SizedBox(height: 16),
                     Text(_t('noConversations'),
                         style: const TextStyle(
@@ -649,11 +648,11 @@ class _ChatScreenState extends State<ChatScreen> {
         child: Column(mainAxisSize: MainAxisSize.min, children: [
           Icon(Icons.forum_outlined,
               size: 64,
-              color: VetoPalette.textSubtle.withValues(alpha: 0.4)),
+              color: V26.ink300.withValues(alpha: 0.4)),
           const SizedBox(height: 16),
           Text(_t('selectPartner'),
               style: const TextStyle(
-                  color: VetoPalette.textMuted,
+                  color: V26.ink500,
                   fontSize: 15,
                   fontWeight: FontWeight.w500)),
           const SizedBox(height: 12),
@@ -806,7 +805,7 @@ class _ChatScreenState extends State<ChatScreen> {
                           _deleteMessage(msg);
                         },
                         style: FilledButton.styleFrom(
-                            backgroundColor: VetoPalette.emergency),
+                            backgroundColor: V26.emerg),
                         child: const Text('Delete'),
                       ),
                     ],

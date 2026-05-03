@@ -3,6 +3,8 @@
 //  Navy + Gold + Paper, serif headlines, gold micro-rule
 // ═══════════════════════════════════════════════════════════════════
 
+import 'dart:async' show unawaited;
+
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -32,13 +34,16 @@ class _T {
 
   static const _copy = <String, Map<String, String>>{
     'he': {
+      'brandEyebrow': 'הגנה משפטית מיידית',
       'navHome': 'בית',
       'navFeatures': 'תכונות',
       'navPricing': 'תמחור',
+      'navHow': 'איך זה עובד',
       'navContact': 'צור קשר',
+      'navCareers': 'קריירה',
       'navLogin': 'כניסה',
       'navRegister': 'הרשמה',
-      'heroEyebrow': 'זמין 24/7',
+      'heroEyebrow': 'VETO · זמין 24/7 בכל הארץ',
       'heroTitleL1': 'ההגנה המשפטית',
       'heroTitleL2': 'שלך — תמיד ',
       'heroTitleEm': 'בהישג יד',
@@ -48,10 +53,13 @@ class _T {
       'heroSecondary': 'גלה עוד',
       'miniStatBefore': 'חיבור ב-',
       'miniStatEm': '3 שניות',
+      'miniStatSuffix': 'עו״ד פלילי זמין',
       'proof1Num': '4.9',
       'proof1Lbl': 'דירוג ממשתמשים',
       'proof2Num': '3″',
       'proof2Lbl': 'זמן חיבור ממוצע',
+      'proof3Num': '+200',
+      'proof3Lbl': 'עורכי דין רשומים',
       'feat1Title': 'הגנה מיידית',
       'feat1Body':
           'חיבור לעורך דין מתמחה תוך שניות, בכל מצב חירום משפטי — חקירה, עצירה, סכסוך.',
@@ -61,7 +69,6 @@ class _T {
       'feat3Title': 'פרטיות מלאה',
       'feat3Body':
           'הצפנה End-to-End, גיבוי בכספת אישית, וגישה רק לידיך — לא לחברה ולא לרשויות.',
-      'statTitle': 'למה VETO?',
       'stat1num': '24/7',
       'stat1lbl': 'הגנה משפטית',
       'stat2num': 'Real',
@@ -82,28 +89,37 @@ class _T {
           'אם נדרש עו"ד — המשרד מזניק איש מקצוע זמין עם עדיפות לשפה הרלוונטית.',
       'pricingTitle': 'מנוי חודשי',
       'pricingHeroTitle': 'שכבת הגנה תמידית',
+      'pricingIntro':
+          'הכל במסלול אחד — עוזר AI, ספריית זכויות, כספת מוצפנת ושיגור עורך דין בזמן אמת.',
       'pricingPrice': '₪19.90',
       'pricingPeriod': 'לחודש',
       'pricingLine1': 'עוזר AI משפטי ללא הגבלה',
       'pricingLine2': 'תרחישים, זכויות ותיעוד ראיות',
       'pricingLine3': 'שיגור עורך דין באירוע חי לפי שימוש',
       'pricingLine4': 'כספת מוצפנת לשמירת מסמכים',
+      'pricingLine5': 'תמיכה בעברית · English · Русский',
       'ctaTitle': 'בונים שכבת הגנה לפני שהאירוע מתחיל',
       'ctaBody':
           'ההרשמה קצרה. מהרגע שהיא מסתיימת, כל חירום משפטי מקבל מסך ברור ומוכן לפעולה.',
       'ctaBtn': 'לעבור לאשף',
-      'footer': 'VETO LEGAL | מערכת תגובה משפטית חכמה, מהירה ורב-לשונית',
+      'ctaSecondary': 'דבר עם איש מכירות',
+      'footer': 'VETO LEGAL · מערכת תגובה משפטית חכמה, מהירה ורב-לשונית',
       'linkPrivacy': 'מדיניות פרטיות',
       'linkTerms': 'תנאי שימוש',
+      'linkContact': 'צור קשר',
+      'linkCareers': 'קריירה',
     },
     'en': {
+      'brandEyebrow': 'Instant legal defense',
       'navHome': 'Home',
       'navFeatures': 'Features',
       'navPricing': 'Pricing',
+      'navHow': 'How it works',
       'navContact': 'Contact',
+      'navCareers': 'Careers',
       'navLogin': 'Sign in',
       'navRegister': 'Sign up',
-      'heroEyebrow': 'Available 24/7',
+      'heroEyebrow': 'VETO · 24/7 nationwide',
       'heroTitleL1': 'Your legal protection',
       'heroTitleL2': ' — always ',
       'heroTitleEm': 'within reach',
@@ -113,10 +129,13 @@ class _T {
       'heroSecondary': 'Learn more',
       'miniStatBefore': 'Connect in ',
       'miniStatEm': '3 seconds',
+      'miniStatSuffix': 'criminal lawyer on duty',
       'proof1Num': '4.9',
       'proof1Lbl': 'User rating',
       'proof2Num': '3″',
       'proof2Lbl': 'Avg. connect time',
+      'proof3Num': '+200',
+      'proof3Lbl': 'Registered lawyers',
       'feat1Title': 'Immediate protection',
       'feat1Body':
           'Connect with a specialized lawyer within seconds — investigations, detention, disputes.',
@@ -126,7 +145,6 @@ class _T {
       'feat3Title': 'Full privacy',
       'feat3Body':
           'End-to-end encryption, backup in your vault, access only for you — not the company or authorities.',
-      'statTitle': 'Why VETO?',
       'stat1num': '24/7',
       'stat1lbl': 'Legal Protection',
       'stat2num': 'Real',
@@ -148,28 +166,37 @@ class _T {
           'When a lawyer is required — dispatch with priority for the right language.',
       'pricingTitle': 'Monthly Plan',
       'pricingHeroTitle': 'Always-on protection layer',
+      'pricingIntro':
+          'Everything on one plan — AI assistant, rights library, encrypted vault and live lawyer dispatch.',
       'pricingPrice': '₪19.90',
       'pricingPeriod': 'per month',
       'pricingLine1': 'Unlimited legal AI assistant',
       'pricingLine2': 'Rights scenarios and evidence tools',
       'pricingLine3': 'Live lawyer dispatch billed by event',
       'pricingLine4': 'Encrypted vault for your documents',
+      'pricingLine5': 'Hebrew · English · Русский support',
       'ctaTitle': 'Build your legal safety layer before the incident begins',
       'ctaBody':
           'Registration is short. Once done, every legal emergency starts from one clear interface.',
       'ctaBtn': 'Open the wizard',
-      'footer': 'VETO LEGAL | Fast, intelligent, multilingual legal response',
+      'ctaSecondary': 'Talk to sales',
+      'footer': 'VETO LEGAL · Fast, intelligent, multilingual legal response',
       'linkPrivacy': 'Privacy',
       'linkTerms': 'Terms',
+      'linkContact': 'Contact',
+      'linkCareers': 'Careers',
     },
     'ru': {
+      'brandEyebrow': 'Мгновенная защита',
       'navHome': 'Главная',
       'navFeatures': 'Функции',
       'navPricing': 'Тарифы',
+      'navHow': 'Как это работает',
       'navContact': 'Контакты',
+      'navCareers': 'Карьера',
       'navLogin': 'Вход',
       'navRegister': 'Регистрация',
-      'heroEyebrow': 'Доступно 24/7',
+      'heroEyebrow': 'VETO · 24/7 по всей стране',
       'heroTitleL1': 'Ваша юридическая защита',
       'heroTitleL2': ' — всегда ',
       'heroTitleEm': 'рядом',
@@ -179,10 +206,13 @@ class _T {
       'heroSecondary': 'Узнать больше',
       'miniStatBefore': 'Подключение за ',
       'miniStatEm': '3 секунды',
+      'miniStatSuffix': 'адвокат на линии',
       'proof1Num': '4.9',
       'proof1Lbl': 'Оценка пользователей',
       'proof2Num': '3″',
       'proof2Lbl': 'Среднее время связи',
+      'proof3Num': '+200',
+      'proof3Lbl': 'Зарегистрированных адвокатов',
       'feat1Title': 'Мгновенная защита',
       'feat1Body':
           'Связь со специализированным адвокатом за секунды — допрос, задержание, конфликт.',
@@ -192,7 +222,6 @@ class _T {
       'feat3Title': 'Полная конфиденциальность',
       'feat3Body':
           'Сквозное шифрование, резерв в хранилище, доступ только у вас — не у компании и не у органов.',
-      'statTitle': 'Почему VETO?',
       'stat1num': '24/7',
       'stat1lbl': 'Защита',
       'stat2num': 'Живые',
@@ -214,20 +243,26 @@ class _T {
           'Если нужен адвокат — оперативный вызов с приоритетом языка.',
       'pricingTitle': 'Ежемесячный план',
       'pricingHeroTitle': 'Постоянная защита',
+      'pricingIntro':
+          'Всё в одном тарифе — AI-ассистент, библиотека прав, хранилище и вызов адвоката.',
       'pricingPrice': '₪19.90',
       'pricingPeriod': 'в месяц',
       'pricingLine1': 'Безлимитный юридический AI',
       'pricingLine2': 'Сценарии прав и сбор доказательств',
       'pricingLine3': 'Вызов адвоката по событию',
       'pricingLine4': 'Зашифрованное хранилище документов',
+      'pricingLine5': 'Иврит · English · Русский',
       'ctaTitle': 'Создайте защитный слой до начала инцидента',
       'ctaBody':
           'Регистрация занимает минуту. После этого любая экстренная ситуация начинается с одного экрана.',
       'ctaBtn': 'Перейти к мастеру',
+      'ctaSecondary': 'Связаться с отделом продаж',
       'footer':
-          'VETO LEGAL | Быстрая, умная и мультиязычная юридическая реакция',
+          'VETO LEGAL · Быстрая, умная и мультиязычная юридическая реакция',
       'linkPrivacy': 'Конфиденциальность',
       'linkTerms': 'Условия',
+      'linkContact': 'Контакты',
+      'linkCareers': 'Карьера',
     },
   };
 }
@@ -239,17 +274,25 @@ class LandingScreen extends StatelessWidget {
   const LandingScreen({super.key});
 
   Future<void> _goNext(BuildContext context) async {
-    final token = await AuthService().getToken();
+    final auth = AuthService();
+    final token = await auth.getToken();
     if (!context.mounted) return;
     if (token != null && token.isNotEmpty) {
-      final role = await AuthService().getStoredRole() ?? 'user';
+      final role = await auth.getStoredRole() ?? 'user';
       if (!context.mounted) return;
       if (role == 'lawyer') {
         Navigator.pushNamed(context, '/lawyer_dashboard');
       } else if (role == 'admin') {
         Navigator.pushNamed(context, '/admin_settings');
       } else {
-        Navigator.pushNamed(context, '/veto_screen');
+        // Citizens: honor the onboarding flag — first-time users land on the
+        // 2026 4-step wizard; returning users go straight to the VETO shell.
+        final onboarded = await auth.getOnboarded();
+        if (!context.mounted) return;
+        Navigator.pushNamed(
+          context,
+          onboarded ? '/veto_screen' : '/wizard_home',
+        );
       }
       return;
     }
@@ -261,7 +304,7 @@ class LandingScreen extends StatelessWidget {
     final code = context.watch<AppLanguageController>().code;
     final dir = AppLanguage.directionOf(code);
     final w = MediaQuery.of(context).size.width;
-    final compact = w < 860;
+    final compact = w < V26AppShell.desktopBreakpoint;
 
     return Directionality(
       textDirection: dir,
@@ -363,13 +406,18 @@ class _NavBarState extends State<_NavBar> {
     }
   }
 
-  void _enterApp(BuildContext ctx) {
+  Future<void> _enterApp(BuildContext ctx) async {
     if (_role == 'lawyer') {
       Navigator.pushNamed(ctx, '/lawyer_dashboard');
     } else if (_role == 'admin') {
       Navigator.pushNamed(ctx, '/admin_settings');
     } else {
-      Navigator.pushNamed(ctx, '/veto_screen');
+      final onboarded = await AuthService().getOnboarded();
+      if (!ctx.mounted) return;
+      Navigator.pushNamed(
+        ctx,
+        onboarded ? '/veto_screen' : '/wizard_home',
+      );
     }
   }
 
@@ -410,6 +458,7 @@ class _NavBarState extends State<_NavBar> {
       t(c, 'navHome'),
       t(c, 'navFeatures'),
       t(c, 'navPricing'),
+      t(c, 'navHow'),
       t(c, 'navContact'),
     ];
 
@@ -439,19 +488,15 @@ class _NavBarState extends State<_NavBar> {
                     letterSpacing: 0.4,
                   ),
                 ),
-                const SizedBox(width: 6),
+                const SizedBox(width: 8),
                 Text(
-                  (c == 'he'
-                      ? 'LEGAL'
-                      : c == 'ru'
-                          ? 'LEGAL'
-                          : 'LEGAL'),
-                  style: const TextStyle(
+                  widget.compact ? 'LEGAL' : t(c, 'brandEyebrow'),
+                  style: TextStyle(
                     fontFamily: V26.sans,
                     color: V26.navy600,
                     fontSize: 11,
-                    fontWeight: FontWeight.w500,
-                    letterSpacing: 1.6,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: widget.compact ? 1.6 : 0,
                   ),
                 ),
               ]),
@@ -524,7 +569,9 @@ class _NavBarState extends State<_NavBar> {
                   name: _name,
                   role: _role,
                   code: c,
-                  onEnterApp: () => _enterApp(context),
+                  onEnterApp: () {
+                    unawaited(_enterApp(context));
+                  },
                 )
               else ...[
                 _NavBtn(
@@ -728,6 +775,7 @@ class _HeroSection extends StatelessWidget {
               fontWeight: FontWeight.w800,
             ),
           ),
+          if (!compact) TextSpan(text: ' · ${t(code, 'miniStatSuffix')}'),
         ],
       ),
       textAlign: TextAlign.center,
@@ -932,6 +980,11 @@ class _HeroCopyColumn extends StatelessWidget {
                 numeral: t(code, 'proof2Num'),
                 label: t(code, 'proof2Lbl'),
               ),
+              if (!compact)
+                _LandingProofPair(
+                  numeral: t(code, 'proof3Num'),
+                  label: t(code, 'proof3Lbl'),
+                ),
             ],
           ),
         ),
@@ -1384,6 +1437,7 @@ class _PricingSection extends StatelessWidget {
       t(code, 'pricingLine2'),
       t(code, 'pricingLine3'),
       t(code, 'pricingLine4'),
+      t(code, 'pricingLine5'),
     ];
     final hPad = compact ? 24.0 : 56.0;
 
@@ -1471,6 +1525,17 @@ class _PricingSection extends StatelessWidget {
               ),
             ),
           ],
+        ),
+        const SizedBox(height: 8),
+        Text(
+          t(code, 'pricingIntro'),
+          style: TextStyle(
+            fontFamily: V26.sans,
+            fontSize: 14,
+            height: 1.5,
+            color: V26.ink500,
+          ),
+          textAlign: compact ? TextAlign.center : TextAlign.start,
         ),
         const SizedBox(height: 16),
         V26CTA(
@@ -1609,11 +1674,23 @@ class _CtaSection extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(height: 18),
-                        V26CTA(
-                          t(code, 'ctaBtn'),
-                          onPressed: onTap,
-                          variant: V26CtaVariant.gold,
-                          large: true,
+                        Wrap(
+                          spacing: 12,
+                          runSpacing: 10,
+                          children: [
+                            V26CTA(
+                              t(code, 'ctaBtn'),
+                              onPressed: onTap,
+                              variant: V26CtaVariant.gold,
+                              large: true,
+                            ),
+                            V26CTA(
+                              t(code, 'ctaSecondary'),
+                              onPressed: onTap,
+                              variant: V26CtaVariant.ghostLight,
+                              large: true,
+                            ),
+                          ],
                         ),
                       ],
                     ),
@@ -1656,40 +1733,59 @@ class _Footer extends StatelessWidget {
           const SizedBox(height: 12),
           Wrap(
             alignment: WrapAlignment.center,
-            spacing: 8,
+            spacing: 4,
             runSpacing: 4,
             children: [
-              TextButton(
-                onPressed: () => Navigator.pushNamed(context, '/privacy'),
-                child: Text(
-                  _T.get(code, 'linkPrivacy'),
-                  style: const TextStyle(
-                    color: _C.accent,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    decoration: TextDecoration.underline,
-                    decorationColor: _C.accent,
-                  ),
-                ),
+              _FooterLink(
+                label: _T.get(code, 'linkPrivacy'),
+                onTap: () => Navigator.pushNamed(context, '/privacy'),
               ),
-              Text(' · ',
-                  style: TextStyle(color: _C.inkLight.withValues(alpha: 0.5))),
-              TextButton(
-                onPressed: () => Navigator.pushNamed(context, '/terms'),
-                child: Text(
-                  _T.get(code, 'linkTerms'),
-                  style: const TextStyle(
-                    color: _C.accent,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    decoration: TextDecoration.underline,
-                    decorationColor: _C.accent,
-                  ),
-                ),
+              _footerDot(),
+              _FooterLink(
+                label: _T.get(code, 'linkTerms'),
+                onTap: () => Navigator.pushNamed(context, '/terms'),
+              ),
+              _footerDot(),
+              _FooterLink(
+                label: _T.get(code, 'linkContact'),
+                onTap: () {},
+              ),
+              _footerDot(),
+              _FooterLink(
+                label: _T.get(code, 'linkCareers'),
+                onTap: () {},
               ),
             ],
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _footerDot() => Text(
+        ' · ',
+        style: TextStyle(color: _C.inkLight.withValues(alpha: 0.5)),
+      );
+}
+
+class _FooterLink extends StatelessWidget {
+  final String label;
+  final VoidCallback onTap;
+  const _FooterLink({required this.label, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return TextButton(
+      onPressed: onTap,
+      child: Text(
+        label,
+        style: const TextStyle(
+          color: _C.accent,
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+          decoration: TextDecoration.underline,
+          decorationColor: _C.accent,
+        ),
       ),
     );
   }

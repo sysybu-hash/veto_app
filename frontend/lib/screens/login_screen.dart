@@ -529,7 +529,12 @@ class _LoginScreenState extends State<LoginScreen> {
     } else if (role == 'admin') {
       Navigator.of(context).pushReplacementNamed('/admin_settings');
     } else {
-      Navigator.of(context).pushReplacementNamed('/veto_screen');
+      // Citizens: first-time visitors run through the 2026 onboarding quiz.
+      final onboarded = await AuthService().getOnboarded();
+      if (!mounted) return;
+      Navigator.of(context).pushReplacementNamed(
+        onboarded ? '/veto_screen' : '/wizard_home',
+      );
     }
   }
 
@@ -683,7 +688,8 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     final lang = context.watch<AppLanguageController>().code;
     final dir = AppLanguage.directionOf(lang);
-    final wide = MediaQuery.sizeOf(context).width >= 900;
+    final wide =
+        MediaQuery.sizeOf(context).width >= V26AppShell.desktopBreakpoint;
 
     final form = _buildAuthFormColumn(context, lang, wide);
 
