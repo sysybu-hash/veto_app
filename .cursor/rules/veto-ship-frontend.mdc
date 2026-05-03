@@ -29,4 +29,4 @@ This runs `flutter build web` (with production `VETO_API_BASE`) and `vercel:chec
 
 ## Frontend (Vercel via GitHub Actions)
 
-On **`push` to `main`**, `.github/workflows/deploy.yml` builds Flutter and deploys to Vercel prod. Analyze/test run with **`continue-on-error`** so a failing test does not skip the deploy (warnings appear in the workflow log).
+On **`push` to `main`**, the **`deploy-vercel`** job in [`.github/workflows/ci.yml`](../../.github/workflows/ci.yml) builds Flutter and deploys to Vercel prod **after** the same workflow’s CI jobs (`no-env-in-git`, `backend-ci`, `flutter-ci`) succeed. PRs to `main` run checks only; deploy is skipped unless the ref is `main` and the event is `push` or `workflow_dispatch`.

@@ -1,3 +1,4 @@
+# Single workflow: checks on every push/PR; production Flutter web deploy only on main.
 name: CI
 
 on:
@@ -5,6 +6,11 @@ on:
     branches: [main, master]
   pull_request:
     branches: [main, master]
+  workflow_dispatch:
+
+env:
+  # Render API origin — must match AppConfig / production backend (web build + Vercel).
+  VETO_API_BASE: https://veto-app-new.onrender.com
 
 jobs:
   no-env-in-git:
@@ -44,3 +50,60 @@ jobs:
       - run: flutter pub get
       - run: flutter analyze
       - run: flutter test
+
+  # Formerly .github/workflows/deploy.yml — one pipeline, no duplicate Flutter CI + deploy runs.
+  deploy-vercel:
+    runs-on: ubuntu-latest
+    needs: [no-env-in-git, backend-ci, flutter-ci]
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    concurrency:
+      group: vercel-deploy-${{ github.ref }}
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.41.6'
+          channel: 'stable'
+
+      - name: Install Flutter dependencies
+        run: |
+          cd frontend
+          flutter pub get
+
+      - name: Build Flutter Web
+        run: |
+          cd frontend
+          SHORT_SHA=$(echo '${{ github.sha }}' | cut -c1-7)
+          flutter build web --release \
+            --no-tree-shake-icons \
+            --pwa-strategy=none \
+            --dart-define=VETO_API_BASE=${{ env.VETO_API_BASE }} \
+            --dart-define=VETO_BUILD_ID=$SHORT_SHA
+
+      - name: Verify web bundle for Vercel
+        working-directory: frontend
+        run: |
+          set -e
+          test -f build/web/index.html || (echo "Missing build/web — Vercel buildCommand will fail." && exit 1)
+          ls -la build/web/index.html
+
+      - name: Vercel CLI (auth check)
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        working-directory: frontend
+        run: |
+          set -e
+          npx --yes vercel@latest --version
+          npx --yes vercel@latest whoami
+
+      - name: Deploy to Vercel
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        working-directory: frontend
+        run: |
+          set -e
+          npx --yes vercel@latest deploy --prod --yes
