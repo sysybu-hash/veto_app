@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/theme/veto_2026.dart';
 import 'call_i18n.dart';
+import 'v26_call_stage.dart';
 
 /// A single chat line rendered in the panel.
 class CallChatLine {
@@ -99,37 +100,43 @@ class _V26CallSidePanelState extends State<V26CallSidePanel>
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: widget.backgroundColor ?? V26.surface,
-      child: Column(
-        children: [
-          TabBar(
-            controller: _tab,
-            labelColor: V26.navy600,
-            unselectedLabelColor: V26.ink300,
-            indicatorColor: V26.gold,
-            indicatorWeight: 2,
-            labelStyle: const TextStyle(
-              fontFamily: V26.sans,
-              fontWeight: FontWeight.w700,
-              fontSize: 13,
-            ),
-            tabs: [
-              Tab(text: CallI18n.tabChat.t(widget.language)),
-              Tab(text: CallI18n.tabCaption.t(widget.language)),
-            ],
-          ),
-          const Divider(height: 1, thickness: 1, color: V26.hairline),
-          Expanded(
-            child: TabBarView(
+    return V26CallGlassPanel(
+      backgroundColor: widget.backgroundColor ?? V26.callGlass,
+      borderColor: V26.callGoldHair,
+      borderRadius: V26.callRadiusPanel,
+      padding: EdgeInsets.zero,
+      child: Material(
+        color: Colors.transparent,
+        child: Column(
+          children: [
+            TabBar(
               controller: _tab,
-              children: [
-                _buildChat(),
-                _buildCaption(),
+              labelColor: V26.goldSoft,
+              unselectedLabelColor: Colors.white.withValues(alpha: 0.48),
+              indicatorColor: V26.gold,
+              indicatorWeight: 2,
+              dividerColor: V26.callGoldHairSoft,
+              labelStyle: const TextStyle(
+                fontFamily: V26.serif,
+                fontWeight: FontWeight.w800,
+                fontSize: 14,
+              ),
+              tabs: [
+                Tab(text: CallI18n.tabChat.t(widget.language)),
+                Tab(text: CallI18n.tabCaption.t(widget.language)),
               ],
             ),
-          ),
-        ],
+            Expanded(
+              child: TabBarView(
+                controller: _tab,
+                children: [
+                  _buildChat(),
+                  _buildCaption(),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -145,8 +152,8 @@ class _V26CallSidePanelState extends State<V26CallSidePanel>
                     child: Text(
                       CallI18n.chatEmpty.t(widget.language),
                       textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        color: V26.ink300,
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.54),
                         fontFamily: V26.sans,
                       ),
                     ),
@@ -171,10 +178,13 @@ class _V26CallSidePanelState extends State<V26CallSidePanel>
                           ),
                           constraints: const BoxConstraints(maxWidth: 260),
                           decoration: BoxDecoration(
-                            color: line.mine ? V26.navy600 : V26.surface,
+                            color: line.mine
+                                ? V26.gold.withValues(alpha: 0.20)
+                                : Colors.white.withValues(alpha: 0.07),
                             border: line.mine
-                                ? null
-                                : Border.all(color: V26.hairline),
+                                ? Border.all(
+                                    color: V26.gold.withValues(alpha: 0.42))
+                                : Border.all(color: V26.callGoldHairSoft),
                             borderRadius: BorderRadiusDirectional.only(
                               topStart: const Radius.circular(14),
                               topEnd: const Radius.circular(14),
@@ -196,7 +206,7 @@ class _V26CallSidePanelState extends State<V26CallSidePanel>
                               Text(
                                 line.text,
                                 style: TextStyle(
-                                  color: line.mine ? Colors.white : V26.ink900,
+                                  color: Colors.white.withValues(alpha: 0.92),
                                   fontFamily: V26.sans,
                                   fontSize: 13.5,
                                   height: 1.5,
@@ -208,7 +218,7 @@ class _V26CallSidePanelState extends State<V26CallSidePanel>
                                 style: TextStyle(
                                   color: line.mine
                                       ? Colors.white.withValues(alpha: 0.6)
-                                      : V26.ink300,
+                                      : Colors.white.withValues(alpha: 0.45),
                                   fontFamily: V26.sans,
                                   fontSize: 10,
                                 ),
@@ -222,9 +232,9 @@ class _V26CallSidePanelState extends State<V26CallSidePanel>
                 ),
         ),
         Container(
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            border: Border(top: BorderSide(color: V26.hairline)),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.04),
+            border: const Border(top: BorderSide(color: V26.callGoldHairSoft)),
           ),
           padding: const EdgeInsets.fromLTRB(10, 8, 10, 10),
           child: Row(
@@ -237,12 +247,16 @@ class _V26CallSidePanelState extends State<V26CallSidePanel>
                   maxLines: 4,
                   textInputAction: TextInputAction.send,
                   onSubmitted: (_) => _send(),
-                  style: const TextStyle(color: V26.ink900, fontFamily: V26.sans),
+                  style: const TextStyle(
+                      color: Colors.white, fontFamily: V26.sans),
                   decoration: InputDecoration(
                     hintText: CallI18n.messagePlaceholder.t(widget.language),
-                    hintStyle: const TextStyle(color: V26.ink300, fontFamily: V26.sans),
+                    hintStyle: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.42),
+                      fontFamily: V26.sans,
+                    ),
                     filled: true,
-                    fillColor: V26.paper2,
+                    fillColor: Colors.white.withValues(alpha: 0.08),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                       borderSide: BorderSide.none,
@@ -257,8 +271,8 @@ class _V26CallSidePanelState extends State<V26CallSidePanel>
               const SizedBox(width: 8),
               IconButton.filled(
                 style: IconButton.styleFrom(
-                  backgroundColor: V26.navy600,
-                  foregroundColor: Colors.white,
+                  backgroundColor: V26.gold.withValues(alpha: 0.22),
+                  foregroundColor: V26.goldSoft,
                 ),
                 tooltip: CallI18n.sendMessage.t(widget.language),
                 onPressed: _send,
@@ -279,14 +293,14 @@ class _V26CallSidePanelState extends State<V26CallSidePanel>
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: V26.warnSoft,
+              color: V26.warn.withValues(alpha: 0.16),
               borderRadius: BorderRadius.circular(V26.rSm),
               border: Border.all(color: V26.warn.withValues(alpha: 0.3)),
             ),
             child: Text(
               CallI18n.captionWebNotice.t(widget.language),
               style: const TextStyle(
-                color: V26.warn,
+                color: V26.goldSoft,
                 fontFamily: V26.sans,
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
@@ -298,8 +312,7 @@ class _V26CallSidePanelState extends State<V26CallSidePanel>
           FilledButton.icon(
             onPressed: widget.onToggleCaption,
             style: FilledButton.styleFrom(
-              backgroundColor:
-                  widget.captionListening ? V26.emerg : V26.paper2,
+              backgroundColor: widget.captionListening ? V26.emerg : V26.paper2,
               foregroundColor:
                   widget.captionListening ? Colors.white : V26.ink700,
               minimumSize: const Size.fromHeight(44),
@@ -331,8 +344,8 @@ class _V26CallSidePanelState extends State<V26CallSidePanel>
             padding: const EdgeInsets.only(bottom: 8),
             child: Text(
               '• $line',
-              style: const TextStyle(
-                color: V26.ink900,
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.84),
                 fontFamily: V26.sans,
                 fontSize: 14,
                 height: 1.4,

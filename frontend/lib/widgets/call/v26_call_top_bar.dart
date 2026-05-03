@@ -1,7 +1,5 @@
 // ============================================================
-//  v26_call_top_bar.dart — Top overlay for active calls.
-//  Shows VETO shield, peer name + role, live timer,
-//  NetworkQualityChip, REC pill (when recording).
+//  v26_call_top_bar.dart — VETO Bold top chrome for active calls.
 // ============================================================
 
 import 'package:flutter/material.dart';
@@ -20,7 +18,7 @@ class V26RecordingPill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return V26CallPill(
-      background: V26.emerg.withValues(alpha: 0.30),
+      background: V26.callRecBg,
       border: V26.emerg.withValues(alpha: 0.5),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -29,7 +27,7 @@ class V26RecordingPill extends StatelessWidget {
             width: 6,
             height: 6,
             decoration: const BoxDecoration(
-              color: Color(0xFFFF6B7A),
+              color: V26.callDangerRed,
               shape: BoxShape.circle,
             ),
           ),
@@ -37,7 +35,7 @@ class V26RecordingPill extends StatelessWidget {
           Text(
             label,
             style: const TextStyle(
-              color: Color(0xFFFFB6BD),
+              color: Color(0xFFFFC2C8),
               fontSize: 11,
               fontWeight: FontWeight.w700,
               letterSpacing: 1.0,
@@ -65,7 +63,10 @@ class V26NetworkQualityChip extends StatelessWidget {
       case 1:
         return (color: V26.ok, label: CallI18n.qualityExcellent.t(language));
       case 2:
-        return (color: const Color(0xFF34D399), label: CallI18n.qualityGood.t(language));
+        return (
+          color: const Color(0xFF34D399),
+          label: CallI18n.qualityGood.t(language)
+        );
       case 3:
         return (color: V26.warn, label: CallI18n.qualityFair.t(language));
       case 4:
@@ -82,38 +83,12 @@ class V26NetworkQualityChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final derived = _derive();
     if (derived.label.isEmpty) return const SizedBox.shrink();
-    return V26CallPill(
-      background: derived.color.withValues(alpha: 0.18),
-      border: derived.color.withValues(alpha: 0.5),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 6,
-            height: 6,
-            decoration: BoxDecoration(
-              color: derived.color,
-              shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: derived.color.withValues(alpha: 0.4),
-                  blurRadius: 4,
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 6),
-          Text(
-            quality.rttMs > 0 ? '${derived.label} · ${quality.rttMs}ms' : derived.label,
-            style: TextStyle(
-              color: derived.color,
-              fontSize: 11,
-              fontWeight: FontWeight.w700,
-              fontFamily: V26.sans,
-            ),
-          ),
-        ],
-      ),
+    return Tooltip(
+      message: quality.rttMs > 0
+          ? '${derived.label} · ${quality.rttMs}ms'
+          : derived.label,
+      child: Icon(Icons.network_cell_rounded,
+          color: V26.gold.withValues(alpha: 0.85), size: 18),
     );
   }
 }
@@ -147,78 +122,109 @@ class V26CallTopBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 10, 16, 4),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+      child: V26CallGlassPanel(
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+        borderRadius: 14,
         child: Row(
           children: [
-            const V26CallShieldBadge(),
-            const SizedBox(width: 10),
+            Flexible(
+              flex: 3,
+              child: Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: AlignmentDirectional.centerStart,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        _formatDuration(durationSec),
+                        style: const TextStyle(
+                          color: V26.gold,
+                          fontSize: 18,
+                          fontFeatures: [FontFeature.tabularFigures()],
+                          fontWeight: FontWeight.w700,
+                          fontFamily: V26.sans,
+                        ),
+                      ),
+                      if (isRecording) ...[
+                        const SizedBox(width: 10),
+                        V26RecordingPill(
+                            label: CallI18n.recordingShort.t(language)),
+                      ],
+                      if (quality.worst > 0) ...[
+                        const SizedBox(width: 8),
+                        V26NetworkQualityChip(
+                            quality: quality, language: language),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
+            ),
             Expanded(
+              flex: 4,
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
                     peerName,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.center,
                     style: const TextStyle(
                       color: Colors.white,
                       fontFamily: V26.serif,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
+                      fontSize: 20,
+                      fontWeight: FontWeight.w800,
                     ),
                   ),
-                  if (specialization != null && specialization!.isNotEmpty)
-                    Text(
-                      specialization!,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: V26.navy300,
-                        fontFamily: V26.sans,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
+                  const SizedBox(height: 2),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 7,
+                        height: 7,
+                        decoration: const BoxDecoration(
+                          color: V26.callStatusGreen,
+                          shape: BoxShape.circle,
+                        ),
                       ),
-                    ),
-                ],
-              ),
-            ),
-            if (quality.worst > 0) ...[
-              const SizedBox(width: 6),
-              V26NetworkQualityChip(quality: quality, language: language),
-            ],
-            const SizedBox(width: 6),
-            V26CallPill(
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    width: 6,
-                    height: 6,
-                    decoration: const BoxDecoration(
-                      color: V26.ok,
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                  const SizedBox(width: 6),
-                  Text(
-                    _formatDuration(durationSec),
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      fontFamily: V26.sans,
-                    ),
+                      const SizedBox(width: 6),
+                      Flexible(
+                        child: Text(
+                          specialization?.trim().isNotEmpty == true
+                              ? '${CallI18n.connectedEncrypted.t(language)} · $specialization'
+                              : CallI18n.connectedEncrypted.t(language),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.62),
+                            fontFamily: V26.sans,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
             ),
-            if (isRecording) ...[
-              const SizedBox(width: 6),
-              const V26RecordingPill(),
-            ],
+            const Flexible(
+              flex: 3,
+              child: Align(
+                alignment: AlignmentDirectional.centerEnd,
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: V26CallShieldBadge(),
+                ),
+              ),
+            ),
           ],
         ),
       ),

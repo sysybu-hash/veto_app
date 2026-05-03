@@ -22,7 +22,8 @@ class V26VideoPlaceholder extends StatelessWidget {
   final String language;
 
   String _initials(String s) {
-    final parts = s.trim().split(RegExp(r'\s+')).where((p) => p.isNotEmpty).toList();
+    final parts =
+        s.trim().split(RegExp(r'\s+')).where((p) => p.isNotEmpty).toList();
     if (parts.isEmpty) return '?';
     if (parts.length == 1) return parts.first.characters.take(2).toString();
     return parts.first.characters.take(1).toString() +
@@ -112,26 +113,24 @@ class V26CallVideoArea extends StatelessWidget {
     final eng = engine;
     final uid = remoteUid;
     final showRemote = eng != null && uid != null && hasRemoteVideo;
+    final Widget body;
     if (showRemote) {
-      return ColoredBox(
+      body = ColoredBox(
         color: Colors.black,
-        child: SizedBox.expand(
-          child: AgoraVideoView(
-            key: ValueKey('remote-$uid'),
-            controller: VideoViewController.remote(
-              rtcEngine: eng,
-              canvas: VideoCanvas(
-                uid: uid,
-                renderMode: RenderModeType.renderModeHidden,
-              ),
-              connection: RtcConnection(channelId: channelId),
+        child: AgoraVideoView(
+          key: ValueKey('remote-$uid'),
+          controller: VideoViewController.remote(
+            rtcEngine: eng,
+            canvas: VideoCanvas(
+              uid: uid,
+              renderMode: RenderModeType.renderModeHidden,
             ),
+            connection: RtcConnection(channelId: channelId),
           ),
         ),
       );
-    }
-    if (mirrorLocalUntilRemote && eng != null && !videoPublishMuted) {
-      return Stack(
+    } else if (mirrorLocalUntilRemote && eng != null && !videoPublishMuted) {
+      body = Stack(
         fit: StackFit.expand,
         children: [
           ColoredBox(
@@ -150,62 +149,92 @@ class V26CallVideoArea extends StatelessWidget {
               ),
             ),
           ),
-          if (uid != null && !hasRemoteVideo)
-            Positioned(
-              left: 0,
-              right: 0,
-              bottom: 0,
-              child: IgnorePointer(
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [
-                        Colors.transparent,
-                        Colors.black.withValues(alpha: 0.55),
-                      ],
-                    ),
-                  ),
-                  child: SafeArea(
-                    top: false,
-                    child: Padding(
-                      padding: EdgeInsets.fromLTRB(
-                        16,
-                        24,
-                        16,
-                        MediaQuery.of(context).padding.bottom + 112,
-                      ),
-                      child: Text(
-                        CallI18n.waitingForPeerVideo.t(language),
-                        textAlign: TextAlign.center,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          color: Colors.white70,
-                          fontFamily: V26.sans,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          height: 1.25,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
         ],
+      );
+    } else {
+      body = Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [V26.navy700, V26.callBgBottom],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+        child: V26VideoPlaceholder(peerName: peerName, language: language),
       );
     }
     return Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [V26.navy700, V26.ink900],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+      decoration: BoxDecoration(
+        color: Colors.black,
+        borderRadius: BorderRadius.circular(V26.callRadiusVideo),
+        border: Border.all(color: V26.callGoldHair),
+        boxShadow: [
+          BoxShadow(
+            color: V26.gold.withValues(alpha: 0.14),
+            blurRadius: 18,
+            spreadRadius: 0.5,
+          ),
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.38),
+            blurRadius: 34,
+            offset: const Offset(0, 18),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(V26.callRadiusVideo - 1),
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            body,
+            DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.black.withValues(alpha: 0.18),
+                    Colors.transparent,
+                    Colors.black.withValues(alpha: 0.12),
+                  ],
+                  stops: const [0, 0.35, 1],
+                ),
+              ),
+            ),
+            if (!showRemote && uid != null && !hasRemoteVideo)
+              _WaitingOverlay(language: language),
+          ],
         ),
       ),
-      child: V26VideoPlaceholder(peerName: peerName, language: language),
+    );
+  }
+}
+
+class _WaitingOverlay extends StatelessWidget {
+  const _WaitingOverlay({required this.language});
+  final String language;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        decoration: BoxDecoration(
+          color: V26.callGlass.withValues(alpha: 0.80),
+          borderRadius: BorderRadius.circular(V26.rPill),
+          border: Border.all(color: V26.callGoldHairSoft),
+        ),
+        child: Text(
+          CallI18n.waitingForPeerVideo.t(language),
+          textAlign: TextAlign.center,
+          style: const TextStyle(
+            color: V26.goldSoft,
+            fontFamily: V26.sans,
+            fontSize: 12,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      ),
     );
   }
 }
@@ -288,12 +317,12 @@ class V26CallLocalPip extends StatelessWidget {
       );
     }
     return Container(
-      width: kIsWeb ? 140 : 120,
-      height: kIsWeb ? 180 : 160,
+      width: kIsWeb ? 154 : 126,
+      height: kIsWeb ? 116 : 96,
       decoration: BoxDecoration(
         color: V26.navy700,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.16), width: 2),
+        borderRadius: BorderRadius.circular(V26.callRadiusPip),
+        border: Border.all(color: V26.callGoldHair, width: 1),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.4),
@@ -303,7 +332,7 @@ class V26CallLocalPip extends StatelessWidget {
         ],
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(V26.callRadiusPip - 1),
         child: body,
       ),
     );

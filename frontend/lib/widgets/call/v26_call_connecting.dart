@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import '../../core/theme/veto_2026.dart';
 import 'call_i18n.dart';
 import 'v26_call_control_bar.dart';
+import 'v26_call_stage.dart';
 
 class V26CallConnecting extends StatefulWidget {
   const V26CallConnecting({
@@ -50,59 +51,63 @@ class _V26CallConnectingState extends State<V26CallConnecting>
         const SizedBox(height: 56),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24),
-          child: Column(
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-                decoration: BoxDecoration(
-                  color: V26.navy500.withValues(alpha: 0.18),
-                  borderRadius: BorderRadius.circular(V26.rPill),
-                  border: Border.all(color: V26.navy400.withValues(alpha: 0.4)),
+          child: V26CallGlassPanel(
+            padding: const EdgeInsets.all(18),
+            child: Column(
+              children: [
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                  decoration: BoxDecoration(
+                    color: V26.gold.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(V26.rPill),
+                    border: Border.all(color: V26.callGoldHair),
+                  ),
+                  child: Text(
+                    CallI18n.badgeConnecting.t(widget.language),
+                    style: const TextStyle(
+                      color: V26.goldSoft,
+                      fontFamily: V26.sans,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
                 ),
-                child: Text(
-                  CallI18n.badgeConnecting.t(widget.language),
+                const SizedBox(height: 18),
+                Text(
+                  CallI18n.findingLawyer.t(widget.language),
+                  textAlign: TextAlign.center,
                   style: const TextStyle(
-                    color: V26.navy200,
-                    fontFamily: V26.sans,
-                    fontSize: 12,
+                    color: Colors.white,
+                    fontFamily: V26.serif,
+                    fontSize: 24,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
-              ),
-              const SizedBox(height: 18),
-              Text(
-                CallI18n.findingLawyer.t(widget.language),
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontFamily: V26.serif,
-                  fontSize: 24,
-                  fontWeight: FontWeight.w700,
+                const SizedBox(height: 6),
+                Text(
+                  CallI18n.connectingNearby.t(widget.language),
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.62),
+                    fontFamily: V26.sans,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                CallI18n.connectingNearby.t(widget.language),
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  color: V26.navy300,
-                  fontFamily: V26.sans,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
+                const SizedBox(height: 14),
+                Text(
+                  '${widget.elapsedSec}s',
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.7),
+                    fontFamily: 'Heebo',
+                    fontSize: 18,
+                    fontFeatures: const [FontFeature.tabularFigures()],
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 14),
-              Text(
-                '${widget.elapsedSec}s',
-                style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.7),
-                  fontFamily: 'Heebo',
-                  fontSize: 18,
-                  fontFeatures: const [FontFeature.tabularFigures()],
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
         const SizedBox(height: 32),
@@ -125,7 +130,7 @@ class _V26CallConnectingState extends State<V26CallConnecting>
             CallI18n.connectingDetails.t(widget.language),
             textAlign: TextAlign.center,
             style: const TextStyle(
-              color: V26.navy200,
+              color: V26.goldSoft,
               fontFamily: V26.sans,
               fontSize: 13,
             ),

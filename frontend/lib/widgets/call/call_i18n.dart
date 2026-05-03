@@ -47,7 +47,8 @@ class CallI18n {
     en: '3 lawyers nearby received the request. Connecting to the first to respond.',
     ru: 'Запрос получили 3 адвоката поблизости. Соединяем с первым ответившим.',
   );
-  static const cancelRequest = CallCopy(he: 'בטל בקשה', en: 'Cancel request', ru: 'Отменить запрос');
+  static const cancelRequest =
+      CallCopy(he: 'בטל בקשה', en: 'Cancel request', ru: 'Отменить запрос');
 
   // ── Incoming (lawyer side) ──────────────────────────────────
   static const incomingBadge = CallCopy(
@@ -65,9 +66,12 @@ class CallI18n {
     en: 'Case details',
     ru: 'Детали ситуации',
   );
-  static const incomingDecline = CallCopy(he: 'דחה', en: 'Decline', ru: 'Отклонить');
-  static const incomingChatFirst = CallCopy(he: 'צ׳אט קודם', en: 'Chat first', ru: 'Сначала чат');
-  static const incomingAccept = CallCopy(he: 'קבל שיחה', en: 'Accept', ru: 'Принять');
+  static const incomingDecline =
+      CallCopy(he: 'דחה', en: 'Decline', ru: 'Отклонить');
+  static const incomingChatFirst =
+      CallCopy(he: 'צ׳אט קודם', en: 'Chat first', ru: 'Сначала чат');
+  static const incomingAccept =
+      CallCopy(he: 'קבל שיחה', en: 'Accept', ru: 'Принять');
 
   // ── Active call / control bar ────────────────────────────────
   static const encryptedBadge = CallCopy(
@@ -75,22 +79,44 @@ class CallI18n {
     en: 'Encrypted call',
     ru: 'Зашифрованный звонок',
   );
+  static const connectedEncrypted = CallCopy(
+    he: 'מחוברים · שיחה מוצפנת',
+    en: 'Connected · encrypted call',
+    ru: 'Подключено · зашифрованный звонок',
+  );
+  static const aes256Footer = CallCopy(
+    he: 'קצה-לקצה · AES-256',
+    en: 'End-to-end · AES-256',
+    ru: 'Сквозное · AES-256',
+  );
+  static const recordingShort = CallCopy(
+    he: 'מוקלט',
+    en: 'REC',
+    ru: 'Запись',
+  );
   static const recordingPill = CallCopy(
     he: 'מוקלט · נשמר בכספת המוצפנת שלך',
     en: 'Recording · saved to your encrypted vault',
     ru: 'Запись · сохраняется в вашем зашифрованном хранилище',
   );
   static const muteMic = CallCopy(he: 'השתק', en: 'Mute', ru: 'Заглушить');
-  static const unmuteMic = CallCopy(he: 'הפעל מיקרופון', en: 'Unmute', ru: 'Включить микрофон');
+  static const unmuteMic =
+      CallCopy(he: 'הפעל מיקרופון', en: 'Unmute', ru: 'Включить микрофон');
   static const speaker = CallCopy(he: 'רמקול', en: 'Speaker', ru: 'Динамик');
   static const camera = CallCopy(he: 'מצלמה', en: 'Camera', ru: 'Камера');
-  static const cameraOff = CallCopy(he: 'כבה מצלמה', en: 'Camera off', ru: 'Выключить камеру');
-  static const flipCamera = CallCopy(he: 'החלפת מצלמה', en: 'Flip camera', ru: 'Сменить камеру');
-  static const screenShare = CallCopy(he: 'שיתוף מסך', en: 'Share screen', ru: 'Показ экрана');
-  static const stopScreenShare = CallCopy(he: 'עצור שיתוף', en: 'Stop sharing', ru: 'Остановить показ');
-  static const noiseSuppression = CallCopy(he: 'דיכוי רעשים', en: 'Noise suppression', ru: 'Шумоподавление');
+  static const cameraOff =
+      CallCopy(he: 'כבה מצלמה', en: 'Camera off', ru: 'Выключить камеру');
+  static const flipCamera =
+      CallCopy(he: 'החלפת מצלמה', en: 'Flip camera', ru: 'Сменить камеру');
+  static const screenShare =
+      CallCopy(he: 'שיתוף מסך', en: 'Share screen', ru: 'Показ экрана');
+  static const stopScreenShare =
+      CallCopy(he: 'עצור שיתוף', en: 'Stop sharing', ru: 'Остановить показ');
+  static const noiseSuppression = CallCopy(
+      he: 'דיכוי רעשים', en: 'Noise suppression', ru: 'Шумоподавление');
   static const openChat = CallCopy(he: 'צ׳אט', en: 'Chat', ru: 'Чат');
-  static const endCall = CallCopy(he: 'סיים שיחה', en: 'End call', ru: 'Завершить');
+  static const endCall =
+      CallCopy(he: 'סיים שיחה', en: 'End call', ru: 'Завершить');
 
   // ── Video placeholders ──────────────────────────────────────
   static const waitingForPeer = CallCopy(
@@ -103,7 +129,8 @@ class CallI18n {
     en: 'Waiting for remote video…',
     ru: 'Ждём удалённое видео…',
   );
-  static const cameraLabel = CallCopy(he: 'המצלמה שלך', en: 'Your camera', ru: 'Ваша камера');
+  static const cameraLabel =
+      CallCopy(he: 'המצלמה שלך', en: 'Your camera', ru: 'Ваша камера');
   static const cameraOffLabel = CallCopy(
     he: 'מצלמה כבויה',
     en: 'Camera is off',
@@ -119,7 +146,8 @@ class CallI18n {
 
   // ── Side panel ─────────────────────────────────────────────
   static const tabChat = CallCopy(he: 'צ׳אט', en: 'Chat', ru: 'Чат');
-  static const tabCaption = CallCopy(he: 'כיתוב חי', en: 'Live caption', ru: 'Субтитры');
+  static const tabCaption =
+      CallCopy(he: 'כיתוב חי', en: 'Live caption', ru: 'Субтитры');
   static const sendMessage = CallCopy(he: 'שלח', en: 'Send', ru: 'Отправить');
   static const messagePlaceholder = CallCopy(
     he: 'הקלד הודעה…',
@@ -136,11 +164,14 @@ class CallI18n {
     en: 'Live captions are mobile-only; the browser uses post-call server transcription.',
     ru: 'Субтитры в реальном времени — только на мобильных; в браузере — после звонка.',
   );
-  static const captionStart = CallCopy(he: 'התחל כיתוב', en: 'Start caption', ru: 'Запустить субтитры');
-  static const captionStop = CallCopy(he: 'עצור כיתוב', en: 'Stop caption', ru: 'Остановить субтитры');
+  static const captionStart =
+      CallCopy(he: 'התחל כיתוב', en: 'Start caption', ru: 'Запустить субтитры');
+  static const captionStop =
+      CallCopy(he: 'עצור כיתוב', en: 'Stop caption', ru: 'Остановить субтитры');
 
   // ── Errors ──────────────────────────────────────────────────
-  static const errorTitle = CallCopy(he: 'שגיאת שיחה', en: 'Call error', ru: 'Ошибка звонка');
+  static const errorTitle =
+      CallCopy(he: 'שגיאת שיחה', en: 'Call error', ru: 'Ошибка звонка');
   static const errorPermission = CallCopy(
     he: 'לא הוענקו הרשאות מצלמה / מיקרופון. אשר בהגדרות הדפדפן/המכשיר ונסה שוב.',
     en: 'Camera / microphone permission denied. Allow access in browser or device settings and retry.',
@@ -171,13 +202,16 @@ class CallI18n {
     en: 'Something went wrong. Please rejoin the call.',
     ru: 'Произошла ошибка. Попробуйте войти заново.',
   );
-  static const errorRetry = CallCopy(he: 'נסה שוב', en: 'Retry', ru: 'Повторить');
+  static const errorRetry =
+      CallCopy(he: 'נסה שוב', en: 'Retry', ru: 'Повторить');
   static const errorExit = CallCopy(he: 'יציאה', en: 'Exit', ru: 'Выйти');
 
   // ── Network quality chip ────────────────────────────────────
-  static const qualityExcellent = CallCopy(he: 'מעולה', en: 'Excellent', ru: 'Отлично');
+  static const qualityExcellent =
+      CallCopy(he: 'מעולה', en: 'Excellent', ru: 'Отлично');
   static const qualityGood = CallCopy(he: 'טובה', en: 'Good', ru: 'Хорошо');
   static const qualityFair = CallCopy(he: 'בינונית', en: 'Fair', ru: 'Средне');
   static const qualityPoor = CallCopy(he: 'גרועה', en: 'Poor', ru: 'Плохо');
-  static const qualityVeryPoor = CallCopy(he: 'נוראית', en: 'Very poor', ru: 'Очень плохо');
+  static const qualityVeryPoor =
+      CallCopy(he: 'נוראית', en: 'Very poor', ru: 'Очень плохо');
 }
