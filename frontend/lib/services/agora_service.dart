@@ -6,7 +6,11 @@
 //
 //  Design goals:
 //    * Web / iOS / Android parity. Platform splits are limited to:
-//       - `startPreview()` AFTER join on web (running it before join
+//       - Web video: join with `publishCameraTrack: false`, then
+//         `startPreview()` after join, then `updateChannelMediaOptions`
+//         to publish camera — avoids iris error "can not publish a disabled
+//         track" (join used to publish before the camera track was enabled).
+//       - `startPreview()` still runs only after join on web (before join
 //         has been reported to deadlock Chromium tabs).
 //       - `switchCamera` / `setEnableSpeakerphone` are native-only.
 //       - Screen share uses `startScreenCapture2` on web, is a no-op
@@ -93,7 +97,6 @@ class AgoraService extends ChangeNotifier {
   int? _remoteUid;
   bool _remoteVideoPlaying = false;
   bool _localPreviewOk = false;
-  bool _webPreviewAfterJoin = false;
   int _durationSec = 0;
   Timer? _durationTimer;
 
@@ -219,8 +222,6 @@ class AgoraService extends ChangeNotifier {
     _retryAttempts = 0;
     _lastError = null;
 
-    if (kIsWeb && enableVideo) _webPreviewAfterJoin = true;
-
     _setPhase(CallConnectionPhase.connecting);
 
     try {
@@ -231,14 +232,15 @@ class AgoraService extends ChangeNotifier {
         options: ChannelMediaOptions(
           clientRoleType: ClientRoleType.clientRoleBroadcaster,
           channelProfile: ChannelProfileType.channelProfileCommunication,
-          publishCameraTrack: enableVideo,
+          // Web: do not publish camera until startPreview() enables the track
+          // (see _webStartPreviewSafe + updateChannelMediaOptions).
+          publishCameraTrack: enableVideo && !kIsWeb,
           publishMicrophoneTrack: true,
           autoSubscribeAudio: true,
           autoSubscribeVideo: true,
         ),
       );
     } catch (err) {
-      _webPreviewAfterJoin = false;
       _setPhase(CallConnectionPhase.failed);
       _emitError(CallErrorKind.connectionFailed, 'joinChannel: $err');
       rethrow;
@@ -427,14 +429,16 @@ class AgoraService extends ChangeNotifier {
       onJoinChannelSuccess: (RtcConnection conn, int elapsed) {
         _retryAttempts = 0;
         _setPhase(CallConnectionPhase.connected);
-        if (_webPreviewAfterJoin) {
-          _webPreviewAfterJoin = false;
+        if (kIsWeb && _wantsVideo && !_videoMuted) {
           unawaited(_webStartPreviewSafe());
         }
       },
       onRejoinChannelSuccess: (RtcConnection conn, int elapsed) {
         _retryAttempts = 0;
         _setPhase(CallConnectionPhase.connected);
+        if (kIsWeb && _wantsVideo && !_videoMuted) {
+          unawaited(_webStartPreviewSafe());
+        }
       },
       onUserJoined: (RtcConnection conn, int remoteUid, int elapsed) {
         _remoteUid = remoteUid;
@@ -600,6 +604,7 @@ class AgoraService extends ChangeNotifier {
       final eng = _engine;
       if (eng == null || _channelId == null) return;
       try {
+        final wantCam = _wantsVideo && !_videoMuted;
         await eng.joinChannel(
           token: _token,
           channelId: _channelId!,
@@ -607,7 +612,7 @@ class AgoraService extends ChangeNotifier {
           options: ChannelMediaOptions(
             clientRoleType: ClientRoleType.clientRoleBroadcaster,
             channelProfile: ChannelProfileType.channelProfileCommunication,
-            publishCameraTrack: _wantsVideo && !_videoMuted,
+            publishCameraTrack: wantCam && !kIsWeb,
             publishMicrophoneTrack: !_micMuted,
             autoSubscribeAudio: true,
             autoSubscribeVideo: true,
@@ -625,6 +630,13 @@ class AgoraService extends ChangeNotifier {
     try {
       await eng.startPreview();
       _localPreviewOk = true;
+      if (_wantsVideo && !_videoMuted) {
+        await eng.updateChannelMediaOptions(
+          const ChannelMediaOptions(
+            publishCameraTrack: true,
+          ),
+        );
+      }
       notifyListeners();
     } catch (err, st) {
       _emitError(CallErrorKind.mediaUnavailable, 'web startPreview: $err');
