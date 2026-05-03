@@ -1529,6 +1529,8 @@ class _VetoScreenState extends State<VetoScreen> {
                     const SizedBox(height: 14),
                     _buildScenarioSelector(isRtl, compact, isDesktop),
                     SizedBox(height: compact ? 12 : 14),
+                    _scenarioDetailPanel(isRtl, compact),
+                    SizedBox(height: compact ? 12 : 14),
                     _rightsCard(),
                     if (isAdmin) ...[
                       const SizedBox(height: 20),
@@ -2103,6 +2105,225 @@ class _VetoScreenState extends State<VetoScreen> {
           ),
         ]),
       );
+
+  // ── Scenario detail panel (2026/citizen.html rev 2) ─────────
+  Widget _scenarioDetailPanel(bool isRtl, bool compact) {
+    final sd = _sdMap[_scenario]!;
+    final title = _langKey == 'ru'
+        ? sd.ru
+        : _langKey == 'en'
+            ? sd.en
+            : sd.he;
+    final sub = _scenarioSub(_scenario);
+    final icon = _scenarioIcon(_scenario);
+    final bullets = _langKey == 'ru'
+        ? sd.rRu
+        : _langKey == 'en'
+            ? sd.rEn
+            : sd.rHe;
+    final whatToKnow = bullets.take(2).toList();
+    final firstAction = bullets.skip(2).take(2).toList();
+    final criticalTime = _langKey == 'he'
+        ? '60 הדקות הראשונות מקבלות משקל מכריע. הקש SOS עכשיו וקבל ייעוץ ראשוני.'
+        : _langKey == 'ru'
+            ? 'Первые 60 минут — критически важны. Нажмите SOS сейчас.'
+            : 'The first 60 minutes are critical. Press SOS now for immediate guidance.';
+    final criticalLabel = _langKey == 'he'
+        ? 'זמן קריטי:'
+        : _langKey == 'ru'
+            ? 'Критическое время:'
+            : 'Critical time:';
+    final labelKnow = _langKey == 'he'
+        ? 'מה הכי חשוב לדעת'
+        : _langKey == 'ru'
+            ? 'Что важно знать'
+            : 'What to know first';
+    final labelAction = _langKey == 'he'
+        ? 'פעולה ראשונה'
+        : _langKey == 'ru'
+            ? 'Первое действие'
+            : 'First action';
+
+    return V26Card(
+      padding: EdgeInsets.zero,
+      lift: false,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Head
+          Container(
+            padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [Color(0xFFFBFCFE), V26.surface],
+              ),
+              border: Border(bottom: BorderSide(color: V26.hairline)),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 42,
+                  height: 42,
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [V26.navy600, V26.navy500],
+                    ),
+                    borderRadius: BorderRadius.circular(11),
+                  ),
+                  alignment: Alignment.center,
+                  child: Icon(icon, color: Colors.white, size: 20),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: const TextStyle(
+                          fontFamily: V26.serif,
+                          fontSize: 17,
+                          fontWeight: FontWeight.w800,
+                          color: V26.ink900,
+                          height: 1.2,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        sub,
+                        style: const TextStyle(
+                          fontFamily: V26.sans,
+                          fontSize: 12,
+                          color: V26.ink500,
+                          height: 1.4,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // Body: what-to-know + first-action
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 14, 16, 4),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _sdBlock(labelKnow, whatToKnow),
+                const SizedBox(height: 10),
+                _sdBlock(labelAction, firstAction),
+              ],
+            ),
+          ),
+          // Warn
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 10, 16, 14),
+            child: Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFFF5F1),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: const Color(0xFFF8D6CB)),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    width: 24,
+                    height: 24,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF4B59C),
+                      borderRadius: BorderRadius.circular(7),
+                    ),
+                    alignment: Alignment.center,
+                    child: const Icon(Icons.warning_amber_rounded,
+                        size: 14, color: Color(0xFF5A1F0E)),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: RichText(
+                      text: TextSpan(
+                        style: const TextStyle(
+                          fontFamily: V26.sans,
+                          color: Color(0xFF7A2A12),
+                          fontSize: 12.5,
+                          height: 1.5,
+                        ),
+                        children: [
+                          TextSpan(
+                            text: '$criticalLabel ',
+                            style: const TextStyle(
+                              color: Color(0xFF5A1F0E),
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                          TextSpan(text: criticalTime),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _sdBlock(String label, List<String> items) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label.toUpperCase(),
+          style: const TextStyle(
+            fontFamily: V26.sans,
+            fontSize: 11,
+            fontWeight: FontWeight.w800,
+            letterSpacing: 1.8,
+            color: V26.navy600,
+          ),
+        ),
+        const SizedBox(height: 6),
+        for (final it in items)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 6),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  margin: const EdgeInsets.only(top: 7),
+                  width: 6,
+                  height: 6,
+                  decoration: const BoxDecoration(
+                    color: V26.navy500,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    it,
+                    style: const TextStyle(
+                      fontFamily: V26.sans,
+                      fontSize: 13,
+                      color: V26.ink700,
+                      height: 1.55,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+      ],
+    );
+  }
 
   // ── Scenario tile (single) ────────────────────────────────
   Widget _scenarioTile(MapEntry<_Scenario, _SD> e, bool compact) {

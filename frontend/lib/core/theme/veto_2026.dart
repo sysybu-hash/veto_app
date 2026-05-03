@@ -2208,3 +2208,255 @@ class V26Empty extends StatelessWidget {
     );
   }
 }
+
+/// ════════════════════════════════════════════════════════════
+///  V26Stepper — vertical step list (wizard / login dark rail).
+/// ════════════════════════════════════════════════════════════
+class V26StepperStep {
+  final String title;
+  final String? caption;
+  const V26StepperStep({required this.title, this.caption});
+}
+
+class V26Stepper extends StatelessWidget {
+  final List<V26StepperStep> steps;
+  final int current;
+  final bool onDark;
+
+  const V26Stepper({
+    super.key,
+    required this.steps,
+    required this.current,
+    this.onDark = true,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: List.generate(steps.length, (i) {
+        final step = steps[i];
+        final done = i < current;
+        final active = i == current;
+        final isLast = i == steps.length - 1;
+        final Color markerBg = done
+            ? V26.navy500
+            : active
+                ? Colors.white
+                : (onDark
+                    ? Colors.white.withValues(alpha: 0.12)
+                    : V26.paper2);
+        final Color markerFg = done
+            ? Colors.white
+            : active
+                ? V26.navy700
+                : (onDark
+                    ? Colors.white.withValues(alpha: 0.6)
+                    : V26.ink500);
+        final Color titleColor = onDark
+            ? (active || done
+                ? Colors.white
+                : Colors.white.withValues(alpha: 0.7))
+            : (active || done ? V26.ink900 : V26.ink500);
+        final Color captionColor = onDark
+            ? Colors.white.withValues(alpha: 0.55)
+            : V26.ink300;
+        return Padding(
+          padding: EdgeInsets.only(bottom: isLast ? 0 : 18),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 32,
+                    height: 32,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: markerBg,
+                      shape: BoxShape.circle,
+                      border: onDark && !done && !active
+                          ? Border.all(
+                              color: Colors.white.withValues(alpha: 0.18),
+                            )
+                          : null,
+                    ),
+                    child: done
+                        ? const Icon(Icons.check_rounded,
+                            size: 16, color: Colors.white)
+                        : Text(
+                            '${i + 1}',
+                            style: TextStyle(
+                              fontFamily: V26.serif,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w800,
+                              color: markerFg,
+                            ),
+                          ),
+                  ),
+                  if (!isLast)
+                    Container(
+                      width: 2,
+                      height: 28,
+                      margin: const EdgeInsets.symmetric(vertical: 4),
+                      color: done
+                          ? V26.navy400.withValues(alpha: 0.7)
+                          : onDark
+                              ? Colors.white.withValues(alpha: 0.10)
+                              : V26.hairline,
+                    ),
+                ],
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.only(top: 4),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        step.title,
+                        style: TextStyle(
+                          fontFamily: V26.serif,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          color: titleColor,
+                          height: 1.25,
+                        ),
+                      ),
+                      if (step.caption != null) ...[
+                        const SizedBox(height: 3),
+                        Text(
+                          step.caption!,
+                          style: TextStyle(
+                            fontFamily: V26.sans,
+                            fontSize: 12,
+                            color: captionColor,
+                            height: 1.4,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      }),
+    );
+  }
+}
+
+/// ════════════════════════════════════════════════════════════
+///  V26Table — admin table wrapper (mirror `.tbl` in CSS).
+/// ════════════════════════════════════════════════════════════
+class V26TableColumn {
+  final String label;
+  final double? width;
+  final TextAlign align;
+  const V26TableColumn(this.label, {this.width, this.align = TextAlign.start});
+}
+
+class V26Table extends StatelessWidget {
+  final List<V26TableColumn> columns;
+  final List<List<Widget>> rows;
+
+  const V26Table({super.key, required this.columns, required this.rows});
+
+  @override
+  Widget build(BuildContext context) {
+    return V26Card(
+      padding: EdgeInsets.zero,
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+            decoration: const BoxDecoration(
+              color: V26.surface2,
+              border: Border(bottom: BorderSide(color: V26.hairline)),
+            ),
+            child: Row(
+              children: [
+                for (int ci = 0; ci < columns.length; ci++)
+                  ci == columns.length - 1
+                      ? Expanded(
+                          child: Padding(
+                            padding:
+                                const EdgeInsets.symmetric(horizontal: 8),
+                            child: Text(
+                              columns[ci].label.toUpperCase(),
+                              textAlign: columns[ci].align,
+                              style: const TextStyle(
+                                fontFamily: V26.sans,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: 0.8,
+                                color: V26.ink500,
+                              ),
+                            ),
+                          ),
+                        )
+                      : SizedBox(
+                          width: columns[ci].width,
+                          child: Padding(
+                            padding:
+                                const EdgeInsets.symmetric(horizontal: 8),
+                            child: Text(
+                              columns[ci].label.toUpperCase(),
+                              textAlign: columns[ci].align,
+                              style: const TextStyle(
+                                fontFamily: V26.sans,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: 0.8,
+                                color: V26.ink500,
+                              ),
+                            ),
+                          ),
+                        ),
+              ],
+            ),
+          ),
+          for (int r = 0; r < rows.length; r++)
+            Container(
+              decoration: BoxDecoration(
+                border: r == rows.length - 1
+                    ? null
+                    : const Border(
+                        bottom: BorderSide(color: V26.hairline),
+                      ),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  for (int ci = 0; ci < rows[r].length; ci++)
+                    ci == rows[r].length - 1
+                        ? Expanded(
+                            child: Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 8),
+                              child: rows[r][ci],
+                            ),
+                          )
+                        : SizedBox(
+                            width: ci < columns.length
+                                ? columns[ci].width
+                                : null,
+                            child: Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 8),
+                              child: rows[r][ci],
+                            ),
+                          ),
+                ],
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
