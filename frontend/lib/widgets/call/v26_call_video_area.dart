@@ -112,7 +112,13 @@ class V26CallVideoArea extends StatelessWidget {
   Widget build(BuildContext context) {
     final eng = engine;
     final uid = remoteUid;
-    final showRemote = eng != null && uid != null && hasRemoteVideo;
+    // Build the remote surface as soon as Agora reports a remote uid.
+    // On Web, waiting for `remoteVideoStateDecoding` before mounting the
+    // `AgoraVideoView.remote` can deadlock the UI in a "waiting" state:
+    // the SDK has a subscribed peer, but Flutter never creates the video
+    // element that receives the decoded frames.
+    final hasRemotePeer = eng != null && uid != null;
+    final showRemote = hasRemotePeer;
     final Widget body;
     if (showRemote) {
       body = ColoredBox(
@@ -201,7 +207,7 @@ class V26CallVideoArea extends StatelessWidget {
                 ),
               ),
             ),
-            if (!showRemote && uid != null && !hasRemoteVideo)
+            if (hasRemotePeer && !hasRemoteVideo)
               _WaitingOverlay(language: language),
           ],
         ),

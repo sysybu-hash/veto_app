@@ -61,7 +61,8 @@ enum CallConnectionPhase {
 
 /// Resolved signal for the UI "connection chip".
 class NetworkQuality {
-  const NetworkQuality({this.up = 0, this.down = 0, this.rttMs = 0, this.txKbps = 0});
+  const NetworkQuality(
+      {this.up = 0, this.down = 0, this.rttMs = 0, this.txKbps = 0});
   final int up;
   final int down;
   final int rttMs;
@@ -96,6 +97,7 @@ class AgoraService extends ChangeNotifier {
   CallConnectionPhase _phase = CallConnectionPhase.idle;
   int? _remoteUid;
   bool _remoteVideoPlaying = false;
+
   /// After the first decoded/frozen frame, ignore brief [remoteVideoStateStopped]
   /// on Web — otherwise the UI drops [AgoraVideoView] and the video element is
   /// destroyed right after subscribe (iris: playing -> destroyed).
@@ -129,7 +131,8 @@ class AgoraService extends ChangeNotifier {
   String? get channelId => _channelId;
   int get localUid => _localUid;
   CallConnectionPhase get phase => _phase;
-  bool get joined => _phase == CallConnectionPhase.connected ||
+  bool get joined =>
+      _phase == CallConnectionPhase.connected ||
       _phase == CallConnectionPhase.reconnecting;
   int? get remoteUid => _remoteUid;
   bool get remoteVideoPlaying => _remoteVideoPlaying;
@@ -259,7 +262,8 @@ class AgoraService extends ChangeNotifier {
     try {
       await _engine?.leaveChannel();
     } catch (err, st) {
-      developer.log('leaveChannel', name: 'VETO.Agora', error: err, stackTrace: st);
+      developer.log('leaveChannel',
+          name: 'VETO.Agora', error: err, stackTrace: st);
     }
     try {
       await _engine?.release();
@@ -313,7 +317,8 @@ class AgoraService extends ChangeNotifier {
       _micMuted = muted;
       notifyListeners();
     } catch (err, st) {
-      developer.log('setMicPublishMuted', name: 'VETO.Agora', error: err, stackTrace: st);
+      developer.log('setMicPublishMuted',
+          name: 'VETO.Agora', error: err, stackTrace: st);
     }
   }
 
@@ -325,7 +330,8 @@ class AgoraService extends ChangeNotifier {
       _videoMuted = muted;
       notifyListeners();
     } catch (err, st) {
-      developer.log('setVideoPublishMuted', name: 'VETO.Agora', error: err, stackTrace: st);
+      developer.log('setVideoPublishMuted',
+          name: 'VETO.Agora', error: err, stackTrace: st);
     }
   }
 
@@ -335,7 +341,8 @@ class AgoraService extends ChangeNotifier {
     try {
       await _engine?.switchCamera();
     } catch (err, st) {
-      developer.log('switchCamera', name: 'VETO.Agora', error: err, stackTrace: st);
+      developer.log('switchCamera',
+          name: 'VETO.Agora', error: err, stackTrace: st);
     }
   }
 
@@ -349,7 +356,8 @@ class AgoraService extends ChangeNotifier {
       _speakerOn = on;
       notifyListeners();
     } catch (err, st) {
-      developer.log('setSpeakerOn', name: 'VETO.Agora', error: err, stackTrace: st);
+      developer.log('setSpeakerOn',
+          name: 'VETO.Agora', error: err, stackTrace: st);
     }
   }
 
@@ -364,7 +372,8 @@ class AgoraService extends ChangeNotifier {
       _noiseSuppression = enable;
       notifyListeners();
     } catch (err, st) {
-      developer.log('setNoiseSuppression', name: 'VETO.Agora', error: err, stackTrace: st);
+      developer.log('setNoiseSuppression',
+          name: 'VETO.Agora', error: err, stackTrace: st);
     }
   }
 
@@ -403,7 +412,8 @@ class AgoraService extends ChangeNotifier {
       notifyListeners();
     } catch (err, st) {
       _emitError(CallErrorKind.mediaUnavailable, 'screen share: $err');
-      developer.log('toggleScreenShare', name: 'VETO.Agora', error: err, stackTrace: st);
+      developer.log('toggleScreenShare',
+          name: 'VETO.Agora', error: err, stackTrace: st);
     }
   }
 
@@ -469,7 +479,9 @@ class AgoraService extends ChangeNotifier {
         RemoteVideoStateReason reason,
         int elapsed,
       ) {
-        if (_remoteUid != null && remoteUid != _remoteUid) {
+        if (_remoteUid == null) {
+          _remoteUid = remoteUid;
+        } else if (remoteUid != _remoteUid) {
           return;
         }
         switch (state) {
@@ -496,8 +508,9 @@ class AgoraService extends ChangeNotifier {
         }
         notifyListeners();
       },
-      onFirstRemoteVideoFrame:
-          (RtcConnection conn, int remoteUid, int width, int height, int elapsed) {
+      onFirstRemoteVideoFrame: (RtcConnection conn, int remoteUid, int width,
+          int height, int elapsed) {
+        _remoteUid ??= remoteUid;
         _remoteVideoHadRenderableFrame = true;
         _remoteVideoPlaying = true;
         notifyListeners();
@@ -606,7 +619,8 @@ class AgoraService extends ChangeNotifier {
       _token = fresh;
       await eng.renewToken(fresh);
     } catch (err, st) {
-      developer.log('renewToken', name: 'VETO.Agora', error: err, stackTrace: st);
+      developer.log('renewToken',
+          name: 'VETO.Agora', error: err, stackTrace: st);
       _emitError(CallErrorKind.tokenExpired, 'renewToken failed: $err');
     }
   }
@@ -614,8 +628,7 @@ class AgoraService extends ChangeNotifier {
   void _handleDisconnect(ConnectionChangedReasonType reason) {
     // When the engine reports a clean "leave channel" reason we should NOT
     // trigger the auto-retry loop — that's a local tear-down.
-    if (reason ==
-            ConnectionChangedReasonType.connectionChangedLeaveChannel ||
+    if (reason == ConnectionChangedReasonType.connectionChangedLeaveChannel ||
         reason == ConnectionChangedReasonType.connectionChangedBannedByServer) {
       _setPhase(CallConnectionPhase.left);
       return;
@@ -693,7 +706,8 @@ class AgoraService extends ChangeNotifier {
       notifyListeners();
     } catch (err, st) {
       _emitError(CallErrorKind.mediaUnavailable, 'web startPreview: $err');
-      developer.log('web startPreview', name: 'VETO.Agora', error: err, stackTrace: st);
+      developer.log('web startPreview',
+          name: 'VETO.Agora', error: err, stackTrace: st);
     }
   }
 }
