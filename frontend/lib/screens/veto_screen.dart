@@ -1475,30 +1475,59 @@ class _VetoScreenState extends State<VetoScreen> {
   // ══════════════════════════════════════════════════════════
   Widget _buildWizardTab(bool isAdmin, bool isRtl) => LayoutBuilder(
         builder: (context, constraints) {
-          final compact = constraints.maxWidth < 600;
-          final hPad = compact ? 14.0 : 20.0;
+          final w = constraints.maxWidth;
+          final compact = w < 600;
+          final isDesktop = w >= 900;
+          final hPad = compact ? 14.0 : (isDesktop ? 32.0 : 20.0);
+          final maxW = compact
+              ? double.infinity
+              : (isDesktop ? 1200.0 : 720.0);
           return SingleChildScrollView(
             padding: EdgeInsets.fromLTRB(hPad, 12, hPad, compact ? 28 : 44),
             child: Align(
               alignment: Alignment.topCenter,
               child: ConstrainedBox(
-                constraints: BoxConstraints(maxWidth: compact ? double.infinity : 720),
+                constraints: BoxConstraints(maxWidth: maxW),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     _statusBadge(),
                     SizedBox(height: compact ? 14 : 18),
-                    _sosButton(compact),
-                    SizedBox(height: compact ? 14 : 18),
-                    _availableLawyersStrip(isRtl, compact),
-                    SizedBox(height: compact ? 14 : 18),
-                    _securityBar(),
-                    SizedBox(height: compact ? 14 : 18),
+                    _citizenHero2026(compact, isDesktop),
+                    SizedBox(height: compact ? 20 : 28),
                     _secLabel(isRtl
                         ? 'מה קורה עכשיו?'
                         : _langKey == 'ru' ? 'Что происходит?' : "What's happening?"),
-                    const SizedBox(height: 8),
-                    _buildScenarioSelector(isRtl, compact),
+                    const SizedBox(height: 6),
+                    Text(
+                      isRtl
+                          ? 'בחר את התרחיש שמתאים לך כעת'
+                          : _langKey == 'ru'
+                              ? 'Выберите подходящий сценарий'
+                              : 'Choose the situation you are in right now',
+                      style: const TextStyle(
+                        fontFamily: V26.serif,
+                        color: V26.ink900,
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
+                        height: 1.25,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      isRtl
+                          ? 'בהתאם לבחירתך נתאים זכויות, הנחיות וסוג עורך הדין שיוזעק.'
+                          : _langKey == 'ru'
+                              ? 'Подстроим права и инструкции под ваш выбор.'
+                              : 'We will tailor rights, guidance, and counsel type to your choice.',
+                      style: const TextStyle(
+                        color: V26.ink500,
+                        fontSize: 13,
+                        height: 1.5,
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    _buildScenarioSelector(isRtl, compact, isDesktop),
                     SizedBox(height: compact ? 12 : 14),
                     _rightsCard(),
                     if (isAdmin) ...[
@@ -1584,128 +1613,429 @@ class _VetoScreenState extends State<VetoScreen> {
     ),
   );
 
-  // ── SOS Button with concentric rings (2026 card stage) ───────────
-  Widget _sosButton(bool compact) {
-    final orbSize = compact ? 148.0 : 168.0;
+  // ── Citizen hero (aligned with 2026/citizen.html rev 2) ─────────
+  Widget _citizenHero2026(bool compact, bool isDesktop) {
+    const r = 28.0;
+    return V26Card(
+      radius: r,
+      lift: true,
+      padding: EdgeInsets.zero,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(r),
+        child: Stack(
+          children: [
+            Positioned.fill(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topRight,
+                    end: Alignment.bottomLeft,
+                    colors: [
+                      V26.navy500.withValues(alpha: 0.10),
+                      Colors.transparent,
+                      const Color(0xFFD6243A).withValues(alpha: 0.07),
+                    ],
+                    stops: const [0.0, 0.55, 1.0],
+                  ),
+                ),
+              ),
+            ),
+            Padding(
+              padding: EdgeInsets.fromLTRB(
+                compact ? 18 : (isDesktop ? 28 : 22),
+                compact ? 20 : 28,
+                compact ? 18 : (isDesktop ? 28 : 22),
+                compact ? 20 : 28,
+              ),
+              child: isDesktop
+                  ? Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Expanded(child: _heroCopyBlock(compact, isDesktop)),
+                        const SizedBox(width: 24),
+                        Expanded(
+                          child: Center(
+                            child: _buildSosOrbCore(compact, isDesktop),
+                          ),
+                        ),
+                      ],
+                    )
+                  : Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Center(child: _buildSosOrbCore(compact, isDesktop)),
+                        if (_isDispatching) ...[
+                          const SizedBox(height: 10),
+                          Text(
+                            _langKey == 'he'
+                                ? 'עורך דין בדרך אליך...'
+                                : _langKey == 'ru'
+                                    ? 'Адвокат уже едет...'
+                                    : 'A lawyer is on the way...',
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              color: V26.ink500,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                        const SizedBox(height: 18),
+                        _heroCopyBlock(compact, isDesktop),
+                      ],
+                    ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _heroCopyBlock(bool compact, bool isDesktop) {
+    const align = TextAlign.start;
+    if (isDesktop) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            _langKey == 'he'
+                ? 'VETO · עזרה משפטית מיידית'
+                : _langKey == 'ru'
+                    ? 'VETO · Срочная юридическая помощь'
+                    : 'VETO · Immediate legal help',
+            textAlign: align,
+            style: const TextStyle(
+              color: V26.navy600,
+              fontSize: 11.5,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 1.8,
+            ),
+          ),
+          const SizedBox(height: 8),
+          _heroHeadlineDesktop(),
+          const SizedBox(height: 12),
+          Text(
+            _langKey == 'he'
+                ? 'הקש על כפתור ה-SOS ועורך דין פלילי מתמחה יוצר איתך קשר תוך דקות — קולי או בווידאו, עם תיעוד שיחה מלא, גיבוי בכספת אישית מוצפנת, ומסירת כל הראיות לידיך בלבד.'
+                : _langKey == 'ru'
+                    ? 'Нажмите SOS — уголовный адвокат свяжется с вами за минуты: голос или видео, полная запись разговора, шифрованное хранение и доступ к доказательствам только у вас.'
+                    : 'Tap SOS — a specialist criminal lawyer reaches you in minutes: voice or video, full call logging, encrypted vault backup, and evidence stays in your hands only.',
+            textAlign: align,
+            style: const TextStyle(
+              color: V26.ink500,
+              fontSize: 15,
+              height: 1.65,
+            ),
+          ),
+          const SizedBox(height: 20),
+          Wrap(
+            alignment: isDesktop ? WrapAlignment.start : WrapAlignment.center,
+            spacing: 10,
+            runSpacing: 10,
+            children: _heroTrustPills(),
+          ),
+        ],
+      );
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _heroHeadlineMobile(),
+        const SizedBox(height: 8),
+        Text(
+          _langKey == 'he'
+              ? 'הקש על SOS ועו"ד מתמחה ייצור איתך קשר תוך דקות. תיעוד שיחה מלא, מוצפן וגיבוי לכספת.'
+              : _langKey == 'ru'
+                  ? 'Нажмите SOS — адвокат свяжется за минуты. Полная запись, шифрование и резерв в сейфе.'
+                  : 'Tap SOS — a lawyer connects within minutes. Encrypted call log and vault backup.',
+          textAlign: TextAlign.center,
+          style: const TextStyle(
+            color: V26.ink500,
+            fontSize: 13,
+            height: 1.55,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _heroHeadlineDesktop() {
+    if (_langKey == 'he') {
+      return Text.rich(
+        TextSpan(
+          style: const TextStyle(
+            fontFamily: V26.serif,
+            fontSize: 30,
+            height: 1.18,
+            color: V26.ink900,
+            fontWeight: FontWeight.w700,
+          ),
+          children: const [
+            TextSpan(text: 'כשהדקה הראשונה\nקובעת את '),
+            TextSpan(
+              text: 'כל היתר',
+              style: TextStyle(color: V26.navy600),
+            ),
+            TextSpan(text: '.'),
+          ],
+        ),
+        textAlign: TextAlign.start,
+      );
+    }
+    if (_langKey == 'ru') {
+      return Text(
+        'Когда первая минута решает всё остальное.',
+        textAlign: TextAlign.start,
+        style: const TextStyle(
+          fontFamily: V26.serif,
+          fontSize: 28,
+          height: 1.2,
+          color: V26.ink900,
+          fontWeight: FontWeight.w700,
+        ),
+      );
+    }
+    return Text.rich(
+      TextSpan(
+        style: const TextStyle(
+          fontFamily: V26.serif,
+          fontSize: 28,
+          height: 1.2,
+          color: V26.ink900,
+          fontWeight: FontWeight.w700,
+        ),
+        children: const [
+          TextSpan(text: 'When the first minute decides '),
+          TextSpan(
+            text: 'everything else',
+            style: TextStyle(color: V26.navy600),
+          ),
+          TextSpan(text: '.'),
+        ],
+      ),
+      textAlign: TextAlign.start,
+    );
+  }
+
+  Widget _heroHeadlineMobile() {
+    if (_langKey == 'he') {
+      return Text.rich(
+        TextSpan(
+          style: const TextStyle(
+            fontFamily: V26.serif,
+            fontSize: 17,
+            height: 1.35,
+            color: V26.ink900,
+            fontWeight: FontWeight.w600,
+          ),
+          children: const [
+            TextSpan(text: 'עורך דין מטעמך — '),
+            TextSpan(
+              text: 'תוך דקות',
+              style: TextStyle(color: V26.navy600, fontWeight: FontWeight.w700),
+            ),
+            TextSpan(text: '.'),
+          ],
+        ),
+        textAlign: TextAlign.center,
+      );
+    }
+    if (_langKey == 'ru') {
+      return Text.rich(
+        TextSpan(
+          style: const TextStyle(
+            fontFamily: V26.serif,
+            fontSize: 17,
+            height: 1.35,
+            color: V26.ink900,
+            fontWeight: FontWeight.w600,
+          ),
+          children: const [
+            TextSpan(text: 'Адвокат на вашей стороне — '),
+            TextSpan(
+              text: 'за минуты',
+              style: TextStyle(color: V26.navy600, fontWeight: FontWeight.w700),
+            ),
+            TextSpan(text: '.'),
+          ],
+        ),
+        textAlign: TextAlign.center,
+      );
+    }
+    return Text.rich(
+      TextSpan(
+        style: const TextStyle(
+          fontFamily: V26.serif,
+          fontSize: 17,
+          height: 1.35,
+          color: V26.ink900,
+          fontWeight: FontWeight.w600,
+        ),
+        children: const [
+          TextSpan(text: 'A lawyer on your side — '),
+          TextSpan(
+            text: 'in minutes',
+            style: TextStyle(color: V26.navy600, fontWeight: FontWeight.w700),
+          ),
+          TextSpan(text: '.'),
+        ],
+      ),
+      textAlign: TextAlign.center,
+    );
+  }
+
+  List<Widget> _heroTrustPills() {
+    String a;
+    String b;
+    String c;
+    if (_langKey == 'he') {
+      a = 'תיעוד שיחה מלא';
+      b = 'כספת מוצפנת E2E';
+      c = 'זמין 24/7';
+    } else if (_langKey == 'ru') {
+      a = 'Полная запись разговора';
+      b = 'Шифрованный сейф E2E';
+      c = 'Доступно 24/7';
+    } else {
+      a = 'Full call logging';
+      b = 'E2E encrypted vault';
+      c = 'Available 24/7';
+    }
+    Widget pill(String label, IconData icon) {
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: V26.paper2,
+          borderRadius: BorderRadius.circular(999),
+          border: Border.all(color: V26.hairline),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 14, color: V26.ink700),
+            const SizedBox(width: 8),
+            Text(
+              label,
+              style: const TextStyle(
+                fontSize: 12,
+                color: V26.ink700,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return [
+      pill(a, Icons.check_rounded),
+      pill(b, Icons.lock_outline_rounded),
+      pill(c, Icons.schedule_rounded),
+    ];
+  }
+
+  Widget _buildSosOrbCore(bool compact, bool isDesktop) {
+    final orbSize = isDesktop ? 188.0 : (compact ? 148.0 : 168.0);
     final ringOuter = orbSize + 36;
     final ringMid = orbSize + 20;
     return Semantics(
       button: true,
-      label: _langKey == 'he' ? 'לחץ להפעלת מצוקה ושיגור עורך דין'
-          : _langKey == 'ru' ? 'Нажмите для вызова адвоката'
-          : 'Tap to dispatch a lawyer',
-      child: V26Card(
-        radius: 32,
-        lift: true,
-        padding: EdgeInsets.zero,
-        child: Padding(
-          padding: EdgeInsets.symmetric(vertical: compact ? 20 : 24, horizontal: 12),
-          child: Column(
+      label: _langKey == 'he'
+          ? 'לחץ להפעלת מצוקה ושיגור עורך דין'
+          : _langKey == 'ru'
+              ? 'Нажмите для вызова адвоката'
+              : 'Tap to dispatch a lawyer',
+      child: GestureDetector(
+        onTap: _isDispatching ? null : _onSosOrbTapped,
+        child: SizedBox(
+          width: ringOuter + 12,
+          height: ringOuter + 12,
+          child: Stack(
+            alignment: Alignment.center,
             children: [
-              GestureDetector(
-                onTap: _isDispatching ? null : _onSosOrbTapped,
-                child: SizedBox(
-                  width: ringOuter + 12,
-                  height: ringOuter + 12,
-                  child: Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      // Outermost ring
-                      Container(
-                        width: ringOuter + 10,
-                        height: ringOuter + 10,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: const Color(0xFFFF3B3B).withValues(alpha: 0.08),
-                            width: 8,
-                          ),
-                        ),
-                      ),
-                      // Middle ring
-                      Container(
-                        width: ringMid + 8,
-                        height: ringMid + 8,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: const Color(0xFFFF3B3B).withValues(alpha: 0.16),
-                            width: 6,
-                          ),
-                        ),
-                      ),
-                      // Inner ring
-                      Container(
-                        width: orbSize + 10,
-                        height: orbSize + 10,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: const Color(0xFFFF3B3B).withValues(alpha: 0.28),
-                            width: 4,
-                          ),
-                        ),
-                      ),
-                      Container(
-                        width: orbSize,
-                        height: orbSize,
-                        decoration: VetoDecorations.light3DOrb(active: _isDispatching),
-                        child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              if (_isDispatching)
-                                const SizedBox(
-                                  width: 30, height: 30,
-                                  child: CircularProgressIndicator(
-                                      color: Colors.white, strokeWidth: 2.5),
-                                )
-                              else
-                                const Text(
-                                  'SOS',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 36,
-                                    fontWeight: FontWeight.w900,
-                                    letterSpacing: 3,
-                                    shadows: [Shadow(color: Colors.white54, blurRadius: 14)],
-                                  ),
-                                ),
-                              const SizedBox(height: 4),
-                              Text(
-                                _isDispatching
-                                    ? (_langKey == 'he' ? 'מחפש...'
-                                        : _langKey == 'ru' ? 'Поиск...' : 'Searching...')
-                                    : (_langKey == 'he' ? 'עזרה מיידית'
-                                        : _langKey == 'ru' ? 'ПОМОЩЬ' : 'EMERGENCY'),
-                                style: TextStyle(
-                                  color: Colors.white.withValues(alpha: 0.9),
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w700,
-                                  letterSpacing: 1.5,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
+              Container(
+                width: ringOuter + 10,
+                height: ringOuter + 10,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: const Color(0xFFFF3B3B).withValues(alpha: 0.08),
+                    width: 8,
                   ),
                 ),
-              const SizedBox(height: 10),
-              Text(
-                _isDispatching
-                    ? (_langKey == 'he' ? 'עורך דין בדרך אליך...'
-                        : _langKey == 'ru' ? 'Адвокат уже едет...'
-                        : 'A lawyer is on the way...')
-                    : (_langKey == 'he' ? 'לחץ לקבלת עזרה מידית'
-                        : _langKey == 'ru' ? 'Нажмите для немедленной помощи'
-                        : 'Tap for immediate help'),
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  color: V26.ink500,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w500,
-                  height: 1.3,
+              ),
+              Container(
+                width: ringMid + 8,
+                height: ringMid + 8,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: const Color(0xFFFF3B3B).withValues(alpha: 0.16),
+                    width: 6,
+                  ),
+                ),
+              ),
+              Container(
+                width: orbSize + 10,
+                height: orbSize + 10,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: const Color(0xFFFF3B3B).withValues(alpha: 0.28),
+                    width: 4,
+                  ),
+                ),
+              ),
+              Container(
+                width: orbSize,
+                height: orbSize,
+                decoration: VetoDecorations.light3DOrb(active: _isDispatching),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    if (_isDispatching)
+                      const SizedBox(
+                        width: 30,
+                        height: 30,
+                        child: CircularProgressIndicator(
+                          color: Colors.white,
+                          strokeWidth: 2.5,
+                        ),
+                      )
+                    else
+                      Text(
+                        'SOS',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: isDesktop ? 40 : 36,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 3,
+                          shadows: const [
+                            Shadow(color: Colors.white54, blurRadius: 14),
+                          ],
+                        ),
+                      ),
+                    const SizedBox(height: 4),
+                    Text(
+                      _isDispatching
+                          ? (_langKey == 'he'
+                              ? 'מחפש...'
+                              : _langKey == 'ru'
+                                  ? 'Поиск...'
+                                  : 'Searching...')
+                          : (_langKey == 'he'
+                              ? 'עזרה מיידית'
+                              : _langKey == 'ru'
+                                  ? 'ПОМОЩЬ'
+                                  : 'EMERGENCY'),
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.9),
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 1.5,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -1715,204 +2045,40 @@ class _VetoScreenState extends State<VetoScreen> {
     );
   }
 
-  /// Set 5 — nearby lawyers strip (illustrative; live matching happens on SOS).
-  Widget _availableLawyersStrip(bool isRtl, bool compact) {
-    final title = _langKey == 'he'
-        ? 'עורכי דין זמינים בקרבת מקום'
-        : _langKey == 'ru'
-            ? 'Доступные адвокаты рядом'
-            : 'Lawyers available nearby';
-    final rows = _langKey == 'he'
-        ? <(String, String, bool)>[
-            ('עו"ד פלילי', '2.1 ק"מ', true),
-            ('עו"ד תעבורה', '3.4 ק"מ', true),
-            ('עו"ד אזרחי', '4.8 ק"מ', false),
-          ]
-        : _langKey == 'ru'
-            ? <(String, String, bool)>[
-                ('Уголовный', '2.1 км', true),
-                ('Дорожный', '3.4 км', true),
-                ('Гражданский', '4.8 км', false),
-              ]
-            : <(String, String, bool)>[
-                ('Criminal', '2.1 km', true),
-                ('Traffic', '3.4 km', true),
-                ('Civil', '4.8 km', false),
-              ];
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Text(
-          title,
-          textAlign: isRtl ? TextAlign.right : TextAlign.left,
-          style: const TextStyle(
-            color: V26.ink500,
-            fontSize: 12.5,
-            fontWeight: FontWeight.w800,
-            letterSpacing: 0.4,
-          ),
-        ),
-        const SizedBox(height: 10),
-        SizedBox(
-          height: compact ? 86 : 92,
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            itemCount: rows.length,
-            separatorBuilder: (_, __) => const SizedBox(width: 10),
-            itemBuilder: (context, i) {
-              final (spec, dist, on) = rows[i];
-              return V26Card(
-                radius: V26.rLg,
-                lift: on,
-                borderColor: on
-                    ? V26.navy500.withValues(alpha: 0.45)
-                    : V26.hairline,
-                padding: EdgeInsets.zero,
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(minWidth: 150),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Row(
-                          children: [
-                            Container(
-                              width: 7,
-                              height: 7,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: on ? V26.navy500 : V26.hairlineStrong,
-                                boxShadow: on
-                                    ? [
-                                        BoxShadow(
-                                          color: V26.navy500.withValues(alpha: 0.45),
-                                          blurRadius: 8,
-                                        ),
-                                      ]
-                                    : null,
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              on
-                                  ? (_langKey == 'he'
-                                      ? 'זמין'
-                                      : _langKey == 'ru'
-                                          ? 'Онлайн'
-                                          : 'Online')
-                                  : (_langKey == 'he'
-                                      ? 'עסוק'
-                                      : _langKey == 'ru'
-                                          ? 'Занят'
-                                          : 'Busy'),
-                              style: TextStyle(
-                                color: on ? V26.navy600 : V26.ink300,
-                                fontSize: 10,
-                                fontWeight: FontWeight.w800,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 6),
-                        Text(
-                          spec,
-                          style: const TextStyle(
-                            color: V26.ink900,
-                            fontSize: 14,
-                            fontWeight: FontWeight.w800,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          dist,
-                          style: const TextStyle(
-                            color: V26.ink500,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              );
-            },
-          ),
-        ),
-      ],
-    );
+  String _scenarioSub(_Scenario s) {
+    switch (s) {
+      case _Scenario.interrogation:
+        return _langKey == 'he'
+            ? 'זימון, חקירה תחת אזהרה, מעצר'
+            : _langKey == 'ru'
+                ? 'Вызов, допрос, арест'
+                : 'Summons, caution interview, arrest';
+      case _Scenario.traffic:
+        return _langKey == 'he'
+            ? 'מהירות, אלכוהול, רישיון'
+            : _langKey == 'ru'
+                ? 'Скорость, алкоголь, права'
+                : 'Speed, alcohol, license';
+      case _Scenario.arrest:
+        return _langKey == 'he'
+            ? 'זכויות במעצר, קשר עם עו"ד'
+            : _langKey == 'ru'
+                ? 'Права при аресте, адвокат'
+                : 'Custody rights, counsel';
+      case _Scenario.accident:
+        return _langKey == 'he'
+            ? 'פציעות, ביטוח, תיעוד'
+            : _langKey == 'ru'
+                ? 'Травмы, страховка, документы'
+                : 'Injuries, insurance, records';
+      case _Scenario.other:
+        return _langKey == 'he'
+            ? 'כל מצב אחר שדורש ייעוץ'
+            : _langKey == 'ru'
+                ? 'Любая другая ситуация'
+                : 'Any other situation';
+    }
   }
-
-  // ── Security level bar (2026 card) ─────────────────────────
-  Widget _securityBar() => V26Card(
-        radius: V26.rLg,
-        lift: true,
-        padding: EdgeInsets.zero,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          child: Row(children: [
-            Container(
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(
-                color: V26.navy500.withValues(alpha: 0.10),
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: V26.navy500.withValues(alpha: 0.28),
-                ),
-              ),
-              child: const Icon(Icons.shield_rounded, color: V26.navy600, size: 20),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        _langKey == 'he'
-                            ? 'רמת אבטחה: גבוהה'
-                            : _langKey == 'ru'
-                                ? 'Уровень защиты: высокий'
-                                : 'Security Level: High',
-                        style: const TextStyle(
-                          color: V26.ink900,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      Text(
-                        _isDispatching ? '100%' : '85%',
-                        style: const TextStyle(
-                          color: V26.navy600,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 6),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(4),
-                    child: LinearProgressIndicator(
-                      value: _isDispatching ? 1.0 : 0.85,
-                      minHeight: 6,
-                      backgroundColor: V26.paper3,
-                      valueColor: const AlwaysStoppedAnimation(V26.navy500),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ]),
-        ),
-      );
 
   Widget _secLabel(String txt) => Padding(
         padding: const EdgeInsets.only(bottom: 4),
@@ -1942,6 +2108,7 @@ class _VetoScreenState extends State<VetoScreen> {
   Widget _scenarioTile(MapEntry<_Scenario, _SD> e, bool compact) {
     final sel = e.key == _scenario;
     final lbl = _langKey == 'ru' ? e.value.ru : _langKey == 'en' ? e.value.en : e.value.he;
+    final sub = _scenarioSub(e.key);
     final iconSize = compact ? 26.0 : 30.0;
     final circlePad = compact ? 8.0 : 10.0;
     // Arrest scenario uses red icon per mockup
@@ -2019,6 +2186,19 @@ class _VetoScreenState extends State<VetoScreen> {
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
+              SizedBox(height: compact ? 4 : 5),
+              Text(
+                sub,
+                style: TextStyle(
+                  color: sel ? V26.ink500 : V26.ink300,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w500,
+                  height: 1.25,
+                ),
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
             ],
           ),
         ),
@@ -2026,22 +2206,27 @@ class _VetoScreenState extends State<VetoScreen> {
     );
   }
 
-  Widget _buildScenarioSelector(bool isRtl, bool compact) {
-    // Show only 3 featured scenarios per mockup: traffic, accident, arrest
-    final featured = [_Scenario.traffic, _Scenario.accident, _Scenario.arrest];
-    final entries = _sdMap.entries
-        .where((e) => featured.contains(e.key))
-        .toList();
-    return Row(
-      children: [
-        for (int i = 0; i < entries.length; i++) ...[
-          if (i > 0) const SizedBox(width: 10),
-          Expanded(child: SizedBox(
-            height: compact ? 100 : 116,
-            child: _scenarioTile(entries[i], compact),
-          )),
-        ],
-      ],
+  Widget _buildScenarioSelector(bool isRtl, bool compact, bool isDesktop) {
+    const order = <_Scenario>[
+      _Scenario.interrogation,
+      _Scenario.traffic,
+      _Scenario.arrest,
+      _Scenario.accident,
+      _Scenario.other,
+    ];
+    final entries = order.map((k) => MapEntry(k, _sdMap[k]!)).toList();
+    final cols = isDesktop ? 3 : 2;
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: cols,
+        mainAxisSpacing: 10,
+        crossAxisSpacing: 10,
+        childAspectRatio: isDesktop ? 0.92 : 0.88,
+      ),
+      itemCount: entries.length,
+      itemBuilder: (context, i) => _scenarioTile(entries[i], compact),
     );
   }
 
