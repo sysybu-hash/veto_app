@@ -26,8 +26,10 @@ migrate_working_dir/
 .pub-cache/
 .pub/
 # Ignore /build except web bundle (Vercel + GitHub Actions)
-/build/
+# "/build/" ignores the whole tree; "!/build/web/" cannot un-ignore children.
+/build/*
 !/build/web/
+!/build/web/**
 /coverage/
 
 # Symbolication related
