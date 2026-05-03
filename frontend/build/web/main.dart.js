@@ -40315,10 +40315,10 @@ return A.n($async$blL,r)},
 bnL(a){var s=B.c.c8(a)
 while(B.c.lM(s,"/"))s=B.c.af(s,0,s.length-1)
 return s},
-bl(){var s=B.c.c8("")
-if(s.length!==0)return A.bnL(s)
-return A.bnL("https://veto-app-new.onrender.com")},
-bh5(){if(B.c.c8("").length!==0)return!1
+bl(){var s="https://veto-app-new.onrender.com",r=B.c.c8(s)
+if(r.length!==0)return A.bnL(r)
+return A.bnL(s)},
+bh5(){if(B.c.c8("https://veto-app-new.onrender.com").length!==0)return!1
 return!1},
 bnM(){A.bh5()
 var s=t.N
