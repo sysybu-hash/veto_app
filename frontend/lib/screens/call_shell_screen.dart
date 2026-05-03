@@ -274,6 +274,9 @@ class _CallShellScreenState extends State<CallShellScreen>
   }
 
   Future<String?> _fetchTokenForRenewal(String eventId) async {
+    if (!RegExp(r'^[0-9a-fA-F]{24}$').hasMatch(eventId)) {
+      return null;
+    }
     final fresh = await _callApi.fetchFreshAgoraToken(eventId);
     if (fresh == null) return null;
     final t = fresh['agoraToken']?.toString();

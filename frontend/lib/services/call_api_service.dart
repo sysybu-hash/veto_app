@@ -36,7 +36,8 @@ class CallApiService {
     final response = await request.send();
     if (response.statusCode < 200 || response.statusCode >= 300) {
       final body = await response.stream.bytesToString();
-      throw Exception('Recording upload failed (${response.statusCode}): $body');
+      throw Exception(
+          'Recording upload failed (${response.statusCode}): $body');
     }
   }
 
@@ -80,7 +81,8 @@ class CallApiService {
     onProgress?.call(bytes.length, bytes.length);
     if (response.statusCode < 200 || response.statusCode >= 300) {
       final errBody = await response.stream.bytesToString();
-      throw Exception('Recording upload failed (${response.statusCode}): $errBody');
+      throw Exception(
+          'Recording upload failed (${response.statusCode}): $errBody');
     }
   }
 
@@ -119,7 +121,11 @@ class CallApiService {
   /// `ttlSec`, `expiresAt` — or `null` when the server refuses.
   Future<Map<String, dynamic>?> fetchFreshAgoraToken(String eventId) async {
     final token = await _auth.getToken();
-    if (token == null || eventId.isEmpty) return null;
+    if (token == null ||
+        eventId.isEmpty ||
+        !RegExp(r'^[0-9a-fA-F]{24}$').hasMatch(eventId)) {
+      return null;
+    }
     final response = await http.post(
       Uri.parse('${AppConfig.baseUrl}/calls/$eventId/token'),
       headers: AppConfig.httpHeaders({'Authorization': 'Bearer $token'}),
