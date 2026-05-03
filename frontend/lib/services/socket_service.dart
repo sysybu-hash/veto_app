@@ -71,7 +71,7 @@ class SocketService {
     }
 
     if ((_socket?.connected ?? false) && _connectedRole == role) {
-      debugPrint('SocketService: Already connected as $role.');
+      // Idempotent: veto_screen + call_shell both call ensureConnected — no second socket.
       return;
     }
 
