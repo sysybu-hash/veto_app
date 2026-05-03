@@ -661,30 +661,31 @@ class V26OptGrid extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         const columnCount = 2;
-        final itemW = (constraints.maxWidth - gap * (columnCount - 1)) /
-            columnCount;
-        final rows = <Widget>[];
-        for (int i = 0; i < options.length; i += columnCount) {
-          final pair = <Widget>[];
-          for (int j = 0; j < columnCount; j++) {
-            if (i + j < options.length) {
-              pair.add(SizedBox(width: itemW, child: options[i + j]));
-            } else {
-              pair.add(SizedBox(width: itemW));
-            }
-            if (j < columnCount - 1) pair.add(SizedBox(width: gap));
-          }
-          rows.add(Row(
+        final maxW = constraints.maxWidth;
+        if (!maxW.isFinite || maxW <= 0) {
+          return Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: pair,
-          ));
-          if (i + columnCount < options.length) rows.add(SizedBox(height: gap));
+            children: [
+              for (int i = 0; i < options.length; i++) ...[
+                if (i > 0) SizedBox(height: gap),
+                options[i],
+              ],
+            ],
+          );
         }
-        return IntrinsicHeight(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: rows,
-          ),
+        final itemW = (maxW - gap * (columnCount - 1)) / columnCount;
+        // Use Wrap instead of IntrinsicHeight + Row — the latter can mis-measure
+        // in scroll/RTL contexts so only the first column paints (e.g. role step).
+        return Wrap(
+          spacing: gap,
+          runSpacing: gap,
+          children: [
+            for (final o in options)
+              SizedBox(
+                width: itemW,
+                child: o,
+              ),
+          ],
         );
       },
     );
