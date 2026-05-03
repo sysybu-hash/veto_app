@@ -96,6 +96,10 @@ class AgoraService extends ChangeNotifier {
   CallConnectionPhase _phase = CallConnectionPhase.idle;
   int? _remoteUid;
   bool _remoteVideoPlaying = false;
+  /// After the first decoded/frozen frame, ignore brief [remoteVideoStateStopped]
+  /// on Web — otherwise the UI drops [AgoraVideoView] and the video element is
+  /// destroyed right after subscribe (iris: playing -> destroyed).
+  bool _remoteVideoHadRenderableFrame = false;
   bool _localPreviewOk = false;
   int _durationSec = 0;
   Timer? _durationTimer;
@@ -266,6 +270,7 @@ class AgoraService extends ChangeNotifier {
     _channelId = null;
     _remoteUid = null;
     _remoteVideoPlaying = false;
+    _remoteVideoHadRenderableFrame = false;
     _localPreviewOk = false;
     _micMuted = false;
     _videoMuted = false;
@@ -441,6 +446,10 @@ class AgoraService extends ChangeNotifier {
         }
       },
       onUserJoined: (RtcConnection conn, int remoteUid, int elapsed) {
+        if (_remoteUid != remoteUid) {
+          _remoteVideoHadRenderableFrame = false;
+          _remoteVideoPlaying = false;
+        }
         _remoteUid = remoteUid;
         notifyListeners();
       },
@@ -449,6 +458,7 @@ class AgoraService extends ChangeNotifier {
         if (_remoteUid == remoteUid) {
           _remoteUid = null;
           _remoteVideoPlaying = false;
+          _remoteVideoHadRenderableFrame = false;
           notifyListeners();
         }
       },
@@ -459,12 +469,35 @@ class AgoraService extends ChangeNotifier {
         RemoteVideoStateReason reason,
         int elapsed,
       ) {
-        _remoteVideoPlaying = state == RemoteVideoState.remoteVideoStateDecoding ||
-            state == RemoteVideoState.remoteVideoStateStarting;
+        if (_remoteUid != null && remoteUid != _remoteUid) {
+          return;
+        }
+        switch (state) {
+          case RemoteVideoState.remoteVideoStateStarting:
+          case RemoteVideoState.remoteVideoStateDecoding:
+          case RemoteVideoState.remoteVideoStateFrozen:
+            _remoteVideoPlaying = true;
+            if (state == RemoteVideoState.remoteVideoStateDecoding ||
+                state == RemoteVideoState.remoteVideoStateFrozen) {
+              _remoteVideoHadRenderableFrame = true;
+            }
+            break;
+          case RemoteVideoState.remoteVideoStateFailed:
+            _remoteVideoPlaying = false;
+            break;
+          case RemoteVideoState.remoteVideoStateStopped:
+            if (_remoteVideoHadRenderableFrame) {
+              // Web often emits stopped around subscribe/unmute; keep the surface.
+              break;
+            }
+            _remoteVideoPlaying = false;
+            break;
+        }
         notifyListeners();
       },
       onFirstRemoteVideoFrame:
           (RtcConnection conn, int remoteUid, int width, int height, int elapsed) {
+        _remoteVideoHadRenderableFrame = true;
         _remoteVideoPlaying = true;
         notifyListeners();
       },

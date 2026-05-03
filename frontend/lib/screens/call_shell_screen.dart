@@ -453,6 +453,7 @@ class _CallShellScreenState extends State<CallShellScreen>
     final lang = _args?.language ?? 'he';
     final ok = await showDialog<bool>(
       context: context,
+      barrierDismissible: false,
       builder: (ctx) => AlertDialog(
         backgroundColor: V26.surface,
         surfaceTintColor: Colors.transparent,
