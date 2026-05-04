@@ -3,14 +3,17 @@ import 'dart:developer' as developer;
 
 import 'package:agora_rtc_engine/agora_rtc_engine.dart';
 import 'package:flutter/foundation.dart';
+import 'package:path_provider/path_provider.dart';
 
 import '../../services/call_api_service.dart';
+import '../../services/call_recording_types.dart';
 import '../../services/call_route_args_storage.dart';
 import '../../services/in_call_permissions.dart';
 import '../../services/socket_service.dart';
 import 'agora_error_mapping.dart';
 import 'call_args.dart';
 import 'call_types.dart';
+import 'recording_file_reader.dart';
 
 export 'call_types.dart';
 
@@ -85,6 +88,14 @@ class CallSessionController extends ChangeNotifier {
   CallNetworkQuality _quality = const CallNetworkQuality();
   final List<CallChatLine> _chatLines = <CallChatLine>[];
 
+  /// Filled after [endCall] on mobile when Agora MediaRecorder produced a file.
+  CallRecordingResult? _postCallRecording;
+
+  MediaRecorder? _agoraMediaRecorder;
+  String? _agoraRecordingPath;
+  Completer<void>? _agoraRecordingStopWaiter;
+  bool _agoraRecordingStarted = false;
+
   RtcEngine? get engine => _engine;
   CallUiPhase get phase => _phase;
   CallFailure? get failure => _failure;
@@ -104,6 +115,13 @@ class CallSessionController extends ChangeNotifier {
 
   /// Agora UID actually used after token refresh (non-zero in production token mode).
   int get joinedAgoraUid => _localUid;
+
+  /// Consumed once by [CallScreen] after the call ends (upload + transcribe pipeline).
+  CallRecordingResult? takePostCallRecording() {
+    final r = _postCallRecording;
+    _postCallRecording = null;
+    return r;
+  }
 
   Future<void> boot() async {
     if (_disposed) return;
@@ -221,6 +239,15 @@ class CallSessionController extends ChangeNotifier {
         });
       }
     } catch (_) {}
+
+    try {
+      final eng = _engine;
+      if (eng != null) {
+        _postCallRecording = await _finalizeAgoraMediaCapture(eng);
+      }
+    } catch (err, st) {
+      developer.log('finalizeAgoraMediaCapture', name: 'VETO.Call', error: err, stackTrace: st);
+    }
 
     await _leaveAndReleaseAgora();
     callRouteArgsStorageClear();
@@ -449,6 +476,7 @@ class CallSessionController extends ChangeNotifier {
         if (kIsWeb && _wantsVideo && !_videoMuted) {
           unawaited(_webStartPreviewAndPublish());
         }
+        _scheduleAgoraChannelRecording();
       },
       onRejoinChannelSuccess: (RtcConnection connection, int elapsed) {
         _joining = false;
@@ -460,6 +488,7 @@ class CallSessionController extends ChangeNotifier {
         if (kIsWeb && _wantsVideo && !_videoMuted) {
           unawaited(_webStartPreviewAndPublish());
         }
+        _scheduleAgoraChannelRecording();
       },
       onUserJoined: (RtcConnection connection, int remoteUid, int elapsed) {
         if (_remoteUid != remoteUid) {
@@ -873,6 +902,139 @@ class CallSessionController extends ChangeNotifier {
     _transitionTo(CallUiPhase.error);
   }
 
+  void _scheduleAgoraChannelRecording() {
+    if (args.chatOnly || kIsWeb) return;
+    unawaited(_tryStartAgoraChannelRecording());
+  }
+
+  Future<void> _tryStartAgoraChannelRecording() async {
+    if (_disposed || _leaving || args.chatOnly || kIsWeb) return;
+    await Future<void>.delayed(const Duration(milliseconds: 600));
+    if (_disposed || _leaving || args.chatOnly || kIsWeb) return;
+    final eng = _engine;
+    if (eng == null || _agoraMediaRecorder != null) return;
+
+    String dirPath;
+    try {
+      dirPath = (await getTemporaryDirectory()).path;
+    } catch (err, st) {
+      developer.log('getTemporaryDirectory', name: 'VETO.Call', error: err, stackTrace: st);
+      return;
+    }
+
+    final path =
+        '$dirPath/veto_agora_${args.eventId}_${DateTime.now().millisecondsSinceEpoch}.mp4';
+
+    final attemptUids = <int>[0];
+    final ru = _remoteUid;
+    if (ru != null && ru > 0) attemptUids.add(ru);
+    if (_localUid > 0) attemptUids.add(_localUid);
+
+    MediaRecorder? recorder;
+    for (final uid in attemptUids) {
+      try {
+        final r = await eng.createMediaRecorder(
+          RecorderStreamInfo(
+            channelId: args.channelId,
+            uid: uid,
+            type: RecorderStreamType.rtc,
+          ),
+        );
+        if (r != null) {
+          recorder = r;
+          break;
+        }
+      } catch (err, st) {
+        developer.log(
+          'createMediaRecorder uid=$uid',
+          name: 'VETO.Call',
+          error: err,
+          stackTrace: st,
+        );
+      }
+    }
+    if (recorder == null) return;
+
+    try {
+      await recorder.setMediaRecorderObserver(
+        MediaRecorderObserver(
+          onRecorderStateChanged:
+              (String ch, int uid, RecorderState state, RecorderReasonCode reason) {
+            if (state != RecorderState.recorderStateStop &&
+                state != RecorderState.recorderStateError) {
+              return;
+            }
+            final w = _agoraRecordingStopWaiter;
+            if (w != null && !w.isCompleted) {
+              w.complete();
+            }
+          },
+        ),
+      );
+
+      await recorder.startRecording(
+        MediaRecorderConfiguration(
+          storagePath: path,
+          containerFormat: MediaRecorderContainerFormat.formatMp4,
+          streamType: _wantsVideo
+              ? MediaRecorderStreamType.streamTypeBoth
+              : MediaRecorderStreamType.streamTypeAudio,
+          maxDurationMs: 3 * 60 * 60 * 1000,
+        ),
+      );
+      _agoraMediaRecorder = recorder;
+      _agoraRecordingPath = path;
+      _agoraRecordingStarted = true;
+    } catch (err, st) {
+      developer.log('startRecording', name: 'VETO.Call', error: err, stackTrace: st);
+      try {
+        await eng.destroyMediaRecorder(recorder);
+      } catch (_) {}
+    }
+  }
+
+  Future<CallRecordingResult?> _finalizeAgoraMediaCapture(RtcEngine engine) async {
+    if (kIsWeb || args.chatOnly) return null;
+    final recorder = _agoraMediaRecorder;
+    final path = _agoraRecordingPath;
+    _agoraMediaRecorder = null;
+    _agoraRecordingPath = null;
+    if (recorder == null || path == null || path.isEmpty) return null;
+
+    if (_agoraRecordingStarted) {
+      final wait = Completer<void>();
+      _agoraRecordingStopWaiter = wait;
+      try {
+        await recorder.stopRecording();
+        await wait.future.timeout(
+          const Duration(seconds: 8),
+          onTimeout: () {},
+        );
+      } catch (err, st) {
+        developer.log('stopRecording', name: 'VETO.Call', error: err, stackTrace: st);
+      } finally {
+        _agoraRecordingStopWaiter = null;
+      }
+    }
+    _agoraRecordingStarted = false;
+
+    try {
+      await engine.destroyMediaRecorder(recorder);
+    } catch (err, st) {
+      developer.log('destroyMediaRecorder', name: 'VETO.Call', error: err, stackTrace: st);
+    }
+
+    final bytes = await readRecordingFileBytes(path);
+    await deleteRecordingFileIfExists(path);
+    if (bytes == null || bytes.isEmpty) return null;
+    final mime = _wantsVideo ? 'video/mp4' : 'audio/mp4';
+    return CallRecordingResult(
+      bytes: bytes,
+      mimeType: mime,
+      fileName: 'veto-call-${args.eventId}.mp4',
+    );
+  }
+
   Future<void> _leaveAgoraOnly() async {
     _retryTimer?.cancel();
     final engine = _engine;
@@ -913,6 +1075,9 @@ class CallSessionController extends ChangeNotifier {
     _engine = null;
     if (engine != null) {
       unawaited(() async {
+        try {
+          await _finalizeAgoraMediaCapture(engine);
+        } catch (_) {}
         try {
           await engine.leaveChannel();
         } catch (_) {}

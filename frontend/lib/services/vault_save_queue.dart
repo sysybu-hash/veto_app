@@ -209,7 +209,7 @@ class VaultSaveQueue extends ChangeNotifier {
       final mediaComp = compressMediaForVault(
         rec.bytes,
         eventId: eventId,
-        baseName: 'veto-call-$eventId.webm',
+        baseName: rec.fileName.isNotEmpty ? rec.fileName : 'veto-call-$eventId.webm',
         defaultMime: rec.mimeType,
       );
       if (rec.bytes.isNotEmpty) {

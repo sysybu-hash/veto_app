@@ -155,7 +155,7 @@ exports.uploadRecording = async (req, res, next) => {
           resource_type: 'video', // covers both audio and video
           folder:        `veto/recordings/${eventId}`,
           public_id:     `call_${Date.now()}`,
-          format:        'webm',
+          // Do not force format — client may send WebM (browser) or MP4 (Agora MediaRecorder).
         },
         (err, result) => {
           if (err) reject(err);
@@ -260,8 +260,11 @@ Rules:
           ? 'audio/mp4'
           : urlLower.endsWith('.wav')
             ? 'audio/wav'
-            : 'audio/webm';
-      const mimeType = ct && ct.startsWith('audio/') ? ct : mimeFromUrl;
+            : urlLower.endsWith('.mp4')
+              ? 'video/mp4'
+              : 'audio/webm';
+      const mimeType =
+        ct && (ct.startsWith('audio/') || ct.startsWith('video/')) ? ct : mimeFromUrl;
 
       const prompt = `
 You are a verbatim speech-to-text transcription engine.
