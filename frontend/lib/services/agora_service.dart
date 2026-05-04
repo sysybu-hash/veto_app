@@ -217,6 +217,8 @@ class AgoraService extends ChangeNotifier {
     bool enableVideo = true,
     AgoraTokenFetcher? tokenFetcher,
   }) async {
+    _retryTimer?.cancel();
+    _retryTimer = null;
     await init(enableVideoTrack: enableVideo);
     final eng = _engine;
     if (eng == null) return;
@@ -443,10 +445,8 @@ class AgoraService extends ChangeNotifier {
     return RtcEngineEventHandler(
       onJoinChannelSuccess: (RtcConnection conn, int elapsed) {
         _retryAttempts = 0;
-        final lu = conn.localUid;
-        if (lu != null && lu != 0) {
-          _localUid = lu;
-        }
+        _retryTimer?.cancel();
+        _retryTimer = null;
         _setPhase(CallConnectionPhase.connected);
         if (kIsWeb && _wantsVideo && !_videoMuted) {
           unawaited(_webStartPreviewSafe());
@@ -454,10 +454,8 @@ class AgoraService extends ChangeNotifier {
       },
       onRejoinChannelSuccess: (RtcConnection conn, int elapsed) {
         _retryAttempts = 0;
-        final lu = conn.localUid;
-        if (lu != null && lu != 0) {
-          _localUid = lu;
-        }
+        _retryTimer?.cancel();
+        _retryTimer = null;
         _setPhase(CallConnectionPhase.connected);
         if (kIsWeb && _wantsVideo && !_videoMuted) {
           unawaited(_webStartPreviewSafe());
@@ -660,6 +658,12 @@ class AgoraService extends ChangeNotifier {
       final eng = _engine;
       if (eng == null || _channelId == null) return;
       try {
+        try {
+          await eng.leaveChannel();
+        } catch (_) {}
+        if (kIsWeb) {
+          await Future<void>.delayed(const Duration(milliseconds: 450));
+        }
         final wantCam = _wantsVideo && !_videoMuted;
         await eng.joinChannel(
           token: _token,
