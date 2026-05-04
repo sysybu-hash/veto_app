@@ -13,7 +13,6 @@ import '../../widgets/call/call_i18n.dart';
 import 'call_args.dart';
 import 'call_session_controller.dart';
 import 'call_web_media.dart';
-import 'web_local_preview.dart';
 
 class CallScreen extends StatefulWidget {
   const CallScreen({super.key});
@@ -840,9 +839,14 @@ class _VideoStage extends StatelessWidget {
     final remoteUid = controller.remoteUid;
     final hasRemote = engine != null && remoteUid != null && remoteUid != 0;
     final canShowLocal = engine != null && !controller.videoMuted;
-    const renderMode =
-        kIsWeb ? RenderModeType.renderModeAdaptive : RenderModeType.renderModeHidden;
+    // renderModeAdaptive is deprecated in Agora and breaks layout on some web + RTL setups.
+    const renderMode = RenderModeType.renderModeHidden;
     final viewPad = MediaQuery.paddingOf(context);
+    final localUid = controller.joinedAgoraUid;
+    final rtcConn = RtcConnection(
+      channelId: controller.args.channelId,
+      localUid: localUid > 0 ? localUid : null,
+    );
     return Padding(
       padding: EdgeInsets.only(
         left: viewPad.left > 0 ? 4 : 0,
@@ -863,66 +867,69 @@ class _VideoStage extends StatelessWidget {
         ),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(V26.callRadiusVideo - 1),
-          child: Stack(
-            fit: StackFit.expand,
-            children: [
-            if (hasRemote)
-              AgoraVideoView(
-                key: ValueKey('remote-$remoteUid'),
-                controller: VideoViewController.remote(
-                  rtcEngine: engine,
-                  canvas: VideoCanvas(
-                    uid: remoteUid,
-                    renderMode: renderMode,
+          child: Directionality(
+            textDirection: TextDirection.ltr,
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                if (hasRemote)
+                  AgoraVideoView(
+                    key: ValueKey('remote-$remoteUid'),
+                    controller: VideoViewController.remote(
+                      rtcEngine: engine,
+                      canvas: VideoCanvas(
+                        uid: remoteUid,
+                        renderMode: renderMode,
+                      ),
+                      connection: rtcConn,
+                    ),
+                  )
+                else if (canShowLocal)
+                  AgoraVideoView(
+                    key: const ValueKey('local-full-until-remote'),
+                    controller: VideoViewController(
+                      rtcEngine: engine,
+                      canvas: const VideoCanvas(
+                        uid: 0,
+                        renderMode: renderMode,
+                        mirrorMode: VideoMirrorModeType.videoMirrorModeEnabled,
+                      ),
+                    ),
+                  )
+                else
+                  _VideoPlaceholder(controller: controller),
+                DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Colors.black.withValues(alpha: .18),
+                        Colors.transparent,
+                        Colors.black.withValues(alpha: .18),
+                      ],
+                    ),
                   ),
-                  connection: RtcConnection(channelId: controller.args.channelId),
                 ),
-              )
-            else if (canShowLocal)
-              AgoraVideoView(
-                key: const ValueKey('local-full-until-remote'),
-                controller: VideoViewController(
-                  rtcEngine: engine,
-                  canvas: const VideoCanvas(
-                    uid: 0,
-                    renderMode: RenderModeType.renderModeAdaptive,
-                    mirrorMode: VideoMirrorModeType.videoMirrorModeEnabled,
+                if (hasRemote && !controller.remoteVideoReady)
+                  Center(
+                    child: _Pill(
+                      label: CallI18n.waitingForPeerVideo.t(controller.args.language),
+                      color: V26.callGlass,
+                      textColor: V26.goldSoft,
+                    ),
                   ),
-                ),
-              )
-            else
-              _VideoPlaceholder(controller: controller),
-            DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.black.withValues(alpha: .18),
-                    Colors.transparent,
-                    Colors.black.withValues(alpha: .18),
-                  ],
-                ),
-              ),
+                if (hasRemote && canShowLocal)
+                  Positioned(
+                    top: 12 + viewPad.top * 0.25,
+                    right: 12,
+                    child: _LocalPip(engine: engine, layoutWidth: layoutWidth),
+                  ),
+              ],
             ),
-            if (hasRemote && !controller.remoteVideoReady)
-              Center(
-                child: _Pill(
-                  label: CallI18n.waitingForPeerVideo.t(controller.args.language),
-                  color: V26.callGlass,
-                  textColor: V26.goldSoft,
-                ),
-              ),
-            if (hasRemote && canShowLocal)
-              PositionedDirectional(
-                top: 12 + viewPad.top * 0.25,
-                start: 12,
-                child: _LocalPip(engine: engine, layoutWidth: layoutWidth),
-              ),
-          ],
+          ),
         ),
       ),
-    ),
     );
   }
 }
@@ -934,20 +941,6 @@ class _LocalPip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final fallback = Container(
-      color: V26.navy700,
-      alignment: Alignment.center,
-      child: const Text(
-        'המצלמה שלך',
-        textAlign: TextAlign.center,
-        style: TextStyle(
-          color: Colors.white54,
-          fontFamily: V26.sans,
-          fontSize: 11,
-          fontWeight: FontWeight.w700,
-        ),
-      ),
-    );
     final narrow = layoutWidth < 420;
     final pipW = kIsWeb ? (narrow ? 128.0 : 154.0) : (narrow ? 108.0 : 126.0);
     final pipH = kIsWeb ? (narrow ? 96.0 : 116.0) : (narrow ? 82.0 : 96.0);
@@ -967,19 +960,17 @@ class _LocalPip extends StatelessWidget {
         ],
       ),
       clipBehavior: Clip.antiAlias,
-      child: kIsWeb
-          ? WebLocalPreview(fallback: fallback)
-          : AgoraVideoView(
-              key: const ValueKey('local-pip-agora'),
-              controller: VideoViewController(
-                rtcEngine: engine,
-                canvas: const VideoCanvas(
-                  uid: 0,
-                  renderMode: RenderModeType.renderModeHidden,
-                  mirrorMode: VideoMirrorModeType.videoMirrorModeEnabled,
-                ),
-              ),
+      child: AgoraVideoView(
+        key: const ValueKey('local-pip-agora'),
+        controller: VideoViewController(
+          rtcEngine: engine,
+          canvas: const VideoCanvas(
+            uid: 0,
+            renderMode: RenderModeType.renderModeHidden,
+            mirrorMode: VideoMirrorModeType.videoMirrorModeEnabled,
           ),
+        ),
+      ),
     );
   }
 }
