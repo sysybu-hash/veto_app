@@ -102,6 +102,9 @@ class CallSessionController extends ChangeNotifier {
   bool get isActive =>
       _phase == CallUiPhase.active || _phase == CallUiPhase.reconnecting;
 
+  /// Agora UID actually used after token refresh (non-zero in production token mode).
+  int get joinedAgoraUid => _localUid;
+
   Future<void> boot() async {
     if (_disposed) return;
     if (args.isIncoming) {
