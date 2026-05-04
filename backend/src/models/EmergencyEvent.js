@@ -187,6 +187,20 @@ const EmergencyEventSchema = new mongoose.Schema(
       default: null, // Cloudinary URL of the call recording
     },
 
+    /** Agora Cloud Recording (REST) — active session metadata; cleared after upload */
+    agora_cloud_recording_resource_id: {
+      type: String,
+      default: null,
+    },
+    agora_cloud_recording_sid: {
+      type: String,
+      default: null,
+    },
+    agora_cloud_recording_uid: {
+      type: Number,
+      default: null,
+    },
+
     // Cloudinary upload metadata (persisted; was dropped before schema existed)
     recording_duration_seconds: {
       type: Number,

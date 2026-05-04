@@ -259,11 +259,11 @@ class CallI18n {
   );
   static const vaultWebNoLocalRecording = CallCopy(
     he:
-        'בדפדפן נשמרת הקלטת המיקרופון המקומי שלך (WebM) — לא שמע הצד השני. אפשר גם לשמור צ׳אט. במובייל נשמרת הקלטת ערוץ מלאה (Agora).',
+        'בדפדפן: אם השרת מוגדר עם Agora Cloud Recording + אחסון S3, נשמרת הקלטת ערוץ מלאה (אודיו/וידאו) בענן ותמלול אפשרי. אחרת נשמרת רק הקלטת מיקרופון מקומי (WebM). במובייל: הקלטת Agora מקומית כמו קודם.',
     en:
-        'In the browser we save your local microphone (WebM), not the remote party. You can also save chat. On mobile, full channel recording is saved.',
+        'Browser: with Agora Cloud Recording + S3 on the server, a full mixed recording is saved in the cloud (audio/video) with optional transcript. Otherwise only your local mic (WebM) is captured. Mobile: unchanged on-device Agora recording.',
     ru:
-        'В браузере сохраняется только ваш микрофон (WebM), не удалённая сторона. Можно сохранить чат. На мобильном — полная запись.',
+        'Браузер: при Agora Cloud Recording + S3 на сервере — полная запись в облаке и расшифровка. Иначе только локальный микрофон (WebM). Мобильный — как раньше.',
   );
   static const vaultNothingToSave = CallCopy(
     he: 'אין הקלטה או צ׳אט לשמירה.',
