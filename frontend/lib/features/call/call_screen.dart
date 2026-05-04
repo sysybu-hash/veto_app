@@ -264,7 +264,7 @@ class _CallScreenState extends State<CallScreen> {
                     height: 1.35,
                   ),
                 ),
-                if (kIsWeb && !hasRec && hasChat) ...[
+                if (kIsWeb && !args.chatOnly) ...[
                   const SizedBox(height: 14),
                   Text(
                     CallI18n.vaultWebNoLocalRecording.t(lang),

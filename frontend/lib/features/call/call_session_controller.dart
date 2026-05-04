@@ -11,6 +11,7 @@ import '../../services/call_route_args_storage.dart';
 import '../../services/in_call_permissions.dart';
 import '../../services/socket_service.dart';
 import 'agora_error_mapping.dart';
+import 'browser_mic_call_recorder.dart';
 import 'call_args.dart';
 import 'call_types.dart';
 import 'recording_file_reader.dart';
@@ -46,12 +47,15 @@ class CallSessionController extends ChangeNotifier {
     required this.args,
     CallApiService? callApi,
     SocketService? socket,
+    BrowserMicCallRecorder? browserMic,
   })  : _callApi = callApi ?? CallApiService(),
-        _socket = socket ?? SocketService();
+        _socket = socket ?? SocketService(),
+        _browserMic = browserMic ?? createBrowserMicCallRecorder();
 
   final CallArgs args;
   final CallApiService _callApi;
   final SocketService _socket;
+  final BrowserMicCallRecorder _browserMic;
 
   RtcEngine? _engine;
   String _token = '';
@@ -248,14 +252,24 @@ class CallSessionController extends ChangeNotifier {
       }
     } catch (_) {}
 
+    CallRecordingResult? webMic;
+    try {
+      webMic = await _browserMic.stop();
+    } catch (err, st) {
+      developer.log('browserMic.stop', name: 'VETO.Call', error: err, stackTrace: st);
+    }
+
+    CallRecordingResult? fromAgora;
     try {
       final eng = _engine;
       if (eng != null) {
-        _postCallRecording = await _finalizeAgoraMediaCapture(eng);
+        fromAgora = await _finalizeAgoraMediaCapture(eng);
       }
     } catch (err, st) {
       developer.log('finalizeAgoraMediaCapture', name: 'VETO.Call', error: err, stackTrace: st);
     }
+
+    _postCallRecording = _pickBetterPostRecording(fromAgora, webMic);
 
     await _leaveAndReleaseAgora();
     callRouteArgsStorageClear();
@@ -910,9 +924,33 @@ class CallSessionController extends ChangeNotifier {
     _transitionTo(CallUiPhase.error);
   }
 
+  CallRecordingResult? _pickBetterPostRecording(
+    CallRecordingResult? agora,
+    CallRecordingResult? browserMic,
+  ) {
+    if (agora != null && agora.bytes.isNotEmpty) return agora;
+    if (browserMic != null && browserMic.bytes.isNotEmpty) return browserMic;
+    return null;
+  }
+
   void _scheduleAgoraChannelRecording() {
-    if (args.chatOnly || kIsWeb) return;
+    if (args.chatOnly) return;
+    if (kIsWeb) {
+      unawaited(_tryStartBrowserMicRecording());
+      return;
+    }
     unawaited(_tryStartAgoraChannelRecording());
+  }
+
+  Future<void> _tryStartBrowserMicRecording() async {
+    if (!kIsWeb || args.chatOnly || _disposed || _leaving) return;
+    await Future<void>.delayed(const Duration(milliseconds: 900));
+    if (_disposed || _leaving) return;
+    try {
+      await _browserMic.start(eventId: args.eventId);
+    } catch (err, st) {
+      developer.log('browserMic.start', name: 'VETO.Call', error: err, stackTrace: st);
+    }
   }
 
   Future<void> _tryStartAgoraChannelRecording() async {
@@ -1075,6 +1113,7 @@ class CallSessionController extends ChangeNotifier {
   @override
   void dispose() {
     _disposed = true;
+    unawaited(_browserMic.stop());
     _connectWatchdog?.cancel();
     _retryTimer?.cancel();
     _durationTimer?.cancel();

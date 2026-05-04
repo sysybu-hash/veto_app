@@ -259,11 +259,11 @@ class CallI18n {
   );
   static const vaultWebNoLocalRecording = CallCopy(
     he:
-        'בדפדפן אין כרגע הקלטת קובץ מקומית מהשיחה. אפשר לשמור את הצ׳אט אם כתבת הודעות. במובייל נשמרת גם הקלטת האודיו/וידאו.',
+        'בדפדפן נשמרת הקלטת המיקרופון המקומי שלך (WebM) — לא שמע הצד השני. אפשר גם לשמור צ׳אט. במובייל נשמרת הקלטת ערוץ מלאה (Agora).',
     en:
-        'The browser cannot save a local call file yet. You can save chat if you typed messages. On mobile, audio/video recording is saved.',
+        'In the browser we save your local microphone (WebM), not the remote party. You can also save chat. On mobile, full channel recording is saved.',
     ru:
-        'В браузере пока нет локальной записи звонка. Можно сохранить чат. На мобильных запись сохраняется.',
+        'В браузере сохраняется только ваш микрофон (WebM), не удалённая сторона. Можно сохранить чат. На мобильном — полная запись.',
   );
   static const vaultNothingToSave = CallCopy(
     he: 'אין הקלטה או צ׳אט לשמירה.',
