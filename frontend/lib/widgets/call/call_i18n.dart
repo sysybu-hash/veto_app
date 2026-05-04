@@ -202,6 +202,26 @@ class CallI18n {
     en: 'Something went wrong. Please rejoin the call.',
     ru: 'Произошла ошибка. Попробуйте войти заново.',
   );
+  static const errorUidConflict = CallCopy(
+    he: 'מזהה משתמש כפול או הצטרפות נדחתה. נסה שוב — אם זה נמשך, רענן את הדף.',
+    en: 'Duplicate user ID or join was rejected. Retry — if it persists, refresh the page.',
+    ru: 'Конфликт ID или вход отклонён. Повторите; при повторении обновите страницу.',
+  );
+  static const webStartCall = CallCopy(
+    he: 'התחל שיחת וידאו',
+    en: 'Start video call',
+    ru: 'Начать видеозвонок',
+  );
+  static const webStartCallHint = CallCopy(
+    he: 'בדפדפן יש ללחוץ כדי לאפשר מצלמה ומיקרופון.',
+    en: 'Browsers require a tap before camera and microphone can start.',
+    ru: 'Браузеру нужно нажатие, чтобы включить камеру и микрофон.',
+  );
+  static const webInsecureContext = CallCopy(
+    he: 'שיחת וידאו זמינה רק ב־HTTPS (או localhost). פתח את האתר בכתובת מאובטחת.',
+    en: 'Video calls need HTTPS (or localhost). Open the app on a secure URL.',
+    ru: 'Видеозвонок доступен только по HTTPS или localhost.',
+  );
   static const errorRetry =
       CallCopy(he: 'נסה שוב', en: 'Retry', ru: 'Повторить');
   static const errorExit = CallCopy(he: 'יציאה', en: 'Exit', ru: 'Выйти');
