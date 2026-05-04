@@ -138,6 +138,61 @@ class CallApiService {
     return Map<String, dynamic>.from(decoded);
   }
 
+  /// Agora Cloud Recording — composite mix (full channel) for web browsers.
+  /// Returns `null` when not configured (503) or on network failure.
+  Future<Map<String, dynamic>?> startCloudRecording({
+    required String eventId,
+    required bool wantVideo,
+  }) async {
+    final token = await _auth.getToken();
+    if (token == null || eventId.isEmpty) return null;
+    final response = await http.post(
+      Uri.parse('${AppConfig.baseUrl}/calls/$eventId/cloud-recording/start'),
+      headers: AppConfig.httpHeaders({'Authorization': 'Bearer $token'}),
+      body: jsonEncode({'wantVideo': wantVideo}),
+    );
+    if (response.statusCode == 503) return null;
+    if (response.statusCode < 200 || response.statusCode >= 300) return null;
+    final decoded = jsonDecode(response.body);
+    if (decoded is! Map) return null;
+    return Map<String, dynamic>.from(decoded);
+  }
+
+  /// Stops cloud recording. Response may include `pending: true` while the
+  /// server uploads to Cloudinary — poll [fetchCallRecordingUrl] until non-empty.
+  Future<Map<String, dynamic>?> stopCloudRecording(String eventId) async {
+    final token = await _auth.getToken();
+    if (token == null || eventId.isEmpty) return null;
+    final response = await http.post(
+      Uri.parse('${AppConfig.baseUrl}/calls/$eventId/cloud-recording/stop'),
+      headers: AppConfig.httpHeaders({'Authorization': 'Bearer $token'}),
+      body: jsonEncode(<String, dynamic>{}),
+    );
+    if (response.statusCode == 503) return null;
+    if (response.statusCode < 200 || response.statusCode >= 300) return null;
+    final decoded = jsonDecode(response.body);
+    if (decoded is! Map) return null;
+    return Map<String, dynamic>.from(decoded);
+  }
+
+  /// `recording_url` on the emergency event (after cloud finalize or client upload).
+  Future<String?> fetchCallRecordingUrl(String eventId) async {
+    final token = await _auth.getToken();
+    if (token == null || eventId.isEmpty) return null;
+    final response = await http.get(
+      Uri.parse('${AppConfig.baseUrl}/calls/$eventId'),
+      headers: AppConfig.httpHeaders({'Authorization': 'Bearer $token'}),
+    );
+    if (response.statusCode < 200 || response.statusCode >= 300) return null;
+    final decoded = jsonDecode(response.body);
+    if (decoded is! Map) return null;
+    final call = decoded['call'];
+    if (call is! Map) return null;
+    final u = call['recording_url']?.toString();
+    if (u == null || u.isEmpty) return null;
+    return u;
+  }
+
   Future<String?> transcribeRecording({
     required String eventId,
     required Uint8List bytes,

@@ -14,8 +14,12 @@ const cloudinary     = require('../config/cloudinary');
 const { getGeminiModelId } = require('../config/gemini.config');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const { buildRtcTokenForUid } = require('../services/agoraToken.service');
+const agoraCr = require('../services/agoraCloudRecording.service');
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+
+/** One finalize pipeline per event (avoid duplicate work if both peers call stop). */
+const cloudRecordingFinalizeLocks = new Set();
 
 function sanitizeTranscript(raw) {
   if (!raw || typeof raw !== 'string') return '';
@@ -334,7 +338,235 @@ exports.getCallDetails = async (req, res, next) => {
       return res.status(403).json({ error: 'Not authorized' });
     }
 
-    res.json({ success: true, call: event });
+    res.json({
+      success: true,
+      call: event,
+      cloudRecordingConfigured: agoraCr.isCloudRecordingConfigured(),
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// ── Agora Cloud Recording (full mix in browser / all clients) ─
+exports.getCloudRecordingStatus = async (req, res, next) => {
+  try {
+    const { eventId } = req.params;
+    const { userId, role } = req.user;
+    const event = await EmergencyEvent.findById(eventId)
+      .select('user_id assigned_lawyer_id')
+      .lean();
+    if (!event) return res.status(404).json({ error: 'Event not found' });
+    const uid = String(userId);
+    const isUser = (role === 'user' || role === 'admin') && event.user_id?.toString() === uid;
+    const isLawyer = role === 'lawyer' && event.assigned_lawyer_id?.toString() === uid;
+    if (!isUser && !isLawyer && req.user.role !== 'admin') {
+      return res.status(403).json({ error: 'Not authorized' });
+    }
+    res.json({
+      success: true,
+      configured: agoraCr.isCloudRecordingConfigured(),
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.startCloudRecording = async (req, res, next) => {
+  try {
+    if (!agoraCr.isCloudRecordingConfigured()) {
+      return res.status(503).json({
+        success: false,
+        configured: false,
+        error: 'Cloud recording not configured on server',
+      });
+    }
+    const { eventId } = req.params;
+    const { userId, role } = req.user;
+    const wantVideo = !!req.body?.wantVideo;
+
+    const event = await EmergencyEvent.findById(eventId)
+      .select('user_id assigned_lawyer_id room_id agora_cloud_recording_sid agora_cloud_recording_resource_id agora_cloud_recording_uid')
+      .lean();
+    if (!event) return res.status(404).json({ error: 'Event not found' });
+
+    const uid = String(userId);
+    const isUser = (role === 'user' || role === 'admin') && event.user_id?.toString() === uid;
+    const isLawyer = role === 'lawyer' && event.assigned_lawyer_id?.toString() === uid;
+    if (!isUser && !isLawyer && req.user.role !== 'admin') {
+      return res.status(403).json({ error: 'Not authorized' });
+    }
+
+    if (event.agora_cloud_recording_sid) {
+      return res.json({
+        success: true,
+        active: true,
+        sid: event.agora_cloud_recording_sid,
+        resourceId: event.agora_cloud_recording_resource_id,
+        recorderUid: event.agora_cloud_recording_uid,
+      });
+    }
+
+    const channelName = event.room_id || String(event._id || eventId);
+    const { resourceId, sid, uidStr } = await agoraCr.acquireAndStart({
+      channelName,
+      eventIdHex: String(eventId),
+      wantVideo,
+    });
+
+    await EmergencyEvent.findByIdAndUpdate(eventId, {
+      agora_cloud_recording_resource_id: resourceId,
+      agora_cloud_recording_sid: sid,
+      agora_cloud_recording_uid: Number(uidStr),
+    });
+
+    res.json({
+      success: true,
+      active: true,
+      sid,
+      resourceId,
+      recorderUid: Number(uidStr),
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+async function finalizeCloudRecordingToCloudinary({
+  eventId,
+  resourceId,
+  sid,
+  channelName,
+  uidStr,
+}) {
+  const s3Prefix = agoraCr.storagePrefixForEvent(String(eventId));
+  const mp4Key = await agoraCr.resolveMp4S3Key({
+    resourceId,
+    sid,
+    cname: channelName,
+    uidStr,
+    s3Prefix,
+    maxWaitMs: 120000,
+  });
+  const mp4Buffer = await agoraCr.downloadMp4FromS3(mp4Key);
+  const uploadResult = await new Promise((resolve, reject) => {
+    const uploadStream = cloudinary.uploader.upload_stream(
+      {
+        resource_type: 'video',
+        folder: `veto/recordings/${eventId}`,
+        public_id: `call_cloud_${Date.now()}`,
+      },
+      (err, result) => {
+        if (err) reject(err);
+        else resolve(result);
+      },
+    );
+    uploadStream.end(mp4Buffer);
+  });
+  await EmergencyEvent.findByIdAndUpdate(eventId, {
+    recording_url:               uploadResult.secure_url,
+    recording_duration_seconds:  uploadResult.duration != null ? Number(uploadResult.duration) : null,
+    recording_size_bytes:        uploadResult.bytes != null ? Number(uploadResult.bytes) : null,
+    agora_cloud_recording_resource_id: null,
+    agora_cloud_recording_sid:         null,
+    agora_cloud_recording_uid:         null,
+  });
+}
+
+exports.stopCloudRecording = async (req, res, next) => {
+  try {
+    if (!agoraCr.isCloudRecordingConfigured()) {
+      return res.status(503).json({
+        success: false,
+        configured: false,
+        error: 'Cloud recording not configured on server',
+      });
+    }
+    const { eventId } = req.params;
+    const { userId, role } = req.user;
+
+    const event = await EmergencyEvent.findById(eventId);
+    if (!event) return res.status(404).json({ error: 'Event not found' });
+
+    const uid = String(userId);
+    const isUser = (role === 'user' || role === 'admin') && event.user_id?.toString() === uid;
+    const isLawyer = role === 'lawyer' && event.assigned_lawyer_id?.toString() === uid;
+    if (!isUser && !isLawyer && req.user.role !== 'admin') {
+      return res.status(403).json({ error: 'Not authorized' });
+    }
+
+    const rid = event.agora_cloud_recording_resource_id;
+    const sid = event.agora_cloud_recording_sid;
+    const rUid = event.agora_cloud_recording_uid;
+    const channelName = event.room_id || String(event._id || eventId);
+    const uidStr = rUid != null && rUid > 0 ? String(rUid) : agoraCr.recorderUidString(String(eventId));
+
+    if (!rid || !sid) {
+      return res.json({
+        success: true,
+        recordingUrl: event.recording_url || null,
+        pending: false,
+        alreadyStopped: true,
+      });
+    }
+
+    const eid = String(eventId);
+    let shouldFinalize = false;
+    try {
+      if (!cloudRecordingFinalizeLocks.has(eid)) {
+        cloudRecordingFinalizeLocks.add(eid);
+        shouldFinalize = true;
+      }
+
+      const st = await agoraCr.stopMix({
+        resourceId: rid,
+        sid,
+        cname: channelName,
+        uidStr,
+      });
+      if (st.status !== 200 && st.status !== 404) {
+        if (shouldFinalize) cloudRecordingFinalizeLocks.delete(eid);
+        const msg = st.data?.message || st.data?.reason || JSON.stringify(st.data || st.status);
+        return next(new Error(`Agora stop failed (${st.status}): ${msg}`));
+      }
+
+      res.json({
+        success: true,
+        pending: true,
+        recordingUrl: null,
+      });
+
+      if (!shouldFinalize) return;
+
+      const ctx = {
+        eventId: eid,
+        resourceId: rid,
+        sid,
+        channelName,
+        uidStr,
+      };
+      setImmediate(() => {
+        finalizeCloudRecordingToCloudinary(ctx)
+          .catch(async (err) => {
+            console.error('[agora-cloud-recording] finalize failed', ctx.eventId, err);
+            try {
+              await EmergencyEvent.findByIdAndUpdate(ctx.eventId, {
+                agora_cloud_recording_resource_id: null,
+                agora_cloud_recording_sid:         null,
+                agora_cloud_recording_uid:         null,
+              });
+            } catch (_) {
+              /* ignore */
+            }
+          })
+          .finally(() => {
+            cloudRecordingFinalizeLocks.delete(eid);
+          });
+      });
+    } catch (err) {
+      if (shouldFinalize) cloudRecordingFinalizeLocks.delete(eid);
+      next(err);
+    }
   } catch (err) {
     next(err);
   }

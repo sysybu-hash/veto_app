@@ -70,6 +70,36 @@ class VaultSaveQueue extends ChangeNotifier {
 
   /// After a call, if a recording was uploaded to the event on the server,
   /// run transcription and save the transcript to the vault.
+  /// After Agora Cloud Recording finalize, [recording_url] appears on the event.
+  /// Polls the API, then optionally saves compressed media + transcript to the vault.
+  void enqueueCloudRecordingVaultSave({
+    required String eventId,
+    required String language,
+    String? roomLabel,
+    bool runTranscription = true,
+    bool includeMediaInVault = true,
+  }) {
+    if (eventId.isEmpty) return;
+    final job = VaultSaveJob(
+      id: _newId(),
+      label: roomLabel ?? 'שמירה מהענן',
+    );
+    _jobs.add(job);
+    if (_jobs.length > 8) {
+      _jobs.removeAt(0);
+    }
+    notifyListeners();
+    unawaited(
+      _runCloudRecordingVault(
+        job,
+        eventId: eventId,
+        language: language,
+        runTranscription: runTranscription,
+        includeMediaInVault: includeMediaInVault,
+      ),
+    );
+  }
+
   void enqueueAgoraRecordingTranscript({
     required String eventId,
     required String language,
@@ -158,6 +188,102 @@ class VaultSaveQueue extends ChangeNotifier {
   void dismissJob(String id) {
     _jobs.removeWhere((j) => j.id == id);
     notifyListeners();
+  }
+
+  Future<String?> _pollCallRecordingUrl(
+    VaultSaveJob job, {
+    required String eventId,
+    int maxAttempts = 60,
+  }) async {
+    for (var i = 0; i < maxAttempts; i++) {
+      final url = await _api.fetchCallRecordingUrl(eventId);
+      if (url != null && url.isNotEmpty) {
+        return url;
+      }
+      _updateJob(
+        job,
+        p: 0.05 + 0.35 * (i / maxAttempts),
+        line: 'ממתין להקלטת ענן…',
+      );
+      await Future<void>.delayed(const Duration(seconds: 2));
+    }
+    return null;
+  }
+
+  Future<void> _runCloudRecordingVault(
+    VaultSaveJob job, {
+    required String eventId,
+    required String language,
+    required bool runTranscription,
+    required bool includeMediaInVault,
+  }) async {
+    try {
+      _updateJob(job, p: 0.02, line: 'ממתין להקלטה…');
+      final recordingUrl = await _pollCallRecordingUrl(job, eventId: eventId);
+      if (recordingUrl == null || recordingUrl.isEmpty) {
+        _finishJob(
+          job,
+          err: 'ההקלטה בענן לא הופיעה בזמן (בדוק הגדרות Agora Cloud Recording ו-S3)',
+        );
+        return;
+      }
+
+      VaultCompressedBlob? mediaComp;
+      if (includeMediaInVault) {
+        _updateJob(job, p: 0.4, line: 'מוריד מדיה…');
+        final mediaRes = await http.get(Uri.parse(recordingUrl));
+        if (mediaRes.statusCode < 200 || mediaRes.statusCode >= 300) {
+          throw Exception('הורדת הקלטה נכשלה (${mediaRes.statusCode})');
+        }
+        final raw = mediaRes.bodyBytes;
+        mediaComp = compressMediaForVault(
+          raw,
+          eventId: eventId,
+          baseName: 'veto-call-$eventId-cloud.mp4',
+          defaultMime: 'video/mp4',
+        );
+      }
+
+      if (runTranscription) {
+        _updateJob(job, p: 0.55, line: 'ממליל…');
+        final tText = await _api.transcribeFromStoredRecording(
+          eventId: eventId,
+          language: language,
+        );
+        if (tText != null && tText.trim().isNotEmpty) {
+          _updateJob(job, p: 0.72, line: 'מדחס תמלול…');
+          final tr = compressTranscriptForVault(
+            tText,
+            eventId: eventId,
+          );
+          await _saveTranscriptToVault(
+            job,
+            comp: tr,
+            progressStart: 0.72,
+            progressEnd: includeMediaInVault ? 0.88 : 1,
+            label: 'שומר תמלול…',
+          );
+        }
+      }
+
+      if (includeMediaInVault && mediaComp != null && mediaComp.bytes.isNotEmpty) {
+        await _saveMediaOnlyVault(
+          job,
+          from: 0.88,
+          to: 1,
+          media: mediaComp,
+          label: 'שומר הקלטה בכספת…',
+        );
+      }
+
+      _updateJob(job, p: 1, line: 'הושלם');
+      _finishJob(job);
+    } catch (e) {
+      _finishJob(
+        job,
+        err: e is Exception ? e.toString() : 'השמירה נכשלה',
+      );
+    }
   }
 
   Future<void> _runAgoraTranscript(

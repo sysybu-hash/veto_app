@@ -100,6 +100,10 @@ class CallSessionController extends ChangeNotifier {
   Completer<void>? _agoraRecordingStopWaiter;
   bool _agoraRecordingStarted = false;
 
+  /// Agora Cloud Recording (server-side mix) — web only; requires backend + S3 env.
+  bool _webCloudRecordingStarted = false;
+  bool _webCloudRecordingStopPending = false;
+
   RtcEngine? get engine => _engine;
   CallUiPhase get phase => _phase;
   CallFailure? get failure => _failure;
@@ -119,6 +123,15 @@ class CallSessionController extends ChangeNotifier {
 
   /// Agora UID actually used after token refresh (non-zero in production token mode).
   int get joinedAgoraUid => _localUid;
+
+  /// True when the server is still moving the cloud recording to Cloudinary.
+  bool get webCloudRecordingStopPending => _webCloudRecordingStopPending;
+
+  /// Web + cloud session started, or stop returned `pending` — vault can poll [recording_url].
+  bool get hasWebCloudRecordingForVault =>
+      kIsWeb &&
+      !args.chatOnly &&
+      (_webCloudRecordingStarted || _webCloudRecordingStopPending);
 
   /// Consumed once by [CallScreen] after the call ends (upload + transcribe pipeline).
   CallRecordingResult? takePostCallRecording() {
@@ -251,6 +264,17 @@ class CallSessionController extends ChangeNotifier {
         });
       }
     } catch (_) {}
+
+    if (kIsWeb && !args.chatOnly) {
+      try {
+        final m = await _callApi.stopCloudRecording(args.eventId);
+        if (m != null && m['pending'] == true) {
+          _webCloudRecordingStopPending = true;
+        }
+      } catch (err, st) {
+        developer.log('stopCloudRecording', name: 'VETO.Call', error: err, stackTrace: st);
+      }
+    }
 
     CallRecordingResult? webMic;
     try {
@@ -937,9 +961,27 @@ class CallSessionController extends ChangeNotifier {
     if (args.chatOnly) return;
     if (kIsWeb) {
       unawaited(_tryStartBrowserMicRecording());
+      unawaited(_tryStartCloudRecordingWeb());
       return;
     }
     unawaited(_tryStartAgoraChannelRecording());
+  }
+
+  Future<void> _tryStartCloudRecordingWeb() async {
+    if (!kIsWeb || args.chatOnly || _disposed) return;
+    await Future<void>.delayed(const Duration(milliseconds: 1200));
+    if (_disposed || _leaving) return;
+    try {
+      final r = await _callApi.startCloudRecording(
+        eventId: args.eventId,
+        wantVideo: _wantsVideo,
+      );
+      if (r != null && (r['success'] == true || r['active'] == true)) {
+        _webCloudRecordingStarted = true;
+      }
+    } catch (err, st) {
+      developer.log('startCloudRecording', name: 'VETO.Call', error: err, stackTrace: st);
+    }
   }
 
   Future<void> _tryStartBrowserMicRecording() async {

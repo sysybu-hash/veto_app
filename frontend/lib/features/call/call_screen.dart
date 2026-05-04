@@ -126,9 +126,11 @@ class _CallScreenState extends State<CallScreen> {
     final args = controller.args;
     final lang = args.language;
     final queue = context.read<VaultSaveQueue>();
-    final hasRec =
+    final hasLocalRec =
         controller.peekPostCallRecording != null &&
             controller.peekPostCallRecording!.bytes.isNotEmpty;
+    final hasCloudVault = controller.hasWebCloudRecordingForVault;
+    final hasRec = hasLocalRec || hasCloudVault;
     final chatText = _chatTranscriptForVault(controller, args);
     final hasChat = chatText.trim().isNotEmpty;
 
@@ -143,6 +145,14 @@ class _CallScreenState extends State<CallScreen> {
             recording: rec,
             runTranscription: false,
           );
+        } else if (hasCloudVault) {
+          queue.enqueueCloudRecordingVaultSave(
+            eventId: args.eventId,
+            language: args.language,
+            roomLabel: args.peerLabel,
+            runTranscription: false,
+            includeMediaInVault: true,
+          );
         }
         return;
       }
@@ -155,6 +165,14 @@ class _CallScreenState extends State<CallScreen> {
             roomLabel: args.peerLabel,
             recording: rec,
             runTranscription: true,
+          );
+        } else if (hasCloudVault) {
+          queue.enqueueCloudRecordingVaultSave(
+            eventId: args.eventId,
+            language: args.language,
+            roomLabel: args.peerLabel,
+            runTranscription: true,
+            includeMediaInVault: true,
           );
         }
         return;

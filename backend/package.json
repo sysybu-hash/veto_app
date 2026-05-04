@@ -19,9 +19,10 @@
     "dev:urls": "node scripts/print-dev-urls.js",
     "cron:calendar": "node scripts/cron-calendar-reminders.js",
     "lint": "eslint src scripts server.js",
-    "test": "node --test ./test/crypto_otp.test.js ./test/ai_routes_mount.test.js ./test/agora_token_uid.test.js"
+    "test": "node --test ./test/crypto_otp.test.js ./test/ai_routes_mount.test.js ./test/agora_token_uid.test.js ./test/agora_cloud_recording_config.test.js"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1042.0",
     "@google/genai": "^1.48.0",
     "@google/generative-ai": "^0.24.1",
     "@sentry/node": "^10.47.0",
