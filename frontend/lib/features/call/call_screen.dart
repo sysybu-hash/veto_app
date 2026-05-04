@@ -98,11 +98,24 @@ class _CallScreenState extends State<CallScreen> {
           roomLabel: args.peerLabel,
         );
       } else if (controller.durationSec >= 1) {
-        queue.enqueueAgoraRecordingTranscript(
-          eventId: args.eventId,
-          language: args.language,
-          roomLabel: args.peerLabel,
-        );
+        final recording = controller.takePostCallRecording();
+        if (recording != null && recording.bytes.isNotEmpty) {
+          queue.enqueueCallMediaArtifacts(
+            eventId: args.eventId,
+            language: args.language,
+            roomLabel: args.peerLabel,
+            recording: recording,
+          );
+        } else if (controller.chatLines.isNotEmpty) {
+          final transcript = controller.chatLines
+              .map((line) => '${line.mine ? 'Me' : args.peerLabel}: ${line.text}')
+              .join('\n');
+          queue.enqueueChatTranscript(
+            eventId: args.eventId,
+            transcript: transcript,
+            roomLabel: args.peerLabel,
+          );
+        }
       }
     } catch (_) {}
   }

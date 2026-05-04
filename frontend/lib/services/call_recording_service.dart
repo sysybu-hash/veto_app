@@ -1,4 +1,5 @@
-// Local call recording: WebRTC path removed. Agora uses server-side recording + transcribe.
+// Optional local mixed capture was removed; post-call media comes from Agora MediaRecorder
+// on iOS/Android (see [CallSessionController]). Web has no file capture yet.
 // [CallRecordingResult] is still used by [VaultSaveQueue] for optional future client-side blobs.
 
 import 'call_recording_types.dart';
