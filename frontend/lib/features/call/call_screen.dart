@@ -14,6 +14,13 @@ import 'call_args.dart';
 import 'call_session_controller.dart';
 import 'call_web_media.dart';
 
+enum _VaultSaveChoice {
+  mediaOnly,
+  mediaAndTranscript,
+  chatOnly,
+  skip,
+}
+
 class CallScreen extends StatefulWidget {
   const CallScreen({super.key});
 
@@ -25,8 +32,9 @@ class _CallScreenState extends State<CallScreen> {
   CallSessionController? _controller;
   late final InCallSpeech _speech;
   final TextEditingController _messageController = TextEditingController();
-  bool _navigatedAway = false;
+  bool _postCallFlowStarted = false;
   bool _queuedArtifacts = false;
+  bool _vaultExitGateDone = false;
   bool _webMediaInsecure = false;
   String _webInsecureLang = 'he';
 
@@ -71,53 +79,282 @@ class _CallScreenState extends State<CallScreen> {
   void _onControllerChanged() {
     if (!mounted) return;
     final controller = _controller;
-    if (controller?.phase == CallUiPhase.ended && !_navigatedAway) {
-      _queuePostCallArtifacts(controller!);
-      _navigatedAway = true;
+    if (controller?.phase == CallUiPhase.ended && !_postCallFlowStarted) {
+      _postCallFlowStarted = true;
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) Navigator.of(context).pop();
+        unawaited(_runPostCallVaultFlow(controller!));
       });
     }
     setState(() {});
   }
 
-  void _queuePostCallArtifacts(CallSessionController controller) {
-    if (_queuedArtifacts) return;
+  String _chatTranscriptForVault(CallSessionController controller, CallArgs args) {
+    return controller.chatLines
+        .map((line) => '${line.mine ? 'Me' : args.peerLabel}: ${line.text}')
+        .join('\n');
+  }
+
+  Future<void> _runPostCallVaultFlow(CallSessionController controller) async {
+    if (!mounted) return;
+    if (_queuedArtifacts) {
+      if (mounted) {
+        setState(() => _vaultExitGateDone = true);
+        Navigator.of(context).pop();
+      }
+      return;
+    }
     _queuedArtifacts = true;
     final args = controller.args;
-    if (args.eventId.isEmpty) return;
+    if (args.eventId.isEmpty) {
+      if (mounted) {
+        setState(() => _vaultExitGateDone = true);
+        Navigator.of(context).pop();
+      }
+      return;
+    }
     try {
-      final queue = context.read<VaultSaveQueue>();
-      if (args.chatOnly) {
-        final transcript = controller.chatLines
-            .map((line) => '${line.mine ? 'Me' : args.peerLabel}: ${line.text}')
-            .join('\n');
-        queue.enqueueChatTranscript(
-          eventId: args.eventId,
-          transcript: transcript,
-          roomLabel: args.peerLabel,
-        );
-      } else if (controller.durationSec >= 1) {
-        final recording = controller.takePostCallRecording();
-        if (recording != null && recording.bytes.isNotEmpty) {
+      await _showPostCallVaultDialog(controller);
+    } catch (_) {}
+    if (mounted) {
+      setState(() => _vaultExitGateDone = true);
+      Navigator.of(context).pop();
+    }
+  }
+
+  Future<void> _showPostCallVaultDialog(CallSessionController controller) async {
+    if (!mounted) return;
+    final args = controller.args;
+    final lang = args.language;
+    final queue = context.read<VaultSaveQueue>();
+    final hasRec =
+        controller.peekPostCallRecording != null &&
+            controller.peekPostCallRecording!.bytes.isNotEmpty;
+    final chatText = _chatTranscriptForVault(controller, args);
+    final hasChat = chatText.trim().isNotEmpty;
+
+    Future<void> applyChoice(_VaultSaveChoice? choice) async {
+      if (choice == _VaultSaveChoice.mediaOnly) {
+        final rec = controller.takePostCallRecording();
+        if (rec != null && rec.bytes.isNotEmpty) {
           queue.enqueueCallMediaArtifacts(
             eventId: args.eventId,
             language: args.language,
             roomLabel: args.peerLabel,
-            recording: recording,
+            recording: rec,
+            runTranscription: false,
           );
-        } else if (controller.chatLines.isNotEmpty) {
-          final transcript = controller.chatLines
-              .map((line) => '${line.mine ? 'Me' : args.peerLabel}: ${line.text}')
-              .join('\n');
+        }
+        return;
+      }
+      if (choice == _VaultSaveChoice.mediaAndTranscript) {
+        final rec = controller.takePostCallRecording();
+        if (rec != null && rec.bytes.isNotEmpty) {
+          queue.enqueueCallMediaArtifacts(
+            eventId: args.eventId,
+            language: args.language,
+            roomLabel: args.peerLabel,
+            recording: rec,
+            runTranscription: true,
+          );
+        }
+        return;
+      }
+      if (choice == _VaultSaveChoice.chatOnly) {
+        controller.discardPostCallRecording();
+        if (hasChat) {
           queue.enqueueChatTranscript(
             eventId: args.eventId,
-            transcript: transcript,
+            transcript: chatText,
             roomLabel: args.peerLabel,
           );
         }
+        return;
       }
-    } catch (_) {}
+      controller.discardPostCallRecording();
+    }
+
+    if (args.chatOnly) {
+      if (!hasChat) {
+        await showDialog<void>(
+          context: context,
+          barrierDismissible: false,
+          builder: (ctx) => _vaultAlertShell(
+            lang: lang,
+            title: CallI18n.vaultSaveTitle.t(lang),
+            body: CallI18n.vaultNothingToSave.t(lang),
+            actions: [
+              FilledButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: Text(CallI18n.vaultSaveSkip.t(lang)),
+              ),
+            ],
+          ),
+        );
+        return;
+      }
+      final choice = await showDialog<_VaultSaveChoice>(
+        context: context,
+        barrierDismissible: false,
+        builder: (ctx) => _vaultAlertShell(
+          lang: lang,
+          title: CallI18n.vaultSaveTitle.t(lang),
+          body: CallI18n.vaultSaveSubtitle.t(lang),
+          actions: [
+            FilledButton(
+              style: FilledButton.styleFrom(backgroundColor: V26.goldSoft),
+              onPressed: () => Navigator.pop(ctx, _VaultSaveChoice.chatOnly),
+              child: Text(CallI18n.vaultSaveChatOnly.t(lang)),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, _VaultSaveChoice.skip),
+              child: Text(CallI18n.vaultSaveSkip.t(lang)),
+            ),
+          ],
+        ),
+      );
+      await applyChoice(choice);
+      return;
+    }
+
+    if (!hasRec && !hasChat) {
+      await showDialog<void>(
+        context: context,
+        barrierDismissible: false,
+        builder: (ctx) => _vaultAlertShell(
+          lang: lang,
+          title: CallI18n.vaultSaveTitle.t(lang),
+          body: CallI18n.vaultNothingToSave.t(lang),
+          actions: [
+            FilledButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: Text(CallI18n.vaultSaveSkip.t(lang)),
+            ),
+          ],
+        ),
+      );
+      controller.discardPostCallRecording();
+      return;
+    }
+
+    final choice = await showDialog<_VaultSaveChoice>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) {
+        return AlertDialog(
+          backgroundColor: V26.callGlass,
+          surfaceTintColor: Colors.transparent,
+          title: Text(
+            CallI18n.vaultSaveTitle.t(lang),
+            style: const TextStyle(
+              color: Colors.white,
+              fontFamily: V26.serif,
+              fontWeight: FontWeight.w800,
+              fontSize: 20,
+            ),
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  CallI18n.vaultSaveSubtitle.t(lang),
+                  style: const TextStyle(
+                    color: Colors.white70,
+                    fontFamily: V26.sans,
+                    height: 1.35,
+                  ),
+                ),
+                if (kIsWeb && !hasRec && hasChat) ...[
+                  const SizedBox(height: 14),
+                  Text(
+                    CallI18n.vaultWebNoLocalRecording.t(lang),
+                    style: const TextStyle(
+                      color: V26.goldSoft,
+                      fontFamily: V26.sans,
+                      fontSize: 13,
+                      height: 1.35,
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 18),
+                if (hasRec) ...[
+                  FilledButton(
+                    style: FilledButton.styleFrom(
+                      backgroundColor: V26.goldSoft,
+                      foregroundColor: V26.navy900,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                    ),
+                    onPressed: () =>
+                        Navigator.pop(ctx, _VaultSaveChoice.mediaAndTranscript),
+                    child: Text(CallI18n.vaultSaveMediaAndTranscript.t(lang)),
+                  ),
+                  const SizedBox(height: 10),
+                  OutlinedButton(
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.white,
+                      side: const BorderSide(color: Colors.white38),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                    ),
+                    onPressed: () => Navigator.pop(ctx, _VaultSaveChoice.mediaOnly),
+                    child: Text(CallI18n.vaultSaveMediaOnly.t(lang)),
+                  ),
+                ],
+                if (hasChat) ...[
+                  if (hasRec) const SizedBox(height: 10),
+                  OutlinedButton(
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.white,
+                      side: const BorderSide(color: V26.callGoldHairSoft),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                    ),
+                    onPressed: () => Navigator.pop(ctx, _VaultSaveChoice.chatOnly),
+                    child: Text(CallI18n.vaultSaveChatOnly.t(lang)),
+                  ),
+                ],
+                const SizedBox(height: 8),
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx, _VaultSaveChoice.skip),
+                  child: Text(
+                    CallI18n.vaultSaveSkip.t(lang),
+                    style: const TextStyle(color: Colors.white54),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+    await applyChoice(choice);
+  }
+
+  Widget _vaultAlertShell({
+    required String lang,
+    required String title,
+    required String body,
+    required List<Widget> actions,
+  }) {
+    return AlertDialog(
+      backgroundColor: V26.callGlass,
+      surfaceTintColor: Colors.transparent,
+      title: Text(
+        title,
+        style: const TextStyle(
+          color: Colors.white,
+          fontFamily: V26.serif,
+          fontWeight: FontWeight.w800,
+        ),
+      ),
+      content: Text(
+        body,
+        style: const TextStyle(
+          color: Colors.white70,
+          fontFamily: V26.sans,
+          height: 1.35,
+        ),
+      ),
+      actions: actions,
+    );
   }
 
   @override
@@ -143,9 +380,10 @@ class _CallScreenState extends State<CallScreen> {
           controller.phase == CallUiPhase.incoming ||
           controller.phase == CallUiPhase.awaitingMediaGesture ||
           controller.phase == CallUiPhase.error ||
-          controller.phase == CallUiPhase.ended,
+          (controller.phase == CallUiPhase.ended && _vaultExitGateDone),
       onPopInvokedWithResult: (didPop, _) {
         if (didPop) return;
+        if (controller?.phase == CallUiPhase.ended) return;
         unawaited(_confirmEnd());
       },
       child: Directionality(
@@ -199,7 +437,29 @@ class _CallScreenState extends State<CallScreen> {
           onExit: () => unawaited(controller.endCall()),
         );
       case CallUiPhase.ended:
-        return const Center(child: CircularProgressIndicator(color: V26.gold));
+        final lang = controller.args.language;
+        return Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const CircularProgressIndicator(color: V26.goldSoft),
+              const SizedBox(height: 20),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 28),
+                child: Text(
+                  CallI18n.vaultSaveSubtitle.t(lang),
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: Colors.white70,
+                    fontFamily: V26.sans,
+                    fontSize: 14,
+                    height: 1.35,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
     }
   }
 

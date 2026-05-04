@@ -123,6 +123,14 @@ class CallSessionController extends ChangeNotifier {
     return r;
   }
 
+  /// Non-destructive read for the post-call save dialog.
+  CallRecordingResult? get peekPostCallRecording => _postCallRecording;
+
+  /// Drop a pending recording without uploading (user skipped save).
+  void discardPostCallRecording() {
+    _postCallRecording = null;
+  }
+
   Future<void> boot() async {
     if (_disposed) return;
     if (args.isIncoming) {

@@ -226,6 +226,51 @@ class CallI18n {
       CallCopy(he: 'נסה שוב', en: 'Retry', ru: 'Повторить');
   static const errorExit = CallCopy(he: 'יציאה', en: 'Exit', ru: 'Выйти');
 
+  // ── Post-call vault save dialog ─────────────────────────────
+  static const vaultSaveTitle = CallCopy(
+    he: 'לשמור בכספת?',
+    en: 'Save to vault?',
+    ru: 'Сохранить в сейф?',
+  );
+  static const vaultSaveSubtitle = CallCopy(
+    he: 'בחר מה לשמור לפני סגירת המסך.',
+    en: 'Choose what to save before closing.',
+    ru: 'Выберите, что сохранить перед закрытием.',
+  );
+  static const vaultSaveMediaOnly = CallCopy(
+    he: 'שמור הקלטה בלבד (ללא תמלול)',
+    en: 'Save recording only (no transcription)',
+    ru: 'Только запись (без расшифровки)',
+  );
+  static const vaultSaveMediaAndTranscript = CallCopy(
+    he: 'שמור הקלטה + תמלול (מומלץ)',
+    en: 'Save recording + transcription (recommended)',
+    ru: 'Запись + расшифровка (рекомендуется)',
+  );
+  static const vaultSaveChatOnly = CallCopy(
+    he: 'שמור צ׳אט בלבד',
+    en: 'Save chat only',
+    ru: 'Только чат',
+  );
+  static const vaultSaveSkip = CallCopy(
+    he: 'לא עכשיו',
+    en: 'Not now',
+    ru: 'Не сейчас',
+  );
+  static const vaultWebNoLocalRecording = CallCopy(
+    he:
+        'בדפדפן אין כרגע הקלטת קובץ מקומית מהשיחה. אפשר לשמור את הצ׳אט אם כתבת הודעות. במובייל נשמרת גם הקלטת האודיו/וידאו.',
+    en:
+        'The browser cannot save a local call file yet. You can save chat if you typed messages. On mobile, audio/video recording is saved.',
+    ru:
+        'В браузере пока нет локальной записи звонка. Можно сохранить чат. На мобильных запись сохраняется.',
+  );
+  static const vaultNothingToSave = CallCopy(
+    he: 'אין הקלטה או צ׳אט לשמירה.',
+    en: 'Nothing to save (no recording or chat).',
+    ru: 'Нечего сохранить.',
+  );
+
   // ── Network quality chip ────────────────────────────────────
   static const qualityExcellent =
       CallCopy(he: 'מעולה', en: 'Excellent', ru: 'Отлично');

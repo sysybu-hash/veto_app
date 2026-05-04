@@ -96,19 +96,22 @@ class VaultSaveQueue extends ChangeNotifier {
     );
   }
 
-  /// Enqueue a full post-call pipeline (client recording + transcribe + vault).
+  /// Enqueue post-call pipeline: upload recording, optionally Gemini transcribe, then vault.
   void enqueueCallMediaArtifacts({
     required String eventId,
     required String language,
     String? roomLabel,
     CallRecordingResult? recording,
+    bool runTranscription = true,
   }) {
     if (eventId.isEmpty || recording == null || recording.bytes.isEmpty) {
       return;
     }
     final job = VaultSaveJob(
       id: _newId(),
-      label: roomLabel ?? 'שמירה מהשיחה',
+      label: runTranscription
+          ? (roomLabel ?? 'שמירה מהשיחה')
+          : (roomLabel ?? 'הקלטת שיחה'),
     );
     _jobs.add(job);
     if (_jobs.length > 8) {
@@ -122,6 +125,7 @@ class VaultSaveQueue extends ChangeNotifier {
         eventId: eventId,
         language: language,
         recording: recording,
+        runTranscription: runTranscription,
       ),
     );
   }
@@ -201,6 +205,7 @@ class VaultSaveQueue extends ChangeNotifier {
     required String eventId,
     required String language,
     required CallRecordingResult recording,
+    bool runTranscription = true,
   }) async {
     try {
       _updateJob(job, p: 0.01, line: 'מכווץ…');
@@ -229,6 +234,20 @@ class VaultSaveQueue extends ChangeNotifier {
             );
           },
         );
+      }
+
+      if (!runTranscription) {
+        _updateJob(job, p: 0.55, line: 'שומר בכספת…');
+        await _saveMediaOnlyVault(
+          job,
+          from: 0.55,
+          to: 1,
+          media: mediaComp,
+          label: 'מעלה הקלטה…',
+        );
+        _updateJob(job, p: 1, line: 'הושלם');
+        _finishJob(job);
+        return;
       }
 
       _updateJob(job, p: 0.5, line: 'ממליל…');
