@@ -614,6 +614,8 @@ class _ActiveView extends StatelessWidget {
                           onSend: onSend,
                         )
                       : Row(
+                          // Keep video stage physically left + chat right regardless of app RTL.
+                          textDirection: TextDirection.ltr,
                           children: [
                             Expanded(
                               child: _VideoOrVoiceStage(
@@ -873,41 +875,51 @@ class _VideoStage extends StatelessWidget {
               fit: StackFit.expand,
               children: [
                 if (hasRemote)
-                  AgoraVideoView(
-                    key: ValueKey('remote-$remoteUid'),
-                    controller: VideoViewController.remote(
-                      rtcEngine: engine,
-                      canvas: VideoCanvas(
-                        uid: remoteUid,
-                        renderMode: renderMode,
+                  Positioned.fill(
+                    child: AgoraVideoView(
+                      key: ValueKey('remote-$remoteUid'),
+                      controller: VideoViewController.remote(
+                        rtcEngine: engine,
+                        canvas: VideoCanvas(
+                          uid: remoteUid,
+                          renderMode: renderMode,
+                        ),
+                        connection: rtcConn,
                       ),
-                      connection: rtcConn,
                     ),
                   )
                 else if (canShowLocal)
-                  AgoraVideoView(
-                    key: const ValueKey('local-full-until-remote'),
-                    controller: VideoViewController(
-                      rtcEngine: engine,
-                      canvas: const VideoCanvas(
-                        uid: 0,
-                        renderMode: renderMode,
-                        mirrorMode: VideoMirrorModeType.videoMirrorModeEnabled,
+                  Positioned.fill(
+                    child: AgoraVideoView(
+                      key: const ValueKey('local-full-until-remote'),
+                      controller: VideoViewController(
+                        rtcEngine: engine,
+                        canvas: const VideoCanvas(
+                          uid: 0,
+                          renderMode: renderMode,
+                          mirrorMode: VideoMirrorModeType.videoMirrorModeEnabled,
+                        ),
                       ),
                     ),
                   )
                 else
-                  _VideoPlaceholder(controller: controller),
-                DecoratedBox(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [
-                        Colors.black.withValues(alpha: .18),
-                        Colors.transparent,
-                        Colors.black.withValues(alpha: .18),
-                      ],
+                  Positioned.fill(
+                    child: _VideoPlaceholder(controller: controller),
+                  ),
+                Positioned.fill(
+                  child: IgnorePointer(
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            Colors.black.withValues(alpha: .18),
+                            Colors.transparent,
+                            Colors.black.withValues(alpha: .18),
+                          ],
+                        ),
+                      ),
                     ),
                   ),
                 ),
