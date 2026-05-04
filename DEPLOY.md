@@ -102,6 +102,13 @@ RETURN_OTP_IN_JSON = 1
 Render Free נכנס לשינה אחרי ~15 דקות. הבקשה הראשונה לוקחת 30–60 שניות.  
 לשמירה על זמינות: הגדר **Cron Job** שמפעיל `/health` כל 14 דקות, או שדרג ל-Starter ($7/חודש).
 
+### שיחות וידאו (Agora) — סדר deploy מומלץ
+
+1. **Render (backend)** — לפרוס תחילה כשיש שינוי ב־`agoraToken.service.js` (ייצור UID ייחודי לטוקן) או בנתיבי טוקן. אם ה־API בפרוד עדיין ישן, הלקוח עלול לקבל `UID_CONFLICT` גם אחרי עדכון Flutter.
+2. **Commit + push** של `frontend/build/web/` אחרי `flutter build web` (או הסקריפט ב־`frontend` שמייצר את הארטיפקט), ואז **Vercel** — כדי שהדפדפן יקבל את לוגיקת ההתחברות וה־UI המעודכנים.
+
+פרטי בדיקה ידנית בין דפדפנים: [docs/CALL_QA_MATRIX.md](docs/CALL_QA_MATRIX.md).
+
 ---
 
 ## חלק ב׳ — Vercel (Flutter Web Frontend)

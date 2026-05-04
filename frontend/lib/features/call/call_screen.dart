@@ -12,6 +12,8 @@ import '../../services/vault_save_queue.dart';
 import '../../widgets/call/call_i18n.dart';
 import 'call_args.dart';
 import 'call_session_controller.dart';
+import 'call_web_media.dart';
+import 'web_local_preview.dart';
 
 class CallScreen extends StatefulWidget {
   const CallScreen({super.key});
@@ -26,6 +28,8 @@ class _CallScreenState extends State<CallScreen> {
   final TextEditingController _messageController = TextEditingController();
   bool _navigatedAway = false;
   bool _queuedArtifacts = false;
+  bool _webMediaInsecure = false;
+  String _webInsecureLang = 'he';
 
   @override
   void initState() {
@@ -46,6 +50,15 @@ class _CallScreenState extends State<CallScreen> {
     if (!mounted) return;
     if (args == null) {
       Navigator.of(context).pushReplacementNamed('/veto_screen');
+      return;
+    }
+
+    if (kIsWeb && !isCallMediaSecureContext()) {
+      if (!mounted) return;
+      setState(() {
+        _webMediaInsecure = true;
+        _webInsecureLang = args.language;
+      });
       return;
     }
 
@@ -114,7 +127,9 @@ class _CallScreenState extends State<CallScreen> {
     final direction = (args?.isRtl ?? true) ? TextDirection.rtl : TextDirection.ltr;
     return PopScope(
       canPop: controller == null ||
+          _webMediaInsecure ||
           controller.phase == CallUiPhase.incoming ||
+          controller.phase == CallUiPhase.awaitingMediaGesture ||
           controller.phase == CallUiPhase.error ||
           controller.phase == CallUiPhase.ended,
       onPopInvokedWithResult: (didPop, _) {
@@ -126,9 +141,14 @@ class _CallScreenState extends State<CallScreen> {
         child: Scaffold(
           backgroundColor: V26.callBgBottom,
           body: SafeArea(
-            child: controller == null
-                ? const Center(child: CircularProgressIndicator(color: V26.gold))
-                : _buildContent(controller),
+            child: _webMediaInsecure
+                ? _WebInsecureMediaView(
+                    language: _webInsecureLang,
+                    onBack: () => Navigator.of(context).pop(),
+                  )
+                : controller == null
+                    ? const Center(child: CircularProgressIndicator(color: V26.gold))
+                    : _buildContent(controller),
           ),
         ),
       ),
@@ -140,6 +160,11 @@ class _CallScreenState extends State<CallScreen> {
       case CallUiPhase.idle:
       case CallUiPhase.connecting:
         return _ConnectingView(controller: controller);
+      case CallUiPhase.awaitingMediaGesture:
+        return _WebGestureStartView(
+          controller: controller,
+          onStart: () => unawaited(controller.beginConnectAfterUserGesture()),
+        );
       case CallUiPhase.incoming:
         return _IncomingView(
           controller: controller,
@@ -287,6 +312,101 @@ class _CallGlowPainter extends CustomPainter {
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
+class _WebInsecureMediaView extends StatelessWidget {
+  const _WebInsecureMediaView({required this.language, required this.onBack});
+
+  final String language;
+  final VoidCallback onBack;
+
+  @override
+  Widget build(BuildContext context) {
+    return _CallScaffold(
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 480),
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.lock_outline, color: V26.goldSoft, size: 56),
+                const SizedBox(height: 16),
+                Text(
+                  CallI18n.webInsecureContext.t(language),
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontFamily: V26.sans,
+                    fontSize: 16,
+                    height: 1.4,
+                  ),
+                ),
+                const SizedBox(height: 24),
+                FilledButton(
+                  style: FilledButton.styleFrom(backgroundColor: V26.navy500),
+                  onPressed: onBack,
+                  child: Text(CallI18n.errorExit.t(language)),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _WebGestureStartView extends StatelessWidget {
+  const _WebGestureStartView({
+    required this.controller,
+    required this.onStart,
+  });
+
+  final CallSessionController controller;
+  final VoidCallback onStart;
+
+  @override
+  Widget build(BuildContext context) {
+    final lang = controller.args.language;
+    return _CallScaffold(
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 460),
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.touch_app_rounded, color: V26.goldSoft, size: 64),
+                const SizedBox(height: 20),
+                Text(
+                  CallI18n.webStartCallHint.t(lang),
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: Colors.white70,
+                    fontFamily: V26.sans,
+                    fontSize: 15,
+                    height: 1.35,
+                  ),
+                ),
+                const SizedBox(height: 28),
+                FilledButton(
+                  style: FilledButton.styleFrom(
+                    backgroundColor: V26.ok,
+                    padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                  ),
+                  onPressed: onStart,
+                  child: Text(CallI18n.webStartCall.t(lang)),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _ConnectingView extends StatelessWidget {
   const _ConnectingView({required this.controller});
   final CallSessionController controller;
@@ -299,7 +419,7 @@ class _ConnectingView extends StatelessWidget {
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 460),
           child: Padding(
-            padding: const EdgeInsets.all(24),
+            padding: EdgeInsets.all(MediaQuery.sizeOf(context).width < 360 ? 16 : 24),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -473,67 +593,80 @@ class _ActiveView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isWide = MediaQuery.sizeOf(context).width >= 900;
     final args = controller.args;
-    return _CallScaffold(
-      child: Column(
-        children: [
-          _TopBar(controller: controller),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(14, 6, 14, 10),
-              child: args.chatOnly
-                  ? _ChatPanel(
-                      controller: controller,
-                      speech: speech,
-                      messageController: messageController,
-                      onSend: onSend,
-                    )
-                  : Row(
-                      children: [
-                        Expanded(child: _VideoOrVoiceStage(controller: controller)),
-                        if (isWide) ...[
-                          const SizedBox(width: 14),
-                          SizedBox(
-                            width: 340,
-                            child: _ChatPanel(
-                              controller: controller,
-                              speech: speech,
-                              messageController: messageController,
-                              onSend: onSend,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final w = constraints.maxWidth;
+        final isWide = w >= 900;
+        final isCompact = w < 600;
+        final hPad = isCompact ? 10.0 : 14.0;
+        return _CallScaffold(
+          child: Column(
+            children: [
+              _TopBar(controller: controller, compact: isCompact),
+              Expanded(
+                child: Padding(
+                  padding: EdgeInsets.fromLTRB(hPad, 6, hPad, 10),
+                  child: args.chatOnly
+                      ? _ChatPanel(
+                          controller: controller,
+                          speech: speech,
+                          messageController: messageController,
+                          onSend: onSend,
+                        )
+                      : Row(
+                          children: [
+                            Expanded(
+                              child: _VideoOrVoiceStage(
+                                controller: controller,
+                                layoutWidth: w - hPad * 2,
+                              ),
                             ),
-                          ),
-                        ],
-                      ],
-                    ),
-            ),
+                            if (isWide) ...[
+                              const SizedBox(width: 14),
+                              SizedBox(
+                                width: 340,
+                                child: _ChatPanel(
+                                  controller: controller,
+                                  speech: speech,
+                                  messageController: messageController,
+                                  onSend: onSend,
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                ),
+              ),
+              _Toolbar(
+                controller: controller,
+                onChat: isWide
+                    ? null
+                    : () => _openChatSheet(
+                          context,
+                          controller,
+                          speech,
+                          messageController,
+                          onSend,
+                        ),
+                onEnd: onEnd,
+                compact: isCompact,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                CallI18n.aes256Footer.t(args.language),
+                style: const TextStyle(
+                  color: V26.goldSoft,
+                  fontFamily: V26.sans,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 8),
+            ],
           ),
-          _Toolbar(
-            controller: controller,
-            onChat: isWide
-                ? null
-                : () => _openChatSheet(
-                      context,
-                      controller,
-                      speech,
-                      messageController,
-                      onSend,
-                    ),
-            onEnd: onEnd,
-          ),
-          const SizedBox(height: 8),
-          Text(
-            CallI18n.aes256Footer.t(args.language),
-            style: const TextStyle(
-              color: V26.goldSoft,
-              fontFamily: V26.sans,
-              fontSize: 11,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          const SizedBox(height: 8),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -569,14 +702,16 @@ class _ActiveView extends StatelessWidget {
 }
 
 class _TopBar extends StatelessWidget {
-  const _TopBar({required this.controller});
+  const _TopBar({required this.controller, this.compact = false});
   final CallSessionController controller;
+  final bool compact;
 
   @override
   Widget build(BuildContext context) {
     final args = controller.args;
+    final pad = compact ? 10.0 : 14.0;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(14, 10, 14, 6),
+      padding: EdgeInsets.fromLTRB(pad, 10, pad, 6),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         decoration: BoxDecoration(
@@ -632,13 +767,17 @@ class _TopBar extends StatelessWidget {
               label: _formatDuration(controller.durationSec),
               color: V26.callRecBg,
               textColor: Colors.white,
+              small: compact,
             ),
-            const SizedBox(width: 8),
-            _Pill(
-              label: _qualityLabel(controller.quality, args.language),
-              color: V26.callGlassSoft,
-              textColor: V26.goldSoft,
-            ),
+            if (!compact) ...[
+              const SizedBox(width: 8),
+              _Pill(
+                label: _qualityLabel(controller.quality, args.language),
+                color: V26.callGlassSoft,
+                textColor: V26.goldSoft,
+                small: compact,
+              ),
+            ],
           ],
         ),
       ),
@@ -647,22 +786,28 @@ class _TopBar extends StatelessWidget {
 }
 
 class _Pill extends StatelessWidget {
-  const _Pill({required this.label, required this.color, required this.textColor});
+  const _Pill({
+    required this.label,
+    required this.color,
+    required this.textColor,
+    this.small = false,
+  });
   final String label;
   final Color color;
   final Color textColor;
+  final bool small;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      padding: EdgeInsets.symmetric(horizontal: small ? 8 : 10, vertical: small ? 5 : 6),
       decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(999)),
       child: Text(
         label,
         style: TextStyle(
           color: textColor,
           fontFamily: V26.sans,
-          fontSize: 11,
+          fontSize: small ? 10 : 11,
           fontWeight: FontWeight.w800,
         ),
       ),
@@ -671,21 +816,23 @@ class _Pill extends StatelessWidget {
 }
 
 class _VideoOrVoiceStage extends StatelessWidget {
-  const _VideoOrVoiceStage({required this.controller});
+  const _VideoOrVoiceStage({required this.controller, this.layoutWidth = 720});
   final CallSessionController controller;
+  final double layoutWidth;
 
   @override
   Widget build(BuildContext context) {
     if (!controller.args.wantVideo) {
-      return _VoiceStage(controller: controller);
+      return _VoiceStage(controller: controller, layoutWidth: layoutWidth);
     }
-    return _VideoStage(controller: controller);
+    return _VideoStage(controller: controller, layoutWidth: layoutWidth);
   }
 }
 
 class _VideoStage extends StatelessWidget {
-  const _VideoStage({required this.controller});
+  const _VideoStage({required this.controller, this.layoutWidth = 720});
   final CallSessionController controller;
+  final double layoutWidth;
 
   @override
   Widget build(BuildContext context) {
@@ -693,24 +840,32 @@ class _VideoStage extends StatelessWidget {
     final remoteUid = controller.remoteUid;
     final hasRemote = engine != null && remoteUid != null && remoteUid != 0;
     final canShowLocal = engine != null && !controller.videoMuted;
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.black,
-        borderRadius: BorderRadius.circular(V26.callRadiusVideo),
-        border: Border.all(color: V26.callGoldHair),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: .38),
-            blurRadius: 34,
-            offset: const Offset(0, 18),
-          ),
-        ],
+    const renderMode =
+        kIsWeb ? RenderModeType.renderModeAdaptive : RenderModeType.renderModeHidden;
+    final viewPad = MediaQuery.paddingOf(context);
+    return Padding(
+      padding: EdgeInsets.only(
+        left: viewPad.left > 0 ? 4 : 0,
+        right: viewPad.right > 0 ? 4 : 0,
       ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(V26.callRadiusVideo - 1),
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.black,
+          borderRadius: BorderRadius.circular(V26.callRadiusVideo),
+          border: Border.all(color: V26.callGoldHair),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: .38),
+              blurRadius: 34,
+              offset: const Offset(0, 18),
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(V26.callRadiusVideo - 1),
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
             if (hasRemote)
               AgoraVideoView(
                 key: ValueKey('remote-$remoteUid'),
@@ -718,7 +873,7 @@ class _VideoStage extends StatelessWidget {
                   rtcEngine: engine,
                   canvas: VideoCanvas(
                     uid: remoteUid,
-                    renderMode: RenderModeType.renderModeHidden,
+                    renderMode: renderMode,
                   ),
                   connection: RtcConnection(channelId: controller.args.channelId),
                 ),
@@ -730,7 +885,7 @@ class _VideoStage extends StatelessWidget {
                   rtcEngine: engine,
                   canvas: const VideoCanvas(
                     uid: 0,
-                    renderMode: RenderModeType.renderModeHidden,
+                    renderMode: RenderModeType.renderModeAdaptive,
                     mirrorMode: VideoMirrorModeType.videoMirrorModeEnabled,
                   ),
                 ),
@@ -760,26 +915,45 @@ class _VideoStage extends StatelessWidget {
               ),
             if (hasRemote && canShowLocal)
               PositionedDirectional(
-                top: 14,
-                start: 14,
-                child: _LocalPip(engine: engine),
+                top: 12 + viewPad.top * 0.25,
+                start: 12,
+                child: _LocalPip(engine: engine, layoutWidth: layoutWidth),
               ),
           ],
         ),
       ),
+    ),
     );
   }
 }
 
 class _LocalPip extends StatelessWidget {
-  const _LocalPip({required this.engine});
+  const _LocalPip({required this.engine, this.layoutWidth = 720});
   final RtcEngine engine;
+  final double layoutWidth;
 
   @override
   Widget build(BuildContext context) {
+    final fallback = Container(
+      color: V26.navy700,
+      alignment: Alignment.center,
+      child: const Text(
+        'המצלמה שלך',
+        textAlign: TextAlign.center,
+        style: TextStyle(
+          color: Colors.white54,
+          fontFamily: V26.sans,
+          fontSize: 11,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+    );
+    final narrow = layoutWidth < 420;
+    final pipW = kIsWeb ? (narrow ? 128.0 : 154.0) : (narrow ? 108.0 : 126.0);
+    final pipH = kIsWeb ? (narrow ? 96.0 : 116.0) : (narrow ? 82.0 : 96.0);
     return Container(
-      width: kIsWeb ? 154 : 126,
-      height: kIsWeb ? 116 : 96,
+      width: pipW,
+      height: pipH,
       decoration: BoxDecoration(
         color: V26.navy700,
         borderRadius: BorderRadius.circular(V26.callRadiusPip),
@@ -793,17 +967,19 @@ class _LocalPip extends StatelessWidget {
         ],
       ),
       clipBehavior: Clip.antiAlias,
-      child: AgoraVideoView(
-        key: const ValueKey('local-pip-agora'),
-        controller: VideoViewController(
-          rtcEngine: engine,
-          canvas: const VideoCanvas(
-            uid: 0,
-            renderMode: RenderModeType.renderModeHidden,
-            mirrorMode: VideoMirrorModeType.videoMirrorModeEnabled,
+      child: kIsWeb
+          ? WebLocalPreview(fallback: fallback)
+          : AgoraVideoView(
+              key: const ValueKey('local-pip-agora'),
+              controller: VideoViewController(
+                rtcEngine: engine,
+                canvas: const VideoCanvas(
+                  uid: 0,
+                  renderMode: RenderModeType.renderModeHidden,
+                  mirrorMode: VideoMirrorModeType.videoMirrorModeEnabled,
+                ),
+              ),
           ),
-        ),
-      ),
     );
   }
 }
@@ -847,15 +1023,19 @@ class _VideoPlaceholder extends StatelessWidget {
 }
 
 class _VoiceStage extends StatelessWidget {
-  const _VoiceStage({required this.controller});
+  const _VoiceStage({required this.controller, this.layoutWidth = 720});
   final CallSessionController controller;
+  final double layoutWidth;
 
   @override
   Widget build(BuildContext context) {
+    final maxCard = layoutWidth < 400 ? layoutWidth - 24.0 : 360.0;
     return Center(
-      child: Container(
-        width: 360,
-        padding: const EdgeInsets.all(28),
+      child: ConstrainedBox(
+        constraints: BoxConstraints(maxWidth: maxCard),
+        child: Container(
+        width: double.infinity,
+        padding: EdgeInsets.all(layoutWidth < 380 ? 20 : 28),
         decoration: BoxDecoration(
           color: V26.callGlass,
           border: Border.all(color: V26.callGoldHair),
@@ -885,6 +1065,7 @@ class _VoiceStage extends StatelessWidget {
           ],
         ),
       ),
+    ),
     );
   }
 }
@@ -894,18 +1075,22 @@ class _Toolbar extends StatelessWidget {
     required this.controller,
     required this.onEnd,
     this.onChat,
+    this.compact = false,
   });
 
   final CallSessionController controller;
   final VoidCallback onEnd;
   final VoidCallback? onChat;
+  final bool compact;
 
   @override
   Widget build(BuildContext context) {
+    final hPad = compact ? 10.0 : 14.0;
+    final btn = compact ? 44.0 : 48.0;
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 14),
+      padding: EdgeInsets.symmetric(horizontal: hPad),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        padding: EdgeInsets.symmetric(horizontal: compact ? 10 : 14, vertical: compact ? 10 : 12),
         decoration: BoxDecoration(
           color: V26.callGlass,
           border: Border.all(color: V26.callGoldHairSoft),
@@ -922,6 +1107,7 @@ class _Toolbar extends StatelessWidget {
               danger: true,
               onPressed: onEnd,
               tooltip: CallI18n.endCall.t(controller.args.language),
+              diameter: btn,
             ),
             _RoundButton(
               icon: controller.micMuted ? Icons.mic_off : Icons.mic,
@@ -930,6 +1116,7 @@ class _Toolbar extends StatelessWidget {
               tooltip: controller.micMuted
                   ? CallI18n.unmuteMic.t(controller.args.language)
                   : CallI18n.muteMic.t(controller.args.language),
+              diameter: btn,
             ),
             if (controller.args.wantVideo)
               _RoundButton(
@@ -939,12 +1126,14 @@ class _Toolbar extends StatelessWidget {
                 tooltip: controller.videoMuted
                     ? CallI18n.camera.t(controller.args.language)
                     : CallI18n.cameraOff.t(controller.args.language),
+                diameter: btn,
               ),
             if (!kIsWeb && controller.args.wantVideo)
               _RoundButton(
                 icon: Icons.flip_camera_ios,
                 onPressed: () => unawaited(controller.switchCamera()),
                 tooltip: CallI18n.flipCamera.t(controller.args.language),
+                diameter: btn,
               ),
             if (!kIsWeb)
               _RoundButton(
@@ -952,6 +1141,7 @@ class _Toolbar extends StatelessWidget {
                 active: controller.speakerOn,
                 onPressed: () => unawaited(controller.setSpeakerOn(!controller.speakerOn)),
                 tooltip: CallI18n.speaker.t(controller.args.language),
+                diameter: btn,
               ),
             if (kIsWeb && controller.args.wantVideo)
               _RoundButton(
@@ -961,6 +1151,7 @@ class _Toolbar extends StatelessWidget {
                 tooltip: controller.screenSharing
                     ? CallI18n.stopScreenShare.t(controller.args.language)
                     : CallI18n.screenShare.t(controller.args.language),
+                diameter: btn,
               ),
             _RoundButton(
               icon: Icons.noise_control_off,
@@ -969,12 +1160,14 @@ class _Toolbar extends StatelessWidget {
                 controller.setNoiseSuppression(!controller.noiseSuppression),
               ),
               tooltip: CallI18n.noiseSuppression.t(controller.args.language),
+              diameter: btn,
             ),
             if (onChat != null)
               _RoundButton(
                 icon: Icons.chat_bubble_outline,
                 onPressed: onChat,
                 tooltip: CallI18n.openChat.t(controller.args.language),
+                diameter: btn,
               ),
           ],
         ),
@@ -990,6 +1183,7 @@ class _RoundButton extends StatelessWidget {
     required this.tooltip,
     this.active = false,
     this.danger = false,
+    this.diameter = 48,
   });
 
   final IconData icon;
@@ -997,6 +1191,7 @@ class _RoundButton extends StatelessWidget {
   final String tooltip;
   final bool active;
   final bool danger;
+  final double diameter;
 
   @override
   Widget build(BuildContext context) {
@@ -1011,14 +1206,14 @@ class _RoundButton extends StatelessWidget {
         borderRadius: BorderRadius.circular(999),
         onTap: onPressed,
         child: Container(
-          width: 48,
-          height: 48,
+          width: diameter,
+          height: diameter,
           decoration: BoxDecoration(
             color: bg,
             shape: BoxShape.circle,
             border: Border.all(color: V26.callGoldHair),
           ),
-          child: Icon(icon, color: Colors.white, size: 22),
+          child: Icon(icon, color: Colors.white, size: diameter < 46 ? 20 : 22),
         ),
       ),
     );
@@ -1299,6 +1494,8 @@ String _errorText(CallFailure? failure, String lang) {
       return CallI18n.errorNetwork.t(lang);
     case CallFailureKind.mediaUnavailable:
       return CallI18n.errorMedia.t(lang);
+    case CallFailureKind.uidConflict:
+      return CallI18n.errorUidConflict.t(lang);
     case CallFailureKind.connectionFailed:
     case CallFailureKind.unknown:
     case CallFailureKind.none:

@@ -28,17 +28,17 @@ const DEFAULT_TTL_SEC = 60 * 60; // 1h
 function mongoIdToAgoraUid(mongoId) {
   const id = String(mongoId || '');
   const m  = id.match(/[0-9a-f]{24}/i);
-  if (m) {
-    const n = parseInt(m[0].slice(0, 8), 16) >>> 0;
-    return n === 0 ? 1 : n;
-  }
+  const stableId = (m ? m[0] : id).toLowerCase();
+
+  // Hash the full identifier. Mongo ObjectIds start with a 4-byte timestamp,
+  // so using only the first 8 hex chars assigns the same Agora uid to users
+  // created in the same second, which causes AgoraRTC UID_CONFLICT.
   let h = 2166136261 >>> 0;
-  for (let i = 0; i < id.length; i++) {
-    h ^= id.charCodeAt(i);
+  for (let i = 0; i < stableId.length; i++) {
+    h ^= stableId.charCodeAt(i);
     h = Math.imul(h, 16777619) >>> 0;
   }
-  const u = h % 4294967290;
-  return u === 0 ? 1 : u;
+  return (h % 4294967294) + 1;
 }
 
 function normalizeRole(role) {

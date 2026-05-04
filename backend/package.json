@@ -19,7 +19,7 @@
     "dev:urls": "node scripts/print-dev-urls.js",
     "cron:calendar": "node scripts/cron-calendar-reminders.js",
     "lint": "eslint src scripts server.js",
-    "test": "node --test ./test/crypto_otp.test.js ./test/ai_routes_mount.test.js"
+    "test": "node --test ./test/crypto_otp.test.js ./test/ai_routes_mount.test.js ./test/agora_token_uid.test.js"
   },
   "dependencies": {
     "@google/genai": "^1.48.0",

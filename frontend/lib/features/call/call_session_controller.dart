@@ -8,28 +8,13 @@ import '../../services/call_api_service.dart';
 import '../../services/call_route_args_storage.dart';
 import '../../services/in_call_permissions.dart';
 import '../../services/socket_service.dart';
+import 'agora_error_mapping.dart';
 import 'call_args.dart';
+import 'call_types.dart';
+
+export 'call_types.dart';
 
 const String kAgoraAppId = 'b40f2355783a4ccca027a91d0d7100ca';
-
-enum CallUiPhase { idle, incoming, connecting, active, reconnecting, ended, error }
-
-enum CallFailureKind {
-  none,
-  permissionDenied,
-  tokenInvalid,
-  tokenExpired,
-  networkLost,
-  connectionFailed,
-  mediaUnavailable,
-  unknown,
-}
-
-class CallFailure {
-  const CallFailure(this.kind, this.message);
-  final CallFailureKind kind;
-  final String message;
-}
 
 class CallNetworkQuality {
   const CallNetworkQuality({
@@ -78,6 +63,9 @@ class CallSessionController extends ChangeNotifier {
   bool _remoteHangup = false;
   int _retryAttempts = 0;
   static const int _maxRetries = 3;
+  int _joinRecoveryAttempts = 0;
+  static const int _maxJoinRecoveries = 4;
+  bool _recoveringJoin = false;
 
   Timer? _durationTimer;
   Timer? _connectWatchdog;
@@ -117,9 +105,20 @@ class CallSessionController extends ChangeNotifier {
   Future<void> boot() async {
     if (_disposed) return;
     if (args.isIncoming) {
-      _setPhase(CallUiPhase.incoming);
+      _transitionTo(CallUiPhase.incoming);
       return;
     }
+    if (kIsWeb && args.wantVideo && !args.chatOnly) {
+      _transitionTo(CallUiPhase.awaitingMediaGesture);
+      return;
+    }
+    await connect();
+  }
+
+  /// Web video: must run after a tap so [getUserMedia] / publish runs in a user gesture.
+  Future<void> beginConnectAfterUserGesture() async {
+    if (_disposed) return;
+    if (_phase != CallUiPhase.awaitingMediaGesture) return;
     await connect();
   }
 
@@ -137,7 +136,7 @@ class CallSessionController extends ChangeNotifier {
       });
     } catch (_) {}
     callRouteArgsStorageClear();
-    _setPhase(CallUiPhase.ended);
+    _transitionTo(CallUiPhase.ended);
   }
 
   Future<void> connect() async {
@@ -145,7 +144,7 @@ class CallSessionController extends ChangeNotifier {
     if (_joining || _joined || _phase == CallUiPhase.active) return;
 
     _failure = null;
-    _setPhase(CallUiPhase.connecting);
+    _transitionTo(CallUiPhase.connecting);
     _connectWatchdog?.cancel();
     _connectWatchdog = Timer(const Duration(seconds: 45), () {
       if (_disposed || _phase != CallUiPhase.connecting) return;
@@ -169,7 +168,7 @@ class CallSessionController extends ChangeNotifier {
       if (args.chatOnly) {
         _connectWatchdog?.cancel();
         _startDurationTimer();
-        _setPhase(CallUiPhase.active);
+        _transitionTo(CallUiPhase.active);
         return;
       }
 
@@ -198,6 +197,7 @@ class CallSessionController extends ChangeNotifier {
     _joined = false;
     _joining = false;
     _retryAttempts = 0;
+    _joinRecoveryAttempts = 0;
     _failure = null;
     await connect();
   }
@@ -221,7 +221,7 @@ class CallSessionController extends ChangeNotifier {
 
     await _leaveAndReleaseAgora();
     callRouteArgsStorageClear();
-    _setPhase(CallUiPhase.ended);
+    _transitionTo(CallUiPhase.ended);
   }
 
   Future<void> setMicMuted(bool muted) async {
@@ -338,6 +338,7 @@ class CallSessionController extends ChangeNotifier {
   }
 
   Future<void> _joinAgora({required bool enableVideo}) async {
+    if (_leaving || _disposed) return;
     if (_joining || _joined) return;
     _joining = true;
     _token = args.token;
@@ -345,6 +346,7 @@ class CallSessionController extends ChangeNotifier {
     _wantsVideo = enableVideo;
 
     try {
+      await _refreshAgoraCredentialsBeforeJoin();
       await _initEngine(enableVideoTrack: enableVideo);
       final engine = _engine;
       if (engine == null) return;
@@ -367,6 +369,33 @@ class CallSessionController extends ChangeNotifier {
       _joining = false;
       _setFatal(CallFailure(CallFailureKind.connectionFailed, err.toString()));
       rethrow;
+    }
+  }
+
+  Future<void> _refreshAgoraCredentialsBeforeJoin() async {
+    if (!RegExp(r'^[0-9a-fA-F]{24}$').hasMatch(args.eventId)) return;
+    try {
+      final fresh = await _callApi.fetchFreshAgoraToken(args.eventId);
+      final freshToken = fresh?['agoraToken']?.toString();
+      final freshUid = fresh?['agoraUid'];
+      final parsedUid = freshUid is int
+          ? freshUid
+          : freshUid is num
+              ? freshUid.toInt()
+              : int.tryParse(freshUid?.toString() ?? '');
+      if (freshToken != null && freshToken.isNotEmpty) {
+        _token = freshToken;
+      }
+      if (parsedUid != null && parsedUid > 0) {
+        _localUid = parsedUid;
+      }
+    } catch (err, st) {
+      developer.log(
+        'refreshAgoraCredentialsBeforeJoin',
+        name: 'VETO.Call',
+        error: err,
+        stackTrace: st,
+      );
     }
   }
 
@@ -409,10 +438,11 @@ class CallSessionController extends ChangeNotifier {
         _joining = false;
         _joined = true;
         _retryAttempts = 0;
+        _joinRecoveryAttempts = 0;
         _connectWatchdog?.cancel();
         _retryTimer?.cancel();
         _startDurationTimer();
-        _setPhase(CallUiPhase.active);
+        _transitionTo(CallUiPhase.active);
         if (kIsWeb && _wantsVideo && !_videoMuted) {
           unawaited(_webStartPreviewAndPublish());
         }
@@ -421,8 +451,9 @@ class CallSessionController extends ChangeNotifier {
         _joining = false;
         _joined = true;
         _retryAttempts = 0;
+        _joinRecoveryAttempts = 0;
         _retryTimer?.cancel();
-        _setPhase(CallUiPhase.active);
+        _transitionTo(CallUiPhase.active);
         if (kIsWeb && _wantsVideo && !_videoMuted) {
           unawaited(_webStartPreviewAndPublish());
         }
@@ -506,10 +537,10 @@ class CallSessionController extends ChangeNotifier {
       ) {
         switch (state) {
           case ConnectionStateType.connectionStateConnected:
-            _setPhase(CallUiPhase.active);
+            _transitionTo(CallUiPhase.active);
             break;
           case ConnectionStateType.connectionStateReconnecting:
-            if (!_leaving) _setPhase(CallUiPhase.reconnecting);
+            if (!_leaving) _transitionTo(CallUiPhase.reconnecting);
             break;
           case ConnectionStateType.connectionStateDisconnected:
           case ConnectionStateType.connectionStateFailed:
@@ -554,10 +585,72 @@ class CallSessionController extends ChangeNotifier {
         unawaited(_renewToken());
       },
       onError: (ErrorCodeType error, String message) {
-        _failure = CallFailure(_classifyAgoraError(error), '${error.name}: $message');
+        if (_leaving || _disposed) return;
+        final combined = '${error.name}: $message';
+        if (isJoinRecoverableFromSdkError(error, message)) {
+          unawaited(_recoverJoinAfterConflict(reason: combined));
+          return;
+        }
+        _failure = CallFailure(classifyAgoraErrorCode(error), combined);
         notifyListeners();
       },
     );
+  }
+
+  Future<void> _recoverJoinAfterConflict({required String reason}) async {
+    if (_disposed || _leaving || _recoveringJoin) return;
+    if (_joinRecoveryAttempts >= _maxJoinRecoveries) {
+      _setFatal(CallFailure(CallFailureKind.uidConflict, reason));
+      return;
+    }
+    _joinRecoveryAttempts++;
+    _recoveringJoin = true;
+    _failure = null;
+    _transitionTo(CallUiPhase.reconnecting);
+    notifyListeners();
+    try {
+      final engine = _engine;
+      if (engine != null) {
+        try {
+          await engine.leaveChannel();
+        } catch (_) {}
+        if (kIsWeb) {
+          await Future<void>.delayed(const Duration(milliseconds: 400));
+        }
+      }
+      await _refreshAgoraCredentialsBeforeJoin();
+      if (_disposed || _leaving) return;
+      final eng = _engine;
+      if (eng == null) {
+        _setFatal(
+          const CallFailure(
+            CallFailureKind.uidConflict,
+            'Engine released during recovery',
+          ),
+        );
+        return;
+      }
+      _joining = true;
+      await eng.joinChannel(
+        token: _token,
+        channelId: args.channelId,
+        uid: _localUid,
+        options: ChannelMediaOptions(
+          clientRoleType: ClientRoleType.clientRoleBroadcaster,
+          channelProfile: ChannelProfileType.channelProfileCommunication,
+          publishCameraTrack: _wantsVideo && !kIsWeb && !_videoMuted,
+          publishMicrophoneTrack: !_micMuted,
+          autoSubscribeAudio: true,
+          autoSubscribeVideo: true,
+        ),
+      );
+    } catch (err, st) {
+      developer.log('recoverJoinAfterConflict', name: 'VETO.Call', error: err, stackTrace: st);
+      _joining = false;
+      _setFatal(CallFailure(CallFailureKind.uidConflict, err.toString()));
+    } finally {
+      _recoveringJoin = false;
+    }
   }
 
   Future<void> _handleRtcDisconnect(ConnectionChangedReasonType reason) async {
@@ -567,6 +660,10 @@ class CallSessionController extends ChangeNotifier {
     }
     if (reason == ConnectionChangedReasonType.connectionChangedBannedByServer) {
       _setFatal(CallFailure(CallFailureKind.connectionFailed, reason.name));
+      return;
+    }
+    if (isRecoverableConnectionReason(reason)) {
+      unawaited(_recoverJoinAfterConflict(reason: reason.name));
       return;
     }
     if (_retryAttempts >= _maxRetries) {
@@ -579,7 +676,7 @@ class CallSessionController extends ChangeNotifier {
       return;
     }
     _retryAttempts++;
-    _setPhase(CallUiPhase.reconnecting);
+    _transitionTo(CallUiPhase.reconnecting);
     _retryTimer?.cancel();
     final backoff = Duration(milliseconds: 650 * (1 << (_retryAttempts - 1)));
     _retryTimer = Timer(backoff, () {
@@ -599,6 +696,8 @@ class CallSessionController extends ChangeNotifier {
       if (kIsWeb) {
         await Future<void>.delayed(const Duration(milliseconds: 500));
       }
+      await _refreshAgoraCredentialsBeforeJoin();
+      if (_disposed || _leaving) return;
       await engine.joinChannel(
         token: _token,
         channelId: args.channelId,
@@ -671,23 +770,6 @@ class CallSessionController extends ChangeNotifier {
       developer.log('renewToken', name: 'VETO.Call', error: err, stackTrace: st);
       _failure = CallFailure(CallFailureKind.tokenExpired, err.toString());
       notifyListeners();
-    }
-  }
-
-  CallFailureKind _classifyAgoraError(ErrorCodeType error) {
-    switch (error) {
-      case ErrorCodeType.errInvalidToken:
-      case ErrorCodeType.errInvalidAppId:
-        return CallFailureKind.tokenInvalid;
-      case ErrorCodeType.errTokenExpired:
-        return CallFailureKind.tokenExpired;
-      case ErrorCodeType.errNoPermission:
-        return CallFailureKind.permissionDenied;
-      case ErrorCodeType.errConnectionLost:
-      case ErrorCodeType.errConnectionInterrupted:
-        return CallFailureKind.networkLost;
-      default:
-        return CallFailureKind.unknown;
     }
   }
 
@@ -773,7 +855,7 @@ class CallSessionController extends ChangeNotifier {
     });
   }
 
-  void _setPhase(CallUiPhase next) {
+  void _transitionTo(CallUiPhase next) {
     if (_phase == next) return;
     _phase = next;
     notifyListeners();
@@ -784,7 +866,8 @@ class CallSessionController extends ChangeNotifier {
     _retryTimer?.cancel();
     _failure = failure;
     _joining = false;
-    _setPhase(CallUiPhase.error);
+    _recoveringJoin = false;
+    _transitionTo(CallUiPhase.error);
   }
 
   Future<void> _leaveAgoraOnly() async {
