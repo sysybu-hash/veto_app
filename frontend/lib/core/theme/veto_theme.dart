@@ -178,13 +178,13 @@ class VetoTheme {
         labelSmall:     TextStyle(fontFamily: V26.sans, fontSize: 11, fontWeight: FontWeight.w700, color: V26.ink500, letterSpacing: 1.5),
       ),
 
-      cardTheme: CardThemeData(
+      cardTheme: const CardThemeData(
         color: VetoMockup.surfaceCard,
         elevation: 0,
         shadowColor: Colors.transparent,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.all(Radius.circular(VetoMockup.radiusCard)),
-          side: const BorderSide(color: VetoMockup.hairline, width: 1),
+          side: BorderSide(color: VetoMockup.hairline, width: 1),
         ),
         margin: EdgeInsets.zero,
       ),
