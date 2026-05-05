@@ -53,8 +53,10 @@ import 'screens/citizen/citizen_tools_screen.dart';
 import 'screens/citizen/security_center_screen.dart';
 import 'screens/legal_document_screen.dart';
 import 'navigation/call_route_args_observer.dart';
+import 'navigation/current_route_observer.dart';
 import 'services/socket_service.dart';
 import 'services/vault_save_queue.dart';
+import 'widgets/global_legal_ai_overlay.dart';
 
 void _installGlobalErrorLogging() {
   final previousHandler = FlutterError.onError;
@@ -288,7 +290,10 @@ class VetoApp extends StatelessWidget {
 
     return MaterialApp(
       navigatorKey: vetoRootNavigatorKey,
-      navigatorObservers: <NavigatorObserver>[CallRouteArgsObserver()],
+      navigatorObservers: <NavigatorObserver>[
+        CallRouteArgsObserver(),
+        currentRouteObserver,
+      ],
       debugShowCheckedModeBanner: false,
       title: 'VETO',
       theme: a11y.mergeTheme(baseTheme),
@@ -325,7 +330,12 @@ class VetoApp extends StatelessWidget {
             highContrast: a11y.highContrast,
             disableAnimations: a11y.reduceMotion,
           ),
-          child: navigatorChild,
+          child: Stack(
+            children: [
+              Positioned.fill(child: navigatorChild),
+              const GlobalLegalAiOverlay(),
+            ],
+          ),
         );
       },
       initialRoute: initialRoute,

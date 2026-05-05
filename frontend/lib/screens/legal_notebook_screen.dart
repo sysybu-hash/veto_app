@@ -43,6 +43,31 @@ class _LegalNotebookScreenState extends State<LegalNotebookScreen> {
     });
   }
 
+  Future<void> _exportNotebook(Map<String, dynamic> row, String format) async {
+    final title = (row['name'] ?? 'Legal Notebook') as String;
+    final body =
+        'Generated from notebook: $title\nStatus: ${(row['status'] ?? 'draft')}';
+    final ok = await _api.exportLegalDocument(
+      title: title,
+      body: body,
+      format: format,
+      domain: 'notebook',
+      intent: 'export',
+      lang: codeForContext(),
+    );
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(ok
+            ? (format == 'pdf' ? 'PDF יוצא בהצלחה' : 'DOCX יוצא בהצלחה')
+            : 'הייצוא נכשל'),
+      ),
+    );
+  }
+
+  String codeForContext() =>
+      context.read<AppLanguageController>().code;
+
   @override
   Widget build(BuildContext context) {
     final code = context.watch<AppLanguageController>().code;
@@ -129,6 +154,18 @@ class _LegalNotebookScreenState extends State<LegalNotebookScreen> {
                           tooltip: 'NotebookLM בדפדפן',
                           icon: const Icon(Icons.open_in_new, color: V26.ink500, size: 20),
                           onPressed: () => _api.openInBrowser(id),
+                        ),
+                        IconButton(
+                          tooltip: 'ייצוא PDF',
+                          icon: const Icon(Icons.picture_as_pdf_outlined,
+                              color: V26.navy600, size: 20),
+                          onPressed: () => _exportNotebook(r, 'pdf'),
+                        ),
+                        IconButton(
+                          tooltip: 'ייצוא DOCX',
+                          icon: const Icon(Icons.description_outlined,
+                              color: V26.navy600, size: 20),
+                          onPressed: () => _exportNotebook(r, 'docx'),
                         ),
                         V26CTA(
                           'עריכה',
