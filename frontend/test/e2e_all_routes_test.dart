@@ -9,30 +9,40 @@ import 'package:veto/app_navigator.dart';
 import 'e2e_test_bindings.dart';
 import 'support/pump_veto_test_app.dart';
 
-const _kSmokeRoutes = <String>[
-  '/landing',
-  '/login',
-  '/call',
-  '/privacy',
-  '/terms',
-  '/wizard_home',
-  '/emergency_wizard',
-  '/veto_screen',
-  '/profile',
-  '/admin_settings',
-  '/files_vault',
-  '/legal_calendar',
-  '/legal_notebook',
-  '/admin_dashboard',
-  '/admin_subscriptions',
-  '/settings',
-  '/admin_users',
-  '/admin_lawyers',
-  '/admin_pending',
-  '/admin_logs',
-  '/lawyer_settings',
-  '/maps',
-  '/shared_vault',
+typedef _RouteCase = ({String route, Object? args, String label});
+
+final List<_RouteCase> _kSmokeRoutes = <_RouteCase>[
+  (route: '/landing', args: null, label: '/landing'),
+  (route: '/login', args: null, label: '/login'),
+  (route: '/call', args: null, label: '/call'),
+  (route: '/privacy', args: null, label: '/privacy'),
+  (route: '/terms', args: null, label: '/terms'),
+  (route: '/wizard_home', args: null, label: '/wizard_home'),
+  (route: '/emergency_wizard', args: null, label: '/emergency_wizard'),
+  (route: '/veto_screen', args: null, label: '/veto_screen'),
+  (route: '/veto_screen', args: <String, dynamic>{'wizard': true}, label: '/veto_screen (wizard)'),
+  (route: '/profile', args: null, label: '/profile'),
+  (route: '/admin_settings', args: null, label: '/admin_settings'),
+  (route: '/files_vault', args: null, label: '/files_vault'),
+  (route: '/legal_calendar', args: null, label: '/legal_calendar'),
+  (route: '/legal_notebook', args: null, label: '/legal_notebook'),
+  (route: '/admin_dashboard', args: null, label: '/admin_dashboard'),
+  (route: '/admin_subscriptions', args: null, label: '/admin_subscriptions'),
+  (route: '/settings', args: null, label: '/settings'),
+  (route: '/admin_users', args: null, label: '/admin_users'),
+  (route: '/admin_lawyers', args: null, label: '/admin_lawyers'),
+  (route: '/admin_pending', args: null, label: '/admin_pending'),
+  (route: '/admin_logs', args: null, label: '/admin_logs'),
+  (route: '/lawyer_settings', args: null, label: '/lawyer_settings'),
+  (route: '/maps', args: null, label: '/maps'),
+  (route: '/shared_vault', args: null, label: '/shared_vault'),
+  (route: '/citizen_contracts', args: null, label: '/citizen_contracts'),
+  (route: '/citizen_tasks', args: null, label: '/citizen_tasks'),
+  (route: '/citizen_contacts', args: null, label: '/citizen_contacts'),
+  (route: '/citizen_notifications', args: null, label: '/citizen_notifications'),
+  (route: '/citizen_reports', args: null, label: '/citizen_reports'),
+  (route: '/citizen_tools', args: null, label: '/citizen_tools'),
+  (route: '/security_center', args: null, label: '/security_center'),
 ];
 
 Object? _argsFor(String route) {
@@ -61,18 +71,18 @@ Object? _argsFor(String route) {
 void main() {
   setUpAll(initE2ePluginMocks);
 
-  for (final route in _kSmokeRoutes) {
-    testWidgets('route $route mounts (smoke)', (tester) async {
+  for (final rc in _kSmokeRoutes) {
+    testWidgets('route ${rc.label} mounts (smoke)', (tester) async {
       await pumpVetoTestApp(tester);
 
       final nav = vetoRootNavigatorKey.currentState;
       expect(nav, isNotNull, reason: 'navigatorKey must be attached');
 
-      final args = _argsFor(route);
+      final args = rc.args ?? _argsFor(rc.route);
       if (args != null) {
-        nav!.pushReplacementNamed(route, arguments: args);
+        nav!.pushReplacementNamed(rc.route, arguments: args);
       } else {
-        nav!.pushReplacementNamed(route);
+        nav!.pushReplacementNamed(rc.route);
       }
       await tester.pump();
       await tester.pump(const Duration(seconds: 2));
@@ -80,7 +90,7 @@ void main() {
       expect(
         find.byType(Material),
         findsWidgets,
-        reason: 'Route $route should build a Material subtree',
+        reason: 'Route ${rc.label} should build a Material subtree',
       );
     });
   }

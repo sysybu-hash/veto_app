@@ -15,9 +15,11 @@ import 'package:provider/provider.dart';
 import '../config/app_config.dart';
 import '../core/i18n/app_language.dart';
 import '../core/theme/veto_2026.dart';
+import '../core/theme/veto_mockup_tokens.dart';
 import '../services/auth_service.dart';
 import '../services/vault_save_queue.dart';
 import '../platform/browser_bridge.dart' as browser_bridge;
+import '../widgets/citizen_mockup_shell.dart';
 
 // ── i18n strings ─────────────────────────────────────────────
 class _L {
@@ -249,6 +251,7 @@ class FilesVaultScreen extends StatefulWidget {
 class _FilesVaultScreenState extends State<FilesVaultScreen>
     with SingleTickerProviderStateMixin {
   final AuthService _auth = AuthService();
+  late final Future<String?> _vaultRoleFuture = _auth.getStoredRole();
 
   List<_VaultFile> _files = [];
   List<_VaultFolder> _folders = [];
@@ -1262,6 +1265,51 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
     );
   }
 
+  Widget _vaultLayerStack() {
+    return Stack(
+      children: [
+        _loading
+            ? const Center(
+                child: CircularProgressIndicator(color: V26.navy600))
+            : _build2026Body(),
+        if (_isDragging)
+          IgnorePointer(
+            child: Container(
+              color: V26.navy600.withValues(alpha: 0.08),
+              child: Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(24),
+                      decoration: BoxDecoration(
+                        color: V26.navy500.withValues(alpha: 0.2),
+                        shape: BoxShape.circle,
+                        border:
+                            Border.all(color: V26.navy600, width: 2),
+                      ),
+                      child: const Icon(Icons.upload_file_rounded,
+                          size: 60, color: V26.navy600),
+                    ),
+                    const SizedBox(height: 20),
+                    Text(
+                      _l.dropFilesHere,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        color: V26.navy600,
+                        fontSize: 22,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
   // ── Build ─────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
@@ -1271,51 +1319,26 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
 
     final uploadLabel = _uploading ? _l.uploading : _l.upload;
 
-    return Directionality(
-      textDirection: isRtl ? TextDirection.rtl : TextDirection.ltr,
-      child: V26AppShell(
-        destinations: isWide
-            ? V26CitizenNav.destinations(code)
-            : V26CitizenNav.bottomDestinations(code),
-        currentIndex: isWide ? 2 /* כספת */ : 2 /* קבצים */,
-        onDestinationSelected: (i) {
-          final routes = isWide
-              ? V26CitizenNav.routes
-              : V26CitizenNav.bottomRoutes;
-          V26CitizenNav.go(context, routes[i], current: '/files_vault');
-        },
-        desktopStatusText: code == 'he'
-            ? 'מאובטח · מוצפן E2E · נשמר במכשיר ובכספת מוצפנת'
-            : (code == 'ru'
-                ? 'Безопасно · E2E шифрование'
-                : 'Secured · E2E encrypted · stored on-device & in encrypted vault'),
-        desktopTrailing: [
-          V26IconBtn(
-            icon: Icons.search_rounded,
-            onTap: () {},
-            tooltip: code == 'he' ? 'חיפוש' : 'Search',
-          ),
-          const SizedBox(width: 8),
-          V26PillCTA(
-            label: uploadLabel,
-            icon: _uploading ? Icons.hourglass_empty_rounded : Icons.add,
-            onTap: _uploading ? null : _pickFile,
-          ),
-        ],
-        mobileAppBar: AppBar(
-          backgroundColor: V26.surface,
+    return FutureBuilder<String?>(
+      future: _vaultRoleFuture,
+      builder: (context, snap) {
+        final citizenChrome = snap.data == 'user';
+        final stackChild = _vaultLayerStack();
+
+        final mobileAppBar = AppBar(
+          backgroundColor: citizenChrome ? VetoMockup.surfaceCard : V26.surface,
           elevation: 0,
           shadowColor: Colors.transparent,
           surfaceTintColor: Colors.transparent,
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new_rounded,
-                color: V26.ink900, size: 20),
+            icon: Icon(Icons.arrow_back_ios_new_rounded,
+                color: citizenChrome ? VetoMockup.ink : V26.ink900, size: 20),
             onPressed: () => Navigator.of(context).maybePop(),
           ),
           title: Text(
             _l.title,
-            style: const TextStyle(
-              color: V26.ink900,
+            style: TextStyle(
+              color: citizenChrome ? VetoMockup.ink : V26.ink900,
               fontFamily: V26.serif,
               fontWeight: FontWeight.w800,
               fontSize: 18,
@@ -1325,84 +1348,152 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
           actions: [
             if (kIsWeb)
               IconButton(
-                icon: const Icon(Icons.photo_camera_outlined,
-                    color: V26.ink700),
+                icon: Icon(Icons.photo_camera_outlined,
+                    color: citizenChrome ? VetoMockup.inkSecondary : V26.ink700),
                 onPressed: _uploading ? null : _captureFromCamera,
                 tooltip: 'Capture from camera',
               ),
             IconButton(
-              icon: const Icon(Icons.refresh_rounded, color: V26.ink700),
+              icon: Icon(Icons.refresh_rounded,
+                  color: citizenChrome ? VetoMockup.inkSecondary : V26.ink700),
               onPressed: _load,
               tooltip: 'Refresh',
             ),
           ],
-        ),
-        floatingAction: isWide
-            ? null
-            : FloatingActionButton.extended(
-                onPressed: _uploading ? null : _pickFile,
-                backgroundColor: _uploading
-                    ? V26.ink500.withValues(alpha: 0.35)
-                    : V26.navy600,
-                icon: _uploading
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                            strokeWidth: 2, color: Colors.white),
-                      )
-                    : const Icon(Icons.upload_file_rounded, color: Colors.white),
-                label: Text(
-                  uploadLabel,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w700,
-                  ),
+        );
+
+        if (citizenChrome) {
+          return Directionality(
+            textDirection: isRtl ? TextDirection.rtl : TextDirection.ltr,
+            child: CitizenMockupShell(
+              currentRoute: '/files_vault',
+              mobileNavIndex: 3,
+              mobileAppBar: mobileAppBar,
+              desktopTrailing: [
+                IconButton(
+                  icon: const Icon(Icons.search_rounded, color: VetoMockup.ink),
+                  tooltip: code == 'he' ? 'חיפוש' : 'Search',
+                  onPressed: () {},
                 ),
-              ),
-        child: Stack(
-          children: [
-            _loading
-                ? const Center(
-                    child: CircularProgressIndicator(color: V26.navy600))
-                : _build2026Body(),
-            if (_isDragging)
-              IgnorePointer(
-                child: Container(
-                  color: V26.navy600.withValues(alpha: 0.08),
-                  child: Center(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(24),
-                          decoration: BoxDecoration(
-                            color: V26.navy500.withValues(alpha: 0.2),
-                            shape: BoxShape.circle,
-                            border:
-                                Border.all(color: V26.navy600, width: 2),
-                          ),
-                          child: const Icon(Icons.upload_file_rounded,
-                              size: 60, color: V26.navy600),
-                        ),
-                        const SizedBox(height: 20),
-                        Text(
-                          _l.dropFilesHere,
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            color: V26.navy600,
-                            fontSize: 22,
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                      ],
+                const SizedBox(width: 4),
+                FilledButton.icon(
+                  onPressed: _uploading ? null : _pickFile,
+                  icon: _uploading
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(
+                              strokeWidth: 2, color: Colors.white),
+                        )
+                      : const Icon(Icons.add_rounded,
+                          color: Colors.white, size: 20),
+                  label: Text(
+                    uploadLabel,
+                    style: const TextStyle(
+                        fontWeight: FontWeight.w800, color: Colors.white),
+                  ),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: VetoMockup.primaryCta,
+                    disabledBackgroundColor:
+                        VetoMockup.inkSecondary.withValues(alpha: 0.35),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius:
+                          BorderRadius.circular(VetoMockup.radiusButton),
                     ),
                   ),
                 ),
+              ],
+              floatingActionButton: isWide
+                  ? null
+                  : FloatingActionButton.extended(
+                      onPressed: _uploading ? null : _pickFile,
+                      backgroundColor: _uploading
+                          ? VetoMockup.inkSecondary.withValues(alpha: 0.35)
+                          : VetoMockup.primaryCta,
+                      icon: _uploading
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                  strokeWidth: 2, color: Colors.white),
+                            )
+                          : const Icon(Icons.upload_file_rounded,
+                              color: Colors.white),
+                      label: Text(
+                        uploadLabel,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+              child: stackChild,
+            ),
+          );
+        }
+
+        return Directionality(
+          textDirection: isRtl ? TextDirection.rtl : TextDirection.ltr,
+          child: V26AppShell(
+            destinations: isWide
+                ? V26CitizenNav.destinations(code)
+                : V26CitizenNav.bottomDestinations(code),
+            currentIndex: isWide ? 2 /* כספת */ : 2 /* קבצים */,
+            onDestinationSelected: (i) {
+              final routes = isWide
+                  ? V26CitizenNav.routes
+                  : V26CitizenNav.bottomRoutes;
+              V26CitizenNav.go(context, routes[i], current: '/files_vault');
+            },
+            desktopStatusText: code == 'he'
+                ? 'מאובטח · מוצפן E2E · נשמר במכשיר ובכספת מוצפנת'
+                : (code == 'ru'
+                    ? 'Безопасно · E2E шифрование'
+                    : 'Secured · E2E encrypted · stored on-device & in encrypted vault'),
+            desktopTrailing: [
+              V26IconBtn(
+                icon: Icons.search_rounded,
+                onTap: () {},
+                tooltip: code == 'he' ? 'חיפוש' : 'Search',
               ),
-          ],
-        ),
-      ),
+              const SizedBox(width: 8),
+              V26PillCTA(
+                label: uploadLabel,
+                icon: _uploading ? Icons.hourglass_empty_rounded : Icons.add,
+                onTap: _uploading ? null : _pickFile,
+              ),
+            ],
+            mobileAppBar: mobileAppBar,
+            floatingAction: isWide
+                ? null
+                : FloatingActionButton.extended(
+                    onPressed: _uploading ? null : _pickFile,
+                    backgroundColor: _uploading
+                        ? V26.ink500.withValues(alpha: 0.35)
+                        : V26.navy600,
+                    icon: _uploading
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                                strokeWidth: 2, color: Colors.white),
+                          )
+                        : const Icon(Icons.upload_file_rounded,
+                            color: Colors.white),
+                    label: Text(
+                      uploadLabel,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+            child: stackChild,
+          ),
+        );
+      },
     );
   }
 

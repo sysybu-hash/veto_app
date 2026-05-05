@@ -7,7 +7,9 @@ import 'package:provider/provider.dart';
 
 import '../core/i18n/app_language.dart';
 import '../core/theme/veto_2026.dart';
+import '../core/theme/veto_mockup_tokens.dart';
 import '../services/auth_service.dart';
+import '../widgets/mockup_desktop_top_bar.dart';
 import '../services/fcm_user_service.dart';
 import '../services/push_service.dart';
 import '../services/socket_service.dart';
@@ -21,6 +23,8 @@ class LawyerDashboard extends StatefulWidget {
 }
 
 class _LawyerDashboardState extends State<LawyerDashboard> {
+  final _lawyerTopSearch = TextEditingController();
+
   String _lawyerName = '';
   bool _isAvailable = true;
   bool _isBooting = true;
@@ -261,6 +265,7 @@ class _LawyerDashboardState extends State<LawyerDashboard> {
 
   @override
   void dispose() {
+    _lawyerTopSearch.dispose();
     _alertSub?.cancel();
     _caseAcceptedSub?.cancel();
     _caseTakenSub?.cancel();
@@ -480,8 +485,58 @@ class _LawyerDashboardState extends State<LawyerDashboard> {
         : V26Backdrop(
             child: SafeArea(
               child: Column(children: [
-                    // ── Top bar ─────────────────────────────────
-                    Container(
+                    if (isDesktop)
+                      MockupDesktopTopBar(
+                        searchController: _lawyerTopSearch,
+                        langCode: code,
+                        trailing: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: VetoMockup.surfaceCard,
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(
+                                color: _isAvailable
+                                    ? VetoMockup.primaryCta.withValues(alpha: 0.45)
+                                    : VetoMockup.hairline,
+                              ),
+                            ),
+                            child: Row(mainAxisSize: MainAxisSize.min, children: [
+                              Container(
+                                width: 8,
+                                height: 8,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: _isAvailable
+                                      ? VetoMockup.primaryCta
+                                      : const Color(0xFFF59E0B),
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                _isAvailable
+                                    ? (isRtl ? 'מחובר' : 'Online')
+                                    : (isRtl ? 'לא זמין' : 'Offline'),
+                                style: TextStyle(
+                                  color: _isAvailable
+                                      ? VetoMockup.primaryCtaDeep
+                                      : VetoMockup.inkSecondary,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ]),
+                          ),
+                        ],
+                        onProfile: () =>
+                            Navigator.pushNamed(context, '/lawyer_settings'),
+                        onNotifications: () {
+                          HapticFeedback.lightImpact();
+                          _showNotificationsPanel();
+                        },
+                      )
+                    else
+                      Container(
                       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
                       child: Row(children: [
                         // Bell
@@ -788,7 +843,7 @@ class _LawyerDashboardState extends State<LawyerDashboard> {
     return Directionality(
       textDirection: AppLanguage.directionOf(code),
       child: Scaffold(
-        backgroundColor: V26.paper,
+        backgroundColor: VetoMockup.pageBackground,
         body: isDesktop
             ? Row(
                 children: [
@@ -805,6 +860,7 @@ class _LawyerDashboardState extends State<LawyerDashboard> {
   V26Sidebar _buildLawyerSidebar(BuildContext context, bool isRtl) {
     return V26Sidebar(
       width: 220,
+      useMockupTokens: true,
       header: Row(
         children: [
           const V26Crest(size: 34),

@@ -44,6 +44,13 @@ import 'screens/chat_screen.dart';
 import 'features/call/call_screen.dart';
 import 'screens/maps_screen.dart';
 import 'screens/shared_vault_screen.dart';
+import 'screens/citizen/citizen_contracts_screen.dart';
+import 'screens/citizen/citizen_tasks_screen.dart';
+import 'screens/citizen/citizen_contacts_screen.dart';
+import 'screens/citizen/citizen_notifications_screen.dart';
+import 'screens/citizen/citizen_reports_screen.dart';
+import 'screens/citizen/citizen_tools_screen.dart';
+import 'screens/citizen/security_center_screen.dart';
 import 'screens/legal_document_screen.dart';
 import 'navigation/call_route_args_observer.dart';
 import 'services/socket_service.dart';
@@ -233,7 +240,11 @@ final Map<String, WidgetBuilder> vetoAppRoutes = <String, WidgetBuilder>{
   '/login': (_) => const LoginScreen(),
   '/wizard_home': (_) => const OnboardingWizardScreen(),
   '/emergency_wizard': (_) => const WizardShellScreen(),
-  '/veto_screen': (_) => const VetoScreen(),
+  '/veto_screen': (ctx) {
+    final args = ModalRoute.of(ctx)?.settings.arguments;
+    final wizard = args is Map && args['wizard'] == true;
+    return VetoScreen(initialShowWizard: wizard);
+  },
   '/lawyer_dashboard': (_) => const LawyerDashboard(),
   '/profile': (_) => const ProfileScreen(),
   '/admin_settings': (_) => const AdminSettingsScreen(),
@@ -254,6 +265,13 @@ final Map<String, WidgetBuilder> vetoAppRoutes = <String, WidgetBuilder>{
   '/shared_vault': (_) => const SharedVaultScreen(),
   '/privacy': (_) => const LegalDocumentScreen(kind: LegalDocKind.privacy),
   '/terms': (_) => const LegalDocumentScreen(kind: LegalDocKind.terms),
+  '/citizen_contracts': (_) => const CitizenContractsScreen(),
+  '/citizen_tasks': (_) => const CitizenTasksScreen(),
+  '/citizen_contacts': (_) => const CitizenContactsScreen(),
+  '/citizen_notifications': (_) => const CitizenNotificationsScreen(),
+  '/citizen_reports': (_) => const CitizenReportsScreen(),
+  '/citizen_tools': (_) => const CitizenToolsScreen(),
+  '/security_center': (_) => const SecurityCenterScreen(),
 };
 
 class VetoApp extends StatelessWidget {

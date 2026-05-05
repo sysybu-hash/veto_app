@@ -33,12 +33,18 @@ import 'admin/admin_i18n.dart';
 import 'evidence_screen.dart';
 import '../widgets/veto_live_voice_sheet.dart';
 import '../widgets/gemini_ai_message_card.dart';
+import '../widgets/citizen_mockup_shell.dart';
+import 'citizen/citizen_home_hub.dart';
 
 part 'veto/veto_screen_models.dart';
 
 // ── VetoScreen ────────────────────────────────────────────
 class VetoScreen extends StatefulWidget {
-  const VetoScreen({super.key});
+  const VetoScreen({super.key, this.initialShowWizard = false});
+
+  /// When true (e.g. mobile "שלח VETO"), open wizard instead of hub.
+  final bool initialShowWizard;
+
   @override
   State<VetoScreen> createState() => _VetoScreenState();
 }
@@ -51,7 +57,9 @@ class _VetoScreenState extends State<VetoScreen> {
   final int _tab = 0;
   // ── Core state
   String _role = '', _phone = '';
+  String _displayName = '';
   String _langKey = 'he';
+  late bool _citizenWizardMode;
   bool _isDispatching = false;
   bool _isLoading = false;
   bool _isListening = false;
@@ -103,6 +111,7 @@ class _VetoScreenState extends State<VetoScreen> {
   @override
   void initState() {
     super.initState();
+    _citizenWizardMode = widget.initialShowWizard;
     // #region agent log (perf boot)
     if (kIsWeb) {
       // ignore: avoid_print
@@ -230,11 +239,13 @@ class _VetoScreenState extends State<VetoScreen> {
       auth.getStoredPhone(),
       auth.getToken(),
       auth.getStoredPreferredLanguage(),
+      auth.getStoredName(),
     ]);
     final r = outs[0] as String?;
     final p = outs[1] as String?;
     final t = outs[2] as String?;
     final language = AppLanguage.normalize(outs[3] as String?);
+    final storedName = outs[4] as String?;
     if (!mounted) return;
     if (r == 'lawyer') {
       Navigator.of(context).pushReplacementNamed('/lawyer_dashboard');
@@ -252,6 +263,7 @@ class _VetoScreenState extends State<VetoScreen> {
         _phone = p ?? '';
         _token = t;
         _langKey = language;
+        _displayName = (storedName ?? '').trim();
       });
       _messages.add(_Msg(text: _l.greeting, isUser: false));
       if (_role == 'admin') _loadAdminFiles();
@@ -1058,9 +1070,76 @@ class _VetoScreenState extends State<VetoScreen> {
     final bool isRtl = _langKey == 'he';
     final bool isWide =
         MediaQuery.sizeOf(context).width >= V26AppShell.desktopBreakpoint;
+    final bool useCitizenMockup = !isAdmin && _role != 'lawyer';
 
-    // Desktop uses the 2026 pill-nav shell and renders the wizard/home
-    // directly (other routes navigate to their dedicated screens).
+    Widget hubOrWizard(bool wide) {
+      if (!_citizenWizardMode) {
+        return CitizenHomeHub(
+          langKey: _langKey,
+          userName: _displayName,
+          onSendVeto: () => setState(() => _citizenWizardMode = true),
+          onOpenLegalTool: (route) => Navigator.pushNamed(context, route),
+        );
+      }
+      final wizardBody = SafeArea(
+        top: !wide,
+        child: RepaintBoundary(
+          child: _buildWizardTab(isAdmin, isRtl),
+        ),
+      );
+      if (wide) {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 10, 12, 0),
+              child: Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: TextButton.icon(
+                  onPressed: () => setState(() => _citizenWizardMode = false),
+                  icon: const Icon(Icons.arrow_back_rounded),
+                  label: Text(
+                    _langKey == 'he'
+                        ? 'חזרה לדף הבית'
+                        : (_langKey == 'ru' ? 'На главную' : 'Back to home'),
+                  ),
+                ),
+              ),
+            ),
+            Expanded(child: wizardBody),
+          ],
+        );
+      }
+      return wizardBody;
+    }
+
+    if (useCitizenMockup && isWide) {
+      return Directionality(
+        textDirection: isRtl ? TextDirection.rtl : TextDirection.ltr,
+        child: CitizenMockupShell(
+          currentRoute: '/veto_screen',
+          showMobileBottomBar: false,
+          child: hubOrWizard(true),
+        ),
+      );
+    }
+
+    if (useCitizenMockup && !isWide) {
+      return Directionality(
+        textDirection: isRtl ? TextDirection.rtl : TextDirection.ltr,
+        child: CitizenMockupShell(
+          currentRoute: '/veto_screen',
+          mobileAppBar: _buildAppBar(isAdmin, citizenMockup: true),
+          mobileNavIndex: citizenMobileNavIndexForRoute(
+            '/veto_screen',
+            wizardMode: _citizenWizardMode,
+          ),
+          child: hubOrWizard(false),
+        ),
+      );
+    }
+
+    // Desktop — admin / legacy: pill-nav shell + wizard
     if (isWide) {
       return Directionality(
         textDirection: isRtl ? TextDirection.rtl : TextDirection.ltr,
@@ -1124,19 +1203,15 @@ class _VetoScreenState extends State<VetoScreen> {
       );
     }
 
-    // Mobile: use V26AppShell so the bottom bar matches the five canonical
-    // citizen destinations (Home · Chat · Files · Map · Profile). The Home
-    // tab stays local to this screen; every other destination navigates to
-    // its dedicated route. The existing app-bar (brand + hamburger) rides on
-    // as `mobileAppBar`.
+    // Mobile — admin / legacy bottom tabs
     return Directionality(
       textDirection: isRtl ? TextDirection.rtl : TextDirection.ltr,
       child: V26AppShell(
         destinations: V26CitizenNav.bottomDestinations(_langKey),
-        currentIndex: 0, // בית — this is the home hub
+        currentIndex: 0,
         onDestinationSelected: (i) {
           const routes = V26CitizenNav.bottomRoutes;
-          if (i == 0) return; // already on Home
+          if (i == 0) return;
           Navigator.of(context)
               .pushReplacementNamed(routes[i.clamp(0, routes.length - 1)]);
         },
@@ -1157,7 +1232,9 @@ class _VetoScreenState extends State<VetoScreen> {
   }
 
   // ── AppBar: accessibility+flag left | centered title | hamburger right ──
-  PreferredSizeWidget _buildAppBar(bool isAdmin) {
+  PreferredSizeWidget _buildAppBar(bool isAdmin, {bool citizenMockup = false}) {
+    final showBackToHub =
+        citizenMockup && _citizenWizardMode && !isAdmin && _role != 'lawyer';
     return AppBar(
       backgroundColor: V26.surface,
       surfaceTintColor: Colors.transparent,
@@ -1173,10 +1250,16 @@ class _VetoScreenState extends State<VetoScreen> {
         ),
       ),
       iconTheme: const IconThemeData(color: V26.ink900, size: 24),
-      // Start side: language only (accessibility sits next to hamburger in [actions])
+      // Start side: optional back to hub (mockup wizard) + language
       leading: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
+          if (showBackToHub)
+            IconButton(
+              icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
+              onPressed: () => setState(() => _citizenWizardMode = false),
+              tooltip: _langKey == 'he' ? 'דף הבית' : 'Home',
+            ),
           const SizedBox(width: 4),
           AppLanguageMenu(
             compact: true,
@@ -1193,7 +1276,7 @@ class _VetoScreenState extends State<VetoScreen> {
           ),
         ],
       ),
-      leadingWidth: 120,
+      leadingWidth: showBackToHub ? 168 : 120,
       // Centered brand title
       title: Row(
         mainAxisSize: MainAxisSize.min,

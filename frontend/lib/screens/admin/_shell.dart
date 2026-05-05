@@ -25,6 +25,7 @@ import 'package:provider/provider.dart';
 
 import '../../core/i18n/app_language.dart';
 import '../../core/theme/veto_2026.dart';
+import '../../core/theme/veto_mockup_tokens.dart';
 import '../../widgets/app_language_menu.dart';
 
 /// Admin section identity — one entry per navigable admin route.
@@ -190,7 +191,7 @@ class AdminShell extends StatelessWidget {
 
     if (!isDesktop) {
       return Scaffold(
-        backgroundColor: V26.paper,
+        backgroundColor: VetoMockup.pageBackground,
         appBar: AppBar(
           backgroundColor: V26.surface,
           elevation: 0,
@@ -241,7 +242,7 @@ class AdminShell extends StatelessWidget {
 
     return VetoScaffold(
       backdrop: false,
-      background: V26.paper,
+      background: VetoMockup.pageBackground,
       sidebar: _buildSidebar(context, code, isRtl),
       desktopTopBar: _AdminTopBar(
         title: title,
@@ -359,8 +360,8 @@ class _AdminTopBar extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
       decoration: const BoxDecoration(
-        color: V26.surface,
-        border: Border(bottom: BorderSide(color: V26.hairline)),
+        color: VetoMockup.surfaceCard,
+        border: Border(bottom: BorderSide(color: VetoMockup.hairline)),
       ),
       child: Row(
         children: [
@@ -382,25 +383,29 @@ class _AdminTopBar extends StatelessWidget {
                 decoration: InputDecoration(
                   hintText: _shellStr(code, 'search_hint'),
                   hintStyle: const TextStyle(
-                      color: V26.ink300, fontFamily: V26.sans, fontSize: 13),
-                  prefixIcon:
-                      const Icon(Icons.search, size: 18, color: V26.ink300),
+                      color: VetoMockup.inkSecondary,
+                      fontFamily: V26.sans,
+                      fontSize: 13),
+                  prefixIcon: const Icon(Icons.search_rounded,
+                      size: 20, color: VetoMockup.inkSecondary),
                   isDense: true,
-                  contentPadding: const EdgeInsets.symmetric(vertical: 10),
+                  contentPadding:
+                      const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    borderSide: const BorderSide(color: V26.hairline),
+                    borderRadius: BorderRadius.circular(999),
+                    borderSide: BorderSide.none,
                   ),
                   enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    borderSide: const BorderSide(color: V26.hairline),
+                    borderRadius: BorderRadius.circular(999),
+                    borderSide: BorderSide.none,
                   ),
                   focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    borderSide: const BorderSide(color: V26.navy500, width: 1.5),
+                    borderRadius: BorderRadius.circular(999),
+                    borderSide:
+                        const BorderSide(color: VetoMockup.primaryCta, width: 1.5),
                   ),
                   filled: true,
-                  fillColor: V26.paper2,
+                  fillColor: VetoMockup.pageBackground,
                 ),
               ),
             ),

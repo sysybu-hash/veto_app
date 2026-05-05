@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 
 import '../../core/i18n/app_language.dart';
 import '../../core/theme/veto_2026.dart';
+import '../../core/theme/veto_mockup_tokens.dart';
 import '../../core/theme/veto_2026_wizard.dart';
 import '../../widgets/app_language_menu.dart';
 import '../../services/auth_service.dart';
@@ -492,7 +493,7 @@ class _WizardShellScreenState extends State<WizardShellScreen> {
     return Directionality(
       textDirection: AppLanguage.directionOf(lang),
       child: Scaffold(
-        backgroundColor: V26.paper,
+        backgroundColor: VetoMockup.pageBackground,
         body: V26Backdrop(
           child: SafeArea(
             child: Row(

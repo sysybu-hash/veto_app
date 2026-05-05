@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 
 import '../core/i18n/app_language.dart';
 import '../core/theme/veto_2026.dart';
+import '../core/theme/veto_mockup_tokens.dart';
 
 /// Which legal document to show.
 enum LegalDocKind {
@@ -62,9 +63,9 @@ class LegalDocumentScreen extends StatelessWidget {
         _titles[lang]?[LegalDocKind.terms] ?? _titles['en']![LegalDocKind.terms]!;
 
     return Scaffold(
-      backgroundColor: V26.paper,
+      backgroundColor: VetoMockup.pageBackground,
       appBar: AppBar(
-        backgroundColor: V26.surface,
+        backgroundColor: VetoMockup.surfaceCard,
         elevation: 0,
         shadowColor: Colors.transparent,
         surfaceTintColor: Colors.transparent,
@@ -72,7 +73,7 @@ class LegalDocumentScreen extends StatelessWidget {
           title,
           style: const TextStyle(
             fontFamily: V26.serif,
-            color: V26.ink900,
+            color: VetoMockup.ink,
             fontSize: 18,
             fontWeight: FontWeight.w800,
             letterSpacing: -0.2,
@@ -80,12 +81,12 @@ class LegalDocumentScreen extends StatelessWidget {
         ),
         centerTitle: true,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: V26.ink900),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: VetoMockup.ink),
           onPressed: () => Navigator.of(context).maybePop(),
         ),
         bottom: const PreferredSize(
           preferredSize: Size.fromHeight(1),
-          child: Divider(height: 1, color: V26.hairline),
+          child: Divider(height: 1, color: VetoMockup.hairline),
         ),
       ),
       body: V26Backdrop(

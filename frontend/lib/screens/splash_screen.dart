@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import '../core/i18n/app_language.dart';
 import '../core/theme/veto_2026.dart';
 import '../core/theme/veto_2026_splash.dart';
+import '../core/theme/veto_mockup_tokens.dart';
 
 /// Splash — matches `2026/splash.html` (light · crest-xl · 3 dots · 1.8s).
 class SplashScreen extends StatefulWidget {
@@ -69,6 +70,7 @@ class _SplashScreenState extends State<SplashScreen>
     final code = context.watch<AppLanguageController>().code;
 
     return Scaffold(
+      backgroundColor: VetoMockup.pageBackground,
       body: V26SplashStage(
         child: Center(
           child: AnimatedBuilder(

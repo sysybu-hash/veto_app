@@ -177,6 +177,7 @@ app.use('/api/ai', require('./src/routes/ai.routes'));
 app.use('/api/payments', require('./src/routes/payment.routes'));
 app.use('/api/chat', require('./src/routes/chat.routes'));
 app.use('/api/vault', require('./src/routes/vault.routes'));
+app.use('/api/citizen-dashboard', require('./src/routes/citizenDashboard.routes'));
 app.use('/api/calls', require('./src/routes/call.routes'));
 
 app.get('/', (_, res) =>

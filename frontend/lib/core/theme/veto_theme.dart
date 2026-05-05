@@ -7,6 +7,7 @@
 import 'package:flutter/material.dart';
 
 import 'veto_2026.dart';
+import 'veto_mockup_tokens.dart';
 
 // ── 2026 palette (exposed via the legacy VetoColors API) ──
 class VetoColors {
@@ -115,7 +116,7 @@ class VetoTheme {
 
   static ThemeData luxuryLight() {
     const ink = VetoColors.inkDark;
-    const paper = VetoColors.background;
+    const paper = VetoMockup.pageBackground;
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.light,
@@ -177,13 +178,13 @@ class VetoTheme {
         labelSmall:     TextStyle(fontFamily: V26.sans, fontSize: 11, fontWeight: FontWeight.w700, color: V26.ink500, letterSpacing: 1.5),
       ),
 
-      cardTheme: const CardThemeData(
-        color: Color(0xFFFFFFFF),
+      cardTheme: CardThemeData(
+        color: VetoMockup.surfaceCard,
         elevation: 0,
         shadowColor: Colors.transparent,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.all(Radius.circular(16)),
-          side: BorderSide(color: VetoColors.border, width: 1),
+          borderRadius: BorderRadius.all(Radius.circular(VetoMockup.radiusCard)),
+          side: const BorderSide(color: VetoMockup.hairline, width: 1),
         ),
         margin: EdgeInsets.zero,
       ),
@@ -215,26 +216,41 @@ class VetoTheme {
 
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: VetoColors.accent,
+          backgroundColor: VetoMockup.primaryCta,
           foregroundColor: Colors.white,
-          elevation: 0,
+          elevation: 2,
+          shadowColor: VetoMockup.primaryCta.withValues(alpha: 0.35),
           padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
           minimumSize: const Size(48, 48),
           iconSize: 22,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          textStyle: const TextStyle(fontFamily: 'Heebo', fontSize: 15, fontWeight: FontWeight.w700, letterSpacing: 0.4),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(VetoMockup.radiusButton),
+          ),
+          textStyle: const TextStyle(
+            fontFamily: 'Heebo',
+            fontSize: 15,
+            fontWeight: FontWeight.w800,
+            letterSpacing: 0.3,
+          ),
         ),
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
-          backgroundColor: VetoColors.accent,
+          backgroundColor: VetoMockup.primaryCta,
           foregroundColor: Colors.white,
-          elevation: 0,
+          elevation: 1,
+          shadowColor: VetoMockup.primaryCta.withValues(alpha: 0.3),
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
           minimumSize: const Size(48, 48),
           iconSize: 22,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          textStyle: const TextStyle(fontFamily: 'Heebo', fontSize: 15, fontWeight: FontWeight.w700),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(VetoMockup.radiusButton),
+          ),
+          textStyle: const TextStyle(
+            fontFamily: 'Heebo',
+            fontSize: 15,
+            fontWeight: FontWeight.w800,
+          ),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
