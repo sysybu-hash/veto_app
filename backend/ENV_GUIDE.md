@@ -54,6 +54,109 @@
 - `AGORA_APP_ID` — **אותו** App ID כמו ב-Flutter, קבוע `kAgoraAppIdPlaceholder` ב-`frontend/lib/services/agora_service.dart`.
 - `AGORA_APP_CERTIFICATE` — מ-Console (Primary certificate). אם ריק, השרת שולח `agoraToken` ריק ו-`agoraUid: 0` (התאמה לפרויקט שמאפשר join רק לפי App ID; אם ב-Agora הופעל **App Certificate** וחובה token — חייבים למלא. הטוקן נבנה ב-`agoraToken.service.js` ב-`session_ready`.
 
+### Agora Cloud Recording + AWS S3 (הקלטה מלאה בדפדפן)
+
+בלי הבלוק הזה, שיחות **web** נשארות עם מיקרופון מקומי בלבד; עם הבלוק — מיקס מלא (אודיו/וידאו) דרך שרת Agora → קובץ ב-S3 → השרת מעלה ל-Cloudinary ותמלול כרגיל.
+
+**מקור בקוד:** `backend/src/services/agoraCloudRecording.service.js` · `call.controller.js` (נתיבי `cloud-recording/*`).
+
+#### א) Agora Console — להפעיל Cloud Recording
+
+1. היכנס ל-[Agora Console](https://console.agora.io/v2) → **Project Management** (ניהול פרויקטים).
+2. בחר את **אותו פרויקט** כמו `AGORA_APP_ID` של VETO → אייקון עריכה.
+3. מצא **Cloud Recording** → **Enable** → אשר (**Apply**).
+4. [מדריך רשמי (Prerequisites)](https://docs.agora.io/en/cloud-recording/get-started/getstarted) — ודא שהשירות מופעל לפני בדיקות.
+
+#### ב) Agora Console — Customer ID + Secret (RESTful — לא App Certificate)
+
+1. ב-Console: **Developer Toolkit** → **RESTful API**.
+2. **Add a secret** → **OK** → **Download** את `key_and_secret.txt` (מורידים **פעם אחת** — לשמור במקום בטוח).
+3. ממלאים ב-Render / `.env`:
+   - `AGORA_RESTFUL_CUSTOMER_ID` = ה-**Customer ID** (המפתח בקובץ).
+   - `AGORA_RESTFUL_CUSTOMER_SECRET` = ה-**Customer Secret** (הסוד בקובץ).
+
+[אימות REST (Basic Auth)](https://docs.agora.io/en/cloud-recording/reference/restful-authentication)
+
+#### ג) דומיין REST של Agora
+
+- `AGORA_RESTFUL_DOMAIN` — ברירת מחדל בקוד: `https://api.sd-rtn.com`.
+- אם מתקבלות שגיאות רשת/אזור, נסה `https://api.agora.io` (כמו בדוגמאות curl הרשמיות).
+
+#### ד) AWS — Bucket + משתמש IAM
+
+1. [AWS Console](https://console.aws.amazon.com/s3/) → **Create bucket** — בחר **Region** (למשל `us-east-1`). שם bucket גלובלי ייחודי.
+2. **IAM** → **Users** → **Create user** — סוג: programmatic access → צור **Access key** (שומרים `Access key ID` + `Secret access key`).
+3. **Attach policy** מותאמת (inline או מנוהלת) — לפחות על ה-bucket של VETO:
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "s3:PutObject",
+        "s3:GetObject",
+        "s3:ListBucket",
+        "s3:AbortMultipartUpload",
+        "s3:ListMultipartUploadParts",
+        "s3:ListBucketMultipartUploads"
+      ],
+      "Resource": [
+        "arn:aws:s3:::החלף-בשם-ה-bucket",
+        "arn:aws:s3:::החלף-בשם-ה-bucket/*"
+      ]
+    }
+  ]
+}
+```
+
+- **Agora** משתמשת ב-`accessKey` / `secretKey` שאתה שולח ב-`start` כדי **לכתוב** ל-S3 מהשרתים שלהם.
+- **Render (Node)** משתמש באותם מפתחות (דרך `@aws-sdk/client-s3`) כדי **לקרוא** את ה-MP4 ולהעלות ל-Cloudinary — אותו משתמש IAM חייב להרשות גם קריאה.
+
+חסימת גישה ציבורית ל-bucket: אין צורך ב-public read; הגישה היא עם מפתחות.
+
+#### ה) `AGORA_CR_S3_REGION_NUM` — לא אותו מספר כמו ב-AWS!
+
+זהו **קוד אזור של Agora** ל-`vendor=1` (Amazon S3), לא שם ה-region של AWS.
+
+| אזור AWS (דוגמה) | `AGORA_CR_S3_REGION_NUM` |
+|------------------|--------------------------|
+| us-east-1        | **0**                    |
+| us-east-2        | 1                        |
+| us-west-2        | 3                        |
+| eu-west-1        | 4                        |
+| eu-central-1     | 7                        |
+
+טבלה מלאה: [Third-party cloud storage regions (region-vendor)](https://docs.agora.io/en/cloud-recording/reference/region-vendor)
+
+#### ו) משתני סביבה ב-Render (סיכום)
+
+| משתנה | דוגמה / הערה |
+|--------|----------------|
+| `AGORA_RESTFUL_CUSTOMER_ID` | מ-Console → RESTful API |
+| `AGORA_RESTFUL_CUSTOMER_SECRET` | מ-`key_and_secret.txt` |
+| `AGORA_RESTFUL_DOMAIN` | אופציונלי; ברירת מחדל `https://api.sd-rtn.com` |
+| `AGORA_CR_S3_BUCKET` | שם ה-bucket |
+| `AGORA_CR_S3_ACCESS_KEY` | AWS Access Key ID |
+| `AGORA_CR_S3_SECRET_KEY` | AWS Secret Access Key |
+| `AGORA_CR_S3_REGION_NUM` | מספר מטבלת Agora (למשל `0` ל-`us-east-1`) |
+| `AGORA_CR_AWS_REGION` | שם AWS כמו ב-console, למשל `us-east-1` (ל-SDK) |
+
+חובה גם (כבר קיים לשיחות): `AGORA_APP_ID`, `AGORA_APP_CERTIFICATE`, Cloudinary, `GEMINI_API_KEY`.
+
+#### ז) איך לוודא שזה עובד
+
+1. אחרי שמירת משתנים ב-Render — **Manual Deploy** (או המתנה ל-deploy) כדי שהסביבה תיטען.
+2. מהמחשב (עם JWT או דרך האפליקציה): `GET /api/calls/:eventId/cloud-recording/status` → אמור להחזיר `"configured": true`.
+3. שיחת web מלאה → בסיום, בלוגים של השרת לא אמורה להופיע שגיאת `[agora-cloud-recording] finalize failed`; ב-Mongo לאירוע אמור להתעדכן `recording_url`.
+
+#### ח) תקלות נפוצות
+
+- **`503` על start/stop** — חסר אחד מהמשתנים, או `AGORA_CR_S3_REGION_NUM` לא מספר תקין / לא תואם לאזור ה-bucket.
+- **`query` 404 אחרי start** — לעיתים token, storageConfig, או Cloud Recording לא הופעל לפרויקט. ראו [Common errors](https://docs.agora.io/en/cloud-recording/reference/common-errors.md).
+- **הקלטה לא מגיעה ל-S3** — בדוק IAM (PutObject), `region`/`vendor`, ושה-bucket באותו חשבון AWS כמו המפתחות.
+
 ---
 
 ## 4) Cloudinary (העלאות / כספה / ראיות)

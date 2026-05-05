@@ -57,6 +57,7 @@ const rateLimit = require('express-rate-limit');
 const mongoSanitize = require('express-mongo-sanitize');
 const { Server } = require('socket.io');
 const connectDB  = require('./src/config/db');
+const agoraCrHealth = require('./src/services/agoraCloudRecording.service');
 
 /** ל-Render health check: השרת חי לפני ש-Mongo מחובר */
 let mongoState = 'pending';
@@ -210,6 +211,8 @@ app.get('/health', (_, res) =>
     mongo: mongoState,
     db: mongoState,          // alias used by AdminDashboard
     socket: ioReady,         // socket.io ready flag
+    /** true כשכל משתני Agora Cloud Recording + S3 מלאים (בלי לחשוף סודות) */
+    cloudRecordingConfigured: agoraCrHealth.isCloudRecordingConfigured(),
   }),
 );
 
