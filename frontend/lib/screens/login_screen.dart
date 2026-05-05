@@ -783,7 +783,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 ? 'Конфиденциальность'
                                 : 'Privacy',
                         style: const TextStyle(
-                          color: V26.navy600,
+                          color: VetoMockup.primaryCta,
                           fontSize: 12,
                           fontWeight: FontWeight.w700,
                         ),
@@ -802,7 +802,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 ? 'Условия'
                                 : 'Terms',
                         style: const TextStyle(
-                          color: V26.navy600,
+                          color: VetoMockup.primaryCta,
                           fontSize: 12,
                           fontWeight: FontWeight.w700,
                         ),
@@ -823,11 +823,11 @@ class _LoginScreenState extends State<LoginScreen> {
       return TextButton.icon(
         onPressed: onTap,
         icon: const Icon(Icons.arrow_back_ios_new_rounded,
-            size: 14, color: V26.navy600),
+            size: 14, color: VetoMockup.primaryCta),
         label: Text(
           _t(lang, 'back'),
           style: const TextStyle(
-            color: V26.navy600,
+            color: VetoMockup.primaryCta,
             fontSize: 13,
             fontWeight: FontWeight.w600,
           ),
@@ -847,7 +847,7 @@ class _LoginScreenState extends State<LoginScreen> {
           onPressed: () =>
               Navigator.of(context).pushReplacementNamed('/landing'),
           icon: const Icon(Icons.arrow_back_ios_new_rounded,
-              size: 14, color: V26.navy600),
+              size: 14, color: VetoMockup.primaryCta),
           label: Text(
             lang == 'he'
                 ? 'דף הבית'
@@ -855,7 +855,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ? 'Главная'
                     : 'Home',
             style: const TextStyle(
-              color: V26.navy600,
+              color: VetoMockup.primaryCta,
               fontSize: 13,
               fontWeight: FontWeight.w600,
             ),
@@ -1108,7 +1108,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 alignment: Alignment.center,
                 child: const Icon(Icons.phone_iphone_rounded,
-                    size: 16, color: V26.navy700),
+                    size: 16, color: VetoMockup.primaryCtaDeep),
               ),
               const SizedBox(width: 10),
               Expanded(
@@ -1142,7 +1142,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   style: const TextStyle(
                     fontWeight: FontWeight.w800,
                     fontSize: 12,
-                    color: V26.navy600,
+                    color: VetoMockup.primaryCta,
                   ),
                 ),
               ),
@@ -1159,10 +1159,10 @@ class _LoginScreenState extends State<LoginScreen> {
               defaultPinTheme: defaultTheme,
               focusedPinTheme: defaultTheme.copyWith(
                 decoration: defaultTheme.decoration?.copyWith(
-                  border: Border.all(color: V26.navy500, width: 1.5),
+                  border: Border.all(color: VetoMockup.primaryCta, width: 1.5),
                   boxShadow: [
                     BoxShadow(
-                      color: V26.navy500.withValues(alpha: 0.12),
+                      color: VetoMockup.primaryCta.withValues(alpha: 0.12),
                       blurRadius: 0,
                       spreadRadius: 4,
                     ),
@@ -1180,13 +1180,13 @@ class _LoginScreenState extends State<LoginScreen> {
         Center(
           child: TextButton.icon(
             icon: const Icon(Icons.content_paste_rounded,
-                size: 16, color: V26.navy600),
+                size: 16, color: VetoMockup.primaryCta),
             label: Text(
               _t(lang, 'pasteOtp'),
               style: const TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w700,
-                color: V26.navy600,
+                color: VetoMockup.primaryCta,
               ),
             ),
             onPressed: () async {
@@ -1413,9 +1413,9 @@ class _LoginStepDotCluster extends StatelessWidget {
           alignment: Alignment.center,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: showCheck ? V26.ok : (active ? V26.navy600 : V26.paper2),
+            color: showCheck ? V26.ok : (active ? VetoMockup.primaryCta : V26.paper2),
             border: Border.all(
-              color: showCheck ? V26.ok : (active ? V26.navy600 : V26.hairline),
+              color: showCheck ? V26.ok : (active ? VetoMockup.primaryCta : V26.hairline),
               width: 1,
             ),
           ),
@@ -1500,7 +1500,7 @@ class _Tab extends StatelessWidget {
             textAlign: TextAlign.center,
             style: TextStyle(
               fontFamily: V26.sans,
-              color: selected ? V26.navy700 : V26.ink500,
+              color: selected ? VetoMockup.primaryCtaDeep : V26.ink500,
               fontWeight: FontWeight.w700,
               fontSize: 13,
             ),
@@ -1544,13 +1544,13 @@ class _RoleCard extends StatelessWidget {
           color: selected ? null : V26.surface,
           borderRadius: BorderRadius.circular(V26.rLg),
           border: Border.all(
-            color: selected ? V26.navy600 : V26.hairline,
+            color: selected ? VetoMockup.primaryCta : V26.hairline,
             width: 2,
           ),
           boxShadow: selected
               ? [
                   BoxShadow(
-                    color: V26.navy500.withValues(alpha: 0.12),
+                    color: VetoMockup.primaryCta.withValues(alpha: 0.12),
                     blurRadius: 0,
                     spreadRadius: 4,
                   ),
@@ -1571,18 +1571,18 @@ class _RoleCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(14),
                     gradient: LinearGradient(
                       colors: selected
-                          ? [V26.navy600, V26.navy500]
+                          ? [VetoMockup.primaryCta, VetoMockup.primaryCta]
                           : [V26.navy100, V26.surface],
                     ),
                     border: Border.all(
-                      color: selected ? V26.navy600 : V26.hairline,
+                      color: selected ? VetoMockup.primaryCta : V26.hairline,
                     ),
                   ),
                   alignment: Alignment.center,
                   child: Icon(
                     icon,
                     size: 22,
-                    color: selected ? Colors.white : V26.navy700,
+                    color: selected ? Colors.white : VetoMockup.primaryCtaDeep,
                   ),
                 ),
                 const SizedBox(height: 14),
@@ -1616,7 +1616,7 @@ class _RoleCard extends StatelessWidget {
                   height: 24,
                   decoration: const BoxDecoration(
                     shape: BoxShape.circle,
-                    color: V26.navy600,
+                    color: VetoMockup.primaryCta,
                   ),
                   alignment: Alignment.center,
                   child: const Text(
@@ -1662,7 +1662,7 @@ class _VetoField extends StatelessWidget {
         color: V26.ink900,
         fontWeight: FontWeight.w600,
       ),
-      cursorColor: V26.navy500,
+      cursorColor: VetoMockup.primaryCta,
       decoration: InputDecoration(
         filled: true,
         fillColor: V26.surface2,
@@ -1679,7 +1679,7 @@ class _VetoField extends StatelessWidget {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(V26.rMd),
-          borderSide: const BorderSide(color: V26.navy500, width: 1.5),
+          borderSide: const BorderSide(color: VetoMockup.primaryCta, width: 1.5),
         ),
       ),
     );
@@ -1737,7 +1737,7 @@ class _PhoneRow extends StatelessWidget {
             color: V26.ink900,
             fontWeight: FontWeight.w600,
           ),
-          cursorColor: V26.navy500,
+          cursorColor: VetoMockup.primaryCta,
           decoration: InputDecoration(
             filled: true,
             fillColor: V26.surface2,
@@ -1755,7 +1755,7 @@ class _PhoneRow extends StatelessWidget {
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(V26.rMd),
-              borderSide: const BorderSide(color: V26.navy500, width: 1.5),
+              borderSide: const BorderSide(color: VetoMockup.primaryCta, width: 1.5),
             ),
           ),
         )),
@@ -1929,11 +1929,11 @@ class _OtpCodeDialogState extends State<_OtpCodeDialog> {
             decoration: BoxDecoration(
               color: V26.surface2,
               borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: V26.navy600.withValues(alpha: 0.4)),
+              border: Border.all(color: VetoMockup.primaryCta.withValues(alpha: 0.4)),
             ),
             child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
               Text(widget.otp, style: const TextStyle(
-                  color: V26.navy600, fontSize: 34,
+                  color: VetoMockup.primaryCta, fontSize: 34,
                   fontWeight: FontWeight.w900, letterSpacing: 8)),
               const SizedBox(width: 12),
               AnimatedSwitcher(
@@ -1944,7 +1944,7 @@ class _OtpCodeDialogState extends State<_OtpCodeDialog> {
                     : IconButton(
                         key: const ValueKey('copy'),
                         icon: const Icon(Icons.copy_rounded,
-                            color: V26.navy600, size: 22),
+                            color: VetoMockup.primaryCta, size: 22),
                         tooltip: _t(widget.code, 'copyCode'),
                         onPressed: _copy,
                       ),

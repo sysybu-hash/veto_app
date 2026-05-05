@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../../core/i18n/app_language.dart';
 import '../../core/theme/veto_2026.dart';
+import '../../core/theme/veto_mockup_tokens.dart';
 import '../../services/admin_service.dart';
 import '_shell.dart';
 import 'admin_i18n.dart';
@@ -57,7 +58,7 @@ class _EmergencyLogsScreenState extends State<EmergencyLogsScreen> {
       case 'pending':
         return V26.warn;
       case 'documentation':
-        return V26.navy600;
+        return VetoMockup.primaryCta;
       case 'dispatching':
       case 'active':
         return V26.emerg;
@@ -126,7 +127,7 @@ class _EmergencyLogsScreenState extends State<EmergencyLogsScreen> {
                     style: const TextStyle(color: V26.ink500))),
             FilledButton(
                 style: FilledButton.styleFrom(
-                  backgroundColor: V26.navy600,
+                  backgroundColor: VetoMockup.primaryCta,
                   foregroundColor: Colors.white,
                 ),
                 onPressed: () => Navigator.pop(ctx, true),
@@ -200,7 +201,7 @@ class _EmergencyLogsScreenState extends State<EmergencyLogsScreen> {
         onRefresh: _load,
         body: V26Backdrop(
           child: _loading
-            ? const Center(child: CircularProgressIndicator(color: V26.navy600))
+            ? const Center(child: CircularProgressIndicator(color: VetoMockup.primaryCta))
             : _events.isEmpty
                 ? Center(child: Column(mainAxisSize: MainAxisSize.min, children: [
                     const Icon(Icons.check_circle_outline, color: V26.ok, size: 48),
@@ -268,10 +269,10 @@ class _EmergencyLogsScreenState extends State<EmergencyLogsScreen> {
                           if (lawyer != null) ...[
                             const SizedBox(height: 4),
                             Row(children: [
-                              const Icon(Icons.gavel_rounded, color: V26.navy500, size: 14),
+                              const Icon(Icons.gavel_rounded, color: VetoMockup.primaryCta, size: 14),
                               const SizedBox(width: 4),
                               Text('${_t(code, 'lawyerPrefix')}: ${lawyer['full_name'] ?? lawyer['phone'] ?? ""}',
-                                  style: const TextStyle(color: V26.navy500, fontSize: 12)),
+                                  style: const TextStyle(color: VetoMockup.primaryCta, fontSize: 12)),
                             ]),
                           ],
                         ]),

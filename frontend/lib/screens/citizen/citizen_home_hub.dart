@@ -21,7 +21,7 @@ class CitizenHomeHub extends StatefulWidget {
   final String langKey;
   final String userName;
   final VoidCallback onSendVeto;
-  final void Function(String route) onOpenLegalTool;
+  final void Function(String route, {Object? arguments}) onOpenLegalTool;
   final Widget? inlineAiPanel;
 
   @override
@@ -56,10 +56,23 @@ class _CitizenHomeHubState extends State<CitizenHomeHub> {
   @override
   Widget build(BuildContext context) {
     final w = MediaQuery.sizeOf(context).width;
-    final pad = w >= 900 ? 32.0 : 16.0;
+    final isDesktop = w >= 1080;
+    final isTablet = w >= 700 && !isDesktop;
+    final pad = isDesktop ? 32.0 : (isTablet ? 24.0 : 16.0);
     final name = widget.userName.trim().isEmpty
         ? _t('משתמש', 'User', 'Пользователь')
         : widget.userName;
+
+    final welcomeCard = _WelcomeCard(
+      name: name,
+      langKey: widget.langKey,
+      onSendVeto: widget.onSendVeto,
+      aiPanel: widget.inlineAiPanel,
+    );
+    final shieldCard = _LegalShieldCard(
+      langKey: widget.langKey,
+      onTapTool: widget.onOpenLegalTool,
+    );
 
     return RefreshIndicator(
       onRefresh: _load,
@@ -69,36 +82,19 @@ class _CitizenHomeHubState extends State<CitizenHomeHub> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  flex: 2,
-                  child: _WelcomeCard(
-                    name: name,
-                    langKey: widget.langKey,
-                    onSendVeto: widget.onSendVeto,
-                    aiPanel: widget.inlineAiPanel,
-                  ),
-                ),
-                if (w >= 700) ...[
+            if (isDesktop)
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(flex: 2, child: welcomeCard),
                   const SizedBox(width: 20),
-                  Expanded(
-                    flex: 3,
-                    child: _LegalShieldCard(
-                      langKey: widget.langKey,
-                      onTapTool: widget.onOpenLegalTool,
-                    ),
-                  ),
+                  Expanded(flex: 3, child: shieldCard),
                 ],
-              ],
-            ),
-            if (w < 700) ...[
+              )
+            else ...[
+              welcomeCard,
               const SizedBox(height: 16),
-              _LegalShieldCard(
-                langKey: widget.langKey,
-                onTapTool: widget.onOpenLegalTool,
-              ),
+              shieldCard,
             ],
             const SizedBox(height: 24),
             Text(
@@ -194,11 +190,31 @@ class _WelcomeCard extends StatelessWidget {
   }
 }
 
+class _LegalShieldItem {
+  final String route;
+  final String he;
+  final String en;
+  final String ru;
+  final IconData icon;
+  final String? intent;
+  final String? domain;
+
+  const _LegalShieldItem({
+    required this.route,
+    required this.he,
+    required this.en,
+    required this.ru,
+    required this.icon,
+    this.intent,
+    this.domain,
+  });
+}
+
 class _LegalShieldCard extends StatelessWidget {
   const _LegalShieldCard({required this.langKey, required this.onTapTool});
 
   final String langKey;
-  final void Function(String route) onTapTool;
+  final void Function(String route, {Object? arguments}) onTapTool;
 
   @override
   Widget build(BuildContext context) {
@@ -208,19 +224,103 @@ class _LegalShieldCard extends StatelessWidget {
       return he;
     }
 
-    final items = <({String route, String he, String en, String ru, IconData icon})>[
-      (route: '/chat', he: 'בדיקת סיכון מיידית', en: 'Instant risk check', ru: 'Проверка рисков', icon: Icons.security_rounded),
-      (route: '/legal_notebook', he: 'סקירת חוזה עם AI', en: 'AI contract review', ru: 'Проверка договора AI', icon: Icons.fact_check_rounded),
-      (route: '/legal_notebook', he: 'יצירת מכתב התראה', en: 'Demand letter draft', ru: 'Письмо-претензия', icon: Icons.campaign_rounded),
-      (route: '/legal_notebook', he: 'הכנת תביעה אזרחית', en: 'Civil claim draft', ru: 'Гражданский иск', icon: Icons.balance_rounded),
-      (route: '/legal_notebook', he: 'מסמכי דיני עבודה', en: 'Labor law docs', ru: 'Документы по труду', icon: Icons.work_outline_rounded),
-      (route: '/legal_notebook', he: 'מסמכי דיני משפחה', en: 'Family law docs', ru: 'Семейные документы', icon: Icons.family_restroom_rounded),
-      (route: '/legal_calendar', he: 'תזכורות ודדליינים', en: 'Deadlines', ru: 'Сроки', icon: Icons.calendar_today_rounded),
-      (route: '/maps', he: 'איתור תחנה/בית משפט', en: 'Court & station map', ru: 'Карта судов', icon: Icons.map_rounded),
-      (route: '/citizen_contracts', he: 'ניהול חוזים פעילים', en: 'Manage contracts', ru: 'Управление договорами', icon: Icons.description_rounded),
-      (route: '/citizen_tasks', he: 'רשימת פעולות משפטיות', en: 'Legal task list', ru: 'Юридические задачи', icon: Icons.task_rounded),
-      (route: '/citizen_reports', he: 'דוח מצב תיק', en: 'Case status report', ru: 'Отчёт по делу', icon: Icons.summarize_rounded),
-      (route: '/files_vault', he: 'ייצוא מסמכים לכספת', en: 'Export to vault', ru: 'Экспорт в хранилище', icon: Icons.inventory_2_rounded),
+    const items = <_LegalShieldItem>[
+      _LegalShieldItem(
+        route: '/chat',
+        he: 'בדיקת סיכון מיידית',
+        en: 'Instant risk check',
+        ru: 'Проверка рисков',
+        icon: Icons.security_rounded,
+        intent: 'risk_check',
+        domain: 'general',
+      ),
+      _LegalShieldItem(
+        route: '/legal_notebook',
+        he: 'סקירת חוזה עם AI',
+        en: 'AI contract review',
+        ru: 'Проверка договора AI',
+        icon: Icons.fact_check_rounded,
+        intent: 'contract_review',
+        domain: 'contracts',
+      ),
+      _LegalShieldItem(
+        route: '/legal_notebook',
+        he: 'יצירת מכתב התראה',
+        en: 'Demand letter draft',
+        ru: 'Письмо-претензия',
+        icon: Icons.campaign_rounded,
+        intent: 'demand_letter',
+        domain: 'civil',
+      ),
+      _LegalShieldItem(
+        route: '/legal_notebook',
+        he: 'הכנת תביעה אזרחית',
+        en: 'Civil claim draft',
+        ru: 'Гражданский иск',
+        icon: Icons.balance_rounded,
+        intent: 'civil_claim',
+        domain: 'civil',
+      ),
+      _LegalShieldItem(
+        route: '/legal_notebook',
+        he: 'מסמכי דיני עבודה',
+        en: 'Labor law docs',
+        ru: 'Документы по труду',
+        icon: Icons.work_outline_rounded,
+        intent: 'labor_doc',
+        domain: 'labor',
+      ),
+      _LegalShieldItem(
+        route: '/legal_notebook',
+        he: 'מסמכי דיני משפחה',
+        en: 'Family law docs',
+        ru: 'Семейные документы',
+        icon: Icons.family_restroom_rounded,
+        intent: 'family_doc',
+        domain: 'family',
+      ),
+      _LegalShieldItem(
+        route: '/legal_calendar',
+        he: 'תזכורות ודדליינים',
+        en: 'Deadlines',
+        ru: 'Сроки',
+        icon: Icons.calendar_today_rounded,
+      ),
+      _LegalShieldItem(
+        route: '/maps',
+        he: 'איתור תחנה/בית משפט',
+        en: 'Court & station map',
+        ru: 'Карта судов',
+        icon: Icons.map_rounded,
+      ),
+      _LegalShieldItem(
+        route: '/citizen_contracts',
+        he: 'ניהול חוזים פעילים',
+        en: 'Manage contracts',
+        ru: 'Управление договорами',
+        icon: Icons.description_rounded,
+      ),
+      _LegalShieldItem(
+        route: '/citizen_tasks',
+        he: 'רשימת פעולות משפטיות',
+        en: 'Legal task list',
+        ru: 'Юридические задачи',
+        icon: Icons.task_rounded,
+      ),
+      _LegalShieldItem(
+        route: '/citizen_reports',
+        he: 'דוח מצב תיק',
+        en: 'Case status report',
+        ru: 'Отчёт по делу',
+        icon: Icons.summarize_rounded,
+      ),
+      _LegalShieldItem(
+        route: '/files_vault',
+        he: 'ייצוא מסמכים לכספת',
+        en: 'Export to vault',
+        ru: 'Экспорт в хранилище',
+        icon: Icons.inventory_2_rounded,
+      ),
     ];
 
     return Container(
@@ -246,17 +346,25 @@ class _LegalShieldCard extends StatelessWidget {
           GridView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 2,
               mainAxisSpacing: 8,
               crossAxisSpacing: 8,
-            childAspectRatio: 2.45,
+              childAspectRatio: 2.45,
             ),
             itemCount: items.length,
             itemBuilder: (_, i) {
               final it = items[i];
               return OutlinedButton.icon(
-                onPressed: () => onTapTool(it.route),
+                onPressed: () => onTapTool(
+                  it.route,
+                  arguments: (it.intent == null && it.domain == null)
+                      ? null
+                      : {
+                          if (it.intent != null) 'intent': it.intent,
+                          if (it.domain != null) 'domain': it.domain,
+                        },
+                ),
                 icon: Icon(it.icon, size: 18, color: VetoMockup.primaryCta),
                 label: Text(
                   t(it.he, it.en, it.ru),
@@ -275,7 +383,7 @@ class _ToolsGrid extends StatelessWidget {
   const _ToolsGrid({required this.langKey, required this.onRoute});
 
   final String langKey;
-  final void Function(String route) onRoute;
+  final void Function(String route, {Object? arguments}) onRoute;
 
   @override
   Widget build(BuildContext context) {
@@ -363,40 +471,59 @@ class _MetricsRow extends StatelessWidget {
     final contracts = s == null ? '—' : '${s['activeContracts'] ?? 0}';
 
     Widget card(String title, String value, Color accent, IconData icon) {
-      return Expanded(
-        child: Container(
-          margin: const EdgeInsets.symmetric(horizontal: 6),
-          padding: const EdgeInsets.all(18),
-          decoration: BoxDecoration(
-            color: VetoMockup.surfaceCard,
-            borderRadius: BorderRadius.circular(VetoMockup.radiusCard),
-            border: Border.all(color: VetoMockup.hairline),
-            boxShadow: VetoMockup.cardShadow,
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Icon(icon, color: accent),
-                  const Spacer(),
-                  Text(
-                    value,
-                    style: TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.w900,
-                      color: accent,
-                    ),
+      return Container(
+        padding: const EdgeInsets.all(18),
+        decoration: BoxDecoration(
+          color: VetoMockup.surfaceCard,
+          borderRadius: BorderRadius.circular(VetoMockup.radiusCard),
+          border: Border.all(color: VetoMockup.hairline),
+          boxShadow: VetoMockup.cardShadow,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              children: [
+                Icon(icon, color: accent),
+                const Spacer(),
+                Text(
+                  value,
+                  style: TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.w900,
+                    color: accent,
                   ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Text(title, style: const TextStyle(fontWeight: FontWeight.w700)),
-            ],
-          ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(title, style: const TextStyle(fontWeight: FontWeight.w700)),
+          ],
         ),
       );
     }
+
+    final entries = <Widget>[
+      card(
+        t('משימות פתוחות', 'Open tasks', 'Задачи'),
+        tasks,
+        VetoMockup.primaryCta,
+        Icons.task_alt_rounded,
+      ),
+      card(
+        t('תיקים במעקב', 'Tracked cases', 'Дела'),
+        cases,
+        VetoMockup.metricBlue,
+        Icons.folder_rounded,
+      ),
+      card(
+        t('חוזים פעילים', 'Active contracts', 'Договоры'),
+        contracts,
+        VetoMockup.metricPurple,
+        Icons.description_rounded,
+      ),
+    ];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -408,53 +535,23 @@ class _MetricsRow extends StatelessWidget {
         const SizedBox(height: 12),
         LayoutBuilder(
           builder: (_, c) {
-            if (c.maxWidth < 600) {
+            if (c.maxWidth < 700) {
               return Column(
                 children: [
-                  card(
-                    t('משימות פתוחות', 'Open tasks', 'Задачи'),
-                    tasks,
-                    VetoMockup.primaryCta,
-                    Icons.task_alt_rounded,
-                  ),
-                  const SizedBox(height: 10),
-                  card(
-                    t('תיקים במעקב', 'Tracked cases', 'Дела'),
-                    cases,
-                    VetoMockup.metricBlue,
-                    Icons.folder_rounded,
-                  ),
-                  const SizedBox(height: 10),
-                  card(
-                    t('חוזים פעילים', 'Active contracts', 'Договоры'),
-                    contracts,
-                    VetoMockup.metricPurple,
-                    Icons.description_rounded,
-                  ),
+                  for (var i = 0; i < entries.length; i++) ...[
+                    SizedBox(width: double.infinity, child: entries[i]),
+                    if (i < entries.length - 1) const SizedBox(height: 10),
+                  ],
                 ],
               );
             }
             return Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                card(
-                  t('משימות פתוחות', 'Open tasks', 'Задачи'),
-                  tasks,
-                  VetoMockup.primaryCta,
-                  Icons.task_alt_rounded,
-                ),
-                card(
-                  t('תיקים במעקב', 'Tracked cases', 'Дела'),
-                  cases,
-                  VetoMockup.metricBlue,
-                  Icons.folder_rounded,
-                ),
-                card(
-                  t('חוזים פעילים', 'Active contracts', 'Договоры'),
-                  contracts,
-                  VetoMockup.metricPurple,
-                  Icons.description_rounded,
-                ),
+                for (var i = 0; i < entries.length; i++) ...[
+                  Expanded(child: entries[i]),
+                  if (i < entries.length - 1) const SizedBox(width: 12),
+                ],
               ],
             );
           },

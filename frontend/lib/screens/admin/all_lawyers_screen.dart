@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../../core/i18n/app_language.dart';
 import '../../core/theme/veto_2026.dart';
+import '../../core/theme/veto_mockup_tokens.dart';
 import '../../services/admin_service.dart';
 import '_shell.dart';
 import 'admin_i18n.dart';
@@ -81,7 +82,7 @@ class _AllLawyersScreenState extends State<AllLawyersScreen> {
             TextButton(onPressed: () => Navigator.pop(ctx), child: Text(_t(code, 'cancel'))),
             FilledButton(
               style: FilledButton.styleFrom(
-                backgroundColor: V26.navy600,
+                backgroundColor: VetoMockup.primaryCta,
                 foregroundColor: Colors.white,
               ),
               onPressed: () async {
@@ -159,13 +160,13 @@ class _AllLawyersScreenState extends State<AllLawyersScreen> {
         onRefresh: _load,
         floatingAction: FloatingActionButton.extended(
           onPressed: () => _showForm(),
-          backgroundColor: V26.navy500,
+          backgroundColor: VetoMockup.primaryCta,
           icon: const Icon(Icons.person_add_rounded),
           label: Text(_t(code, 'addLawyer')),
         ),
         body: V26Backdrop(
           child: _loading
-            ? const Center(child: CircularProgressIndicator(color: V26.navy600))
+            ? const Center(child: CircularProgressIndicator(color: VetoMockup.primaryCta))
             : _lawyers.isEmpty
                 ? Center(child: Text(_t(code, 'noLawyers'), style: const TextStyle(color: V26.ink500)))
                 : ListView.separated(
@@ -183,7 +184,7 @@ class _AllLawyersScreenState extends State<AllLawyersScreen> {
                           color: V26.surface,
                           borderRadius: BorderRadius.circular(12),
                           border: const Border(
-                            left: BorderSide(color: V26.navy700, width: 3),
+                            left: BorderSide(color: VetoMockup.primaryCtaDeep, width: 3),
                             top: BorderSide(color: V26.hairline),
                             right: BorderSide(color: V26.hairline),
                             bottom: BorderSide(color: V26.hairline),
@@ -193,8 +194,8 @@ class _AllLawyersScreenState extends State<AllLawyersScreen> {
                         child: Row(children: [
                           CircleAvatar(
                             radius: 20,
-                            backgroundColor: V26.navy600.withValues(alpha: 0.12),
-                            child: const Icon(Icons.gavel_rounded, color: V26.navy600, size: 18),
+                            backgroundColor: VetoMockup.primaryCta.withValues(alpha: 0.12),
+                            child: const Icon(Icons.gavel_rounded, color: VetoMockup.primaryCta, size: 18),
                           ),
                           const SizedBox(width: 12),
                           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -227,7 +228,7 @@ class _AllLawyersScreenState extends State<AllLawyersScreen> {
                                   style: const TextStyle(color: V26.warn, fontSize: 10)),
                             ),
                           IconButton(
-                            icon: const Icon(Icons.edit_outlined, size: 20, color: V26.navy600),
+                            icon: const Icon(Icons.edit_outlined, size: 20, color: VetoMockup.primaryCta),
                             onPressed: () => _showForm(lawyer: Map<String, dynamic>.from(l as Map)),
                             tooltip: _t(code, 'edit'),
                           ),
@@ -250,7 +251,7 @@ class _AllLawyersScreenState extends State<AllLawyersScreen> {
       TextField(
         controller: ctrl, textDirection: dir, keyboardType: type,
         style: const TextStyle(color: V26.ink900),
-        cursorColor: V26.navy600,
+        cursorColor: VetoMockup.primaryCta,
         decoration: InputDecoration(
           labelText: label,
           labelStyle: const TextStyle(color: V26.ink500),
@@ -265,7 +266,7 @@ class _AllLawyersScreenState extends State<AllLawyersScreen> {
               borderSide: const BorderSide(color: V26.hairline)),
           focusedBorder: const OutlineInputBorder(
               borderRadius: BorderRadius.all(Radius.circular(10)),
-              borderSide: BorderSide(color: V26.navy600, width: 1.5)),
+              borderSide: BorderSide(color: VetoMockup.primaryCta, width: 1.5)),
         ),
       );
 }

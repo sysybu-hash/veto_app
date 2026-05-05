@@ -125,13 +125,13 @@ class VetoTheme {
       iconTheme: const IconThemeData(color: ink, size: 22),
       colorScheme: const ColorScheme.light(
         brightness: Brightness.light,
-        primary: VetoColors.accent,       // Navy 600
+        primary: VetoMockup.primaryCta,
         onPrimary: Colors.white,
         secondary: V26.gold,
         onSecondary: Colors.white,
-        tertiary: V26.navy500,
+        tertiary: VetoMockup.primaryCtaDeep,
         onTertiary: Colors.white,
-        surface: VetoColors.surface,
+        surface: VetoMockup.surfaceCard,
         onSurface: ink,
         error: VetoColors.error,
         onError: Colors.white,
@@ -195,14 +195,14 @@ class VetoTheme {
         contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
         hintStyle: const TextStyle(fontFamily: 'Heebo', color: VetoColors.inkFaint, fontSize: 14),
         labelStyle: const TextStyle(fontFamily: 'Heebo', color: VetoColors.inkLight, fontSize: 14),
-        floatingLabelStyle: const TextStyle(fontFamily: 'Heebo', color: VetoColors.accent, fontSize: 12),
+        floatingLabelStyle: const TextStyle(fontFamily: 'Heebo', color: VetoMockup.primaryCta, fontSize: 12),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: VetoColors.border, width: 1),
+          borderRadius: BorderRadius.circular(VetoMockup.radiusButton),
+          borderSide: const BorderSide(color: VetoMockup.hairline, width: 1),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: VetoColors.accent, width: 2),
+          borderRadius: BorderRadius.circular(VetoMockup.radiusButton),
+          borderSide: const BorderSide(color: VetoMockup.primaryCta, width: 2),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
@@ -255,22 +255,25 @@ class VetoTheme {
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
-          foregroundColor: VetoColors.accent,
-          side: const BorderSide(color: VetoColors.accent, width: 1.5),
+          foregroundColor: VetoMockup.primaryCta,
+          side: const BorderSide(color: VetoMockup.primaryCta, width: 1.5),
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
           minimumSize: const Size(48, 48),
           iconSize: 22,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          textStyle: const TextStyle(fontFamily: 'Heebo', fontSize: 15, fontWeight: FontWeight.w700),
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(VetoMockup.radiusButton)),
+          textStyle: const TextStyle(
+              fontFamily: 'Heebo', fontSize: 15, fontWeight: FontWeight.w700),
         ),
       ),
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
-          foregroundColor: VetoColors.accent,
+          foregroundColor: VetoMockup.primaryCta,
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
           minimumSize: const Size(48, 40),
           iconSize: 22,
-          textStyle: const TextStyle(fontFamily: 'Heebo', fontSize: 14, fontWeight: FontWeight.w600),
+          textStyle: const TextStyle(
+              fontFamily: 'Heebo', fontSize: 14, fontWeight: FontWeight.w600),
         ),
       ),
       iconButtonTheme: IconButtonThemeData(
@@ -283,71 +286,123 @@ class VetoTheme {
       ),
 
       dialogTheme: const DialogThemeData(
-        backgroundColor: Color(0xFFFFFFFF),
-        elevation: 8,
+        backgroundColor: VetoMockup.surfaceCard,
+        elevation: 6,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.all(Radius.circular(20)),
-          side: BorderSide(color: VetoColors.border, width: 1),
+          borderRadius: BorderRadius.all(Radius.circular(VetoMockup.radiusCard)),
+          side: BorderSide(color: VetoMockup.hairline, width: 1),
         ),
-        titleTextStyle: TextStyle(fontFamily: 'Heebo', fontSize: 20, fontWeight: FontWeight.w700, color: VetoColors.inkDark),
-        contentTextStyle: TextStyle(fontFamily: 'Heebo', fontSize: 14, color: VetoColors.inkLight),
+        titleTextStyle: TextStyle(
+            fontFamily: V26.serif,
+            fontSize: 20,
+            fontWeight: FontWeight.w800,
+            color: VetoMockup.ink),
+        contentTextStyle: TextStyle(
+            fontFamily: 'Heebo',
+            fontSize: 14,
+            color: VetoMockup.inkSecondary),
       ),
 
       bottomSheetTheme: const BottomSheetThemeData(
-        backgroundColor: Color(0xFFFFFFFF),
-        modalBarrierColor: Color(0x44000000),
+        backgroundColor: VetoMockup.surfaceCard,
+        modalBarrierColor: Color(0x55000000),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
         ),
       ),
 
       snackBarTheme: SnackBarThemeData(
-        backgroundColor: const Color(0xFF1A2340),
-        contentTextStyle: const TextStyle(fontFamily: 'Heebo', color: Colors.white, fontSize: 14),
+        backgroundColor: VetoMockup.ink,
+        contentTextStyle: const TextStyle(
+            fontFamily: 'Heebo', color: Colors.white, fontSize: 14),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         behavior: SnackBarBehavior.floating,
       ),
 
-      dividerTheme: const DividerThemeData(color: VetoColors.divider, thickness: 1, space: 1),
+      dividerTheme: const DividerThemeData(
+          color: VetoMockup.hairline, thickness: 1, space: 1),
 
       navigationBarTheme: NavigationBarThemeData(
         backgroundColor: const Color(0xEEFFFFFF),
         elevation: 0,
         shadowColor: Colors.transparent,
-        indicatorColor: VetoColors.accent.withValues(alpha: 0.12),
+        indicatorColor: VetoMockup.primaryCta.withValues(alpha: 0.12),
         labelTextStyle: WidgetStateProperty.all(
-          const TextStyle(fontFamily: 'Heebo', fontSize: 12, fontWeight: FontWeight.w700, color: VetoColors.inkDark),
+          const TextStyle(
+              fontFamily: 'Heebo',
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: VetoMockup.ink),
         ),
         iconTheme: WidgetStateProperty.resolveWith((s) {
           final selected = s.contains(WidgetState.selected);
           return IconThemeData(
-            color: selected ? VetoColors.accent : VetoColors.inkLight,
+            color:
+                selected ? VetoMockup.primaryCta : VetoMockup.inkSecondary,
             size: 24,
           );
         }),
       ),
 
       chipTheme: ChipThemeData(
-        backgroundColor: const Color(0xFFEEF2FF),
-        selectedColor: VetoColors.accent.withValues(alpha: 0.15),
-        labelStyle: const TextStyle(fontFamily: 'Heebo', color: VetoColors.inkMedium, fontSize: 13),
-        side: const BorderSide(color: VetoColors.border, width: 1),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
+        backgroundColor: VetoMockup.softCard,
+        selectedColor: VetoMockup.primaryCta.withValues(alpha: 0.14),
+        labelStyle: const TextStyle(
+            fontFamily: 'Heebo', color: VetoMockup.ink, fontSize: 13),
+        side: const BorderSide(color: VetoMockup.hairline, width: 1),
+        shape:
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       ),
 
       switchTheme: SwitchThemeData(
         thumbColor: WidgetStateProperty.resolveWith((s) =>
-            s.contains(WidgetState.selected) ? VetoColors.accent : const Color(0xFFCDD5E0)),
+            s.contains(WidgetState.selected)
+                ? VetoMockup.primaryCta
+                : const Color(0xFFCDD5E0)),
         trackColor: WidgetStateProperty.resolveWith((s) =>
-            s.contains(WidgetState.selected) ? VetoColors.accentGlow : const Color(0xFFE8EDF8)),
+            s.contains(WidgetState.selected)
+                ? VetoMockup.primaryCta.withValues(alpha: 0.32)
+                : const Color(0xFFE8EDF8)),
       ),
 
       listTileTheme: const ListTileThemeData(
         tileColor: Colors.transparent,
-        textColor: VetoColors.inkDark,
-        iconColor: VetoColors.accent,
+        textColor: VetoMockup.ink,
+        iconColor: VetoMockup.primaryCta,
         contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      ),
+
+      dataTableTheme: const DataTableThemeData(
+        headingRowColor: WidgetStatePropertyAll(VetoMockup.softCard),
+        dataRowColor: WidgetStatePropertyAll(VetoMockup.surfaceCard),
+        dividerThickness: 1,
+        headingTextStyle: TextStyle(
+          fontFamily: 'Heebo',
+          fontSize: 12,
+          fontWeight: FontWeight.w800,
+          color: VetoMockup.ink,
+          letterSpacing: 0.5,
+        ),
+        dataTextStyle: TextStyle(
+          fontFamily: 'Heebo',
+          fontSize: 13,
+          color: VetoMockup.ink,
+        ),
+      ),
+
+      progressIndicatorTheme: const ProgressIndicatorThemeData(
+        color: VetoMockup.primaryCta,
+        linearTrackColor: VetoMockup.softCard,
+      ),
+
+      tooltipTheme: TooltipThemeData(
+        decoration: BoxDecoration(
+          color: VetoMockup.ink,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        textStyle: const TextStyle(
+            color: Colors.white, fontFamily: 'Heebo', fontSize: 12),
       ),
     );
   }

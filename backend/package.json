@@ -20,7 +20,7 @@
     "cron:calendar": "node scripts/cron-calendar-reminders.js",
     "cron:gcal-sync": "node scripts/gcal-sync-worker.js",
     "lint": "eslint src scripts server.js",
-    "test": "node --test ./test/crypto_otp.test.js ./test/ai_routes_mount.test.js ./test/agora_token_uid.test.js ./test/agora_cloud_recording_config.test.js ./test/gcal_token_crypto.test.js"
+    "test": "node --test ./test/crypto_otp.test.js ./test/ai_routes_mount.test.js ./test/agora_token_uid.test.js ./test/agora_cloud_recording_config.test.js ./test/gcal_token_crypto.test.js ./test/legal_assistant_routes_mount.test.js ./test/legal_documents_routes_mount.test.js ./test/legal_document_engine.test.js"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1042.0",

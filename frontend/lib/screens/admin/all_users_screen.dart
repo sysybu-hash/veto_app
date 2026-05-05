@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../../core/i18n/app_language.dart';
 import '../../core/theme/veto_2026.dart';
+import '../../core/theme/veto_mockup_tokens.dart';
 import '../../services/admin_service.dart';
 import '_shell.dart';
 import 'admin_i18n.dart';
@@ -102,7 +103,7 @@ class _AllUsersScreenState extends State<AllUsersScreen> {
             TextButton(onPressed: () => Navigator.pop(ctx), child: Text(_t(code, 'cancel'))),
             FilledButton(
               style: FilledButton.styleFrom(
-                backgroundColor: V26.navy600,
+                backgroundColor: VetoMockup.primaryCta,
                 foregroundColor: Colors.white,
               ),
               onPressed: () async {
@@ -177,13 +178,13 @@ class _AllUsersScreenState extends State<AllUsersScreen> {
         onRefresh: _load,
         floatingAction: FloatingActionButton.extended(
           onPressed: () => _showForm(),
-          backgroundColor: V26.navy500,
+          backgroundColor: VetoMockup.primaryCta,
           icon: const Icon(Icons.person_add_rounded),
           label: Text(_t(code, 'addUser')),
         ),
         body: V26Backdrop(
           child: _loading
-            ? const Center(child: CircularProgressIndicator(color: V26.navy600))
+            ? const Center(child: CircularProgressIndicator(color: VetoMockup.primaryCta))
             : _users.isEmpty
                 ? Center(child: Text(_t(code, 'noUsers'), style: const TextStyle(color: V26.ink500)))
                 : ListView.separated(
@@ -200,7 +201,7 @@ class _AllUsersScreenState extends State<AllUsersScreen> {
                           color: V26.surface,
                           borderRadius: BorderRadius.circular(12),
                           border: const Border(
-                            left: BorderSide(color: V26.navy600, width: 3),
+                            left: BorderSide(color: VetoMockup.primaryCta, width: 3),
                             top: BorderSide(color: V26.hairline),
                             right: BorderSide(color: V26.hairline),
                             bottom: BorderSide(color: V26.hairline),
@@ -210,11 +211,11 @@ class _AllUsersScreenState extends State<AllUsersScreen> {
                         child: Row(children: [
                           CircleAvatar(
                             radius: 20,
-                            backgroundColor: V26.navy600.withValues(alpha: 0.15),
+                            backgroundColor: VetoMockup.primaryCta.withValues(alpha: 0.15),
                             child: Text(
                               ((u['full_name'] as String?) ?? '?').isNotEmpty
                                   ? (u['full_name'] as String).characters.first : '?',
-                              style: const TextStyle(color: V26.navy600, fontWeight: FontWeight.bold),
+                              style: const TextStyle(color: VetoMockup.primaryCta, fontWeight: FontWeight.bold),
                             ),
                           ),
                           const SizedBox(width: 12),
@@ -226,7 +227,7 @@ class _AllUsersScreenState extends State<AllUsersScreen> {
                             Text(AdminStrings.roleLabel(code, u['role']?.toString()),
                                 style: const TextStyle(color: V26.ink300, fontSize: 11)),
                             Text(AdminStrings.languageLabel(code, u['preferred_language']?.toString()),
-                              style: const TextStyle(color: V26.navy500, fontSize: 11)),
+                              style: const TextStyle(color: VetoMockup.primaryCta, fontSize: 11)),
                           ])),
                           Container(
                             margin: const EdgeInsets.only(left: 4),
@@ -250,7 +251,7 @@ class _AllUsersScreenState extends State<AllUsersScreen> {
                                   style: const TextStyle(color: V26.ok, fontSize: 10)),
                             ),
                           IconButton(
-                            icon: const Icon(Icons.edit_outlined, size: 20, color: V26.navy600),
+                            icon: const Icon(Icons.edit_outlined, size: 20, color: VetoMockup.primaryCta),
                             onPressed: () => _showForm(user: Map<String, dynamic>.from(u as Map)),
                             tooltip: _t(code, 'edit'),
                           ),
@@ -273,7 +274,7 @@ class _AllUsersScreenState extends State<AllUsersScreen> {
       TextField(
         controller: ctrl, textDirection: dir,
         style: const TextStyle(color: V26.ink900),
-        cursorColor: V26.navy600,
+        cursorColor: VetoMockup.primaryCta,
         decoration: _dec(label, icon),
       );
 
@@ -291,6 +292,6 @@ class _AllUsersScreenState extends State<AllUsersScreen> {
         borderSide: const BorderSide(color: V26.hairline)),
     focusedBorder: const OutlineInputBorder(
         borderRadius: BorderRadius.all(Radius.circular(10)),
-        borderSide: BorderSide(color: V26.navy600, width: 1.5)),
+        borderSide: BorderSide(color: VetoMockup.primaryCta, width: 1.5)),
   );
 }

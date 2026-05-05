@@ -258,6 +258,7 @@ class AdminShell extends StatelessWidget {
     final panelLabel = _shellStr(code, 'panel');
     return V26Sidebar(
       width: _sidebarWidth,
+      useMockupTokens: true,
       header: Row(
         children: [
           const V26Crest(size: 34),
@@ -413,10 +414,14 @@ class _AdminTopBar extends StatelessWidget {
           const SizedBox(width: 16),
           const _EnvSelector(),
           const SizedBox(width: 12),
-          IconButton(
-            tooltip: _shellStr(code, 'notifications'),
-            icon: const Icon(Icons.notifications_outlined, color: V26.ink500),
-            onPressed: () {},
+          Builder(
+            builder: (innerCtx) => IconButton(
+              tooltip: _shellStr(code, 'notifications'),
+              icon: const Icon(Icons.notifications_outlined,
+                  color: VetoMockup.primaryCta),
+              onPressed: () => Navigator.of(innerCtx)
+                  .pushReplacementNamed('/admin_logs'),
+            ),
           ),
           const AppLanguageMenu(compact: true),
           ...actions,

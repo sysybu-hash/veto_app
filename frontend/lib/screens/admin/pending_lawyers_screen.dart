@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../../core/i18n/app_language.dart';
 import '../../core/theme/veto_2026.dart';
+import '../../core/theme/veto_mockup_tokens.dart';
 import '../../services/admin_service.dart';
 import '_shell.dart';
 import 'admin_i18n.dart';
@@ -95,7 +96,7 @@ class _PendingLawyersScreenState extends State<PendingLawyersScreen> {
         onRefresh: _load,
         body: V26Backdrop(
           child: _loading
-            ? const Center(child: CircularProgressIndicator(color: V26.navy600))
+            ? const Center(child: CircularProgressIndicator(color: VetoMockup.primaryCta))
             : _lawyers.isEmpty
                 ? Center(
                     child: Column(
@@ -143,7 +144,7 @@ class _PendingLawyersScreenState extends State<PendingLawyersScreen> {
                           children: [
                             Row(children: [
                               const Icon(Icons.gavel_rounded,
-                                  color: V26.navy600, size: 20),
+                                  color: VetoMockup.primaryCta, size: 20),
                               const SizedBox(width: 8),
                               Expanded(
                                 child: Text(
