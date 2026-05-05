@@ -41,6 +41,21 @@
 - `GOOGLE_CLIENT_ID` + `GOOGLE_CLIENT_SECRET`
 - [Google Cloud — Credentials](https://console.cloud.google.com/apis/credentials) · [OAuth 2.0 client (Web)](https://support.google.com/cloud/answer/6158849?hl=he)
 
+### Google Calendar (סנכרון אירועים — OAuth נפרד)
+
+לא משתמשים ב־`GOOGLE_CLIENT_ID` של Sign-In אלא בלקוח OAuth ייעודי עם scope **Calendar events**.
+
+- `GOOGLE_CALENDAR_CLIENT_ID` / `GOOGLE_CALENDAR_CLIENT_SECRET` — OAuth 2.0 Client (Web או Desktop לפי איך שפותחים את ה־consent).
+- `GCAL_OAUTH_REDIRECT_URI` — חייב להתאים בדיוק ל־Authorized redirect URIs ב־GCP, למשל  
+  `https://<api-host>/api/integrations/gcal/callback` או מקומית  
+  `http://localhost:5001/api/integrations/gcal/callback`.
+- אופציונלי: `GCAL_OAUTH_SUCCESS_REDIRECT` — אחרי חיבור מוצלח, הפניה (HTTPS) לדף באפליקציה.
+- אופציונלי: `GCAL_TOKEN_ENC_KEY` — מפתח ארוך ל־AES-256-GCM על ה־refresh token; אם חסר, נגזר מ־`JWT_SECRET` (פחות מומלץ בפרוד).
+- Worker: `npm run cron:gcal-sync` (Cron / Render Job כל ~5–15 דקות). דורש `MONGO_URI` ואותם סודות OAuth.
+- אופציונלי: `GCAL_SYNC_LOOKAHEAD_DAYS` — חלון יבוא עתידי (ברירת מחדל 120).
+
+**מדיניות קונפליקטים (בקוד):** יבוא מעדכן לפי `googleEventId`; אירוע מקור VETO (`syncSource: veto`) לא נדרס מגוגל אם `updatedAt` מקומי חדש מ־`updated` של גוגל. יצוא דוחף אירועים שאין להם מראה בגוגל או ש־`updatedAt > syncedAt`. מחיקה ב־VETO מנסה למחוק גם בגוגל אם היה `googleEventId`.
+
 ---
 
 ## 3) Gemini (AI + ניתוח כספת)
