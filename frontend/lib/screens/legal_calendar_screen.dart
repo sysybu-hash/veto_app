@@ -171,7 +171,10 @@ class _LegalCalendarScreenState extends State<LegalCalendarScreen> {
     super.initState();
     _selectedDay = _dateOnly(_focusDate);
     unawaited(_loadCases());
-    _load();
+    // _load uses MaterialLocalizations — must not run during initState.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) unawaited(_load());
+    });
   }
 
   String _icalDisplay(String? u) {
