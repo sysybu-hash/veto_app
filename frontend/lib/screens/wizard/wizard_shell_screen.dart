@@ -9,6 +9,7 @@ import '../../core/theme/veto_2026.dart';
 import '../../core/theme/veto_mockup_tokens.dart';
 import '../../core/theme/veto_2026_wizard.dart';
 import '../../widgets/app_language_menu.dart';
+import '../../l10n/app_localizations.dart';
 import '../../services/auth_service.dart';
 import '../../services/socket_service.dart';
 
@@ -111,19 +112,11 @@ class _WizardShellScreenState extends State<WizardShellScreen> {
         _isBusy = false;
         _wizardIndex = 2;
       });
-      final foundName = data['lawyerName']?.toString() ??
-          (_langCode == 'ru'
-              ? 'Адвокат'
-              : _langCode == 'en'
-                  ? 'Lawyer'
-                  : 'עורך דין');
+      final l10n = AppLocalizations.of(context)!;
+      final foundName = data['lawyerName']?.toString() ?? l10n.wizDefaultLawyerName;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(_langCode == 'ru'
-              ? 'Адвокат подключен: $foundName'
-              : _langCode == 'en'
-                  ? 'Lawyer connected: $foundName'
-                  : 'עורך דין התחבר: $foundName'),
+          content: Text(l10n.wizLawyerConnected(foundName)),
         ),
       );
     });
@@ -141,7 +134,7 @@ class _WizardShellScreenState extends State<WizardShellScreen> {
           'roomId': roomId,
           'callType': data['callType']?.toString() ?? 'video',
           'peerName': data['peerName']?.toString() ??
-              (_langCode == 'he' ? 'עורך דין' : 'Lawyer'),
+              AppLocalizations.of(context)!.wizDefaultLawyerName,
           'role': _role == 'admin' ? 'admin' : 'user',
           'eventId': data['eventId']?.toString() ?? roomId,
           'language': _langCode,
@@ -157,13 +150,10 @@ class _WizardShellScreenState extends State<WizardShellScreen> {
         _isBusy = false;
         _wizardIndex = 0;
       });
+      final l10n = AppLocalizations.of(context)!;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(_langCode == 'ru'
-              ? 'Сейчас нет доступных адвокатов. Попробуйте снова чуть позже.'
-              : _langCode == 'en'
-                  ? 'No lawyers are available right now. Please try again shortly.'
-                  : 'אין כרגע עורכי דין זמינים. נסה שוב בעוד רגע.'),
+          content: Text(l10n.wizNoLawyersAvailable),
         ),
       );
     });
@@ -190,11 +180,11 @@ class _WizardShellScreenState extends State<WizardShellScreen> {
 
   Future<void> _showWizardSessionPicker(Map<String, dynamic> data) async {
     final eventId = data['eventId']?.toString();
-    final lawyerName = data['lawyerName']?.toString() ??
-        (_langCode == 'ru' ? 'Адвокат' : _langCode == 'en' ? 'Lawyer' : 'עורך דין');
+    final l10n = AppLocalizations.of(context)!;
+    final lawyerName =
+        data['lawyerName']?.toString() ?? l10n.wizDefaultLawyerName;
     if (eventId == null || eventId.isEmpty) return;
 
-    final lang = _langCode;
     final chosen = await showModalBottomSheet<String>(
       context: context,
       backgroundColor: Colors.transparent,
@@ -211,9 +201,7 @@ class _WizardShellScreenState extends State<WizardShellScreen> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    lang == 'he'
-                        ? '$lawyerName קיבל את הקריאה'
-                        : '$lawyerName accepted',
+                    l10n.wizSessionAccepted(lawyerName),
                     textAlign: TextAlign.center,
                     style: const TextStyle(
                       fontFamily: V26.sans,
@@ -232,7 +220,7 @@ class _WizardShellScreenState extends State<WizardShellScreen> {
                             side: const BorderSide(color: V26.hairline),
                           ),
                           onPressed: () => Navigator.pop(ctx, 'audio'),
-                          child: Text(lang == 'he' ? 'אודיו' : 'Audio'),
+                          child: Text(l10n.wizSessionAudio),
                         ),
                       ),
                       const SizedBox(width: 8),
@@ -243,7 +231,7 @@ class _WizardShellScreenState extends State<WizardShellScreen> {
                             side: const BorderSide(color: V26.hairline),
                           ),
                           onPressed: () => Navigator.pop(ctx, 'video'),
-                          child: Text(lang == 'he' ? 'וידאו' : 'Video'),
+                          child: Text(l10n.wizSessionVideo),
                         ),
                       ),
                       const SizedBox(width: 8),
@@ -254,7 +242,7 @@ class _WizardShellScreenState extends State<WizardShellScreen> {
                             side: const BorderSide(color: V26.hairline),
                           ),
                           onPressed: () => Navigator.pop(ctx, 'chat'),
-                          child: Text(lang == 'he' ? 'צ\'ט' : 'Chat'),
+                          child: Text(l10n.wizSessionChat),
                         ),
                       ),
                     ],
@@ -325,168 +313,85 @@ class _WizardShellScreenState extends State<WizardShellScreen> {
     }
   }
 
-  List<String> _wizardTitles(String lang) {
+  List<String> _wizardTitles(AppLocalizations l) {
     final lawyer = _role == 'lawyer';
     if (lawyer) {
-      return switch (lang) {
-        'en' => ['Availability', 'Alerts', 'Case', 'Account'],
-        'ru' => ['Доступность', 'Оповещения', 'Дело', 'Аккаунт'],
-        _ => ['זמינות', 'התראות', 'טיפול', 'סגירה'],
-      };
+      return [
+        l.wizShellLawTitle1,
+        l.wizShellLawTitle2,
+        l.wizShellLawTitle3,
+        l.wizShellLawTitle4,
+      ];
     }
-    return switch (lang) {
-      'en' => ['Protection', 'Broadcast', 'Tools', 'Account'],
-      'ru' => ['Защита', 'Тревога', 'Инструменты', 'Аккаунт'],
-      _ => ['הגנה', 'שידור', 'התאמה', 'ניהול'],
-    };
+    return [
+      l.wizShellUserTitle1,
+      l.wizShellUserTitle2,
+      l.wizShellUserTitle3,
+      l.wizShellUserTitle4,
+    ];
   }
 
-  List<String> _wizardSubtitles(String lang) {
+  List<String> _wizardSubtitles(AppLocalizations l) {
     final lawyer = _role == 'lawyer';
     if (lawyer) {
-      return switch (lang) {
-        'en' => [
-            'Control incoming flow',
-            'Accept or decline',
-            'Active matter status',
-            'Profile & sign out',
-          ],
-        'ru' => [
-            'Поток входящих',
-            'Принять или отказать',
-            'Статус дела',
-            'Профиль и выход',
-          ],
-        _ => [
-            'שליטה בזרימת תיקים',
-            'קבל או דחה התראות',
-            'סטטוס תיק פעיל',
-            'פרופיל והתנתקות',
-          ],
-      };
+      return [
+        l.wizShellLawSub1,
+        l.wizShellLawSub2,
+        l.wizShellLawSub3,
+        l.wizShellLawSub4,
+      ];
     }
-    return switch (lang) {
-      'en' => [
-          'System readiness',
-          'One-tap emergency',
-          'Evidence workspace',
-          'Profile & sign out',
-        ],
-      'ru' => [
-          'Готовность системы',
-          'Тревога в одно касание',
-          'Доказательства',
-          'Профиль и выход',
-        ],
-      _ => [
-          'סטטוס מערכת',
-          'שיגור חירום מהיר',
-          'תיעוד וסביבת חירום',
-          'פרופיל ויציאה',
-        ],
-    };
+    return [
+      l.wizShellUserSub1,
+      l.wizShellUserSub2,
+      l.wizShellUserSub3,
+      l.wizShellUserSub4,
+    ];
   }
 
-  _RailMarketing _railMarketing(String lang) {
+  _RailMarketing _railMarketing(AppLocalizations l) {
     final lawyer = _role == 'lawyer';
     if (lawyer) {
-      return switch (lang) {
-        'en' => const _RailMarketing(
-            brandEm: 'Console',
-            headlineLine1: 'Your on-call',
-            headlineBeforeEm: ' ',
-            headlineEm: 'VETO',
-            headlineLine3: 'desk',
-            description:
-                'Four steps: availability, alerts, active case, and account.',
-            saveStatusLine: 'Connected · dispatch ready',
-            saveExitLabel: 'Save & exit',
-          ),
-        'ru' => const _RailMarketing(
-            brandEm: 'Консоль',
-            headlineLine1: 'Один поток',
-            headlineBeforeEm: ' ',
-            headlineEm: 'VETO',
-            headlineLine3: 'для адвоката',
-            description:
-                'Четыре шага: доступность, оповещения, дело и аккаунт.',
-            saveStatusLine: 'Подключено · готово',
-            saveExitLabel: 'Сохранить и выйти',
-          ),
-        _ => const _RailMarketing(
-            brandEm: 'מסוף',
-            headlineLine1: 'ניהול',
-            headlineBeforeEm: 'את ',
-            headlineEm: 'VETO',
-            headlineLine3: 'במסך אחד',
-            description:
-                'ארבעה שלבים: זמינות, התראות, תיק פעיל ופעולות חשבון.',
-            saveStatusLine: 'מחובר · מוכן לשיגורים',
-            saveExitLabel: 'שמור וצא',
-          ),
-      };
+      return _RailMarketing(
+        brandEm: l.wizShellRailLawyerBrandEm,
+        headlineLine1: l.wizShellRailLawyerHeadline1,
+        headlineBeforeEm: l.wizShellRailLawyerBeforeEm,
+        headlineEm: 'VETO',
+        headlineLine3: l.wizShellRailLawyerLine3,
+        description: l.wizShellRailLawyerDesc,
+        saveStatusLine: l.wizShellRailLawyerSaveStatus,
+        saveExitLabel: l.wizShellRailLawyerSaveExit,
+      );
     }
-    return switch (lang) {
-      'en' => const _RailMarketing(
-          brandEm: 'Wizard',
-          headlineLine1: 'Let\'s set up',
-          headlineBeforeEm: ' ',
-          headlineEm: 'VETO',
-          headlineLine3: 'just for you',
-          description:
-              'Four guided steps: protection, emergency dispatch, tools, and account.',
-          saveStatusLine: 'Connected · system active',
-          saveExitLabel: 'Save & exit',
-        ),
-      'ru' => const _RailMarketing(
-          brandEm: 'Мастер',
-          headlineLine1: 'Настроим',
-          headlineBeforeEm: ' ',
-          headlineEm: 'VETO',
-          headlineLine3: 'под вас',
-          description:
-              'Четыре шага: защита, тревога, инструменты и аккаунт.',
-          saveStatusLine: 'Подключено · активно',
-          saveExitLabel: 'Сохранить и выйти',
-        ),
-      _ => const _RailMarketing(
-          brandEm: 'אשף',
-          headlineLine1: 'בוא נכין',
-          headlineBeforeEm: 'את ',
-          headlineEm: 'VETO',
-          headlineLine3: 'בדיוק לך',
-          description:
-              'ארבעה שלבים מודרכים: הגנה, שיגור חירום, כלים וחשבון.',
-          saveStatusLine: 'מחובר · המערכת פעילה',
-          saveExitLabel: 'שמור וצא',
-        ),
-    };
+    return _RailMarketing(
+      brandEm: l.wizShellRailUserBrandEm,
+      headlineLine1: l.wizShellRailUserHeadline1,
+      headlineBeforeEm: l.wizShellRailUserBeforeEm,
+      headlineEm: 'VETO',
+      headlineLine3: l.wizShellRailUserLine3,
+      description: l.wizShellRailUserDesc,
+      saveStatusLine: l.wizShellRailUserSaveStatus,
+      saveExitLabel: l.wizShellRailUserSaveExit,
+    );
   }
 
-  String _topKicker(String lang) {
+  String _topKicker(AppLocalizations l) {
     final i = _wizardIndex + 1;
-    return switch (lang) {
-      'en' => 'Step $i of 4',
-      'ru' => 'Шаг $i из 4',
-      _ => 'שלב $i מתוך 4',
-    };
+    return l.wizShellStepOfTotal(i);
   }
 
-  String _phoneProgressBold(String lang) {
+  String _phoneProgressBold(AppLocalizations l) {
     final i = _wizardIndex + 1;
-    return switch (lang) {
-      'en' => 'Step $i of 4',
-      'ru' => 'Шаг $i из 4',
-      _ => 'שלב $i מתוך 4',
-    };
+    return l.wizShellStepOfTotal(i);
   }
 
   @override
   Widget build(BuildContext context) {
     final lang = context.watch<AppLanguageController>().code;
-    final titles = _wizardTitles(lang);
-    final subtitles = _wizardSubtitles(lang);
-    final rail = _railMarketing(lang);
+    final l = AppLocalizations.of(context)!;
+    final titles = _wizardTitles(l);
+    final subtitles = _wizardSubtitles(l);
+    final rail = _railMarketing(l);
     final wide =
         MediaQuery.sizeOf(context).width >= V26AppShell.desktopBreakpoint;
 
@@ -518,20 +423,20 @@ class _WizardShellScreenState extends State<WizardShellScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      _wizTopBar(context, lang, titles, compact: !wide),
+                      _wizTopBar(context, l, titles, compact: !wide),
                       if (!wide)
                         V26WizardPhoneProgress(
                           stepIndexZeroBased: _wizardIndex,
                           stepCount: 4,
-                          labelBold: _phoneProgressBold(lang),
+                          labelBold: _phoneProgressBold(l),
                           labelDetail: titles[_wizardIndex.clamp(0, 3)],
                         ),
                       Expanded(
                         child: AnimatedSwitcher(
                           duration: const Duration(milliseconds: 260),
                           child: _role == 'lawyer'
-                              ? _lawyerWizard(!wide)
-                              : _userWizard(!wide),
+                              ? _lawyerWizard(!wide, l)
+                              : _userWizard(!wide, l),
                         ),
                       ),
                     ],
@@ -547,22 +452,16 @@ class _WizardShellScreenState extends State<WizardShellScreen> {
 
   Widget _wizTopBar(
     BuildContext context,
-    String lang,
+    AppLocalizations l,
     List<String> titles, {
     required bool compact,
   }) {
     final idx = _wizardIndex.clamp(0, titles.length - 1);
     final sectionTitle = titles[idx];
-    final roleBadge = switch ((_role, lang)) {
-      ('lawyer', 'en') => 'LAWYER',
-      ('lawyer', 'ru') => 'АДВОКАТ',
-      ('lawyer', _) => 'עורך דין',
-      ('admin', 'en') => 'ADMIN',
-      ('admin', 'ru') => 'АДМИН',
-      ('admin', _) => 'אדמין',
-      (_, 'en') => 'USER',
-      (_, 'ru') => 'USER',
-      _ => 'משתמש',
+    final roleBadge = switch (_role) {
+      'lawyer' => l.wizShellBadgeLawyer,
+      'admin' => l.wizShellBadgeAdmin,
+      _ => l.wizShellBadgeUser,
     };
 
     return Container(
@@ -585,7 +484,7 @@ class _WizardShellScreenState extends State<WizardShellScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                V26Kicker(_topKicker(lang)),
+                V26Kicker(_topKicker(l)),
                 const SizedBox(height: 4),
                 Text(
                   sectionTitle,
@@ -606,31 +505,19 @@ class _WizardShellScreenState extends State<WizardShellScreen> {
             const SizedBox(width: 8),
           ],
           IconButton(
-            tooltip: lang == 'he'
-                ? 'פרופיל'
-                : lang == 'ru'
-                    ? 'Профиль'
-                    : 'Profile',
+            tooltip: l.wizShellTooltipProfile,
             onPressed: () => Navigator.pushNamed(context, '/profile'),
             icon: const Icon(Icons.account_circle_outlined, color: V26.ink700),
           ),
           if (_role == 'admin')
             IconButton(
-              tooltip: lang == 'he'
-                  ? 'ניהול'
-                  : lang == 'ru'
-                      ? 'Админ'
-                      : 'Admin',
+              tooltip: l.wizShellTooltipAdmin,
               onPressed: () => Navigator.pushNamed(context, '/admin_settings'),
               icon: const Icon(Icons.admin_panel_settings_outlined,
                   color: V26.ink700),
             ),
           IconButton(
-            tooltip: lang == 'he'
-                ? 'התנתק'
-                : lang == 'ru'
-                    ? 'Выход'
-                    : 'Log out',
+            tooltip: l.wizShellTooltipLogout,
             onPressed: () => AuthService().logout(context),
             icon: const Icon(Icons.logout_rounded, color: V26.ink500),
           ),
@@ -639,7 +526,7 @@ class _WizardShellScreenState extends State<WizardShellScreen> {
     );
   }
 
-  Widget _userWizard(bool compact) {
+  Widget _userWizard(bool compact, AppLocalizations l) {
     return ListView(
       key: const ValueKey('userWizard2050'),
       padding: EdgeInsets.fromLTRB(
@@ -651,20 +538,22 @@ class _WizardShellScreenState extends State<WizardShellScreen> {
       children: [
         _panel(
           compact: compact,
-          title: 'שלב 1 | מצב הגנה',
-          subtitle: 'מבט מהיר על סטטוס המערכת שלך',
+          title: l.wizShellUserPanel1Title,
+          subtitle: l.wizShellUserPanel1Sub,
           child: Row(
             children: [
               V26Badge(
-                _isBusy ? 'שידור פעיל' : 'מוגן',
+                _isBusy
+                    ? l.wizShellUserBadgeDispatching
+                    : l.wizShellUserBadgeProtected,
                 tone: _isBusy ? V26BadgeTone.warn : V26BadgeTone.ok,
               ),
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
                   _isBusy
-                      ? 'קריאה כבר בתהליך, המערכת עוקבת אחרי תגובת עורכי דין.'
-                      : 'מוכן להפעלה. בלחיצה אחת תצא קריאת חירום מלאה.',
+                      ? l.wizShellUserPanel1BusyBody
+                      : l.wizShellUserPanel1IdleBody,
                   style: const TextStyle(
                     fontFamily: V26.sans,
                     color: V26.ink700,
@@ -679,10 +568,10 @@ class _WizardShellScreenState extends State<WizardShellScreen> {
         const SizedBox(height: 12),
         _panel(
           compact: compact,
-          title: 'שלב 2 | שידור חירום',
-          subtitle: 'כפתור אחד, פעולה אחת, אפס בלבול',
+          title: l.wizShellUserPanel2Title,
+          subtitle: l.wizShellUserPanel2Sub,
           child: V26CTA(
-            _isBusy ? 'שידור פעיל...' : 'הפעל VETO עכשיו',
+            _isBusy ? l.wizShellUserDispatchCtaBusy : l.wizShellUserDispatchCta,
             variant: V26CtaVariant.danger,
             large: true,
             expanded: true,
@@ -694,10 +583,10 @@ class _WizardShellScreenState extends State<WizardShellScreen> {
         const SizedBox(height: 12),
         _panel(
           compact: compact,
-          title: 'שלב 3 | תיעוד מתקדם',
-          subtitle: 'גישה מהירה למסך התיעוד הקיים',
+          title: l.wizShellUserPanel3Title,
+          subtitle: l.wizShellUserPanel3Sub,
           child: V26CTA(
-            'פתח סביבת חירום',
+            l.wizShellUserOpenEmergency,
             variant: V26CtaVariant.ghost,
             large: true,
             expanded: true,
@@ -708,26 +597,26 @@ class _WizardShellScreenState extends State<WizardShellScreen> {
         const SizedBox(height: 12),
         _panel(
           compact: compact,
-          title: 'שלב 4 | פעולות חשבון',
-          subtitle: 'פרופיל, ניהול, ויציאה בטוחה',
+          title: l.wizShellUserPanel4Title,
+          subtitle: l.wizShellUserPanel4Sub,
           child: Wrap(
             spacing: 10,
             runSpacing: 10,
             children: [
               V26CTA(
-                'פרופיל',
+                l.wizShellUserCtaProfile,
                 variant: V26CtaVariant.ghost,
                 onPressed: () => Navigator.pushNamed(context, '/profile'),
               ),
               if (_role == 'admin')
                 V26CTA(
-                  'ניהול מערכת',
+                  l.wizShellUserCtaAdmin,
                   variant: V26CtaVariant.ghost,
                   onPressed: () =>
                       Navigator.pushNamed(context, '/admin_settings'),
                 ),
               V26CTA(
-                'התנתק',
+                l.wizShellUserCtaLogout,
                 variant: V26CtaVariant.subtle,
                 onPressed: () => AuthService().logout(context),
               ),
@@ -738,7 +627,7 @@ class _WizardShellScreenState extends State<WizardShellScreen> {
     );
   }
 
-  Widget _lawyerWizard(bool compact) {
+  Widget _lawyerWizard(bool compact, AppLocalizations l) {
     return ListView(
       key: const ValueKey('lawyerWizard2050'),
       padding: EdgeInsets.fromLTRB(
@@ -750,14 +639,17 @@ class _WizardShellScreenState extends State<WizardShellScreen> {
       children: [
         _panel(
           compact: compact,
-          title: 'שלב 1 | זמינות',
-          subtitle: 'שליטה מלאה בזרימת תיקים נכנסים',
+          title: l.wizShellLawPanel1Title,
+          subtitle: l.wizShellLawPanel1Sub,
           child: SwitchListTile.adaptive(
             contentPadding: EdgeInsets.zero,
             activeThumbColor: V26.navy600,
             activeTrackColor: V26.navy200,
-            title: Text(_isAvailable ? 'זמין לקריאות' : 'לא זמין כרגע'),
-            subtitle: Text(_isAvailable ? 'On-call active' : 'Standby mode'),
+            title: Text(
+                _isAvailable ? l.wizShellLawAvailOn : l.wizShellLawAvailOff),
+            subtitle: Text(_isAvailable
+                ? l.wizShellLawAvailOnSub
+                : l.wizShellLawAvailOffSub),
             value: _isAvailable,
             onChanged: (v) {
               setState(() {
@@ -771,10 +663,10 @@ class _WizardShellScreenState extends State<WizardShellScreen> {
         const SizedBox(height: 12),
         _panel(
           compact: compact,
-          title: 'שלב 2 | התראות פעילות',
-          subtitle: 'קבל או דחה תיקים בלחיצה מהירה',
+          title: l.wizShellLawPanel2Title,
+          subtitle: l.wizShellLawPanel2Sub,
           child: _alerts.isEmpty
-              ? const Text('אין כרגע התראות פעילות')
+              ? Text(l.wizShellLawNoAlerts)
               : Column(
                   children: _alerts
                       .map(
@@ -798,7 +690,8 @@ class _WizardShellScreenState extends State<WizardShellScreen> {
                               const SizedBox(width: 10),
                               Expanded(
                                 child: Text(
-                                  'קריאה #${alert['eventId'] ?? 'N/A'}',
+                                  l.wizShellLawCallNumber(
+                                      alert['eventId']?.toString() ?? 'N/A'),
                                   style: const TextStyle(
                                     fontFamily: V26.sans,
                                     color: V26.ink900,
@@ -807,13 +700,13 @@ class _WizardShellScreenState extends State<WizardShellScreen> {
                                 ),
                               ),
                               IconButton(
-                                tooltip: 'דחה',
+                                tooltip: l.wizShellLawRejectTooltip,
                                 onPressed: () => _rejectAlert(alert),
                                 icon: const Icon(Icons.close_rounded,
                                     color: V26.emerg, size: 20),
                               ),
                               V26CTA(
-                                'קבל',
+                                l.wizShellLawAccept,
                                 variant: V26CtaVariant.primary,
                                 icon: Icons.check_rounded,
                                 onPressed: () => _acceptAlert(alert),
@@ -828,10 +721,10 @@ class _WizardShellScreenState extends State<WizardShellScreen> {
         const SizedBox(height: 12),
         _panel(
           compact: compact,
-          title: 'שלב 3 | טיפול בתיק',
-          subtitle: 'מעבר אוטומטי לסטטוס עסוק לאחר קבלה',
+          title: l.wizShellLawPanel3Title,
+          subtitle: l.wizShellLawPanel3Sub,
           child: Text(
-            _isAvailable ? 'אין תיק פעיל כרגע' : 'סטטוס עסוק - תיק בטיפול',
+            _isAvailable ? l.wizShellLawNoCase : l.wizShellLawBusyCase,
             style: const TextStyle(
               fontFamily: V26.sans,
               color: V26.ink700,
@@ -843,26 +736,26 @@ class _WizardShellScreenState extends State<WizardShellScreen> {
         const SizedBox(height: 12),
         _panel(
           compact: compact,
-          title: 'שלב 4 | פעולות חשבון',
-          subtitle: 'גישה מהירה לכלי הפרופיל והניהול',
+          title: l.wizShellLawPanel4Title,
+          subtitle: l.wizShellLawPanel4Sub,
           child: Wrap(
             spacing: 10,
             runSpacing: 10,
             children: [
               V26CTA(
-                'פרופיל',
+                l.wizShellUserCtaProfile,
                 variant: V26CtaVariant.ghost,
                 onPressed: () => Navigator.pushNamed(context, '/profile'),
               ),
               if (_role == 'admin')
                 V26CTA(
-                  'ניהול מערכת',
+                  l.wizShellUserCtaAdmin,
                   variant: V26CtaVariant.ghost,
                   onPressed: () =>
                       Navigator.pushNamed(context, '/admin_settings'),
                 ),
               V26CTA(
-                'התנתק',
+                l.wizShellUserCtaLogout,
                 variant: V26CtaVariant.subtle,
                 onPressed: () => AuthService().logout(context),
               ),

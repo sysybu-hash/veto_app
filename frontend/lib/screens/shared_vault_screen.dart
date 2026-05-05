@@ -5,6 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../config/app_config.dart';
 import '../core/theme/veto_2026.dart';
+import '../l10n/app_localizations.dart';
 import '../services/auth_service.dart';
 
 class SharedVaultScreen extends StatefulWidget {
@@ -60,6 +61,7 @@ class _SharedVaultScreenState extends State<SharedVaultScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final loc = AppLocalizations.of(context)!;
     return Scaffold(
       backgroundColor: V26.paper,
       appBar: AppBar(
@@ -73,7 +75,7 @@ class _SharedVaultScreenState extends State<SharedVaultScreen> {
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: Text(
-          _userName != null ? _userName! : 'Vault',
+          _userName != null ? _userName! : loc.sharedVaultFallbackTitle,
           style: const TextStyle(
             fontFamily: V26.serif,
             color: V26.ink900,
@@ -92,13 +94,13 @@ class _SharedVaultScreenState extends State<SharedVaultScreen> {
         child: _loading
             ? const Center(child: CircularProgressIndicator(color: V26.navy600))
             : _files.isEmpty
-                ? const Center(
+                ? Center(
                     child: Column(mainAxisSize: MainAxisSize.min, children: [
-                      Icon(Icons.folder_open_outlined,
+                      const Icon(Icons.folder_open_outlined,
                           size: 56, color: V26.ink300),
-                      SizedBox(height: 12),
-                      Text('No documents shared.',
-                          style: TextStyle(
+                      const SizedBox(height: 12),
+                      Text(loc.sharedVaultNoDocuments,
+                          style: const TextStyle(
                               fontFamily: V26.sans,
                               color: V26.ink500,
                               fontSize: 14)),
@@ -110,7 +112,7 @@ class _SharedVaultScreenState extends State<SharedVaultScreen> {
                     separatorBuilder: (_, __) => const SizedBox(height: 10),
                     itemBuilder: (context, i) {
                       final f = _files[i];
-                      return _SharedFileCard(file: f);
+                      return _SharedFileCard(file: f, loc: loc);
                     },
                   ),
       ),
@@ -120,12 +122,13 @@ class _SharedVaultScreenState extends State<SharedVaultScreen> {
 
 class _SharedFileCard extends StatelessWidget {
   final Map<String, dynamic> file;
+  final AppLocalizations loc;
 
-  const _SharedFileCard({required this.file});
+  const _SharedFileCard({required this.file, required this.loc});
 
   @override
   Widget build(BuildContext context) {
-    final name = file['name'] ?? 'Untitled';
+    final name = file['name'] ?? loc.sharedVaultUntitled;
     final url = file['url'] ?? '';
     final type = file['mimeType'] ?? '';
 

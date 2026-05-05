@@ -35,7 +35,9 @@ import '../widgets/veto_live_voice_sheet.dart';
 import '../widgets/gemini_ai_message_card.dart';
 import '../widgets/citizen_mockup_shell.dart';
 import 'citizen/citizen_home_hub.dart';
+import '../l10n/app_localizations.dart';
 
+part 'veto/veto_screen_scenario_data.dart';
 part 'veto/veto_screen_models.dart';
 
 // ── VetoScreen ────────────────────────────────────────────
@@ -85,12 +87,37 @@ class _VetoScreenState extends State<VetoScreen> {
   // ── Wizard state
   _Scenario _scenario = _Scenario.policeInquiry;
   bool _rightsExpanded = true;
+  /// Optional overlay from [_mergeScenarioBundleFromAssets]; null uses const [_sdMap].
+  Map<_Scenario, _SD>? _scenarioMapOverride;
   // ── Admin state
   List<dynamic> _adminFiles = [];
   bool _adminFilesLoading = false;
 
-  _LL get _l => _langs[_langKey]!;
-  _SD get _s => _sdMap[_scenario]!;
+  AppLocalizations _arbFor(String langKey) {
+    switch (langKey) {
+      case 'en':
+        return lookupAppLocalizations(const Locale('en'));
+      case 'ru':
+        return lookupAppLocalizations(const Locale('ru'));
+      default:
+        return lookupAppLocalizations(const Locale('he'));
+    }
+  }
+
+  String _bcp47For(String langKey) {
+    switch (langKey) {
+      case 'en':
+        return 'en-US';
+      case 'ru':
+        return 'ru-RU';
+      default:
+        return 'he-IL';
+    }
+  }
+
+  Map<_Scenario, _SD> get _scenarioMap => _scenarioMapOverride ?? _sdMap;
+
+  _SD get _s => _scenarioMap[_scenario]!;
   List<String> get _rights =>
       _langKey == 'ru' ? _s.rRu : _langKey == 'en' ? _s.rEn : _s.rHe;
   List<_ScenarioRight>? get _rightsRich => _s.rich;
@@ -98,15 +125,8 @@ class _VetoScreenState extends State<VetoScreen> {
       _langKey == 'ru' ? _s.ru : _langKey == 'en' ? _s.en : _s.he;
 
   /// Web Gemini Live: replaces generic hint while mic session is active.
-  String get _geminiLiveInputHint {
-    if (_langKey == 'ru') {
-      return 'Голосовой режим Gemini Live — нажмите микрофон ещё раз, чтобы остановить';
-    }
-    if (_langKey == 'en') {
-      return 'Gemini Live voice — tap the mic again to stop';
-    }
-    return 'שיחה קולית (Gemini Live) — הקש שוב על המיקרופון לסיום';
-  }
+  String get _geminiLiveInputHint =>
+      _arbFor(_langKey).vetoGeminiLiveInputHint;
 
   @override
   void initState() {
@@ -148,6 +168,13 @@ class _VetoScreenState extends State<VetoScreen> {
         Future<void>.delayed(const Duration(milliseconds: 900), _retryWebFlows);
       });
     }
+    unawaited(_tryLoadScenarioBundle());
+  }
+
+  Future<void> _tryLoadScenarioBundle() async {
+    final merged = await _mergeScenarioBundleFromAssets(_sdMap);
+    if (!mounted || merged == null) return;
+    setState(() => _scenarioMapOverride = merged);
   }
 
   /// Flows: Flutter Web may build `flt-glass-pane` after first paint — retry after shell mount.
@@ -265,7 +292,7 @@ class _VetoScreenState extends State<VetoScreen> {
         _langKey = language;
         _displayName = (storedName ?? '').trim();
       });
-      _messages.add(_Msg(text: _l.greeting, isUser: false));
+      _messages.add(_Msg(text: _arbFor(_langKey).vetoChatAssistantGreeting, isUser: false));
       if (_role == 'admin') _loadAdminFiles();
     }
     if ((r ?? '').isNotEmpty) {
@@ -326,7 +353,7 @@ class _VetoScreenState extends State<VetoScreen> {
             side: const BorderSide(color: V26.hairline),
           ),
           title: Text(
-            AdminStrings.t(_langKey, 'changeStatus'),
+            AdminStrings.t(navContext, 'changeStatus'),
             style: const TextStyle(color: V26.ink900),
           ),
           content: StatefulBuilder(
@@ -340,7 +367,7 @@ class _VetoScreenState extends State<VetoScreen> {
                   .map(
                     (v) => DropdownMenuItem<String>(
                       value: v,
-                      child: Text(AdminStrings.eventStatus(_langKey, v)),
+                      child: Text(AdminStrings.eventStatus(navContext, v)),
                     ),
                   )
                   .toList(),
@@ -352,11 +379,11 @@ class _VetoScreenState extends State<VetoScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx, false),
-              child: Text(AdminStrings.t(_langKey, 'cancel')),
+              child: Text(AdminStrings.t(navContext, 'cancel')),
             ),
             FilledButton(
               onPressed: () => Navigator.pop(ctx, true),
-              child: Text(AdminStrings.t(_langKey, 'save')),
+              child: Text(AdminStrings.t(navContext, 'save')),
             ),
           ],
         ),
@@ -370,13 +397,7 @@ class _VetoScreenState extends State<VetoScreen> {
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
-            _langKey == 'he'
-                ? 'עדכון נכשל'
-                : _langKey == 'ru'
-                    ? 'Не удалось обновить'
-                    : 'Update failed',
-          ),
+          content: Text(_arbFor(_langKey).vetoSnackAdminEmergencyUpdateFailed),
         ),
       );
     }
@@ -388,21 +409,10 @@ class _VetoScreenState extends State<VetoScreen> {
     final evidence = (ev['evidence'] as List?) ?? [];
     final hasEvidence = evidence.isNotEmpty;
 
-    final title = _langKey == 'he'
-        ? 'ניקוי'
-        : _langKey == 'ru'
-            ? 'Очистка'
-            : 'Cleaning';
-    final clearLabel = _langKey == 'he'
-        ? 'הסר ראיות מצורפות בלבד'
-        : _langKey == 'ru'
-            ? 'Удалить только вложения'
-            : 'Remove attached evidence only';
-    final clearedMsg = _langKey == 'he'
-        ? 'הראיות הוסרו'
-        : _langKey == 'ru'
-            ? 'Вложения удалены'
-            : 'Evidence cleared';
+    final l = _arbFor(_langKey);
+    final title = l.vetoUiAdminEmergencyCleaningTitle;
+    final clearLabel = l.vetoUiAdminEmergencyClearEvidenceLabel;
+    final clearedMsg = l.vetoSnackAdminEmergencyEvidenceCleared;
 
     final action = await showDialog<String>(
       context: navContext,
@@ -430,14 +440,14 @@ class _VetoScreenState extends State<VetoScreen> {
                 style: FilledButton.styleFrom(backgroundColor: V26.emerg),
                 onPressed: () => Navigator.pop(ctx, 'delete'),
                 icon: const Icon(Icons.delete_outline, color: V26.ink900),
-                label: Text(AdminStrings.t(_langKey, 'deleteEvent')),
+                label: Text(AdminStrings.t(navContext, 'deleteEvent')),
               ),
             ],
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx, null),
-              child: Text(AdminStrings.t(_langKey, 'cancel')),
+              child: Text(AdminStrings.t(navContext, 'cancel')),
             ),
           ],
         ),
@@ -453,13 +463,7 @@ class _VetoScreenState extends State<VetoScreen> {
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-              _langKey == 'he'
-                  ? 'ניקוי נכשל'
-                  : _langKey == 'ru'
-                      ? 'Ошибка очистки'
-                      : 'Clear failed',
-            ),
+            content: Text(_arbFor(_langKey).vetoSnackAdminEmergencyClearFailed),
           ),
         );
       }
@@ -480,22 +484,22 @@ class _VetoScreenState extends State<VetoScreen> {
             side: const BorderSide(color: V26.hairline),
           ),
           title: Text(
-            AdminStrings.t(_langKey, 'deleteEvent'),
+            AdminStrings.t(navContext, 'deleteEvent'),
             style: const TextStyle(color: V26.ink900),
           ),
           content: Text(
-            AdminStrings.t(_langKey, 'deleteEventConfirm'),
+            AdminStrings.t(navContext, 'deleteEventConfirm'),
             style: const TextStyle(color: V26.ink500),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx, false),
-              child: Text(AdminStrings.t(_langKey, 'cancel')),
+              child: Text(AdminStrings.t(navContext, 'cancel')),
             ),
             FilledButton(
               style: FilledButton.styleFrom(backgroundColor: V26.emerg),
               onPressed: () => Navigator.pop(ctx, true),
-              child: Text(AdminStrings.t(_langKey, 'delete')),
+              child: Text(AdminStrings.t(navContext, 'delete')),
             ),
           ],
         ),
@@ -509,13 +513,7 @@ class _VetoScreenState extends State<VetoScreen> {
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
-            _langKey == 'he'
-                ? 'מחיקה נכשלה'
-                : _langKey == 'ru'
-                    ? 'Не удалось удалить'
-                    : 'Delete failed',
-          ),
+          content: Text(_arbFor(_langKey).vetoSnackAdminEmergencyDeleteFailed),
         ),
       );
     }
@@ -580,11 +578,7 @@ class _VetoScreenState extends State<VetoScreen> {
     if (!connected) {
       setState(() => _isDispatching = false);
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(_langKey == 'he'
-            ? 'אין חיבור לשרת. בדוק רשת והתחבר מחדש.'
-            : _langKey == 'ru'
-                ? 'Нет связи с сервером. Проверьте сеть.'
-                : 'Cannot reach the server. Check your connection.'),
+        content: Text(_arbFor(_langKey).vetoSnackDispatchNoConnection),
         backgroundColor: V26.emerg,
       ));
       return;
@@ -603,17 +597,10 @@ class _VetoScreenState extends State<VetoScreen> {
       specialization: spec,
     );
     final specLabel = spec ?? '';
+    final l = _arbFor(_langKey);
     final msg = lawyerName != null
-        ? ('🔔 ${_langKey == 'he'
-            ? 'מחפש עורך דין בתחום $specLabel...\n$lawyerName ייצור איתך קשר.'
-            : _langKey == 'ru'
-            ? 'Ищу адвоката по $specLabel...\n$lawyerName свяжется с вами.'
-            : 'Searching $specLabel lawyer...\n$lawyerName will contact you.'}')
-        : ('🔔 ${_langKey == 'he'
-            ? 'מחפש עורך דין זמין...'
-            : _langKey == 'ru'
-            ? 'Ищу доступного адвоката...'
-            : 'Searching for an available lawyer...'}');
+        ? ('🔔 ${l.vetoDispatchSearchingLawyer(specLabel, lawyerName)}')
+        : ('🔔 ${l.vetoDispatchSearchingGeneric}');
     if (mounted) {
       setState(() => _messages.add(_Msg(text: msg, isUser: false, isSystem: true)));
       _scrollToBottom();
@@ -650,11 +637,12 @@ class _VetoScreenState extends State<VetoScreen> {
     final ok = browser_bridge.supportsBrowserMethod('vetoSTT', 'isSupported', const []);
     if (!ok) {
       ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('הדפדפן שלך לא תומך בזיהוי קול')));
+        SnackBar(content: Text(_arbFor(_langKey).vetoSnackSttBrowserUnsupported)),
+      );
       return;
     }
     setState(() => _isListening = true);
-    _safeJs('vetoSTT', 'start', [_l.code]);
+    _safeJs('vetoSTT', 'start', [_bcp47For(_langKey)]);
   }
   void _stopListening() {
     if (_liveSessionActive) {
@@ -703,14 +691,9 @@ class _VetoScreenState extends State<VetoScreen> {
             nativeAudio: o['nativeAudio'] == true,
           ));
         } else if (mounted) {
-          final msg = _langKey == 'he'
-              ? 'החיבור הקולי נותק. לחץ שוב על המיקרופון.'
-              : _langKey == 'ru'
-                  ? 'Голосовая сессия прервалась. Нажмите микрофон ещё раз.'
-                  : 'Voice session disconnected. Tap the mic to try again.';
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(msg),
+              content: Text(_arbFor(_langKey).vetoSnackGeminiLiveDisconnected),
               duration: const Duration(seconds: 4),
             ),
           );
@@ -718,11 +701,7 @@ class _VetoScreenState extends State<VetoScreen> {
         return;
       }
       final t = e == 'not_supported'
-          ? (_langKey == 'he'
-              ? 'הדפדפן/המכשיר לא תומנים בקלט קול (HTTPS ומכשיר נדרשים).'
-              : _langKey == 'ru'
-                  ? 'Колючий ввод недоступен в этой среде.'
-                  : 'Voice input is not available in this browser.')
+          ? _arbFor(_langKey).vetoSnackVoiceInputUnavailable
           : e;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(t)));
       return;
@@ -780,7 +759,8 @@ class _VetoScreenState extends State<VetoScreen> {
     }
     if (!mounted) return;
     setState(() => _isLoading = false);
-    final uHist = uText.isNotEmpty ? uText : _langKey == 'he' ? '(קלט קולי)' : '(voice)';
+    final uHist =
+        uText.isNotEmpty ? uText : _arbFor(_langKey).vetoVoiceHistoryPlaceholder;
     _geminiHistory
       ..add({'role': 'user', 'parts': [
             {'text': uHist}
@@ -801,7 +781,7 @@ class _VetoScreenState extends State<VetoScreen> {
       await _payAndDispatch(spec, null);
     }
   }
-  void _speak(String t) => _safeJs('vetoTTS', 'speak', [t, _l.code]);
+  void _speak(String t) => _safeJs('vetoTTS', 'speak', [t, _bcp47For(_langKey)]);
   void _stopSpeaking() => _safeJs('vetoTTS', 'stop', []);
   void _scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -835,7 +815,7 @@ class _VetoScreenState extends State<VetoScreen> {
         'roomId': roomId,
         'callType': data['callType']?.toString() ?? 'video',
         'peerName': data['peerName']?.toString() ??
-            (_langKey == 'he' ? 'עורך דין' : 'Lawyer'),
+            _arbFor(_langKey).vetoPeerNameLawyer,
         'role': socketRole,
         'eventId': data['eventId']?.toString() ?? roomId,
         'language': _langKey,
@@ -877,11 +857,7 @@ class _VetoScreenState extends State<VetoScreen> {
     if (!mounted) return;
     final n = data['lawyersNotified'];
     final count = n is int ? n : int.tryParse('$n') ?? 0;
-    final msg = _langKey == 'ru'
-        ? '📡 Запрос отправлен. Уведомлено адвокатов: $count.'
-        : _langKey == 'en'
-            ? '📡 Request broadcast. Lawyers notified: $count.'
-            : '📡 הבקשה שודרה לעורכי דין. נשלחה התראה ל־$count עורכי דין.';
+    final msg = '📡 ${_arbFor(_langKey).vetoDispatchBroadcast(count)}';
     setState(() {
       _messages.add(_Msg(text: msg, isUser: false, isSystem: true));
     });
@@ -892,19 +868,14 @@ class _VetoScreenState extends State<VetoScreen> {
     if (!mounted) return;
     setState(() {
       _isDispatching = false;
-      _messages.add(_Msg(text: data['message']?.toString() ??
-          (_langKey == 'he'
-              ? 'כרגע אין עורכי דין זמינים.'
-              : _langKey == 'ru'
-                  ? 'В данный момент нет доступных адвокатов.'
-                  : 'No lawyers are currently available.'), isUser: false, isSystem: true));
+      _messages.add(_Msg(
+          text: data['message']?.toString() ??
+              _arbFor(_langKey).vetoDispatchNoLawyers,
+          isUser: false,
+          isSystem: true));
     });
-    final message = data['message']?.toString() ??
-        (_langKey == 'he'
-            ? 'כרגע אין עורכי דין זמינים.'
-            : _langKey == 'ru'
-                ? 'В данный момент нет доступных адвокатов.'
-                : 'No lawyers are currently available.');
+    final message =
+        data['message']?.toString() ?? _arbFor(_langKey).vetoDispatchNoLawyers;
     _scrollToBottom();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -918,11 +889,7 @@ class _VetoScreenState extends State<VetoScreen> {
     if (!mounted) return;
     setState(() => _isDispatching = false);
     final message = data['message']?.toString() ??
-        (_langKey == 'he'
-            ? 'שליחת החירום נכשלה. נסה שוב.'
-            : _langKey == 'ru'
-                ? 'Не удалось отправить сигнал. Попробуйте ещё раз.'
-                : 'Dispatch failed. Please try again.');
+        _arbFor(_langKey).vetoDispatchFailedRetry;
     setState(() {
       _messages.add(_Msg(text: message, isUser: false, isSystem: true));
     });
@@ -936,11 +903,7 @@ class _VetoScreenState extends State<VetoScreen> {
     if (!mounted) return;
     setState(() => _isDispatching = false);
     final message = data['message']?.toString() ??
-        (_langKey == 'he'
-            ? 'עורך דין אחר כבר קיבל את הקריאה.'
-            : _langKey == 'ru'
-                ? 'Другой адвокат уже принял вызов.'
-                : 'Another lawyer has already taken this case.');
+        _arbFor(_langKey).vetoDispatchCaseTaken;
     setState(() {
       _messages.add(_Msg(text: message, isUser: false, isSystem: true));
     });
@@ -953,11 +916,7 @@ class _VetoScreenState extends State<VetoScreen> {
   Future<void> _openCamera() async {
     if (_token == null) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(_langKey == 'he'
-            ? 'נדרשת התחברות לתיעוד ראיות'
-            : _langKey == 'ru'
-                ? 'Войдите, чтобы записывать доказательства'
-                : 'Sign in to capture evidence'),
+        content: Text(_arbFor(_langKey).vetoEvidenceSignInRequired),
       ));
       return;
     }
@@ -981,11 +940,8 @@ class _VetoScreenState extends State<VetoScreen> {
         } else {
           if (!mounted) return;
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text(_langKey == 'he'
-                ? 'לא ניתן לפתוח תיעוד ראיות (${res.statusCode})'
-                : _langKey == 'ru'
-                    ? 'Не удалось начать запись (${res.statusCode})'
-                    : 'Could not start evidence session (${res.statusCode})'),
+            content: Text(_arbFor(_langKey)
+                .vetoEvidenceSessionFailed(res.statusCode)),
             backgroundColor: V26.emerg,
           ));
           return;
@@ -993,11 +949,7 @@ class _VetoScreenState extends State<VetoScreen> {
       } catch (e) {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(_langKey == 'he'
-              ? 'שגיאת רשת בתיעוד ראיות'
-              : _langKey == 'ru'
-                  ? 'Ошибка сети'
-                  : 'Network error starting evidence'),
+          content: Text(_arbFor(_langKey).vetoEvidenceNetworkError),
           backgroundColor: V26.emerg,
         ));
         return;
@@ -1035,11 +987,7 @@ class _VetoScreenState extends State<VetoScreen> {
     await Clipboard.setData(ClipboardData(text: 'https://maps.google.com/?q=$lat,$lng'));
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text(_langKey == 'he'
-          ? 'קישור מיקום הועתק ללוח הגזירים'
-          : _langKey == 'ru'
-          ? 'Ссылка на местоположение скопирована'
-          : 'Location link copied to clipboard'),
+      content: Text(_arbFor(_langKey).vetoSnackLocationCopied),
       backgroundColor: V26.ok,
     ));
   }
@@ -1050,7 +998,7 @@ class _VetoScreenState extends State<VetoScreen> {
       _activeEventId = null;
       _messages.clear();
       _geminiHistory.clear();
-      _messages.add(_Msg(text: _l.greeting, isUser: false));
+      _messages.add(_Msg(text: _arbFor(_langKey).vetoChatAssistantGreeting, isUser: false));
     });
   }
 
@@ -1075,7 +1023,6 @@ class _VetoScreenState extends State<VetoScreen> {
     Widget hubOrWizard(bool wide) {
       if (!_citizenWizardMode) {
         return CitizenHomeHub(
-          langKey: _langKey,
           userName: _displayName,
           onSendVeto: () => setState(() => _citizenWizardMode = true),
           onOpenLegalTool: (route, {arguments}) =>
@@ -1099,11 +1046,7 @@ class _VetoScreenState extends State<VetoScreen> {
                 child: TextButton.icon(
                   onPressed: () => setState(() => _citizenWizardMode = false),
                   icon: const Icon(Icons.arrow_back_rounded),
-                  label: Text(
-                    _langKey == 'he'
-                        ? 'חזרה לדף הבית'
-                        : (_langKey == 'ru' ? 'На главную' : 'Back to home'),
-                  ),
+                  label: Text(_arbFor(_langKey).vetoUiBackToHomeWizard),
                 ),
               ),
             ),
@@ -1151,16 +1094,10 @@ class _VetoScreenState extends State<VetoScreen> {
             const routes = V26CitizenNav.routes;
             V26CitizenNav.go(context, routes[i], current: '/veto_screen');
           },
-          desktopStatusText: _langKey == 'he'
-              ? 'מחובר · ממתין לאירוע · זמני תגובה ממוצעים 3:21 דק\''
-              : (_langKey == 'ru'
-                  ? 'Подключено · ожидание события · среднее время 3:21'
-                  : 'Connected · ready · average response 3:21'),
+          desktopStatusText: _arbFor(_langKey).vetoUiDesktopStatusLine,
           desktopTrailing: [
             V26LangPill(
-              label: _langKey == 'he'
-                  ? 'עברית'
-                  : (_langKey == 'ru' ? 'Русский' : 'English'),
+              label: _arbFor(_langKey).vetoLangSelfName,
               onTap: () {
                 final next = _langKey == 'he'
                     ? 'en'
@@ -1174,13 +1111,11 @@ class _VetoScreenState extends State<VetoScreen> {
             V26IconBtn(
               icon: Icons.accessibility_new_rounded,
               onTap: () => showAccessibilitySheet(context),
-              tooltip: _langKey == 'he' ? 'נגישות' : 'Accessibility',
+              tooltip: _arbFor(_langKey).fabAccessibility,
             ),
             const SizedBox(width: 8),
             V26PillCTA(
-              label: _langKey == 'he'
-                  ? 'הפרופיל שלי'
-                  : (_langKey == 'ru' ? 'Мой профиль' : 'My Profile'),
+              label: _arbFor(_langKey).vetoUiProfileCta,
               icon: Icons.person_rounded,
               onTap: () => Navigator.pushNamed(context, '/profile'),
             ),
@@ -1190,7 +1125,7 @@ class _VetoScreenState extends State<VetoScreen> {
                 icon: Icons.admin_panel_settings_outlined,
                 onTap: () =>
                     Navigator.pushNamed(context, '/admin_settings'),
-                tooltip: 'Admin',
+                tooltip: _arbFor(_langKey).vetoUiAdminTooltip,
               ),
             ],
           ],
@@ -1259,19 +1194,19 @@ class _VetoScreenState extends State<VetoScreen> {
             IconButton(
               icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
               onPressed: () => setState(() => _citizenWizardMode = false),
-              tooltip: _langKey == 'he' ? 'דף הבית' : 'Home',
+              tooltip: _arbFor(_langKey).vetoWizardTooltipHome,
             ),
           const SizedBox(width: 4),
           AppLanguageMenu(
             compact: true,
-            tooltip: _langKey == 'he' ? 'שפה' : _langKey == 'ru' ? 'Язык' : 'Language',
+            tooltip: _arbFor(_langKey).vetoWizardTooltipLanguage,
             onLanguageChanged: (k) {
               if (!mounted) return;
               setState(() {
                 _langKey = k;
                 _messages.clear();
                 _geminiHistory.clear();
-                _messages.add(_Msg(text: _langs[k]!.greeting, isUser: false));
+                _messages.add(_Msg(text: _arbFor(k).vetoChatAssistantGreeting, isUser: false));
               });
             },
           ),
@@ -1286,7 +1221,7 @@ class _VetoScreenState extends State<VetoScreen> {
           const Icon(Icons.shield_rounded, color: V26.navy600, size: 20),
           const SizedBox(width: 8),
           Text(
-            'VETO — הגנה משפטית',
+            _arbFor(_langKey).vetoWizardAppBarTitle,
             style: TextStyle(
               fontWeight: FontWeight.w900,
               fontSize: 15,
@@ -1326,19 +1261,11 @@ class _VetoScreenState extends State<VetoScreen> {
           icon: Icon(
             Icons.accessibility_new_rounded,
             size: 22,
-            semanticLabel: kIsWeb
-                ? (_langKey == 'he'
-                    ? 'נגישות'
-                    : _langKey == 'ru'
-                        ? 'Доступность'
-                        : 'Accessibility')
-                : null,
+            semanticLabel: kIsWeb ? _arbFor(_langKey).fabAccessibility : null,
           ),
           color: V26.ink500,
           onPressed: () => showAccessibilitySheet(context),
-          tooltip: kIsWeb
-              ? null
-              : (_langKey == 'he' ? 'נגישות' : _langKey == 'ru' ? 'Доступность' : 'Accessibility'),
+          tooltip: kIsWeb ? null : _arbFor(_langKey).fabAccessibility,
         ),
         Builder(
           builder: (ctx) => IconButton(
@@ -1347,7 +1274,7 @@ class _VetoScreenState extends State<VetoScreen> {
             icon: const Icon(Icons.menu_rounded, size: 26),
             color: V26.ink900,
             onPressed: () => _showHamburgerMenu(ctx, isAdmin),
-            tooltip: _langKey == 'he' ? 'תפריט' : _langKey == 'ru' ? 'Меню' : 'Menu',
+            tooltip: _arbFor(_langKey).navMenu,
           ),
         ),
         const SizedBox(width: 4),
@@ -1360,6 +1287,7 @@ class _VetoScreenState extends State<VetoScreen> {
   }
 
   void _showHamburgerMenu(BuildContext ctx, bool isAdmin) {
+    final l = _arbFor(_langKey);
     showModalBottomSheet(
       context: ctx,
       backgroundColor: V26.surface,
@@ -1385,7 +1313,7 @@ class _VetoScreenState extends State<VetoScreen> {
               if (isAdmin)
                 _menuItem(
                   Icons.admin_panel_settings_outlined,
-                  _langKey == 'he' ? 'פאנל ניהול' : 'Admin Panel',
+                  l.admShellPanel,
                   V26.navy600,
                   () {
                     Navigator.pop(ctx);
@@ -1394,11 +1322,7 @@ class _VetoScreenState extends State<VetoScreen> {
                 ),
               _menuItem(
                 Icons.home_outlined,
-                _langKey == 'he'
-                    ? 'דף הבית'
-                    : _langKey == 'ru'
-                        ? 'Главная'
-                        : 'Home',
+                l.vetoUiHamburgerHome,
                 V26.navy600,
                 () {
                   Navigator.pop(ctx);
@@ -1407,11 +1331,7 @@ class _VetoScreenState extends State<VetoScreen> {
               ),
               _menuItem(
                 Icons.folder_special_outlined,
-                _langKey == 'he'
-                    ? 'כספת קבצים'
-                    : _langKey == 'ru'
-                        ? 'Хранилище'
-                        : 'File Vault',
+                l.vetoUiFileVaultTitle,
                 V26.navy600,
                 () {
                   Navigator.pop(ctx);
@@ -1420,7 +1340,7 @@ class _VetoScreenState extends State<VetoScreen> {
               ),
               _menuItem(
                 Icons.calendar_month_outlined,
-                _langKey == 'he' ? 'יומן משפטי' : 'Legal calendar',
+                l.calScrTitle,
                 V26.navy600,
                 () {
                   Navigator.pop(ctx);
@@ -1429,7 +1349,7 @@ class _VetoScreenState extends State<VetoScreen> {
               ),
               _menuItem(
                 Icons.menu_book_outlined,
-                _langKey == 'he' ? 'מחברת (Enterprise)' : 'Notebook (Enterprise)',
+                l.vetoUiNotebookEnterprise,
                 V26.navy600,
                 () {
                   Navigator.pop(ctx);
@@ -1438,11 +1358,7 @@ class _VetoScreenState extends State<VetoScreen> {
               ),
               _menuItem(
                 Icons.map_outlined,
-                _langKey == 'he'
-                    ? 'מפה'
-                    : _langKey == 'ru'
-                        ? 'Карта'
-                        : 'Map',
+                l.citizenShellMoreMap,
                 V26.navy600,
                 () {
                   Navigator.pop(ctx);
@@ -1451,11 +1367,7 @@ class _VetoScreenState extends State<VetoScreen> {
               ),
               _menuItem(
                 Icons.settings_outlined,
-                _langKey == 'he'
-                    ? 'הגדרות'
-                    : _langKey == 'ru'
-                        ? 'Настройки'
-                        : 'Settings',
+                l.citizenShellNavSettings,
                 V26.ink500,
                 () {
                   Navigator.pop(ctx);
@@ -1464,11 +1376,7 @@ class _VetoScreenState extends State<VetoScreen> {
               ),
               _menuItem(
                 Icons.person_outline,
-                _langKey == 'he'
-                    ? 'פרופיל'
-                    : _langKey == 'ru'
-                        ? 'Профиль'
-                        : 'Profile',
+                l.citizenShellMoreProfile,
                 V26.ink500,
                 () {
                   Navigator.pop(ctx);
@@ -1478,11 +1386,7 @@ class _VetoScreenState extends State<VetoScreen> {
               const Divider(height: 20, color: V26.hairline),
               _menuItem(
                 Icons.logout_rounded,
-                _langKey == 'he'
-                    ? 'התנתקות'
-                    : _langKey == 'ru'
-                        ? 'Выход'
-                        : 'Log out',
+                l.profScreenLogout,
                 V26.emerg,
                 () {
                   Navigator.pop(ctx);
@@ -1512,75 +1416,79 @@ class _VetoScreenState extends State<VetoScreen> {
       );
 
   // ── Files tab placeholder (routes to file vault) ───────────
-  Widget _buildFilesTab(bool isRtl) => Center(
-    child: Column(mainAxisSize: MainAxisSize.min, children: [
-      const Icon(Icons.folder_special_outlined, size: 64, color: V26.navy600),
-      const SizedBox(height: 16),
-      Text(
-        isRtl ? 'כספת קבצים' : _langKey == 'ru' ? 'Хранилище файлов' : 'File Vault',
-        style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800,
-            color: V26.ink900),
-      ),
-      const SizedBox(height: 8),
-      Text(
-        isRtl ? 'שמור ונהל את כל קבצי הראיות שלך'
-            : _langKey == 'ru' ? 'Сохраняйте и управляйте доказательствами'
-            : 'Store and manage all your evidence files',
-        style: const TextStyle(color: Color(0xFF64748B), fontSize: 14),
-        textAlign: TextAlign.center,
-      ),
-      const SizedBox(height: 24),
-      FilledButton.icon(
-        onPressed: () => Navigator.pushNamed(context, '/files_vault'),
-        icon: const Icon(Icons.open_in_new),
-        label: Text(isRtl ? 'פתח כספת קבצים'
-            : _langKey == 'ru' ? 'Открыть хранилище' : 'Open File Vault'),
-        style: FilledButton.styleFrom(backgroundColor: V26.navy600),
-      ),
-    ]),
-  );
+  Widget _buildFilesTab(bool isRtl) {
+    final l = _arbFor(_langKey);
+    return Center(
+      child: Column(mainAxisSize: MainAxisSize.min, children: [
+        const Icon(Icons.folder_special_outlined, size: 64, color: V26.navy600),
+        const SizedBox(height: 16),
+        Text(
+          l.vetoUiFileVaultTitle,
+          style: const TextStyle(
+              fontSize: 20, fontWeight: FontWeight.w800, color: V26.ink900),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          l.vetoUiFileVaultSubtitle,
+          style: const TextStyle(color: Color(0xFF64748B), fontSize: 14),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 24),
+        FilledButton.icon(
+          onPressed: () => Navigator.pushNamed(context, '/files_vault'),
+          icon: const Icon(Icons.open_in_new),
+          label: Text(l.vetoUiOpenFileVault),
+          style: FilledButton.styleFrom(backgroundColor: V26.navy600),
+        ),
+      ]),
+    );
+  }
 
   // ── Profile tab placeholder ────────────────────────────────
-  Widget _buildProfileTab(bool isRtl) => Center(
-    child: Column(mainAxisSize: MainAxisSize.min, children: [
-      Container(
-        width: 80, height: 80,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: V26.navy600.withValues(alpha: 0.12),
-          border: Border.all(color: V26.navy600.withValues(alpha: 0.3), width: 2),
+  Widget _buildProfileTab(bool isRtl) {
+    final l = _arbFor(_langKey);
+    return Center(
+      child: Column(mainAxisSize: MainAxisSize.min, children: [
+        Container(
+          width: 80,
+          height: 80,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: V26.navy600.withValues(alpha: 0.12),
+            border:
+                Border.all(color: V26.navy600.withValues(alpha: 0.3), width: 2),
+          ),
+          child: const Icon(Icons.person_rounded, size: 44, color: V26.navy600),
         ),
-        child: const Icon(Icons.person_rounded, size: 44, color: V26.navy600),
-      ),
-      const SizedBox(height: 16),
-      Text(
-        _phone.isNotEmpty ? _phone : (isRtl ? 'המשתמש שלי' : 'My Profile'),
-        style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800,
-            color: V26.ink900),
-        textDirection: TextDirection.ltr,
-      ),
-      const SizedBox(height: 24),
-      FilledButton.icon(
-        onPressed: () => Navigator.pushNamed(context, '/profile'),
-        icon: const Icon(Icons.manage_accounts_rounded),
-        label: Text(isRtl ? 'נהל פרופיל'
-            : _langKey == 'ru' ? 'Управлять профилем' : 'Manage Profile'),
-        style: FilledButton.styleFrom(backgroundColor: V26.navy600),
-      ),
-      const SizedBox(height: 12),
-      OutlinedButton.icon(
-        onPressed: () => AuthService().logout(context),
-        icon: const Icon(Icons.logout_rounded, color: Color(0xFFFF3B3B)),
-        label: Text(
-          isRtl ? 'התנתקות' : _langKey == 'ru' ? 'Выход' : 'Log out',
-          style: const TextStyle(color: Color(0xFFFF3B3B)),
+        const SizedBox(height: 16),
+        Text(
+          _phone.isNotEmpty ? _phone : l.vetoUiProfileTabTitleGuest,
+          style: const TextStyle(
+              fontSize: 20, fontWeight: FontWeight.w800, color: V26.ink900),
+          textDirection: TextDirection.ltr,
         ),
-        style: OutlinedButton.styleFrom(
-          side: const BorderSide(color: Color(0xFFFF3B3B)),
+        const SizedBox(height: 24),
+        FilledButton.icon(
+          onPressed: () => Navigator.pushNamed(context, '/profile'),
+          icon: const Icon(Icons.manage_accounts_rounded),
+          label: Text(l.vetoUiManageProfile),
+          style: FilledButton.styleFrom(backgroundColor: V26.navy600),
         ),
-      ),
-    ]),
-  );
+        const SizedBox(height: 12),
+        OutlinedButton.icon(
+          onPressed: () => AuthService().logout(context),
+          icon: const Icon(Icons.logout_rounded, color: Color(0xFFFF3B3B)),
+          label: Text(
+            l.profScreenLogout,
+            style: const TextStyle(color: Color(0xFFFF3B3B)),
+          ),
+          style: OutlinedButton.styleFrom(
+            side: const BorderSide(color: Color(0xFFFF3B3B)),
+          ),
+        ),
+      ]),
+    );
+  }
 
   // ══════════════════════════════════════════════════════════
   // WIZARD TAB (Home)
@@ -1594,6 +1502,7 @@ class _VetoScreenState extends State<VetoScreen> {
           final maxW = compact
               ? double.infinity
               : (isDesktop ? 1200.0 : 720.0);
+          final l = _arbFor(_langKey);
           return SingleChildScrollView(
             padding: EdgeInsets.fromLTRB(hPad, 12, hPad, compact ? 28 : 44),
             child: Align(
@@ -1607,16 +1516,10 @@ class _VetoScreenState extends State<VetoScreen> {
                     SizedBox(height: compact ? 14 : 18),
                     _citizenHero2026(compact, isDesktop),
                     SizedBox(height: compact ? 20 : 28),
-                    _secLabel(isRtl
-                        ? 'מה קורה עכשיו?'
-                        : _langKey == 'ru' ? 'Что происходит?' : "What's happening?"),
+                    _secLabel(l.vetoUiScenarioHeading),
                     const SizedBox(height: 6),
                     Text(
-                      isRtl
-                          ? 'בחר את התרחיש שמתאים לך כעת'
-                          : _langKey == 'ru'
-                              ? 'Выберите подходящий сценарий'
-                              : 'Choose the situation you are in right now',
+                      l.vetoUiScenarioPickTitle,
                       style: const TextStyle(
                         fontFamily: V26.serif,
                         color: V26.ink900,
@@ -1627,11 +1530,7 @@ class _VetoScreenState extends State<VetoScreen> {
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      isRtl
-                          ? 'בהתאם לבחירתך נתאים זכויות, הנחיות וסוג עורך הדין שיוזעק.'
-                          : _langKey == 'ru'
-                              ? 'Подстроим права и инструкции под ваш выбор.'
-                              : 'We will tailor rights, guidance, and counsel type to your choice.',
+                      l.vetoUiScenarioPickSubtitle,
                       style: const TextStyle(
                         color: V26.ink500,
                         fontSize: 13,
@@ -1658,17 +1557,10 @@ class _VetoScreenState extends State<VetoScreen> {
 
   // ── Status badge pill (2026 surface) ───────────────────────
   Widget _statusBadge() {
+    final l = _arbFor(_langKey);
     final text = _isDispatching
-        ? (_langKey == 'he'
-            ? 'מחובר · שיגור פעיל'
-            : _langKey == 'ru'
-                ? 'Активно · Диспетчеризация'
-                : 'Connected · Dispatching')
-        : (_langKey == 'he'
-            ? 'מחובר · ממתין לאירוע'
-            : _langKey == 'ru'
-                ? 'Подключено · Ожидание'
-                : 'Connected · Standby');
+        ? l.vetoUiStatusDispatching
+        : l.vetoUiStatusStandby;
     final tone =
         _isDispatching ? V26StatusTone.live : V26StatusTone.online;
     return Center(
@@ -1747,11 +1639,7 @@ class _VetoScreenState extends State<VetoScreen> {
                         if (_isDispatching) ...[
                           const SizedBox(height: 10),
                           Text(
-                            _langKey == 'he'
-                                ? 'עורך דין בדרך אליך...'
-                                : _langKey == 'ru'
-                                    ? 'Адвокат уже едет...'
-                                    : 'A lawyer is on the way...',
+                            _arbFor(_langKey).vetoUiHeroLawyerOnWay,
                             textAlign: TextAlign.center,
                             style: const TextStyle(
                               color: V26.ink500,
@@ -1773,16 +1661,13 @@ class _VetoScreenState extends State<VetoScreen> {
 
   Widget _heroCopyBlock(bool compact, bool isDesktop) {
     const align = TextAlign.start;
+    final l = _arbFor(_langKey);
     if (isDesktop) {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
-            _langKey == 'he'
-                ? 'VETO · עזרה משפטית מיידית'
-                : _langKey == 'ru'
-                    ? 'VETO · Срочная юридическая помощь'
-                    : 'VETO · Immediate legal help',
+            l.vetoUiHeroEyebrow,
             textAlign: align,
             style: const TextStyle(
               color: V26.navy600,
@@ -1795,11 +1680,7 @@ class _VetoScreenState extends State<VetoScreen> {
           _heroHeadlineDesktop(),
           const SizedBox(height: 12),
           Text(
-            _langKey == 'he'
-                ? 'הקש על כפתור ה-SOS ועורך דין פלילי מתמחה יוצר איתך קשר תוך דקות — קולי או בווידאו, עם תיעוד שיחה מלא, גיבוי בכספת אישית מוצפנת, ומסירת כל הראיות לידיך בלבד.'
-                : _langKey == 'ru'
-                    ? 'Нажмите SOS — уголовный адвокат свяжется с вами за минуты: голос или видео, полная запись разговора, шифрованное хранение и доступ к доказательствам только у вас.'
-                    : 'Tap SOS — a specialist criminal lawyer reaches you in minutes: voice or video, full call logging, encrypted vault backup, and evidence stays in your hands only.',
+            l.vetoUiHeroBodyDesktop,
             textAlign: align,
             style: const TextStyle(
               color: V26.ink500,
@@ -1823,11 +1704,7 @@ class _VetoScreenState extends State<VetoScreen> {
         _heroHeadlineMobile(),
         const SizedBox(height: 8),
         Text(
-          _langKey == 'he'
-              ? 'הקש על SOS ועו"ד מתמחה ייצור איתך קשר תוך דקות. תיעוד שיחה מלא, מוצפן וגיבוי לכספת.'
-              : _langKey == 'ru'
-                  ? 'Нажмите SOS — адвокат свяжется за минуты. Полная запись, шифрование и резерв в сейфе.'
-                  : 'Tap SOS — a lawyer connects within minutes. Encrypted call log and vault backup.',
+          l.vetoUiHeroBodyMobile,
           textAlign: TextAlign.center,
           style: const TextStyle(
             color: V26.ink500,
@@ -1840,147 +1717,39 @@ class _VetoScreenState extends State<VetoScreen> {
   }
 
   Widget _heroHeadlineDesktop() {
-    if (_langKey == 'he') {
-      return const Text.rich(
-        TextSpan(
-          style: TextStyle(
-            fontFamily: V26.serif,
-            fontSize: 30,
-            height: 1.18,
-            color: V26.ink900,
-            fontWeight: FontWeight.w700,
-          ),
-          children: [
-            TextSpan(text: 'כשהדקה הראשונה\nקובעת את '),
-            TextSpan(
-              text: 'כל היתר',
-              style: TextStyle(color: V26.navy600),
-            ),
-            TextSpan(text: '.'),
-          ],
-        ),
-        textAlign: TextAlign.start,
-      );
-    }
-    if (_langKey == 'ru') {
-      return const Text(
-        'Когда первая минута решает всё остальное.',
-        textAlign: TextAlign.start,
-        style: TextStyle(
-          fontFamily: V26.serif,
-          fontSize: 28,
-          height: 1.2,
-          color: V26.ink900,
-          fontWeight: FontWeight.w700,
-        ),
-      );
-    }
-    return const Text.rich(
-      TextSpan(
-        style: TextStyle(
-          fontFamily: V26.serif,
-          fontSize: 28,
-          height: 1.2,
-          color: V26.ink900,
-          fontWeight: FontWeight.w700,
-        ),
-        children: [
-          TextSpan(text: 'When the first minute decides '),
-          TextSpan(
-            text: 'everything else',
-            style: TextStyle(color: V26.navy600),
-          ),
-          TextSpan(text: '.'),
-        ],
-      ),
+    final fs = _langKey == 'he' ? 30.0 : 28.0;
+    return Text(
+      _arbFor(_langKey).vetoUiHeroHeadlineDesktop,
       textAlign: TextAlign.start,
+      style: TextStyle(
+        fontFamily: V26.serif,
+        fontSize: fs,
+        height: 1.18,
+        color: V26.ink900,
+        fontWeight: FontWeight.w700,
+      ),
     );
   }
 
   Widget _heroHeadlineMobile() {
-    if (_langKey == 'he') {
-      return const Text.rich(
-        TextSpan(
-          style: TextStyle(
-            fontFamily: V26.serif,
-            fontSize: 17,
-            height: 1.35,
-            color: V26.ink900,
-            fontWeight: FontWeight.w600,
-          ),
-          children: [
-            TextSpan(text: 'עורך דין מטעמך — '),
-            TextSpan(
-              text: 'תוך דקות',
-              style: TextStyle(color: V26.navy600, fontWeight: FontWeight.w700),
-            ),
-            TextSpan(text: '.'),
-          ],
-        ),
-        textAlign: TextAlign.center,
-      );
-    }
-    if (_langKey == 'ru') {
-      return const Text.rich(
-        TextSpan(
-          style: TextStyle(
-            fontFamily: V26.serif,
-            fontSize: 17,
-            height: 1.35,
-            color: V26.ink900,
-            fontWeight: FontWeight.w600,
-          ),
-          children: [
-            TextSpan(text: 'Адвокат на вашей стороне — '),
-            TextSpan(
-              text: 'за минуты',
-              style: TextStyle(color: V26.navy600, fontWeight: FontWeight.w700),
-            ),
-            TextSpan(text: '.'),
-          ],
-        ),
-        textAlign: TextAlign.center,
-      );
-    }
-    return const Text.rich(
-      TextSpan(
-        style: TextStyle(
-          fontFamily: V26.serif,
-          fontSize: 17,
-          height: 1.35,
-          color: V26.ink900,
-          fontWeight: FontWeight.w600,
-        ),
-        children: [
-          TextSpan(text: 'A lawyer on your side — '),
-          TextSpan(
-            text: 'in minutes',
-            style: TextStyle(color: V26.navy600, fontWeight: FontWeight.w700),
-          ),
-          TextSpan(text: '.'),
-        ],
-      ),
+    return Text(
+      _arbFor(_langKey).vetoUiHeroHeadlineMobile,
       textAlign: TextAlign.center,
+      style: const TextStyle(
+        fontFamily: V26.serif,
+        fontSize: 17,
+        height: 1.35,
+        color: V26.ink900,
+        fontWeight: FontWeight.w600,
+      ),
     );
   }
 
   List<Widget> _heroTrustPills() {
-    String a;
-    String b;
-    String c;
-    if (_langKey == 'he') {
-      a = 'תיעוד שיחה מלא';
-      b = 'כספת מוצפנת E2E';
-      c = 'זמין 24/7';
-    } else if (_langKey == 'ru') {
-      a = 'Полная запись разговора';
-      b = 'Шифрованный сейф E2E';
-      c = 'Доступно 24/7';
-    } else {
-      a = 'Full call logging';
-      b = 'E2E encrypted vault';
-      c = 'Available 24/7';
-    }
+    final l = _arbFor(_langKey);
+    final a = l.vetoUiHeroTrustPill1;
+    final b = l.vetoUiHeroTrustPill2;
+    final c = l.vetoUiHeroTrustPill3;
     Widget pill(String label, IconData icon) {
       return Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -2020,11 +1789,7 @@ class _VetoScreenState extends State<VetoScreen> {
     final ringMid = orbSize + 20;
     return Semantics(
       button: true,
-      label: _langKey == 'he'
-          ? 'לחץ להפעלת מצוקה ושיגור עורך דין'
-          : _langKey == 'ru'
-              ? 'Нажмите для вызова адвоката'
-              : 'Tap to dispatch a lawyer',
+      label: _arbFor(_langKey).vetoUiSosSemanticLabel,
       child: GestureDetector(
         onTap: _isDispatching ? null : _onSosOrbTapped,
         child: SizedBox(
@@ -2116,16 +1881,8 @@ class _VetoScreenState extends State<VetoScreen> {
                     const SizedBox(height: 4),
                     Text(
                       _isDispatching
-                          ? (_langKey == 'he'
-                              ? 'מחפש...'
-                              : _langKey == 'ru'
-                                  ? 'Поиск...'
-                                  : 'Searching...')
-                          : (_langKey == 'he'
-                              ? 'עזרה מיידית'
-                              : _langKey == 'ru'
-                                  ? 'ПОМОЩЬ'
-                                  : 'EMERGENCY'),
+                          ? _arbFor(_langKey).vetoUiSosSearching
+                          : _arbFor(_langKey).vetoUiSosOrbEmergencyCaption,
                       style: TextStyle(
                         color: Colors.white.withValues(alpha: 0.9),
                         fontSize: 11,
@@ -2144,7 +1901,7 @@ class _VetoScreenState extends State<VetoScreen> {
   }
 
   String _scenarioTileD(_Scenario s) {
-    final sd = _sdMap[s]!;
+    final sd = _scenarioMap[s]!;
     return _langKey == 'ru'
         ? sd.tileDRu
         : _langKey == 'en'
@@ -2178,7 +1935,7 @@ class _VetoScreenState extends State<VetoScreen> {
 
   // ── Scenario detail panel (2026/citizen.html rev 2) ─────────
   Widget _scenarioDetailPanel(bool isRtl, bool compact) {
-    final sd = _sdMap[_scenario]!;
+    final sd = _scenarioMap[_scenario]!;
     final title = _langKey == 'ru'
         ? sd.ru
         : _langKey == 'en'
@@ -2205,21 +1962,10 @@ class _VetoScreenState extends State<VetoScreen> {
         : _langKey == 'en'
             ? sd.warnEn
             : sd.warnHe;
-    final criticalLabel = _langKey == 'he'
-        ? 'זמן קריטי:'
-        : _langKey == 'ru'
-            ? 'Критическое время:'
-            : 'Critical time:';
-    final labelKnow = _langKey == 'he'
-        ? 'מה הכי חשוב לדעת'
-        : _langKey == 'ru'
-            ? 'Что важно знать'
-            : 'What to know first';
-    final labelAction = _langKey == 'he'
-        ? 'פעולה ראשונה'
-        : _langKey == 'ru'
-            ? 'Первое действие'
-            : 'First action';
+    final l10n = _arbFor(_langKey);
+    final criticalLabel = l10n.vetoUiScenarioCriticalLabel;
+    final labelKnow = l10n.vetoUiScenarioLabelKnow;
+    final labelAction = l10n.vetoUiScenarioLabelAction;
 
     return V26Card(
       padding: EdgeInsets.zero,
@@ -2512,7 +2258,7 @@ class _VetoScreenState extends State<VetoScreen> {
       _Scenario.family,
       _Scenario.consumer,
     ];
-    final entries = order.map((k) => MapEntry(k, _sdMap[k]!)).toList();
+    final entries = order.map((k) => MapEntry(k, _scenarioMap[k]!)).toList();
     final cols = isDesktop ? 3 : 2;
     return GridView.builder(
       shrinkWrap: true,
@@ -2663,11 +2409,8 @@ class _VetoScreenState extends State<VetoScreen> {
                           const SizedBox(width: 10),
                           Expanded(
                             child: Text(
-                              _langKey == 'he'
-                                  ? 'הזכויות שלך — $_sLabel'
-                                  : _langKey == 'ru'
-                                      ? 'Ваши права — $_sLabel'
-                                      : 'Your Rights — $_sLabel',
+                              _arbFor(_langKey)
+                                  .vetoUiRightsCardTitle(_sLabel),
                               style: const TextStyle(
                                 color: V26.ink900,
                                 fontWeight: FontWeight.w900,
@@ -2686,11 +2429,7 @@ class _VetoScreenState extends State<VetoScreen> {
                               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                             ),
                             child: Text(
-                              _langKey == 'he'
-                                  ? 'קרא עוד'
-                                  : _langKey == 'ru'
-                                      ? 'Подробнее'
-                                      : 'Read more',
+                              _arbFor(_langKey).vetoUiReadMore,
                               style: const TextStyle(
                                   fontSize: 12, fontWeight: FontWeight.w700),
                             ),
@@ -2863,18 +2602,15 @@ class _VetoScreenState extends State<VetoScreen> {
                       IconButton(
                         constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
                         padding: EdgeInsets.zero,
-                        tooltip: AdminStrings.t(_langKey, 'edit'),
+                        tooltip: AdminStrings.t(ctx, 'edit'),
                         icon: const Icon(Icons.edit_outlined, size: 18, color: V26.navy600),
                         onPressed: () => _adminEditEmergencyEvent(ctx, ev, isRtl),
                       ),
                       IconButton(
                         constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
                         padding: EdgeInsets.zero,
-                        tooltip: _langKey == 'he'
-                            ? 'ניקוי'
-                            : _langKey == 'ru'
-                                ? 'Очистка'
-                                : 'Cleaning',
+                        tooltip: _arbFor(_langKey)
+                            .vetoUiAdminEmergencyCleaningTitle,
                         icon: const Icon(Icons.cleaning_services_outlined, size: 18, color: V26.ink500),
                         onPressed: () => _adminCleanEmergencyEvent(ctx, ev, isRtl),
                       ),
@@ -2918,7 +2654,7 @@ class _VetoScreenState extends State<VetoScreen> {
                     ),
                   ] else
                     Text(
-                      isRtl ? 'אין ראיות מצורפות' : 'No evidence attached',
+                      _arbFor(_langKey).vetoUiAdminNoEvidenceAttached,
                       style: const TextStyle(color: V26.ink300, fontSize: 11),
                     ),
                 ]),
@@ -2944,9 +2680,7 @@ class _VetoScreenState extends State<VetoScreen> {
               color: V26.emerg, size: 16),
           const SizedBox(width: 8),
           Expanded(child: Text(
-            _langKey == 'he' ? '🚨 בתהליך שיגור — מחפש עורך דין זמין...'
-                : _langKey == 'ru' ? '🚨 Диспетчеризация — ищем адвоката...'
-                : '🚨 Dispatching — searching for a lawyer...',
+            _arbFor(_langKey).vetoUiDispatchBanner,
             style: const TextStyle(
               color: V26.emerg, fontSize: 12, fontWeight: FontWeight.w700),
           )),
@@ -2955,8 +2689,7 @@ class _VetoScreenState extends State<VetoScreen> {
               onPressed: _resetSession,
               style: TextButton.styleFrom(
                   foregroundColor: V26.ink500, padding: EdgeInsets.zero),
-              child: Text(_langKey == 'he' ? 'ביטול'
-                  : _langKey == 'ru' ? 'Отмена' : 'Cancel',
+              child: Text(_arbFor(_langKey).vetoUiCancel,
                   style: const TextStyle(fontSize: 12)),
             ),
         ]),
@@ -3061,18 +2794,14 @@ class _VetoScreenState extends State<VetoScreen> {
   Widget _typingBubble(BuildContext context) {
     final rtl = Directionality.of(context) == TextDirection.rtl;
     return GeminiAiTypingBubble(
-      label: _l.processing,
+      label: _arbFor(_langKey).vetoChatProcessing,
       alignment: rtl ? Alignment.centerLeft : Alignment.centerRight,
     );
   }
 
   /// Thin status row while Multimodal Live mic session is active (web).
   Widget _geminiLiveActiveBanner(bool isRtl) {
-    final label = _langKey == 'ru'
-        ? 'Gemini Live · идёт запись'
-        : _langKey == 'en'
-            ? 'Gemini Live · session active'
-            : 'Gemini Live · שיחה פעילה';
+    final label = _arbFor(_langKey).vetoGeminiLiveBannerActive;
     return Semantics(
       label: label,
       child: Container(
@@ -3156,11 +2885,7 @@ class _VetoScreenState extends State<VetoScreen> {
                     browser_bridge.supportsBrowserMethod('vetoGeminiLive', 'isSupported', const [])) ...[
                   const SizedBox(width: 6),
                   Tooltip(
-                    message: _langKey == 'he'
-                        ? 'הגדרות שמע (Gemini Live)'
-                        : _langKey == 'ru'
-                            ? 'Настройки звука (Gemini Live)'
-                            : 'Live voice & volume',
+                    message: _arbFor(_langKey).vetoGeminiLiveTooltipAudioSettings,
                     child: GestureDetector(
                       onTap: () async {
                         await showVetoLiveVoiceSheet(context);
@@ -3228,10 +2953,10 @@ class _VetoScreenState extends State<VetoScreen> {
               style: const TextStyle(color: V26.ink900, fontSize: 14),
               decoration: InputDecoration(
                 hintText: _isDispatching
-                    ? _l.dispatching
+                    ? _arbFor(_langKey).vetoChatDispatching
                     : (_isListening && _liveSessionActive && kIsWeb
                         ? _geminiLiveInputHint
-                        : _l.hint),
+                        : _arbFor(_langKey).vetoChatInputHint),
                 hintStyle: const TextStyle(color: V26.ink500),
                 filled: true,
                 fillColor: V26.surface,
@@ -3297,11 +3022,7 @@ class _VetoScreenState extends State<VetoScreen> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(
-              _langKey == 'he'
-                  ? 'כלים מהירים'
-                  : _langKey == 'ru'
-                      ? 'Быстрые действия'
-                      : 'Quick tools',
+              _arbFor(_langKey).vetoChatQuickTools,
               textAlign: TextAlign.center,
               style: const TextStyle(color: V26.ink300, fontSize: 11),
             ),
@@ -3313,11 +3034,7 @@ class _VetoScreenState extends State<VetoScreen> {
                     child: _chatActBtn(
                       Icons.camera_alt_outlined,
                       V26.navy500,
-                      _langKey == 'he'
-                          ? 'תיעוד'
-                          : _langKey == 'ru'
-                              ? 'Камера'
-                              : 'Camera',
+                      _arbFor(_langKey).vetoChatToolCamera,
                       _openCamera,
                     ),
                   ),
@@ -3327,11 +3044,7 @@ class _VetoScreenState extends State<VetoScreen> {
                     child: _chatActBtn(
                       Icons.volume_off_rounded,
                       V26.navy500,
-                      _langKey == 'he'
-                          ? 'השתק'
-                          : _langKey == 'ru'
-                              ? 'Звук'
-                              : 'Mute',
+                      _arbFor(_langKey).vetoChatToolMute,
                       _stopSpeaking,
                     ),
                   ),
@@ -3341,11 +3054,7 @@ class _VetoScreenState extends State<VetoScreen> {
                     child: _chatActBtn(
                       Icons.location_on_outlined,
                       V26.ok,
-                      _langKey == 'he'
-                          ? 'מיקום'
-                          : _langKey == 'ru'
-                              ? 'Геолок.'
-                              : 'Location',
+                      _arbFor(_langKey).vetoChatLocationTooltip,
                       _shareLocation,
                     ),
                   ),
@@ -3389,18 +3098,22 @@ class _ContactSheetState extends State<_ContactSheet> {
   final _ctrl = TextEditingController();
   bool _busy = false;
 
+  AppLocalizations _sheetL() {
+    switch (widget.langKey) {
+      case 'en':
+        return lookupAppLocalizations(const Locale('en'));
+      case 'ru':
+        return lookupAppLocalizations(const Locale('ru'));
+      default:
+        return lookupAppLocalizations(const Locale('he'));
+    }
+  }
+
   @override
   void dispose() { _ctrl.dispose(); super.dispose(); }
 
-  String _buildMsg() {
-    if (widget.langKey == 'he') {
-      return 'שלום, אני זקוק לסיוע משפטי דחוף — ${widget.scenarioLabel}. אנא פנה אליי בהקדם.';
-    }
-    if (widget.langKey == 'ru') {
-      return 'Здравствуйте, мне нужна срочная юридическая помощь — ${widget.scenarioLabel}.';
-    }
-    return 'Hello, I need urgent legal assistance regarding: ${widget.scenarioLabel}. Please contact me immediately.';
-  }
+  String _buildMsg() =>
+      _sheetL().vetoContactShareBody(widget.scenarioLabel);
 
   Future<void> _go() async {
     setState(() => _busy = true);
@@ -3425,7 +3138,8 @@ class _ContactSheetState extends State<_ContactSheet> {
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('לא ניתן לפתוח את הקישור')));
+          SnackBar(content: Text(_sheetL().vetoContactLinkOpenFailed)),
+        );
       }
     }
     if (mounted) setState(() => _busy = false);
@@ -3437,15 +3151,20 @@ class _ContactSheetState extends State<_ContactSheet> {
     final Color accent = widget.type == 'whatsapp' ? const Color(0xFF25D366)
         : widget.type == 'telegram' ? const Color(0xFF229ED9)
         : V26.navy500;
-    final String title = widget.type == 'whatsapp' ? 'WhatsApp'
-        : widget.type == 'telegram' ? 'Telegram'
-        : (isRtl ? 'שיחת וידאו' : 'Video Call');
-    final String hintText = widget.type == 'whatsapp' ? '+972XXXXXXXXX'
-        : widget.type == 'telegram' ? '@username'
-        : 'https://zoom.us/j/...';
+    final sl = _sheetL();
+    final String title = widget.type == 'whatsapp'
+        ? 'WhatsApp'
+        : widget.type == 'telegram'
+            ? 'Telegram'
+            : sl.vetoContactVideoTitle;
+    final String hintText = widget.type == 'whatsapp'
+        ? '+972XXXXXXXXX'
+        : widget.type == 'telegram'
+            ? '@username'
+            : 'https://zoom.us/j/...';
     final String labelText = widget.type == 'video'
-        ? (isRtl ? 'קישור לשיחה' : 'Call link')
-        : (isRtl ? 'מספר טלפון' : 'Phone number');
+        ? sl.vetoContactFieldCallLink
+        : sl.vetoContactFieldPhone;
 
     return Directionality(
       textDirection: isRtl ? TextDirection.rtl : TextDirection.ltr,
@@ -3510,7 +3229,7 @@ class _ContactSheetState extends State<_ContactSheet> {
                     ? const SizedBox(width: 16, height: 16,
                         child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
                     : const Icon(Icons.open_in_new, size: 18, color: Colors.white),
-                label: Text(isRtl ? 'פתח' : 'Open',
+                label: Text(sl.vetoContactOpen,
                     style: const TextStyle(fontWeight: FontWeight.w700, color: Colors.white)),
               ),
             ),
@@ -3518,7 +3237,7 @@ class _ContactSheetState extends State<_ContactSheet> {
               const SizedBox(height: 4),
               TextButton(
                 onPressed: () => setState(() => _ctrl.text = '+972'),
-                child: Text(isRtl ? '▼ ישראל +972...' : '▼ Israel +972...',
+                child: Text(sl.vetoContactIsraelShortcut,
                     style: const TextStyle(color: V26.ink500, fontSize: 12)),
               ),
             ],
@@ -3545,24 +3264,39 @@ class _PaymentDialogState extends State<_PaymentDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final loc = AppLocalizations.of(context)!;
     return AlertDialog(
       backgroundColor: const Color(0xFF0C1827),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      title: const Row(children: [
-        Icon(Icons.paypal_rounded, color: Color(0xFF009CDE), size: 24),
-        SizedBox(width: 10),
-        Text('תשלום עם PayPal',
-            style: TextStyle(color: Color(0xFF0C1827), fontWeight: FontWeight.w700, fontSize: 16)),
+      title: Row(children: [
+        const Icon(Icons.paypal_rounded, color: Color(0xFF009CDE), size: 24),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Text(
+            loc.vetoPayPalDialogTitle,
+            style: const TextStyle(
+                color: Color(0xFF0C1827),
+                fontWeight: FontWeight.w700,
+                fontSize: 16),
+          ),
+        ),
       ]),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('ייעוץ עורך דין 15 דקות',
-              style: TextStyle(color: Color(0xFF0C1827), fontWeight: FontWeight.w600, fontSize: 14)),
+          Text(
+            loc.vetoPayPalProductLine,
+            style: const TextStyle(
+                color: Color(0xFF0C1827),
+                fontWeight: FontWeight.w600,
+                fontSize: 14),
+          ),
           const SizedBox(height: 4),
-          const Text('₪50 (≈ \$13.90 USD) — חיוב חד-פעמי',
-              style: TextStyle(color: Color(0xFFA8A090), fontSize: 13)),
+          Text(
+            loc.vetoPayPalPriceLine,
+            style: const TextStyle(color: Color(0xFFA8A090), fontSize: 13),
+          ),
           const SizedBox(height: 12),
           Container(
             padding: const EdgeInsets.all(10),
@@ -3571,15 +3305,18 @@ class _PaymentDialogState extends State<_PaymentDialog> {
               borderRadius: BorderRadius.circular(8),
               border: Border.all(color: const Color(0xFFEF4444).withValues(alpha: 0.2)),
             ),
-            child: const Text('לא ניתן לבטל לאחר תשלום.',
-                style: TextStyle(color: Color(0xFFEF4444), fontSize: 12)),
+            child: Text(
+              loc.vetoPayPalNonRefundable,
+              style: const TextStyle(color: Color(0xFFEF4444), fontSize: 12),
+            ),
           ),
         ],
       ),
       actions: [
         TextButton(
           onPressed: _loading ? null : () => Navigator.pop(context, null),
-          child: const Text('ביטול', style: TextStyle(color: Color(0xFF7A7260))),
+          child: Text(loc.vetoUiCancel,
+              style: const TextStyle(color: Color(0xFF7A7260))),
         ),
         ElevatedButton.icon(
           style: ElevatedButton.styleFrom(
@@ -3591,7 +3328,8 @@ class _PaymentDialogState extends State<_PaymentDialog> {
               ? const SizedBox(width: 16, height: 16,
                   child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
               : const Icon(Icons.open_in_new, size: 16),
-          label: Text(_loading ? 'פותח...' : 'שלם עם PayPal'),
+          label: Text(
+              _loading ? loc.vetoPayPalPayButtonLoading : loc.vetoPayPalPayButton),
         ),
       ],
     );
@@ -3604,7 +3342,8 @@ class _PaymentDialogState extends State<_PaymentDialog> {
     if (orderId == null) {
       setState(() => _loading = false);
       ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('שגיאה ביצירת הזמנת PayPal. נסה שוב.')));
+        SnackBar(content: Text(AppLocalizations.of(context)!.vetoPayPalOrderFailed)),
+      );
       return;
     }
     Navigator.pop(context, orderId);
@@ -3627,20 +3366,30 @@ class _CaptureDialogState extends State<_CaptureDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final loc = AppLocalizations.of(context)!;
     return AlertDialog(
       backgroundColor: const Color(0xFF0C1827),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      title: const Row(children: [
-        Icon(Icons.hourglass_top_rounded, color: V26.navy500, size: 22),
-        SizedBox(width: 10),
-        Text('אשר את התשלום',
-            style: TextStyle(color: Color(0xFFE2E8F0), fontWeight: FontWeight.w700, fontSize: 16)),
+      title: Row(children: [
+        const Icon(Icons.hourglass_top_rounded, color: V26.navy500, size: 22),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Text(
+            loc.vetoPayCaptureTitle,
+            style: const TextStyle(
+                color: Color(0xFFE2E8F0),
+                fontWeight: FontWeight.w700,
+                fontSize: 16),
+          ),
+        ),
       ]),
       content: Column(mainAxisSize: MainAxisSize.min, children: [
-        const Text(
-            'PayPal נפתח בטאב חדש.\nלאחר אישור התשלום שם — חזור לכאן ולחץ "שילמתי".',
-            style: TextStyle(color: Color(0xFFA8A090), height: 1.6, fontSize: 13),
-            textAlign: TextAlign.center),
+        Text(
+          loc.vetoPayCaptureBody,
+          style: const TextStyle(
+              color: Color(0xFFA8A090), height: 1.6, fontSize: 13),
+          textAlign: TextAlign.center,
+        ),
         if (_error != null) ...[
           const SizedBox(height: 10),
           Text(_error!,
@@ -3650,7 +3399,8 @@ class _CaptureDialogState extends State<_CaptureDialog> {
       actions: [
         TextButton(
           onPressed: _capturing ? null : () => Navigator.pop(context, false),
-          child: const Text('ביטול', style: TextStyle(color: Color(0xFF7A7260))),
+          child: Text(loc.vetoUiCancel,
+              style: const TextStyle(color: Color(0xFF7A7260))),
         ),
         ElevatedButton(
           style: ElevatedButton.styleFrom(
@@ -3661,7 +3411,8 @@ class _CaptureDialogState extends State<_CaptureDialog> {
           child: _capturing
               ? const SizedBox(width: 16, height: 16,
                   child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-              : const Text('שילמתי ✓', style: TextStyle(fontWeight: FontWeight.w700)),
+              : Text(loc.vetoPayCapturePaidButton,
+                  style: const TextStyle(fontWeight: FontWeight.w700)),
         ),
       ],
     );
@@ -3675,11 +3426,12 @@ class _CaptureDialogState extends State<_CaptureDialog> {
     if (result.success) {
       Navigator.pop(context, true);
     } else {
+      final loc = AppLocalizations.of(context)!;
       setState(() {
         _capturing = false;
         _error = result.error != null
-            ? 'שגיאה: ${result.error}'
-            : 'התשלום לא הושלם. נסה שוב לאחר אישור ב-PayPal.';
+            ? loc.vetoPayCaptureError(result.error!)
+            : loc.vetoPayCaptureIncomplete;
       });
     }
   }
@@ -3700,57 +3452,101 @@ class _SubscriptionGateDialogState extends State<_SubscriptionGateDialog> {
   String? _orderId;
 
   Future<void> _openPayPal() async {
-    setState(() { _loading = true; _error = null; });
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
     try {
       final orderId = await PaymentService.createAndOpenOrder(PaymentType.subscription);
       if (!mounted) return;
+      final loc = AppLocalizations.of(context)!;
       if (orderId == null) {
-        setState(() { _loading = false; _error = 'לא ניתן לפתוח את PayPal. נסה שוב.'; });
+        setState(() {
+          _loading = false;
+          _error = loc.vetoPayPalOrderFailed;
+        });
         return;
       }
-      setState(() { _loading = false; _orderId = orderId; });
+      setState(() {
+        _loading = false;
+        _orderId = orderId;
+      });
     } catch (e) {
-      if (mounted) setState(() { _loading = false; _error = 'שגיאה: $e'; });
+      if (!mounted) return;
+      final loc = AppLocalizations.of(context)!;
+      setState(() {
+        _loading = false;
+        _error = loc.vetoPayCaptureError('$e');
+      });
     }
   }
 
   Future<void> _confirmPayment() async {
     if (_orderId == null) return;
-    setState(() { _loading = true; _error = null; });
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
     final phone = await AuthService().getStoredPhone();
     final result = await PaymentService.captureOrder(
-        orderId: _orderId!, type: PaymentType.subscription, userId: phone);
+      orderId: _orderId!,
+      type: PaymentType.subscription,
+      userId: phone,
+    );
     if (!mounted) return;
+    final loc = AppLocalizations.of(context)!;
     if (result.success) {
       await AuthService().setSubscribed(true);
       if (!mounted) return;
       Navigator.of(context).pop(true);
     } else {
-      setState(() { _loading = false; _error = result.error ?? 'התשלום לא אושר.'; });
+      setState(() {
+        _loading = false;
+        _error = result.error != null
+            ? loc.vetoPayCaptureError(result.error!)
+            : loc.vetoPaySubPaymentDeclined;
+      });
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final langCode = context.watch<AppLanguageController>().code;
+    final loc = AppLocalizations.of(context)!;
     return Directionality(
-      textDirection: TextDirection.rtl,
+      textDirection: AppLanguage.directionOf(langCode),
       child: AlertDialog(
         backgroundColor: const Color(0xFF0C1827),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Row(children: [
-          Icon(Icons.lock_outline, color: V26.navy500),
-          SizedBox(width: 10),
-          Text('נדרש מנוי', style: TextStyle(color: Color(0xFFF8FAFC), fontSize: 18)),
-        ]),
+        title: Row(
+          children: [
+            const Icon(Icons.lock_outline, color: V26.navy500),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                loc.vetoPaySubGateTitle,
+                style: const TextStyle(color: Color(0xFFF8FAFC), fontSize: 18),
+              ),
+            ),
+          ],
+        ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('כדי להשתמש ב-VETO נדרש מנוי חודשי.',
-                style: TextStyle(color: Color(0xFFA8A090), fontSize: 14)),
+            Text(
+              loc.vetoPaySubGateBody,
+              style: const TextStyle(color: Color(0xFFA8A090), fontSize: 14),
+            ),
             const SizedBox(height: 4),
-            const Text('ללא מנוי פעיל לא ניתן להשתמש במערכת.',
-                style: TextStyle(color: Color(0xFFEF4444), fontSize: 12, fontWeight: FontWeight.w600)),
+            Text(
+              loc.vetoPaySubGateBlockNote,
+              style: const TextStyle(
+                color: Color(0xFFEF4444),
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
             const SizedBox(height: 16),
             Container(
               padding: const EdgeInsets.all(14),
@@ -3759,27 +3555,44 @@ class _SubscriptionGateDialogState extends State<_SubscriptionGateDialog> {
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(color: V26.navy500.withValues(alpha: 0.4)),
               ),
-              child: const Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text('מנוי חודשי',
-                    style: TextStyle(color: Color(0xFFF8FAFC), fontWeight: FontWeight.bold, fontSize: 15)),
-                SizedBox(height: 6),
-                Row(children: [
-                  Text('₪19.90',
-                      style: TextStyle(color: Color(0xFF2ECC71), fontWeight: FontWeight.w800, fontSize: 22)),
-                  SizedBox(width: 6),
-                  Text('/ חודש  (USD \$5.50)',
-                      style: TextStyle(color: Color(0xFFA8A090), fontSize: 13)),
-                ]),
-                SizedBox(height: 8),
-                Text('✓ ייעוץ AI משפטי ללא הגבלה',
-                    style: TextStyle(color: Color(0xFFA8A090), fontSize: 12)),
-                Text('✓ הזמנת עורך דין חרום (₪50 נוסף)',
-                    style: TextStyle(color: Color(0xFFA8A090), fontSize: 12)),
-              ]),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    loc.vetoPaySubPlanTitle,
+                    style: const TextStyle(
+                      color: Color(0xFFF8FAFC),
+                      fontWeight: FontWeight.bold,
+                      fontSize: 15,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    loc.vetoPaySubPriceLine,
+                    style: const TextStyle(
+                      color: Color(0xFF2ECC71),
+                      fontWeight: FontWeight.w800,
+                      fontSize: 18,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    '✓ ${loc.vetoPaySubFeatureAi}',
+                    style: const TextStyle(color: Color(0xFFA8A090), fontSize: 12),
+                  ),
+                  Text(
+                    '✓ ${loc.vetoPaySubFeatureLawyer}',
+                    style: const TextStyle(color: Color(0xFFA8A090), fontSize: 12),
+                  ),
+                ],
+              ),
             ),
             if (_error != null) ...[
               const SizedBox(height: 10),
-              Text(_error!, style: const TextStyle(color: Color(0xFFEF4444), fontSize: 12)),
+              Text(
+                _error!,
+                style: const TextStyle(color: Color(0xFFEF4444), fontSize: 12),
+              ),
             ],
           ],
         ),
@@ -3787,36 +3600,65 @@ class _SubscriptionGateDialogState extends State<_SubscriptionGateDialog> {
             ? [
                 TextButton(
                   onPressed: () => Navigator.of(context).pop(false),
-                  child: const Text('התנתק', style: TextStyle(color: Color(0xFFEF4444))),
+                  child: Text(
+                    loc.profScreenLogout,
+                    style: const TextStyle(color: Color(0xFFEF4444)),
+                  ),
                 ),
                 ElevatedButton.icon(
                   style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF009CDE),
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))),
+                    backgroundColor: const Color(0xFF009CDE),
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
                   onPressed: _loading ? null : _openPayPal,
                   icon: _loading
-                      ? const SizedBox(width: 16, height: 16,
-                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
                       : const Icon(Icons.paypal_rounded, size: 18),
-                  label: Text(_loading ? 'פותח...' : 'שלם עם PayPal'),
+                  label: Text(
+                    _loading ? loc.vetoPayPalPayButtonLoading : loc.vetoPayPalPayButton,
+                  ),
                 ),
               ]
             : [
                 TextButton(
                   onPressed: () => Navigator.of(context).pop(false),
-                  child: const Text('התנתק', style: TextStyle(color: Color(0xFFEF4444))),
+                  child: Text(
+                    loc.profScreenLogout,
+                    style: const TextStyle(color: Color(0xFFEF4444)),
+                  ),
                 ),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF2ECC71),
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))),
+                    backgroundColor: const Color(0xFF2ECC71),
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
                   onPressed: _loading ? null : _confirmPayment,
                   child: _loading
-                      ? const SizedBox(width: 16, height: 16,
-                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                      : const Text('שילמתי ✓', style: TextStyle(fontWeight: FontWeight.w700)),
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : Text(
+                          loc.vetoPayCapturePaidButton,
+                          style: const TextStyle(fontWeight: FontWeight.w700),
+                        ),
                 ),
               ],
       ),

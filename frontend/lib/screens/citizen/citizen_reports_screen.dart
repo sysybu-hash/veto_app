@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/i18n/app_language.dart';
+import '../../l10n/app_localizations.dart';
 import '../../services/citizen_dashboard_api_service.dart';
 import '../../widgets/citizen_mockup_shell.dart';
 
@@ -42,8 +43,8 @@ class _CitizenReportsScreenState extends State<CitizenReportsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final code = context.watch<AppLanguageController>().code;
-    final he = code == 'he';
+    context.watch<AppLanguageController>();
+    final l10n = AppLocalizations.of(context)!;
     final totals = _data?['totals'] as Map<String, dynamic>?;
     return CitizenMockupShell(
       currentRoute: '/citizen_reports',
@@ -53,7 +54,8 @@ class _CitizenReportsScreenState extends State<CitizenReportsScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(he ? 'דוחות' : 'Reports', style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800)),
+            Text(l10n.citizenShellNavReports,
+                style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800)),
             const SizedBox(height: 16),
             if (_loading) const LinearProgressIndicator(),
             if (_err != null) Text(_err!, style: const TextStyle(color: Colors.red)),

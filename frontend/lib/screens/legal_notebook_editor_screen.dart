@@ -11,6 +11,7 @@ import 'package:http/http.dart' as http;
 
 import '../config/app_config.dart';
 import '../core/theme/veto_2026.dart';
+import '../l10n/app_localizations.dart';
 import '../services/auth_service.dart';
 import '../services/legal_notebook_api_service.dart';
 
@@ -36,6 +37,8 @@ class _LegalNotebookEditorScreenState extends State<LegalNotebookEditorScreen>
   Map<String, dynamic>? _row;
   List<Map<String, dynamic>> _vaultFiles = const [];
   Timer? _saveDebounce;
+
+  AppLocalizations get _l10n => AppLocalizations.of(context)!;
 
   @override
   void initState() {
@@ -124,7 +127,7 @@ class _LegalNotebookEditorScreenState extends State<LegalNotebookEditorScreen>
     if (!mounted) return;
     if (res == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Chat failed')),
+        SnackBar(content: Text(_l10n.nbEdScrChatFailed)),
       );
       await _load();
       return;
@@ -149,6 +152,7 @@ class _LegalNotebookEditorScreenState extends State<LegalNotebookEditorScreen>
       isScrollControlled: true,
       backgroundColor: V26.surface,
       builder: (ctx) {
+        final sheetLoc = AppLocalizations.of(ctx)!;
         return StatefulBuilder(
           builder: (context, setS) {
             return Padding(
@@ -163,9 +167,9 @@ class _LegalNotebookEditorScreenState extends State<LegalNotebookEditorScreen>
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Text(
-                      'הוספת מקור',
-                      style: TextStyle(
+                    Text(
+                      sheetLoc.nbEdScrAddSource,
+                      style: const TextStyle(
                         fontFamily: V26.serif,
                         fontWeight: FontWeight.w800,
                         fontSize: 18,
@@ -174,10 +178,10 @@ class _LegalNotebookEditorScreenState extends State<LegalNotebookEditorScreen>
                     ),
                     const SizedBox(height: 12),
                     SegmentedButton<String>(
-                      segments: const [
-                        ButtonSegment(value: 'text', label: Text('טקסט')),
-                        ButtonSegment(value: 'url', label: Text('קישור')),
-                        ButtonSegment(value: 'vault', label: Text('כספת')),
+                      segments: [
+                        ButtonSegment(value: 'text', label: Text(sheetLoc.nbEdScrSegText)),
+                        ButtonSegment(value: 'url', label: Text(sheetLoc.nbEdScrSegUrl)),
+                        ButtonSegment(value: 'vault', label: Text(sheetLoc.nbEdScrSegVault)),
                       ],
                       selected: {kind},
                       onSelectionChanged: (s) => setS(() => kind = s.first),
@@ -185,25 +189,25 @@ class _LegalNotebookEditorScreenState extends State<LegalNotebookEditorScreen>
                     const SizedBox(height: 12),
                     TextField(
                       controller: titleCtrl,
-                      decoration: const InputDecoration(labelText: 'כותרת (אופציונלי)'),
+                      decoration: InputDecoration(labelText: sheetLoc.nbEdScrOptionalTitle),
                     ),
                     if (kind == 'text')
                       TextField(
                         controller: textCtrl,
                         maxLines: 5,
-                        decoration: const InputDecoration(labelText: 'תוכן'),
+                        decoration: InputDecoration(labelText: sheetLoc.nbEdScrContent),
                       ),
                     if (kind == 'url')
                       TextField(
                         controller: urlCtrl,
-                        decoration: const InputDecoration(labelText: 'URL'),
+                        decoration: InputDecoration(labelText: sheetLoc.nbEdScrUrlField),
                       ),
                     if (kind == 'vault')
                       _vaultFiles.isEmpty
-                          ? const Text('אין קבצים בכספת', style: TextStyle(color: V26.ink500))
+                          ? Text(sheetLoc.nbEdScrNoVaultFiles, style: const TextStyle(color: V26.ink500))
                           : DropdownMenu<String>(
                               initialSelection: fileId,
-                              label: const Text('קובץ'),
+                              label: Text(sheetLoc.nbEdScrPickFile),
                               dropdownMenuEntries: [
                                 for (final f in _vaultFiles)
                                   DropdownMenuEntry(
@@ -270,8 +274,8 @@ class _LegalNotebookEditorScreenState extends State<LegalNotebookEditorScreen>
     }
     if (_row == null) {
       return Scaffold(
-        appBar: AppBar(title: const Text('מחברת')),
-        body: const Center(child: Text('לא נמצא')),
+        appBar: AppBar(title: Text(_l10n.nbEdScrLoadingTitle)),
+        body: Center(child: Text(_l10n.nbEdScrNotFound)),
       );
     }
 
@@ -290,24 +294,24 @@ class _LegalNotebookEditorScreenState extends State<LegalNotebookEditorScreen>
             fontWeight: FontWeight.w700,
             color: V26.ink900,
           ),
-          decoration: const InputDecoration(
+          decoration: InputDecoration(
             border: InputBorder.none,
-            hintText: 'שם מחברת',
+            hintText: _l10n.nbEdScrNameHint,
           ),
           onChanged: (_) => _scheduleSave(),
         ),
         bottom: TabBar(
           controller: _tabs,
           labelColor: V26.navy600,
-          tabs: const [
-            Tab(text: 'עורך'),
-            Tab(text: 'מקורות'),
-            Tab(text: 'צ׳אט'),
+          tabs: [
+            Tab(text: _l10n.nbEdScrTabEditor),
+            Tab(text: _l10n.nbEdScrTabSources),
+            Tab(text: _l10n.nbEdScrTabChat),
           ],
         ),
         actions: [
           IconButton(
-            tooltip: 'רענון',
+            tooltip: _l10n.nbScrRefreshTooltip,
             onPressed: _load,
             icon: const Icon(Icons.refresh),
           ),
@@ -329,9 +333,9 @@ class _LegalNotebookEditorScreenState extends State<LegalNotebookEditorScreen>
                 color: V26.ink900,
                 height: 1.45,
               ),
-              decoration: const InputDecoration(
-                hintText: '# Markdown\n\nכתבו הערות…',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                hintText: _l10n.nbEdScrMarkdownHint,
+                border: const OutlineInputBorder(),
                 alignLabelWithHint: true,
               ),
               onChanged: (_) => _scheduleSave(),
@@ -345,13 +349,13 @@ class _LegalNotebookEditorScreenState extends State<LegalNotebookEditorScreen>
                 child: FilledButton.icon(
                   onPressed: _addSource,
                   icon: const Icon(Icons.add),
-                  label: const Text('מקור חדש'),
+                  label: Text(_l10n.nbEdScrNewSource),
                   style: FilledButton.styleFrom(backgroundColor: V26.navy600),
                 ),
               ),
               const SizedBox(height: 12),
               if (sources.isEmpty)
-                const Text('אין מקורות', style: TextStyle(color: V26.ink500))
+                Text(_l10n.nbEdScrNoSources, style: const TextStyle(color: V26.ink500))
               else
                 ...sources.map((s) {
                   final m = s as Map<String, dynamic>;
@@ -420,9 +424,9 @@ class _LegalNotebookEditorScreenState extends State<LegalNotebookEditorScreen>
                     Expanded(
                       child: TextField(
                         controller: _chatCtrl,
-                        decoration: const InputDecoration(
-                          hintText: 'שאלה לפי המקורות…',
-                          border: OutlineInputBorder(),
+                        decoration: InputDecoration(
+                          hintText: _l10n.nbEdScrChatPlaceholder,
+                          border: const OutlineInputBorder(),
                         ),
                         minLines: 1,
                         maxLines: 4,

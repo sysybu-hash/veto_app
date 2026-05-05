@@ -20,7 +20,7 @@ class _AllLawyersScreenState extends State<AllLawyersScreen> {
   bool _loading = true;
   final _svc = AdminService();
 
-  String _t(String code, String key) => AdminStrings.t(code, key);
+  String _t(BuildContext context, String key) => AdminStrings.t(context, key);
 
   @override
   void initState() { super.initState(); _load(); }
@@ -53,33 +53,33 @@ class _AllLawyersScreenState extends State<AllLawyersScreen> {
             borderRadius: BorderRadius.circular(16),
             side: const BorderSide(color: V26.hairline),
           ),
-          title: Text(id == null ? _t(code, 'addLawyer') : _t(code, 'editLawyer'),
+          title: Text(id == null ? _t(context, 'addLawyer') : _t(context, 'editLawyer'),
               style: const TextStyle(color: V26.ink900)),
           content: SingleChildScrollView(
             child: Column(mainAxisSize: MainAxisSize.min, children: [
-              _field(nameCtrl,  _t(code, 'fullName'),          Icons.badge_outlined),
+              _field(nameCtrl,  _t(context, 'fullName'),          Icons.badge_outlined),
               const SizedBox(height: 10),
-              _field(phoneCtrl, _t(code, 'phone'),  Icons.phone_iphone_rounded, dir: TextDirection.ltr),
+              _field(phoneCtrl, _t(context, 'phone'),  Icons.phone_iphone_rounded, dir: TextDirection.ltr),
               const SizedBox(height: 10),
-              _field(emailCtrl, _t(code, 'email'),           Icons.email_outlined, dir: TextDirection.ltr),
+              _field(emailCtrl, _t(context, 'email'),           Icons.email_outlined, dir: TextDirection.ltr),
               const SizedBox(height: 10),
-              _field(licCtrl,   _t(code, 'license'),      Icons.numbers),
+              _field(licCtrl,   _t(context, 'license'),      Icons.numbers),
               const SizedBox(height: 10),
-              _field(expCtrl,   _t(code, 'experience'),      Icons.work_outline,
+              _field(expCtrl,   _t(context, 'experience'),      Icons.work_outline,
                   type: TextInputType.number),
               const SizedBox(height: 10),
-              _field(specsCtrl, _t(code, 'specializations'),  Icons.category_outlined),
+              _field(specsCtrl, _t(context, 'specializations'),  Icons.category_outlined),
               const SizedBox(height: 10),
               StatefulBuilder(builder: (_, ss) => SwitchListTile.adaptive(
                 value: available,
                 onChanged: (v) => ss(() => available = v),
                 contentPadding: EdgeInsets.zero,
-                title: Text(_t(code, 'availableForCalls'), style: const TextStyle(color: V26.ink900)),
+                title: Text(_t(context, 'availableForCalls'), style: const TextStyle(color: V26.ink900)),
               )),
             ]),
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx), child: Text(_t(code, 'cancel'))),
+            TextButton(onPressed: () => Navigator.pop(ctx), child: Text(_t(context, 'cancel'))),
             FilledButton(
               style: FilledButton.styleFrom(
                 backgroundColor: VetoMockup.primaryCta,
@@ -106,12 +106,12 @@ class _AllLawyersScreenState extends State<AllLawyersScreen> {
                   _load();
                 } else if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                    content: Text(_t(code, 'saveLawyerFailed')),
+                    content: Text(_t(context, 'saveLawyerFailed')),
                     backgroundColor: V26.emerg,
                   ));
                 }
               },
-              child: Text(id == null ? _t(code, 'add') : _t(code, 'save')),
+              child: Text(id == null ? _t(context, 'add') : _t(context, 'save')),
             ),
           ],
         ),
@@ -131,15 +131,15 @@ class _AllLawyersScreenState extends State<AllLawyersScreen> {
             borderRadius: BorderRadius.circular(16),
             side: const BorderSide(color: V26.hairline),
           ),
-          title: Text(_t(code, 'deleteLawyer'), style: const TextStyle(color: V26.ink900)),
-          content: Text('${_t(code, 'deleteLawyerConfirm')}\n$name', style: const TextStyle(color: V26.ink500)),
+          title: Text(_t(context, 'deleteLawyer'), style: const TextStyle(color: V26.ink900)),
+          content: Text('${_t(context, 'deleteLawyerConfirm')}\n$name', style: const TextStyle(color: V26.ink500)),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(_t(code, 'cancel'))),
+            TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(_t(context, 'cancel'))),
             FilledButton(
               style: FilledButton.styleFrom(
                   backgroundColor: V26.emerg, foregroundColor: Colors.white),
               onPressed: () => Navigator.pop(ctx, true),
-              child: Text(_t(code, 'delete')),
+              child: Text(_t(context, 'delete')),
             ),
           ],
         ),
@@ -156,19 +156,19 @@ class _AllLawyersScreenState extends State<AllLawyersScreen> {
       textDirection: AppLanguage.directionOf(code),
       child: AdminShell(
         active: AdminSection.lawyers,
-        title: '${_t(code, 'lawyers')} (${_loading ? _t(code, 'loading') : _lawyers.length})',
+        title: '${_t(context, 'lawyers')} (${_loading ? _t(context, 'loading') : _lawyers.length})',
         onRefresh: _load,
         floatingAction: FloatingActionButton.extended(
           onPressed: () => _showForm(),
           backgroundColor: VetoMockup.primaryCta,
           icon: const Icon(Icons.person_add_rounded),
-          label: Text(_t(code, 'addLawyer')),
+          label: Text(_t(context, 'addLawyer')),
         ),
         body: V26Backdrop(
           child: _loading
             ? const Center(child: CircularProgressIndicator(color: VetoMockup.primaryCta))
             : _lawyers.isEmpty
-                ? Center(child: Text(_t(code, 'noLawyers'), style: const TextStyle(color: V26.ink500)))
+                ? Center(child: Text(_t(context, 'noLawyers'), style: const TextStyle(color: V26.ink500)))
                 : ListView.separated(
                     padding: const EdgeInsets.fromLTRB(16, 16, 16, 80),
                     itemCount: _lawyers.length,
@@ -199,7 +199,7 @@ class _AllLawyersScreenState extends State<AllLawyersScreen> {
                           ),
                           const SizedBox(width: 12),
                           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                            Text(l['full_name'] ?? _t(code, 'noName'),
+                            Text(l['full_name'] ?? _t(context, 'noName'),
                                 style: const TextStyle(color: V26.ink900, fontWeight: FontWeight.w600)),
                             Text(l['phone'] ?? '', textDirection: TextDirection.ltr,
                                 style: const TextStyle(color: V26.ink500, fontSize: 12)),
@@ -213,7 +213,7 @@ class _AllLawyersScreenState extends State<AllLawyersScreen> {
                               color: (available ? V26.ok : V26.ink500).withValues(alpha: 0.15),
                               borderRadius: BorderRadius.circular(8),
                             ),
-                            child: Text(available ? _t(code, 'available') : _t(code, 'unavailable'),
+                            child: Text(available ? _t(context, 'available') : _t(context, 'unavailable'),
                                 style: TextStyle(color: available ? V26.ok : V26.ink500, fontSize: 10)),
                           ),
                           if (l['is_approved'] != true)
@@ -224,18 +224,18 @@ class _AllLawyersScreenState extends State<AllLawyersScreen> {
                                 color: V26.warn.withValues(alpha: 0.15),
                                 borderRadius: BorderRadius.circular(8),
                               ),
-                              child: Text(_t(code, 'pendingSingle'),
+                              child: Text(_t(context, 'pendingSingle'),
                                   style: const TextStyle(color: V26.warn, fontSize: 10)),
                             ),
                           IconButton(
                             icon: const Icon(Icons.edit_outlined, size: 20, color: VetoMockup.primaryCta),
                             onPressed: () => _showForm(lawyer: Map<String, dynamic>.from(l as Map)),
-                            tooltip: _t(code, 'edit'),
+                            tooltip: _t(context, 'edit'),
                           ),
                           IconButton(
                             icon: const Icon(Icons.delete_outline, size: 20, color: V26.emerg),
                             onPressed: () => _confirmDelete(lid, l['full_name']?.toString() ?? ''),
-                            tooltip: _t(code, 'delete'),
+                            tooltip: _t(context, 'delete'),
                           ),
                         ]),
                       );

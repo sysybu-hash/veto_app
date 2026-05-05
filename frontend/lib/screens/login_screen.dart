@@ -19,6 +19,8 @@ import '../core/theme/veto_2026_auth.dart';
 import '../platform/browser_bridge.dart' as browser_bridge;
 import '../services/auth_service.dart';
 import '../widgets/app_language_menu.dart';
+import '../l10n/app_localizations.dart';
+import 'login_l10n_lookup.dart';
 
 // ?? Google Sign-In singleton ??????????????????????????????????
 // Replace 'YOUR_GOOGLE_CLIENT_ID' after creating credentials in
@@ -29,356 +31,8 @@ const _kGoogleClientId =
 
 enum _Step { role, profile, otp }
 
-// ?????????????????????????????????????????????????????????????
-//  Translations
-// ?????????????????????????????????????????????????????????????
-const _copy = <String, Map<String, String>>{
-  'he': {
-    'eyebrow': 'כניסה / הרשמה',
-    'tagline': 'שכבת גישה אחת לכל תפקיד',
-    'stepRole': 'תפקיד',
-    'stepProfile': 'פרטים',
-    'stepOtp': 'אימות',
-    'chooseRole': 'איך נכנסים ל-VETO?',
-    'chooseRoleBody': 'הבחירה שלך קובעת את הלוח, הזרימה ושפת העבודה.',
-    'citizenTitle': 'אזרח',
-    'citizenBody': 'הנחיה משפטית מידית, AI, תרחישים, SOS ותיעוד ראיות.',
-    'lawyerTitle': 'עורך דין',
-    'lawyerBody': 'קבל התראות, שלוט בזמינות וטפל בתיקים בקונסולה.',
-    'next': 'המשך',
-    'login': 'כניסה',
-    'register': 'הרשמה',
-    'profileTitle': 'פרטי חשבון',
-    'fullName': 'שם מלא',
-    'phoneLabel': 'מספר טלפון',
-    'phoneHint': 'לדוגמה: 0501234567 או 5XXXXXXXX',
-    'back': 'חזרה',
-    'sendOtp': 'שלח קוד',
-    'orDivider': 'או',
-    'googleBtn': 'המשך עם Google',
-    'otpTitle': 'אימות טלפון',
-    'otpSentTo': 'הקוד נשלח ל-',
-    'copyCode': 'העתק קוד',
-    'copied': 'הועתק!',
-    'verify': 'אמת והמשך',
-    'emailLabel': 'כתובת אימייל',
-    'emailHint': 'name@example.com',
-    'pasteOtp': 'הדבק קוד',
-    'missingName': 'הכנס שם מלא כדי להשלים את ההרשמה.',
-    'registerFailed': 'לא ניתן ליצור את החשבון שלך. נסה שוב.',
-    'otpFailed': 'לא ניתן לשלוח את הקוד. ודא שהחשבון קיים או עבור להרשמה.',
-    'otpNotFound': 'לא נמצא חשבון עם מספר זה. עבור להרשמה או בדוק את המספר.',
-    'otpRateLimited': 'נשלחו יותר מדי בקשות לקוד בזמן קצר. המתן כ-10 דקות ונסה שוב.',
-    'otpServer': 'השרת לא זמין כרגע. נסה שוב בעוד רגע.',
-    'otpNetwork': 'לא ניתן להתחבר לשרת. ודא שה-API רץ (למשל פורט 5001) ושהכתובת נכונה.',
-    'systemError': 'שגיאה זמנית. נסה שוב.',
-    'otpInvalid': 'הקוד אינו תקין.',
-    'otpIncomplete': 'הכנס את כל 6 הספרות.',
-    'googleFailed': 'כניסה עם Google נכשלה. נסה שוב.',
-    'googleNotConfigured': 'Google Sign-In עדיין לא מוגדר. השתמש בטלפון.',
-    'otpDialogTitle': 'קוד האימות שלך',
-    'otpDialogBody': 'SMS אינו זמין כרגע. השתמש בקוד הזמני הזה:',
-    'understood': 'הבנתי',
-    'pendingTitle': 'ממתין לאישור',
-    'pendingBody': 'חשבון עורך הדין שלך נוצר ונשלח לאדמין לבדיקה. תקבל הודעה לאחר אישור.',
-    'subscriptionTitle': 'הפעל גישה מלאה ל-VETO',
-    'subscriptionBody': 'נדרש מנוי חודשי. שיגור עורך דין חירום מחויב בנפרד בלבד כשאתה מפעיל אירוע חי.',
-    'subscriptionPlan': 'מנוי חודשי',
-    'subscriptionPrice': '₪19.90 / חודש',
-    'subscriptionLine1': 'AI משפטי ללא הגבלה',
-    'subscriptionLine2': 'גישה לתרחישים, זכויות וכלי ראיות',
-    'subscriptionLine3': 'שיגור עורך דין חירום מחויב בנפרד',
-    'later': 'אולי מאוחר יותר',
-    'paypal': 'פתח PayPal',
-    'paymentOpened': 'סיימת ב-PayPal? חזור כאן ואשר.',
-    'paymentConfirm': 'אשר תשלום',
-    'paymentOpenFailed': 'לא ניתן לפתוח PayPal כרגע.',
-    'paymentConfirmFailed': 'התשלום טרם אושר. בדוק את לשונית ה-PayPal ונסה שוב.',
-    'invalidPhone': 'הזן מספר טלפון תקין (9–10 ספרות).',
-    'brandTagline': 'הגנה משפטית מיידית',
-    'authSide_role_h1_l1': 'שכבת הגישה',
-    'authSide_role_h1_l2': 'שלך — ',
-    'authSide_role_h1_em': 'לכל תפקיד',
-    'authSide_role_p':
-        'בחר אם אתה אזרח שמחפש הגנה משפטית, או עורך דין שמצטרף למשרד הדיגיטלי שלנו. הזרימה והמסך יתאימו לתפקיד.',
-    'authSide_role_f1t': 'חשבון אחד · כל המכשירים',
-    'authSide_role_f1b':
-        'אפליקציה במובייל, דפדפן בדסקטופ — נתונים מסונכרנים תמיד.',
-    'authSide_role_f2t': 'אבטחה ברמת בנק',
-    'authSide_role_f2b': 'OTP חד-פעמי, JWT, ואחסון מקומי מוצפן.',
-    'authSide_role_f3t': 'שלוש שפות',
-    'authSide_role_f3b': 'עברית, אנגלית, רוסית — ממשק מלא.',
-    'authSide_role_q':
-        '"קיבלתי עורך דין על הקו תוך 4 שניות, באמצע הלילה. הוא הסביר לי את הזכויות שלי לפני שאמרתי מילה לחוקר."',
-    'authSide_role_qi': 'דכ',
-    'authSide_role_qn': 'דניאל כהן',
-    'authSide_role_qr': 'משתמש מאז 2025',
-    'authSide_prof_h1_l1': 'פרטים שמשמשים',
-    'authSide_prof_h1_l2': 'אך ורק ',
-    'authSide_prof_h1_em': 'לאמת אותך',
-    'authSide_prof_p':
-        'אנחנו לא שולחים פרסומות, לא מוכרים נתונים, ולא חולקים את המידע שלך עם רשויות. הטלפון משמש רק לאימות.',
-    'authSide_prof_f1t': 'אימות בטלפון',
-    'authSide_prof_f1b': 'OTP חד-פעמי לצורך כניסה — לא נשמרת סיסמה.',
-    'authSide_prof_f2t': 'או Google Sign-In',
-    'authSide_prof_f2b': 'חשבון Google שלך — בלחיצה אחת.',
-    'authSide_otp_h1_l1': 'שלחנו לך קוד',
-    'authSide_otp_h1_l2': 'בן ',
-    'authSide_otp_h1_em': '6 ספרות',
-    'authSide_otp_p':
-        'הקלד את הקוד שקיבלת ב-SMS או הדבק אותו ישירות. הקוד תקף ל-10 דקות בלבד.',
-    'authSide_otp_q':
-        '"זה לא רק עו״ד — זה ידיעה שיש לך גב, גם בשתיים בלילה."',
-    'authSide_otp_qi': 'שכ',
-    'authSide_otp_qn': 'שירה כהן',
-    'authSide_otp_qr': 'עורכת דין · משתמשת מקצועית',
-    'roleStepKicker': 'בחר תפקיד',
-    'profileStepKicker': 'פרטי חשבון',
-    'profileH2Register': 'בוא ניצור לך חשבון',
-    'profileH2Login': 'התחברות לחשבון',
-    'profileLedeRegister':
-        'אנחנו צריכים שם וטלפון בלבד. ניתן גם להירשם דרך Google.',
-    'profileLedeLogin': 'הזן את מספר הטלפון לקבלת קוד אימות חד-פעמי.',
-    'otpStepKicker': 'אימות טלפון',
-    'otpH2': 'הזן את קוד האימות',
-    'otpLede': 'שלחנו קוד בן 6 ספרות אל מספר הטלפון שלך:',
-    'otpSentLabel': 'נשלח אל',
-    'changePhone': 'שינוי',
-    'secureFootnote': '🔒 מאובטח עם הצפנה מקצה לקצה',
-  },
-  'en': {
-    'eyebrow': 'Sign in / Register',
-    'tagline': 'One access layer for every role',
-    'stepRole': 'Role',
-    'stepProfile': 'Details',
-    'stepOtp': 'Verify',
-    'chooseRole': 'How do you enter VETO?',
-    'chooseRoleBody': 'Your choice sets the dashboard, flow and working language.',
-    'citizenTitle': 'Citizen',
-    'citizenBody': 'Immediate legal guidance, AI, scenarios, SOS and evidence capture.',
-    'lawyerTitle': 'Lawyer',
-    'lawyerBody': 'Receive alerts, control availability and handle cases in your console.',
-    'next': 'Continue',
-    'login': 'Sign in',
-    'register': 'Register',
-    'profileTitle': 'Account details',
-    'fullName': 'Full name',
-    'phoneLabel': 'Phone number',
-    'phoneHint': 'e.g. 0501234567 or 5XXXXXXXX',
-    'back': 'Back',
-    'sendOtp': 'Send code',
-    'orDivider': 'or',
-    'googleBtn': 'Continue with Google',
-    'otpTitle': 'Phone verification',
-    'otpSentTo': 'Code sent to ',
-    'copyCode': 'Copy code',
-    'copied': 'Copied!',
-    'verify': 'Verify and continue',
-    'invalidPhone': 'Please enter a valid 9�10 digit phone number.',
-    'missingName': 'Please enter your full name to complete registration.',
-    'registerFailed': 'Could not create your account. Please try again.',
-    'otpFailed': 'Could not send the code. Make sure the account exists or switch to registration.',
-    'otpNotFound': 'No account was found for this phone number. Switch to registration or check the number.',
-    'otpRateLimited': 'Too many code requests in a short time. Please wait about 10 minutes and try again.',
-    'otpServer': 'The server is temporarily unavailable. Please try again in a moment.',
-    'otpNetwork': 'Could not reach the server. Make sure the API is running (port 5001 locally) and the address is correct.',
-    'systemError': 'A temporary error occurred. Please try again.',
-    'otpInvalid': 'The code is not valid.',
-    'otpIncomplete': 'Please enter all 6 digits.',
-    'googleFailed': 'Google sign-in failed. Please try again.',
-    'googleNotConfigured': 'Google Sign-In is not configured yet. Please use phone.',
-    'otpDialogTitle': 'Your verification code',
-    'otpDialogBody': 'SMS is currently unavailable. Use this temporary code:',
-    'understood': 'Got it',
-    'pendingTitle': 'Approval pending',
-    'pendingBody': 'Your lawyer account was created and sent to the admin for review. You will be notified once approved.',
-    'subscriptionTitle': 'Activate full VETO access',
-    'subscriptionBody': 'A monthly membership is required. Emergency lawyer dispatch is billed only when you trigger a live event.',
-    'subscriptionPlan': 'Monthly membership',
-    'subscriptionPrice': '�19.90 / month',
-    'subscriptionLine1': 'Unlimited legal AI',
-    'subscriptionLine2': 'Access to scenarios, rights and evidence tools',
-    'subscriptionLine3': 'Emergency lawyer dispatch billed separately',
-    'later': 'Maybe later',
-    'paypal': 'Open PayPal',
-    'paymentOpened': 'Done in PayPal? Return here and confirm.',
-    'paymentConfirm': 'Confirm payment',
-    'paymentOpenFailed': 'PayPal could not be opened right now.',
-    'paymentConfirmFailed': 'Payment not confirmed yet. Check the PayPal tab and try again.',
-    'emailLabel': 'Email address',
-    'emailHint': 'name@example.com',
-    'pasteOtp': 'Paste code',
-    'brandTagline': 'Immediate legal protection',
-    'authSide_role_h1_l1': 'Your access layer',
-    'authSide_role_h1_l2': '— ',
-    'authSide_role_h1_em': 'for every role',
-    'authSide_role_p':
-        'Choose citizen if you need protection, or lawyer if you join our digital practice. The flow adapts to your role.',
-    'authSide_role_f1t': 'One account · every device',
-    'authSide_role_f1b':
-        'Mobile app or desktop browser — your data stays in sync.',
-    'authSide_role_f2t': 'Bank-grade security',
-    'authSide_role_f2b': 'One-time OTP, JWT, and encrypted local storage.',
-    'authSide_role_f3t': 'Three languages',
-    'authSide_role_f3b': 'Hebrew, English, Russian — full UI.',
-    'authSide_role_q':
-        '"I had a lawyer on the line in four seconds, in the middle of the night — before I said a word to the investigator."',
-    'authSide_role_qi': 'DK',
-    'authSide_role_qn': 'Daniel Cohen',
-    'authSide_role_qr': 'Member since 2025',
-    'authSide_prof_h1_l1': 'Details used',
-    'authSide_prof_h1_l2': 'only ',
-    'authSide_prof_h1_em': 'to verify you',
-    'authSide_prof_p':
-        'No spam, no selling data, no sharing with authorities. Phone is verification only.',
-    'authSide_prof_f1t': 'Phone verification',
-    'authSide_prof_f1b': 'One-time OTP — no saved passwords.',
-    'authSide_prof_f2t': 'Or Google Sign-In',
-    'authSide_prof_f2b': 'Your Google account — one tap.',
-    'authSide_otp_h1_l1': 'We sent a code',
-    'authSide_otp_h1_l2': 'with ',
-    'authSide_otp_h1_em': '6 digits',
-    'authSide_otp_p':
-        'Type the SMS code or paste it. Codes expire in about 10 minutes.',
-    'authSide_otp_q':
-        '"It is not just counsel — it is knowing someone has your back at 2 a.m."',
-    'authSide_otp_qi': 'SK',
-    'authSide_otp_qn': 'Shira Cohen',
-    'authSide_otp_qr': 'Attorney · professional user',
-    'roleStepKicker': 'Choose role',
-    'profileStepKicker': 'Account details',
-    'profileH2Register': 'Let’s create your account',
-    'profileH2Login': 'Sign in to your account',
-    'profileLedeRegister':
-        'We only need name and phone. Google signup is available too.',
-    'profileLedeLogin': 'Enter your phone to receive a one-time verification code.',
-    'otpStepKicker': 'Phone verification',
-    'otpH2': 'Enter the verification code',
-    'otpLede': 'We sent a 6-digit code to your phone:',
-    'otpSentLabel': 'Sent to',
-    'changePhone': 'Change',
-    'secureFootnote': '🔒 Secured with end-to-end encryption',
-  },
-  'ru': {
-    'eyebrow': 'Вход / Регистрация',
-    'tagline': 'Единый доступ для каждой роли',
-    'stepRole': 'Роль',
-    'stepProfile': 'Данные',
-    'stepOtp': 'Подтверждение',
-    'chooseRole': 'Как войти в VETO?',
-    'chooseRoleBody': 'Ваш выбор задаёт интерфейс, сценарий и язык работы.',
-    'citizenTitle': 'Гражданин',
-    'citizenBody': 'Мгновенная юридическая помощь, AI, сценарии, SOS и запись доказательств.',
-    'lawyerTitle': 'Адвокат',
-    'lawyerBody': 'Получайте запросы, управляйте доступностью и работайте с делами в консоли.',
-    'next': 'Продолжить',
-    'login': 'Войти',
-    'register': 'Регистрация',
-    'profileTitle': 'Данные аккаунта',
-    'fullName': 'Полное имя',
-    'phoneLabel': 'Номер телефона',
-    'phoneHint': 'пр. 0501234567 или 5XXXXXXXX',
-    'back': 'Назад',
-    'sendOtp': 'Отправить код',
-    'orDivider': 'или',
-    'googleBtn': 'Продолжить с Google',
-    'otpTitle': 'Подтверждение телефона',
-    'otpSentTo': 'Код отправлен на ',
-    'copyCode': 'Скопировать код',
-    'copied': 'Скопировано!',
-    'verify': 'Подтвердить и продолжить',
-    'invalidPhone': 'Введите корректный номер из 9–10 цифр.',
-    'missingName': 'Введите полное имя для завершения регистрации.',
-    'registerFailed': 'Не удалось создать аккаунт. Попробуйте снова.',
-    'otpFailed': 'Не удалось отправить код. Убедитесь, что аккаунт существует.',
-    'otpNotFound': 'Аккаунт с таким номером не найден. Перейдите к регистрации или проверьте номер.',
-    'otpRateLimited': 'Слишком много запросов кода за короткое время. Подождите около 10 минут и попробуйте снова.',
-    'otpServer': 'Сервер временно недоступен. Попробуйте снова чуть позже.',
-    'otpNetwork': 'Не удалось подключиться к серверу. Убедитесь, что API запущен (локально порт 5001) и адрес верный.',
-    'systemError': 'Временная ошибка. Попробуйте снова.',
-    'otpInvalid': 'Код недействителен.',
-    'otpIncomplete': 'Введите все 6 цифр.',
-    'googleFailed': 'Вход через Google не удался. Попробуйте снова.',
-    'googleNotConfigured': 'Google Sign-In ещё не настроен. Используйте телефон.',
-    'otpDialogTitle': 'Ваш код подтверждения',
-    'otpDialogBody': 'SMS сейчас недоступен. Используйте этот временный код:',
-    'understood': 'Понятно',
-    'pendingTitle': 'Ожидание подтверждения',
-    'pendingBody': 'Ваш аккаунт адвоката создан и отправлен администратору на проверку.',
-    'subscriptionTitle': 'Активировать полный доступ к VETO',
-    'subscriptionBody': 'Требуется ежемесячная подписка. Вызов адвоката оплачивается отдельно.',
-    'subscriptionPlan': 'Ежемесячная подписка',
-    'subscriptionPrice': '₪19.90 / месяц',
-    'subscriptionLine1': 'Безлимитный юридический AI',
-    'subscriptionLine2': 'Доступ к сценариям, правам и доказательствам',
-    'subscriptionLine3': 'Вызов адвоката оплачивается отдельно',
-    'later': 'Позже',
-    'paypal': 'Открыть PayPal',
-    'paymentOpened': 'Завершили в PayPal? Вернитесь и подтвердите.',
-    'paymentConfirm': 'Подтвердить оплату',
-    'paymentOpenFailed': 'PayPal сейчас недоступен.',
-    'paymentConfirmFailed': 'Оплата ещё не подтверждена. Проверьте PayPal и попробуйте снова.',
-    'emailLabel': 'Адрес электронной почты',
-    'emailHint': 'name@example.com',
-    'pasteOtp': 'Вставить код',
-    'brandTagline': 'Юридическая защита рядом',
-    'authSide_role_h1_l1': 'Один слой доступа',
-    'authSide_role_h1_l2': 'для ',
-    'authSide_role_h1_em': 'каждой роли',
-    'authSide_role_p':
-        'Выберите гражданина или адвоката — интерфейс и сценарий подстроятся под роль.',
-    'authSide_role_f1t': 'Один аккаунт · все устройства',
-    'authSide_role_f1b':
-        'Телефон или браузер — данные синхронизируются.',
-    'authSide_role_f2t': 'Безопасность как в банке',
-    'authSide_role_f2b': 'OTP, JWT и локальное шифрование.',
-    'authSide_role_f3t': 'Три языка',
-    'authSide_role_f3b': 'Иврит, английский, русский — полный интерфейс.',
-    'authSide_role_q':
-        '"Юрист был на линии через 4 секунды посреди ночи — до того как я заговорил со следователем."',
-    'authSide_role_qi': 'ДК',
-    'authSide_role_qn': 'Даниэль Коэн',
-    'authSide_role_qr': 'Пользователь с 2025',
-    'authSide_prof_h1_l1': 'Данные нужны',
-    'authSide_prof_h1_l2': 'только ',
-    'authSide_prof_h1_em': 'для проверки',
-    'authSide_prof_p':
-        'Без рекламы, без продажи данных, без передачи третьим лицам. Телефон только для входа.',
-    'authSide_prof_f1t': 'Подтверждение телефоном',
-    'authSide_prof_f1b': 'Разовый OTP — пароли не хранятся.',
-    'authSide_prof_f2t': 'Или Google',
-    'authSide_prof_f2b': 'Вход аккаунтом Google в один тап.',
-    'authSide_otp_h1_l1': 'Мы отправили код',
-    'authSide_otp_h1_l2': 'из ',
-    'authSide_otp_h1_em': '6 цифр',
-    'authSide_otp_p':
-        'Введите код из SMS или вставьте его. Код действует около 10 минут.',
-    'authSide_otp_q':
-        '"Это не просто адвокат — это уверенность, что тебя прикроют и в два часа ночи."',
-    'authSide_otp_qi': 'ШК',
-    'authSide_otp_qn': 'Шира Коэн',
-    'authSide_otp_qr': 'Адвокат · профиль пользователя',
-    'roleStepKicker': 'Выберите роль',
-    'profileStepKicker': 'Данные аккаунта',
-    'profileH2Register': 'Создадим ваш аккаунт',
-    'profileH2Login': 'Вход в аккаунт',
-    'profileLedeRegister':
-        'Нужны только имя и телефон. Также можно через Google.',
-    'profileLedeLogin': 'Введите телефон для получения одноразового кода.',
-    'otpStepKicker': 'Подтверждение телефона',
-    'otpH2': 'Введите код подтверждения',
-    'otpLede': 'Мы отправили 6-значный код на ваш номер:',
-    'otpSentLabel': 'Отправлено на',
-    'changePhone': 'Изменить',
-    'secureFootnote': '🔒 Защищено сквозным шифрованием',
-  },
-};
-
-String _t(String code, String key) {
-  return _copy[AppLanguage.normalize(code)]?[key] ??
-      _copy[AppLanguage.hebrew]![key] ??
-      key;
-}
+String _t(BuildContext context, String key) =>
+    loginT(AppLocalizations.of(context)!, key);
 
 const TextStyle _kAuthMktBodyStyle = TextStyle(
   fontFamily: V26.sans,
@@ -387,7 +41,8 @@ const TextStyle _kAuthMktBodyStyle = TextStyle(
   color: Color(0xFFC7D5EE),
 );
 
-Widget _authMarketingHeadline(String lang, String k1, String k2, String kem) {
+Widget _authMarketingHeadline(
+    BuildContext context, String k1, String k2, String kem) {
   return Text.rich(
     TextSpan(
       style: const TextStyle(
@@ -397,10 +52,10 @@ Widget _authMarketingHeadline(String lang, String k1, String k2, String kem) {
         color: Colors.white,
       ),
       children: [
-        TextSpan(text: '${_t(lang, k1)}\n'),
-        TextSpan(text: _t(lang, k2)),
+        TextSpan(text: '${_t(context, k1)}\n'),
+        TextSpan(text: _t(context, k2)),
         TextSpan(
-          text: _t(lang, kem),
+          text: _t(context, kem),
           style: const TextStyle(color: V26.goldSoft),
         ),
       ],
@@ -495,17 +150,12 @@ class _LoginScreenState extends State<LoginScreen> {
           final stage = status['stage']?.toString();
           final key = status['key']?.toString();
           final err = status['error']?.toString();
-          final msg = lang == 'he'
-              ? (ok
-                  ? 'Flows: הופעל (${stage ?? ''}${key != null ? ' · $key' : ''})'
-                  : 'Flows: נכשל (${err ?? 'unknown'})')
-              : lang == 'ru'
-                  ? (ok
-                      ? 'Flows: OK (${stage ?? ''}${key != null ? ' · $key' : ''})'
-                      : 'Flows: ошибка (${err ?? 'unknown'})')
-                  : (ok
-                      ? 'Flows: OK (${stage ?? ''}${key != null ? ' · $key' : ''})'
-                      : 'Flows: failed (${err ?? 'unknown'})');
+          final loc = AppLocalizations.of(context)!;
+          final detail =
+              '${stage ?? ''}${key != null ? ' · $key' : ''}'.trim();
+          final msg = ok
+              ? loc.loginFlowsSuccess(detail.isEmpty ? '—' : detail)
+              : loc.loginFlowsFailed(err ?? 'unknown');
           messenger?.showSnackBar(
             SnackBar(
               content: Text(msg),
@@ -539,9 +189,9 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  String _messageForOtpRequestFailure(String lang, String? result) {
+  String _messageForOtpRequestFailure(BuildContext context, String? result) {
     if (result == null || result == 'error') {
-      return _t(lang, 'otpNetwork');
+      return _t(context, 'otpNetwork');
     }
 
     if (result.startsWith('error|')) {
@@ -549,21 +199,21 @@ class _LoginScreenState extends State<LoginScreen> {
       if (parts.length >= 3) {
         final code = int.tryParse(parts[1]);
         final server = parts.sublist(2).join('|').trim();
-        if (code == 404) return _t(lang, 'otpNotFound');
-        if (code == 429) return _t(lang, 'otpRateLimited');
-        if (code != null && code >= 500) return _t(lang, 'otpServer');
+        if (code == 404) return _t(context, 'otpNotFound');
+        if (code == 429) return _t(context, 'otpRateLimited');
+        if (code != null && code >= 500) return _t(context, 'otpServer');
         if (server.isNotEmpty) return server;
       }
     }
 
     if (result.startsWith('error:')) {
       final code = int.tryParse(result.substring('error:'.length));
-      if (code == 404) return _t(lang, 'otpNotFound');
-      if (code == 429) return _t(lang, 'otpRateLimited');
-      if (code != null && code >= 500) return _t(lang, 'otpServer');
+      if (code == 404) return _t(context, 'otpNotFound');
+      if (code == 429) return _t(context, 'otpRateLimited');
+      if (code != null && code >= 500) return _t(context, 'otpServer');
     }
 
-    return _t(lang, 'otpFailed');
+    return _t(context, 'otpFailed');
   }
 
   // ?? Phone flow ??????????????????????????????????????????????
@@ -572,11 +222,11 @@ class _LoginScreenState extends State<LoginScreen> {
     final digits = _phoneCtrl.text.trim().replaceAll(RegExp(r'\D'), '');
 
     if (digits.length < 9 || digits.length > 10) {
-      setState(() => _error = _t(lang, 'invalidPhone'));
+      setState(() => _error = _t(context, 'invalidPhone'));
       return;
     }
     if (_registerMode && _nameCtrl.text.trim().isEmpty) {
-      setState(() => _error = _t(lang, 'missingName'));
+      setState(() => _error = _t(context, 'missingName'));
       return;
     }
 
@@ -592,7 +242,7 @@ class _LoginScreenState extends State<LoginScreen> {
           email: _emailCtrl.text.trim().isEmpty ? null : _emailCtrl.text.trim(),
         );
         if (!ok) {
-          setState(() { _loading = false; _error = _t(lang, 'registerFailed'); });
+          setState(() { _loading = false; _error = _t(context, 'registerFailed'); });
           return;
         }
       }
@@ -604,7 +254,7 @@ class _LoginScreenState extends State<LoginScreen> {
           (otp != null && otp.startsWith('error|'))) {
         setState(() {
           _loading = false;
-          _error = _messageForOtpRequestFailure(lang, otp);
+          _error = _messageForOtpRequestFailure(context, otp);
         });
         return;
       }
@@ -618,7 +268,7 @@ class _LoginScreenState extends State<LoginScreen> {
         );
       }
     } catch (_) {
-      setState(() { _loading = false; _error = _t(lang, 'systemError'); });
+      setState(() { _loading = false; _error = _t(context, 'systemError'); });
     }
   }
 
@@ -642,14 +292,13 @@ class _LoginScreenState extends State<LoginScreen> {
       return;
     }
 
-    setState(() { _loading = false; _error = _t(lang, 'otpInvalid'); });
+    setState(() { _loading = false; _error = _t(context, 'otpInvalid'); });
   }
 
   Future<void> _submitOtp() async {
-    final lang = context.read<AppLanguageController>().code;
     final code = _otpCtrl.text.trim();
     if (code.length != 6) {
-      setState(() => _error = _t(lang, 'otpIncomplete'));
+      setState(() => _error = _t(context, 'otpIncomplete'));
       return;
     }
     await _verifyOtp(code);
@@ -671,7 +320,7 @@ class _LoginScreenState extends State<LoginScreen> {
       if (!mounted) return;
 
       if (data == null) {
-        setState(() { _loading = false; _error = _t(lang, 'googleFailed'); });
+        setState(() { _loading = false; _error = _t(context, 'googleFailed'); });
         return;
       }
 
@@ -679,7 +328,7 @@ class _LoginScreenState extends State<LoginScreen> {
     } catch (e) {
       debugPrint('Google Sign-In error: $e');
       if (mounted) {
-        setState(() { _loading = false; _error = _t(lang, 'googleFailed'); });
+        setState(() { _loading = false; _error = _t(context, 'googleFailed'); });
       }
     }
   }
@@ -736,9 +385,9 @@ class _LoginScreenState extends State<LoginScreen> {
                 _LoginStepperDots(
                   stepIndex: _step.index,
                   labels: [
-                    _t(lang, 'stepRole'),
-                    _t(lang, 'stepProfile'),
-                    _t(lang, 'stepOtp'),
+                    _t(context, 'stepRole'),
+                    _t(context, 'stepProfile'),
+                    _t(context, 'stepOtp'),
                   ],
                 ),
                 const SizedBox(height: 28),
@@ -764,51 +413,50 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 const SizedBox(height: 22),
                 Text(
-                  _t(lang, 'secureFootnote'),
+                  _t(context, 'secureFootnote'),
                   style: const TextStyle(color: V26.ink300, fontSize: 12),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 10),
-                Wrap(
-                  alignment: WrapAlignment.center,
-                  spacing: 4,
-                  runSpacing: 0,
-                  children: [
-                    TextButton(
-                      onPressed: () => Navigator.pushNamed(context, '/privacy'),
-                      child: Text(
-                        lang == 'he'
-                            ? 'מדיניות פרטיות'
-                            : lang == 'ru'
-                                ? 'Конфиденциальность'
-                                : 'Privacy',
-                        style: const TextStyle(
-                          color: VetoMockup.primaryCta,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
+                Builder(
+                  builder: (ctx) {
+                    final loc = AppLocalizations.of(ctx)!;
+                    return Wrap(
+                      alignment: WrapAlignment.center,
+                      spacing: 4,
+                      runSpacing: 0,
+                      children: [
+                        TextButton(
+                          onPressed: () =>
+                              Navigator.pushNamed(context, '/privacy'),
+                          child: Text(
+                            loc.linkPrivacy,
+                            style: const TextStyle(
+                              color: VetoMockup.primaryCta,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
                         ),
-                      ),
-                    ),
-                    const Text(
-                      '·',
-                      style: TextStyle(color: V26.ink300, fontSize: 12),
-                    ),
-                    TextButton(
-                      onPressed: () => Navigator.pushNamed(context, '/terms'),
-                      child: Text(
-                        lang == 'he'
-                            ? 'תנאי שימוש'
-                            : lang == 'ru'
-                                ? 'Условия'
-                                : 'Terms',
-                        style: const TextStyle(
-                          color: VetoMockup.primaryCta,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
+                        const Text(
+                          '·',
+                          style: TextStyle(color: V26.ink300, fontSize: 12),
                         ),
-                      ),
-                    ),
-                  ],
+                        TextButton(
+                          onPressed: () =>
+                              Navigator.pushNamed(context, '/terms'),
+                          child: Text(
+                            loc.linkTerms,
+                            style: const TextStyle(
+                              color: VetoMockup.primaryCta,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                      ],
+                    );
+                  },
                 ),
               ],
             ),
@@ -825,7 +473,7 @@ class _LoginScreenState extends State<LoginScreen> {
         icon: const Icon(Icons.arrow_back_ios_new_rounded,
             size: 14, color: VetoMockup.primaryCta),
         label: Text(
-          _t(lang, 'back'),
+          _t(context, 'back'),
           style: const TextStyle(
             color: VetoMockup.primaryCta,
             fontSize: 13,
@@ -840,7 +488,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
     final Widget left = switch (_step) {
       _Step.role when wide => V26Badge(
-          _t(lang, 'eyebrow'),
+          _t(context, 'eyebrow'),
           tone: V26BadgeTone.brand,
         ),
       _Step.role => TextButton.icon(
@@ -849,11 +497,7 @@ class _LoginScreenState extends State<LoginScreen> {
           icon: const Icon(Icons.arrow_back_ios_new_rounded,
               size: 14, color: VetoMockup.primaryCta),
           label: Text(
-            lang == 'he'
-                ? 'דף הבית'
-                : lang == 'ru'
-                    ? 'Главная'
-                    : 'Home',
+            AppLocalizations.of(context)!.vetoUiHamburgerHome,
             style: const TextStyle(
               color: VetoMockup.primaryCta,
               fontSize: 13,
@@ -895,27 +539,27 @@ class _LoginScreenState extends State<LoginScreen> {
         final citizen = _RoleCard(
           selected: _role == 'user',
           icon: Icons.person_outline_rounded,
-          title: _t(lang, 'citizenTitle'),
-          body: _t(lang, 'citizenBody'),
+          title: _t(context, 'citizenTitle'),
+          body: _t(context, 'citizenBody'),
           onTap: () => setState(() => _role = 'user'),
         );
         final lawyer = _RoleCard(
           selected: _role == 'lawyer',
           icon: Icons.gavel_rounded,
-          title: _t(lang, 'lawyerTitle'),
-          body: _t(lang, 'lawyerBody'),
+          title: _t(context, 'lawyerTitle'),
+          body: _t(context, 'lawyerBody'),
           onTap: () => setState(() => _role = 'lawyer'),
         );
         return Column(
           key: const ValueKey('role'),
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            V26Kicker(_t(lang, 'roleStepKicker')),
+            V26Kicker(_t(context, 'roleStepKicker')),
             const SizedBox(height: 8),
-            V26Headline(_t(lang, 'chooseRole'), size: 28),
+            V26Headline(_t(context, 'chooseRole'), size: 28),
             const SizedBox(height: 8),
             Text(
-              _t(lang, 'chooseRoleBody'),
+              _t(context, 'chooseRoleBody'),
               style: const TextStyle(
                 color: V26.ink500,
                 fontSize: 14,
@@ -943,7 +587,7 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
             const SizedBox(height: 22),
             V26CTA(
-              _t(lang, 'next'),
+              _t(context, 'next'),
               variant: V26CtaVariant.primary,
               large: true,
               expanded: true,
@@ -963,8 +607,8 @@ class _LoginScreenState extends State<LoginScreen> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         _ModeTabs(
-          loginLabel: _t(lang, 'login'),
-          registerLabel: _t(lang, 'register'),
+          loginLabel: _t(context, 'login'),
+          registerLabel: _t(context, 'register'),
           isRegister: _registerMode,
           onChanged: (v) => setState(() {
             _registerMode = v;
@@ -972,19 +616,19 @@ class _LoginScreenState extends State<LoginScreen> {
           }),
         ),
         const SizedBox(height: 20),
-        V26Kicker(_t(lang, 'profileStepKicker')),
+        V26Kicker(_t(context, 'profileStepKicker')),
         const SizedBox(height: 8),
         V26Headline(
           _registerMode
-              ? _t(lang, 'profileH2Register')
-              : _t(lang, 'profileH2Login'),
+              ? _t(context, 'profileH2Register')
+              : _t(context, 'profileH2Login'),
           size: 28,
         ),
         const SizedBox(height: 8),
         Text(
           _registerMode
-              ? _t(lang, 'profileLedeRegister')
-              : _t(lang, 'profileLedeLogin'),
+              ? _t(context, 'profileLedeRegister')
+              : _t(context, 'profileLedeLogin'),
           style: const TextStyle(
             color: V26.ink500,
             fontSize: 14,
@@ -995,15 +639,15 @@ class _LoginScreenState extends State<LoginScreen> {
         if (_registerMode) ...[
           _VetoField(
             controller: _nameCtrl,
-            label: _t(lang, 'fullName'),
+            label: _t(context, 'fullName'),
             icon: Icons.badge_outlined,
             action: TextInputAction.next,
             onSubmitted: (_) => FocusScope.of(context).nextFocus(),
           ),
           _VetoField(
             controller: _emailCtrl,
-            label: _t(lang, 'emailLabel'),
-            hint: _t(lang, 'emailHint'),
+            label: _t(context, 'emailLabel'),
+            hint: _t(context, 'emailHint'),
             icon: Icons.email_outlined,
             keyboardType: TextInputType.emailAddress,
             action: TextInputAction.next,
@@ -1013,8 +657,8 @@ class _LoginScreenState extends State<LoginScreen> {
         ],
         _PhoneRow(
           controller: _phoneCtrl,
-          label: _t(lang, 'phoneLabel'),
-          hint: _t(lang, 'phoneHint'),
+          label: _t(context, 'phoneLabel'),
+          hint: _t(context, 'phoneHint'),
           countryCode: _countryCode,
           onSubmitted: _loading ? null : (_) => _continueFromProfile(),
         ),
@@ -1023,7 +667,7 @@ class _LoginScreenState extends State<LoginScreen> {
           children: [
             Expanded(
               child: V26CTA(
-                _t(lang, 'back'),
+                _t(context, 'back'),
                 variant: V26CtaVariant.ghost,
                 large: true,
                 expanded: true,
@@ -1033,7 +677,7 @@ class _LoginScreenState extends State<LoginScreen> {
             const SizedBox(width: 10),
             Expanded(
               child: V26CTA(
-                _t(lang, 'sendOtp'),
+                _t(context, 'sendOtp'),
                 expanded: true,
                 large: true,
                 loading: _loading,
@@ -1043,10 +687,10 @@ class _LoginScreenState extends State<LoginScreen> {
           ],
         ),
         const SizedBox(height: 20),
-        _OrDivider(label: _t(lang, 'orDivider')),
+        _OrDivider(label: _t(context, 'orDivider')),
         const SizedBox(height: 16),
         _GoogleButton(
-          label: _t(lang, 'googleBtn'),
+          label: _t(context, 'googleBtn'),
           loading: _loading,
           onTap: _signInWithGoogle,
         ),
@@ -1077,12 +721,12 @@ class _LoginScreenState extends State<LoginScreen> {
       key: const ValueKey('otp'),
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        V26Kicker(_t(lang, 'otpStepKicker')),
+        V26Kicker(_t(context, 'otpStepKicker')),
         const SizedBox(height: 8),
-        V26Headline(_t(lang, 'otpH2'), size: 28),
+        V26Headline(_t(context, 'otpH2'), size: 28),
         const SizedBox(height: 8),
         Text(
-          _t(lang, 'otpLede'),
+          _t(context, 'otpLede'),
           style: const TextStyle(
             color: V26.ink500,
             fontSize: 14,
@@ -1116,7 +760,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      _t(lang, 'otpSentLabel'),
+                      _t(context, 'otpSentLabel'),
                       style: const TextStyle(
                         fontSize: 11,
                         color: V26.ink500,
@@ -1138,7 +782,7 @@ class _LoginScreenState extends State<LoginScreen> {
               TextButton(
                 onPressed: () => setState(() => _step = _Step.profile),
                 child: Text(
-                  _t(lang, 'changePhone'),
+                  _t(context, 'changePhone'),
                   style: const TextStyle(
                     fontWeight: FontWeight.w800,
                     fontSize: 12,
@@ -1182,7 +826,7 @@ class _LoginScreenState extends State<LoginScreen> {
             icon: const Icon(Icons.content_paste_rounded,
                 size: 16, color: VetoMockup.primaryCta),
             label: Text(
-              _t(lang, 'pasteOtp'),
+              _t(context, 'pasteOtp'),
               style: const TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w700,
@@ -1205,7 +849,7 @@ class _LoginScreenState extends State<LoginScreen> {
           children: [
             Expanded(
               child: V26CTA(
-                _t(lang, 'back'),
+                _t(context, 'back'),
                 variant: V26CtaVariant.ghost,
                 large: true,
                 expanded: true,
@@ -1215,7 +859,7 @@ class _LoginScreenState extends State<LoginScreen> {
             const SizedBox(width: 10),
             Expanded(
               child: V26CTA(
-                _t(lang, 'verify'),
+                _t(context, 'verify'),
                 expanded: true,
                 large: true,
                 loading: _loading,
@@ -1250,40 +894,40 @@ class _LoginMarketingSide extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      V26AuthBrandRow(tagline: _t(lang, 'brandTagline')),
+                      V26AuthBrandRow(tagline: _t(context, 'brandTagline')),
                       const SizedBox(height: 40),
-                      _authMarketingHeadline(lang, 'authSide_role_h1_l1',
+                      _authMarketingHeadline(context, 'authSide_role_h1_l1',
                           'authSide_role_h1_l2', 'authSide_role_h1_em'),
                       const SizedBox(height: 16),
-                      Text(_t(lang, 'authSide_role_p'),
+                      Text(_t(context, 'authSide_role_p'),
                           style: _kAuthMktBodyStyle),
                       const SizedBox(height: 36),
                       V26AuthFeatureLine(
                         icon: Icons.devices_rounded,
-                        title: _t(lang, 'authSide_role_f1t'),
-                        body: _t(lang, 'authSide_role_f1b'),
+                        title: _t(context, 'authSide_role_f1t'),
+                        body: _t(context, 'authSide_role_f1b'),
                       ),
                       const SizedBox(height: 18),
                       V26AuthFeatureLine(
                         icon: Icons.lock_outline_rounded,
-                        title: _t(lang, 'authSide_role_f2t'),
-                        body: _t(lang, 'authSide_role_f2b'),
+                        title: _t(context, 'authSide_role_f2t'),
+                        body: _t(context, 'authSide_role_f2b'),
                       ),
                       const SizedBox(height: 18),
                       V26AuthFeatureLine(
                         icon: Icons.language_rounded,
-                        title: _t(lang, 'authSide_role_f3t'),
-                        body: _t(lang, 'authSide_role_f3b'),
+                        title: _t(context, 'authSide_role_f3t'),
+                        body: _t(context, 'authSide_role_f3b'),
                       ),
                     ],
                   ),
                 ),
               ),
               V26AuthQuote(
-                quote: _t(lang, 'authSide_role_q'),
-                initials: _t(lang, 'authSide_role_qi'),
-                name: _t(lang, 'authSide_role_qn'),
-                role: _t(lang, 'authSide_role_qr'),
+                quote: _t(context, 'authSide_role_q'),
+                initials: _t(context, 'authSide_role_qi'),
+                name: _t(context, 'authSide_role_qn'),
+                role: _t(context, 'authSide_role_qr'),
               ),
             ],
           ),
@@ -1294,23 +938,23 @@ class _LoginMarketingSide extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                V26AuthBrandRow(tagline: _t(lang, 'brandTagline')),
+                V26AuthBrandRow(tagline: _t(context, 'brandTagline')),
                 const SizedBox(height: 40),
-                _authMarketingHeadline(lang, 'authSide_prof_h1_l1',
+                _authMarketingHeadline(context, 'authSide_prof_h1_l1',
                     'authSide_prof_h1_l2', 'authSide_prof_h1_em'),
                 const SizedBox(height: 16),
-                Text(_t(lang, 'authSide_prof_p'), style: _kAuthMktBodyStyle),
+                Text(_t(context, 'authSide_prof_p'), style: _kAuthMktBodyStyle),
                 const SizedBox(height: 36),
                 V26AuthFeatureLine(
                   icon: Icons.phone_in_talk_outlined,
-                  title: _t(lang, 'authSide_prof_f1t'),
-                  body: _t(lang, 'authSide_prof_f1b'),
+                  title: _t(context, 'authSide_prof_f1t'),
+                  body: _t(context, 'authSide_prof_f1b'),
                 ),
                 const SizedBox(height: 18),
                 V26AuthFeatureLine(
                   icon: Icons.login_rounded,
-                  title: _t(lang, 'authSide_prof_f2t'),
-                  body: _t(lang, 'authSide_prof_f2b'),
+                  title: _t(context, 'authSide_prof_f2t'),
+                  body: _t(context, 'authSide_prof_f2b'),
                 ),
                 const SizedBox(height: 48),
               ],
@@ -1327,22 +971,22 @@ class _LoginMarketingSide extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      V26AuthBrandRow(tagline: _t(lang, 'brandTagline')),
+                      V26AuthBrandRow(tagline: _t(context, 'brandTagline')),
                       const SizedBox(height: 40),
-                      _authMarketingHeadline(lang, 'authSide_otp_h1_l1',
+                      _authMarketingHeadline(context, 'authSide_otp_h1_l1',
                           'authSide_otp_h1_l2', 'authSide_otp_h1_em'),
                       const SizedBox(height: 16),
-                      Text(_t(lang, 'authSide_otp_p'),
+                      Text(_t(context, 'authSide_otp_p'),
                           style: _kAuthMktBodyStyle),
                     ],
                   ),
                 ),
               ),
               V26AuthQuote(
-                quote: _t(lang, 'authSide_otp_q'),
-                initials: _t(lang, 'authSide_otp_qi'),
-                name: _t(lang, 'authSide_otp_qn'),
-                role: _t(lang, 'authSide_otp_qr'),
+                quote: _t(context, 'authSide_otp_q'),
+                initials: _t(context, 'authSide_otp_qi'),
+                name: _t(context, 'authSide_otp_qn'),
+                role: _t(context, 'authSide_otp_qr'),
               ),
             ],
           ),
@@ -1918,10 +1562,10 @@ class _OtpCodeDialogState extends State<_OtpCodeDialog> {
           borderRadius: BorderRadius.circular(20),
           side: const BorderSide(color: V26.hairline),
         ),
-        title: Text(_t(widget.code, 'otpDialogTitle'),
+        title: Text(_t(context, 'otpDialogTitle'),
             style: const TextStyle(color: V26.ink900, fontWeight: FontWeight.w800)),
         content: Column(mainAxisSize: MainAxisSize.min, children: [
-          Text(_t(widget.code, 'otpDialogBody'),
+          Text(_t(context, 'otpDialogBody'),
               style: const TextStyle(color: V26.ink500, height: 1.5)),
           const SizedBox(height: 16),
           Container(
@@ -1945,7 +1589,7 @@ class _OtpCodeDialogState extends State<_OtpCodeDialog> {
                         key: const ValueKey('copy'),
                         icon: const Icon(Icons.copy_rounded,
                             color: VetoMockup.primaryCta, size: 22),
-                        tooltip: _t(widget.code, 'copyCode'),
+                        tooltip: _t(context, 'copyCode'),
                         onPressed: _copy,
                       ),
               ),
@@ -1953,14 +1597,14 @@ class _OtpCodeDialogState extends State<_OtpCodeDialog> {
           ),
           if (_copied) ...[
             const SizedBox(height: 8),
-            Text(_t(widget.code, 'copied'),
+            Text(_t(context, 'copied'),
                 style: const TextStyle(color: V26.ok, fontSize: 13)),
           ],
         ]),
         actions: [
           FilledButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: Text(_t(widget.code, 'understood')),
+            child: Text(_t(context, 'understood')),
           ),
         ],
       ),
@@ -1989,15 +1633,15 @@ class _PendingApprovalDialog extends StatelessWidget {
         title: Row(children: [
           const Icon(Icons.hourglass_empty_rounded, color: V26.warn, size: 22),
           const SizedBox(width: 10),
-          Expanded(child: Text(_t(code, 'pendingTitle'),
+          Expanded(child: Text(_t(context, 'pendingTitle'),
               style: const TextStyle(color: V26.ink900, fontWeight: FontWeight.w800))),
         ]),
-        content: Text(_t(code, 'pendingBody'),
+        content: Text(_t(context, 'pendingBody'),
             style: const TextStyle(color: V26.ink500, height: 1.6)),
         actions: [
           FilledButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: Text(_t(code, 'understood')),
+            child: Text(_t(context, 'understood')),
           ),
         ],
       ),

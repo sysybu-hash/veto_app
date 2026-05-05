@@ -5,9 +5,12 @@ import 'package:provider/provider.dart';
 import '../core/i18n/app_language.dart';
 import '../core/theme/veto_2026.dart';
 import '../core/theme/veto_mockup_tokens.dart';
+import '../l10n/app_localizations.dart';
 import '../services/auth_service.dart';
 import '../widgets/citizen_mockup_shell.dart';
 import '../widgets/app_language_menu.dart';
+
+import 'dash_profile_l10n_lookup.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -22,78 +25,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   bool _saving = false;
   String? _role;
   String? _phone;
-
-  static const Map<String, Map<String, String>> _copy = {
-    'he': {
-      'title': 'פרופיל',
-      'nameEmpty': 'שם אינו יכול להיות ריק.',
-      'saved': 'הפרופיל עודכן בהצלחה.',
-      'saveError': 'לא הצלחנו לשמור את השינויים.',
-      'name': 'שם מלא',
-      'nameHint': 'הזן שם מלא',
-      'phone': 'טלפון',
-      'role': 'תפקיד',
-      'save': 'שמור שינויים',
-      'logout': 'התנתק',
-      'language': 'שפת ממשק',
-      'badgePremium': 'פרימיום',
-      'badgeSince': 'מאז 2025',
-      'badgeVerified': 'מאומת',
-      'statCases': 'תיקים',
-      'statFiles': 'קבצים',
-      'statDays': 'ימים ב-VETO',
-      'subscriptionTitle': 'המנוי שלך',
-      'subscriptionBody':
-          'פרימיום חודשי · ₪19.90 לחודש · חיוב בתאריך ה-15 לחודש',
-      'subscriptionCta': 'נהל מנוי',
-    },
-    'en': {
-      'title': 'Profile',
-      'nameEmpty': 'Name cannot be empty.',
-      'saved': 'Your profile was updated successfully.',
-      'saveError': 'We could not save your changes.',
-      'name': 'Full name',
-      'nameHint': 'Enter your full name',
-      'phone': 'Phone',
-      'role': 'Role',
-      'save': 'Save changes',
-      'logout': 'Log out',
-      'language': 'Interface language',
-      'badgePremium': 'Premium',
-      'badgeSince': 'Since 2025',
-      'badgeVerified': 'Verified',
-      'statCases': 'Cases',
-      'statFiles': 'Files',
-      'statDays': 'Days on VETO',
-      'subscriptionTitle': 'Your subscription',
-      'subscriptionBody':
-          'Premium Monthly · ₪19.90/mo · renews on the 15th',
-      'subscriptionCta': 'Manage subscription',
-    },
-    'ru': {
-      'title': 'Профиль',
-      'nameEmpty': 'Имя не может быть пустым.',
-      'saved': 'Профиль успешно обновлен.',
-      'saveError': 'Не удалось сохранить изменения.',
-      'name': 'Полное имя',
-      'nameHint': 'Введите полное имя',
-      'phone': 'Телефон',
-      'role': 'Роль',
-      'save': 'Сохранить изменения',
-      'logout': 'Выйти',
-      'language': 'Язык интерфейса',
-      'badgePremium': 'Премиум',
-      'badgeSince': 'С 2025',
-      'badgeVerified': 'Верифицирован',
-      'statCases': 'Дела',
-      'statFiles': 'Файлы',
-      'statDays': 'Дней в VETO',
-      'subscriptionTitle': 'Ваша подписка',
-      'subscriptionBody':
-          'Премиум ежемесячно · ₪19.90/мес · списание 15 числа',
-      'subscriptionCta': 'Управлять подпиской',
-    },
-  };
 
   @override
   void initState() {
@@ -112,7 +43,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final name = _nameCtrl.text.trim();
     if (name.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(_t(code, 'nameEmpty'))));
+          SnackBar(content: Text(_t(context, 'nameEmpty'))));
       return;
     }
     setState(() => _saving = true);
@@ -123,7 +54,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (!mounted) return;
     setState(() => _saving = false);
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text(ok ? _t(code, 'saved') : _t(code, 'saveError')),
+      content: Text(ok ? _t(context, 'saved') : _t(context, 'saveError')),
       backgroundColor: ok ? V26.ok : V26.emerg,
     ));
   }
@@ -151,10 +82,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-  String _t(String code, String key) {
-    return _copy[AppLanguage.normalize(code)]?[key] ??
-        _copy[AppLanguage.hebrew]![key] ??
-        key;
+  String _t(BuildContext ctx, String key) {
+    final l = AppLocalizations.of(ctx);
+    if (l == null) return key;
+    return profScreenT(l, key);
   }
 
   @override
@@ -166,7 +97,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final body = _loading
         ? const Center(
             child: CircularProgressIndicator(color: V26.navy600))
-        : _profileScrollBody(code);
+        : _profileScrollBody();
 
     if (_role == 'user' && !_loading) {
       return Directionality(
@@ -191,7 +122,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               onPressed: () => Navigator.of(context).maybePop(),
             ),
             title: Text(
-              _t(code, 'title'),
+              _t(context, 'title'),
               style: const TextStyle(
                   color: VetoMockup.ink,
                   fontFamily: V26.serif,
@@ -228,7 +159,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               : V26CitizenNav.bottomRoutes;
           V26CitizenNav.go(context, routes[i], current: '/profile');
         },
-        desktopStatusText: _t(code, 'title'),
+        desktopStatusText: _t(context, 'title'),
         desktopTrailing: const [
           Padding(
             padding: EdgeInsets.symmetric(horizontal: 12),
@@ -246,7 +177,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             onPressed: () => Navigator.of(context).maybePop(),
           ),
           title: Text(
-            _t(code, 'title'),
+            _t(context, 'title'),
             style: const TextStyle(
                 color: V26.ink900,
                 fontFamily: V26.serif,
@@ -270,7 +201,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _profileScrollBody(String code) {
+  Widget _profileScrollBody() {
+    final l10n = AppLocalizations.of(context)!;
     return SingleChildScrollView(
                 padding: const EdgeInsets.all(24),
                 child: Center(
@@ -280,25 +212,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         const SizedBox(height: 8),
-                        _buildHero(code),
+                        _buildHero(),
                         const SizedBox(height: 20),
-                        _buildStatsStrip(code),
+                        _buildStatsStrip(),
                         const SizedBox(height: 20),
-                        _buildSubscriptionBlock(code),
+                        _buildSubscriptionBlock(),
                         const SizedBox(height: 20),
                         _buildCard(
                           children: [
-                            _sectionLabel(_t(code, 'name')),
+                            _sectionLabel(_t(context, 'name')),
                             TextField(
                               controller: _nameCtrl,
                               decoration: InputDecoration(
-                                hintText: _t(code, 'nameHint'),
+                                hintText: _t(context, 'nameHint'),
                                 prefixIcon:
                                     const Icon(Icons.person_outline, size: 18),
                               ),
                             ),
                             const SizedBox(height: 20),
-                            _sectionLabel(_t(code, 'phone')),
+                            _sectionLabel(_t(context, 'phone')),
                             Container(
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 16, vertical: 14),
@@ -314,7 +246,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               ),
                             ),
                             const SizedBox(height: 20),
-                            _sectionLabel(_t(code, 'role')),
+                            _sectionLabel(_t(context, 'role')),
                             Container(
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 16, vertical: 14),
@@ -336,7 +268,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   ),
                                   const SizedBox(width: 8),
                                   Text(
-                                    _roleLabel(code, _role),
+                                    _roleLabel(context, _role),
                                     style: const TextStyle(
                                         color: V26.ink500),
                                   ),
@@ -344,7 +276,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               ),
                             ),
                             const SizedBox(height: 20),
-                            _sectionLabel(_t(code, 'language')),
+                            _sectionLabel(_t(context, 'language')),
                             Container(
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 16, vertical: 14),
@@ -367,7 +299,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             onPressed: () => Navigator.pushNamed(context, '/files_vault'),
                             icon: const Icon(Icons.folder_special_outlined, size: 16),
                             label: Text(
-                              code == 'he' ? 'כספת קבצים' : code == 'ru' ? 'Хранилище' : 'File Vault',
+                              l10n.citizenToolVault,
                               style: const TextStyle(fontSize: 13),
                             ),
                             style: OutlinedButton.styleFrom(
@@ -382,7 +314,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             onPressed: () => Navigator.pushNamed(context, '/settings'),
                             icon: const Icon(Icons.settings_outlined, size: 16),
                             label: Text(
-                              code == 'he' ? 'הגדרות' : code == 'ru' ? 'Настройки' : 'Settings',
+                              l10n.citizenShellNavSettings,
                               style: const TextStyle(fontSize: 13),
                             ),
                             style: OutlinedButton.styleFrom(
@@ -401,7 +333,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   child: CircularProgressIndicator(
                                       strokeWidth: 2, color: Color(0xFF041018)))
                               : const Icon(Icons.check_rounded, size: 18, color: Color(0xFF041018)),
-                          label: Text(_t(code, 'save'),
+                          label: Text(_t(context, 'save'),
                             style: const TextStyle(color: Color(0xFF041018)),
                           ),
                           style: FilledButton.styleFrom(
@@ -417,7 +349,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         OutlinedButton.icon(
                           onPressed: () => AuthService().logout(context),
                           icon: const Icon(Icons.logout_rounded, size: 18),
-                          label: Text(_t(code, 'logout')),
+                          label: Text(_t(context, 'logout')),
                           style: OutlinedButton.styleFrom(
                             foregroundColor: V26.emerg,
                             side: BorderSide(
@@ -434,26 +366,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  String _roleLabel(String code, String? role) {
+  String _roleLabel(BuildContext context, String? role) {
+    final l = AppLocalizations.of(context)!;
     switch (role) {
       case 'lawyer':
-        return switch (AppLanguage.normalize(code)) {
-          'en' => 'Lawyer',
-          'ru' => 'Адвокат',
-          _ => 'עורך דין',
-        };
+        return l.landingRoleLawyer;
       case 'admin':
-        return switch (AppLanguage.normalize(code)) {
-          'en' => 'Admin',
-          'ru' => 'Администратор',
-          _ => 'מנהל מערכת',
-        };
+        return l.landingRoleAdmin;
       default:
-        return switch (AppLanguage.normalize(code)) {
-          'en' => 'User',
-          'ru' => 'Пользователь',
-          _ => 'משתמש',
-        };
+        return l.landingRoleUser;
     }
   }
 
@@ -475,10 +396,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   // ── Hero: avatar + name + 3 V26Badge chips (Premium · Since 2025 · Verified)
-  Widget _buildHero(String code) {
+  Widget _buildHero() {
     final name = _nameCtrl.text.isNotEmpty
         ? _nameCtrl.text
-        : (_phone ?? _roleLabel(code, _role));
+        : (_phone ?? _roleLabel(context, _role));
     final avatarInitial =
         _nameCtrl.text.isNotEmpty ? _nameCtrl.text[0].toUpperCase() : '?';
     return V26Card(
@@ -499,7 +420,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
           const SizedBox(height: 4),
           Text(
-            _roleLabel(code, _role),
+            _roleLabel(context, _role),
             style: const TextStyle(
               fontFamily: V26.sans,
               fontSize: 13,
@@ -512,9 +433,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
             runSpacing: 8,
             alignment: WrapAlignment.center,
             children: [
-              V26Badge(_t(code, 'badgePremium'), tone: V26BadgeTone.gold),
-              V26Badge(_t(code, 'badgeSince'), tone: V26BadgeTone.neutral),
-              V26Badge(_t(code, 'badgeVerified'), tone: V26BadgeTone.ok),
+              V26Badge(_t(context, 'badgePremium'), tone: V26BadgeTone.gold),
+              V26Badge(_t(context, 'badgeSince'), tone: V26BadgeTone.neutral),
+              V26Badge(_t(context, 'badgeVerified'), tone: V26BadgeTone.ok),
             ],
           ),
         ],
@@ -523,7 +444,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   // ── Stats strip: 3 numbers (cases · files · days) ──
-  Widget _buildStatsStrip(String code) {
+  Widget _buildStatsStrip() {
     Widget cell(String num, String label) => Expanded(
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -556,18 +477,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 18),
       child: Row(
         children: [
-          cell('0', _t(code, 'statCases')),
+          cell('0', _t(context, 'statCases')),
           Container(width: 1, height: 32, color: V26.hairline),
-          cell('0', _t(code, 'statFiles')),
+          cell('0', _t(context, 'statFiles')),
           Container(width: 1, height: 32, color: V26.hairline),
-          cell('—', _t(code, 'statDays')),
+          cell('—', _t(context, 'statDays')),
         ],
       ),
     );
   }
 
   // ── Subscription block: admins → console; everyone else → app settings ──
-  Widget _buildSubscriptionBlock(String code) {
+  Widget _buildSubscriptionBlock() {
     return V26Card(
       padding: const EdgeInsets.all(18),
       child: Column(
@@ -579,7 +500,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   color: V26.gold, size: 20),
               const SizedBox(width: 8),
               Text(
-                _t(code, 'subscriptionTitle'),
+                _t(context, 'subscriptionTitle'),
                 style: const TextStyle(
                   fontFamily: V26.serif,
                   fontSize: 15,
@@ -591,7 +512,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
           const SizedBox(height: 8),
           Text(
-            _t(code, 'subscriptionBody'),
+            _t(context, 'subscriptionBody'),
             style: const TextStyle(
               fontFamily: V26.sans,
               fontSize: 13,
@@ -603,7 +524,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           Align(
             alignment: AlignmentDirectional.centerStart,
             child: V26CTA(
-              _t(code, 'subscriptionCta'),
+              _t(context, 'subscriptionCta'),
               onPressed: () {
                 if (_role == 'admin') {
                   Navigator.pushNamed(context, '/admin_subscriptions');

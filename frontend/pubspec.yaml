@@ -90,10 +90,12 @@ dev_dependencies:
 #  Flutter config
 # ══════════════════════════════════════════════════════════════
 flutter:
+  generate: true
   uses-material-design: true
 
   assets:
     - assets/fonts/
+    - assets/l10n/scenarios_bundle.json
 
   fonts:
     - family: Heebo

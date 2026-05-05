@@ -26,7 +26,9 @@ import 'package:provider/provider.dart';
 import '../../core/i18n/app_language.dart';
 import '../../core/theme/veto_2026.dart';
 import '../../core/theme/veto_mockup_tokens.dart';
+import '../../l10n/app_localizations.dart';
 import '../../widgets/app_language_menu.dart';
+import 'admin_l10n_lookups.dart';
 
 /// Admin section identity — one entry per navigable admin route.
 enum AdminSection {
@@ -62,73 +64,6 @@ const Map<AdminSection, String> _sectionRoutes = {
   AdminSection.subscriptions: '/admin_subscriptions',
   AdminSection.settings: '/admin_settings',
 };
-
-// ────────────────────────────────────────────────────────────
-//  i18n — only strings that live inside the shell itself.
-// ────────────────────────────────────────────────────────────
-String _shellStr(String code, String key) {
-  const he = {
-    'panel': 'פאנל ניהול',
-    'admin_group': 'ניהול',
-    'system_group': 'מערכת',
-    'dashboard': 'לוח בקרה',
-    'users': 'משתמשים',
-    'lawyers': 'עורכי דין',
-    'pending': 'ממתינים לאישור',
-    'logs': 'יומני חירום',
-    'subscriptions': 'מנויים',
-    'settings': 'הגדרות',
-    'search_hint': 'חיפוש גלובלי...',
-    'refresh': 'רענן',
-    'admin': 'מנהל',
-    'env_production': 'Production',
-    'env_staging': 'Staging',
-    'notifications': 'התראות',
-  };
-  const en = {
-    'panel': 'Admin Panel',
-    'admin_group': 'ADMIN',
-    'system_group': 'SYSTEM',
-    'dashboard': 'Dashboard',
-    'users': 'Users',
-    'lawyers': 'Lawyers',
-    'pending': 'Pending',
-    'logs': 'Emergency Logs',
-    'subscriptions': 'Subscriptions',
-    'settings': 'Settings',
-    'search_hint': 'Search everywhere...',
-    'refresh': 'Refresh',
-    'admin': 'Admin',
-    'env_production': 'Production',
-    'env_staging': 'Staging',
-    'notifications': 'Notifications',
-  };
-  const ru = {
-    'panel': 'Панель администратора',
-    'admin_group': 'АДМИН',
-    'system_group': 'СИСТЕМА',
-    'dashboard': 'Панель',
-    'users': 'Пользователи',
-    'lawyers': 'Адвокаты',
-    'pending': 'Ожидают',
-    'logs': 'Журналы',
-    'subscriptions': 'Подписки',
-    'settings': 'Настройки',
-    'search_hint': 'Поиск...',
-    'refresh': 'Обновить',
-    'admin': 'Администратор',
-    'env_production': 'Production',
-    'env_staging': 'Staging',
-    'notifications': 'Уведомления',
-  };
-  final normalized = AppLanguage.normalize(code);
-  final map = switch (normalized) {
-    AppLanguage.english => en,
-    AppLanguage.russian => ru,
-    _ => he,
-  };
-  return map[key] ?? he[key] ?? key;
-}
 
 /// AdminShell — wraps an admin screen body in the unified VETO 2026 chrome.
 ///
@@ -178,11 +113,12 @@ class AdminShell extends StatelessWidget {
     final code = context.watch<AppLanguageController>().code;
     final isRtl = AppLanguage.directionOf(code) == TextDirection.rtl;
     final isDesktop = context.isDesktop;
+    final l10n = AppLocalizations.of(context)!;
 
     final combinedActions = <Widget>[
       if (onRefresh != null)
         IconButton(
-          tooltip: _shellStr(code, 'refresh'),
+          tooltip: admShellT(l10n, 'refresh'),
           icon: const Icon(Icons.refresh_rounded, color: V26.ink700),
           onPressed: onRefresh,
         ),
@@ -243,7 +179,7 @@ class AdminShell extends StatelessWidget {
     return VetoScaffold(
       backdrop: false,
       background: VetoMockup.pageBackground,
-      sidebar: _buildSidebar(context, code, isRtl),
+      sidebar: _buildSidebar(context, l10n, code, isRtl),
       desktopTopBar: _AdminTopBar(
         title: title,
         code: code,
@@ -254,8 +190,13 @@ class AdminShell extends StatelessWidget {
     );
   }
 
-  V26Sidebar _buildSidebar(BuildContext context, String code, bool isRtl) {
-    final panelLabel = _shellStr(code, 'panel');
+  V26Sidebar _buildSidebar(
+    BuildContext context,
+    AppLocalizations l10n,
+    String code,
+    bool isRtl,
+  ) {
+    final panelLabel = admShellT(l10n, 'panel');
     return V26Sidebar(
       width: _sidebarWidth,
       useMockupTokens: true,
@@ -296,27 +237,27 @@ class AdminShell extends StatelessWidget {
       ),
       groups: [
         V26SidebarGroup(
-          title: _shellStr(code, 'admin_group'),
+          title: admShellT(l10n, 'admin_group'),
           items: [
             _navItem(context, AdminSection.dashboard, Icons.home_rounded,
-                _shellStr(code, 'dashboard')),
+                admShellT(l10n, 'dashboard')),
             _navItem(context, AdminSection.users, Icons.people_alt_rounded,
-                _shellStr(code, 'users')),
+                admShellT(l10n, 'users')),
             _navItem(context, AdminSection.lawyers, Icons.balance_rounded,
-                _shellStr(code, 'lawyers')),
+                admShellT(l10n, 'lawyers')),
             _navItem(context, AdminSection.pending,
-                Icons.pending_actions_rounded, _shellStr(code, 'pending')),
+                Icons.pending_actions_rounded, admShellT(l10n, 'pending')),
             _navItem(context, AdminSection.logs, Icons.warning_amber_rounded,
-                _shellStr(code, 'logs')),
+                admShellT(l10n, 'logs')),
           ],
         ),
         V26SidebarGroup(
-          title: _shellStr(code, 'system_group'),
+          title: admShellT(l10n, 'system_group'),
           items: [
             _navItem(context, AdminSection.subscriptions,
-                Icons.credit_card_rounded, _shellStr(code, 'subscriptions')),
+                Icons.credit_card_rounded, admShellT(l10n, 'subscriptions')),
             _navItem(context, AdminSection.settings, Icons.settings_rounded,
-                _shellStr(code, 'settings')),
+                admShellT(l10n, 'settings')),
           ],
         ),
       ],
@@ -358,6 +299,7 @@ class _AdminTopBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
       decoration: const BoxDecoration(
@@ -382,7 +324,7 @@ class _AdminTopBar extends StatelessWidget {
               child: TextField(
                 style: const TextStyle(fontFamily: V26.sans, fontSize: 13),
                 decoration: InputDecoration(
-                  hintText: _shellStr(code, 'search_hint'),
+                  hintText: admShellT(l10n, 'search_hint'),
                   hintStyle: const TextStyle(
                       color: VetoMockup.inkSecondary,
                       fontFamily: V26.sans,
@@ -416,7 +358,7 @@ class _AdminTopBar extends StatelessWidget {
           const SizedBox(width: 12),
           Builder(
             builder: (innerCtx) => IconButton(
-              tooltip: _shellStr(code, 'notifications'),
+              tooltip: admShellT(l10n, 'notifications'),
               icon: const Icon(Icons.notifications_outlined,
                   color: VetoMockup.primaryCta),
               onPressed: () => Navigator.of(innerCtx)
@@ -427,7 +369,7 @@ class _AdminTopBar extends StatelessWidget {
           ...actions,
           const SizedBox(width: 8),
           Tooltip(
-            message: _shellStr(code, 'admin'),
+            message: admShellT(l10n, 'admin'),
             child: const V26Avatar('A', size: V26AvatarSize.sm),
           ),
         ],
@@ -447,7 +389,8 @@ class _EnvSelector extends StatelessWidget {
     return ValueListenableBuilder<AdminEnv>(
       valueListenable: adminEnvNotifier,
       builder: (context, env, _) {
-        final code = context.watch<AppLanguageController>().code;
+        context.watch<AppLanguageController>();
+        final l10n = AppLocalizations.of(context)!;
         final isProduction = env == AdminEnv.production;
         final dotColor =
             isProduction ? const Color(0xFF22C55E) : const Color(0xFFF59E0B);
@@ -475,17 +418,17 @@ class _EnvSelector extends StatelessWidget {
                 DropdownMenuItem(
                   value: AdminEnv.production,
                   child: _envRow(
-                      const Color(0xFF22C55E), _shellStr(code, 'env_production')),
+                      const Color(0xFF22C55E), admShellT(l10n, 'env_production')),
                 ),
                 DropdownMenuItem(
                   value: AdminEnv.staging,
                   child: _envRow(
-                      const Color(0xFFF59E0B), _shellStr(code, 'env_staging')),
+                      const Color(0xFFF59E0B), admShellT(l10n, 'env_staging')),
                 ),
               ],
               selectedItemBuilder: (_) => [
-                _envRow(dotColor, _shellStr(code, 'env_production')),
-                _envRow(dotColor, _shellStr(code, 'env_staging')),
+                _envRow(dotColor, admShellT(l10n, 'env_production')),
+                _envRow(dotColor, admShellT(l10n, 'env_staging')),
               ],
               onChanged: (v) {
                 if (v != null) adminEnvNotifier.value = v;

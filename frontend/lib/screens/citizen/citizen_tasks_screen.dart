@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/i18n/app_language.dart';
+import '../../l10n/app_localizations.dart';
 import '../../services/citizen_dashboard_api_service.dart';
 import '../../widgets/citizen_mockup_shell.dart';
 import '../../widgets/veto_dialogs.dart';
@@ -41,25 +42,33 @@ class _CitizenTasksScreenState extends State<CitizenTasksScreen> {
 
   Future<void> _add() async {
     final title = TextEditingController();
-    final code = context.read<AppLanguageController>().code;
-    final he = code == 'he';
+    final l10n = AppLocalizations.of(context)!;
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text(he ? 'משימה חדשה' : 'New task'),
-        content: TextField(controller: title, decoration: InputDecoration(labelText: he ? 'כותרת' : 'Title')),
+        title: Text(l10n.citizenTaskNewTitle),
+        content: TextField(
+            controller: title,
+            decoration: InputDecoration(labelText: l10n.citizenTaskFieldTitle)),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(he ? 'ביטול' : 'Cancel')),
-          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: Text(he ? 'שמירה' : 'Save')),
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: Text(l10n.commonCancel)),
+          FilledButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: Text(l10n.commonSave)),
         ],
       ),
     );
     if (ok != true || !mounted || title.text.trim().isEmpty) return;
     try {
-      await CitizenDashboardApiService.instance.createTask({'title': title.text.trim(), 'status': 'open'});
+      await CitizenDashboardApiService.instance
+          .createTask({'title': title.text.trim(), 'status': 'open'});
       await _load();
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
+      }
     }
   }
 
@@ -70,17 +79,18 @@ class _CitizenTasksScreenState extends State<CitizenTasksScreen> {
       await CitizenDashboardApiService.instance.updateTask(id, {'status': st});
       await _load();
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
+      }
     }
   }
 
   Future<void> _delete(String id) async {
-    final code = context.read<AppLanguageController>().code;
-    final he = code == 'he';
+    final l10n = AppLocalizations.of(context)!;
     final ok = await showVetoConfirmDialog<bool>(
       context: context,
-      title: he ? 'מחיקה' : 'Delete',
-      message: he ? 'למחוק משימה?' : 'Delete task?',
+      title: l10n.commonDelete,
+      message: l10n.citizenDeleteTaskBody,
       danger: true,
     );
     if (ok != true) return;
@@ -88,14 +98,16 @@ class _CitizenTasksScreenState extends State<CitizenTasksScreen> {
       await CitizenDashboardApiService.instance.deleteTask(id);
       await _load();
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final code = context.watch<AppLanguageController>().code;
-    final he = code == 'he';
+    context.watch<AppLanguageController>();
+    final l10n = AppLocalizations.of(context)!;
     return CitizenMockupShell(
       currentRoute: '/citizen_tasks',
       mobileNavIndex: citizenMobileNavIndexForRoute('/citizen_tasks'),
@@ -105,14 +117,21 @@ class _CitizenTasksScreenState extends State<CitizenTasksScreen> {
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
             child: Row(
               children: [
-                Text(he ? 'משימות' : 'Tasks', style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800)),
+                Text(l10n.citizenShellNavTasks,
+                    style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800)),
                 const Spacer(),
-                FilledButton.icon(onPressed: _add, icon: const Icon(Icons.add), label: Text(he ? 'חדש' : 'New')),
+                FilledButton.icon(
+                    onPressed: _add,
+                    icon: const Icon(Icons.add),
+                    label: Text(l10n.citizenBtnNew)),
               ],
             ),
           ),
           if (_loading) const LinearProgressIndicator(),
-          if (_err != null) Padding(padding: const EdgeInsets.all(16), child: Text(_err!, style: const TextStyle(color: Colors.red))),
+          if (_err != null)
+            Padding(
+                padding: const EdgeInsets.all(16),
+                child: Text(_err!, style: const TextStyle(color: Colors.red))),
           Expanded(
             child: ListView.builder(
               padding: const EdgeInsets.all(16),
@@ -126,8 +145,14 @@ class _CitizenTasksScreenState extends State<CitizenTasksScreen> {
                   margin: const EdgeInsets.only(bottom: 10),
                   child: ListTile(
                     leading: Checkbox(value: done, onChanged: (_) => _toggleDone(m)),
-                    title: Text(title, style: TextStyle(fontWeight: FontWeight.w700, decoration: done ? TextDecoration.lineThrough : null)),
-                    trailing: IconButton(icon: const Icon(Icons.delete_outline), onPressed: () => _delete(id)),
+                    title: Text(title,
+                        style: TextStyle(
+                            fontWeight: FontWeight.w700,
+                            decoration:
+                                done ? TextDecoration.lineThrough : null)),
+                    trailing: IconButton(
+                        icon: const Icon(Icons.delete_outline),
+                        onPressed: () => _delete(id)),
                   ),
                 );
               },
