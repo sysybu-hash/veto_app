@@ -6,8 +6,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/i18n/app_language.dart';
-import '../../core/theme/veto_2026.dart';
-import '../../core/theme/veto_mockup_tokens.dart';
 import '../../services/citizen_dashboard_api_service.dart';
 import '../../widgets/citizen_mockup_shell.dart';
 import '../../widgets/veto_dialogs.dart';
