@@ -1,0 +1,11 @@
+{"sessionId":"4cc158","runId":"pre-fix","hypothesisId":"BOOT","location":"frontend/web/index.html:dbg","message":"page_boot","data":{"href":"https://web-nine-gamma-76.vercel.app/","ua":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36","ts":1777379468953},"timestamp":1777379468953}
+{"sessionId":"4cc158","runId":"pre-fix","hypothesisId":"BOOT","location":"frontend/web/index.html:dbg","message":"longtask_observer_on","data":{},"timestamp":1777379468953}
+{"sessionId":"4cc158","runId":"pre-fix","hypothesisId":"HB","location":"frontend/web/index.html:dbg","message":"heartbeat","data":{"n":2,"vis":"visible"},"timestamp":1777379472963}
+{"sessionId":"4cc158","runId":"pre-fix","hypothesisId":"HB","location":"frontend/web/index.html:dbg","message":"heartbeat","data":{"n":1,"vis":"visible"},"timestamp":1777379471031}
+{"sessionId":"4cc158","runId":"pre-fix","hypothesisId":"HB","location":"frontend/web/index.html:dbg","message":"heartbeat","data":{"n":3,"vis":"visible"},"timestamp":1777379474955}
+{"sessionId":"4cc158","runId":"pre-fix","hypothesisId":"HB","location":"frontend/web/index.html:dbg","message":"heartbeat","data":{"n":4,"vis":"visible"},"timestamp":1777379476964}
+{"sessionId":"4cc158","runId":"pre-fix","hypothesisId":"HB","location":"frontend/web/index.html:dbg","message":"heartbeat","data":{"n":5,"vis":"visible"},"timestamp":1777379478956}
+{"sessionId":"4cc158","runId":"pre-fix","hypothesisId":"HB","location":"frontend/web/index.html:dbg","message":"heartbeat","data":{"n":6,"vis":"visible"},"timestamp":1777379480955}
+{"sessionId":"4cc158","runId":"pre-fix","hypothesisId":"HB","location":"frontend/web/index.html:dbg","message":"heartbeat","data":{"n":7,"vis":"visible"},"timestamp":1777379483037}
+{"sessionId":"4cc158","runId":"pre-fix","hypothesisId":"HB","location":"frontend/web/index.html:dbg","message":"heartbeat","data":{"n":8,"vis":"visible"},"timestamp":1777379484955}
+{"sessionId":"4cc158","runId":"pre-fix","hypothesisId":"HB","location":"frontend/web/index.html:dbg","message":"heartbeat","data":{"n":9,"vis":"visible"},"timestamp":1777379486961}
