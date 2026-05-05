@@ -13,7 +13,10 @@ import 'package:provider/provider.dart';
 import '../config/app_config.dart';
 import '../core/i18n/app_language.dart';
 import '../core/theme/veto_2026.dart';
+import '../core/theme/veto_mockup_tokens.dart';
 import '../services/auth_service.dart';
+import '../widgets/app_language_menu.dart';
+import '../widgets/citizen_mockup_shell.dart';
 
 // ── i18n ──────────────────────────────────────────────────────
 const _i18n = {
@@ -511,6 +514,107 @@ class _SettingsScreenState extends State<SettingsScreen>
     final isWide =
         MediaQuery.sizeOf(context).width >= V26AppShell.desktopBreakpoint;
 
+    final wizardTabBar = TabBar(
+      controller: _wizardTab,
+      indicatorColor: VetoMockup.primaryCta,
+      labelColor: VetoMockup.ink,
+      unselectedLabelColor: VetoMockup.inkSecondary,
+      labelStyle: const TextStyle(
+        fontFamily: V26.sans,
+        fontWeight: FontWeight.w700,
+        fontSize: 12,
+      ),
+      isScrollable: true,
+      tabs: [
+        Tab(text: _t(code, 'wiz1Title')),
+        Tab(text: _t(code, 'wiz3Title')),
+        Tab(text: _t(code, 'wiz5Title')),
+      ],
+    );
+
+    if (_role == 'user' && !_loading) {
+      final shellBody = V26Backdrop(
+        child: isWide
+            ? Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Material(
+                    color: VetoMockup.surfaceCard,
+                    child: wizardTabBar,
+                  ),
+                  const Divider(height: 1, color: VetoMockup.hairline),
+                  Expanded(child: _settingsWizardTabs(code, isRtl)),
+                ],
+              )
+            : _settingsWizardTabs(code, isRtl),
+      );
+      return Directionality(
+        textDirection: isRtl ? TextDirection.rtl : TextDirection.ltr,
+        child: CitizenMockupShell(
+          currentRoute: '/settings',
+          mobileNavIndex: citizenMobileNavIndexForRoute('/settings'),
+          desktopTrailing: [
+            Padding(
+              padding: const EdgeInsetsDirectional.only(end: 8),
+              child: V26PillCTA(
+                label: _t(code, 'save'),
+                icon: Icons.check,
+                onTap: _saving ? null : () => _save(code),
+              ),
+            ),
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 12),
+              child: Center(child: AppLanguageMenu(compact: true)),
+            ),
+          ],
+          mobileAppBar: !isWide
+              ? AppBar(
+                  backgroundColor: VetoMockup.surfaceCard,
+                  elevation: 0,
+                  shadowColor: Colors.transparent,
+                  surfaceTintColor: Colors.transparent,
+                  leading: IconButton(
+                    icon: const Icon(Icons.arrow_back_ios_new_rounded,
+                        color: VetoMockup.ink, size: 20),
+                    onPressed: () => Navigator.of(context).pop(),
+                  ),
+                  title: Text(
+                    _t(code, 'title'),
+                    style: const TextStyle(
+                      fontFamily: V26.serif,
+                      color: VetoMockup.ink,
+                      fontWeight: FontWeight.w800,
+                      fontSize: 18,
+                      letterSpacing: -0.2,
+                    ),
+                  ),
+                  centerTitle: true,
+                  actions: [
+                    Padding(
+                      padding: const EdgeInsetsDirectional.only(end: 8),
+                      child: Center(
+                        child: V26CTA(
+                          _t(code, 'save'),
+                          onPressed: _saving ? null : () => _save(code),
+                          loading: _saving,
+                        ),
+                      ),
+                    ),
+                  ],
+                  bottom: PreferredSize(
+                    preferredSize: wizardTabBar.preferredSize,
+                    child: Material(
+                      color: VetoMockup.surfaceCard,
+                      child: wizardTabBar,
+                    ),
+                  ),
+                )
+              : null,
+          child: shellBody,
+        ),
+      );
+    }
+
     return Directionality(
       textDirection: isRtl ? TextDirection.rtl : TextDirection.ltr,
       child: Scaffold(
@@ -585,7 +689,14 @@ class _SettingsScreenState extends State<SettingsScreen>
         body: V26Backdrop(
           child: _loading
               ? const Center(child: CircularProgressIndicator(color: V26.navy600))
-              : TabBarView(
+              : _settingsWizardTabs(code, isRtl),
+        ),
+      ),
+    );
+  }
+
+  Widget _settingsWizardTabs(String code, bool isRtl) {
+    return TabBarView(
                 controller: _wizardTab,
                 children: [
                   SingleChildScrollView(
@@ -951,10 +1062,7 @@ class _SettingsScreenState extends State<SettingsScreen>
                   ),
                 ),
                 ],
-              ),
-        ),
-      ),
-    );
+              );
   }
 }
 

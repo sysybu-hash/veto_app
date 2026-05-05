@@ -12,7 +12,10 @@ import 'package:provider/provider.dart';
 import '../config/app_config.dart';
 import '../core/i18n/app_language.dart';
 import '../core/theme/veto_2026.dart';
+import '../core/theme/veto_mockup_tokens.dart';
 import '../services/auth_service.dart';
+import '../widgets/app_language_menu.dart';
+import '../widgets/citizen_mockup_shell.dart';
 
 // ── i18n ──────────────────────────────────────────────────────
 const _i18n = {
@@ -137,6 +140,7 @@ class ChatScreen extends StatefulWidget {
 
 class _ChatScreenState extends State<ChatScreen> {
   final AuthService _auth = AuthService();
+  late final Future<String?> _citizenChromeFuture = _auth.getStoredRole();
 
   List<_Conversation> _conversations = [];
   bool _loadingConvs = true;
@@ -469,46 +473,115 @@ class _ChatScreenState extends State<ChatScreen> {
     final isWideTop =
         MediaQuery.sizeOf(context).width >= V26AppShell.desktopBreakpoint;
 
-    // Desktop: use 2026 pill-nav app shell and split-view below.
-    if (isWideTop) {
-      return Directionality(
-        textDirection: isRtl ? TextDirection.rtl : TextDirection.ltr,
-        child: V26AppShell(
-          destinations: V26CitizenNav.destinations(code),
-          currentIndex: 1, // צ'אט AI
-          onDestinationSelected: (i) {
-            V26CitizenNav.go(context, V26CitizenNav.routes[i],
-                current: '/chat');
-          },
-          desktopStatusText: isRtl
-              ? 'שיחות פעילות · מוצפן E2E'
-              : 'Active conversations · E2E encrypted',
-          child: Row(
-            children: [
-              SizedBox(width: 340, child: _buildConversationList()),
-              const VerticalDivider(width: 1, color: V26.hairline),
-              Expanded(
-                child: _activePartnerId == null
-                    ? _buildEmptyThread()
-                    : _buildThread(),
-              ),
-            ],
-          ),
+    final wideShellChild = Row(
+      children: [
+        SizedBox(width: 340, child: _buildConversationList()),
+        const VerticalDivider(width: 1, color: V26.hairline),
+        Expanded(
+          child: _activePartnerId == null
+              ? _buildEmptyThread()
+              : _buildThread(),
         ),
-      );
-    }
+      ],
+    );
 
-    // Narrow: legacy layout (thread or conversation list).
-    return Directionality(
-      textDirection: isRtl ? TextDirection.rtl : TextDirection.ltr,
-      child: Scaffold(
-        backgroundColor: V26.paper,
-        body: V26Backdrop(
-          child: _activePartnerId != null
+    return FutureBuilder<String?>(
+      future: _citizenChromeFuture,
+      builder: (context, snap) {
+        final citizen = snap.data == 'user';
+        if (citizen) {
+          final narrowChild = _activePartnerId != null
               ? _buildThread(showBackButton: true)
-              : _buildConversationList(showAppBar: true),
-        ),
-      ),
+              : Scaffold(
+                  backgroundColor: V26.paper,
+                  body: V26Backdrop(
+                    child: _buildConversationList(showAppBar: false),
+                  ),
+                );
+          return Directionality(
+            textDirection: isRtl ? TextDirection.rtl : TextDirection.ltr,
+            child: CitizenMockupShell(
+              currentRoute: '/chat',
+              mobileNavIndex: citizenMobileNavIndexForRoute('/chat'),
+              desktopTrailing: const [
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 12),
+                  child: Center(child: AppLanguageMenu(compact: true)),
+                ),
+              ],
+              mobileAppBar: (!isWideTop && _activePartnerId == null)
+                  ? AppBar(
+                      backgroundColor: VetoMockup.surfaceCard,
+                      elevation: 0,
+                      shadowColor: Colors.transparent,
+                      surfaceTintColor: Colors.transparent,
+                      leading: IconButton(
+                        icon: const Icon(Icons.arrow_back_ios_new_rounded,
+                            color: VetoMockup.ink, size: 20),
+                        onPressed: () => Navigator.of(context).maybePop(),
+                      ),
+                      title: Text(
+                        _t('title'),
+                        style: const TextStyle(
+                          fontFamily: V26.serif,
+                          color: VetoMockup.ink,
+                          fontWeight: FontWeight.w800,
+                          fontSize: 18,
+                          letterSpacing: -0.2,
+                        ),
+                      ),
+                      centerTitle: true,
+                      actions: [
+                        IconButton(
+                          icon: const Icon(Icons.edit_outlined,
+                              color: VetoMockup.primaryCta),
+                          onPressed: _showNewChatPicker,
+                          tooltip: _t('newChat'),
+                        ),
+                      ],
+                      bottom: const PreferredSize(
+                        preferredSize: Size.fromHeight(1),
+                        child: Divider(height: 1, color: VetoMockup.hairline),
+                      ),
+                    )
+                  : null,
+              child: isWideTop ? wideShellChild : narrowChild,
+            ),
+          );
+        }
+
+        // Desktop: use 2026 pill-nav app shell and split-view below.
+        if (isWideTop) {
+          return Directionality(
+            textDirection: isRtl ? TextDirection.rtl : TextDirection.ltr,
+            child: V26AppShell(
+              destinations: V26CitizenNav.destinations(code),
+              currentIndex: 1, // צ'אט AI
+              onDestinationSelected: (i) {
+                V26CitizenNav.go(context, V26CitizenNav.routes[i],
+                    current: '/chat');
+              },
+              desktopStatusText: isRtl
+                  ? 'שיחות פעילות · מוצפן E2E'
+                  : 'Active conversations · E2E encrypted',
+              child: wideShellChild,
+            ),
+          );
+        }
+
+        // Narrow: legacy layout (thread or conversation list).
+        return Directionality(
+          textDirection: isRtl ? TextDirection.rtl : TextDirection.ltr,
+          child: Scaffold(
+            backgroundColor: V26.paper,
+            body: V26Backdrop(
+              child: _activePartnerId != null
+                  ? _buildThread(showBackButton: true)
+                  : _buildConversationList(showAppBar: true),
+            ),
+          ),
+        );
+      },
     );
   }
 

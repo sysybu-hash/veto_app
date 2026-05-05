@@ -4,7 +4,9 @@ import 'package:provider/provider.dart';
 
 import '../core/i18n/app_language.dart';
 import '../core/theme/veto_2026.dart';
+import '../core/theme/veto_mockup_tokens.dart';
 import '../services/auth_service.dart';
+import '../widgets/citizen_mockup_shell.dart';
 import '../widgets/app_language_menu.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -161,6 +163,58 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final isWide =
         MediaQuery.sizeOf(context).width >= V26AppShell.desktopBreakpoint;
 
+    final body = _loading
+        ? const Center(
+            child: CircularProgressIndicator(color: V26.navy600))
+        : _profileScrollBody(code);
+
+    if (_role == 'user' && !_loading) {
+      return Directionality(
+        textDirection: AppLanguage.directionOf(code),
+        child: CitizenMockupShell(
+          currentRoute: '/profile',
+          mobileNavIndex: citizenMobileNavIndexForRoute('/profile'),
+          desktopTrailing: const [
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 12),
+              child: Center(child: AppLanguageMenu(compact: true)),
+            ),
+          ],
+          mobileAppBar: AppBar(
+            backgroundColor: VetoMockup.surfaceCard,
+            elevation: 0,
+            shadowColor: Colors.transparent,
+            surfaceTintColor: Colors.transparent,
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back_ios_new_rounded,
+                  color: VetoMockup.ink, size: 20),
+              onPressed: () => Navigator.of(context).maybePop(),
+            ),
+            title: Text(
+              _t(code, 'title'),
+              style: const TextStyle(
+                  color: VetoMockup.ink,
+                  fontFamily: V26.serif,
+                  fontWeight: FontWeight.w800,
+                  fontSize: 18),
+            ),
+            centerTitle: true,
+            actions: const [
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 12),
+                child: Center(child: AppLanguageMenu(compact: true)),
+              ),
+            ],
+            bottom: const PreferredSize(
+              preferredSize: Size.fromHeight(1),
+              child: Divider(height: 1, color: VetoMockup.hairline),
+            ),
+          ),
+          child: body,
+        ),
+      );
+    }
+
     return Directionality(
       textDirection: AppLanguage.directionOf(code),
       child: V26AppShell(
@@ -211,11 +265,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
             child: Divider(height: 1, color: V26.hairline),
           ),
         ),
-        child: _loading
-            ? const Center(
-                child: CircularProgressIndicator(
-                    color: V26.navy600))
-            : SingleChildScrollView(
+        child: body,
+      ),
+    );
+  }
+
+  Widget _profileScrollBody(String code) {
+    return SingleChildScrollView(
                 padding: const EdgeInsets.all(24),
                 child: Center(
                   child: ConstrainedBox(
@@ -375,8 +431,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                   ),
                 ),
-              ),
-      ),
     );
   }
 

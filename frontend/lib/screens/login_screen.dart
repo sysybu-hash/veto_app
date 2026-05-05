@@ -14,6 +14,7 @@ import 'package:provider/provider.dart';
 
 import '../core/i18n/app_language.dart';
 import '../core/theme/veto_2026.dart';
+import '../core/theme/veto_mockup_tokens.dart';
 import '../core/theme/veto_2026_auth.dart';
 import '../platform/browser_bridge.dart' as browser_bridge;
 import '../services/auth_service.dart';
@@ -696,7 +697,7 @@ class _LoginScreenState extends State<LoginScreen> {
     return Directionality(
       textDirection: dir,
       child: Scaffold(
-        backgroundColor: V26.paper,
+        backgroundColor: VetoMockup.pageBackground,
         body: V26Backdrop(
           child: wide
               ? Row(

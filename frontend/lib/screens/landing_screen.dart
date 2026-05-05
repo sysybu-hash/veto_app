@@ -11,6 +11,7 @@ import 'package:provider/provider.dart';
 
 import '../core/i18n/app_language.dart';
 import '../core/theme/veto_2026.dart';
+import '../core/theme/veto_mockup_tokens.dart';
 import '../core/theme/veto_2026_splash.dart';
 import '../services/auth_service.dart';
 import '../widgets/app_language_menu.dart';
@@ -19,7 +20,7 @@ import '../widgets/ai_chat_dialog.dart';
 
 // ── Palette — 2026 Navy / Gold / Paper ─────────────────────────────
 class _C {
-  static const bg = V26.paper;
+  static const bg = VetoMockup.pageBackground;
   static const navBg = V26.surface;
   static const inkDark = V26.ink900;
   static const inkMid = V26.ink700;

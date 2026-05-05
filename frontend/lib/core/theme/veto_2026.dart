@@ -7,6 +7,8 @@
 
 import 'package:flutter/material.dart';
 
+import 'veto_mockup_tokens.dart';
+
 /// ════════════════════════════════════════════════════════════
 ///  V26 — Design tokens (colors, shadows, radii, spacing, type)
 ///  1:1 mirror of `_veto-2026.css` `:root` variables.
@@ -1160,6 +1162,8 @@ class V26Sidebar extends StatelessWidget {
   final Widget? footer;
   final double width;
   final String? activeLabel;
+  /// Burgundy active state + mockup card surface (lawyer dashboard parity).
+  final bool useMockupTokens;
 
   const V26Sidebar({
     super.key,
@@ -1168,6 +1172,7 @@ class V26Sidebar extends StatelessWidget {
     this.footer,
     this.width = 240,
     this.activeLabel,
+    this.useMockupTokens = false,
   });
 
   @override
@@ -1175,9 +1180,13 @@ class V26Sidebar extends StatelessWidget {
     return Container(
       width: width,
       padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 12),
-      decoration: const BoxDecoration(
-        color: V26.surface,
-        border: Border(right: BorderSide(color: V26.hairline)),
+      decoration: BoxDecoration(
+        color: useMockupTokens ? VetoMockup.surfaceCard : V26.surface,
+        border: Border(
+          right: BorderSide(
+            color: useMockupTokens ? VetoMockup.hairline : V26.hairline,
+          ),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1187,7 +1196,9 @@ class V26Sidebar extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(6, 6, 6, 18),
               child: header!,
             ),
-            Container(height: 1, color: V26.hairline),
+            Container(
+                height: 1,
+                color: useMockupTokens ? VetoMockup.hairline : V26.hairline),
             const SizedBox(height: 8),
           ],
           Expanded(
@@ -1200,11 +1211,13 @@ class V26Sidebar extends StatelessWidget {
                       padding: const EdgeInsets.fromLTRB(10, 14, 10, 6),
                       child: Text(
                         g.title!.toUpperCase(),
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontFamily: V26.sans,
                           fontSize: 10,
                           fontWeight: FontWeight.w800,
-                          color: V26.ink300,
+                          color: useMockupTokens
+                              ? VetoMockup.inkSecondary
+                              : V26.ink300,
                           letterSpacing: 1.8,
                         ),
                       ),
@@ -1212,6 +1225,7 @@ class V26Sidebar extends StatelessWidget {
                   for (final item in g.items)
                     _SidebarEntry(
                       item: item,
+                      useMockupTokens: useMockupTokens,
                       active: item.active ||
                           (activeLabel != null && activeLabel == item.label),
                     ),
@@ -1220,7 +1234,9 @@ class V26Sidebar extends StatelessWidget {
             ),
           ),
           if (footer != null) ...[
-            Container(height: 1, color: V26.hairline),
+            Container(
+                height: 1,
+                color: useMockupTokens ? VetoMockup.hairline : V26.hairline),
             Padding(
               padding: const EdgeInsets.all(10),
               child: footer!,
@@ -1235,10 +1251,22 @@ class V26Sidebar extends StatelessWidget {
 class _SidebarEntry extends StatelessWidget {
   final V26SidebarItem item;
   final bool active;
-  const _SidebarEntry({required this.item, required this.active});
+  final bool useMockupTokens;
+  const _SidebarEntry({
+    required this.item,
+    required this.active,
+    this.useMockupTokens = false,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final Color activeBg = useMockupTokens
+        ? VetoMockup.primaryCta.withValues(alpha: 0.08)
+        : V26.navy100;
+    final Color activeFg =
+        useMockupTokens ? VetoMockup.primaryCtaDeep : V26.navy700;
+    final Color idleFg =
+        useMockupTokens ? VetoMockup.ink : V26.ink700;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 1),
       child: Material(
@@ -1249,13 +1277,21 @@ class _SidebarEntry extends StatelessWidget {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
             decoration: BoxDecoration(
-              color: active ? V26.navy100 : Colors.transparent,
+              color: active ? activeBg : Colors.transparent,
               borderRadius: BorderRadius.circular(8),
+              border: useMockupTokens && active
+                  ? const Border(
+                      right: BorderSide(
+                        color: VetoMockup.primaryCta,
+                        width: 3,
+                      ),
+                    )
+                  : null,
             ),
             child: Row(
               children: [
                 Icon(item.icon,
-                    size: 16, color: active ? V26.navy700 : V26.ink700),
+                    size: 16, color: active ? activeFg : idleFg),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
@@ -1264,7 +1300,7 @@ class _SidebarEntry extends StatelessWidget {
                       fontFamily: V26.sans,
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
-                      color: active ? V26.navy700 : V26.ink700,
+                      color: active ? activeFg : idleFg,
                     ),
                   ),
                 ),
@@ -1273,7 +1309,11 @@ class _SidebarEntry extends StatelessWidget {
                     padding:
                         const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
                     decoration: BoxDecoration(
-                      color: active ? V26.navy200 : V26.paper2,
+                      color: useMockupTokens
+                          ? (active
+                              ? VetoMockup.primaryCta.withValues(alpha: 0.12)
+                              : VetoMockup.pageBackground)
+                          : (active ? V26.navy200 : V26.paper2),
                       borderRadius: BorderRadius.circular(V26.rPill),
                     ),
                     child: Text(
@@ -1282,7 +1322,11 @@ class _SidebarEntry extends StatelessWidget {
                         fontFamily: V26.sans,
                         fontSize: 10,
                         fontWeight: FontWeight.w700,
-                        color: active ? V26.navy700 : V26.ink300,
+                        color: useMockupTokens
+                            ? (active
+                                ? VetoMockup.primaryCtaDeep
+                                : VetoMockup.inkSecondary)
+                            : (active ? V26.navy700 : V26.ink300),
                       ),
                     ),
                   ),

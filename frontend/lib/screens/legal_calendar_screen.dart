@@ -14,7 +14,9 @@ import 'package:url_launcher/url_launcher.dart';
 import '../config/app_config.dart';
 import '../core/i18n/app_language.dart';
 import '../core/theme/veto_2026.dart';
+import '../core/theme/veto_mockup_tokens.dart';
 import '../services/auth_service.dart';
+import '../widgets/citizen_mockup_shell.dart';
 import '../services/calendar_api_service.dart';
 import '../services/gcal_api_service.dart';
 
@@ -153,6 +155,7 @@ class _LegalCalendarScreenState extends State<LegalCalendarScreen> {
   final _api = CalendarApiService();
   final _gcalApi = GcalApiService();
   final _auth = AuthService();
+  late final Future<String?> _citizenChromeFuture = _auth.getStoredRole();
 
   DateTime _focusDate = DateTime.now();
   _CalView _view = _CalView.month;
@@ -922,99 +925,179 @@ class _LegalCalendarScreenState extends State<LegalCalendarScreen> {
         ? '${L.title} · $periodLabel'
         : (code == 'ru' ? '${L.title} · $periodLabel' : '${L.title} · $periodLabel');
 
-    return Directionality(
-      textDirection: AppLanguage.directionOf(code),
-      child: V26AppShell(
-        destinations:
-            isWide ? V26CitizenNav.destinations(code) : V26CitizenNav.bottomDestinations(code),
-        currentIndex: isWide ? 3 : -1,
-        onDestinationSelected: (i) {
-          final routes = isWide ? V26CitizenNav.routes : V26CitizenNav.bottomRoutes;
-          V26CitizenNav.go(context, routes[i], current: '/legal_calendar');
-        },
-        desktopStatusText: statusText,
-        desktopTrailing: [
-          V26IconBtn(
-            icon: Icons.refresh_rounded,
-            tooltip: L.refresh,
-            onTap: _loading ? null : _load,
-          ),
-          const SizedBox(width: 8),
-          V26IconBtn(
-            icon: Icons.chevron_right,
-            tooltip: L.prev,
-            onTap: _loading ? null : () => _stepPeriod(-1),
-          ),
-          const SizedBox(width: 8),
-          V26IconBtn(
-            icon: Icons.chevron_left,
-            tooltip: L.next,
-            onTap: _loading ? null : () => _stepPeriod(1),
-          ),
-        ],
-        mobileAppBar: AppBar(
-          backgroundColor: V26.surface,
-          foregroundColor: V26.ink900,
-          elevation: 0,
-          title: Text(
-            '${L.title} · $periodLabel',
-            style: const TextStyle(
-              fontFamily: V26.serif,
-              fontWeight: FontWeight.w800,
-            ),
-          ),
-          actions: [
-            IconButton(
-              tooltip: L.refresh,
-              onPressed: _loading ? null : _load,
-              icon: const Icon(Icons.refresh),
-            ),
-            IconButton(
-              tooltip: L.prev,
-              onPressed: _loading ? null : () => _stepPeriod(-1),
-              icon: const Icon(Icons.chevron_right),
-            ),
-            IconButton(
-              tooltip: L.next,
-              onPressed: _loading ? null : () => _stepPeriod(1),
-              icon: const Icon(Icons.chevron_left),
-            ),
-          ],
-        ),
-        floatingAction: FloatingActionButton.extended(
-          onPressed: () => _showEventEditor(L),
-          backgroundColor: V26.navy600,
-          icon: const Icon(Icons.add, color: Colors.white),
-          label: Text(L.addEvent, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
-          heroTag: 'legal_cal_fab',
-        ),
-        child: _loading
-            ? const Center(child: CircularProgressIndicator())
-            : Column(
-                children: [
-                  _buildIcalCard(L),
-                  _buildGcalCard(L),
-                  _buildViewToggle(L),
-                  Expanded(
-                    child: RefreshIndicator(
-                      onRefresh: _load,
-                      child: _view == _CalView.agenda
-                          ? Padding(
-                              padding: const EdgeInsets.fromLTRB(12, 0, 12, 0),
-                              child: _buildAgenda(L),
-                            )
-                          : SingleChildScrollView(
-                              physics: const AlwaysScrollableScrollPhysics(),
-                              padding: const EdgeInsets.fromLTRB(12, 0, 12, 100),
-                              child: _view == _CalView.week
-                                  ? _buildWeekView(L, loc)
-                                  : _buildMonthGrid(L, loc),
-                            ),
-                    ),
+    final calendarBody = _loading
+        ? const Center(child: CircularProgressIndicator())
+        : Column(
+            children: [
+              _buildIcalCard(L),
+              _buildGcalCard(L),
+              _buildViewToggle(L),
+              Expanded(
+                child: RefreshIndicator(
+                  onRefresh: _load,
+                  child: _view == _CalView.agenda
+                      ? Padding(
+                          padding: const EdgeInsets.fromLTRB(12, 0, 12, 0),
+                          child: _buildAgenda(L),
+                        )
+                      : SingleChildScrollView(
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          padding: const EdgeInsets.fromLTRB(12, 0, 12, 100),
+                          child: _view == _CalView.week
+                              ? _buildWeekView(L, loc)
+                              : _buildMonthGrid(L, loc),
+                        ),
+                ),
+              ),
+            ],
+          );
+
+    final fabLegacy = FloatingActionButton.extended(
+      onPressed: () => _showEventEditor(L),
+      backgroundColor: V26.navy600,
+      icon: const Icon(Icons.add, color: Colors.white),
+      label: Text(L.addEvent,
+          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
+      heroTag: 'legal_cal_fab',
+    );
+
+    final fabCitizen = FloatingActionButton.extended(
+      onPressed: () => _showEventEditor(L),
+      backgroundColor: VetoMockup.primaryCta,
+      icon: const Icon(Icons.add, color: Colors.white),
+      label: Text(L.addEvent,
+          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
+      heroTag: 'legal_cal_fab',
+    );
+
+    return FutureBuilder<String?>(
+      future: _citizenChromeFuture,
+      builder: (context, snap) {
+        final citizen = snap.data == 'user';
+        if (citizen) {
+          return Directionality(
+            textDirection: AppLanguage.directionOf(code),
+            child: CitizenMockupShell(
+              currentRoute: '/legal_calendar',
+              mobileNavIndex: citizenMobileNavIndexForRoute('/legal_calendar'),
+              desktopTrailing: [
+                IconButton(
+                  icon: const Icon(Icons.refresh_rounded, color: VetoMockup.ink),
+                  tooltip: L.refresh,
+                  onPressed: _loading ? null : _load,
+                ),
+                IconButton(
+                  icon: const Icon(Icons.chevron_right, color: VetoMockup.ink),
+                  tooltip: L.prev,
+                  onPressed: _loading ? null : () => _stepPeriod(-1),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.chevron_left, color: VetoMockup.ink),
+                  tooltip: L.next,
+                  onPressed: _loading ? null : () => _stepPeriod(1),
+                ),
+              ],
+              floatingActionButton: fabCitizen,
+              mobileAppBar: AppBar(
+                backgroundColor: VetoMockup.surfaceCard,
+                foregroundColor: VetoMockup.ink,
+                elevation: 0,
+                title: Text(
+                  '${L.title} · $periodLabel',
+                  style: const TextStyle(
+                    fontFamily: V26.serif,
+                    fontWeight: FontWeight.w800,
+                    color: VetoMockup.ink,
+                  ),
+                ),
+                actions: [
+                  IconButton(
+                    tooltip: L.refresh,
+                    onPressed: _loading ? null : _load,
+                    icon: const Icon(Icons.refresh, color: VetoMockup.ink),
+                  ),
+                  IconButton(
+                    tooltip: L.prev,
+                    onPressed: _loading ? null : () => _stepPeriod(-1),
+                    icon: const Icon(Icons.chevron_right, color: VetoMockup.ink),
+                  ),
+                  IconButton(
+                    tooltip: L.next,
+                    onPressed: _loading ? null : () => _stepPeriod(1),
+                    icon: const Icon(Icons.chevron_left, color: VetoMockup.ink),
                   ),
                 ],
               ),
-      ),
+              child: calendarBody,
+            ),
+          );
+        }
+        return Directionality(
+          textDirection: AppLanguage.directionOf(code),
+          child: V26AppShell(
+            destinations: isWide
+                ? V26CitizenNav.destinations(code)
+                : V26CitizenNav.bottomDestinations(code),
+            currentIndex: isWide ? 3 : -1,
+            onDestinationSelected: (i) {
+              final routes =
+                  isWide ? V26CitizenNav.routes : V26CitizenNav.bottomRoutes;
+              V26CitizenNav.go(context, routes[i], current: '/legal_calendar');
+            },
+            desktopStatusText: statusText,
+            desktopTrailing: [
+              V26IconBtn(
+                icon: Icons.refresh_rounded,
+                tooltip: L.refresh,
+                onTap: _loading ? null : _load,
+              ),
+              const SizedBox(width: 8),
+              V26IconBtn(
+                icon: Icons.chevron_right,
+                tooltip: L.prev,
+                onTap: _loading ? null : () => _stepPeriod(-1),
+              ),
+              const SizedBox(width: 8),
+              V26IconBtn(
+                icon: Icons.chevron_left,
+                tooltip: L.next,
+                onTap: _loading ? null : () => _stepPeriod(1),
+              ),
+            ],
+            mobileAppBar: AppBar(
+              backgroundColor: V26.surface,
+              foregroundColor: V26.ink900,
+              elevation: 0,
+              title: Text(
+                '${L.title} · $periodLabel',
+                style: const TextStyle(
+                  fontFamily: V26.serif,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              actions: [
+                IconButton(
+                  tooltip: L.refresh,
+                  onPressed: _loading ? null : _load,
+                  icon: const Icon(Icons.refresh),
+                ),
+                IconButton(
+                  tooltip: L.prev,
+                  onPressed: _loading ? null : () => _stepPeriod(-1),
+                  icon: const Icon(Icons.chevron_right),
+                ),
+                IconButton(
+                  tooltip: L.next,
+                  onPressed: _loading ? null : () => _stepPeriod(1),
+                  icon: const Icon(Icons.chevron_left),
+                ),
+              ],
+            ),
+            floatingAction: fabLegacy,
+            child: calendarBody,
+          ),
+        );
+      },
     );
   }
 }
