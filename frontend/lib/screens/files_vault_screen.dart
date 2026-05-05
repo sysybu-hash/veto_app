@@ -20,127 +20,7 @@ import '../services/auth_service.dart';
 import '../services/vault_save_queue.dart';
 import '../platform/browser_bridge.dart' as browser_bridge;
 import '../widgets/citizen_mockup_shell.dart';
-
-// ── i18n strings ─────────────────────────────────────────────
-class _L {
-  final String title, upload, uploading, analyzing, deleteConfirm, delete,
-      share, revoke, analyze, noFiles, usageOf, used, quota, legalCase,
-      caseName, createCase, addToCase, files, allFiles, caseFiles,
-      shareWithLawyer, lawyerAccess, fileType, size, date, status,
-      aiSummary, aiBtn, cancel, save, errorUpload, successUpload,
-      successDelete, successShare, compressing, caseCreated, loading,
-      rename, fileName,       successRename,
-      deleteCase, deleteCaseConfirm, successDeleteCase,
-      removeFromCase,
-      folders, newFolder, folderName, moveToFolder, rootVault, deleteFolder,
-      deleteFolderConfirm, folderNotEmpty, goUp, openFolder,
-      dropFilesHere, uploadZoneTitle, uploadZoneHint;
-
-  const _L({
-    required this.title, required this.upload, required this.uploading,
-    required this.analyzing, required this.deleteConfirm, required this.delete,
-    required this.share, required this.revoke, required this.analyze,
-    required this.noFiles, required this.usageOf, required this.used,
-    required this.quota, required this.legalCase, required this.caseName,
-    required this.createCase, required this.addToCase, required this.files,
-    required this.allFiles, required this.caseFiles, required this.shareWithLawyer,
-    required this.lawyerAccess, required this.fileType, required this.size,
-    required this.date, required this.status, required this.aiSummary,
-    required this.aiBtn, required this.cancel, required this.save,
-    required this.errorUpload, required this.successUpload,
-    required this.successDelete, required this.successShare,
-    required this.compressing, required this.caseCreated, required this.loading,
-    required this.rename, required this.fileName, required this.successRename,
-    required this.deleteCase, required this.deleteCaseConfirm, required this.successDeleteCase,
-    required this.removeFromCase,
-    required this.folders, required this.newFolder, required this.folderName,
-    required this.moveToFolder, required this.rootVault, required this.deleteFolder,
-    required this.deleteFolderConfirm, required this.folderNotEmpty, required this.goUp,
-    required this.openFolder,
-    required this.dropFilesHere, required this.uploadZoneTitle, required this.uploadZoneHint,
-  });
-}
-
-const _he = _L(
-  title: 'הכספת שלך', upload: 'העלה קובץ', uploading: 'מעלה...',
-  analyzing: 'AI מנתח...', deleteConfirm: 'למחוק את הקובץ?',
-  delete: 'מחק', share: 'שתף עם עו"ד', revoke: 'בטל גישה',
-  analyze: 'נתח עם AI', noFiles: 'אין קבצים עדיין',
-  usageOf: 'בשימוש: ', used: 'GB', quota: ' / 10 GB',
-  legalCase: 'תיק משפטי', caseName: 'שם התיק',
-  createCase: 'צור תיק', addToCase: 'הוסף לתיק', files: 'קבצים',
-  allFiles: 'כל הקבצים', caseFiles: 'קבצי התיק',
-  shareWithLawyer: 'שתף עם עורך דין', lawyerAccess: 'גישת עו"ד',
-  fileType: 'סוג', size: 'גודל', date: 'תאריך', status: 'סטטוס',
-  aiSummary: 'סיכום AI', aiBtn: 'נתח', cancel: 'ביטול', save: 'שמור',
-  errorUpload: 'שגיאה בהעלאה', successUpload: 'קובץ הועלה בהצלחה',
-  successDelete: 'הקובץ נמחק', successShare: 'הגישה עודכנה',
-  compressing: 'דוחס...', caseCreated: 'התיק נוצר', loading: 'טוען...',
-  rename: 'שנה שם', fileName: 'שם הקובץ', successRename: 'השם עודכן',
-  deleteCase: 'מחק תיק', deleteCaseConfirm: 'למחוק את התיק? הקבצים יישארו בכספת.',
-  successDeleteCase: 'התיק נמחק', removeFromCase: 'הסר מהתיק',
-  folders: 'תיקיות', newFolder: 'תיקייה חדשה', folderName: 'שם התיקייה',
-  moveToFolder: 'העבר לתיקייה', rootVault: 'כספת', deleteFolder: 'מחק תיקייה',
-  deleteFolderConfirm: 'למחוק את התיקייה? (רק אם ריקה)', folderNotEmpty: 'התיקייה אינה ריקה',
-  goUp: 'הקודם', openFolder: 'פתח',
-  dropFilesHere: 'שחררו כאן לטעינה',
-  uploadZoneTitle: 'העלאה מהירה',
-  uploadZoneHint: 'במובייל: "העלה" או מצלמה. בווב: גרירה לכאן או לכל מקום על המסך.',
-);
-
-const _en = _L(
-  title: 'Your Vault', upload: 'Upload File', uploading: 'Uploading...',
-  analyzing: 'AI analyzing...', deleteConfirm: 'Delete this file?',
-  delete: 'Delete', share: 'Share with Lawyer', revoke: 'Revoke Access',
-  analyze: 'Analyze with AI', noFiles: 'No files yet',
-  usageOf: 'Used: ', used: 'GB', quota: ' / 10 GB',
-  legalCase: 'Legal Case', caseName: 'Case name',
-  createCase: 'Create Case', addToCase: 'Add to Case', files: 'files',
-  allFiles: 'All Files', caseFiles: 'Case Files',
-  shareWithLawyer: 'Share with Lawyer', lawyerAccess: 'Lawyer Access',
-  fileType: 'Type', size: 'Size', date: 'Date', status: 'Status',
-  aiSummary: 'AI Summary', aiBtn: 'Analyze', cancel: 'Cancel', save: 'Save',
-  errorUpload: 'Upload failed', successUpload: 'File uploaded successfully',
-  successDelete: 'File deleted', successShare: 'Access updated',
-  compressing: 'Compressing...', caseCreated: 'Case created', loading: 'Loading...',
-  rename: 'Rename', fileName: 'File name', successRename: 'Name updated',
-  deleteCase: 'Delete Case', deleteCaseConfirm: 'Delete this case? Files will remain in your vault.',
-  successDeleteCase: 'Case deleted', removeFromCase: 'Remove from Case',
-  folders: 'Folders', newFolder: 'New folder', folderName: 'Folder name',
-  moveToFolder: 'Move to folder', rootVault: 'Vault', deleteFolder: 'Delete folder',
-  deleteFolderConfirm: 'Delete this folder? (only if empty)', folderNotEmpty: 'Folder is not empty',
-  goUp: 'Up', openFolder: 'Open',
-  dropFilesHere: 'Drop to upload',
-  uploadZoneTitle: 'Quick upload',
-  uploadZoneHint: 'Mobile: use Upload or camera. Web: drag files here or anywhere on the page.',
-);
-
-const _ru = _L(
-  title: 'Моё хранилище', upload: 'Загрузить файл', uploading: 'Загрузка...',
-  analyzing: 'AI анализирует...', deleteConfirm: 'Удалить файл?',
-  delete: 'Удалить', share: 'Поделиться с адвокатом', revoke: 'Закрыть доступ',
-  analyze: 'Анализ AI', noFiles: 'Файлов пока нет',
-  usageOf: 'Использовано: ', used: 'ГБ', quota: ' / 10 ГБ',
-  legalCase: 'Юридическое дело', caseName: 'Название дела',
-  createCase: 'Создать дело', addToCase: 'Добавить в дело', files: 'файлов',
-  allFiles: 'Все файлы', caseFiles: 'Файлы дела',
-  shareWithLawyer: 'Поделиться с адвокатом', lawyerAccess: 'Доступ адвоката',
-  fileType: 'Тип', size: 'Размер', date: 'Дата', status: 'Статус',
-  aiSummary: 'Сводка AI', aiBtn: 'Анализ', cancel: 'Отмена', save: 'Сохранить',
-  errorUpload: 'Ошибка загрузки', successUpload: 'Файл загружен',
-  successDelete: 'Файл удалён', successShare: 'Доступ обновлён',
-  compressing: 'Сжатие...', caseCreated: 'Дело создано', loading: 'Загрузка...',
-  rename: 'Переименовать', fileName: 'Имя файла', successRename: 'Имя обновлено',
-  deleteCase: 'Удалить дело', deleteCaseConfirm: 'Удалить это дело? Файлы останутся в хранилище.',
-  successDeleteCase: 'Дело удалено', removeFromCase: 'Убрать из дела',
-  folders: 'Папки', newFolder: 'Новая папка', folderName: 'Имя папки',
-  moveToFolder: 'Переместить', rootVault: 'Хранилище', deleteFolder: 'Удалить папку',
-  deleteFolderConfirm: 'Удалить папку? (только пустая)', folderNotEmpty: 'Папка не пуста',
-  goUp: 'Назад', openFolder: 'Открыть',
-  dropFilesHere: 'Отпустите для загрузки',
-  uploadZoneTitle: 'Быстрая загрузка',
-  uploadZoneHint: 'Телефон: кнопка загрузки или камера. Веб: перетащите сюда или в любую область.',
-);
+import '../l10n/app_localizations.dart';
 
 // ── Data models ───────────────────────────────────────────────
 class _VaultFile {
@@ -250,6 +130,8 @@ class FilesVaultScreen extends StatefulWidget {
 
 class _FilesVaultScreenState extends State<FilesVaultScreen>
     with SingleTickerProviderStateMixin {
+  AppLocalizations get _l10n => AppLocalizations.of(context)!;
+
   final AuthService _auth = AuthService();
   late final Future<String?> _vaultRoleFuture = _auth.getStoredRole();
 
@@ -258,7 +140,7 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
   List<_LegalCase> _cases = [];
   /// Breadcrumb: first is always root; last is current folder (id null = vault root).
   final List<({String? id, String name})> _folderPath = [
-    (id: null, name: ''), // name filled from _l.rootVault in build
+    (id: null, name: ''), // name filled from vaultScrRootVault in build
   ];
   bool _loading = true;
   bool _uploading = false;
@@ -347,11 +229,11 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: V26.surface,
-        title: Text(_l.newFolder, style: const TextStyle(color: V26.ink900)),
+        title: Text(_l10n.vaultScrNewFolder, style: const TextStyle(color: V26.ink900)),
         content: TextField(
           controller: ctrl,
           decoration: InputDecoration(
-            labelText: _l.folderName,
+            labelText: _l10n.vaultScrFolderName,
             labelStyle: const TextStyle(color: V26.ink500),
           ),
           style: const TextStyle(color: V26.ink900),
@@ -359,11 +241,11 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: Text(_l.cancel, style: const TextStyle(color: V26.ink500)),
+            child: Text(_l10n.vaultScrCancel, style: const TextStyle(color: V26.ink500)),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: Text(_l.save),
+            child: Text(_l10n.vaultScrSave),
           ),
         ],
       ),
@@ -387,10 +269,10 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
       if (res.statusCode == 201 || res.statusCode == 200) {
         await _load();
       } else {
-        _snack(_l.errorUpload, isError: true);
+        _snack(_l10n.vaultScrErrorUpload, isError: true);
       }
     } catch (_) {
-      _snack(_l.errorUpload, isError: true);
+      _snack(_l10n.vaultScrErrorUpload, isError: true);
     } finally {
       ctrl.dispose();
     }
@@ -402,17 +284,17 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: V26.surface,
-        title: Text(_l.deleteFolder, style: const TextStyle(color: V26.ink900)),
-        content: Text(_l.deleteFolderConfirm, style: const TextStyle(color: V26.ink500)),
+        title: Text(_l10n.vaultScrDeleteFolder, style: const TextStyle(color: V26.ink900)),
+        content: Text(_l10n.vaultScrDeleteFolderConfirm, style: const TextStyle(color: V26.ink500)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: Text(_l.cancel, style: const TextStyle(color: V26.ink500)),
+            child: Text(_l10n.vaultScrCancel, style: const TextStyle(color: V26.ink500)),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: FilledButton.styleFrom(backgroundColor: V26.emerg, foregroundColor: Colors.white),
-            child: Text(_l.delete),
+            child: Text(_l10n.vaultScrDelete),
           ),
         ],
       ),
@@ -436,12 +318,12 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
         return;
       }
       if (res.statusCode == 400) {
-        _snack(_l.folderNotEmpty, isError: true);
+        _snack(_l10n.vaultScrFolderNotEmpty, isError: true);
         return;
       }
-      _snack(_l.errorUpload, isError: true);
+      _snack(_l10n.vaultScrErrorUpload, isError: true);
     } catch (_) {
-      _snack(_l.errorUpload, isError: true);
+      _snack(_l10n.vaultScrErrorUpload, isError: true);
     }
   }
 
@@ -452,14 +334,14 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
       builder: (ctx) {
         return AlertDialog(
           backgroundColor: V26.surface,
-          title: Text(_l.moveToFolder, style: const TextStyle(color: V26.ink900, fontSize: 16)),
+          title: Text(_l10n.vaultScrMoveToFolder, style: const TextStyle(color: V26.ink900, fontSize: 16)),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 ListTile(
                   leading: const Icon(Icons.home_outlined, color: V26.navy600),
-                  title: Text(_l.rootVault, style: const TextStyle(color: V26.ink900)),
+                  title: Text(_l10n.vaultScrRootVault, style: const TextStyle(color: V26.ink900)),
                   onTap: () {
                     targetId = 'ROOT';
                     Navigator.pop(ctx);
@@ -491,7 +373,7 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
                 targetId = '__cancel__';
                 Navigator.pop(ctx);
               },
-              child: Text(_l.cancel, style: const TextStyle(color: V26.ink500)),
+              child: Text(_l10n.vaultScrCancel, style: const TextStyle(color: V26.ink500)),
             ),
           ],
         );
@@ -517,18 +399,11 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
       if (res.statusCode == 200) {
         await _load();
       } else {
-        _snack(_l.errorUpload, isError: true);
+        _snack(_l10n.vaultScrErrorUpload, isError: true);
       }
     } catch (_) {
-      _snack(_l.errorUpload, isError: true);
+      _snack(_l10n.vaultScrErrorUpload, isError: true);
     }
-  }
-
-  _L get _l {
-    final code = context.read<AppLanguageController>().code;
-    if (code == 'he') return _he;
-    if (code == 'ru') return _ru;
-    return _en;
   }
 
   @override
@@ -574,7 +449,7 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
   // ── Drag & drop (web handlers moved to bridge) ────────────────
 
   Future<void> _uploadHtmlFile(dynamic file) async {
-    if (_usedMb >= _quotaMb) { _snack(_l.quota, isError: true); return; }
+    if (_usedMb >= _quotaMb) { _snack(_l10n.vaultScrQuotaExceededSnack, isError: true); return; }
     if (!mounted) return;
     setState(() => _uploading = true);
     try {
@@ -598,13 +473,13 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
       req.files.add(http.MultipartFile.fromBytes('file', bytes, filename: fileName));
       final streamed = await req.send();
       if (streamed.statusCode == 201 || streamed.statusCode == 200) {
-        _snack(_l.successUpload);
+        _snack(_l10n.vaultScrSuccessUpload);
         await _load();
       } else {
-        _snack(_l.errorUpload, isError: true);
+        _snack(_l10n.vaultScrErrorUpload, isError: true);
       }
     } catch (_) {
-      _snack(_l.errorUpload, isError: true);
+      _snack(_l10n.vaultScrErrorUpload, isError: true);
     } finally {
       if (mounted) setState(() => _uploading = false);
     }
@@ -764,7 +639,7 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
   Future<void> _pickFile() async {
     if (_uploading) return;
     if (_usedMb >= _quotaMb) {
-      _snack(_l.quota, isError: true);
+      _snack(_l10n.vaultScrQuotaExceededSnack, isError: true);
       return;
     }
 
@@ -784,7 +659,7 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
       final fileSizeMb = pf.size / (1024 * 1024);
       
       if (_usedMb + fileSizeMb > _quotaMb) {
-        _snack('${_l.quota} (max 100MB)', isError: true);
+        _snack(_l10n.vaultScrQuotaFileTooLargeSnack, isError: true);
         return;
       }
 
@@ -818,15 +693,15 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
       final responseBody = await streamedRes.stream.bytesToString();
 
       if (streamedRes.statusCode == 200 || streamedRes.statusCode == 201) {
-        _snack(_l.successUpload);
+        _snack(_l10n.vaultScrSuccessUpload);
         await _load();
       } else {
         debugPrint('Upload failed (${streamedRes.statusCode}): $responseBody');
-        _snack('${_l.errorUpload} (${streamedRes.statusCode})', isError: true);
+        _snack('${_l10n.vaultScrErrorUpload} (${streamedRes.statusCode})', isError: true);
       }
     } catch (e) {
       debugPrint('Error in _pickFile: $e');
-      _snack(_l.errorUpload, isError: true);
+      _snack(_l10n.vaultScrErrorUpload, isError: true);
     } finally {
       if (mounted) setState(() => _uploading = false);
     }
@@ -843,13 +718,13 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
         headers: AppConfig.httpHeaders({'Authorization': 'Bearer $tok'}),
       ).timeout(const Duration(seconds: 60));
       if (res.statusCode == 200) {
-        _snack(_l.aiSummary);
+        _snack(_l10n.vaultScrAiSummary);
         await _load();
       } else if (res.statusCode == 401) {
         if (kIsWeb) {
           debugPrint('vault analyze 401: sign in again or file not owned by this user');
         }
-        _snack('נדרש להתחבר מחדש (או אין גישה לקובץ)', isError: true);
+        _snack(_l10n.vaultScrReloginNoAccess, isError: true);
       }
     } catch (_) {}
     finally {
@@ -867,7 +742,7 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
         body: jsonEncode({'lawyerAccess': !file.lawyerAccess}),
       ).timeout(const Duration(seconds: 10));
       if (res.statusCode == 200) {
-        _snack(_l.successShare);
+        _snack(_l10n.vaultScrSuccessShare);
         await _load();
       }
     } catch (_) {}
@@ -881,18 +756,18 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
         shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
             side: const BorderSide(color: V26.hairline)),
-        title: Text(_l.deleteConfirm,
+        title: Text(_l10n.vaultScrDeleteConfirm,
             style: const TextStyle(color: V26.ink900, fontWeight: FontWeight.w700)),
         content: Text(file.name,
             style: const TextStyle(color: V26.ink500)),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx, false),
-              child: Text(_l.cancel, style: const TextStyle(color: V26.ink500))),
+              child: Text(_l10n.vaultScrCancel, style: const TextStyle(color: V26.ink500))),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: FilledButton.styleFrom(
                 backgroundColor: V26.emerg, foregroundColor: Colors.white),
-            child: Text(_l.delete),
+            child: Text(_l10n.vaultScrDelete),
           ),
         ],
       ),
@@ -906,7 +781,7 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
         headers: AppConfig.httpHeaders({'Authorization': 'Bearer $tok'}),
       ).timeout(const Duration(seconds: 10));
       if (res.statusCode == 200 || res.statusCode == 204) {
-        _snack(_l.successDelete);
+        _snack(_l10n.vaultScrSuccessDelete);
         await _load();
       }
     } catch (_) {}
@@ -921,7 +796,7 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
         shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
             side: const BorderSide(color: V26.hairline)),
-        title: Text(_l.rename,
+        title: Text(_l10n.vaultScrRename,
             style: const TextStyle(color: V26.ink900, fontWeight: FontWeight.w700)),
         content: TextField(
           controller: ctrl,
@@ -929,7 +804,7 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
           style: const TextStyle(color: V26.ink900),
           cursorColor: V26.navy600,
           decoration: InputDecoration(
-            hintText: _l.fileName,
+            hintText: _l10n.vaultScrFileName,
             hintStyle: const TextStyle(color: V26.ink500),
             filled: true,
             fillColor: const Color(0xFF0F1A24),
@@ -946,13 +821,13 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
         ),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx),
-              child: Text(_l.cancel, style: const TextStyle(color: V26.ink500))),
+              child: Text(_l10n.vaultScrCancel, style: const TextStyle(color: V26.ink500))),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, ctrl.text.trim()),
             style: FilledButton.styleFrom(
                 backgroundColor: V26.navy600,
                 foregroundColor: Colors.white),
-            child: Text(_l.save),
+            child: Text(_l10n.vaultScrSave),
           ),
         ],
       ),
@@ -970,7 +845,7 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
       ).timeout(const Duration(seconds: 10));
 
       if (res.statusCode == 200) {
-        _snack(_l.successRename);
+        _snack(_l10n.vaultScrSuccessRename);
         await _load();
       }
     } catch (_) {}
@@ -987,7 +862,7 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
         shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
             side: const BorderSide(color: V26.hairline)),
-        title: Text(_l.createCase,
+        title: Text(_l10n.vaultScrCreateCase,
             style: const TextStyle(color: V26.ink900, fontWeight: FontWeight.w700)),
         content: TextField(
           controller: ctrl,
@@ -995,7 +870,7 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
           style: const TextStyle(color: V26.ink900),
           cursorColor: V26.navy600,
           decoration: InputDecoration(
-            hintText: _l.caseName,
+            hintText: _l10n.vaultScrCaseName,
             hintStyle: const TextStyle(color: V26.ink500),
             filled: true,
             fillColor: const Color(0xFF0F1A24),
@@ -1012,13 +887,13 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
         ),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx),
-              child: Text(_l.cancel, style: const TextStyle(color: V26.ink500))),
+              child: Text(_l10n.vaultScrCancel, style: const TextStyle(color: V26.ink500))),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, ctrl.text.trim()),
             style: FilledButton.styleFrom(
                 backgroundColor: V26.navy600,
                 foregroundColor: Colors.white),
-            child: Text(_l.save),
+            child: Text(_l10n.vaultScrSave),
           ),
         ],
       ),
@@ -1033,7 +908,7 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
         body: jsonEncode({'name': name}),
       ).timeout(const Duration(seconds: 10));
       if (res.statusCode == 201 || res.statusCode == 200) {
-        _snack(_l.caseCreated);
+        _snack(_l10n.vaultScrCaseCreated);
         await _load();
       }
     } catch (_) {}
@@ -1048,7 +923,7 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
         shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
             side: const BorderSide(color: V26.hairline)),
-        title: Text(_l.rename,
+        title: Text(_l10n.vaultScrRename,
             style: const TextStyle(color: V26.ink900, fontWeight: FontWeight.w700)),
         content: TextField(
           controller: ctrl,
@@ -1056,7 +931,7 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
           style: const TextStyle(color: V26.ink900),
           cursorColor: V26.navy600,
           decoration: InputDecoration(
-            hintText: _l.caseName,
+            hintText: _l10n.vaultScrCaseName,
             hintStyle: const TextStyle(color: V26.ink500),
             filled: true,
             fillColor: const Color(0xFF0F1A24),
@@ -1073,13 +948,13 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
         ),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx),
-              child: Text(_l.cancel, style: const TextStyle(color: V26.ink500))),
+              child: Text(_l10n.vaultScrCancel, style: const TextStyle(color: V26.ink500))),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, ctrl.text.trim()),
             style: FilledButton.styleFrom(
                 backgroundColor: V26.navy600,
                 foregroundColor: Colors.white),
-            child: Text(_l.save),
+            child: Text(_l10n.vaultScrSave),
           ),
         ],
       ),
@@ -1094,7 +969,7 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
         body: jsonEncode({'name': name}),
       ).timeout(const Duration(seconds: 10));
       if (res.statusCode == 200) {
-        _snack(_l.successRename);
+        _snack(_l10n.vaultScrSuccessRename);
         await _load();
       }
     } catch (_) {}
@@ -1108,18 +983,18 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
         shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
             side: const BorderSide(color: V26.hairline)),
-        title: Text(_l.deleteCase,
+        title: Text(_l10n.vaultScrDeleteCase,
             style: const TextStyle(color: V26.ink900, fontWeight: FontWeight.w700)),
-        content: Text(_l.deleteCaseConfirm,
+        content: Text(_l10n.vaultScrDeleteCaseConfirm,
             style: const TextStyle(color: V26.ink500)),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx, false),
-              child: Text(_l.cancel, style: const TextStyle(color: V26.ink500))),
+              child: Text(_l10n.vaultScrCancel, style: const TextStyle(color: V26.ink500))),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: FilledButton.styleFrom(
                 backgroundColor: V26.emerg, foregroundColor: Colors.white),
-            child: Text(_l.deleteCase),
+            child: Text(_l10n.vaultScrDeleteCase),
           ),
         ],
       ),
@@ -1133,7 +1008,7 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
         headers: AppConfig.httpHeaders({'Authorization': 'Bearer $tok'}),
       ).timeout(const Duration(seconds: 10));
       if (res.statusCode == 200) {
-        _snack(_l.successDeleteCase);
+        _snack(_l10n.vaultScrSuccessDeleteCase);
         await _load();
       }
     } catch (_) {}
@@ -1293,7 +1168,7 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
                     ),
                     const SizedBox(height: 20),
                     Text(
-                      _l.dropFilesHere,
+                      _l10n.vaultScrDropFilesHere,
                       textAlign: TextAlign.center,
                       style: const TextStyle(
                         color: V26.navy600,
@@ -1317,7 +1192,7 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
     final isRtl = AppLanguage.directionOf(code) == TextDirection.rtl;
     final isWide = MediaQuery.sizeOf(context).width >= V26AppShell.desktopBreakpoint;
 
-    final uploadLabel = _uploading ? _l.uploading : _l.upload;
+    final uploadLabel = _uploading ? _l10n.vaultScrUploading : _l10n.vaultScrUpload;
 
     return FutureBuilder<String?>(
       future: _vaultRoleFuture,
@@ -1336,7 +1211,7 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
             onPressed: () => Navigator.of(context).maybePop(),
           ),
           title: Text(
-            _l.title,
+            _l10n.vaultScrTitle,
             style: TextStyle(
               color: citizenChrome ? VetoMockup.ink : V26.ink900,
               fontFamily: V26.serif,
@@ -1351,13 +1226,13 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
                 icon: Icon(Icons.photo_camera_outlined,
                     color: citizenChrome ? VetoMockup.inkSecondary : V26.ink700),
                 onPressed: _uploading ? null : _captureFromCamera,
-                tooltip: 'Capture from camera',
+                tooltip: _l10n.vaultScrCaptureCamera,
               ),
             IconButton(
               icon: Icon(Icons.refresh_rounded,
                   color: citizenChrome ? VetoMockup.inkSecondary : V26.ink700),
               onPressed: _load,
-              tooltip: 'Refresh',
+              tooltip: _l10n.vaultScrRefresh,
             ),
           ],
         );
@@ -1372,7 +1247,7 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
               desktopTrailing: [
                 IconButton(
                   icon: const Icon(Icons.search_rounded, color: VetoMockup.ink),
-                  tooltip: code == 'he' ? 'חיפוש' : 'Search',
+                  tooltip: _l10n.vaultScrSearchTooltip,
                   onPressed: () {},
                 ),
                 const SizedBox(width: 4),
@@ -1447,16 +1322,12 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
                   : V26CitizenNav.bottomRoutes;
               V26CitizenNav.go(context, routes[i], current: '/files_vault');
             },
-            desktopStatusText: code == 'he'
-                ? 'מאובטח · מוצפן E2E · נשמר במכשיר ובכספת מוצפנת'
-                : (code == 'ru'
-                    ? 'Безопасно · E2E шифрование'
-                    : 'Secured · E2E encrypted · stored on-device & in encrypted vault'),
+            desktopStatusText: _l10n.vaultScrDesktopStatus,
             desktopTrailing: [
               V26IconBtn(
                 icon: Icons.search_rounded,
                 onTap: () {},
-                tooltip: code == 'he' ? 'חיפוש' : 'Search',
+                tooltip: _l10n.vaultScrSearchTooltip,
               ),
               const SizedBox(width: 8),
               V26PillCTA(
@@ -1499,7 +1370,6 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
 
   // ── VETO 2026 body (matches `2026/vault.html`) ──────────────
   Widget _build2026Body() {
-    final code = context.read<AppLanguageController>().code;
     final isWide =
         MediaQuery.sizeOf(context).width >= V26AppShell.desktopBreakpoint;
 
@@ -1514,10 +1384,10 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
         children: [
           _buildCallSaveBanners(),
           // Header (kicker + headline + sub-line + tabs)
-          _buildVaultHeader(code, isWide),
+          _buildVaultHeader(isWide),
           const SizedBox(height: 18),
           // Storage indicator card
-          _buildStorageCard(code),
+          _buildStorageCard(),
           const SizedBox(height: 18),
           // Folder breadcrumb (if not at root)
           if (_folderPath.length > 1) ...[
@@ -1534,7 +1404,7 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
           const SizedBox(height: 28),
           // Cases section — kept as secondary area
           if (_cases.isNotEmpty) ...[
-            _buildCasesSection(code),
+            _buildCasesSection(),
             const SizedBox(height: 40),
           ],
         ],
@@ -1542,30 +1412,28 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
     );
   }
 
-  Widget _buildVaultHeader(String code, bool isWide) {
-    final he = code == 'he';
-    final ru = code == 'ru';
-    final kicker = he
-        ? 'מאובטח · מוצפן E2E'
-        : (ru ? 'Безопасно · E2E' : 'Secured · E2E Encrypted');
-    final subline = he
-        ? '${_files.length} קבצים · ${_usedGb.toStringAsFixed(1)} GB מתוך ${_quotaGb.toStringAsFixed(0)} GB · נשמר אך ורק במכשיר ובכספת המוצפנת שלך'
-        : (ru
-            ? '${_files.length} файлов · ${_usedGb.toStringAsFixed(1)} GB из ${_quotaGb.toStringAsFixed(0)} GB · хранится только на устройстве и в зашифрованном хранилище'
-            : '${_files.length} files · ${_usedGb.toStringAsFixed(1)} GB of ${_quotaGb.toStringAsFixed(0)} GB · stored only on your device and in your encrypted vault');
-
-    final tabLabels = he
-        ? const ['הכל', 'מסמכים', 'שמע', 'וידאו', 'תמונות']
-        : (ru
-            ? const ['Все', 'Документы', 'Аудио', 'Видео', 'Фото']
-            : const ['All', 'Documents', 'Audio', 'Video', 'Photos']);
+  Widget _buildVaultHeader(bool isWide) {
+    final loc = _l10n;
+    final kicker = loc.vaultScrHeroKicker;
+    final subline = loc.vaultScrHeroSubline(
+      _files.length,
+      _usedGb.toStringAsFixed(1),
+      _quotaGb.toStringAsFixed(0),
+    );
+    final tabLabels = [
+      loc.vaultScrTabAll,
+      loc.vaultScrTabDocuments,
+      loc.vaultScrTabAudio,
+      loc.vaultScrTabVideo,
+      loc.vaultScrTabPhotos,
+    ];
 
     final headerText = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         V26Kicker(kicker),
         const SizedBox(height: 4),
-        V26Headline(_l.title, size: isWide ? 26 : 22, weight: FontWeight.w800),
+        V26Headline(_l10n.vaultScrTitle, size: isWide ? 26 : 22, weight: FontWeight.w800),
         const SizedBox(height: 6),
         Text(
           subline,
@@ -1608,23 +1476,14 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
     );
   }
 
-  Widget _buildStorageCard(String code) {
+  Widget _buildStorageCard() {
     final pct = (_usedMb / _quotaMb).clamp(0.0, 1.0);
-    final he = code == 'he';
-    final ru = code == 'ru';
-    final usedLabel = he
-        ? '${_usedGb.toStringAsFixed(1)} GB מנוצל מתוך ${_quotaGb.toStringAsFixed(0)} GB'
-        : (ru
-            ? '${_usedGb.toStringAsFixed(1)} GB из ${_quotaGb.toStringAsFixed(0)} GB'
-            : '${_usedGb.toStringAsFixed(1)} GB of ${_quotaGb.toStringAsFixed(0)} GB used');
-    final subLabel = he
-        ? '${_files.length} קבצים · הצפנה AES-256 בכל קובץ'
-        : (ru
-            ? '${_files.length} файлов · AES-256 шифрование'
-            : '${_files.length} files · AES-256 per-file encryption');
-    final upgrade = he
-        ? 'שדרג תוכנית'
-        : (ru ? 'Обновить план' : 'Upgrade plan');
+    final usedLabel = _l10n.vaultScrStorageUsedLine(
+      _usedGb.toStringAsFixed(1),
+      _quotaGb.toStringAsFixed(0),
+    );
+    final subLabel = _l10n.vaultScrStorageSubLine(_files.length);
+    final upgrade = _l10n.vaultScrUpgradePlan;
 
     return V26Card(
       padding: const EdgeInsets.all(16),
@@ -1696,7 +1555,7 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
             return OutlinedButton.icon(
               onPressed: _createSubfolder,
               icon: const Icon(Icons.create_new_folder_outlined, size: 16),
-              label: Text(_l.newFolder),
+              label: Text(_l10n.vaultScrNewFolder),
               style: OutlinedButton.styleFrom(
                 foregroundColor: V26.navy600,
                 side: const BorderSide(color: V26.hairline),
@@ -1746,10 +1605,10 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
         padding: const EdgeInsets.symmetric(vertical: 40),
         child: V26Empty(
           icon: Icons.folder_open_outlined,
-          title: _l.noFiles,
-          description: _l.upload,
+          title: _l10n.vaultScrNoFiles,
+          description: _l10n.vaultScrUpload,
           action: V26PillCTA(
-            label: _l.upload,
+            label: _l10n.vaultScrUpload,
             icon: Icons.add,
             onTap: _uploading ? null : _pickFile,
           ),
@@ -1771,7 +1630,7 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
         final f = here[i];
         return _Vault2026FileCard(
           file: f,
-          l: _l,
+          l10n: _l10n,
           onTap: () => _showPreview(f),
           onMenu: () => _showFileActions(f),
           onLongPress: () => _showFileActions(f),
@@ -1780,22 +1639,18 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
     );
   }
 
-  Widget _buildCasesSection(String code) {
-    final he = code == 'he';
-    final ru = code == 'ru';
-    final title = he
-        ? 'תיקים משפטיים'
-        : (ru ? 'Юридические дела' : 'Legal cases');
+  Widget _buildCasesSection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           children: [
-            V26Kicker(he ? 'תיקי תיעוד' : (ru ? 'Дела' : 'Case files')),
+            V26Kicker(_l10n.vaultScrCasesSectionKicker),
           ],
         ),
         const SizedBox(height: 6),
-        V26Headline(title, size: 20, weight: FontWeight.w800),
+        V26Headline(_l10n.vaultScrLegalCasesSectionTitle,
+            size: 20, weight: FontWeight.w800),
         const SizedBox(height: 12),
         ..._cases.map(
           (c) => Padding(
@@ -1803,7 +1658,7 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
             child: _CaseCard(
               legalCase: c,
               files: _files.where((f) => f.caseId == c.id).toList(),
-              l: _l,
+              l10n: _l10n,
               onRename: () => _renameCase(c),
               onDelete: () => _deleteCase(c),
             ),
@@ -1860,8 +1715,8 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
                 ),
                 title: Text(
                   _analyzing && _activeFileId == f.id
-                      ? _l.analyzing
-                      : _l.aiBtn,
+                      ? _l10n.vaultScrAnalyzing
+                      : _l10n.vaultScrAiBtn,
                   style: const TextStyle(color: V26.ink900),
                 ),
                 onTap: () {
@@ -1877,7 +1732,7 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
                   color: f.lawyerAccess ? V26.warn : V26.ok,
                 ),
                 title: Text(
-                  f.lawyerAccess ? _l.revoke : _l.share,
+                  f.lawyerAccess ? _l10n.vaultScrRevoke : _l10n.vaultScrShare,
                   style: const TextStyle(color: V26.ink900),
                 ),
                 onTap: () {
@@ -1888,7 +1743,7 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
               ListTile(
                 leading: const Icon(Icons.drive_file_rename_outline,
                     color: V26.ink500),
-                title: Text(_l.rename,
+                title: Text(_l10n.vaultScrRename,
                     style: const TextStyle(color: V26.ink900)),
                 onTap: () {
                   Navigator.pop(ctx);
@@ -1900,7 +1755,7 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
                 ListTile(
                   leading:
                       const Icon(Icons.drive_folder_upload, color: V26.ink500),
-                  title: Text(_l.moveToFolder,
+                  title: Text(_l10n.vaultScrMoveToFolder,
                       style: const TextStyle(color: V26.ink900)),
                   onTap: () {
                     Navigator.pop(ctx);
@@ -1911,7 +1766,7 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
                 ListTile(
                   leading: const Icon(Icons.inventory_2_outlined,
                       color: V26.ink500),
-                  title: Text(_l.addToCase,
+                  title: Text(_l10n.vaultScrAddToCase,
                       style: const TextStyle(color: V26.ink900)),
                   onTap: () {
                     Navigator.pop(ctx);
@@ -1922,7 +1777,7 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
                 ListTile(
                   leading: const Icon(Icons.unarchive_outlined,
                       color: V26.ink500),
-                  title: Text(_l.removeFromCase,
+                  title: Text(_l10n.vaultScrRemoveFromCase,
                       style: const TextStyle(color: V26.ink900)),
                   onTap: () {
                     Navigator.pop(ctx);
@@ -1932,7 +1787,7 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
               ListTile(
                 leading: const Icon(Icons.delete_outline_rounded,
                     color: V26.emerg),
-                title: Text(_l.delete,
+                title: Text(_l10n.vaultScrDelete,
                     style:
                         const TextStyle(color: V26.emerg)),
                 onTap: () {
@@ -1988,7 +1843,7 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        _l.uploadZoneTitle,
+                        _l10n.vaultScrUploadZoneTitle,
                         style: const TextStyle(
                           color: V26.ink900,
                           fontSize: 16,
@@ -1997,7 +1852,7 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        _l.uploadZoneHint,
+                        _l10n.vaultScrUploadZoneHint,
                         style: const TextStyle(
                           color: V26.ink500,
                           fontSize: 12,
@@ -2044,7 +1899,7 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
                 child: Text(
-                  (i == 0 && _folderPath[i].name.isEmpty) ? _l.rootVault : _folderPath[i].name,
+                  (i == 0 && _folderPath[i].name.isEmpty) ? _l10n.vaultScrRootVault : _folderPath[i].name,
                   style: TextStyle(
                     color: i == _folderPath.length - 1
                         ? V26.navy600
@@ -2078,14 +1933,14 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
         ),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-          child: Text(_l.addToCase,
+          child: Text(_l10n.vaultScrAddToCase,
               style: const TextStyle(color: V26.ink900,
                   fontWeight: FontWeight.w700, fontSize: 16)),
         ),
         ..._cases.map((c) => ListTile(
           leading: const Icon(Icons.cases_rounded, color: V26.navy600),
           title: Text(c.name, style: const TextStyle(color: V26.ink900)),
-          subtitle: Text('${c.fileIds.length} ${_l.files}',
+          subtitle: Text('${c.fileIds.length} ${_l10n.vaultScrFiles}',
               style: const TextStyle(color: V26.ink500, fontSize: 12)),
           onTap: () => Navigator.pop(ctx, c),
         )),
@@ -2110,16 +1965,15 @@ class _FilesVaultScreenState extends State<FilesVaultScreen>
 class _FolderListTile extends StatelessWidget {
   const _FolderListTile({
     required this.name,
-    required this.l,
     required this.onOpen,
     required this.onDelete,
   });
   final String name;
-  final _L l;
   final VoidCallback onOpen, onDelete;
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Material(
       color: V26.surface,
       borderRadius: BorderRadius.circular(14),
@@ -2150,12 +2004,12 @@ class _FolderListTile extends StatelessWidget {
               ),
               TextButton(
                 onPressed: onOpen,
-                child: Text(l.openFolder),
+                child: Text(l10n.vaultScrOpenFolder),
               ),
               IconButton(
                 icon: const Icon(Icons.delete_outline, color: V26.emerg, size: 20),
                 onPressed: onDelete,
-                tooltip: l.deleteFolder,
+                tooltip: l10n.vaultScrDeleteFolder,
               ),
             ],
           ),
@@ -2169,14 +2023,14 @@ class _FolderListTile extends StatelessWidget {
 // ignore: unused_element
 class _FileCard extends StatelessWidget {
   final _VaultFile file;
-  final _L l;
+  final AppLocalizations l10n;
   final bool isAnalyzing;
   final VoidCallback onAnalyze, onDelete, onToggleAccess, onRename;
   final VoidCallback? onAddToCase, onRemoveFromCase, onMoveToFolder;
   final VoidCallback? onPreview;
 
   const _FileCard({
-    required this.file, required this.l, required this.isAnalyzing,
+    required this.file, required this.l10n, required this.isAnalyzing,
     required this.onAnalyze, required this.onDelete,
     required this.onToggleAccess, required this.onRename,
     // ignore: unused_element_parameter
@@ -2231,7 +2085,7 @@ class _FileCard extends StatelessWidget {
               onPressed: onPreview,
               padding: EdgeInsets.zero,
               constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
-              tooltip: 'Preview',
+              tooltip: l10n.vaultScrPreview,
             ),
           // Lawyer access badge
           if (file.lawyerAccess)
@@ -2246,7 +2100,7 @@ class _FileCard extends StatelessWidget {
                 const Icon(Icons.lock_open_rounded,
                     size: 11, color: V26.ok),
                 const SizedBox(width: 3),
-                Text(l.lawyerAccess, style: const TextStyle(
+                Text(l10n.vaultScrLawyerAccess, style: const TextStyle(
                     color: V26.ok, fontSize: 10,
                     fontWeight: FontWeight.w600)),
               ]),
@@ -2279,7 +2133,7 @@ class _FileCard extends StatelessWidget {
             icon: isAnalyzing
                 ? Icons.hourglass_empty_rounded
                 : Icons.auto_awesome,
-            label: isAnalyzing ? l.analyzing : l.aiBtn,
+            label: isAnalyzing ? l10n.vaultScrAnalyzing : l10n.vaultScrAiBtn,
             color: V26.navy600,
             onTap: isAnalyzing ? null : onAnalyze,
           ),
@@ -2287,40 +2141,40 @@ class _FileCard extends StatelessWidget {
             icon: file.lawyerAccess
                 ? Icons.lock_rounded
                 : Icons.lock_open_rounded,
-            label: file.lawyerAccess ? l.revoke : l.share,
+            label: file.lawyerAccess ? l10n.vaultScrRevoke : l10n.vaultScrShare,
             color: file.lawyerAccess ? V26.warn : V26.ok,
             onTap: onToggleAccess,
           ),
           _ActionChip(
             icon: Icons.edit_note_rounded,
-            label: l.rename,
+            label: l10n.vaultScrRename,
             color: V26.ink300,
             onTap: onRename,
           ),
           if (onAddToCase != null)
             _ActionChip(
               icon: Icons.cases_rounded,
-              label: l.addToCase,
+              label: l10n.vaultScrAddToCase,
               color: V26.navy700,
               onTap: onAddToCase!,
             ),
           if (onMoveToFolder != null)
             _ActionChip(
               icon: Icons.drive_file_move_rounded,
-              label: l.moveToFolder,
+              label: l10n.vaultScrMoveToFolder,
               color: V26.navy600,
               onTap: onMoveToFolder!,
             ),
           _ActionChip(
             icon: Icons.delete_outline_rounded,
-            label: l.delete,
+            label: l10n.vaultScrDelete,
             color: V26.emerg,
             onTap: onDelete,
           ),
           if (file.caseId != null)
             _ActionChip(
               icon: Icons.link_off_rounded,
-              label: l.removeFromCase,
+              label: l10n.vaultScrRemoveFromCase,
               color: V26.warn,
               onTap: onRemoveFromCase,
             ),
@@ -2366,11 +2220,11 @@ class _ActionChip extends StatelessWidget {
 class _CaseCard extends StatelessWidget {
   final _LegalCase legalCase;
   final List<_VaultFile> files;
-  final _L l;
+  final AppLocalizations l10n;
   final VoidCallback onRename, onDelete;
 
   const _CaseCard({
-    required this.legalCase, required this.files, required this.l,
+    required this.legalCase, required this.files, required this.l10n,
     required this.onRename, required this.onDelete,
   });
 
@@ -2406,7 +2260,7 @@ class _CaseCard extends StatelessWidget {
                   fontSize: 15)),
               const SizedBox(height: 2),
               Text(
-                '${files.length} ${l.files}  ·  '
+                '${files.length} ${l10n.vaultScrFiles}  ·  '
                 '${legalCase.createdAt.day}/${legalCase.createdAt.month}/${legalCase.createdAt.year}',
                 style: const TextStyle(color: V26.ink500, fontSize: 12),
               ),
@@ -2444,7 +2298,7 @@ class _CaseCard extends StatelessWidget {
           if (files.length > 3)
             Padding(
               padding: const EdgeInsets.only(top: 4),
-              child: Text('+${files.length - 3} more',
+              child: Text(l10n.vaultScrMoreFilesCount(files.length - 3),
                   style: const TextStyle(
                       color: V26.navy600, fontSize: 12,
                       fontWeight: FontWeight.w600)),
@@ -2461,14 +2315,14 @@ class _CaseCard extends StatelessWidget {
 // ════════════════════════════════════════════════════════════
 class _Vault2026FileCard extends StatelessWidget {
   final _VaultFile file;
-  final _L l;
+  final AppLocalizations l10n;
   final VoidCallback? onTap;
   final VoidCallback? onMenu;
   final VoidCallback? onLongPress;
 
   const _Vault2026FileCard({
     required this.file,
-    required this.l,
+    required this.l10n,
     this.onTap,
     this.onMenu,
     this.onLongPress,
@@ -2535,7 +2389,7 @@ class _Vault2026FileCard extends StatelessWidget {
               ),
               const SizedBox(height: 4),
               Text(
-                '${file.sizeLabel}  ·  ${_timeAgo(file.uploadedAt)}',
+                '${file.sizeLabel}  ·  ${_timeAgo(l10n, file.uploadedAt)}',
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
@@ -2544,15 +2398,20 @@ class _Vault2026FileCard extends StatelessWidget {
                   color: V26.ink500,
                 ),
               ),
-              if (_badges().isNotEmpty) ...[
-                const SizedBox(height: 8),
-                Wrap(
-                  spacing: 4,
-                  runSpacing: 4,
-                  children: _badges(),
-                ),
-              ] else
-                const SizedBox(height: 8),
+              ...(() {
+                final badges = _badges(l10n);
+                if (badges.isEmpty) {
+                  return [const SizedBox(height: 8)];
+                }
+                return [
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 4,
+                    runSpacing: 4,
+                    children: badges,
+                  ),
+                ];
+              })(),
             ],
           ),
         ),
@@ -2560,29 +2419,29 @@ class _Vault2026FileCard extends StatelessWidget {
     );
   }
 
-  List<Widget> _badges() {
+  List<Widget> _badges(AppLocalizations loc) {
     final out = <Widget>[];
     if (file.type.startsWith('audio/')) {
-      out.add(const _BadgePill(label: 'תיעוד שיחה', bg: V26.infoSoft, fg: V26.info));
+      out.add(_BadgePill(label: loc.vaultScrBadgeCallRecording, bg: V26.infoSoft, fg: V26.info));
     }
     if (file.type.startsWith('image/') || file.type.startsWith('video/')) {
-      out.add(const _BadgePill(
-          label: 'חתום GPS', bg: V26.goldSoft, fg: V26.goldDeep));
+      out.add(_BadgePill(
+          label: loc.vaultScrBadgeGpsSigned, bg: V26.goldSoft, fg: V26.goldDeep));
     }
     if (file.type.contains('pdf')) {
       // Treat PDFs as potentially "signed" — show badge if filename hints.
       if (file.name.toLowerCase().contains('signed') ||
           file.name.contains('חתום')) {
-        out.add(const _BadgePill(label: 'חתום', bg: V26.okSoft, fg: V26.ok));
+        out.add(_BadgePill(label: loc.vaultScrBadgeSignedPdf, bg: V26.okSoft, fg: V26.ok));
       }
     }
     if (file.lawyerAccess) {
       out.add(_BadgePill(
-          label: l.lawyerAccess, bg: V26.infoSoft, fg: V26.info));
+          label: loc.vaultScrLawyerAccess, bg: V26.infoSoft, fg: V26.info));
     }
     if (file.caseId != null) {
       out.add(_BadgePill(
-          label: l.legalCase, bg: V26.paper2, fg: V26.navy600));
+          label: loc.vaultScrLegalCase, bg: V26.paper2, fg: V26.navy600));
     }
     return out;
   }
@@ -2603,20 +2462,22 @@ class _Vault2026FileCard extends StatelessWidget {
     return (V26.paper2, V26.navy600);
   }
 
-  static String _timeAgo(DateTime dt) {
+  static String _timeAgo(AppLocalizations loc, DateTime dt) {
     final diff = DateTime.now().difference(dt);
     if (diff.inDays >= 30) {
-      return 'לפני ${(diff.inDays / 30).floor()} חודש';
+      return loc.vaultScrTimeAgoMonths((diff.inDays / 30).floor());
     }
     if (diff.inDays >= 7) {
-      return 'לפני ${(diff.inDays / 7).floor()} שבועות';
+      return loc.vaultScrTimeAgoWeeks((diff.inDays / 7).floor());
     }
     if (diff.inDays >= 1) {
-      return diff.inDays == 1 ? 'אתמול' : 'לפני ${diff.inDays} ימים';
+      return diff.inDays == 1
+          ? loc.vaultScrTimeYesterday
+          : loc.vaultScrTimeAgoDays(diff.inDays);
     }
-    if (diff.inHours >= 1) return 'לפני ${diff.inHours} שעות';
-    if (diff.inMinutes >= 1) return 'לפני ${diff.inMinutes} דק\'';
-    return 'הרגע';
+    if (diff.inHours >= 1) return loc.vaultScrTimeAgoHours(diff.inHours);
+    if (diff.inMinutes >= 1) return loc.vaultScrTimeAgoMinutes(diff.inMinutes);
+    return loc.vaultScrTimeJustNow;
   }
 }
 

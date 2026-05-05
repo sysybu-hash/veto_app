@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/theme/veto_2026.dart';
+import '../../l10n/app_localizations.dart';
 import '../../screens/in_call_speech.dart';
 import '../../services/call_route_args_storage.dart';
 import '../../services/vault_save_queue.dart';
@@ -36,7 +37,6 @@ class _CallScreenState extends State<CallScreen> {
   bool _queuedArtifacts = false;
   bool _vaultExitGateDone = false;
   bool _webMediaInsecure = false;
-  String _webInsecureLang = 'he';
 
   @override
   void initState() {
@@ -64,7 +64,6 @@ class _CallScreenState extends State<CallScreen> {
       if (!mounted) return;
       setState(() {
         _webMediaInsecure = true;
-        _webInsecureLang = args.language;
       });
       return;
     }
@@ -133,7 +132,6 @@ class _CallScreenState extends State<CallScreen> {
   Future<void> _showPostCallVaultDialog(CallSessionController controller) async {
     if (!mounted) return;
     final args = controller.args;
-    final lang = args.language;
     final queue = context.read<VaultSaveQueue>();
     final hasLocalRec =
         controller.peekPostCallRecording != null &&
@@ -206,13 +204,12 @@ class _CallScreenState extends State<CallScreen> {
           context: context,
           barrierDismissible: false,
           builder: (ctx) => _vaultAlertShell(
-            lang: lang,
-            title: CallI18n.vaultSaveTitle.t(lang),
-            body: CallI18n.vaultNothingToSave.t(lang),
+            title: CallL10n.vaultSaveTitle(ctx),
+            body: CallL10n.vaultNothingToSave(ctx),
             actions: [
               FilledButton(
                 onPressed: () => Navigator.pop(ctx),
-                child: Text(CallI18n.vaultSaveSkip.t(lang)),
+                child: Text(CallL10n.vaultSaveSkip(ctx)),
               ),
             ],
           ),
@@ -223,18 +220,17 @@ class _CallScreenState extends State<CallScreen> {
         context: context,
         barrierDismissible: false,
         builder: (ctx) => _vaultAlertShell(
-          lang: lang,
-          title: CallI18n.vaultSaveTitle.t(lang),
-          body: CallI18n.vaultSaveSubtitle.t(lang),
+          title: CallL10n.vaultSaveTitle(ctx),
+          body: CallL10n.vaultSaveSubtitle(ctx),
           actions: [
             FilledButton(
               style: FilledButton.styleFrom(backgroundColor: V26.goldSoft),
               onPressed: () => Navigator.pop(ctx, _VaultSaveChoice.chatOnly),
-              child: Text(CallI18n.vaultSaveChatOnly.t(lang)),
+              child: Text(CallL10n.vaultSaveChatOnly(ctx)),
             ),
             TextButton(
               onPressed: () => Navigator.pop(ctx, _VaultSaveChoice.skip),
-              child: Text(CallI18n.vaultSaveSkip.t(lang)),
+              child: Text(CallL10n.vaultSaveSkip(ctx)),
             ),
           ],
         ),
@@ -248,13 +244,12 @@ class _CallScreenState extends State<CallScreen> {
         context: context,
         barrierDismissible: false,
         builder: (ctx) => _vaultAlertShell(
-          lang: lang,
-          title: CallI18n.vaultSaveTitle.t(lang),
-          body: CallI18n.vaultNothingToSave.t(lang),
+          title: CallL10n.vaultSaveTitle(ctx),
+          body: CallL10n.vaultNothingToSave(ctx),
           actions: [
             FilledButton(
               onPressed: () => Navigator.pop(ctx),
-              child: Text(CallI18n.vaultSaveSkip.t(lang)),
+              child: Text(CallL10n.vaultSaveSkip(ctx)),
             ),
           ],
         ),
@@ -271,7 +266,7 @@ class _CallScreenState extends State<CallScreen> {
           backgroundColor: V26.callGlass,
           surfaceTintColor: Colors.transparent,
           title: Text(
-            CallI18n.vaultSaveTitle.t(lang),
+            CallL10n.vaultSaveTitle(ctx),
             style: const TextStyle(
               color: Colors.white,
               fontFamily: V26.serif,
@@ -284,7 +279,7 @@ class _CallScreenState extends State<CallScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Text(
-                  CallI18n.vaultSaveSubtitle.t(lang),
+                  CallL10n.vaultSaveSubtitle(ctx),
                   style: const TextStyle(
                     color: Colors.white70,
                     fontFamily: V26.sans,
@@ -294,7 +289,7 @@ class _CallScreenState extends State<CallScreen> {
                 if (kIsWeb && !args.chatOnly) ...[
                   const SizedBox(height: 14),
                   Text(
-                    CallI18n.vaultWebNoLocalRecording.t(lang),
+                    CallL10n.vaultWebNoLocalRecording(ctx),
                     style: const TextStyle(
                       color: V26.goldSoft,
                       fontFamily: V26.sans,
@@ -313,7 +308,7 @@ class _CallScreenState extends State<CallScreen> {
                     ),
                     onPressed: () =>
                         Navigator.pop(ctx, _VaultSaveChoice.mediaAndTranscript),
-                    child: Text(CallI18n.vaultSaveMediaAndTranscript.t(lang)),
+                    child: Text(CallL10n.vaultSaveMediaAndTranscript(ctx)),
                   ),
                   const SizedBox(height: 10),
                   OutlinedButton(
@@ -323,7 +318,7 @@ class _CallScreenState extends State<CallScreen> {
                       padding: const EdgeInsets.symmetric(vertical: 14),
                     ),
                     onPressed: () => Navigator.pop(ctx, _VaultSaveChoice.mediaOnly),
-                    child: Text(CallI18n.vaultSaveMediaOnly.t(lang)),
+                    child: Text(CallL10n.vaultSaveMediaOnly(ctx)),
                   ),
                 ],
                 if (hasChat) ...[
@@ -335,14 +330,14 @@ class _CallScreenState extends State<CallScreen> {
                       padding: const EdgeInsets.symmetric(vertical: 14),
                     ),
                     onPressed: () => Navigator.pop(ctx, _VaultSaveChoice.chatOnly),
-                    child: Text(CallI18n.vaultSaveChatOnly.t(lang)),
+                    child: Text(CallL10n.vaultSaveChatOnly(ctx)),
                   ),
                 ],
                 const SizedBox(height: 8),
                 TextButton(
                   onPressed: () => Navigator.pop(ctx, _VaultSaveChoice.skip),
                   child: Text(
-                    CallI18n.vaultSaveSkip.t(lang),
+                    CallL10n.vaultSaveSkip(ctx),
                     style: const TextStyle(color: Colors.white54),
                   ),
                 ),
@@ -356,7 +351,6 @@ class _CallScreenState extends State<CallScreen> {
   }
 
   Widget _vaultAlertShell({
-    required String lang,
     required String title,
     required String body,
     required List<Widget> actions,
@@ -420,19 +414,18 @@ class _CallScreenState extends State<CallScreen> {
           body: SafeArea(
             child: _webMediaInsecure
                 ? _WebInsecureMediaView(
-                    language: _webInsecureLang,
                     onBack: () => Navigator.of(context).pop(),
                   )
                 : controller == null
                     ? const Center(child: CircularProgressIndicator(color: V26.gold))
-                    : _buildContent(controller),
+                    : _buildContent(context, controller),
           ),
         ),
       ),
     );
   }
 
-  Widget _buildContent(CallSessionController controller) {
+  Widget _buildContent(BuildContext context, CallSessionController controller) {
     switch (controller.phase) {
       case CallUiPhase.idle:
       case CallUiPhase.connecting:
@@ -464,7 +457,6 @@ class _CallScreenState extends State<CallScreen> {
           onExit: () => unawaited(controller.endCall()),
         );
       case CallUiPhase.ended:
-        final lang = controller.args.language;
         return Center(
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -474,7 +466,7 @@ class _CallScreenState extends State<CallScreen> {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 28),
                 child: Text(
-                  CallI18n.vaultSaveSubtitle.t(lang),
+                  CallL10n.vaultSaveSubtitle(context),
                   textAlign: TextAlign.center,
                   style: const TextStyle(
                     color: Colors.white70,
@@ -499,20 +491,15 @@ class _CallScreenState extends State<CallScreen> {
   Future<void> _confirmEnd() async {
     final controller = _controller;
     if (controller == null) return;
-    final lang = controller.args.language;
     final ok = await showDialog<bool>(
       context: context,
       barrierDismissible: false,
-      builder: (context) {
+      builder: (dialogCtx) {
         return AlertDialog(
           backgroundColor: V26.surface,
           surfaceTintColor: Colors.transparent,
           title: Text(
-            switch (lang) {
-              'he' => 'לצאת מהשיחה?',
-              'ru' => 'Покинуть звонок?',
-              _ => 'Leave call?',
-            },
+            CallL10n.leaveCallTitle(dialogCtx),
             style: const TextStyle(
               color: V26.ink900,
               fontFamily: V26.serif,
@@ -520,28 +507,18 @@ class _CallScreenState extends State<CallScreen> {
             ),
           ),
           content: Text(
-            switch (lang) {
-              'he' => 'השיחה תיסגר לשני הצדדים.',
-              'ru' => 'Сессия завершится для обеих сторон.',
-              _ => 'The session will end for both sides.',
-            },
+            CallL10n.leaveCallBody(dialogCtx),
             style: const TextStyle(color: V26.ink500, fontFamily: V26.sans),
           ),
           actions: [
             TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: Text(
-                switch (lang) {
-                  'he' => 'ביטול',
-                  'ru' => 'Отмена',
-                  _ => 'Cancel',
-                },
-              ),
+              onPressed: () => Navigator.pop(dialogCtx, false),
+              child: Text(AppLocalizations.of(dialogCtx)!.commonCancel),
             ),
             FilledButton(
               style: FilledButton.styleFrom(backgroundColor: V26.emerg),
-              onPressed: () => Navigator.pop(context, true),
-              child: Text(CallI18n.endCall.t(lang)),
+              onPressed: () => Navigator.pop(dialogCtx, true),
+              child: Text(CallL10n.endCall(dialogCtx)),
             ),
           ],
         );
@@ -612,9 +589,8 @@ class _CallGlowPainter extends CustomPainter {
 }
 
 class _WebInsecureMediaView extends StatelessWidget {
-  const _WebInsecureMediaView({required this.language, required this.onBack});
+  const _WebInsecureMediaView({required this.onBack});
 
-  final String language;
   final VoidCallback onBack;
 
   @override
@@ -631,7 +607,7 @@ class _WebInsecureMediaView extends StatelessWidget {
                 const Icon(Icons.lock_outline, color: V26.goldSoft, size: 56),
                 const SizedBox(height: 16),
                 Text(
-                  CallI18n.webInsecureContext.t(language),
+                  CallL10n.webInsecureContext(context),
                   textAlign: TextAlign.center,
                   style: const TextStyle(
                     color: Colors.white,
@@ -644,7 +620,7 @@ class _WebInsecureMediaView extends StatelessWidget {
                 FilledButton(
                   style: FilledButton.styleFrom(backgroundColor: V26.navy500),
                   onPressed: onBack,
-                  child: Text(CallI18n.errorExit.t(language)),
+                  child: Text(CallL10n.errorExit(context)),
                 ),
               ],
             ),
@@ -666,7 +642,6 @@ class _WebGestureStartView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final lang = controller.args.language;
     return _CallScaffold(
       child: Center(
         child: ConstrainedBox(
@@ -679,7 +654,7 @@ class _WebGestureStartView extends StatelessWidget {
                 const Icon(Icons.touch_app_rounded, color: V26.goldSoft, size: 64),
                 const SizedBox(height: 20),
                 Text(
-                  CallI18n.webStartCallHint.t(lang),
+                  CallL10n.webStartCallHint(context),
                   textAlign: TextAlign.center,
                   style: const TextStyle(
                     color: Colors.white70,
@@ -695,7 +670,7 @@ class _WebGestureStartView extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
                   ),
                   onPressed: onStart,
-                  child: Text(CallI18n.webStartCall.t(lang)),
+                  child: Text(CallL10n.webStartCall(context)),
                 ),
               ],
             ),
@@ -712,7 +687,6 @@ class _ConnectingView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final lang = controller.args.language;
     return _CallScaffold(
       child: Center(
         child: ConstrainedBox(
@@ -738,7 +712,7 @@ class _ConnectingView extends StatelessWidget {
                 ),
                 const SizedBox(height: 24),
                 Text(
-                  CallI18n.badgeConnecting.t(lang),
+                  CallL10n.badgeConnecting(context),
                   textAlign: TextAlign.center,
                   style: const TextStyle(
                     color: Colors.white,
@@ -749,7 +723,7 @@ class _ConnectingView extends StatelessWidget {
                 ),
                 const SizedBox(height: 10),
                 Text(
-                  CallI18n.connectingDetails.t(lang),
+                  CallL10n.connectingDetails(context),
                   textAlign: TextAlign.center,
                   style: const TextStyle(
                     color: Colors.white70,
@@ -782,7 +756,6 @@ class _IncomingView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final args = controller.args;
-    final lang = args.language;
     return _CallScaffold(
       child: Center(
         child: ConstrainedBox(
@@ -807,7 +780,7 @@ class _IncomingView extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    CallI18n.incomingBadge.t(lang),
+                    CallL10n.incomingBadge(context),
                     textAlign: TextAlign.center,
                     style: const TextStyle(
                       color: V26.goldSoft,
@@ -849,7 +822,7 @@ class _IncomingView extends StatelessWidget {
                             padding: const EdgeInsets.symmetric(vertical: 16),
                           ),
                           onPressed: onDecline,
-                          child: Text(CallI18n.incomingDecline.t(lang)),
+                          child: Text(CallL10n.incomingDecline(context)),
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -860,7 +833,7 @@ class _IncomingView extends StatelessWidget {
                             padding: const EdgeInsets.symmetric(vertical: 16),
                           ),
                           onPressed: onAccept,
-                          child: Text(CallI18n.incomingAccept.t(lang)),
+                          child: Text(CallL10n.incomingAccept(context)),
                         ),
                       ),
                     ],
@@ -955,7 +928,7 @@ class _ActiveView extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               Text(
-                CallI18n.aes256Footer.t(args.language),
+                CallL10n.aes256Footer(context),
                 style: const TextStyle(
                   color: V26.goldSoft,
                   fontFamily: V26.sans,
@@ -1050,8 +1023,8 @@ class _TopBar extends StatelessWidget {
                   const SizedBox(height: 2),
                   Text(
                     controller.phase == CallUiPhase.reconnecting
-                        ? CallI18n.errorNetwork.t(args.language)
-                        : CallI18n.connectedEncrypted.t(args.language),
+                        ? CallL10n.errorNetwork(context)
+                        : CallL10n.connectedEncrypted(context),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
@@ -1073,7 +1046,7 @@ class _TopBar extends StatelessWidget {
             if (!compact) ...[
               const SizedBox(width: 8),
               _Pill(
-                label: _qualityLabel(controller.quality, args.language),
+                label: _qualityLabel(controller.quality, context),
                 color: V26.callGlassSoft,
                 textColor: V26.goldSoft,
                 small: compact,
@@ -1226,7 +1199,7 @@ class _VideoStage extends StatelessWidget {
                 if (hasRemote && !controller.remoteVideoReady)
                   Center(
                     child: _Pill(
-                      label: CallI18n.waitingForPeerVideo.t(controller.args.language),
+                      label: CallL10n.waitingForPeerVideo(context),
                       color: V26.callGlass,
                       textColor: V26.goldSoft,
                     ),
@@ -1293,7 +1266,6 @@ class _VideoPlaceholder extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final lang = controller.args.language;
     return Container(
       decoration: const BoxDecoration(
         gradient: LinearGradient(
@@ -1310,8 +1282,8 @@ class _VideoPlaceholder extends StatelessWidget {
           const SizedBox(height: 14),
           Text(
             controller.videoMuted
-                ? CallI18n.cameraOffLabel.t(lang)
-                : CallI18n.waitingForPeer.t(lang),
+                ? CallL10n.cameraOffLabel(context)
+                : CallL10n.waitingForPeer(context),
             textAlign: TextAlign.center,
             style: const TextStyle(
               color: Colors.white70,
@@ -1350,7 +1322,7 @@ class _VoiceStage extends StatelessWidget {
             const Icon(Icons.graphic_eq_rounded, color: V26.goldSoft, size: 80),
             const SizedBox(height: 18),
             Text(
-              CallI18n.voiceHeader.t(controller.args.language),
+              CallL10n.voiceHeader(context),
               textAlign: TextAlign.center,
               style: const TextStyle(
                 color: Colors.white,
@@ -1409,7 +1381,7 @@ class _Toolbar extends StatelessWidget {
               icon: Icons.call_end,
               danger: true,
               onPressed: onEnd,
-              tooltip: CallI18n.endCall.t(controller.args.language),
+              tooltip: CallL10n.endCall(context),
               diameter: btn,
             ),
             _RoundButton(
@@ -1417,8 +1389,8 @@ class _Toolbar extends StatelessWidget {
               active: !controller.micMuted,
               onPressed: () => unawaited(controller.setMicMuted(!controller.micMuted)),
               tooltip: controller.micMuted
-                  ? CallI18n.unmuteMic.t(controller.args.language)
-                  : CallI18n.muteMic.t(controller.args.language),
+                  ? CallL10n.unmuteMic(context)
+                  : CallL10n.muteMic(context),
               diameter: btn,
             ),
             if (controller.args.wantVideo)
@@ -1427,15 +1399,15 @@ class _Toolbar extends StatelessWidget {
                 active: !controller.videoMuted,
                 onPressed: () => unawaited(controller.setVideoMuted(!controller.videoMuted)),
                 tooltip: controller.videoMuted
-                    ? CallI18n.camera.t(controller.args.language)
-                    : CallI18n.cameraOff.t(controller.args.language),
+                    ? CallL10n.camera(context)
+                    : CallL10n.cameraOff(context),
                 diameter: btn,
               ),
             if (!kIsWeb && controller.args.wantVideo)
               _RoundButton(
                 icon: Icons.flip_camera_ios,
                 onPressed: () => unawaited(controller.switchCamera()),
-                tooltip: CallI18n.flipCamera.t(controller.args.language),
+                tooltip: CallL10n.flipCamera(context),
                 diameter: btn,
               ),
             if (!kIsWeb)
@@ -1443,7 +1415,7 @@ class _Toolbar extends StatelessWidget {
                 icon: controller.speakerOn ? Icons.volume_up : Icons.hearing,
                 active: controller.speakerOn,
                 onPressed: () => unawaited(controller.setSpeakerOn(!controller.speakerOn)),
-                tooltip: CallI18n.speaker.t(controller.args.language),
+                tooltip: CallL10n.speaker(context),
                 diameter: btn,
               ),
             if (kIsWeb && controller.args.wantVideo)
@@ -1452,8 +1424,8 @@ class _Toolbar extends StatelessWidget {
                 active: controller.screenSharing,
                 onPressed: () => unawaited(controller.toggleScreenShare()),
                 tooltip: controller.screenSharing
-                    ? CallI18n.stopScreenShare.t(controller.args.language)
-                    : CallI18n.screenShare.t(controller.args.language),
+                    ? CallL10n.stopScreenShare(context)
+                    : CallL10n.screenShare(context),
                 diameter: btn,
               ),
             _RoundButton(
@@ -1462,14 +1434,14 @@ class _Toolbar extends StatelessWidget {
               onPressed: () => unawaited(
                 controller.setNoiseSuppression(!controller.noiseSuppression),
               ),
-              tooltip: CallI18n.noiseSuppression.t(controller.args.language),
+              tooltip: CallL10n.noiseSuppression(context),
               diameter: btn,
             ),
             if (onChat != null)
               _RoundButton(
                 icon: Icons.chat_bubble_outline,
                 onPressed: onChat,
-                tooltip: CallI18n.openChat.t(controller.args.language),
+                tooltip: CallL10n.openChat(context),
                 diameter: btn,
               ),
           ],
@@ -1538,7 +1510,6 @@ class _ChatPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final lang = controller.args.language;
     return Container(
       decoration: BoxDecoration(
         color: V26.callGlass,
@@ -1553,7 +1524,7 @@ class _ChatPanel extends StatelessWidget {
               children: [
                 Expanded(
                   child: Text(
-                    CallI18n.tabChat.t(lang),
+                    CallL10n.tabChat(context),
                     style: const TextStyle(
                       color: Colors.white,
                       fontFamily: V26.sans,
@@ -1569,8 +1540,8 @@ class _ChatPanel extends StatelessWidget {
                   ),
                   label: Text(
                     speech.listening
-                        ? CallI18n.captionStop.t(lang)
-                        : CallI18n.captionStart.t(lang),
+                        ? CallL10n.captionStop(context)
+                        : CallL10n.captionStart(context),
                   ),
                   style: TextButton.styleFrom(foregroundColor: V26.goldSoft),
                 ),
@@ -1586,7 +1557,7 @@ class _ChatPanel extends StatelessWidget {
                   Padding(
                     padding: const EdgeInsets.only(top: 20),
                     child: Text(
-                      CallI18n.chatEmpty.t(lang),
+                      CallL10n.chatEmpty(context),
                       textAlign: TextAlign.center,
                       style: const TextStyle(color: Colors.white54, fontFamily: V26.sans),
                     ),
@@ -1624,7 +1595,7 @@ class _ChatPanel extends StatelessWidget {
                   ),
                 if (speech.error != null)
                   Text(
-                    kIsWeb ? CallI18n.captionWebNotice.t(lang) : speech.error!,
+                    kIsWeb ? CallL10n.captionWebNotice(context) : speech.error!,
                     style: const TextStyle(color: Colors.white54, fontFamily: V26.sans),
                   ),
               ],
@@ -1641,7 +1612,7 @@ class _ChatPanel extends StatelessWidget {
                     maxLines: 3,
                     style: const TextStyle(color: Colors.white, fontFamily: V26.sans),
                     decoration: InputDecoration(
-                      hintText: CallI18n.messagePlaceholder.t(lang),
+                      hintText: CallL10n.messagePlaceholder(context),
                       hintStyle: const TextStyle(color: Colors.white38),
                       filled: true,
                       fillColor: Colors.white.withValues(alpha: .08),
@@ -1658,7 +1629,7 @@ class _ChatPanel extends StatelessWidget {
                 FilledButton(
                   style: FilledButton.styleFrom(backgroundColor: V26.goldDeep),
                   onPressed: onSend,
-                  child: Text(CallI18n.sendMessage.t(lang)),
+                  child: Text(CallL10n.sendMessage(context)),
                 ),
               ],
             ),
@@ -1682,7 +1653,6 @@ class _ErrorView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final lang = controller.args.language;
     final failure = controller.failure;
     return _CallScaffold(
       child: Center(
@@ -1703,7 +1673,7 @@ class _ErrorView extends StatelessWidget {
                   const Icon(Icons.warning_amber_rounded, color: V26.callDangerRed, size: 58),
                   const SizedBox(height: 16),
                   Text(
-                    CallI18n.errorTitle.t(lang),
+                    CallL10n.errorTitle(context),
                     textAlign: TextAlign.center,
                     style: const TextStyle(
                       color: Colors.white,
@@ -1714,7 +1684,7 @@ class _ErrorView extends StatelessWidget {
                   ),
                   const SizedBox(height: 10),
                   Text(
-                    _errorText(failure, lang),
+                    _errorText(failure, context),
                     textAlign: TextAlign.center,
                     style: const TextStyle(color: Colors.white70, fontFamily: V26.sans),
                   ),
@@ -1743,7 +1713,7 @@ class _ErrorView extends StatelessWidget {
                             padding: const EdgeInsets.symmetric(vertical: 14),
                           ),
                           onPressed: onExit,
-                          child: Text(CallI18n.errorExit.t(lang)),
+                          child: Text(CallL10n.errorExit(context)),
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -1754,7 +1724,7 @@ class _ErrorView extends StatelessWidget {
                             padding: const EdgeInsets.symmetric(vertical: 14),
                           ),
                           onPressed: onRetry,
-                          child: Text(CallI18n.errorRetry.t(lang)),
+                          child: Text(CallL10n.errorRetry(context)),
                         ),
                       ),
                     ],
@@ -1775,34 +1745,34 @@ String _formatDuration(int seconds) {
   return '${minutes.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}';
 }
 
-String _qualityLabel(CallNetworkQuality quality, String lang) {
+String _qualityLabel(CallNetworkQuality quality, BuildContext context) {
   final worst = quality.worst;
   if (worst <= 0) return 'LTE';
-  if (worst <= 2) return CallI18n.qualityExcellent.t(lang);
-  if (worst == 3) return CallI18n.qualityGood.t(lang);
-  if (worst == 4) return CallI18n.qualityFair.t(lang);
-  if (worst == 5) return CallI18n.qualityPoor.t(lang);
-  return CallI18n.qualityVeryPoor.t(lang);
+  if (worst <= 2) return CallL10n.qualityExcellent(context);
+  if (worst == 3) return CallL10n.qualityGood(context);
+  if (worst == 4) return CallL10n.qualityFair(context);
+  if (worst == 5) return CallL10n.qualityPoor(context);
+  return CallL10n.qualityVeryPoor(context);
 }
 
-String _errorText(CallFailure? failure, String lang) {
+String _errorText(CallFailure? failure, BuildContext context) {
   switch (failure?.kind) {
     case CallFailureKind.permissionDenied:
-      return CallI18n.errorPermission.t(lang);
+      return CallL10n.errorPermission(context);
     case CallFailureKind.tokenInvalid:
-      return CallI18n.errorTokenInvalid.t(lang);
+      return CallL10n.errorTokenInvalid(context);
     case CallFailureKind.tokenExpired:
-      return CallI18n.errorTokenExpired.t(lang);
+      return CallL10n.errorTokenExpired(context);
     case CallFailureKind.networkLost:
-      return CallI18n.errorNetwork.t(lang);
+      return CallL10n.errorNetwork(context);
     case CallFailureKind.mediaUnavailable:
-      return CallI18n.errorMedia.t(lang);
+      return CallL10n.errorMedia(context);
     case CallFailureKind.uidConflict:
-      return CallI18n.errorUidConflict.t(lang);
+      return CallL10n.errorUidConflict(context);
     case CallFailureKind.connectionFailed:
     case CallFailureKind.unknown:
     case CallFailureKind.none:
     case null:
-      return CallI18n.errorGeneric.t(lang);
+      return CallL10n.errorGeneric(context);
   }
 }

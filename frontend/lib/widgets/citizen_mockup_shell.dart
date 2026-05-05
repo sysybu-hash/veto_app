@@ -9,6 +9,7 @@ import 'package:provider/provider.dart';
 import '../core/i18n/app_language.dart';
 import '../core/theme/veto_2026.dart';
 import '../core/theme/veto_mockup_tokens.dart';
+import '../l10n/app_localizations.dart';
 import 'app_language_menu.dart';
 import 'mockup_desktop_top_bar.dart';
 import 'veto_dialogs.dart';
@@ -17,52 +18,47 @@ import 'veto_dialogs.dart';
 const double kCitizenMockupDesktopBreakpoint = 1080;
 
 class _NavEntry {
-  const _NavEntry({
-    required this.route,
-    required this.labelHe,
-    required this.labelEn,
-    required this.labelRu,
-    required this.icon,
-  });
+  const _NavEntry({required this.route, required this.icon});
 
   final String route;
-  final String labelHe;
-  final String labelEn;
-  final String labelRu;
   final IconData icon;
+}
 
-  String label(String code) {
-    if (code == 'en') return labelEn;
-    if (code == 'ru') return labelRu;
-    return labelHe;
+String _sidebarLabel(AppLocalizations l10n, String route) {
+  switch (route) {
+    case '/veto_screen':
+      return l10n.citizenShellNavHome;
+    case '/files_vault':
+      return l10n.citizenShellNavCases;
+    case '/citizen_contracts':
+      return l10n.citizenShellNavContracts;
+    case '/citizen_notifications':
+      return l10n.citizenShellNavAlerts;
+    case '/citizen_tasks':
+      return l10n.citizenShellNavTasks;
+    case '/citizen_contacts':
+      return l10n.citizenShellNavContacts;
+    case '/citizen_tools':
+      return l10n.citizenShellNavTools;
+    case '/citizen_reports':
+      return l10n.citizenShellNavReports;
+    case '/settings':
+      return l10n.citizenShellNavSettings;
+    default:
+      return route;
   }
 }
 
 const List<_NavEntry> _kSidebarEntries = [
-  _NavEntry(route: '/veto_screen', labelHe: 'בית', labelEn: 'Home', labelRu: 'Главная', icon: Icons.home_rounded),
-  _NavEntry(route: '/files_vault', labelHe: 'תיקים', labelEn: 'Cases', labelRu: 'Дела', icon: Icons.folder_rounded),
-  _NavEntry(
-      route: '/citizen_contracts',
-      labelHe: 'חוזים',
-      labelEn: 'Contracts',
-      labelRu: 'Договоры',
-      icon: Icons.description_rounded),
-  _NavEntry(
-      route: '/citizen_notifications',
-      labelHe: 'התראות',
-      labelEn: 'Alerts',
-      labelRu: 'Уведомления',
-      icon: Icons.notifications_none_rounded),
-  _NavEntry(route: '/citizen_tasks', labelHe: 'משימות', labelEn: 'Tasks', labelRu: 'Задачи', icon: Icons.task_alt_rounded),
-  _NavEntry(
-      route: '/citizen_contacts',
-      labelHe: 'אנשי קשר',
-      labelEn: 'Contacts',
-      labelRu: 'Контакты',
-      icon: Icons.people_outline_rounded),
-  _NavEntry(route: '/citizen_tools', labelHe: 'כלים', labelEn: 'Tools', labelRu: 'Инструменты', icon: Icons.build_outlined),
-  _NavEntry(route: '/citizen_reports', labelHe: 'דוחות', labelEn: 'Reports', labelRu: 'Отчёты', icon: Icons.bar_chart_rounded),
-  _NavEntry(route: '/settings', labelHe: 'הגדרות', labelEn: 'Settings', labelRu: 'Настройки', icon: Icons.settings_outlined),
+  _NavEntry(route: '/veto_screen', icon: Icons.home_rounded),
+  _NavEntry(route: '/files_vault', icon: Icons.folder_rounded),
+  _NavEntry(route: '/citizen_contracts', icon: Icons.description_rounded),
+  _NavEntry(route: '/citizen_notifications', icon: Icons.notifications_none_rounded),
+  _NavEntry(route: '/citizen_tasks', icon: Icons.task_alt_rounded),
+  _NavEntry(route: '/citizen_contacts', icon: Icons.people_outline_rounded),
+  _NavEntry(route: '/citizen_tools', icon: Icons.build_outlined),
+  _NavEntry(route: '/citizen_reports', icon: Icons.bar_chart_rounded),
+  _NavEntry(route: '/settings', icon: Icons.settings_outlined),
 ];
 
 class CitizenMockupShell extends StatefulWidget {
@@ -114,18 +110,17 @@ class _CitizenMockupShellState extends State<CitizenMockupShell> {
     Navigator.of(context).pushReplacementNamed('/veto_screen');
   }
 
-  Future<void> _moreSheet(BuildContext context, String code) async {
-    final he = code == 'he';
-    final ru = code == 'ru';
+  Future<void> _moreSheet(BuildContext context) async {
+    final l10n = AppLocalizations.of(context)!;
     await showVetoBottomSheet(
       context: context,
-      title: he ? 'עוד' : (ru ? 'Ещё' : 'More'),
+      title: l10n.citizenShellMoreTitle,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           ListTile(
             leading: const Icon(Icons.chat_bubble_outline),
-            title: Text(he ? 'צ\'אט AI' : (ru ? 'AI-чат' : 'AI Chat')),
+            title: Text(l10n.citizenShellMoreAiChat),
             onTap: () {
               Navigator.pop(context);
               _go(context, '/chat');
@@ -133,7 +128,7 @@ class _CitizenMockupShellState extends State<CitizenMockupShell> {
           ),
           ListTile(
             leading: const Icon(Icons.event_note_rounded),
-            title: Text(he ? 'יומן משפטי' : (ru ? 'Календарь' : 'Calendar')),
+            title: Text(l10n.citizenShellMoreCalendar),
             onTap: () {
               Navigator.pop(context);
               _go(context, '/legal_calendar');
@@ -141,7 +136,7 @@ class _CitizenMockupShellState extends State<CitizenMockupShell> {
           ),
           ListTile(
             leading: const Icon(Icons.edit_note_rounded),
-            title: Text(he ? 'מחברת' : (ru ? 'Блокнот' : 'Notebook')),
+            title: Text(l10n.citizenShellMoreNotebook),
             onTap: () {
               Navigator.pop(context);
               _go(context, '/legal_notebook');
@@ -149,7 +144,7 @@ class _CitizenMockupShellState extends State<CitizenMockupShell> {
           ),
           ListTile(
             leading: const Icon(Icons.map_rounded),
-            title: Text(he ? 'מפה' : (ru ? 'Карта' : 'Map')),
+            title: Text(l10n.citizenShellMoreMap),
             onTap: () {
               Navigator.pop(context);
               _go(context, '/maps');
@@ -157,7 +152,7 @@ class _CitizenMockupShellState extends State<CitizenMockupShell> {
           ),
           ListTile(
             leading: const Icon(Icons.bar_chart_rounded),
-            title: Text(he ? 'דוחות' : (ru ? 'Отчёты' : 'Reports')),
+            title: Text(l10n.citizenShellMoreReports),
             onTap: () {
               Navigator.pop(context);
               _go(context, '/citizen_reports');
@@ -165,7 +160,7 @@ class _CitizenMockupShellState extends State<CitizenMockupShell> {
           ),
           ListTile(
             leading: const Icon(Icons.settings_outlined),
-            title: Text(he ? 'הגדרות' : (ru ? 'Настройки' : 'Settings')),
+            title: Text(l10n.citizenShellMoreSettings),
             onTap: () {
               Navigator.pop(context);
               _go(context, '/settings');
@@ -173,7 +168,7 @@ class _CitizenMockupShellState extends State<CitizenMockupShell> {
           ),
           ListTile(
             leading: const Icon(Icons.person_rounded),
-            title: Text(he ? 'פרופיל' : (ru ? 'Профиль' : 'Profile')),
+            title: Text(l10n.citizenShellMoreProfile),
             onTap: () {
               Navigator.pop(context);
               _go(context, '/profile');
@@ -202,7 +197,6 @@ class _CitizenMockupShellState extends State<CitizenMockupShell> {
             children: [
               _DesktopSidebar(
                 currentRoute: widget.currentRoute,
-                langCode: code,
                 onSelect: (r) => _go(context, r),
               ),
               Expanded(
@@ -211,7 +205,6 @@ class _CitizenMockupShellState extends State<CitizenMockupShell> {
                   children: [
                     MockupDesktopTopBar(
                       searchController: _searchCtrl,
-                      langCode: code,
                       trailing: widget.desktopTrailing,
                       onProfile: () => Navigator.pushNamed(context, '/profile'),
                       onNotifications: () => _go(context, '/citizen_notifications'),
@@ -226,6 +219,7 @@ class _CitizenMockupShellState extends State<CitizenMockupShell> {
       );
     }
 
+    final l10n = AppLocalizations.of(context)!;
     return Directionality(
       textDirection: isRtl ? TextDirection.rtl : TextDirection.ltr,
       child: Scaffold(
@@ -236,12 +230,12 @@ class _CitizenMockupShellState extends State<CitizenMockupShell> {
         bottomNavigationBar: widget.showMobileBottomBar
             ? _CitizenMobileBottomNav(
                 currentIndex: widget.mobileNavIndex,
-                langCode: code,
+                l10n: l10n,
                 onHome: () => _goVetoHub(context),
                 onProtections: () => _goVetoWizard(context),
                 onSendVeto: () => _goVetoWizard(context),
                 onDocuments: () => _go(context, '/files_vault'),
-                onMore: () => _moreSheet(context, code),
+                onMore: () => _moreSheet(context),
               )
             : null,
       ),
@@ -252,16 +246,15 @@ class _CitizenMockupShellState extends State<CitizenMockupShell> {
 class _DesktopSidebar extends StatelessWidget {
   const _DesktopSidebar({
     required this.currentRoute,
-    required this.langCode,
     required this.onSelect,
   });
 
   final String currentRoute;
-  final String langCode;
   final ValueChanged<String> onSelect;
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       width: 260,
       decoration: const BoxDecoration(
@@ -323,7 +316,7 @@ class _DesktopSidebar extends StatelessWidget {
                               const SizedBox(width: 12),
                               Expanded(
                                 child: Text(
-                                  e.label(langCode),
+                                  _sidebarLabel(l10n, e.route),
                                   style: TextStyle(
                                     fontFamily: V26.sans,
                                     fontWeight: active ? FontWeight.w800 : FontWeight.w600,
@@ -355,7 +348,7 @@ class _DesktopSidebar extends StatelessWidget {
 class _CitizenMobileBottomNav extends StatelessWidget {
   const _CitizenMobileBottomNav({
     required this.currentIndex,
-    required this.langCode,
+    required this.l10n,
     required this.onHome,
     required this.onProtections,
     required this.onSendVeto,
@@ -364,7 +357,7 @@ class _CitizenMobileBottomNav extends StatelessWidget {
   });
 
   final int currentIndex;
-  final String langCode;
+  final AppLocalizations l10n;
   final VoidCallback onHome;
   final VoidCallback onProtections;
   final VoidCallback onSendVeto;
@@ -373,7 +366,6 @@ class _CitizenMobileBottomNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final he = langCode == 'he';
     Widget item(int idx, IconData icon, String label, VoidCallback onTap) {
       final sel = currentIndex == idx;
       return Expanded(
@@ -413,8 +405,8 @@ class _CitizenMobileBottomNav extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          item(0, Icons.home_rounded, he ? 'בית' : 'Home', onHome),
-          item(1, Icons.shield_outlined, he ? 'הגנות' : 'Shield', onProtections),
+          item(0, Icons.home_rounded, l10n.citizenShellMobileHome, onHome),
+          item(1, Icons.shield_outlined, l10n.citizenShellMobileProtections, onProtections),
           Expanded(
             child: Transform.translate(
               offset: const Offset(0, -18),
@@ -437,8 +429,8 @@ class _CitizenMobileBottomNav extends StatelessWidget {
               ),
             ),
           ),
-          item(3, Icons.folder_rounded, he ? 'מסמכים' : 'Files', onDocuments),
-          item(4, Icons.more_horiz_rounded, he ? 'עוד' : 'More', onMore),
+          item(3, Icons.folder_rounded, l10n.citizenShellMobileDocuments, onDocuments),
+          item(4, Icons.more_horiz_rounded, l10n.citizenShellMobileMore, onMore),
         ],
       ),
     );

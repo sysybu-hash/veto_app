@@ -13,61 +13,10 @@ import '../config/app_config.dart';
 import '../core/i18n/app_language.dart';
 import '../core/theme/veto_2026.dart';
 import '../core/theme/veto_mockup_tokens.dart';
+import '../l10n/app_localizations.dart';
 import '../services/auth_service.dart';
 import '../widgets/app_language_menu.dart';
 import '../widgets/citizen_mockup_shell.dart';
-
-// ── i18n ──────────────────────────────────────────────────────
-const _i18n = {
-  'he': {
-    'title': 'שיחות',
-    'newChat': 'שיחה חדשה',
-    'noConversations': 'אין שיחות עדיין',
-    'typeMessage': 'הקלד הודעה...',
-    'send': 'שלח',
-    'today': 'היום',
-    'yesterday': 'אתמול',
-    'loadingMore': 'טוען...',
-    'deleteMsg': 'מחק הודעה',
-    'you': 'אתה',
-    'selectPartner': 'בחר שותף לשיחה',
-    'noPartners': 'אין גורמים זמינים לשיחה',
-    'back': 'חזור',
-    'unread': 'הודעות שלא נקראו',
-  },
-  'en': {
-    'title': 'Conversations',
-    'newChat': 'New Chat',
-    'noConversations': 'No conversations yet',
-    'typeMessage': 'Type a message...',
-    'send': 'Send',
-    'today': 'Today',
-    'yesterday': 'Yesterday',
-    'loadingMore': 'Loading...',
-    'deleteMsg': 'Delete message',
-    'you': 'You',
-    'selectPartner': 'Select a partner to chat with',
-    'noPartners': 'No available partners',
-    'back': 'Back',
-    'unread': 'Unread messages',
-  },
-  'ru': {
-    'title': 'Беседы',
-    'newChat': 'Новый чат',
-    'noConversations': 'Нет разговоров',
-    'typeMessage': 'Введите сообщение...',
-    'send': 'Отправить',
-    'today': 'Сегодня',
-    'yesterday': 'Вчера',
-    'loadingMore': 'Загрузка...',
-    'deleteMsg': 'Удалить сообщение',
-    'you': 'Вы',
-    'selectPartner': 'Выберите собеседника',
-    'noPartners': 'Нет доступных собеседников',
-    'back': 'Назад',
-    'unread': 'Непрочитанные',
-  },
-};
 
 // ── Data models ───────────────────────────────────────────────
 class _Conversation {
@@ -160,8 +109,19 @@ class _ChatScreenState extends State<ChatScreen> {
   Timer? _conversationPoll;
 
   String _t(String key) {
-    final code = context.read<AppLanguageController>().code;
-    return _i18n[code]?[key] ?? _i18n['en']![key] ?? key;
+    final l = AppLocalizations.of(context)!;
+    return switch (key) {
+      'title' => l.chatScrTitle,
+      'newChat' => l.chatScrNewChat,
+      'noConversations' => l.chatScrNoConversations,
+      'typeMessage' => l.chatScrTypeMessage,
+      'today' => l.chatScrToday,
+      'yesterday' => l.chatScrYesterday,
+      'deleteMsg' => l.chatScrDeleteMsg,
+      'selectPartner' => l.chatScrSelectPartner,
+      'noPartners' => l.chatScrNoPartners,
+      _ => key,
+    };
   }
 
   @override
@@ -561,9 +521,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 V26CitizenNav.go(context, V26CitizenNav.routes[i],
                     current: '/chat');
               },
-              desktopStatusText: isRtl
-                  ? 'שיחות פעילות · מוצפן E2E'
-                  : 'Active conversations · E2E encrypted',
+              desktopStatusText: AppLocalizations.of(context)!.chatScrDesktopStatus,
               child: wideShellChild,
             ),
           );
@@ -869,8 +827,8 @@ class _ChatScreenState extends State<ChatScreen> {
                     actions: [
                       TextButton(
                         onPressed: () => Navigator.pop(ctx),
-                        child: const Text('Cancel',
-                            style: TextStyle(color: V26.ink500)),
+                        child: Text(AppLocalizations.of(ctx)!.commonCancel,
+                            style: const TextStyle(color: V26.ink500)),
                       ),
                       FilledButton(
                         onPressed: () {
@@ -879,7 +837,7 @@ class _ChatScreenState extends State<ChatScreen> {
                         },
                         style: FilledButton.styleFrom(
                             backgroundColor: V26.emerg),
-                        child: const Text('Delete'),
+                        child: Text(AppLocalizations.of(ctx)!.commonDelete),
                       ),
                     ],
                   ),

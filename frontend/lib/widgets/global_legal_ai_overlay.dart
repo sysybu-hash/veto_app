@@ -25,6 +25,8 @@ import '../navigation/current_route_observer.dart';
 import '../platform/browser_bridge.dart' as browser_bridge;
 import '../services/auth_service.dart';
 import '../services/legal_assistant_api_service.dart';
+import '../core/i18n/app_language.dart';
+import '../l10n/app_localizations.dart';
 
 const Set<String> _kHiddenRoutes = {
   '/',
@@ -67,7 +69,6 @@ class _GlobalLegalAiOverlayState extends State<GlobalLegalAiOverlay> {
   @override
   void initState() {
     super.initState();
-    _messages.add(_OverlayMsg.bot('שלום, אני סוכן VETO. במה אפשר לעזור?'));
     _loadPrefs();
     if (kIsWeb) {
       browser_bridge.registerGeminiLiveResultHandler(_onLiveResult);
@@ -91,6 +92,11 @@ class _GlobalLegalAiOverlayState extends State<GlobalLegalAiOverlay> {
       _speechLang = sl;
       _token = t;
       _hasToken = (t != null && t.isNotEmpty);
+      if (_messages.isEmpty) {
+        final code = AppLanguage.normalize(lang);
+        _messages.add(_OverlayMsg.bot(
+            lookupAppLocalizations(Locale(code)).legalAiWelcome));
+      }
     });
   }
 
@@ -141,11 +147,12 @@ class _GlobalLegalAiOverlayState extends State<GlobalLegalAiOverlay> {
 
     if (data['err'] != null) {
       final e = data['err'].toString();
+      final loc = lookupAppLocalizations(Locale(AppLanguage.normalize(_lang)));
       final friendly = e == 'live_socket_closed'
-          ? 'החיבור הקולי נותק. הקש שוב על המיקרופון.'
+          ? loc.legalAiVoiceSocketClosed
           : e == 'not_supported'
-              ? 'הדפדפן הזה לא תומך בקלט קול.'
-              : 'שגיאת שמע: $e';
+              ? loc.legalAiVoiceNotSupported
+              : loc.legalAiAudioError(e);
       setState(() => _messages.add(_OverlayMsg.bot(friendly)));
       return;
     }
@@ -178,13 +185,13 @@ class _GlobalLegalAiOverlayState extends State<GlobalLegalAiOverlay> {
   }
 
   Future<void> _toggleMic() async {
+    final loc = lookupAppLocalizations(Locale(AppLanguage.normalize(_lang)));
     if (!kIsWeb) {
-      setState(() => _messages
-          .add(_OverlayMsg.bot('שיחה קולית זמינה רק בגרסת ה-web.')));
+      setState(() => _messages.add(_OverlayMsg.bot(loc.legalAiVoiceWebOnly)));
       return;
     }
     if (!_hasToken) {
-      setState(() => _messages.add(_OverlayMsg.bot('נדרש להתחבר תחילה.')));
+      setState(() => _messages.add(_OverlayMsg.bot(loc.legalAiSignInRequired)));
       return;
     }
     if (_isListening) {
@@ -201,8 +208,8 @@ class _GlobalLegalAiOverlayState extends State<GlobalLegalAiOverlay> {
       const [],
     );
     if (!supported) {
-      setState(() => _messages.add(
-          _OverlayMsg.bot('הדפדפן או המכשיר אינו תומך בשיחה קולית של Gemini.')));
+      setState(() => _messages
+          .add(_OverlayMsg.bot(loc.legalAiGeminiNotSupported)));
       return;
     }
     setState(() {
@@ -219,58 +226,58 @@ class _GlobalLegalAiOverlayState extends State<GlobalLegalAiOverlay> {
     ]);
   }
 
-  String _routeLabel(String route) {
+  String _routeLabel(AppLocalizations l, String route) {
     switch (route) {
       case '/legal_calendar':
-        return 'יומן משפטי';
+        return l.legalAiRouteLegalCalendar;
       case '/legal_notebook':
-        return 'מחברת משפטית';
+        return l.legalAiRouteLegalNotebook;
       case '/files_vault':
-        return 'כספת קבצים';
+        return l.legalAiRouteFilesVault;
       case '/citizen_contracts':
-        return 'חוזים';
+        return l.legalAiRouteCitizenContracts;
       case '/citizen_tasks':
-        return 'משימות';
+        return l.legalAiRouteCitizenTasks;
       case '/citizen_contacts':
-        return 'אנשי קשר';
+        return l.legalAiRouteCitizenContacts;
       case '/citizen_notifications':
-        return 'התראות';
+        return l.legalAiRouteCitizenNotifications;
       case '/citizen_reports':
-        return 'דוחות';
+        return l.legalAiRouteCitizenReports;
       case '/citizen_tools':
-        return 'כלים';
+        return l.legalAiRouteCitizenTools;
       case '/security_center':
-        return 'מרכז בטיחות';
+        return l.legalAiRouteSecurityCenter;
       case '/admin_dashboard':
-        return 'דשבורד אדמין';
+        return l.legalAiRouteAdminDashboard;
       case '/admin_users':
-        return 'ניהול משתמשים';
+        return l.legalAiRouteAdminUsers;
       case '/admin_lawyers':
-        return 'ניהול עורכי דין';
+        return l.legalAiRouteAdminLawyers;
       case '/admin_pending':
-        return 'ממתינים לאישור';
+        return l.legalAiRouteAdminPending;
       case '/admin_logs':
-        return 'יומן אירועים';
+        return l.legalAiRouteAdminLogs;
       case '/admin_subscriptions':
-        return 'מנויים';
+        return l.legalAiRouteAdminSubscriptions;
       case '/admin_settings':
-        return 'הגדרות מערכת';
+        return l.legalAiRouteAdminSettings;
       case '/lawyer_dashboard':
-        return 'דשבורד עורך דין';
+        return l.legalAiRouteLawyerDashboard;
       case '/lawyer_settings':
-        return 'הגדרות עו״ד';
+        return l.legalAiRouteLawyerSettings;
       case '/maps':
-        return 'מפה';
+        return l.legalAiRouteMaps;
       case '/profile':
-        return 'פרופיל';
+        return l.legalAiRouteProfile;
       case '/settings':
-        return 'הגדרות';
+        return l.legalAiRouteSettings;
       case '/chat':
-        return 'שיחות';
+        return l.legalAiRouteChat;
       case '/shared_vault':
-        return 'כספת משותפת';
+        return l.legalAiRouteSharedVault;
       default:
-        return 'מסך כללי';
+        return l.legalAiRouteDefault;
     }
   }
 
@@ -307,7 +314,9 @@ class _GlobalLegalAiOverlayState extends State<GlobalLegalAiOverlay> {
       lang: _lang,
     );
 
-    final reply = (res['reply'] ?? 'לא התקבלה תשובה כרגע.').toString();
+    final loc = lookupAppLocalizations(Locale(AppLanguage.normalize(_lang)));
+    final reply =
+        (res['reply'] ?? loc.legalAiNoReply).toString();
     _history
       ..add({
         'role': 'user',
@@ -344,6 +353,7 @@ class _GlobalLegalAiOverlayState extends State<GlobalLegalAiOverlay> {
         if (_shouldHide(route)) {
           return const SizedBox.shrink();
         }
+        final l = AppLocalizations.of(context)!;
         final isRtl = Directionality.of(context) == TextDirection.rtl;
         final mq = MediaQuery.of(context);
         final isWide = mq.size.width >= 1080;
@@ -358,7 +368,7 @@ class _GlobalLegalAiOverlayState extends State<GlobalLegalAiOverlay> {
               end: endPad,
               bottom: bottomPad,
               child: _open
-                  ? _panel(isRtl, route, mq)
+                  ? _panel(isRtl, route, mq, l)
                   : _bubbleButton(),
             ),
           ],
@@ -399,7 +409,8 @@ class _GlobalLegalAiOverlayState extends State<GlobalLegalAiOverlay> {
     );
   }
 
-  Widget _panel(bool isRtl, String route, MediaQueryData mq) {
+  Widget _panel(
+      bool isRtl, String route, MediaQueryData mq, AppLocalizations l) {
     final isWide = mq.size.width >= 1080;
     final width = isWide ? 380.0 : (mq.size.width - 32).clamp(280.0, 400.0);
     final height = isWide ? 520.0 : (mq.size.height * 0.65).clamp(380.0, 600.0);
@@ -426,18 +437,18 @@ class _GlobalLegalAiOverlayState extends State<GlobalLegalAiOverlay> {
         borderRadius: BorderRadius.circular(20),
         child: Column(
           children: [
-            _header(route),
-            _modeRow(),
-            if (_liveSessionActive) _liveBanner(),
+            _header(route, l),
+            _modeRow(l),
+            if (_liveSessionActive) _liveBanner(l),
             Expanded(child: _conversationList(isRtl)),
-            if (_liveMode) _liveModeFooter() else _textModeFooter(),
+            if (_liveMode) _liveModeFooter(l) else _textModeFooter(l),
           ],
         ),
       ),
     );
   }
 
-  Widget _header(String route) {
+  Widget _header(String route, AppLocalizations l) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
@@ -463,14 +474,14 @@ class _GlobalLegalAiOverlayState extends State<GlobalLegalAiOverlay> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('סוכן VETO',
-                    style: TextStyle(
+                Text(l.legalAiTitle,
+                    style: const TextStyle(
                       fontFamily: V26.serif,
                       fontWeight: FontWeight.w800,
                       color: VetoMockup.ink,
                       fontSize: 15,
                     )),
-                Text(_routeLabel(route),
+                Text(_routeLabel(l, route),
                     style: const TextStyle(
                       color: VetoMockup.inkSecondary,
                       fontSize: 11.5,
@@ -479,7 +490,7 @@ class _GlobalLegalAiOverlayState extends State<GlobalLegalAiOverlay> {
             ),
           ),
           IconButton(
-            tooltip: 'סגור',
+            tooltip: l.legalAiCloseTooltip,
             onPressed: () => setState(() => _open = false),
             icon: const Icon(Icons.close_rounded, size: 18),
           ),
@@ -488,14 +499,14 @@ class _GlobalLegalAiOverlayState extends State<GlobalLegalAiOverlay> {
     );
   }
 
-  Widget _modeRow() {
+  Widget _modeRow(AppLocalizations l) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(12, 10, 12, 6),
       child: Row(
         children: [
           Expanded(
             child: _modeChip(
-              label: 'Text',
+              label: l.legalAiModeText,
               icon: Icons.chat_bubble_outline_rounded,
               active: !_liveMode,
               onTap: () => setState(() => _liveMode = false),
@@ -504,7 +515,7 @@ class _GlobalLegalAiOverlayState extends State<GlobalLegalAiOverlay> {
           const SizedBox(width: 8),
           Expanded(
             child: _modeChip(
-              label: 'Live Audio',
+              label: l.legalAiModeLive,
               icon: Icons.graphic_eq_rounded,
               active: _liveMode,
               onTap: () => setState(() => _liveMode = true),
@@ -515,7 +526,7 @@ class _GlobalLegalAiOverlayState extends State<GlobalLegalAiOverlay> {
     );
   }
 
-  Widget _liveBanner() {
+  Widget _liveBanner(AppLocalizations l) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       color: const Color(0xFFEFFAF2),
@@ -530,10 +541,10 @@ class _GlobalLegalAiOverlayState extends State<GlobalLegalAiOverlay> {
             ),
           ),
           const SizedBox(width: 8),
-          const Expanded(
+          Expanded(
             child: Text(
-              'Gemini Live פעיל — דבר/י חופשי, השיחה משודרת בזמן אמת.',
-              style: TextStyle(
+              l.legalAiLiveBanner,
+              style: const TextStyle(
                 color: Color(0xFF205B26),
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
@@ -621,7 +632,7 @@ class _GlobalLegalAiOverlayState extends State<GlobalLegalAiOverlay> {
     );
   }
 
-  Widget _liveModeFooter() {
+  Widget _liveModeFooter(AppLocalizations l) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
       child: Row(
@@ -629,8 +640,8 @@ class _GlobalLegalAiOverlayState extends State<GlobalLegalAiOverlay> {
           Expanded(
             child: Text(
               _liveSessionActive
-                  ? 'הקש לעצירה'
-                  : 'הקש על המיקרופון להתחלת שיחה קולית',
+                  ? l.legalAiMicStopHint
+                  : l.legalAiMicStartHint,
               style: const TextStyle(
                   color: VetoMockup.inkSecondary, fontSize: 12),
             ),
@@ -668,7 +679,7 @@ class _GlobalLegalAiOverlayState extends State<GlobalLegalAiOverlay> {
     );
   }
 
-  Widget _textModeFooter() {
+  Widget _textModeFooter(AppLocalizations l) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
       child: Row(
@@ -680,7 +691,7 @@ class _GlobalLegalAiOverlayState extends State<GlobalLegalAiOverlay> {
               enabled: !_sending,
               style: const TextStyle(fontSize: 13),
               decoration: InputDecoration(
-                hintText: 'כתוב הודעה משפטית...',
+                hintText: l.legalAiInputHint,
                 isDense: true,
                 filled: true,
                 fillColor: Colors.white,

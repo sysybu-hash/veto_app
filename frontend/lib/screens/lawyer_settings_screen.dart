@@ -13,160 +13,30 @@ import '../config/app_config.dart';
 import '../core/i18n/app_language.dart';
 import '../core/theme/veto_2026.dart';
 import '../core/theme/veto_mockup_tokens.dart';
+import '../l10n/app_localizations.dart';
 import '../services/auth_service.dart';
 
-// ── i18n ──────────────────────────────────────────────────────
-const _i18n = {
-  'he': {
-    'title': 'הגדרות עורך דין',
-    'availability': 'זמינות',
-    'availableNow': 'זמין לקבלת תיקים',
-    'availableDesc': 'כשהוא פעיל, הלקוחות יוכלו לראות אותך ולשלוח בקשות',
-    'schedule': 'שעות פעילות',
-    'scheduleDesc': 'הגדר את שעות העבודה שלך לכל יום',
-    'mon': 'שני',
-    'tue': 'שלישי',
-    'wed': 'רביעי',
-    'thu': 'חמישי',
-    'fri': 'שישי',
-    'sat': 'שבת',
-    'sun': 'ראשון',
-    'from': 'מ',
-    'to': 'עד',
-    'closed': 'סגור',
-    'specializations': 'תחומי התמחות',
-    'specDesc': 'הוסף את תחומי ההתמחות שלך',
-    'addSpec': 'הוסף התמחות',
-    'addSpecHint': 'לדוגמה: דיני עבודה',
-    'contact': 'קישורי יצירת קשר',
-    'whatsapp': 'מספר WhatsApp',
-    'whatsappHint': '+972501234567',
-    'telegram': 'שם משתמש Telegram',
-    'telegramHint': '@username',
-    'responseTime': 'זמן מענה ממוצע',
-    'minutes': 'דקות',
-    'notifications': 'התראות',
-    'notifyEmergency': 'התראות חירום',
-    'notifyNewCase': 'תיק חדש',
-    'notifyUpdates': 'עדכוני מערכת',
-    'notifySms': 'SMS',
-    'license': 'פרטי רישיון',
-    'licenseNumber': 'מספר רישיון',
-    'barAssociation': 'לשכת עורכי הדין',
-    'languages': 'שפות טיפול',
-    'account': 'חשבון',
-    'logout': 'התנתק',
-    'deleteAccount': 'מחק חשבון',
-    'deleteConfirm': 'מחיקת חשבון היא בלתי הפיכה. לאשר?',
-    'save': 'שמור שינויים',
-    'saved': 'ההגדרות נשמרו',
-    'cancel': 'ביטול',
-    'yes': 'כן',
-    'no': 'לא',
-    'add': 'הוסף',
-  },
-  'en': {
-    'title': 'Lawyer Settings',
-    'availability': 'Availability',
-    'availableNow': 'Available for cases',
-    'availableDesc': 'When active, clients can see and send requests to you',
-    'schedule': 'Working Hours',
-    'scheduleDesc': 'Set your working hours for each day',
-    'mon': 'Mon',
-    'tue': 'Tue',
-    'wed': 'Wed',
-    'thu': 'Thu',
-    'fri': 'Fri',
-    'sat': 'Sat',
-    'sun': 'Sun',
-    'from': 'From',
-    'to': 'To',
-    'closed': 'Closed',
-    'specializations': 'Specializations',
-    'specDesc': 'Add your areas of expertise',
-    'addSpec': 'Add specialization',
-    'addSpecHint': 'e.g. Labor law',
-    'contact': 'Contact Links',
-    'whatsapp': 'WhatsApp number',
-    'whatsappHint': '+972501234567',
-    'telegram': 'Telegram username',
-    'telegramHint': '@username',
-    'responseTime': 'Avg. response time',
-    'minutes': 'minutes',
-    'notifications': 'Notifications',
-    'notifyEmergency': 'Emergency alerts',
-    'notifyNewCase': 'New case alert',
-    'notifyUpdates': 'System updates',
-    'notifySms': 'SMS alerts',
-    'license': 'License Details',
-    'licenseNumber': 'License number',
-    'barAssociation': 'Bar association',
-    'languages': 'Languages handled',
-    'account': 'Account',
-    'logout': 'Sign out',
-    'deleteAccount': 'Delete account',
-    'deleteConfirm': 'This is irreversible. Confirm?',
-    'save': 'Save changes',
-    'saved': 'Settings saved',
-    'cancel': 'Cancel',
-    'yes': 'Yes',
-    'no': 'No',
-    'add': 'Add',
-  },
-  'ru': {
-    'title': 'Настройки адвоката',
-    'availability': 'Доступность',
-    'availableNow': 'Доступен для дел',
-    'availableDesc': 'Когда включено, клиенты могут видеть вас и отправлять запросы',
-    'schedule': 'Рабочие часы',
-    'scheduleDesc': 'Установите рабочие часы для каждого дня',
-    'mon': 'Пн',
-    'tue': 'Вт',
-    'wed': 'Ср',
-    'thu': 'Чт',
-    'fri': 'Пт',
-    'sat': 'Сб',
-    'sun': 'Вс',
-    'from': 'С',
-    'to': 'До',
-    'closed': 'Закрыто',
-    'specializations': 'Специализации',
-    'specDesc': 'Добавьте ваши области экспертизы',
-    'addSpec': 'Добавить специализацию',
-    'addSpecHint': 'Например: трудовое право',
-    'contact': 'Контакты',
-    'whatsapp': 'Номер WhatsApp',
-    'whatsappHint': '+972501234567',
-    'telegram': 'Имя пользователя Telegram',
-    'telegramHint': '@username',
-    'responseTime': 'Среднее время ответа',
-    'minutes': 'минут',
-    'notifications': 'Уведомления',
-    'notifyEmergency': 'Экстренные уведомления',
-    'notifyNewCase': 'Новое дело',
-    'notifyUpdates': 'Системные обновления',
-    'notifySms': 'SMS-уведомления',
-    'license': 'Данные лицензии',
-    'licenseNumber': 'Номер лицензии',
-    'barAssociation': 'Коллегия адвокатов',
-    'languages': 'Языки обслуживания',
-    'account': 'Аккаунт',
-    'logout': 'Выйти',
-    'deleteAccount': 'Удалить аккаунт',
-    'deleteConfirm': 'Это необратимо. Подтвердить?',
-    'save': 'Сохранить',
-    'saved': 'Настройки сохранены',
-    'cancel': 'Отмена',
-    'yes': 'Да',
-    'no': 'Нет',
-    'add': 'Добавить',
-  },
-};
+String _lsetDayShort(AppLocalizations l, String key) {
+  switch (key) {
+    case 'sun':
+      return l.lsetSun;
+    case 'mon':
+      return l.lsetMon;
+    case 'tue':
+      return l.lsetTue;
+    case 'wed':
+      return l.lsetWed;
+    case 'thu':
+      return l.lsetThu;
+    case 'fri':
+      return l.lsetFri;
+    case 'sat':
+      return l.lsetSat;
+    default:
+      return key;
+  }
+}
 
-String _t(String code, String key) =>
-    (_i18n[code] ?? _i18n['en']!)[key] ?? key;
-
-// ── Model ─────────────────────────────────────────────────────
 class _DaySchedule {
   final String key;
   bool open;
@@ -293,8 +163,9 @@ class _LawyerSettingsScreenState extends State<LawyerSettingsScreen> {
     if (mounted) setState(() => _loading = false);
   }
 
-  Future<void> _save(String code) async {
+  Future<void> _save() async {
     if (!mounted) return;
+    final savedMsg = AppLocalizations.of(context)!.lsetSaved;
     setState(() => _saving = true);
     try {
       final tok = await _auth.getToken();
@@ -328,14 +199,15 @@ class _LawyerSettingsScreenState extends State<LawyerSettingsScreen> {
           },
         }),
       ).timeout(const Duration(seconds: 12));
-      _snack(_t(code, 'saved'));
+      _snack(savedMsg);
     } catch (_) {}
     finally {
       if (mounted) setState(() => _saving = false);
     }
   }
 
-  Future<void> _deleteAccount(String code) async {
+  Future<void> _deleteAccount() async {
+    final loc = AppLocalizations.of(context)!;
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -343,21 +215,21 @@ class _LawyerSettingsScreenState extends State<LawyerSettingsScreen> {
         shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
             side: const BorderSide(color: V26.hairline)),
-        title: Text(_t(code, 'deleteAccount'),
+        title: Text(loc.lsetDeleteAccount,
             style: const TextStyle(color: V26.emerg, fontWeight: FontWeight.w700)),
-        content: Text(_t(code, 'deleteConfirm'),
+        content: Text(loc.lsetDeleteConfirm,
             style: const TextStyle(color: V26.ink900)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: Text(_t(code, 'no'),
+            child: Text(loc.lsetNo,
                 style: const TextStyle(color: V26.ink500)),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: FilledButton.styleFrom(
                 backgroundColor: V26.emerg, foregroundColor: Colors.white),
-            child: Text(_t(code, 'yes')),
+            child: Text(loc.lsetYes),
           ),
         ],
       ),
@@ -377,7 +249,7 @@ class _LawyerSettingsScreenState extends State<LawyerSettingsScreen> {
     } catch (_) {}
   }
 
-  void _addSpec(String code) {
+  void _addSpec() {
     final text = _specCtrl.text.trim();
     if (text.isEmpty || _specializations.contains(text)) return;
     setState(() {
@@ -400,6 +272,7 @@ class _LawyerSettingsScreenState extends State<LawyerSettingsScreen> {
   @override
   Widget build(BuildContext context) {
     final code = context.watch<AppLanguageController>().code;
+    final l10n = AppLocalizations.of(context)!;
     final isRtl = AppLanguage.directionOf(code) == TextDirection.rtl;
 
     return Directionality(
@@ -415,20 +288,20 @@ class _LawyerSettingsScreenState extends State<LawyerSettingsScreen> {
             icon: const Icon(Icons.arrow_back_ios_new_rounded, color: V26.ink900, size: 20),
             onPressed: () => Navigator.of(context).pop(),
           ),
-          title: Text(_t(code, 'title'), style: const TextStyle(color: V26.ink900, fontWeight: FontWeight.w800, fontSize: 18)),
+          title: Text(l10n.lsetTitle, style: const TextStyle(color: V26.ink900, fontWeight: FontWeight.w800, fontSize: 18)),
           centerTitle: true,
           actions: [
             Padding(
               padding: const EdgeInsets.only(right: 12),
               child: FilledButton(
-                onPressed: _saving ? null : () => _save(code),
+                onPressed: _saving ? null : _save,
                 style: FilledButton.styleFrom(
                   backgroundColor: VetoMockup.primaryCta,
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                 ),
-                child: Text(_saving ? '...' : _t(code, 'save'), style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
+                child: Text(_saving ? '...' : l10n.lsetSave, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
               ),
             ),
           ],
@@ -446,11 +319,11 @@ class _LawyerSettingsScreenState extends State<LawyerSettingsScreen> {
                   // ── Availability ──────────────────────────
                   _Section(
                     icon: Icons.toggle_on_rounded,
-                    title: _t(code, 'availability'),
+                    title: l10n.lsetAvailability,
                     children: [
                       _ToggleTile(
-                        label: _t(code, 'availableNow'),
-                        subtitle: _t(code, 'availableDesc'),
+                        label: l10n.lsetAvailableNow,
+                        subtitle: l10n.lsetAvailableDesc,
                         icon: Icons.wifi_tethering_rounded,
                         color: V26.ok,
                         value: _isAvailable,
@@ -462,18 +335,18 @@ class _LawyerSettingsScreenState extends State<LawyerSettingsScreen> {
                   // ── Working Hours ─────────────────────────
                   _Section(
                     icon: Icons.schedule_rounded,
-                    title: _t(code, 'schedule'),
+                    title: l10n.lsetSchedule,
                     children: [
                       Padding(
                         padding: const EdgeInsets.only(bottom: 10),
-                        child: Text(_t(code, 'scheduleDesc'),
+                        child: Text(l10n.lsetScheduleDesc,
                             style: const TextStyle(color: V26.ink500, fontSize: 13)),
                       ),
                       ..._schedule.map((day) => _ScheduleRow(
-                            dayLabel: _t(code, day.key),
-                            fromLabel: _t(code, 'from'),
-                            toLabel: _t(code, 'to'),
-                            closedLabel: _t(code, 'closed'),
+                            dayLabel: _lsetDayShort(l10n, day.key),
+                            fromLabel: l10n.lsetFrom,
+                            toLabel: l10n.lsetTo,
+                            closedLabel: l10n.lsetClosed,
                             schedule: day,
                             onChanged: () => setState(() {}),
                           )),
@@ -483,11 +356,11 @@ class _LawyerSettingsScreenState extends State<LawyerSettingsScreen> {
                   // ── Specializations ───────────────────────
                   _Section(
                     icon: Icons.workspace_premium_rounded,
-                    title: _t(code, 'specializations'),
+                    title: l10n.lsetSpecializations,
                     children: [
                       Padding(
                         padding: const EdgeInsets.only(bottom: 10),
-                        child: Text(_t(code, 'specDesc'),
+                        child: Text(l10n.lsetSpecDesc,
                             style: const TextStyle(color: V26.ink500, fontSize: 13)),
                       ),
                       if (_specializations.isNotEmpty)
@@ -509,7 +382,7 @@ class _LawyerSettingsScreenState extends State<LawyerSettingsScreen> {
                             style: const TextStyle(color: V26.ink900, fontSize: 14),
                             cursorColor: VetoMockup.primaryCta,
                             decoration: InputDecoration(
-                              hintText: _t(code, 'addSpecHint'),
+                              hintText: l10n.lsetAddSpecHint,
                               hintStyle: const TextStyle(color: V26.ink500),
                               filled: true,
                               fillColor: const Color(0xFF0F1A24),
@@ -525,17 +398,17 @@ class _LawyerSettingsScreenState extends State<LawyerSettingsScreen> {
                                   borderSide: BorderSide(
                                       color: VetoMockup.primaryCta, width: 1.5)),
                             ),
-                            onSubmitted: (_) => _addSpec(code),
+                            onSubmitted: (_) => _addSpec(),
                           ),
                         ),
                         const SizedBox(width: 8),
                         FilledButton(
-                          onPressed: () => _addSpec(code),
+                          onPressed: _addSpec,
                           style: FilledButton.styleFrom(
                             backgroundColor: VetoMockup.primaryCta,
                             foregroundColor: Colors.white,
                           ),
-                          child: Text(_t(code, 'add')),
+                          child: Text(l10n.lsetAdd),
                         ),
                       ]),
                     ],
@@ -544,24 +417,24 @@ class _LawyerSettingsScreenState extends State<LawyerSettingsScreen> {
                   // ── Contact Links ─────────────────────────
                   _Section(
                     icon: Icons.contact_phone_rounded,
-                    title: _t(code, 'contact'),
+                    title: l10n.lsetContact,
                     children: [
                       _FieldTile(
-                        label: _t(code, 'whatsapp'),
-                        hint: _t(code, 'whatsappHint'),
+                        label: l10n.lsetWhatsapp,
+                        hint: l10n.lsetWhatsappHint,
                         controller: _whatsappCtrl,
                         icon: Icons.chat_bubble_outline_rounded,
                         keyboardType: TextInputType.phone,
                       ),
                       _FieldTile(
-                        label: _t(code, 'telegram'),
-                        hint: _t(code, 'telegramHint'),
+                        label: l10n.lsetTelegram,
+                        hint: l10n.lsetTelegramHint,
                         controller: _telegramCtrl,
                         icon: Icons.send_outlined,
                       ),
                       _SliderTile(
-                        label: _t(code, 'responseTime'),
-                        unit: _t(code, 'minutes'),
+                        label: l10n.lsetResponseTime,
+                        unit: l10n.lsetMinutes,
                         value: _responseMinutes,
                         min: 5, max: 120, divisions: 23,
                         onChanged: (v) => setState(() => _responseMinutes = v),
@@ -572,24 +445,24 @@ class _LawyerSettingsScreenState extends State<LawyerSettingsScreen> {
                   // ── Languages ─────────────────────────────
                   _Section(
                     icon: Icons.translate_rounded,
-                    title: _t(code, 'languages'),
+                    title: l10n.lsetLanguages,
                     children: [
                       _ToggleTile(
-                        label: 'עברית',
+                        label: l10n.csetHebrew,
                         icon: Icons.language_rounded,
                         color: VetoMockup.primaryCta,
                         value: _langHe,
                         onChanged: (v) => setState(() => _langHe = v),
                       ),
                       _ToggleTile(
-                        label: 'English',
+                        label: l10n.csetEnglish,
                         icon: Icons.language_rounded,
                         color: VetoMockup.primaryCta,
                         value: _langEn,
                         onChanged: (v) => setState(() => _langEn = v),
                       ),
                       _ToggleTile(
-                        label: 'Русский',
+                        label: l10n.csetRussian,
                         icon: Icons.language_rounded,
                         color: VetoMockup.primaryCta,
                         value: _langRu,
@@ -601,31 +474,31 @@ class _LawyerSettingsScreenState extends State<LawyerSettingsScreen> {
                   // ── Notifications ─────────────────────────
                   _Section(
                     icon: Icons.notifications_rounded,
-                    title: _t(code, 'notifications'),
+                    title: l10n.lsetNotifications,
                     children: [
                       _ToggleTile(
-                        label: _t(code, 'notifyEmergency'),
+                        label: l10n.lsetNotifyEmergency,
                         icon: Icons.warning_amber_rounded,
                         color: V26.emerg,
                         value: _notifyEmergency,
                         onChanged: (v) => setState(() => _notifyEmergency = v),
                       ),
                       _ToggleTile(
-                        label: _t(code, 'notifyNewCase'),
+                        label: l10n.lsetNotifyNewCase,
                         icon: Icons.folder_open_rounded,
                         color: V26.ok,
                         value: _notifyNewCase,
                         onChanged: (v) => setState(() => _notifyNewCase = v),
                       ),
                       _ToggleTile(
-                        label: _t(code, 'notifyUpdates'),
+                        label: l10n.lsetNotifyUpdates,
                         icon: Icons.update_rounded,
                         color: VetoMockup.primaryCta,
                         value: _notifyUpdates,
                         onChanged: (v) => setState(() => _notifyUpdates = v),
                       ),
                       _ToggleTile(
-                        label: _t(code, 'notifySms'),
+                        label: l10n.lsetNotifySms,
                         icon: Icons.sms_outlined,
                         color: VetoMockup.primaryCta,
                         value: _notifySms,
@@ -637,16 +510,16 @@ class _LawyerSettingsScreenState extends State<LawyerSettingsScreen> {
                   // ── License ───────────────────────────────
                   _Section(
                     icon: Icons.verified_rounded,
-                    title: _t(code, 'license'),
+                    title: l10n.lsetLicense,
                     children: [
                       _FieldTile(
-                        label: _t(code, 'licenseNumber'),
+                        label: l10n.lsetLicenseNumber,
                         controller: _licenseCtrl,
                         icon: Icons.badge_outlined,
                         keyboardType: TextInputType.number,
                       ),
                       _FieldTile(
-                        label: _t(code, 'barAssociation'),
+                        label: l10n.lsetBarAssociation,
                         controller: _barCtrl,
                         icon: Icons.account_balance_outlined,
                       ),
@@ -656,19 +529,19 @@ class _LawyerSettingsScreenState extends State<LawyerSettingsScreen> {
                   // ── Account ───────────────────────────────
                   _Section(
                     icon: Icons.manage_accounts_rounded,
-                    title: _t(code, 'account'),
+                    title: l10n.lsetAccount,
                     children: [
                       _ActionTile(
-                        label: _t(code, 'logout'),
+                        label: l10n.lsetLogout,
                         icon: Icons.logout_rounded,
                         color: V26.ink500,
                         onTap: () => _auth.logout(context),
                       ),
                       _ActionTile(
-                        label: _t(code, 'deleteAccount'),
+                        label: l10n.lsetDeleteAccount,
                         icon: Icons.delete_forever_rounded,
                         color: V26.emerg,
-                        onTap: () => _deleteAccount(code),
+                        onTap: _deleteAccount,
                       ),
                     ],
                   ),

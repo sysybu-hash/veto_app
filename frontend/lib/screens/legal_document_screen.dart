@@ -9,6 +9,7 @@ import 'package:provider/provider.dart';
 import '../core/i18n/app_language.dart';
 import '../core/theme/veto_2026.dart';
 import '../core/theme/veto_mockup_tokens.dart';
+import '../l10n/app_localizations.dart';
 
 /// Which legal document to show.
 enum LegalDocKind {
@@ -20,21 +21,6 @@ class LegalDocumentScreen extends StatelessWidget {
   const LegalDocumentScreen({super.key, required this.kind});
 
   final LegalDocKind kind;
-
-  static const _titles = <String, Map<LegalDocKind, String>>{
-    'he': {
-      LegalDocKind.privacy: 'מדיניות פרטיות',
-      LegalDocKind.terms: 'תנאי שימוש',
-    },
-    'en': {
-      LegalDocKind.privacy: 'Privacy Policy',
-      LegalDocKind.terms: 'Terms of Service',
-    },
-    'ru': {
-      LegalDocKind.privacy: 'Политика конфиденциальности',
-      LegalDocKind.terms: 'Условия использования',
-    },
-  };
 
   static const _bodies = <String, Map<LegalDocKind, String>>{
     'he': {
@@ -55,12 +41,13 @@ class LegalDocumentScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final code = context.watch<AppLanguageController>().code;
     final lang = AppLanguage.normalize(code);
-    final title = _titles[lang]?[kind] ?? _titles['en']![kind]!;
+    final loc = AppLocalizations.of(context)!;
+    final title = kind == LegalDocKind.privacy
+        ? loc.legalDocPrivacyTitle
+        : loc.legalDocTermsTitle;
     final body = _bodies[lang]?[kind] ?? _bodies['en']![kind]!;
-    final privacyLbl = _titles[lang]?[LegalDocKind.privacy] ??
-        _titles['en']![LegalDocKind.privacy]!;
-    final termsLbl =
-        _titles[lang]?[LegalDocKind.terms] ?? _titles['en']![LegalDocKind.terms]!;
+    final privacyLbl = loc.legalDocPrivacyTitle;
+    final termsLbl = loc.legalDocTermsTitle;
 
     return Scaffold(
       backgroundColor: VetoMockup.pageBackground,

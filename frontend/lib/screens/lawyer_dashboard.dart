@@ -8,12 +8,14 @@ import 'package:provider/provider.dart';
 import '../core/i18n/app_language.dart';
 import '../core/theme/veto_2026.dart';
 import '../core/theme/veto_mockup_tokens.dart';
+import '../l10n/app_localizations.dart';
 import '../services/auth_service.dart';
 import '../widgets/mockup_desktop_top_bar.dart';
 import '../services/fcm_user_service.dart';
 import '../services/push_service.dart';
 import '../services/socket_service.dart';
 
+import 'dash_profile_l10n_lookup.dart';
 
 class LawyerDashboard extends StatefulWidget {
   const LawyerDashboard({super.key});
@@ -35,115 +37,16 @@ class _LawyerDashboardState extends State<LawyerDashboard> {
   StreamSubscription<Map<String, dynamic>>? _caseTakenSub;
   StreamSubscription<Map<String, dynamic>>? _sessionReadySub;
 
-  static const Map<String, Map<String, String>> _copy = {
-    'he': {
-      'eyebrow': 'מרכז תגובה משפטי',
-      'title': 'עמדת עורך הדין',
-      'subtitle': 'כל קריאת חירום מגיעה לכאן עם שליטה מלאה על זמינות, תגובה וקבלת תיק.',
-      'status': 'זמינות',
-      'statusOnline': 'זמין לקבלת קריאות',
-      'statusOffline': 'לא זמין כרגע',
-      'statusHelp': 'כאשר המתג פעיל, משתמשים באזור שלך יוכלו להגיע אליך בשעת חירום.',
-      'queue': 'קריאות ממתינות',
-      'response': 'יעד תגובה',
-      'responseValue': 'עד 2 דק׳',
-      'shift': 'ניהול משמרת',
-      'shiftTitle': 'שליטה חיה בזמינות',
-      'shiftBody': 'הפעל זמינות כשאתה פנוי לקבל תיק. כשתאשר קריאה, המערכת תסמן אותך כעסוק כדי למנוע כפילויות.',
-      'activity': 'תיבת חירום',
-      'activityTitle': 'קריאות פעילות',
-      'activitySubtitle': 'כל קריאה מציגה את פרטי האירוע כפי שהתקבלו בזמן אמת מהאפליקציה של האזרח.',
-      'emptyTitle': 'אין כרגע קריאות פעילות',
-      'emptyBody': 'ברגע שמשתמש יפעיל SOS ותהיה מוגדר כזמין, הקריאה תופיע כאן ותוכל להגיב מיד.',
-      'emptyHint': 'השאר את הזמינות פעילה כדי להופיע ראשון בתיעדוף.',
-      'request': 'קריאת חירום',
-      'requestFrom': 'פנייה ממשתמש',
-      'requestDetails': 'פרטי האירוע',
-      'requestUnknown': 'לא נמסרו פרטים נוספים.',
-      'accept': 'קבל תיק',
-      'reject': 'דלג',
-      'accepted': 'התיק הוקצה אליך בהצלחה.',
-      'rejected': 'הקריאה הוסרה מהתור שלך.',
-      'liveDialog': 'קריאה נכנסת',
-      'profile': 'פרופיל',
-      'logout': 'התנתק',
-    },
-    'en': {
-      'eyebrow': 'Legal response center',
-      'title': 'Lawyer console',
-      'subtitle': 'Every emergency request lands here with full control over availability, response time, and case acceptance.',
-      'status': 'Availability',
-      'statusOnline': 'Available for emergency calls',
-      'statusOffline': 'Unavailable right now',
-      'statusHelp': 'When the switch is on, nearby users can be matched to you during emergencies.',
-      'queue': 'Pending alerts',
-      'response': 'Response target',
-      'responseValue': 'Under 2 min',
-      'shift': 'Shift control',
-      'shiftTitle': 'Live availability control',
-      'shiftBody': 'Turn availability on when you are ready to take a case. Once you accept a call, the system marks you busy to avoid duplicate assignments.',
-      'activity': 'Emergency inbox',
-      'activityTitle': 'Active requests',
-      'activitySubtitle': 'Each request shows the live event details exactly as received from the citizen app.',
-      'emptyTitle': 'No active requests right now',
-      'emptyBody': 'As soon as a user triggers SOS and you are marked available, the request will appear here for immediate response.',
-      'emptyHint': 'Keep availability on to stay high in dispatch priority.',
-      'request': 'Emergency request',
-      'requestFrom': 'Request from user',
-      'requestDetails': 'Event details',
-      'requestUnknown': 'No additional details were sent.',
-      'accept': 'Accept case',
-      'reject': 'Skip',
-      'accepted': 'The case was assigned to you successfully.',
-      'rejected': 'The request was removed from your queue.',
-      'liveDialog': 'Incoming request',
-      'profile': 'Profile',
-      'logout': 'Log out',
-    },
-    'ru': {
-      'eyebrow': 'Юридический центр реагирования',
-      'title': 'Панель адвоката',
-      'subtitle': 'Все экстренные запросы приходят сюда. Вы управляете доступностью, скоростью ответа и принятием дела.',
-      'status': 'Доступность',
-      'statusOnline': 'Готов принимать экстренные запросы',
-      'statusOffline': 'Сейчас недоступен',
-      'statusHelp': 'Когда переключатель включен, пользователи поблизости смогут найти вас в экстренной ситуации.',
-      'queue': 'Ожидающие запросы',
-      'response': 'Цель ответа',
-      'responseValue': 'До 2 мин',
-      'shift': 'Управление сменой',
-      'shiftTitle': 'Живой контроль доступности',
-      'shiftBody': 'Включайте доступность, когда готовы принять дело. После подтверждения система отметит вас занятым и исключит дубли.',
-      'activity': 'Экстренный inbox',
-      'activityTitle': 'Активные запросы',
-      'activitySubtitle': 'Каждый запрос показывает детали события так, как они были получены из приложения пользователя.',
-      'emptyTitle': 'Сейчас нет активных запросов',
-      'emptyBody': 'Как только пользователь нажмет SOS и вы будете доступны, запрос появится здесь для немедленного ответа.',
-      'emptyHint': 'Оставляйте доступность включенной, чтобы быть выше в приоритете распределения.',
-      'request': 'Экстренный запрос',
-      'requestFrom': 'Запрос от пользователя',
-      'requestDetails': 'Детали события',
-      'requestUnknown': 'Дополнительные детали не переданы.',
-      'accept': 'Принять дело',
-      'reject': 'Пропустить',
-      'accepted': 'Дело успешно закреплено за вами.',
-      'rejected': 'Запрос удален из вашей очереди.',
-      'liveDialog': 'Новый запрос',
-      'profile': 'Профиль',
-      'logout': 'Выйти',
-    },
-  };
-
   @override
   void initState() {
     super.initState();
     _bootstrap();
   }
 
-  String _t(String code, String key) {
-    return _copy[AppLanguage.normalize(code)]?[key] ??
-        _copy[AppLanguage.hebrew]![key] ??
-        key;
+  String _t(BuildContext ctx, String key) {
+    final l = AppLocalizations.of(ctx);
+    if (l == null) return key;
+    return lawyerDashT(l, key);
   }
 
   Future<void> _bootstrap() async {
@@ -172,15 +75,10 @@ class _LawyerDashboardState extends State<LawyerDashboard> {
     final online = await SocketService().ensureConnected(role: role);
     if (!mounted) return;
     if (!online) {
+      final lBoot = lookupAppLocalizations(Locale(preferredLanguage));
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
-            preferredLanguage == 'he'
-                ? 'אין חיבור לשרת — בדוק רשת ונסה לרענן.'
-                : preferredLanguage == 'ru'
-                    ? 'Нет связи с сервером. Проверьте сеть.'
-                    : 'Cannot reach the server. Check your connection.',
-          ),
+          content: Text(lBoot.lawyerDashServerUnreachable),
           backgroundColor: V26.emerg,
         ),
       );
@@ -287,8 +185,7 @@ class _LawyerDashboardState extends State<LawyerDashboard> {
       _isAvailable = false;
     });
     SocketService().emit('lawyer_availability', {'available': false});
-    _showSnack(_t(context.read<AppLanguageController>().code, 'accepted'),
-        background: V26.ok);
+    _showSnack(_t(context, 'accepted'), background: V26.ok);
   }
 
   void _rejectCase(Map<String, dynamic> alert) {
@@ -297,15 +194,13 @@ class _LawyerDashboardState extends State<LawyerDashboard> {
     setState(() {
       _alerts.removeWhere((item) => item['eventId'] == eventId);
     });
-    _showSnack(_t(context.read<AppLanguageController>().code, 'rejected'));
+    _showSnack(_t(context, 'rejected'));
   }
 
   void _showNotificationsPanel() {
-    final code = context.read<AppLanguageController>().code;
-    final isRtl = AppLanguage.directionOf(code) == TextDirection.rtl;
     if (_alerts.isEmpty) {
       _showSnack(
-        isRtl ? 'אין קריאות ממתינות' : 'No pending emergency alerts',
+        _t(context, 'noPendingAlerts'),
         background: V26.surface,
       );
       return;
@@ -336,7 +231,7 @@ class _LawyerDashboardState extends State<LawyerDashboard> {
                 ),
               ),
               Text(
-                _t(code, 'queue'),
+                _t(ctx, 'queue'),
                 style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w900,
@@ -349,7 +244,7 @@ class _LawyerDashboardState extends State<LawyerDashboard> {
                   contentPadding: EdgeInsets.zero,
                   leading: const Icon(Icons.emergency_rounded, color: Color(0xFFFF3B3B)),
                   title: Text(
-                    a['userName']?.toString() ?? 'User',
+                    a['userName']?.toString() ?? _t(ctx, 'userFallback'),
                     style: const TextStyle(color: V26.ink900, fontWeight: FontWeight.w600),
                   ),
                   subtitle: Text(
@@ -364,13 +259,15 @@ class _LawyerDashboardState extends State<LawyerDashboard> {
     );
   }
 
-  void _openSharedVaultFromCases(bool isRtl) {
+  void _openSharedVaultFromCases() {
+    final l = AppLocalizations.of(context);
+    final userFb = l?.lawyerDashUserFallback ?? 'User';
     for (final c in _activeCases) {
       final uid = c['userId'];
       if (uid != null && uid.toString().isNotEmpty) {
         Navigator.pushNamed(context, '/shared_vault', arguments: {
           'userId': uid.toString(),
-          'userName': c['userName'] ?? 'User',
+          'userName': c['userName'] ?? userFb,
         });
         return;
       }
@@ -380,13 +277,13 @@ class _LawyerDashboardState extends State<LawyerDashboard> {
       if (uid != null && uid.toString().isNotEmpty) {
         Navigator.pushNamed(context, '/shared_vault', arguments: {
           'userId': uid.toString(),
-          'userName': a['userName'] ?? 'User',
+          'userName': a['userName'] ?? userFb,
         });
         return;
       }
     }
     _showSnack(
-      isRtl ? 'קבל תיק או בחר תיק פעיל לפני צפיית קבצים' : 'Accept a case or pick an active case to view files',
+      _t(context, 'vaultRequiresCase'),
       background: V26.surface,
     );
   }
@@ -407,13 +304,13 @@ class _LawyerDashboardState extends State<LawyerDashboard> {
   }
 
   void _showAlertDialog(Map<String, dynamic> alert) {
-    final code = context.read<AppLanguageController>().code;
+    final langCode = context.read<AppLanguageController>().code;
     showDialog<void>(
       context: context,
       barrierDismissible: false,
-      builder: (context) {
+      builder: (dialogCtx) {
         return Directionality(
-          textDirection: AppLanguage.directionOf(code),
+          textDirection: AppLanguage.directionOf(langCode),
           child: AlertDialog(
             backgroundColor: V26.surface,
             shape: RoundedRectangleBorder(
@@ -427,7 +324,7 @@ class _LawyerDashboardState extends State<LawyerDashboard> {
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
-                    _t(code, 'liveDialog'),
+                    _t(dialogCtx, 'liveDialog'),
                     style: const TextStyle(
                       color: V26.ink900,
                       fontWeight: FontWeight.w800,
@@ -437,32 +334,32 @@ class _LawyerDashboardState extends State<LawyerDashboard> {
               ],
             ),
             content: _AlertSummary(
-              title: _t(code, 'requestDetails'),
-              fromLabel: _t(code, 'requestFrom'),
-              fallbackText: _t(code, 'requestUnknown'),
+              title: _t(dialogCtx, 'requestDetails'),
+              fromLabel: _t(dialogCtx, 'requestFrom'),
+              fallbackText: _t(dialogCtx, 'requestUnknown'),
               data: alert,
             ),
             actions: [
               TextButton(
                 onPressed: () {
-                  Navigator.of(context).pop();
+                  Navigator.of(dialogCtx).pop();
                   _rejectCase(alert);
                 },
                 child: Text(
-                  _t(code, 'reject'),
+                  _t(dialogCtx, 'reject'),
                   style: const TextStyle(color: V26.ink500),
                 ),
               ),
               FilledButton(
                 onPressed: () {
-                  Navigator.of(context).pop();
+                  Navigator.of(dialogCtx).pop();
                   _acceptCase(alert);
                 },
                 style: FilledButton.styleFrom(
                   backgroundColor: V26.ok,
                   foregroundColor: Colors.white,
                 ),
-                child: Text(_t(code, 'accept')),
+                child: Text(_t(dialogCtx, 'accept')),
               ),
             ],
           ),
@@ -475,7 +372,7 @@ class _LawyerDashboardState extends State<LawyerDashboard> {
   Widget build(BuildContext context) {
     final language = context.watch<AppLanguageController>();
     final code = language.code;
-    final isRtl = AppLanguage.directionOf(code) == TextDirection.rtl;
+    final l = AppLocalizations.of(context)!;
 
     final isDesktop = context.isDesktop;
     final bodyContent = _isBooting
@@ -488,7 +385,6 @@ class _LawyerDashboardState extends State<LawyerDashboard> {
                     if (isDesktop)
                       MockupDesktopTopBar(
                         searchController: _lawyerTopSearch,
-                        langCode: code,
                         trailing: [
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -515,8 +411,8 @@ class _LawyerDashboardState extends State<LawyerDashboard> {
                               const SizedBox(width: 6),
                               Text(
                                 _isAvailable
-                                    ? (isRtl ? 'מחובר' : 'Online')
-                                    : (isRtl ? 'לא זמין' : 'Offline'),
+                                    ? l.lawyerDashBadgeOnline
+                                    : l.lawyerDashBadgeOffline,
                                 style: TextStyle(
                                   color: _isAvailable
                                       ? VetoMockup.primaryCtaDeep
@@ -558,7 +454,7 @@ class _LawyerDashboardState extends State<LawyerDashboard> {
                         const Spacer(),
                         // Title
                         Text(
-                          isRtl ? 'לוח בקרה — עורך דין' : 'Lawyer Dashboard',
+                          l.lawyerDashMobileHeader,
                           style: const TextStyle(
                             fontFamily: V26.serif,
                             color: V26.ink900,
@@ -598,7 +494,9 @@ class _LawyerDashboardState extends State<LawyerDashboard> {
                             ),
                             const SizedBox(width: 6),
                             Text(
-                              _isAvailable ? (isRtl ? 'מחובר' : 'Online') : (isRtl ? 'לא זמין' : 'Offline'),
+                              _isAvailable
+                                  ? l.lawyerDashBadgeOnline
+                                  : l.lawyerDashBadgeOffline,
                               style: TextStyle(
                                 color: _isAvailable
                                     ? V26.navy600
@@ -632,7 +530,7 @@ class _LawyerDashboardState extends State<LawyerDashboard> {
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        isRtl ? 'שלום, עו"ד $_lawyerName' : 'Hello, Adv. $_lawyerName',
+                                        l.lawyerDashGreeting(_lawyerName),
                                         style: const TextStyle(
                                           fontFamily: V26.serif,
                                           color: V26.ink900,
@@ -643,9 +541,9 @@ class _LawyerDashboardState extends State<LawyerDashboard> {
                                       ),
                                       const SizedBox(height: 4),
                                       Text(
-                                        isRtl
-                                            ? 'יש לך ${_activeCases.length} תיקים פעילים'
-                                            : 'You have ${_activeCases.length} active cases',
+                                        l.lawyerDashActiveCaseCount(
+                                          _activeCases.length,
+                                        ),
                                         style: const TextStyle(
                                           color: V26.ink500,
                                           fontSize: 14,
@@ -677,13 +575,13 @@ class _LawyerDashboardState extends State<LawyerDashboard> {
 
                           // Stats row: 3 cards
                           Row(children: [
-                            _LawyerStat(value: '${_activeCases.length}', label: isRtl ? 'תיקים פעילים' : 'Active cases', color: const Color(0xFF5B8FFF)),
+                            _LawyerStat(value: '${_activeCases.length}', label: l.lawyerDashStatActiveCases, color: const Color(0xFF5B8FFF)),
                             const SizedBox(width: 10),
-                            _LawyerStat(value: '${_alerts.length}', label: isRtl ? 'שיחות היום' : 'Today calls', color: const Color(0xFF334155)),
+                            _LawyerStat(value: '${_alerts.length}', label: l.lawyerDashStatTodayCalls, color: const Color(0xFF334155)),
                             const SizedBox(width: 10),
                             _LawyerStat(
                               value: '4.8',
-                              label: isRtl ? 'דירוג' : 'Rating',
+                              label: l.lawyerDashStatRating,
                               color: const Color(0xFFF59E0B),
                               icon: Icons.star_rounded,
                             ),
@@ -708,8 +606,8 @@ class _LawyerDashboardState extends State<LawyerDashboard> {
                                 Expanded(
                                   child: Text(
                                     _isAvailable
-                                        ? (isRtl ? 'זמין לקריאות' : 'Available')
-                                        : (isRtl ? 'לא זמין' : 'Unavailable'),
+                                        ? l.lawyerDashToggleAvailable
+                                        : l.lawyerDashToggleUnavailable,
                                     style: TextStyle(
                                       color: _isAvailable
                                           ? V26.navy600
@@ -735,7 +633,7 @@ class _LawyerDashboardState extends State<LawyerDashboard> {
                           Align(
                             alignment: AlignmentDirectional.centerStart,
                             child: Text(
-                              isRtl ? 'תיקים פעילים' : 'Active Cases',
+                              l.lawyerDashSectionActiveCases,
                               style: const TextStyle(
                                 color: V26.ink900,
                                 fontSize: 17,
@@ -755,7 +653,7 @@ class _LawyerDashboardState extends State<LawyerDashboard> {
                                 padding: const EdgeInsets.all(24),
                                 child: Center(
                                   child: Text(
-                                    _t(code, 'emptyTitle'),
+                                    _t(context, 'emptyTitle'),
                                     style: const TextStyle(
                                       color: V26.ink500,
                                       fontSize: 14,
@@ -769,9 +667,9 @@ class _LawyerDashboardState extends State<LawyerDashboard> {
                           // Alerts (incoming)
                           for (final alert in _alerts)
                             _LawyerCaseCard(
-                              data: alert, isRtl: isRtl,
-                              acceptLabel: _t(code, 'accept'),
-                              rejectLabel: _t(code, 'reject'),
+                              data: alert,
+                              acceptLabel: _t(context, 'accept'),
+                              rejectLabel: _t(context, 'reject'),
                               onAccept: () => _acceptCase(alert),
                               onReject: () => _rejectCase(alert),
                               urgency: 'urgent',
@@ -780,15 +678,16 @@ class _LawyerDashboardState extends State<LawyerDashboard> {
                           // Active cases
                           for (int i = 0; i < _activeCases.length; i++)
                             _LawyerCaseCard(
-                              data: _activeCases[i], isRtl: isRtl,
-                              acceptLabel: isRtl ? 'קבל תיק' : 'View case',
-                              rejectLabel: isRtl ? 'סגור' : 'Close',
+                              data: _activeCases[i],
+                              acceptLabel: l.lawyerDashViewCase,
+                              rejectLabel: l.lawyerDashCloseCase,
                               onAccept: () {
                                 final c = _activeCases[i];
                                 final uid = c['userId'];
                                 if (uid != null) {
                                   Navigator.pushNamed(context, '/shared_vault', arguments: {
-                                    'userId': uid, 'userName': c['userName'] ?? 'User',
+                                    'userId': uid,
+                                    'userName': c['userName'] ?? l.lawyerDashUserFallback,
                                   });
                                 }
                               },
@@ -815,24 +714,28 @@ class _LawyerDashboardState extends State<LawyerDashboard> {
                           child: Row(mainAxisAlignment: MainAxisAlignment.spaceAround, children: [
                             _BottomNavItem(
                               icon: Icons.home_rounded,
-                              label: isRtl ? 'בית' : 'Home',
+                              label: l.lawyerDashNavHome,
                               selected: true,
                               onTap: () => Navigator.pushReplacementNamed(context, '/lawyer_dashboard'),
                             ),
                             _BottomNavItem(
                               icon: Icons.folder_outlined,
-                              label: isRtl ? 'תיקים' : 'Cases',
+                              label: l.lawyerDashNavCases,
                               selected: false,
-                              onTap: () => _openSharedVaultFromCases(isRtl),
+                              onTap: _openSharedVaultFromCases,
                             ),
                             _BottomNavItem(
                               icon: Icons.chat_bubble_outline_rounded,
-                              label: isRtl ? 'צ׳אט' : 'Chat',
+                              label: l.lawyerDashNavChat,
                               selected: false,
                               onTap: () => Navigator.pushNamed(context, '/chat'),
                             ),
-                            _BottomNavItem(icon: Icons.person_outline_rounded, label: isRtl ? 'פרופיל' : 'Profile', selected: false,
-                              onTap: () => Navigator.pushNamed(context, '/lawyer_settings')),
+                            _BottomNavItem(
+                              icon: Icons.person_outline_rounded,
+                              label: l.lawyerDashNavProfile,
+                              selected: false,
+                              onTap: () => Navigator.pushNamed(context, '/lawyer_settings'),
+                            ),
                           ]),
                         ),
                       ),
@@ -847,7 +750,7 @@ class _LawyerDashboardState extends State<LawyerDashboard> {
         body: isDesktop
             ? Row(
                 children: [
-                  _buildLawyerSidebar(context, isRtl),
+                  _buildLawyerSidebar(context, l),
                   Expanded(child: bodyContent),
                 ],
               )
@@ -857,7 +760,7 @@ class _LawyerDashboardState extends State<LawyerDashboard> {
   }
 
   /// Desktop-only sidebar mirroring 2026/lawyer.html layout.
-  V26Sidebar _buildLawyerSidebar(BuildContext context, bool isRtl) {
+  V26Sidebar _buildLawyerSidebar(BuildContext context, AppLocalizations l) {
     return V26Sidebar(
       width: 220,
       useMockupTokens: true,
@@ -880,7 +783,7 @@ class _LawyerDashboardState extends State<LawyerDashboard> {
                   ),
                 ),
                 Text(
-                  isRtl ? 'עורך דין' : 'Lawyer',
+                  l.lawyerDashRoleLawyer,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
@@ -898,31 +801,31 @@ class _LawyerDashboardState extends State<LawyerDashboard> {
       ),
       groups: [
         V26SidebarGroup(
-          title: isRtl ? 'ניווט' : 'NAVIGATION',
+          title: l.lawyerDashSidebarNavigation,
           items: [
             V26SidebarItem(
-              label: isRtl ? 'לוח בקרה' : 'Dashboard',
+              label: l.lawyerDashSidebarDashboard,
               icon: Icons.home_rounded,
               active: true,
               onTap: null,
             ),
             V26SidebarItem(
-              label: isRtl ? 'תיקים' : 'Cases',
+              label: l.lawyerDashSidebarCases,
               icon: Icons.folder_outlined,
-              onTap: () => _openSharedVaultFromCases(isRtl),
+              onTap: _openSharedVaultFromCases,
             ),
             V26SidebarItem(
-              label: isRtl ? 'צ׳אט' : 'Chat',
+              label: l.lawyerDashSidebarChat,
               icon: Icons.chat_bubble_outline_rounded,
               onTap: () => Navigator.pushNamed(context, '/chat'),
             ),
             V26SidebarItem(
-              label: isRtl ? 'פרופיל' : 'Profile',
+              label: l.lawyerDashSidebarProfile,
               icon: Icons.person_outline_rounded,
               onTap: () => Navigator.pushNamed(context, '/lawyer_settings'),
             ),
             V26SidebarItem(
-              label: isRtl ? 'הגדרות' : 'Settings',
+              label: l.lawyerDashSidebarSettings,
               icon: Icons.settings_rounded,
               onTap: () => Navigator.pushNamed(context, '/lawyer_settings'),
             ),
@@ -995,21 +898,21 @@ class _LawyerStat extends StatelessWidget {
 // ── Case card ─────────────────────────────────────────────
 class _LawyerCaseCard extends StatelessWidget {
   final Map<String, dynamic> data;
-  final bool isRtl;
   final String acceptLabel, rejectLabel, urgency;
   final VoidCallback onAccept, onReject;
   const _LawyerCaseCard({
-    required this.data, required this.isRtl,
+    required this.data,
     required this.acceptLabel, required this.rejectLabel,
     required this.onAccept, required this.onReject, required this.urgency,
   });
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     final isUrgent = urgency == 'urgent';
     final chipColor = isUrgent ? const Color(0xFFFF3B3B) : const Color(0xFFF59E0B);
-    final chipLabel = isUrgent ? (isRtl ? 'דחוף' : 'Urgent') : (isRtl ? 'ממתין' : 'Pending');
-    final nameRaw = data['userName'] ?? data['name'] ?? (isRtl ? 'משתמש' : 'User');
+    final chipLabel = isUrgent ? l.lawyerDashChipUrgent : l.lawyerDashChipPending;
+    final nameRaw = data['userName'] ?? data['name'] ?? l.lawyerDashUserFallback;
     final scenario = data['scenario'] ?? data['type'] ?? '';
 
     return Padding(
@@ -1048,7 +951,7 @@ class _LawyerCaseCard extends StatelessWidget {
             ),
             const SizedBox(height: 10),
             Text(
-              isRtl ? 'אזרח: $nameRaw' : 'Client: $nameRaw',
+              l.lawyerDashClientLine(nameRaw.toString()),
               style: const TextStyle(
                 color: V26.ink900,
                 fontWeight: FontWeight.w800,
@@ -1057,7 +960,7 @@ class _LawyerCaseCard extends StatelessWidget {
             ),
             const SizedBox(height: 2),
             Text(
-              scenario.isEmpty ? (isRtl ? 'אירוע חירום' : 'Emergency') : scenario,
+              scenario.isEmpty ? l.lawyerDashEmergencyFallback : scenario.toString(),
               style: const TextStyle(
                 color: V26.ink500,
                 fontSize: 13,

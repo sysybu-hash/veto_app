@@ -21,7 +21,7 @@ class _PendingLawyersScreenState extends State<PendingLawyersScreen> {
   bool _loading = true;
   final _svc = AdminService();
 
-  String _t(String code, String key) => AdminStrings.t(code, key);
+  String _t(BuildContext context, String key) => AdminStrings.t(context, key);
 
   @override
   void initState() {
@@ -36,11 +36,10 @@ class _PendingLawyersScreenState extends State<PendingLawyersScreen> {
   }
 
   Future<void> _approve(String id, String name) async {
-    final code = context.read<AppLanguageController>().code;
     final ok = await _svc.approveLawyer(id);
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text(ok ? '${_t(code, 'approveSuccess')}: $name' : _t(code, 'approveError')),
+      content: Text(ok ? '${_t(context, 'approveSuccess')}: $name' : _t(context, 'approveError')),
       backgroundColor: ok ? V26.ok : V26.emerg,
     ));
     if (ok) _load();
@@ -58,17 +57,17 @@ class _PendingLawyersScreenState extends State<PendingLawyersScreen> {
             borderRadius: BorderRadius.circular(16),
             side: const BorderSide(color: V26.hairline),
           ),
-          title: Text(_t(code, 'rejectRequest'), style: const TextStyle(color: V26.ink900)),
-          content: Text('${_t(code, 'rejectRequestConfirm')}\n$name',
+          title: Text(_t(context, 'rejectRequest'), style: const TextStyle(color: V26.ink900)),
+          content: Text('${_t(context, 'rejectRequestConfirm')}\n$name',
               style: const TextStyle(color: V26.ink500)),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context, false),
-              child: Text(_t(code, 'cancel'), style: const TextStyle(color: V26.ink500)),
+              child: Text(_t(context, 'cancel'), style: const TextStyle(color: V26.ink500)),
             ),
             TextButton(
               onPressed: () => Navigator.pop(context, true),
-              child: Text(_t(code, 'reject'), style: const TextStyle(color: V26.emerg)),
+              child: Text(_t(context, 'reject'), style: const TextStyle(color: V26.emerg)),
             ),
           ],
         ),
@@ -78,7 +77,7 @@ class _PendingLawyersScreenState extends State<PendingLawyersScreen> {
     final ok = await _svc.rejectLawyer(id);
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text(ok ? '${_t(code, 'rejectSuccess')}: $name' : _t(code, 'rejectError')),
+      content: Text(ok ? '${_t(context, 'rejectSuccess')}: $name' : _t(context, 'rejectError')),
       backgroundColor: ok ? V26.ok : V26.emerg,
     ));
     if (ok) _load();
@@ -92,7 +91,7 @@ class _PendingLawyersScreenState extends State<PendingLawyersScreen> {
       textDirection: AppLanguage.directionOf(code),
       child: AdminShell(
         active: AdminSection.pending,
-        title: _t(code, 'pendingLawyersTitle'),
+        title: _t(context, 'pendingLawyersTitle'),
         onRefresh: _load,
         body: V26Backdrop(
           child: _loading
@@ -106,7 +105,7 @@ class _PendingLawyersScreenState extends State<PendingLawyersScreen> {
                             size: 64, color: V26.ok),
                         const SizedBox(height: 16),
                         Text(
-                          _t(code, 'noPendingLawyers'),
+                          _t(context, 'noPendingLawyers'),
                           style: const TextStyle(color: V26.ink500, fontSize: 16),
                         ),
                       ],
@@ -160,18 +159,18 @@ class _PendingLawyersScreenState extends State<PendingLawyersScreen> {
                             const SizedBox(height: 8),
                             _info(Icons.phone_iphone_rounded, phone),
                             if (email.isNotEmpty) _info(Icons.email_outlined, email),
-                            _info(Icons.numbers_rounded, '${_t(code, 'license')}: $license'),
+                            _info(Icons.numbers_rounded, '${_t(context, 'license')}: $license'),
                             _info(Icons.work_outline_rounded,
-                                '${_t(code, 'experienceYears')}: $exp'),
+                                '${_t(context, 'experienceYears')}: $exp'),
                             _info(Icons.category_outlined,
-                                '${_t(code, 'specializationsLabel')}: $specs'),
+                                '${_t(context, 'specializationsLabel')}: $specs'),
                             const SizedBox(height: 12),
                             Row(children: [
                               Expanded(
                                 child: OutlinedButton.icon(
                                   onPressed: () => _reject(id, name),
                                   icon: const Icon(Icons.close_rounded, size: 16),
-                                  label: Text(_t(code, 'reject')),
+                                  label: Text(_t(context, 'reject')),
                                   style: OutlinedButton.styleFrom(
                                     foregroundColor: V26.emerg,
                                     side: const BorderSide(color: V26.emerg),
@@ -183,7 +182,7 @@ class _PendingLawyersScreenState extends State<PendingLawyersScreen> {
                                 child: ElevatedButton.icon(
                                   onPressed: () => _approve(id, name),
                                   icon: const Icon(Icons.check_rounded, size: 16),
-                                  label: Text(_t(code, 'approve')),
+                                  label: Text(_t(context, 'approve')),
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: V26.ok,
                                     foregroundColor: Colors.white,
