@@ -199,6 +199,25 @@ const LawyerSchema = new mongoose.Schema(
       sparse: true,
     },
 
+    gcalRefreshTokenEnc: {
+      type: String,
+      default: null,
+      select: false,
+    },
+    gcalCalendarId: {
+      type: String,
+      default: 'primary',
+    },
+    gcalEventsSyncToken: {
+      type: String,
+      default: null,
+      select: false,
+    },
+    gcalLastSyncAt: {
+      type: Date,
+      default: null,
+    },
+
     // ── Response Config ───────────────────────────────────────
     response_minutes: {
       type: Number,

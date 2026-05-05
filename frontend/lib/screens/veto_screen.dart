@@ -32,6 +32,7 @@ import '../services/push_service.dart';
 import 'admin/admin_i18n.dart';
 import 'evidence_screen.dart';
 import '../widgets/veto_live_voice_sheet.dart';
+import '../widgets/gemini_ai_message_card.dart';
 
 part 'veto/veto_screen_models.dart';
 
@@ -69,10 +70,12 @@ class _VetoScreenState extends State<VetoScreen> {
   final List<Map<String, dynamic>> _geminiHistory = [];
   String _geminiLiveVoice = 'Kore';
   double _geminiLiveGain = 0.85;
+  /// Speech / system-instruction language for Live token (`POST /ai/live-token`); may differ from UI language.
+  String _geminiLiveLang = 'he';
   final _inputCtrl = TextEditingController();
   final _scrollCtrl = ScrollController();
   // ── Wizard state
-  _Scenario _scenario = _Scenario.interrogation;
+  _Scenario _scenario = _Scenario.policeInquiry;
   bool _rightsExpanded = true;
   // ── Admin state
   List<dynamic> _adminFiles = [];
@@ -82,6 +85,7 @@ class _VetoScreenState extends State<VetoScreen> {
   _SD get _s => _sdMap[_scenario]!;
   List<String> get _rights =>
       _langKey == 'ru' ? _s.rRu : _langKey == 'en' ? _s.rEn : _s.rHe;
+  List<_ScenarioRight>? get _rightsRich => _s.rich;
   String get _sLabel =>
       _langKey == 'ru' ? _s.ru : _langKey == 'en' ? _s.en : _s.he;
 
@@ -166,10 +170,12 @@ class _VetoScreenState extends State<VetoScreen> {
   Future<void> _loadLiveAudioPrefs() async {
     final v = await VetoLiveAudioPrefs.getVoice();
     final g = await VetoLiveAudioPrefs.getGain();
+    final l = await VetoLiveAudioPrefs.getLang();
     if (!mounted) return;
     setState(() {
       _geminiLiveVoice = v;
       _geminiLiveGain = g;
+      _geminiLiveLang = l;
     });
   }
 
@@ -621,7 +627,7 @@ class _VetoScreenState extends State<VetoScreen> {
         _liveSessionActive = true;
       });
       _safeJs('vetoGeminiLive', 'start', [
-        _langKey,
+        _geminiLiveLang,
         _token,
         AppConfig.baseUrl,
         _geminiLiveVoice,
@@ -771,7 +777,7 @@ class _VetoScreenState extends State<VetoScreen> {
             {'text': displayReply}
           ]});
     setState(() {
-      _messages.add(_Msg(text: displayReply, isUser: false));
+      _messages.add(_Msg(text: displayReply, isUser: false, hadNativeAudio: nativeAudio));
     });
     _scrollToBottom();
     if (!nativeAudio) {
@@ -2053,39 +2059,13 @@ class _VetoScreenState extends State<VetoScreen> {
     );
   }
 
-  String _scenarioSub(_Scenario s) {
-    switch (s) {
-      case _Scenario.interrogation:
-        return _langKey == 'he'
-            ? 'זימון, חקירה תחת אזהרה, מעצר'
-            : _langKey == 'ru'
-                ? 'Вызов, допрос, арест'
-                : 'Summons, caution interview, arrest';
-      case _Scenario.traffic:
-        return _langKey == 'he'
-            ? 'מהירות, אלכוהול, רישיון'
-            : _langKey == 'ru'
-                ? 'Скорость, алкоголь, права'
-                : 'Speed, alcohol, license';
-      case _Scenario.arrest:
-        return _langKey == 'he'
-            ? 'זכויות במעצר, קשר עם עו"ד'
-            : _langKey == 'ru'
-                ? 'Права при аресте, адвокат'
-                : 'Custody rights, counsel';
-      case _Scenario.accident:
-        return _langKey == 'he'
-            ? 'פציעות, ביטוח, תיעוד'
-            : _langKey == 'ru'
-                ? 'Травмы, страховка, документы'
-                : 'Injuries, insurance, records';
-      case _Scenario.other:
-        return _langKey == 'he'
-            ? 'כל מצב אחר שדורש ייעוץ'
-            : _langKey == 'ru'
-                ? 'Любая другая ситуация'
-                : 'Any other situation';
-    }
+  String _scenarioTileD(_Scenario s) {
+    final sd = _sdMap[s]!;
+    return _langKey == 'ru'
+        ? sd.tileDRu
+        : _langKey == 'en'
+            ? sd.tileDEn
+            : sd.tileDHe;
   }
 
   Widget _secLabel(String txt) => Padding(
@@ -2120,20 +2100,27 @@ class _VetoScreenState extends State<VetoScreen> {
         : _langKey == 'en'
             ? sd.en
             : sd.he;
-    final sub = _scenarioSub(_scenario);
-    final icon = _scenarioIcon(_scenario);
-    final bullets = _langKey == 'ru'
-        ? sd.rRu
+    final sub = _langKey == 'ru'
+        ? sd.headSubRu
         : _langKey == 'en'
-            ? sd.rEn
-            : sd.rHe;
-    final whatToKnow = bullets.take(2).toList();
-    final firstAction = bullets.skip(2).take(2).toList();
-    final criticalTime = _langKey == 'he'
-        ? '60 הדקות הראשונות מקבלות משקל מכריע. הקש SOS עכשיו וקבל ייעוץ ראשוני.'
-        : _langKey == 'ru'
-            ? 'Первые 60 минут — критически важны. Нажмите SOS сейчас.'
-            : 'The first 60 minutes are critical. Press SOS now for immediate guidance.';
+            ? sd.headSubEn
+            : sd.headSubHe;
+    final icon = _scenarioIcon(_scenario);
+    final whatToKnow = _langKey == 'ru'
+        ? sd.knowRu
+        : _langKey == 'en'
+            ? sd.knowEn
+            : sd.knowHe;
+    final firstAction = _langKey == 'ru'
+        ? sd.firstRu
+        : _langKey == 'en'
+            ? sd.firstEn
+            : sd.firstHe;
+    final criticalTime = _langKey == 'ru'
+        ? sd.warnRu
+        : _langKey == 'en'
+            ? sd.warnEn
+            : sd.warnHe;
     final criticalLabel = _langKey == 'he'
         ? 'זמן קריטי:'
         : _langKey == 'ru'
@@ -2335,11 +2322,10 @@ class _VetoScreenState extends State<VetoScreen> {
   Widget _scenarioTile(MapEntry<_Scenario, _SD> e, bool compact) {
     final sel = e.key == _scenario;
     final lbl = _langKey == 'ru' ? e.value.ru : _langKey == 'en' ? e.value.en : e.value.he;
-    final sub = _scenarioSub(e.key);
+    final sub = _scenarioTileD(e.key);
     final iconSize = compact ? 26.0 : 30.0;
     final circlePad = compact ? 8.0 : 10.0;
-    // Arrest scenario uses red icon per mockup
-    final isRed = e.key == _Scenario.arrest;
+    final isRed = e.key == _Scenario.policeInquiry;
     final iconColor =
         sel ? V26.navy600 : (isRed ? V26.emerg : V26.navy500);
     return Material(
@@ -2435,11 +2421,12 @@ class _VetoScreenState extends State<VetoScreen> {
 
   Widget _buildScenarioSelector(bool isRtl, bool compact, bool isDesktop) {
     const order = <_Scenario>[
-      _Scenario.interrogation,
-      _Scenario.traffic,
-      _Scenario.arrest,
-      _Scenario.accident,
-      _Scenario.other,
+      _Scenario.policeInquiry,
+      _Scenario.trafficStop,
+      _Scenario.civilDispute,
+      _Scenario.labor,
+      _Scenario.family,
+      _Scenario.consumer,
     ];
     final entries = order.map((k) => MapEntry(k, _sdMap[k]!)).toList();
     final cols = isDesktop ? 3 : 2;
@@ -2450,10 +2437,103 @@ class _VetoScreenState extends State<VetoScreen> {
         crossAxisCount: cols,
         mainAxisSpacing: 10,
         crossAxisSpacing: 10,
-        childAspectRatio: isDesktop ? 0.92 : 0.88,
+        childAspectRatio: isDesktop ? 0.95 : 0.92,
       ),
       itemCount: entries.length,
       itemBuilder: (context, i) => _scenarioTile(entries[i], compact),
+    );
+  }
+
+  Widget _richRightTile(_ScenarioRight r, int num) {
+    final title =
+        _langKey == 'ru' ? r.tRu : _langKey == 'en' ? r.tEn : r.tHe;
+    final desc =
+        _langKey == 'ru' ? r.dRu : _langKey == 'en' ? r.dEn : r.dHe;
+    final ex = _langKey == 'ru'
+        ? r.exRu
+        : _langKey == 'en'
+            ? r.exEn
+            : r.exHe;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 14),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 28,
+            height: 28,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: V26.navy500.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: V26.navy500.withValues(alpha: 0.25)),
+            ),
+            child: Text(
+              '$num',
+              style: const TextStyle(
+                fontWeight: FontWeight.w900,
+                color: V26.navy600,
+                fontSize: 13,
+              ),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w900,
+                    fontSize: 15,
+                    color: V26.ink900,
+                    height: 1.25,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  desc,
+                  style: const TextStyle(
+                    color: V26.ink500,
+                    fontSize: 13.5,
+                    height: 1.5,
+                  ),
+                ),
+                if (ex != null && ex.isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: V26.surface2,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: V26.hairline),
+                    ),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Icon(Icons.tips_and_updates_rounded,
+                            size: 16, color: V26.navy600),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            ex,
+                            style: const TextStyle(
+                              fontSize: 12.5,
+                              height: 1.45,
+                              color: V26.ink700,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -2546,48 +2626,56 @@ class _VetoScreenState extends State<VetoScreen> {
                   if (_rightsExpanded)
                     Padding(
                       padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                      child: Column(
-                        children: _rights
-                            .take(3)
-                            .map(
-                              (line) => Padding(
-                                padding:
-                                    const EdgeInsets.symmetric(vertical: 6),
-                                child: Row(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Container(
-                                      margin:
-                                          const EdgeInsetsDirectional.only(
-                                        top: 7,
-                                        start: 2,
-                                        end: 2,
-                                      ),
-                                      width: 7,
-                                      height: 7,
-                                      decoration: const BoxDecoration(
-                                        shape: BoxShape.circle,
-                                        color: V26.navy500,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 10),
-                                    Expanded(
-                                      child: Text(
-                                        line,
-                                        style: const TextStyle(
-                                          color: V26.ink700,
-                                          fontSize: 15,
-                                          fontWeight: FontWeight.w600,
-                                          height: 1.45,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
+                      child: _rightsRich != null
+                          ? Column(
+                              children: [
+                                for (var i = 0; i < _rightsRich!.length && i < 6; i++)
+                                  _richRightTile(_rightsRich![i], i + 1),
+                              ],
                             )
-                            .toList(),
-                      ),
+                          : Column(
+                              children: _rights
+                                  .take(3)
+                                  .map(
+                                    (line) => Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                          vertical: 6),
+                                      child: Row(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Container(
+                                            margin: const EdgeInsetsDirectional
+                                                .only(
+                                              top: 7,
+                                              start: 2,
+                                              end: 2,
+                                            ),
+                                            width: 7,
+                                            height: 7,
+                                            decoration: const BoxDecoration(
+                                              shape: BoxShape.circle,
+                                              color: V26.navy500,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 10),
+                                          Expanded(
+                                            child: Text(
+                                              line,
+                                              style: const TextStyle(
+                                                color: V26.ink700,
+                                                fontSize: 15,
+                                                fontWeight: FontWeight.w600,
+                                                height: 1.45,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  )
+                                  .toList(),
+                            ),
                     ),
                 ],
               ),
@@ -2796,7 +2884,7 @@ class _VetoScreenState extends State<VetoScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         itemCount: _messages.length + (_isLoading ? 1 : 0),
         itemBuilder: (context, i) {
-          if (i == _messages.length) return _typingBubble();
+          if (i == _messages.length) return _typingBubble(context);
           final msg = _messages[i];
           if (msg.isSystem) {
             return Container(
@@ -2815,30 +2903,33 @@ class _VetoScreenState extends State<VetoScreen> {
             );
           }
           final isUser = msg.isUser;
+          if (!isUser) {
+            return Align(
+              alignment: isRtl ? Alignment.centerLeft : Alignment.centerRight,
+              child: GeminiAiMessageCard(
+                text: msg.text,
+                langKey: _langKey,
+                hadNativeAudio: msg.hadNativeAudio,
+              ),
+            );
+          }
           return Align(
-            alignment: isUser
-                ? (isRtl ? Alignment.centerRight : Alignment.centerLeft)
-                : (isRtl ? Alignment.centerLeft : Alignment.centerRight),
+            alignment: isRtl ? Alignment.centerRight : Alignment.centerLeft,
             child: Container(
               margin: const EdgeInsets.symmetric(vertical: 5),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               constraints: BoxConstraints(
                   maxWidth: MediaQuery.of(context).size.width * 0.78),
               decoration: BoxDecoration(
-                color: isUser
-                    ? V26.navy600.withValues(alpha: 0.10)
-                    : V26.surface,
-                borderRadius: BorderRadius.only(
-                  topLeft: const Radius.circular(18),
-                  topRight: const Radius.circular(18),
-                  bottomLeft: Radius.circular(isUser ? 18 : 4),
-                  bottomRight: Radius.circular(isUser ? 4 : 18),
+                color: V26.navy600.withValues(alpha: 0.10),
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(18),
+                  topRight: Radius.circular(18),
+                  bottomLeft: Radius.circular(18),
+                  bottomRight: Radius.circular(4),
                 ),
                 border: Border.all(
-                    color: isUser
-                        ? V26.navy600.withValues(alpha: 0.30)
-                        : V26.hairline,
-                    width: 1.5),
+                    color: V26.navy600.withValues(alpha: 0.30), width: 1.5),
                 boxShadow: [
                   BoxShadow(
                       color: Colors.black.withValues(alpha: 0.04),
@@ -2846,11 +2937,11 @@ class _VetoScreenState extends State<VetoScreen> {
                 ],
               ),
               child: Text(msg.text,
-                  style: TextStyle(
-                      color: isUser ? V26.navy600 : V26.ink900,
+                  style: const TextStyle(
+                      color: V26.navy600,
                       fontSize: 14.5,
                       height: 1.55,
-                      fontWeight: isUser ? FontWeight.w700 : FontWeight.w600)),
+                      fontWeight: FontWeight.w700)),
             ),
           );
         },
@@ -2873,6 +2964,7 @@ class _VetoScreenState extends State<VetoScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            if (kIsWeb && _liveSessionActive) _geminiLiveActiveBanner(isRtl),
             _chatInput(isRtl),
             _chatActBar(),
             const SizedBox(height: 4),
@@ -2882,34 +2974,52 @@ class _VetoScreenState extends State<VetoScreen> {
     ),
   ]);
 
-  Widget _typingBubble() => Align(
-    alignment: Alignment.centerRight,
-    child: Container(
-      margin: const EdgeInsets.symmetric(vertical: 5),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-          color: V26.surface,
-          borderRadius: const BorderRadius.only(
-            topLeft: Radius.circular(18), topRight: Radius.circular(18),
-            bottomLeft: Radius.circular(18), bottomRight: Radius.circular(4)),
-          border: Border.all(color: V26.hairline, width: 1.5),
-          boxShadow: [BoxShadow(
-              color: Colors.black.withValues(alpha: 0.04),
-              blurRadius: 8, offset: const Offset(0, 2))]),
-      child: Row(mainAxisSize: MainAxisSize.min, children: [
-        SizedBox(
-            width: 48,
-            child: LinearProgressIndicator(
-                borderRadius: BorderRadius.circular(4),
-                backgroundColor: V26.hairline,
-                valueColor: const AlwaysStoppedAnimation(V26.ok))),
-        const SizedBox(width: 10),
-        Text(_l.processing,
-            style: const TextStyle(color: V26.ink500,
-                fontSize: 13, fontWeight: FontWeight.w500)),
-      ]),
-    ),
-  );
+  Widget _typingBubble(BuildContext context) {
+    final rtl = Directionality.of(context) == TextDirection.rtl;
+    return GeminiAiTypingBubble(
+      label: _l.processing,
+      alignment: rtl ? Alignment.centerLeft : Alignment.centerRight,
+    );
+  }
+
+  /// Thin status row while Multimodal Live mic session is active (web).
+  Widget _geminiLiveActiveBanner(bool isRtl) {
+    final label = _langKey == 'ru'
+        ? 'Gemini Live · идёт запись'
+        : _langKey == 'en'
+            ? 'Gemini Live · session active'
+            : 'Gemini Live · שיחה פעילה';
+    return Semantics(
+      label: label,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        decoration: BoxDecoration(
+          color: V26.ok.withValues(alpha: 0.08),
+          border: Border(
+            bottom: BorderSide(color: V26.ok.withValues(alpha: 0.22)),
+          ),
+        ),
+        child: Row(
+          textDirection: isRtl ? TextDirection.rtl : TextDirection.ltr,
+          children: [
+            const LivePulseDot(color: V26.ok),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                label,
+                style: const TextStyle(
+                  color: V26.ink700,
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
   Widget _chatInput(bool isRtl) {
     // Web: mic + optional Gemini Live tune + paste — needs extra width vs mobile STT+paste.
@@ -2973,10 +3083,12 @@ class _VetoScreenState extends State<VetoScreen> {
                         if (!mounted) return;
                         final v = await VetoLiveAudioPrefs.getVoice();
                         final g = await VetoLiveAudioPrefs.getGain();
+                        final l = await VetoLiveAudioPrefs.getLang();
                         if (mounted) {
                           setState(() {
                             _geminiLiveVoice = v;
                             _geminiLiveGain = g;
+                            _geminiLiveLang = l;
                           });
                         }
                       },

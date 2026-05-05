@@ -144,6 +144,27 @@ const UserSchema = new mongoose.Schema(
       index: true,
       sparse: true,
     },
+
+    /** Google Calendar OAuth (separate from Sign-In) — AES-GCM blob, never log */
+    gcalRefreshTokenEnc: {
+      type: String,
+      default: null,
+      select: false,
+    },
+    gcalCalendarId: {
+      type: String,
+      default: 'primary',
+    },
+    /** Incremental sync token from Calendar API events.list */
+    gcalEventsSyncToken: {
+      type: String,
+      default: null,
+      select: false,
+    },
+    gcalLastSyncAt: {
+      type: Date,
+      default: null,
+    },
   },
   {
     timestamps: true, // createdAt, updatedAt

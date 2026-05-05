@@ -261,6 +261,10 @@ exports.deleteEvent = async (req, res, next) => {
     const { accountId, accountRole } = accountFromReq(req);
     const ev = await CalendarEvent.findOneAndDelete({ _id: req.params.id, accountId, accountRole });
     if (!ev) return res.status(404).json({ error: 'Event not found' });
+    if (ev.googleEventId) {
+      const { deleteRemoteIfMirrored } = require('../services/gcalSync.service');
+      deleteRemoteIfMirrored(accountId, accountRole, ev.googleEventId, ev.googleCalendarId).catch(() => {});
+    }
     res.json({ success: true });
   } catch (err) {
     next(err);

@@ -36,6 +36,87 @@ class LegalNotebookApiService {
     );
   }
 
+  Future<Map<String, dynamic>?> getOne(String id) async {
+    final t = await _t();
+    if (t == null) return null;
+    final r = await http.get(
+      Uri.parse('${AppConfig.baseUrl}/legal-notebook/${Uri.encodeComponent(id)}'),
+      headers: AppConfig.httpHeaders({'Authorization': 'Bearer $t'}),
+    );
+    if (r.statusCode != 200) return null;
+    return jsonDecode(r.body) as Map<String, dynamic>;
+  }
+
+  Future<Map<String, dynamic>?> patch(
+    String id, {
+    String? name,
+    String? content,
+  }) async {
+    final t = await _t();
+    if (t == null) return null;
+    final body = <String, dynamic>{};
+    if (name != null) body['name'] = name;
+    if (content != null) body['content'] = content;
+    final r = await http.patch(
+      Uri.parse('${AppConfig.baseUrl}/legal-notebook/${Uri.encodeComponent(id)}'),
+      headers: AppConfig.httpHeaders({'Authorization': 'Bearer $t'}),
+      body: jsonEncode(body),
+    );
+    if (r.statusCode != 200) return null;
+    return jsonDecode(r.body) as Map<String, dynamic>;
+  }
+
+  Future<Map<String, dynamic>?> addSource(
+    String id, {
+    required String kind,
+    String title = '',
+    String? vaultFileId,
+    String? url,
+    String? text,
+  }) async {
+    final t = await _t();
+    if (t == null) return null;
+    final body = <String, dynamic>{
+      'kind': kind,
+      'title': title,
+      if (vaultFileId != null) 'vaultFileId': vaultFileId,
+      if (url != null) 'url': url,
+      if (text != null) 'text': text,
+    };
+    final r = await http.post(
+      Uri.parse('${AppConfig.baseUrl}/legal-notebook/${Uri.encodeComponent(id)}/sources'),
+      headers: AppConfig.httpHeaders({'Authorization': 'Bearer $t'}),
+      body: jsonEncode(body),
+    );
+    if (r.statusCode != 201) return null;
+    return jsonDecode(r.body) as Map<String, dynamic>;
+  }
+
+  Future<Map<String, dynamic>?> removeSource(String notebookId, String sourceId) async {
+    final t = await _t();
+    if (t == null) return null;
+    final r = await http.delete(
+      Uri.parse(
+        '${AppConfig.baseUrl}/legal-notebook/${Uri.encodeComponent(notebookId)}/sources/${Uri.encodeComponent(sourceId)}',
+      ),
+      headers: AppConfig.httpHeaders({'Authorization': 'Bearer $t'}),
+    );
+    if (r.statusCode != 200) return null;
+    return jsonDecode(r.body) as Map<String, dynamic>;
+  }
+
+  Future<Map<String, dynamic>?> chat(String id, String message) async {
+    final t = await _t();
+    if (t == null) return null;
+    final r = await http.post(
+      Uri.parse('${AppConfig.baseUrl}/legal-notebook/${Uri.encodeComponent(id)}/chat'),
+      headers: AppConfig.httpHeaders({'Authorization': 'Bearer $t'}),
+      body: jsonEncode({'message': message}),
+    );
+    if (r.statusCode != 200) return null;
+    return jsonDecode(r.body) as Map<String, dynamic>;
+  }
+
   Future<String?> openUrl(String id) async {
     final t = await _t();
     if (t == null) return null;

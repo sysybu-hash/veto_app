@@ -105,6 +105,15 @@ class _CallScreenState extends State<CallScreen> {
     }
     _queuedArtifacts = true;
     final args = controller.args;
+    // כספת ושמירת הקלטה — רק מצד האזרח (או אדמין בשיחה); עו״ד לא מקבל דיאלוג שמירה.
+    if (args.socketRole == 'lawyer') {
+      controller.discardPostCallRecording();
+      if (mounted) {
+        setState(() => _vaultExitGateDone = true);
+        Navigator.of(context).pop();
+      }
+      return;
+    }
     if (args.eventId.isEmpty) {
       if (mounted) {
         setState(() => _vaultExitGateDone = true);

@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 import '../core/i18n/app_language.dart';
 import '../core/theme/veto_2026.dart';
 import '../services/legal_notebook_api_service.dart';
+import 'legal_notebook_editor_screen.dart';
 
 class LegalNotebookScreen extends StatefulWidget {
   const LegalNotebookScreen({super.key});
@@ -43,10 +44,10 @@ class _LegalNotebookScreenState extends State<LegalNotebookScreen> {
     final isWide =
         MediaQuery.sizeOf(context).width >= V26AppShell.desktopBreakpoint;
     final statusText = code == 'he'
-        ? 'מחברת משפטית · Enterprise'
+        ? 'מחברת משפטית · VETO'
         : (code == 'ru'
-            ? 'Юр. блокнот · Enterprise'
-            : 'Legal notebook · Enterprise');
+            ? 'Юр. блокнот · VETO'
+            : 'Legal notebook · VETO');
     return Directionality(
       textDirection: AppLanguage.directionOf(code),
       child: V26AppShell(
@@ -188,10 +189,22 @@ class _LegalNotebookScreenState extends State<LegalNotebookScreen> {
                             await _reload();
                           },
                         ),
-                        V26CTA(
-                          'פתח',
-                          variant: V26CtaVariant.ghost,
+                        IconButton(
+                          tooltip: 'NotebookLM בדפדפן',
+                          icon: const Icon(Icons.open_in_new, color: V26.ink500, size: 20),
                           onPressed: () => _api.openInBrowser(id),
+                        ),
+                        V26CTA(
+                          'עריכה',
+                          variant: V26CtaVariant.ghost,
+                          onPressed: () {
+                            Navigator.push<void>(
+                              context,
+                              MaterialPageRoute<void>(
+                                builder: (_) => LegalNotebookEditorScreen(notebookId: id),
+                              ),
+                            ).then((_) => _reload());
+                          },
                         ),
                       ],
                     ),

@@ -27,6 +27,16 @@ const CalendarEventSchema = new mongoose.Schema(
     reminderBeforeMinutes: [{ type: Number }],
     notes: { type: String, default: '' },
     sourceCaseId: { type: mongoose.Schema.Types.ObjectId, ref: 'VaultCase', default: null },
+    /** Google Calendar mirror (when sync is enabled) */
+    googleEventId: { type: String, default: null, sparse: true, index: true },
+    googleCalendarId: { type: String, default: null },
+    googleEtag: { type: String, default: null },
+    syncedAt: { type: Date, default: null },
+    syncSource: {
+      type: String,
+      enum: ['veto', 'google'],
+      default: 'veto',
+    },
     /** Deduplication for server-side reminder jobs: { at, beforeMinutes, channel } */
     remindersFired: [
       {
@@ -41,5 +51,6 @@ const CalendarEventSchema = new mongoose.Schema(
 
 CalendarEventSchema.index({ accountId: 1, start: 1 });
 CalendarEventSchema.index({ start: 1, end: 1 });
+CalendarEventSchema.index({ accountId: 1, googleEventId: 1 }, { sparse: true });
 
 module.exports = mongoose.model('CalendarEvent', CalendarEventSchema);

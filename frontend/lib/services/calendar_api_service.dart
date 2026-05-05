@@ -92,22 +92,31 @@ class CalendarApiService {
     required DateTime start,
     required DateTime end,
     String type = 'other',
+    String timezone = 'Asia/Jerusalem',
     String locationAddress = '',
+    Map<String, double>? locationLatLng,
     List<int> reminderBeforeMinutes = const [15, 60],
     String notes = '',
+    String? sourceCaseId,
   }) async {
     final t = await _token();
     if (t == null) return null;
-    final body = {
+    final body = <String, dynamic>{
       'title': title,
       'start': start.toUtc().toIso8601String(),
       'end': end.toUtc().toIso8601String(),
       'type': type,
-      'timezone': 'Asia/Jerusalem',
+      'timezone': timezone,
       'locationAddress': locationAddress,
       'reminderBeforeMinutes': reminderBeforeMinutes,
       'notes': notes,
     };
+    if (locationLatLng != null) {
+      body['locationLatLng'] = locationLatLng;
+    }
+    if (sourceCaseId != null && sourceCaseId.isNotEmpty) {
+      body['sourceCaseId'] = sourceCaseId;
+    }
     final r = await http.post(
       Uri.parse('${AppConfig.baseUrl}/calendar/events'),
       headers: AppConfig.httpHeaders({'Authorization': 'Bearer $t'}),
@@ -117,6 +126,87 @@ class CalendarApiService {
     return CalendarEventDto.fromJson(
       jsonDecode(r.body) as Map<String, dynamic>,
     );
+  }
+
+  Future<CalendarEventDto?> getEvent(String id) async {
+    final t = await _token();
+    if (t == null) return null;
+    final r = await http.get(
+      Uri.parse('${AppConfig.baseUrl}/calendar/events/${Uri.encodeComponent(id)}'),
+      headers: AppConfig.httpHeaders({'Authorization': 'Bearer $t'}),
+    );
+    if (r.statusCode != 200) return null;
+    return CalendarEventDto.fromJson(
+      jsonDecode(r.body) as Map<String, dynamic>,
+    );
+  }
+
+  Future<CalendarEventDto?> updateEvent({
+    required String id,
+    String? title,
+    String? type,
+    DateTime? start,
+    DateTime? end,
+    String? timezone,
+    String? locationAddress,
+    Map<String, double>? locationLatLng,
+    List<int>? reminderBeforeMinutes,
+    String? notes,
+    String? sourceCaseId,
+    bool clearSourceCaseId = false,
+  }) async {
+    final t = await _token();
+    if (t == null) return null;
+    final body = <String, dynamic>{};
+    if (title != null) body['title'] = title;
+    if (type != null) body['type'] = type;
+    if (start != null) body['start'] = start.toUtc().toIso8601String();
+    if (end != null) body['end'] = end.toUtc().toIso8601String();
+    if (timezone != null) body['timezone'] = timezone;
+    if (locationAddress != null) body['locationAddress'] = locationAddress;
+    if (locationLatLng != null) body['locationLatLng'] = locationLatLng;
+    if (reminderBeforeMinutes != null) {
+      body['reminderBeforeMinutes'] = reminderBeforeMinutes;
+    }
+    if (notes != null) body['notes'] = notes;
+    if (clearSourceCaseId) {
+      body['sourceCaseId'] = null;
+    } else if (sourceCaseId != null) {
+      body['sourceCaseId'] = sourceCaseId;
+    }
+    final r = await http.put(
+      Uri.parse('${AppConfig.baseUrl}/calendar/events/${Uri.encodeComponent(id)}'),
+      headers: AppConfig.httpHeaders({'Authorization': 'Bearer $t'}),
+      body: jsonEncode(body),
+    );
+    if (r.statusCode != 200) return null;
+    return CalendarEventDto.fromJson(
+      jsonDecode(r.body) as Map<String, dynamic>,
+    );
+  }
+
+  Future<bool> deleteEvent(String id) async {
+    final t = await _token();
+    if (t == null) return false;
+    final r = await http.delete(
+      Uri.parse('${AppConfig.baseUrl}/calendar/events/${Uri.encodeComponent(id)}'),
+      headers: AppConfig.httpHeaders({'Authorization': 'Bearer $t'}),
+    );
+    return r.statusCode == 200;
+  }
+
+  /// Merge events for [months] as (year, month) pairs (dedupe by id).
+  Future<List<CalendarEventDto>> listMonths(Iterable<(int, int)> months) async {
+    final seen = <String>{};
+    final out = <CalendarEventDto>[];
+    for (final ym in months) {
+      final list = await listMonth(ym.$1, ym.$2);
+      for (final e in list) {
+        if (seen.add(e.id)) out.add(e);
+      }
+    }
+    out.sort((a, b) => a.start.compareTo(b.start));
+    return out;
   }
 
   Future<String?> icalUrl() async {
