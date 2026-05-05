@@ -25,12 +25,167 @@ class _LegalNotebookScreenState extends State<LegalNotebookScreen> {
   final _auth = AuthService();
   late final Future<String?> _citizenChromeFuture = _auth.getStoredRole();
   bool _load = true;
+  bool _intentBannerHandled = false;
+  String? _intent;
+  String? _domain;
   List<Map<String, dynamic>> _rows = const [];
 
   @override
   void initState() {
     super.initState();
     _reload();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_intentBannerHandled) return;
+    final args = ModalRoute.of(context)?.settings.arguments;
+    if (args is Map) {
+      final intent = args['intent']?.toString();
+      final domain = args['domain']?.toString();
+      if (intent != null || domain != null) {
+        _intent = intent;
+        _domain = domain;
+      }
+    }
+    _intentBannerHandled = true;
+  }
+
+  Widget _buildNotebookRow(Map<String, dynamic> r) {
+    final id = (r['_id'] ?? r['id']).toString();
+    return V26Card(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      child: Row(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: V26.paper2,
+              border: Border.all(color: V26.hairline),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: const Icon(Icons.book_outlined,
+                color: V26.navy600, size: 20),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  (r['name'] ?? 'Notebook') as String,
+                  style: const TextStyle(
+                    fontFamily: V26.sans,
+                    color: V26.ink900,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  (r['status'] ?? '—') as String,
+                  style: const TextStyle(
+                    fontFamily: V26.sans,
+                    color: V26.ink500,
+                    fontSize: 11,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          IconButton(
+            tooltip: 'סנכרון',
+            icon: const Icon(Icons.sync, color: V26.navy600, size: 20),
+            onPressed: () async {
+              final res = await _api.sync(id);
+              if (!mounted) return;
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    res?['sync']?['ok'] == true
+                        ? 'הסנכרון הושלם (בבדיקת API)'
+                        : (res?['sync']?['message'] as String? ??
+                            res?['sync']?['error'] as String? ??
+                            'סנכרון'),
+                  ),
+                ),
+              );
+              await _reload();
+            },
+          ),
+          IconButton(
+            tooltip: 'NotebookLM בדפדפן',
+            icon: const Icon(Icons.open_in_new,
+                color: V26.ink500, size: 20),
+            onPressed: () => _api.openInBrowser(id),
+          ),
+          IconButton(
+            tooltip: 'ייצוא PDF',
+            icon: const Icon(Icons.picture_as_pdf_outlined,
+                color: VetoMockup.primaryCta, size: 20),
+            onPressed: () => _exportNotebook(r, 'pdf'),
+          ),
+          IconButton(
+            tooltip: 'ייצוא DOCX',
+            icon: const Icon(Icons.description_outlined,
+                color: VetoMockup.primaryCta, size: 20),
+            onPressed: () => _exportNotebook(r, 'docx'),
+          ),
+          V26CTA(
+            'עריכה',
+            variant: V26CtaVariant.ghost,
+            onPressed: () {
+              Navigator.push<void>(
+                context,
+                MaterialPageRoute<void>(
+                  builder: (_) =>
+                      LegalNotebookEditorScreen(notebookId: id),
+                ),
+              ).then((_) => _reload());
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _intentLabel(String code) {
+    if (_intent == null) return '';
+    switch (_intent) {
+      case 'contract_review':
+        return code == 'he'
+            ? 'סקירת חוזה עם AI'
+            : code == 'ru'
+                ? 'Проверка договора AI'
+                : 'AI contract review';
+      case 'demand_letter':
+        return code == 'he'
+            ? 'יצירת מכתב התראה'
+            : code == 'ru'
+                ? 'Письмо-претензия'
+                : 'Demand letter draft';
+      case 'civil_claim':
+        return code == 'he'
+            ? 'הכנת תביעה אזרחית'
+            : code == 'ru'
+                ? 'Гражданский иск'
+                : 'Civil claim draft';
+      case 'labor_doc':
+        return code == 'he'
+            ? 'מסמך דיני עבודה'
+            : code == 'ru'
+                ? 'Документ по труду'
+                : 'Labor law document';
+      case 'family_doc':
+        return code == 'he'
+            ? 'מסמך דיני משפחה'
+            : code == 'ru'
+                ? 'Семейный документ'
+                : 'Family law document';
+      default:
+        return _intent!;
+    }
   }
 
   Future<void> _reload() async {
@@ -78,113 +233,68 @@ class _LegalNotebookScreenState extends State<LegalNotebookScreen> {
         : (code == 'ru'
             ? 'Юр. блокнот · VETO'
             : 'Legal notebook · VETO');
+    final intentBanner = (_intent != null)
+        ? Container(
+            margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            decoration: BoxDecoration(
+              color: VetoMockup.primaryCta.withValues(alpha: 0.06),
+              borderRadius: BorderRadius.circular(VetoMockup.radiusCard),
+              border: Border.all(
+                  color: VetoMockup.primaryCta.withValues(alpha: 0.3)),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.bolt_rounded,
+                    color: VetoMockup.primaryCta, size: 18),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    code == 'he'
+                        ? 'נבחר זרם משפטי: ${_intentLabel(code)} (${_domain ?? "כללי"}) — צור מחברת חדשה כדי להתחיל.'
+                        : code == 'ru'
+                            ? 'Юридический поток: ${_intentLabel(code)} (${_domain ?? "общий"}) — создайте новый блокнот.'
+                            : 'Selected flow: ${_intentLabel(code)} (${_domain ?? "general"}) — create a new notebook to begin.',
+                    style: const TextStyle(
+                      color: VetoMockup.ink,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 12.5,
+                    ),
+                  ),
+                ),
+                FilledButton.icon(
+                  onPressed: () async {
+                    await _api.create();
+                    await _reload();
+                  },
+                  icon: const Icon(Icons.add_rounded, size: 16),
+                  label: Text(code == 'he' ? 'מחברת חדשה' : 'New'),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: VetoMockup.primaryCta,
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 14, vertical: 10),
+                  ),
+                ),
+              ],
+            ),
+          )
+        : const SizedBox.shrink();
     final bodyChild = _load
             ? const Center(
                 child: CircularProgressIndicator(color: V26.navy600))
-            : ListView.separated(
-                padding: const EdgeInsets.all(16),
-                itemCount: _rows.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 10),
-                itemBuilder: (ctx, i) {
-                  final r = _rows[i];
-                  final id = (r['_id'] ?? r['id']).toString();
-                  return V26Card(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 14, vertical: 12),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            color: V26.paper2,
-                            border: Border.all(color: V26.hairline),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child:
-                              const Icon(Icons.book_outlined, color: V26.navy600, size: 20),
-                        ),
-                        const SizedBox(width: 14),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                (r['name'] ?? 'Notebook') as String,
-                                style: const TextStyle(
-                                  fontFamily: V26.sans,
-                                  color: V26.ink900,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                              const SizedBox(height: 2),
-                              Text(
-                                (r['status'] ?? '—') as String,
-                                style: const TextStyle(
-                                  fontFamily: V26.sans,
-                                  color: V26.ink500,
-                                  fontSize: 11,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        IconButton(
-                          tooltip: 'סנכרון',
-                          icon: const Icon(Icons.sync,
-                              color: V26.navy600, size: 20),
-                          onPressed: () async {
-                            final res = await _api.sync(id);
-                            if (!context.mounted) return;
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                  res?['sync']?['ok'] == true
-                                      ? 'הסנכרון הושלם (בבדיקת API)'
-                                      : (res?['sync']?['message'] as String? ??
-                                          res?['sync']?['error'] as String? ??
-                                          'סנכרון'),
-                                ),
-                              ),
-                            );
-                            await _reload();
-                          },
-                        ),
-                        IconButton(
-                          tooltip: 'NotebookLM בדפדפן',
-                          icon: const Icon(Icons.open_in_new, color: V26.ink500, size: 20),
-                          onPressed: () => _api.openInBrowser(id),
-                        ),
-                        IconButton(
-                          tooltip: 'ייצוא PDF',
-                          icon: const Icon(Icons.picture_as_pdf_outlined,
-                              color: V26.navy600, size: 20),
-                          onPressed: () => _exportNotebook(r, 'pdf'),
-                        ),
-                        IconButton(
-                          tooltip: 'ייצוא DOCX',
-                          icon: const Icon(Icons.description_outlined,
-                              color: V26.navy600, size: 20),
-                          onPressed: () => _exportNotebook(r, 'docx'),
-                        ),
-                        V26CTA(
-                          'עריכה',
-                          variant: V26CtaVariant.ghost,
-                          onPressed: () {
-                            Navigator.push<void>(
-                              context,
-                              MaterialPageRoute<void>(
-                                builder: (_) => LegalNotebookEditorScreen(notebookId: id),
-                              ),
-                            ).then((_) => _reload());
-                          },
-                        ),
-                      ],
+            : Column(
+                children: [
+                  intentBanner,
+                  Expanded(
+                    child: ListView.separated(
+                      padding: const EdgeInsets.all(16),
+                      itemCount: _rows.length,
+                      separatorBuilder: (_, __) => const SizedBox(height: 10),
+                      itemBuilder: (ctx, i) => _buildNotebookRow(_rows[i]),
                     ),
-                  );
-                },
+                  ),
+                ],
               );
-
     final fabNarrowCitizen = !isWide
         ? FloatingActionButton.extended(
             onPressed: () async {

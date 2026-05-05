@@ -12,6 +12,7 @@ import 'package:provider/provider.dart';
 import '../config/app_config.dart';
 import '../core/i18n/app_language.dart';
 import '../core/theme/veto_2026.dart';
+import '../core/theme/veto_mockup_tokens.dart';
 import '../services/auth_service.dart';
 
 // ── i18n ──────────────────────────────────────────────────────
@@ -422,7 +423,7 @@ class _LawyerSettingsScreenState extends State<LawyerSettingsScreen> {
               child: FilledButton(
                 onPressed: _saving ? null : () => _save(code),
                 style: FilledButton.styleFrom(
-                  backgroundColor: V26.navy500,
+                  backgroundColor: VetoMockup.primaryCta,
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -438,7 +439,7 @@ class _LawyerSettingsScreenState extends State<LawyerSettingsScreen> {
         ),
         body: V26Backdrop(
           child: _loading
-            ? const Center(child: CircularProgressIndicator(color: V26.navy600))
+            ? const Center(child: CircularProgressIndicator(color: VetoMockup.primaryCta))
             : ListView(
                 padding: const EdgeInsets.all(16),
                 children: [
@@ -506,7 +507,7 @@ class _LawyerSettingsScreenState extends State<LawyerSettingsScreen> {
                           child: TextField(
                             controller: _specCtrl,
                             style: const TextStyle(color: V26.ink900, fontSize: 14),
-                            cursorColor: V26.navy600,
+                            cursorColor: VetoMockup.primaryCta,
                             decoration: InputDecoration(
                               hintText: _t(code, 'addSpecHint'),
                               hintStyle: const TextStyle(color: V26.ink500),
@@ -522,7 +523,7 @@ class _LawyerSettingsScreenState extends State<LawyerSettingsScreen> {
                               focusedBorder: const OutlineInputBorder(
                                   borderRadius: BorderRadius.all(Radius.circular(10)),
                                   borderSide: BorderSide(
-                                      color: V26.navy600, width: 1.5)),
+                                      color: VetoMockup.primaryCta, width: 1.5)),
                             ),
                             onSubmitted: (_) => _addSpec(code),
                           ),
@@ -531,7 +532,7 @@ class _LawyerSettingsScreenState extends State<LawyerSettingsScreen> {
                         FilledButton(
                           onPressed: () => _addSpec(code),
                           style: FilledButton.styleFrom(
-                            backgroundColor: V26.navy600,
+                            backgroundColor: VetoMockup.primaryCta,
                             foregroundColor: Colors.white,
                           ),
                           child: Text(_t(code, 'add')),
@@ -576,21 +577,21 @@ class _LawyerSettingsScreenState extends State<LawyerSettingsScreen> {
                       _ToggleTile(
                         label: 'עברית',
                         icon: Icons.language_rounded,
-                        color: V26.navy600,
+                        color: VetoMockup.primaryCta,
                         value: _langHe,
                         onChanged: (v) => setState(() => _langHe = v),
                       ),
                       _ToggleTile(
                         label: 'English',
                         icon: Icons.language_rounded,
-                        color: V26.navy600,
+                        color: VetoMockup.primaryCta,
                         value: _langEn,
                         onChanged: (v) => setState(() => _langEn = v),
                       ),
                       _ToggleTile(
                         label: 'Русский',
                         icon: Icons.language_rounded,
-                        color: V26.navy600,
+                        color: VetoMockup.primaryCta,
                         value: _langRu,
                         onChanged: (v) => setState(() => _langRu = v),
                       ),
@@ -619,14 +620,14 @@ class _LawyerSettingsScreenState extends State<LawyerSettingsScreen> {
                       _ToggleTile(
                         label: _t(code, 'notifyUpdates'),
                         icon: Icons.update_rounded,
-                        color: V26.navy600,
+                        color: VetoMockup.primaryCta,
                         value: _notifyUpdates,
                         onChanged: (v) => setState(() => _notifyUpdates = v),
                       ),
                       _ToggleTile(
                         label: _t(code, 'notifySms'),
                         icon: Icons.sms_outlined,
-                        color: V26.navy600,
+                        color: VetoMockup.primaryCta,
                         value: _notifySms,
                         onChanged: (v) => setState(() => _notifySms = v),
                       ),
@@ -706,10 +707,10 @@ class _Section extends StatelessWidget {
               Container(
                 width: 32, height: 32,
                 decoration: BoxDecoration(
-                  color: V26.navy500.withValues(alpha: 0.12),
+                  color: VetoMockup.primaryCta.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Icon(icon, color: V26.navy500, size: 16),
+                child: Icon(icon, color: VetoMockup.primaryCta, size: 16),
               ),
               const SizedBox(width: 10),
               Text(title, style: const TextStyle(color: V26.ink900, fontSize: 15, fontWeight: FontWeight.w700)),
@@ -763,7 +764,7 @@ class _ToggleTile extends StatelessWidget {
         Switch(
           value: value,
           onChanged: onChanged,
-          activeThumbColor: V26.navy600,
+          activeThumbColor: VetoMockup.primaryCta,
         ),
       ]),
     );
@@ -797,7 +798,7 @@ class _FieldTile extends StatelessWidget {
         TextField(
           controller: controller,
           keyboardType: keyboardType,
-          cursorColor: V26.navy600,
+          cursorColor: VetoMockup.primaryCta,
           style: const TextStyle(color: V26.ink900, fontSize: 14),
           decoration: InputDecoration(
             hintText: hint,
@@ -814,7 +815,7 @@ class _FieldTile extends StatelessWidget {
             focusedBorder: const OutlineInputBorder(
                 borderRadius: BorderRadius.all(Radius.circular(10)),
                 borderSide: BorderSide(
-                    color: V26.navy600, width: 1.5)),
+                    color: VetoMockup.primaryCta, width: 1.5)),
           ),
         ),
       ]),
@@ -845,11 +846,11 @@ class _SliderTile extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
             decoration: BoxDecoration(
-              color: V26.navy600.withValues(alpha: 0.12),
+              color: VetoMockup.primaryCta.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Text('$value $unit', style: const TextStyle(
-                color: V26.navy600, fontSize: 13, fontWeight: FontWeight.w700)),
+                color: VetoMockup.primaryCta, fontSize: 13, fontWeight: FontWeight.w700)),
           ),
         ]),
         Slider(
@@ -857,7 +858,7 @@ class _SliderTile extends StatelessWidget {
           min: min.toDouble(),
           max: max.toDouble(),
           divisions: divisions,
-          activeColor: V26.navy600,
+          activeColor: VetoMockup.primaryCta,
           onChanged: (v) => onChanged(v.round()),
         ),
       ]),
@@ -900,17 +901,17 @@ class _SpecChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
-        color: V26.navy600.withValues(alpha: 0.10),
+        color: VetoMockup.primaryCta.withValues(alpha: 0.10),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: V26.navy600.withValues(alpha: 0.25)),
+        border: Border.all(color: VetoMockup.primaryCta.withValues(alpha: 0.25)),
       ),
       child: Row(mainAxisSize: MainAxisSize.min, children: [
         Text(label, style: const TextStyle(
-            color: V26.navy600, fontSize: 13, fontWeight: FontWeight.w600)),
+            color: VetoMockup.primaryCta, fontSize: 13, fontWeight: FontWeight.w600)),
         const SizedBox(width: 6),
         GestureDetector(
           onTap: onRemove,
-          child: const Icon(Icons.close_rounded, size: 14, color: V26.navy600),
+          child: const Icon(Icons.close_rounded, size: 14, color: VetoMockup.primaryCta),
         ),
       ]),
     );

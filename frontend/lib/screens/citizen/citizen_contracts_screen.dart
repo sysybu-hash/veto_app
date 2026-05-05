@@ -6,7 +6,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/i18n/app_language.dart';
+import '../../core/theme/veto_mockup_tokens.dart';
 import '../../services/citizen_dashboard_api_service.dart';
+import '../../services/legal_documents_api_service.dart';
 import '../../widgets/citizen_mockup_shell.dart';
 import '../../widgets/veto_dialogs.dart';
 
@@ -83,6 +85,30 @@ class _CitizenContractsScreenState extends State<CitizenContractsScreen> {
     }
   }
 
+  Future<void> _exportContract(
+      Map<String, dynamic> m, String format, String code) async {
+    final title = (m['title'] as String?) ?? 'חוזה';
+    final counterparty = (m['counterparty'] as String?) ?? '';
+    final cp = counterparty.isEmpty ? '—' : counterparty;
+    final status = (m['status'] as String?) ?? 'active';
+    final body =
+        '### חוזה\n$title\n\n### צד שני\n$cp\n\n### סטטוס\n$status';
+    final ok = await LegalDocumentsApiService.instance.exportDocument(
+      title: title,
+      body: body,
+      format: format,
+      domain: 'contracts',
+      intent: 'contract_export',
+      lang: code,
+    );
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(ok
+          ? (format == 'pdf' ? 'PDF יוצא' : 'DOCX יוצא')
+          : 'הייצוא נכשל'),
+    ));
+  }
+
   Future<void> _delete(String id) async {
     final code = context.read<AppLanguageController>().code;
     final he = code == 'he';
@@ -138,9 +164,33 @@ class _CitizenContractsScreenState extends State<CitizenContractsScreen> {
                 return Card(
                   margin: const EdgeInsets.only(bottom: 10),
                   child: ListTile(
-                    title: Text(title, style: const TextStyle(fontWeight: FontWeight.w700)),
+                    title: Text(title,
+                        style:
+                            const TextStyle(fontWeight: FontWeight.w700)),
                     subtitle: Text(st),
-                    trailing: IconButton(icon: const Icon(Icons.delete_outline), onPressed: () => _delete(id)),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          tooltip: 'ייצוא PDF',
+                          icon: const Icon(Icons.picture_as_pdf_outlined,
+                              color: VetoMockup.primaryCta),
+                          onPressed: () =>
+                              _exportContract(m, 'pdf', code),
+                        ),
+                        IconButton(
+                          tooltip: 'ייצוא DOCX',
+                          icon: const Icon(Icons.description_outlined,
+                              color: VetoMockup.primaryCta),
+                          onPressed: () =>
+                              _exportContract(m, 'docx', code),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.delete_outline),
+                          onPressed: () => _delete(id),
+                        ),
+                      ],
+                    ),
                   ),
                 );
               },

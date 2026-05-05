@@ -4,13 +4,12 @@
 
 import 'dart:convert';
 
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:http/http.dart' as http;
 import 'package:url_launcher/url_launcher.dart';
 
 import '../config/app_config.dart';
-import '../platform/browser_bridge.dart' as browser_bridge;
 import 'auth_service.dart';
+import 'legal_documents_api_service.dart';
 
 class LegalNotebookApiService {
   Future<String?> _t() => AuthService().getToken();
@@ -148,39 +147,23 @@ class LegalNotebookApiService {
     return jsonDecode(r.body) as Map<String, dynamic>;
   }
 
+  /// Delegates to [LegalDocumentsApiService] so all callers share a single
+  /// implementation (Hebrew RTL fonts + footer stamp on the backend).
   Future<bool> exportLegalDocument({
     required String title,
     required String body,
-    required String format, // pdf | docx
+    required String format,
     String domain = 'כללי',
     String intent = 'מסמך משפטי',
     String lang = 'he',
-  }) async {
-    final t = await _t();
-    if (t == null) return false;
-    final r = await http.post(
-      Uri.parse('${AppConfig.baseUrl}/legal-documents/export'),
-      headers: AppConfig.httpHeaders({'Authorization': 'Bearer $t'}),
-      body: jsonEncode({
-        'title': title,
-        'body': body,
-        'format': format,
-        'domain': domain,
-        'intent': intent,
-        'lang': lang,
-      }),
+  }) {
+    return LegalDocumentsApiService.instance.exportDocument(
+      title: title,
+      body: body,
+      format: format,
+      domain: domain,
+      intent: intent,
+      lang: lang,
     );
-    if (r.statusCode != 200) return false;
-
-    if (kIsWeb) {
-      final mime = format == 'docx'
-          ? 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-          : 'application/pdf';
-      final b64 = base64Encode(r.bodyBytes);
-      browser_bridge.openInNewTab('data:$mime;base64,$b64');
-      return true;
-    }
-    // Mobile/Desktop native save flow can be added with file saver package.
-    return true;
   }
 }

@@ -12,6 +12,7 @@ import 'package:provider/provider.dart';
 import '../config/app_config.dart';
 import '../core/i18n/app_language.dart';
 import '../core/theme/veto_2026.dart';
+import '../core/theme/veto_mockup_tokens.dart';
 import '../services/auth_service.dart';
 import 'admin/_shell.dart';
 
@@ -214,7 +215,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
         onRefresh: _loadAll,
         body: V26Backdrop(
           child: _loading
-              ? const Center(child: CircularProgressIndicator(color: V26.navy600))
+              ? const Center(child: CircularProgressIndicator(color: VetoMockup.primaryCta))
               : RefreshIndicator(
                   onRefresh: _loadAll,
                   child: SingleChildScrollView(
@@ -245,7 +246,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                                   badgeColor: const Color(0xFF22C55E)),
                               _KpiCard(
                                   icon: Icons.people_alt_rounded,
-                                  color: V26.navy600,
+                                  color: VetoMockup.primaryCta,
                                   label: isRtl ? 'משתמשים רשומים' : 'Registered Users',
                                   value: _totalUsers.toString()),
                               _KpiCard(
@@ -302,7 +303,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
         borderRadius: BorderRadius.circular(22),
         border: Border.all(color: V26.hairline),
         boxShadow: [
-          BoxShadow(color: V26.navy500.withValues(alpha: 0.1), blurRadius: 16, offset: const Offset(0, 6)),
+          BoxShadow(color: VetoMockup.primaryCta.withValues(alpha: 0.1), blurRadius: 16, offset: const Offset(0, 6)),
         ],
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -322,7 +323,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
         borderRadius: BorderRadius.circular(22),
         border: Border.all(color: V26.hairline),
         boxShadow: [
-          BoxShadow(color: V26.navy500.withValues(alpha: 0.1), blurRadius: 16, offset: const Offset(0, 6)),
+          BoxShadow(color: VetoMockup.primaryCta.withValues(alpha: 0.1), blurRadius: 16, offset: const Offset(0, 6)),
         ],
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -394,7 +395,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
           final statusColor = status == 'resolved'
               ? V26.ok
               : status == 'dispatched'
-                  ? V26.navy500
+                  ? VetoMockup.primaryCta
                   : V26.emerg;
           final statusLabel = status == 'resolved'
               ? _t(code, 'resolvedStatus')

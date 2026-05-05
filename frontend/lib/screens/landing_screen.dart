@@ -25,7 +25,7 @@ class _C {
   static const inkDark = V26.ink900;
   static const inkMid = V26.ink700;
   static const inkLight = V26.ink500;
-  static const accent = V26.navy600;
+  static const accent = VetoMockup.primaryCta;
 }
 
 // ── i18n ──────────────────────────────────────────────────────────
@@ -316,7 +316,7 @@ class LandingScreen extends StatelessWidget {
             context: context,
             builder: (_) => AiChatDialog(code: code),
           ),
-          backgroundColor: V26.navy600,
+          backgroundColor: VetoMockup.primaryCta,
           foregroundColor: Colors.white,
           elevation: 0,
           icon: const Icon(Icons.auto_awesome_rounded),
@@ -494,7 +494,7 @@ class _NavBarState extends State<_NavBar> {
                   widget.compact ? 'LEGAL' : t(c, 'brandEyebrow'),
                   style: TextStyle(
                     fontFamily: V26.sans,
-                    color: V26.navy600,
+                    color: VetoMockup.primaryCta,
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
                     letterSpacing: widget.compact ? 1.6 : 0,
@@ -659,7 +659,7 @@ class _UserBubble extends StatelessWidget {
       case 'admin':
         return V26.navy800;
       default:
-        return V26.navy600;
+        return VetoMockup.primaryCta;
     }
   }
 
@@ -729,7 +729,7 @@ class _UserBubble extends StatelessWidget {
             ),
             const SizedBox(width: 10),
             const Icon(Icons.arrow_forward_ios_rounded,
-                color: V26.navy600, size: 12),
+                color: VetoMockup.primaryCta, size: 12),
             const SizedBox(width: 4),
           ],
         ),
@@ -886,7 +886,7 @@ class _HeroCopyColumn extends StatelessWidget {
                 t(code, 'heroEyebrow'),
                 style: const TextStyle(
                   fontFamily: V26.sans,
-                  color: V26.navy600,
+                  color: VetoMockup.primaryCta,
                   fontSize: 11,
                   fontWeight: FontWeight.w800,
                   letterSpacing: 1.98,
@@ -1013,7 +1013,7 @@ class _HeroEmphasis extends StatelessWidget {
             fontWeight: FontWeight.w900,
             height: 1.05,
             letterSpacing: -0.02 * size,
-            color: V26.navy600,
+            color: VetoMockup.primaryCta,
           ),
         ),
         Positioned(
@@ -1260,7 +1260,7 @@ class _StackStepBlock extends StatelessWidget {
             fontFamily: V26.serif,
             fontSize: 54,
             fontWeight: FontWeight.w900,
-            color: V26.navy600.withValues(alpha: 0.16),
+            color: VetoMockup.primaryCta.withValues(alpha: 0.16),
             height: 1,
           ),
         ),
@@ -1303,13 +1303,13 @@ class _FeaturesSection extends StatelessWidget {
     final features = [
       (
         Icons.bolt_rounded,
-        V26.navy700,
+        VetoMockup.primaryCtaDeep,
         t(code, 'feat1Title'),
         t(code, 'feat1Body')
       ),
       (
         Icons.chat_bubble_rounded,
-        V26.navy600,
+        VetoMockup.primaryCta,
         t(code, 'feat2Title'),
         t(code, 'feat2Body')
       ),
@@ -1511,7 +1511,7 @@ class _PricingSection extends StatelessWidget {
                 fontFamily: V26.serif,
                 fontSize: 54,
                 fontWeight: FontWeight.w900,
-                color: V26.navy600,
+                color: VetoMockup.primaryCta,
                 height: 1,
               ),
             ),
@@ -1624,7 +1624,7 @@ class _CtaSection extends StatelessWidget {
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: [V26.navy700, V26.navy600],
+                  colors: [VetoMockup.primaryCtaDeep, VetoMockup.primaryCta],
                 ),
               ),
               child: Stack(
