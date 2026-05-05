@@ -179,6 +179,8 @@ app.use('/api/chat', require('./src/routes/chat.routes'));
 app.use('/api/vault', require('./src/routes/vault.routes'));
 app.use('/api/citizen-dashboard', require('./src/routes/citizenDashboard.routes'));
 app.use('/api/calls', require('./src/routes/call.routes'));
+app.use('/api/legal-assistant', require('./src/routes/legalAssistant.routes'));
+app.use('/api/legal-documents', require('./src/routes/legalDocuments.routes'));
 
 app.get('/', (_, res) =>
   res.json({

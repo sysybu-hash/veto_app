@@ -15,12 +15,14 @@ class CitizenHomeHub extends StatefulWidget {
     required this.userName,
     required this.onSendVeto,
     required this.onOpenLegalTool,
+    this.inlineAiPanel,
   });
 
   final String langKey;
   final String userName;
   final VoidCallback onSendVeto;
   final void Function(String route) onOpenLegalTool;
+  final Widget? inlineAiPanel;
 
   @override
   State<CitizenHomeHub> createState() => _CitizenHomeHubState();
@@ -76,6 +78,7 @@ class _CitizenHomeHubState extends State<CitizenHomeHub> {
                     name: name,
                     langKey: widget.langKey,
                     onSendVeto: widget.onSendVeto,
+                    aiPanel: widget.inlineAiPanel,
                   ),
                 ),
                 if (w >= 700) ...[
@@ -126,11 +129,13 @@ class _WelcomeCard extends StatelessWidget {
     required this.name,
     required this.langKey,
     required this.onSendVeto,
+    this.aiPanel,
   });
 
   final String name;
   final String langKey;
   final VoidCallback onSendVeto;
+  final Widget? aiPanel;
 
   @override
   Widget build(BuildContext context) {
@@ -179,6 +184,10 @@ class _WelcomeCard extends StatelessWidget {
             icon: const Icon(Icons.send_rounded),
             label: Text(t('שליחת VETO', 'Send VETO', 'Отправить VETO')),
           ),
+          if (aiPanel != null) ...[
+            const SizedBox(height: 16),
+            aiPanel!,
+          ],
         ],
       ),
     );
@@ -200,12 +209,18 @@ class _LegalShieldCard extends StatelessWidget {
     }
 
     final items = <({String route, String he, String en, String ru, IconData icon})>[
-      (route: '/chat', he: 'בדיקת סיכון', en: 'Risk check', ru: 'Риски', icon: Icons.security_rounded),
-      (route: '/legal_notebook', he: 'סקירת חוזה', en: 'Contract review', ru: 'Договор', icon: Icons.fact_check_rounded),
-      (route: '/legal_calendar', he: 'תזכורות', en: 'Deadlines', ru: 'Сроки', icon: Icons.calendar_today_rounded),
-      (route: '/maps', he: 'מפה', en: 'Map', ru: 'Карта', icon: Icons.map_rounded),
-      (route: '/citizen_contracts', he: 'חוזים', en: 'Contracts', ru: 'Договоры', icon: Icons.description_rounded),
-      (route: '/citizen_tasks', he: 'משימות', en: 'Tasks', ru: 'Задачи', icon: Icons.task_rounded),
+      (route: '/chat', he: 'בדיקת סיכון מיידית', en: 'Instant risk check', ru: 'Проверка рисков', icon: Icons.security_rounded),
+      (route: '/legal_notebook', he: 'סקירת חוזה עם AI', en: 'AI contract review', ru: 'Проверка договора AI', icon: Icons.fact_check_rounded),
+      (route: '/legal_notebook', he: 'יצירת מכתב התראה', en: 'Demand letter draft', ru: 'Письмо-претензия', icon: Icons.campaign_rounded),
+      (route: '/legal_notebook', he: 'הכנת תביעה אזרחית', en: 'Civil claim draft', ru: 'Гражданский иск', icon: Icons.balance_rounded),
+      (route: '/legal_notebook', he: 'מסמכי דיני עבודה', en: 'Labor law docs', ru: 'Документы по труду', icon: Icons.work_outline_rounded),
+      (route: '/legal_notebook', he: 'מסמכי דיני משפחה', en: 'Family law docs', ru: 'Семейные документы', icon: Icons.family_restroom_rounded),
+      (route: '/legal_calendar', he: 'תזכורות ודדליינים', en: 'Deadlines', ru: 'Сроки', icon: Icons.calendar_today_rounded),
+      (route: '/maps', he: 'איתור תחנה/בית משפט', en: 'Court & station map', ru: 'Карта судов', icon: Icons.map_rounded),
+      (route: '/citizen_contracts', he: 'ניהול חוזים פעילים', en: 'Manage contracts', ru: 'Управление договорами', icon: Icons.description_rounded),
+      (route: '/citizen_tasks', he: 'רשימת פעולות משפטיות', en: 'Legal task list', ru: 'Юридические задачи', icon: Icons.task_rounded),
+      (route: '/citizen_reports', he: 'דוח מצב תיק', en: 'Case status report', ru: 'Отчёт по делу', icon: Icons.summarize_rounded),
+      (route: '/files_vault', he: 'ייצוא מסמכים לכספת', en: 'Export to vault', ru: 'Экспорт в хранилище', icon: Icons.inventory_2_rounded),
     ];
 
     return Container(
@@ -231,11 +246,11 @@ class _LegalShieldCard extends StatelessWidget {
           GridView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 2,
               mainAxisSpacing: 8,
               crossAxisSpacing: 8,
-              childAspectRatio: 2.8,
+            childAspectRatio: 2.45,
             ),
             itemCount: items.length,
             itemBuilder: (_, i) {
@@ -281,15 +296,14 @@ class _ToolsGrid extends StatelessWidget {
 
     return LayoutBuilder(
       builder: (_, c) {
-        final cols = c.maxWidth > 900 ? 3 : 2;
         return GridView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: cols,
+          gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+            maxCrossAxisExtent: 320,
             mainAxisSpacing: 12,
             crossAxisSpacing: 12,
-            childAspectRatio: 1.35,
+            mainAxisExtent: 132,
           ),
           itemCount: tools.length,
           itemBuilder: (_, i) {
