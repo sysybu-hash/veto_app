@@ -51,7 +51,8 @@ jobs:
       - run: flutter analyze
       - run: flutter test
 
-  # Next.js — Root Directory in Vercel must be `web-client` (not frontend/).
+  # Root Directory in Vercel project must stay `web-client`. Run `vercel deploy` from repo
+  # root — if cwd is already `web-client`, Vercel appends the setting → web-client/web-client.
   deploy-vercel:
     runs-on: ubuntu-latest
     needs: [no-env-in-git, backend-ci]
@@ -59,9 +60,6 @@ jobs:
     concurrency:
       group: vercel-deploy-${{ github.ref }}
       cancel-in-progress: true
-    defaults:
-      run:
-        working-directory: web-client
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-node@v6
@@ -71,6 +69,7 @@ jobs:
           cache-dependency-path: web-client/package-lock.json
 
       - name: Install and build Next.js
+        working-directory: web-client
         env:
           NEXT_PUBLIC_API_ORIGIN: ${{ env.VETO_API_BASE }}
         run: |
