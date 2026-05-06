@@ -39,7 +39,7 @@ async function sendToLawyer(lawyer, { title, body, data = {} }) {
   try {
     await webpush.sendNotification(
       lawyer.push_subscription,
-      JSON.stringify({ title, body, data }),
+      JSON.stringify({ title, body, url: '/dashboard', data }),
     );
     return { sent: true };
   } catch (err) {
@@ -74,7 +74,10 @@ async function sendToUser(user, { title, body, data = {} }) {
   if (!user || !user.push_subscription) return { sent: false, reason: 'no subscription' };
   const User = require('../models/User');
   try {
-    await webpush.sendNotification(user.push_subscription, JSON.stringify({ title, body, data }));
+    await webpush.sendNotification(
+      user.push_subscription,
+      JSON.stringify({ title, body, url: '/dashboard', data }),
+    );
     return { sent: true };
   } catch (err) {
     if (err.statusCode === 410 || err.statusCode === 404) {

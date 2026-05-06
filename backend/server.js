@@ -159,6 +159,7 @@ app.set('io', io);
 app.use('/api/auth', authLimiter, require('./src/routes/auth.routes'));
 app.use('/api/users', require('./src/routes/user.routes'));
 app.use('/api/lawyers', require('./src/routes/lawyer.routes'));
+app.use('/api/notifications', require('./src/routes/notifications.routes'));
 
 // ── Public VAPID key for browser push subscription ────────────
 app.get('/api/push/vapid-key', (_, res) => {
