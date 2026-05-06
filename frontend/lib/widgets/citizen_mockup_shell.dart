@@ -39,8 +39,18 @@ class _NavEntry {
 }
 
 const List<_NavEntry> _kSidebarEntries = [
-  _NavEntry(route: '/veto_screen', labelHe: 'בית', labelEn: 'Home', labelRu: 'Главная', icon: Icons.home_rounded),
-  _NavEntry(route: '/files_vault', labelHe: 'תיקים', labelEn: 'Cases', labelRu: 'Дела', icon: Icons.folder_rounded),
+  _NavEntry(
+      route: '/veto_screen',
+      labelHe: 'בית',
+      labelEn: 'Home',
+      labelRu: 'Главная',
+      icon: Icons.home_rounded),
+  _NavEntry(
+      route: '/files_vault',
+      labelHe: 'תיקים',
+      labelEn: 'Cases',
+      labelRu: 'Дела',
+      icon: Icons.folder_rounded),
   _NavEntry(
       route: '/citizen_contracts',
       labelHe: 'חוזים',
@@ -53,16 +63,36 @@ const List<_NavEntry> _kSidebarEntries = [
       labelEn: 'Alerts',
       labelRu: 'Уведомления',
       icon: Icons.notifications_none_rounded),
-  _NavEntry(route: '/citizen_tasks', labelHe: 'משימות', labelEn: 'Tasks', labelRu: 'Задачи', icon: Icons.task_alt_rounded),
+  _NavEntry(
+      route: '/citizen_tasks',
+      labelHe: 'משימות',
+      labelEn: 'Tasks',
+      labelRu: 'Задачи',
+      icon: Icons.task_alt_rounded),
   _NavEntry(
       route: '/citizen_contacts',
       labelHe: 'אנשי קשר',
       labelEn: 'Contacts',
       labelRu: 'Контакты',
       icon: Icons.people_outline_rounded),
-  _NavEntry(route: '/citizen_tools', labelHe: 'כלים', labelEn: 'Tools', labelRu: 'Инструменты', icon: Icons.build_outlined),
-  _NavEntry(route: '/citizen_reports', labelHe: 'דוחות', labelEn: 'Reports', labelRu: 'Отчёты', icon: Icons.bar_chart_rounded),
-  _NavEntry(route: '/settings', labelHe: 'הגדרות', labelEn: 'Settings', labelRu: 'Настройки', icon: Icons.settings_outlined),
+  _NavEntry(
+      route: '/citizen_tools',
+      labelHe: 'כלים',
+      labelEn: 'Tools',
+      labelRu: 'Инструменты',
+      icon: Icons.build_outlined),
+  _NavEntry(
+      route: '/citizen_reports',
+      labelHe: 'דוחות',
+      labelEn: 'Reports',
+      labelRu: 'Отчёты',
+      icon: Icons.bar_chart_rounded),
+  _NavEntry(
+      route: '/settings',
+      labelHe: 'הגדרות',
+      labelEn: 'Settings',
+      labelRu: 'Настройки',
+      icon: Icons.settings_outlined),
 ];
 
 class CitizenMockupShell extends StatefulWidget {
@@ -73,8 +103,10 @@ class CitizenMockupShell extends StatefulWidget {
     this.mobileAppBar,
     this.mobileNavIndex = 0,
     this.showMobileBottomBar = true,
+
     /// Extra actions in the desktop top bar (e.g. vault upload) — appears after search.
     this.desktopTrailing,
+
     /// Shown on mobile layout only (above bottom nav).
     this.floatingActionButton,
   });
@@ -82,6 +114,7 @@ class CitizenMockupShell extends StatefulWidget {
   final String currentRoute;
   final Widget child;
   final PreferredSizeWidget? mobileAppBar;
+
   /// 0 בית · 1 הגנות · 2 שלח VETO · 3 מסמכים · 4 עוד
   final int mobileNavIndex;
   final bool showMobileBottomBar;
@@ -107,7 +140,8 @@ class _CitizenMockupShellState extends State<CitizenMockupShell> {
   }
 
   void _goVetoWizard(BuildContext context) {
-    Navigator.of(context).pushReplacementNamed('/veto_screen', arguments: {'wizard': true});
+    Navigator.of(context)
+        .pushReplacementNamed('/veto_screen', arguments: {'wizard': true});
   }
 
   void _goVetoHub(BuildContext context) {
@@ -214,7 +248,8 @@ class _CitizenMockupShellState extends State<CitizenMockupShell> {
                       langCode: code,
                       trailing: widget.desktopTrailing,
                       onProfile: () => Navigator.pushNamed(context, '/profile'),
-                      onNotifications: () => _go(context, '/citizen_notifications'),
+                      onNotifications: () =>
+                          _go(context, '/citizen_notifications'),
                     ),
                     Expanded(child: widget.child),
                   ],
@@ -232,17 +267,10 @@ class _CitizenMockupShellState extends State<CitizenMockupShell> {
         backgroundColor: VetoMockup.pageBackground,
         appBar: widget.mobileAppBar,
         floatingActionButton: widget.floatingActionButton,
-        // Mobile web: ensure the body gets a definite min height (RefreshIndicator /
-        // Column+Expanded) — some WebKit builds under-report the first constraint pass.
-        body: LayoutBuilder(
-          builder: (context, c) => Align(
-            alignment: Alignment.topCenter,
-            child: ConstrainedBox(
-              constraints: BoxConstraints(minWidth: c.maxWidth, minHeight: c.maxHeight),
-              child: widget.child,
-            ),
-          ),
-        ),
+        // Tight body extent for nested scroll views (RefreshIndicator + SingleChildScrollView).
+        // Avoid Align here: on Flutter Web it can leave the hub scroll view with zero visible
+        // layout height in narrow/mobile breakpoints.
+        body: SizedBox.expand(child: widget.child),
         bottomNavigationBar: widget.showMobileBottomBar
             ? _CitizenMobileBottomNav(
                 currentIndex: widget.mobileNavIndex,
@@ -307,7 +335,9 @@ class _DesktopSidebar extends StatelessWidget {
                   return Padding(
                     padding: const EdgeInsets.only(bottom: 4),
                     child: Material(
-                      color: active ? VetoMockup.primaryCta.withValues(alpha: 0.08) : Colors.transparent,
+                      color: active
+                          ? VetoMockup.primaryCta.withValues(alpha: 0.08)
+                          : Colors.transparent,
                       borderRadius: BorderRadius.circular(12),
                       child: InkWell(
                         borderRadius: BorderRadius.circular(12),
@@ -317,18 +347,23 @@ class _DesktopSidebar extends StatelessWidget {
                             borderRadius: BorderRadius.circular(12),
                             border: Border(
                               right: BorderSide(
-                                color: active ? VetoMockup.primaryCta : Colors.transparent,
+                                color: active
+                                    ? VetoMockup.primaryCta
+                                    : Colors.transparent,
                                 width: 3,
                               ),
                             ),
                           ),
-                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 14, vertical: 12),
                           child: Row(
                             children: [
                               Icon(
                                 e.icon,
                                 size: 22,
-                                color: active ? VetoMockup.primaryCta : VetoMockup.inkSecondary,
+                                color: active
+                                    ? VetoMockup.primaryCta
+                                    : VetoMockup.inkSecondary,
                               ),
                               const SizedBox(width: 12),
                               Expanded(
@@ -336,9 +371,13 @@ class _DesktopSidebar extends StatelessWidget {
                                   e.label(langCode),
                                   style: TextStyle(
                                     fontFamily: V26.sans,
-                                    fontWeight: active ? FontWeight.w800 : FontWeight.w600,
+                                    fontWeight: active
+                                        ? FontWeight.w800
+                                        : FontWeight.w600,
                                     fontSize: 14,
-                                    color: active ? VetoMockup.primaryCtaDeep : VetoMockup.ink,
+                                    color: active
+                                        ? VetoMockup.primaryCtaDeep
+                                        : VetoMockup.ink,
                                   ),
                                 ),
                               ),
@@ -392,7 +431,8 @@ class _CitizenMobileBottomNav extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(icon, color: sel ? VetoMockup.primaryCta : VetoMockup.inkSecondary),
+              Icon(icon,
+                  color: sel ? VetoMockup.primaryCta : VetoMockup.inkSecondary),
               const SizedBox(height: 2),
               Text(
                 label,
@@ -409,7 +449,8 @@ class _CitizenMobileBottomNav extends StatelessWidget {
     }
 
     return Container(
-      padding: EdgeInsets.only(bottom: MediaQuery.paddingOf(context).bottom + 8, top: 8),
+      padding: EdgeInsets.only(
+          bottom: MediaQuery.paddingOf(context).bottom + 8, top: 8),
       decoration: BoxDecoration(
         color: VetoMockup.surfaceCard,
         boxShadow: [
@@ -424,7 +465,8 @@ class _CitizenMobileBottomNav extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           item(0, Icons.home_rounded, he ? 'בית' : 'Home', onHome),
-          item(1, Icons.shield_outlined, he ? 'הגנות' : 'Shield', onProtections),
+          item(
+              1, Icons.shield_outlined, he ? 'הגנות' : 'Shield', onProtections),
           Expanded(
             child: Transform.translate(
               offset: const Offset(0, -18),
@@ -440,7 +482,8 @@ class _CitizenMobileBottomNav extends StatelessWidget {
                     child: const SizedBox(
                       width: 64,
                       height: 64,
-                      child: Icon(Icons.shield_moon_rounded, color: Colors.white, size: 30),
+                      child: Icon(Icons.shield_moon_rounded,
+                          color: Colors.white, size: 30),
                     ),
                   ),
                 ),

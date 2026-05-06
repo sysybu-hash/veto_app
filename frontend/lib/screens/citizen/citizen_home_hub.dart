@@ -107,10 +107,12 @@ class _CitizenHomeHubState extends State<CitizenHomeHub> {
               ),
             ),
             const SizedBox(height: 12),
-            _ToolsGrid(langKey: widget.langKey, onRoute: widget.onOpenLegalTool),
+            _ToolsGrid(
+                langKey: widget.langKey, onRoute: widget.onOpenLegalTool),
             const SizedBox(height: 28),
             if (_err != null)
-              Text(_err!, style: const TextStyle(color: Colors.red, fontSize: 12))
+              Text(_err!,
+                  style: const TextStyle(color: Colors.red, fontSize: 12))
             else
               _MetricsRow(summary: _summary, langKey: widget.langKey),
           ],
@@ -368,7 +370,8 @@ class _LegalShieldCard extends StatelessWidget {
                 icon: Icon(it.icon, size: 18, color: VetoMockup.primaryCta),
                 label: Text(
                   t(it.he, it.en, it.ru),
-                  style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
+                  style: const TextStyle(
+                      fontWeight: FontWeight.w700, fontSize: 12),
                 ),
               );
             },
@@ -394,57 +397,93 @@ class _ToolsGrid extends StatelessWidget {
     }
 
     final tools = [
-      (r: '/files_vault', he: 'מעקב תיקים', en: 'Case tracking', ru: 'Дела', i: Icons.folder_open_rounded),
-      (r: '/citizen_contracts', he: 'ניהול חוזים', en: 'Contracts', ru: 'Договоры', i: Icons.handshake_outlined),
-      (r: '/citizen_tasks', he: 'משימות פתוחות', en: 'Open tasks', ru: 'Задачи', i: Icons.checklist_rounded),
-      (r: '/citizen_contacts', he: 'אנשי קשר', en: 'Contacts', ru: 'Контакты', i: Icons.people_alt_outlined),
-      (r: '/citizen_reports', he: 'דוחות', en: 'Reports', ru: 'Отчёты', i: Icons.insights_outlined),
-      (r: '/citizen_tools', he: 'כלים מתקדמים', en: 'Advanced', ru: 'Ещё', i: Icons.apps_rounded),
+      (
+        r: '/files_vault',
+        he: 'מעקב תיקים',
+        en: 'Case tracking',
+        ru: 'Дела',
+        i: Icons.folder_open_rounded
+      ),
+      (
+        r: '/citizen_contracts',
+        he: 'ניהול חוזים',
+        en: 'Contracts',
+        ru: 'Договоры',
+        i: Icons.handshake_outlined
+      ),
+      (
+        r: '/citizen_tasks',
+        he: 'משימות פתוחות',
+        en: 'Open tasks',
+        ru: 'Задачи',
+        i: Icons.checklist_rounded
+      ),
+      (
+        r: '/citizen_contacts',
+        he: 'אנשי קשר',
+        en: 'Contacts',
+        ru: 'Контакты',
+        i: Icons.people_alt_outlined
+      ),
+      (
+        r: '/citizen_reports',
+        he: 'דוחות',
+        en: 'Reports',
+        ru: 'Отчёты',
+        i: Icons.insights_outlined
+      ),
+      (
+        r: '/citizen_tools',
+        he: 'כלים מתקדמים',
+        en: 'Advanced',
+        ru: 'Ещё',
+        i: Icons.apps_rounded
+      ),
     ];
 
-    return LayoutBuilder(
-      builder: (_, c) {
-        return GridView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-            maxCrossAxisExtent: 320,
-            mainAxisSpacing: 12,
-            crossAxisSpacing: 12,
-            mainAxisExtent: 132,
-          ),
-          itemCount: tools.length,
-          itemBuilder: (_, i) {
-            final e = tools[i];
-            return Material(
-              color: VetoMockup.surfaceCard,
-              borderRadius: BorderRadius.circular(VetoMockup.radiusCard),
-              elevation: 0,
-              child: InkWell(
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+        maxCrossAxisExtent: 320,
+        mainAxisSpacing: 12,
+        crossAxisSpacing: 12,
+        mainAxisExtent: 132,
+      ),
+      itemCount: tools.length,
+      itemBuilder: (_, i) {
+        final e = tools[i];
+        return Material(
+          color: VetoMockup.surfaceCard,
+          borderRadius: BorderRadius.circular(VetoMockup.radiusCard),
+          elevation: 0,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(VetoMockup.radiusCard),
+            onTap: () => onRoute(e.r),
+            child: Container(
+              decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(VetoMockup.radiusCard),
-                onTap: () => onRoute(e.r),
-                child: Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(VetoMockup.radiusCard),
-                    border: Border.all(color: VetoMockup.hairline),
-                    boxShadow: VetoMockup.cardShadow,
-                  ),
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Icon(e.i, color: VetoMockup.primaryCta, size: 28),
-                      const Spacer(),
-                      Text(
-                        t(e.he, e.en, e.ru),
-                        style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
-                      ),
-                    ],
-                  ),
-                ),
+                border: Border.all(color: VetoMockup.hairline),
+                boxShadow: VetoMockup.cardShadow,
               ),
-            );
-          },
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                mainAxisSize: MainAxisSize.max,
+                children: [
+                  Icon(e.i, color: VetoMockup.primaryCta, size: 28),
+                  Text(
+                    t(e.he, e.en, e.ru),
+                    style: const TextStyle(
+                        fontWeight: FontWeight.w800, fontSize: 15),
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+          ),
         );
       },
     );
