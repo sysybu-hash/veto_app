@@ -26,7 +26,8 @@ import '../platform/browser_bridge.dart' as browser_bridge;
 import '../services/auth_service.dart';
 import '../services/legal_assistant_api_service.dart';
 
-const Set<String> _kHiddenRoutes = {
+/// Routes where the floating legal-AI dock must not appear (pre-auth, static pages).
+const Set<String> kLegalAiHiddenRoutes = {
   '/',
   '/landing',
   '/login',
@@ -37,7 +38,10 @@ const Set<String> _kHiddenRoutes = {
 };
 
 class GlobalLegalAiOverlay extends StatefulWidget {
-  const GlobalLegalAiOverlay({super.key});
+  const GlobalLegalAiOverlay({super.key, required this.route});
+
+  /// Current named route (from [currentRouteNotifier]); positioning is handled by [VetoApp].
+  final String route;
 
   @override
   State<GlobalLegalAiOverlay> createState() => _GlobalLegalAiOverlayState();
@@ -332,39 +336,20 @@ class _GlobalLegalAiOverlayState extends State<GlobalLegalAiOverlay> {
 
   bool _shouldHide(String route) {
     if (!_hasToken) return true;
-    if (_kHiddenRoutes.contains(route)) return true;
+    if (kLegalAiHiddenRoutes.contains(route)) return true;
     return false;
   }
 
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder<String>(
-      valueListenable: currentRouteNotifier,
-      builder: (context, route, _) {
-        if (_shouldHide(route)) {
-          return const SizedBox.shrink();
-        }
-        final isRtl = Directionality.of(context) == TextDirection.rtl;
-        final mq = MediaQuery.of(context);
-        final isWide = mq.size.width >= 1080;
-        // On mobile, lift bubble above bottom nav (~70) + center FAB.
-        final bottomPad = isWide
-            ? mq.padding.bottom + 24
-            : mq.padding.bottom + 92;
-        final endPad = isWide ? 24.0 : 16.0;
-        return Stack(
-          children: [
-            PositionedDirectional(
-              end: endPad,
-              bottom: bottomPad,
-              child: _open
-                  ? _panel(isRtl, route, mq)
-                  : _bubbleButton(),
-            ),
-          ],
-        );
-      },
-    );
+    if (_shouldHide(widget.route)) {
+      return const SizedBox.shrink();
+    }
+    final isRtl = Directionality.of(context) == TextDirection.rtl;
+    final mq = MediaQuery.of(context);
+    return _open
+        ? _panel(isRtl, widget.route, mq)
+        : _bubbleButton();
   }
 
   Widget _bubbleButton() {

@@ -1,0 +1,731 @@
+"use client";
+
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import {
+  createContract,
+  fetchContracts,
+  fetchTasks,
+  signContract as requestSignContract,
+  updateTaskStatus,
+  type ApiCitizenContract,
+  type ApiCitizenContractStatus,
+  type ApiCitizenTask,
+  parsePriorityFromRelatedType,
+} from "@/api/productivityApi";
+import { getJwt } from "@/lib/authToken";
+import { CitizenBottomNav } from "@/components/citizen/CitizenBottomNav";
+import { CreateTaskModal } from "@/components/productivity/CreateTaskModal";
+
+/** UI contract status — maps to backend `CitizenContract.status`. */
+type ContractStatus = "pending_signature" | "active" | "expired" | "at_risk";
+
+type Contract = {
+  id: string;
+  title: string;
+  partyName: string;
+  status: ContractStatus;
+  updatedAt: string;
+};
+
+type TaskPriority = "high" | "medium" | "low";
+
+type Task = {
+  id: string;
+  title: string;
+  description: string;
+  dueDate: string;
+  priority: TaskPriority;
+  done: boolean;
+};
+
+const statusLabels: Record<ContractStatus, string> = {
+  pending_signature: "Pending signature",
+  active: "Active",
+  expired: "Expired",
+  at_risk: "At risk",
+};
+
+function apiStatusToUi(s: ApiCitizenContractStatus): ContractStatus {
+  switch (s) {
+    case "draft":
+      return "pending_signature";
+    case "active":
+      return "active";
+    case "closed":
+      return "expired";
+    case "at_risk":
+      return "at_risk";
+    default:
+      return "active";
+  }
+}
+
+function uiStatusToApi(s: ContractStatus): ApiCitizenContractStatus {
+  switch (s) {
+    case "pending_signature":
+      return "draft";
+    case "active":
+      return "active";
+    case "expired":
+      return "closed";
+    case "at_risk":
+      return "at_risk";
+    default:
+      return "active";
+  }
+}
+
+function formatApiDate(iso?: string): string {
+  if (!iso) return new Date().toISOString().slice(0, 10);
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return iso.slice(0, 10);
+  return d.toISOString().slice(0, 10);
+}
+
+function mapApiContract(row: ApiCitizenContract): Contract {
+  return {
+    id: String(row._id),
+    title: row.title,
+    partyName: row.counterparty ?? "",
+    status: apiStatusToUi(row.status),
+    updatedAt: formatApiDate(row.updatedAt),
+  };
+}
+
+function dueAtToInputDate(dueAt?: string | null): string {
+  if (dueAt == null || dueAt === "") return "";
+  const d = new Date(dueAt);
+  if (Number.isNaN(d.getTime())) return "";
+  return d.toISOString().slice(0, 10);
+}
+
+function mapApiTask(row: ApiCitizenTask): Task {
+  return {
+    id: String(row._id),
+    title: row.title,
+    description: row.description ?? "",
+    dueDate: dueAtToInputDate(row.dueAt),
+    priority: parsePriorityFromRelatedType(row.relatedType),
+    done: row.status === "done",
+  };
+}
+
+function statusStyles(status: ContractStatus): string {
+  switch (status) {
+    case "pending_signature":
+      return "bg-amber-50 text-amber-800 ring-amber-200";
+    case "active":
+      return "bg-emerald-50 text-emerald-800 ring-emerald-200";
+    case "expired":
+      return "bg-slate-100 text-slate-600 ring-slate-200";
+    case "at_risk":
+      return "bg-orange-50 text-orange-900 ring-orange-200";
+    default:
+      return "bg-slate-100 text-slate-700 ring-slate-200";
+  }
+}
+
+function priorityStyles(p: TaskPriority): string {
+  switch (p) {
+    case "high":
+      return "bg-red-50 text-red-800 ring-red-200";
+    case "medium":
+      return "bg-amber-50 text-amber-800 ring-amber-200";
+    case "low":
+      return "bg-slate-100 text-slate-700 ring-slate-200";
+    default:
+      return "bg-slate-100 text-slate-700 ring-slate-200";
+  }
+}
+
+type ContractFormPayload = {
+  title: string;
+  partyName: string;
+  status: ContractStatus;
+};
+
+function CreateContractModal({
+  open,
+  onClose,
+  onSave,
+}: {
+  open: boolean;
+  onClose: () => void;
+  onSave: (c: ContractFormPayload) => Promise<void>;
+}) {
+  const [title, setTitle] = useState("");
+  const [partyName, setPartyName] = useState("");
+  const [status, setStatus] = useState<ContractStatus>("pending_signature");
+  const [saving, setSaving] = useState(false);
+  const [saveErr, setSaveErr] = useState<string | null>(null);
+  const titleRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (open) {
+      setTitle("");
+      setPartyName("");
+      setStatus("pending_signature");
+      setSaveErr(null);
+      setSaving(false);
+      queueMicrotask(() => titleRef.current?.focus());
+    }
+  }, [open]);
+
+  if (!open) return null;
+
+  const save = async () => {
+    const t = title.trim();
+    const p = partyName.trim();
+    if (!t || !p || saving) return;
+    setSaveErr(null);
+    setSaving(true);
+    try {
+      await onSave({ title: t, partyName: p, status });
+      onClose();
+    } catch (e) {
+      setSaveErr(e instanceof Error ? e.message : "Save failed");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div
+      className="fixed inset-0 z-[60] flex items-end justify-center bg-slate-900/50 p-4 sm:items-center"
+      role="presentation"
+      onMouseDown={(e) => {
+        if (e.target === e.currentTarget && !saving) onClose();
+      }}
+    >
+      <div
+        className="w-full max-w-lg overflow-hidden rounded-2xl bg-white shadow-2xl"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="contract-modal-title"
+        onMouseDown={(e) => e.stopPropagation()}
+      >
+        <div className="border-b border-slate-100 px-5 py-4">
+          <h2
+            id="contract-modal-title"
+            className="text-lg font-semibold text-slate-900"
+          >
+            New contract
+          </h2>
+          <p className="mt-0.5 text-sm text-slate-500">
+            Add a contract you are negotiating or signing.
+          </p>
+        </div>
+        <div className="space-y-4 px-5 py-4">
+          <div>
+            <label
+              htmlFor="c-title"
+              className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500"
+            >
+              Contract title
+            </label>
+            <input
+              ref={titleRef}
+              id="c-title"
+              value={title}
+              disabled={saving}
+              onChange={(e) => setTitle(e.target.value)}
+              className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 disabled:bg-slate-50"
+            />
+          </div>
+          <div>
+            <label
+              htmlFor="c-party"
+              className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500"
+            >
+              Party name
+            </label>
+            <input
+              id="c-party"
+              value={partyName}
+              disabled={saving}
+              onChange={(e) => setPartyName(e.target.value)}
+              className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 disabled:bg-slate-50"
+              placeholder="e.g. Organization or person"
+            />
+          </div>
+          <div>
+            <label
+              htmlFor="c-status"
+              className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500"
+            >
+              Status
+            </label>
+            <select
+              id="c-status"
+              value={status}
+              disabled={saving}
+              onChange={(e) => setStatus(e.target.value as ContractStatus)}
+              className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 disabled:bg-slate-50"
+            >
+              <option value="pending_signature">Pending signature</option>
+              <option value="active">Active</option>
+              <option value="expired">Expired</option>
+              <option value="at_risk">At risk</option>
+            </select>
+          </div>
+          {saveErr && (
+            <p
+              className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800"
+              role="alert"
+            >
+              {saveErr}
+            </p>
+          )}
+        </div>
+        <div className="flex gap-3 border-t border-slate-100 px-5 py-4">
+          <button
+            type="button"
+            onClick={() => !saving && onClose()}
+            disabled={saving}
+            className="flex-1 rounded-xl border border-slate-200 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={() => void save()}
+            disabled={!title.trim() || !partyName.trim() || saving}
+            className="flex-1 rounded-xl bg-blue-600 py-3 text-sm font-semibold text-white hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {saving ? "Saving…" : "Save contract"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ContractViewModal({
+  contract,
+  onClose,
+}: {
+  contract: Contract | null;
+  onClose: () => void;
+}) {
+  if (!contract) return null;
+  return (
+    <div
+      className="fixed inset-0 z-[60] flex items-end justify-center bg-slate-900/50 p-4 sm:items-center"
+      onMouseDown={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
+      <div
+        className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl"
+        onMouseDown={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="view-contract-title"
+      >
+        <h2
+          id="view-contract-title"
+          className="text-lg font-semibold text-slate-900"
+        >
+          {contract.title}
+        </h2>
+        <p className="mt-2 text-sm text-slate-600">Party: {contract.partyName}</p>
+        <p className="mt-2 text-sm text-slate-600">
+          Status: {statusLabels[contract.status]}
+        </p>
+        <p className="mt-1 text-xs text-slate-400">Last updated {contract.updatedAt}</p>
+        <button
+          type="button"
+          onClick={onClose}
+          className="mt-6 w-full rounded-xl bg-slate-900 py-3 text-sm font-semibold text-white hover:bg-slate-800"
+        >
+          Close
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function ProductivityLoadingSkeleton() {
+  return (
+    <div className="animate-pulse space-y-4 p-4 sm:p-6" aria-busy="true" aria-label="Loading">
+      <div className="grid gap-4 sm:grid-cols-2">
+        {[1, 2, 3, 4].map((i) => (
+          <div key={i} className="h-36 rounded-xl border border-slate-100 bg-slate-100" />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+export default function ProductivityPage() {
+  const router = useRouter();
+  const [tab, setTab] = useState<"contracts" | "tasks">("contracts");
+  const [contracts, setContracts] = useState<Contract[]>([]);
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [contractModalOpen, setContractModalOpen] = useState(false);
+  const [taskModalOpen, setTaskModalOpen] = useState(false);
+  const [viewContract, setViewContract] = useState<Contract | null>(null);
+  const [menuOpenId, setMenuOpenId] = useState<string | null>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [updatingTaskId, setUpdatingTaskId] = useState<string | null>(null);
+  const [signingContractId, setSigningContractId] = useState<string | null>(
+    null,
+  );
+
+  const loadData = useCallback(async () => {
+    if (!getJwt()) return;
+    setIsLoading(true);
+    setLoadError(null);
+    try {
+      const [apiContracts, apiTasks] = await Promise.all([
+        fetchContracts(),
+        fetchTasks(),
+      ]);
+      setContracts(apiContracts.map(mapApiContract));
+      setTasks(apiTasks.map(mapApiTask));
+    } catch (e) {
+      setLoadError(
+        e instanceof Error ? e.message : "Could not load contracts and tasks",
+      );
+      setContracts([]);
+      setTasks([]);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!getJwt()) {
+      router.replace("/login");
+      return;
+    }
+    void loadData();
+  }, [router, loadData]);
+
+  useEffect(() => {
+    const onDoc = (e: MouseEvent) => {
+      if (!menuRef.current?.contains(e.target as Node)) {
+        setMenuOpenId(null);
+      }
+    };
+    document.addEventListener("click", onDoc);
+    return () => document.removeEventListener("click", onDoc);
+  }, []);
+
+  const sortedContracts = useMemo(
+    () =>
+      [...contracts].sort((a, b) =>
+        a.title.localeCompare(b.title, undefined, { sensitivity: "base" }),
+      ),
+    [contracts],
+  );
+
+  const sortedTasks = useMemo(() => {
+    const prioOrder: Record<TaskPriority, number> = {
+      high: 0,
+      medium: 1,
+      low: 2,
+    };
+    return [...tasks].sort((a, b) => {
+      if (a.done !== b.done) return a.done ? 1 : -1;
+      const pd = (a.dueDate || "").localeCompare(b.dueDate || "");
+      if (pd !== 0) return pd;
+      return prioOrder[a.priority] - prioOrder[b.priority];
+    });
+  }, [tasks]);
+
+  const handleNewClick = () => {
+    if (tab === "contracts") setContractModalOpen(true);
+    else setTaskModalOpen(true);
+  };
+
+  const saveNewContract = async (payload: ContractFormPayload) => {
+    await createContract({
+      title: payload.title,
+      counterparty: payload.partyName,
+      status: uiStatusToApi(payload.status),
+    });
+    await loadData();
+  };
+
+  const signContract = async (id: string) => {
+    setActionError(null);
+    setSigningContractId(id);
+    try {
+      await requestSignContract(id);
+      await loadData();
+      setMenuOpenId(null);
+    } catch (e) {
+      setActionError(e instanceof Error ? e.message : "Could not sign contract");
+    } finally {
+      setSigningContractId(null);
+    }
+  };
+
+  const toggleTaskDone = async (id: string) => {
+    const t = tasks.find((x) => x.id === id);
+    if (!t || updatingTaskId) return;
+    const nextDone = !t.done;
+    setActionError(null);
+    setUpdatingTaskId(id);
+    try {
+      const updated = await updateTaskStatus(id, nextDone);
+      setTasks((prev) =>
+        prev.map((row) =>
+          row.id === id ? mapApiTask(updated) : row,
+        ),
+      );
+    } catch (e) {
+      setActionError(
+        e instanceof Error ? e.message : "Could not update task status",
+      );
+    } finally {
+      setUpdatingTaskId(null);
+    }
+  };
+
+  return (
+    <div className="mx-auto min-h-0 w-full max-w-4xl flex-1 px-4 pb-28 pt-6 md:px-6">
+      <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm">
+        <div className="border-b border-slate-100 bg-slate-50/80 px-4 py-4 sm:flex sm:items-center sm:justify-between sm:px-6">
+          <div className="mb-4 sm:mb-0">
+            <p className="text-xs font-semibold uppercase tracking-wider text-blue-600">
+              Citizen workspace
+            </p>
+            <h1 className="mt-1 text-xl font-bold tracking-tight text-slate-900 sm:text-2xl">
+              Contracts &amp; tasks
+            </h1>
+            <p className="mt-1 text-sm text-slate-600">
+              Track agreements and your legal to-do list in one place.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={handleNewClick}
+            disabled={isLoading || !!loadError}
+            className="w-full rounded-xl bg-blue-600 px-4 py-3 text-sm font-semibold text-white shadow-md shadow-blue-600/25 transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+          >
+            {tab === "contracts" ? "New contract" : "New task"}
+          </button>
+        </div>
+
+        <div className="border-b border-slate-100 px-4 sm:px-6">
+          <div className="flex gap-0">
+            <button
+              type="button"
+              onClick={() => setTab("contracts")}
+              className={`relative flex-1 border-b-2 py-3 text-sm font-semibold transition sm:flex-none sm:px-6 ${
+                tab === "contracts"
+                  ? "border-blue-600 text-blue-600"
+                  : "border-transparent text-slate-500 hover:text-slate-800"
+              }`}
+            >
+              Contracts
+            </button>
+            <button
+              type="button"
+              onClick={() => setTab("tasks")}
+              className={`relative flex-1 border-b-2 py-3 text-sm font-semibold transition sm:flex-none sm:px-6 ${
+                tab === "tasks"
+                  ? "border-blue-600 text-blue-600"
+                  : "border-transparent text-slate-500 hover:text-slate-800"
+              }`}
+            >
+              Tasks
+            </button>
+          </div>
+        </div>
+
+        {isLoading && <ProductivityLoadingSkeleton />}
+
+        {!isLoading && loadError && (
+          <div
+            className="m-4 flex flex-col gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-4 text-sm text-red-800 sm:m-6 sm:flex-row sm:items-center sm:justify-between"
+            role="alert"
+          >
+            <p>{loadError}</p>
+            <button
+              type="button"
+              onClick={() => void loadData()}
+              className="shrink-0 rounded-lg bg-red-700 px-4 py-2 text-sm font-semibold text-white hover:bg-red-600"
+            >
+              Retry
+            </button>
+          </div>
+        )}
+
+        {!isLoading && !loadError && (
+          <div className="p-4 sm:p-6">
+            {actionError && (
+              <div
+                className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900"
+                role="status"
+              >
+                {actionError}
+              </div>
+            )}
+            {tab === "contracts" && (
+              <div className="grid gap-4 sm:grid-cols-2">
+                {sortedContracts.length === 0 && (
+                  <p className="col-span-full py-10 text-center text-sm text-slate-500">
+                    No contracts yet. Create one with &quot;New contract&quot;.
+                  </p>
+                )}
+                {sortedContracts.map((c) => (
+                  <article
+                    key={c.id}
+                    className="flex flex-col rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition hover:border-slate-300 hover:shadow-md"
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <h3 className="font-semibold text-slate-900">{c.title}</h3>
+                        <p className="mt-1 text-sm text-slate-600">{c.partyName}</p>
+                      </div>
+                      <span
+                        className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset ${statusStyles(c.status)}`}
+                      >
+                        {statusLabels[c.status]}
+                      </span>
+                    </div>
+                    <p className="mt-3 text-xs text-slate-400">Updated {c.updatedAt}</p>
+                    <div
+                      className="relative mt-4"
+                      ref={menuOpenId === c.id ? menuRef : undefined}
+                    >
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setMenuOpenId((id) => (id === c.id ? null : c.id));
+                        }}
+                        className="flex w-full items-center justify-center gap-2 rounded-lg border border-slate-200 bg-slate-50 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+                      >
+                        Actions
+                        <svg
+                          className="h-4 w-4"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth={2}
+                          viewBox="0 0 24 24"
+                        >
+                          <path d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </button>
+                      {menuOpenId === c.id && (
+                        <div className="absolute left-0 right-0 z-10 mt-1 overflow-hidden rounded-xl border border-slate-200 bg-white py-1 shadow-lg">
+                          <button
+                            type="button"
+                            className="block w-full px-4 py-2.5 text-left text-sm text-slate-700 hover:bg-slate-50"
+                            onClick={() => {
+                              setViewContract(c);
+                              setMenuOpenId(null);
+                            }}
+                          >
+                            View
+                          </button>
+                          <button
+                            type="button"
+                            className="block w-full px-4 py-2.5 text-left text-sm text-blue-700 hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-40"
+                            disabled={
+                              c.status !== "pending_signature" ||
+                              signingContractId === c.id
+                            }
+                            onClick={() => void signContract(c.id)}
+                          >
+                            {signingContractId === c.id ? "Signing…" : "Sign"}
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </article>
+                ))}
+              </div>
+            )}
+
+            {tab === "tasks" && (
+              <ul className="divide-y divide-slate-100 rounded-xl border border-slate-200 bg-slate-50/50">
+                {sortedTasks.length === 0 && (
+                  <li className="px-4 py-10 text-center text-sm text-slate-500">
+                    No tasks yet. Add one with &quot;New task&quot;.
+                  </li>
+                )}
+                {sortedTasks.map((t) => (
+                  <li
+                    key={t.id}
+                    className={`flex flex-col gap-3 p-4 transition sm:flex-row sm:items-center sm:gap-4 ${
+                      t.done ? "bg-slate-100/80" : "bg-white"
+                    }`}
+                  >
+                    <label className="flex flex-1 cursor-pointer items-start gap-3">
+                      <input
+                        type="checkbox"
+                        checked={t.done}
+                        disabled={updatingTaskId === t.id}
+                        onChange={() => void toggleTaskDone(t.id)}
+                        className="mt-1 h-4 w-4 shrink-0 rounded border-slate-300 text-blue-600 focus:ring-blue-500 disabled:cursor-wait disabled:opacity-50"
+                      />
+                      <span className="min-w-0">
+                        <span
+                          className={`block font-medium text-slate-900 ${
+                            t.done ? "text-slate-500 line-through" : ""
+                          }`}
+                        >
+                          {t.title}
+                        </span>
+                        {t.description && (
+                          <span className="mt-0.5 block text-sm text-slate-600">
+                            {t.description}
+                          </span>
+                        )}
+                      </span>
+                    </label>
+                    <div className="flex shrink-0 flex-wrap items-center gap-2 sm:flex-col sm:items-end">
+                      <span
+                        className={`rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset ${priorityStyles(t.priority)}`}
+                      >
+                        {t.priority.charAt(0).toUpperCase() + t.priority.slice(1)}
+                      </span>
+                      <span className="text-xs font-medium text-slate-500">
+                        Due {t.dueDate || "—"}
+                      </span>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        )}
+      </div>
+
+      <p className="mt-4 text-center text-xs text-slate-500">
+        Need files?{" "}
+        <Link href="/vault" className="font-semibold text-blue-400 hover:text-blue-300">
+          Open your vault
+        </Link>
+      </p>
+
+      <CreateContractModal
+        open={contractModalOpen}
+        onClose={() => setContractModalOpen(false)}
+        onSave={saveNewContract}
+      />
+      <CreateTaskModal
+        open={taskModalOpen}
+        onClose={() => setTaskModalOpen(false)}
+        onTaskCreated={() => void loadData()}
+      />
+      <ContractViewModal
+        contract={viewContract}
+        onClose={() => setViewContract(null)}
+      />
+
+      <CitizenBottomNav active="productivity" />
+    </div>
+  );
+}

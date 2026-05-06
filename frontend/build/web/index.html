@@ -68,6 +68,26 @@
     * { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
     /* Prevent blue tap highlight on mobile */
     * { -webkit-tap-highlight-color: transparent; }
+    /* Flutter Web: host must fill the visual viewport (iOS dynamic toolbar, Chrome mobile). */
+    flt-glass-pane,
+    flt-scene-host,
+    flt-semantics-placeholder {
+      display: block;
+      width: 100%;
+      height: 100%;
+      max-width: 100vw;
+      min-height: 100vh;
+      min-height: 100dvh;
+      min-height: -webkit-fill-available;
+    }
+    body {
+      /* Pairs with overflow:hidden on html/body — pins the frame so inner Flutter canvas gets stable size. */
+      position: fixed;
+      inset: 0;
+      max-width: 100vw;
+      max-height: 100dvh;
+      max-height: -webkit-fill-available;
+    }
     /* Smooth scrolling on iOS */
     flt-glass-pane { touch-action: auto; }
   </style>
