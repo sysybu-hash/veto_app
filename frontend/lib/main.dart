@@ -56,7 +56,7 @@ import 'navigation/call_route_args_observer.dart';
 import 'navigation/current_route_observer.dart';
 import 'services/socket_service.dart';
 import 'services/vault_save_queue.dart';
-import 'widgets/global_legal_ai_overlay.dart';
+import 'widgets/global_legal_ai_overlay.dart' show GlobalLegalAiOverlay, kLegalAiHiddenRoutes;
 
 void _installGlobalErrorLogging() {
   final previousHandler = FlutterError.onError;
@@ -319,23 +319,41 @@ class VetoApp extends StatelessWidget {
         // Respect OS font scaling, then apply in-app size steps.
         final os = mq.textScaler.scale(1.0);
         final combined = (os * a11y.textScale).clamp(0.75, 2.25);
-        // Floating accessibility FAB + bottom sheet removed: on Web it could leave a
-        // full-screen modal barrier with no usable sheet. Preferences still load via
-        // [AccessibilitySettings] (theme + text scaler). Re-introduce as a dedicated
-        // route (/accessibility) when needed — do not wrap the navigator in a Stack FAB.
-        return MediaQuery(
-          data: mq.copyWith(
-            textScaler: TextScaler.linear(combined),
-            boldText: a11y.boldBody,
-            highContrast: a11y.highContrast,
-            disableAnimations: a11y.reduceMotion,
-          ),
-          child: Stack(
-            children: [
-              Positioned.fill(child: navigatorChild),
-              const GlobalLegalAiOverlay(),
-            ],
-          ),
+        final scaledMq = mq.copyWith(
+          textScaler: TextScaler.linear(combined),
+          boldText: a11y.boldBody,
+          highContrast: a11y.highContrast,
+          disableAnimations: a11y.reduceMotion,
+        );
+        // Legal-AI dock: bubble uses [PositionedDirectional] as a direct child of this [Stack].
+        return ValueListenableBuilder<String>(
+          valueListenable: currentRouteNotifier,
+          builder: (context, route, _) {
+            final r = route.isEmpty ? '/' : route;
+            final showLegalAiDock =
+                r.isNotEmpty && !kLegalAiHiddenRoutes.contains(r);
+            final isWide = mq.size.width >= 1080;
+            final bottomPad = isWide
+                ? mq.padding.bottom + 24.0
+                : mq.padding.bottom + 92.0;
+            final endPad = isWide ? 24.0 : 16.0;
+            return MediaQuery(
+              data: scaledMq,
+              child: Stack(
+                clipBehavior: Clip.none,
+                fit: StackFit.expand,
+                children: [
+                  Positioned.fill(child: navigatorChild),
+                  if (showLegalAiDock)
+                    PositionedDirectional(
+                      end: endPad,
+                      bottom: bottomPad,
+                      child: GlobalLegalAiOverlay(route: r),
+                    ),
+                ],
+              ),
+            );
+          },
         );
       },
       initialRoute: initialRoute,

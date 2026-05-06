@@ -2,6 +2,7 @@
 //  citizen_home_hub.dart — mockup hub (welcome, CTA, tools, KPIs)
 // ============================================================
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 
 import '../../core/theme/veto_2026.dart';
@@ -31,11 +32,18 @@ class CitizenHomeHub extends StatefulWidget {
 class _CitizenHomeHubState extends State<CitizenHomeHub> {
   Map<String, dynamic>? _summary;
   String? _err;
+  final ScrollController _mobileScroll = ScrollController();
 
   @override
   void initState() {
     super.initState();
     _load();
+  }
+
+  @override
+  void dispose() {
+    _mobileScroll.dispose();
+    super.dispose();
   }
 
   Future<void> _load() async {
@@ -91,56 +99,75 @@ class _CitizenHomeHubState extends State<CitizenHomeHub> {
         ? Text(_err!, style: const TextStyle(color: Colors.red, fontSize: 12))
         : _MetricsRow(summary: _summary, langKey: widget.langKey);
 
-    // Desktop: SingleChildScrollView + Row/Expanded.
-    // Mobile web: ListView — nested shrink-wrapped GridViews inside a scroll view
-    // can resolve to zero height on web.
+    // Desktop: wide layout. On Flutter Web, [RefreshIndicator] around a vertical
+    // [SingleChildScrollView] has produced an empty body in desktop-width previews.
     if (isDesktop) {
+      final desktopScroll = SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: EdgeInsets.all(pad),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(flex: 2, child: welcomeCard),
+                const SizedBox(width: 20),
+                Expanded(flex: 3, child: shieldCard),
+              ],
+            ),
+            const SizedBox(height: 24),
+            toolsHeading,
+            const SizedBox(height: 12),
+            toolsGrid,
+            const SizedBox(height: 28),
+            metricsOrErr,
+          ],
+        ),
+      );
+      if (kIsWeb) return desktopScroll;
       return RefreshIndicator(
         onRefresh: _load,
-        child: SingleChildScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          padding: EdgeInsets.all(pad),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(flex: 2, child: welcomeCard),
-                  const SizedBox(width: 20),
-                  Expanded(flex: 3, child: shieldCard),
-                ],
-              ),
+        child: desktopScroll,
+      );
+    }
+
+    final bottomSafe = MediaQuery.paddingOf(context).bottom;
+    final edgeInsets =
+        EdgeInsets.fromLTRB(pad, pad, pad, pad + bottomSafe + 24);
+
+    // Flutter Web + mobile: wrapping a vertical ListView in [RefreshIndicator] has
+    // caused “empty body” reports (viewport / overscroll quirks). Use slivers +
+    // explicit [ScrollController] (non-primary) and skip pull-to-refresh on web.
+    final scrollable = CustomScrollView(
+      controller: _mobileScroll,
+      primary: false,
+      physics: const AlwaysScrollableScrollPhysics(),
+      slivers: [
+        SliverPadding(
+          padding: edgeInsets,
+          sliver: SliverList(
+            delegate: SliverChildListDelegate([
+              welcomeCard,
+              const SizedBox(height: 16),
+              shieldCard,
               const SizedBox(height: 24),
               toolsHeading,
               const SizedBox(height: 12),
               toolsGrid,
               const SizedBox(height: 28),
               metricsOrErr,
-            ],
+            ]),
           ),
         ),
-      );
-    }
+      ],
+    );
 
-    final bottomSafe = MediaQuery.paddingOf(context).bottom;
+    if (kIsWeb) return scrollable;
+
     return RefreshIndicator(
       onRefresh: _load,
-      child: ListView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        padding: EdgeInsets.fromLTRB(pad, pad, pad, pad + bottomSafe + 24),
-        children: [
-          welcomeCard,
-          const SizedBox(height: 16),
-          shieldCard,
-          const SizedBox(height: 24),
-          toolsHeading,
-          const SizedBox(height: 12),
-          toolsGrid,
-          const SizedBox(height: 28),
-          metricsOrErr,
-        ],
-      ),
+      child: scrollable,
     );
   }
 }
