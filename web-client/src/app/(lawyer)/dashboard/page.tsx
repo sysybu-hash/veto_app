@@ -1,8 +1,9 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { getJwt, getRoleFromJwt } from "@/lib/authToken";
+import { subscribeToPush } from "@/lib/pushClient";
 import { connectSocket, getSocket } from "@/lib/socketClient";
 import {
   useEmergencyStore,
@@ -87,6 +88,9 @@ function parseSessionReadyPayload(data: unknown): SessionReadyState | null {
 
 export default function LawyerDashboardPage() {
   const router = useRouter();
+  const [notifPermission, setNotifPermission] = useState<
+    NotificationPermission | "unsupported"
+  >("unsupported");
 
   const isAvailable = useLawyerStore((s) => s.isAvailable);
   const activeAlert = useLawyerStore((s) => s.activeAlert);
@@ -111,6 +115,14 @@ export default function LawyerDashboardPage() {
       router.replace("/hub");
     }
   }, [router]);
+
+  useEffect(() => {
+    if (typeof window === "undefined" || typeof Notification === "undefined") {
+      setNotifPermission("unsupported");
+      return;
+    }
+    setNotifPermission(Notification.permission);
+  }, []);
 
   useEffect(() => {
     if (!getJwt() || getRoleFromJwt() !== "lawyer") return;
@@ -231,6 +243,17 @@ export default function LawyerDashboardPage() {
         });
         if (!sock.connected) sock.connect();
       }
+
+      if (next) {
+        void subscribeToPush().then((result) => {
+          if (typeof Notification !== "undefined") {
+            setNotifPermission(Notification.permission);
+          }
+          if (!result.ok && result.reason !== "denied" && result.reason !== "unsupported") {
+            console.warn("[push]", result.reason, result.message ?? "");
+          }
+        });
+      }
     },
     [setAvailable],
   );
@@ -304,6 +327,28 @@ export default function LawyerDashboardPage() {
             <span className="text-sm font-medium text-slate-700">
               {isAvailable ? "Online" : "Offline"}
             </span>
+            {isAvailable && notifPermission === "granted" && (
+              <span
+                className="inline-flex max-w-[min(100%,11rem)] items-center gap-1 truncate text-xs font-medium text-emerald-700 sm:max-w-none"
+                title="Browser notifications enabled for SOS alerts"
+              >
+                  <svg
+                    className="h-4 w-4"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth={2}
+                    viewBox="0 0 24 24"
+                    aria-hidden
+                  >
+                    <path
+                      d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                  Notifications active
+                </span>
+              )}
           </div>
         </div>
       </header>
