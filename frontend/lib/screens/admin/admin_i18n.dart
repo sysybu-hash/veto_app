@@ -1,31 +1,359 @@
-import 'package:flutter/widgets.dart';
-
 import '../../core/i18n/app_language.dart';
-import '../../l10n/app_localizations.dart';
-import 'admin_l10n_lookups.dart';
 
-/// Admin-facing strings (merged into ARB under `adm*`).
 class AdminStrings {
-  static String t(BuildContext context, String key) {
-    final l = AppLocalizations.of(context);
-    if (l == null) return key;
-    return admT(l, key);
+  static const Map<String, Map<String, String>> _copy = {
+    'he': {
+      'loading': 'טוען...',
+      'unknown': 'לא ידוע',
+      'adminPanel': 'פאנל ניהול',
+      'openApp': 'כניסה לאפליקציה',
+      'citizenApp': 'ממשק אזרח (VETO)',
+      'refresh': 'רענן',
+      'logout': 'יציאה',
+      'quickStats': 'סטטיסטיקה מהירה',
+      'users': 'משתמשים',
+      'lawyers': 'עורכי דין',
+      'pending': 'ממתינים',
+      'pendingApprovals': 'עורכי דין ממתינים לאישור',
+      'pendingApprovalsAction': 'אישור עורכי דין',
+      'systemOverview': 'סקירת מערכת',
+      'serverStatus': 'סטטוס שרת',
+      'database': 'בסיס נתונים',
+      'appVersion': 'גרסת אפליקציה',
+      'userManagement': 'ניהול משתמשים',
+      'allUsers': 'כל המשתמשים',
+      'allLawyers': 'כל עורכי הדין',
+      'emergencyLogs': 'יומני חירום',
+      'systemSettings': 'הגדרות מערכת',
+      'fixedOtp': 'OTP קבוע לאדמינים',
+      'fixedOtpHint': 'קוד 123456 לצרכי פיתוח ובדיקות',
+      'settingUpdateError': 'שגיאה בעדכון ההגדרה',
+      'settingUpdated': 'ההגדרה עודכנה בהצלחה',
+      'addUser': 'הוסף משתמש',
+      'editUser': 'ערוך משתמש',
+      'fullName': 'שם מלא',
+      'phone': 'טלפון (+972...)',
+      'role': 'תפקיד',
+      'language': 'שפה',
+      'citizen': 'אזרח',
+      'admin': 'אדמין',
+      'cancel': 'ביטול',
+      'add': 'הוסף',
+      'save': 'שמור',
+      'manualExempt': 'פטור מתשלום (הוסף ידנית)',
+      'manualExemptHint': 'המשתמש לא יצטרך מנוי',
+      'deleteUser': 'מחיקת משתמש',
+      'deleteUserConfirm': 'מחק את המשתמש לצמיתות? לא ניתן לבטל.',
+      'noUsers': 'אין משתמשים',
+      'noName': 'ללא שם',
+      'verified': 'מאומת',
+      'unverified': 'לא מאומת',
+      'exempt': 'פטור',
+      'edit': 'ערוך',
+      'delete': 'מחק',
+      'addLawyer': 'הוסף עורך דין',
+      'editLawyer': 'ערוך עורך דין',
+      'email': 'אימייל',
+      'license': 'מספר רישיון',
+      'experience': 'שנות ניסיון',
+      'specializations': 'התמחויות (פסיק)',
+      'availableForCalls': 'זמין לקריאות',
+      'deleteLawyer': 'מחיקת עורך דין',
+      'deleteLawyerConfirm': 'מחק את עורך הדין לצמיתות?',
+      'noLawyers': 'אין עורכי דין',
+      'available': 'זמין',
+      'unavailable': 'לא זמין',
+      'pendingSingle': 'ממתין',
+      'pendingLawyersTitle': 'עורכי דין ממתינים לאישור',
+      'noPendingLawyers': 'אין בקשות ממתינות',
+      'approve': 'אשר',
+      'reject': 'דחה',
+      'approveSuccess': 'אושר',
+      'approveError': 'שגיאה באישור',
+      'rejectSuccess': 'נדחה',
+      'rejectError': 'שגיאה בדחייה',
+      'rejectRequest': 'דחיית בקשה',
+      'rejectRequestConfirm': 'האם לדחות את הבקשה?',
+      'experienceYears': 'ניסיון',
+      'specializationsLabel': 'התמחויות',
+      'changeStatus': 'שנה סטטוס',
+      'statusDispatching': 'בשיגור',
+      'statusAccepted': 'התקבל',
+      'statusInProgress': 'בתהליך',
+      'statusCompleted': 'הושלם',
+      'statusCancelled': 'בוטל',
+      'statusFailed': 'נכשל',
+      'statusDocumentation': 'תיעוד',
+      'active': 'פעיל',
+      'resolved': 'סגור',
+      'pendingStatus': 'ממתין',
+      'deleteEvent': 'מחק אירוע',
+      'deleteEventConfirm': 'האם למחוק את רשומת האירוע לצמיתות?',
+      'noEmergencyEvents': 'אין אירועי חירום',
+      'lawyerPrefix': 'עו"ד',
+      'online': 'Online',
+      'connected': 'Connected',
+      'saveUserFailed': 'שמירת המשתמש נכשלה. בדוק את פורמט הטלפון (+972...).',
+      'saveLawyerFailed': 'שמירת עורך הדין נכשלה. בדוק את פורמט הטלפון (+972...).',
+      'dispatchingTitle': 'שיגור חירום',
+      'dispatchTimeoutSec': 'זמן תגובה (שניות)',
+      'dispatchRadiusKm': 'רדיוס (ק״מ)',
+      'dispatchMaxLawyers': 'מקס׳ עורכי דין לקריאה',
+      'commTitle': 'תקשורת ואינטגרציות',
+      'commTwilio': 'Twilio SMS / Voice',
+      'commAgora': 'Agora RTC',
+      'commFcm': 'Firebase Cloud Messaging',
+      'commGemini': 'Google Gemini',
+      'badgeActive': 'פעיל',
+      'maintenanceTitle': 'תחזוקה',
+      'maintenanceMode': 'מצב תחזוקה',
+      'maintenanceHint': 'מציג מסך תחזוקה למשתמשי קצה',
+      'cacheReset': 'איפוס מטמון',
+      'cacheResetSnack': 'בקשת איפוס מטמון נשלחה (דמו)',
+    },
+    'en': {
+      'loading': 'Loading...',
+      'unknown': 'Unknown',
+      'adminPanel': 'Admin panel',
+      'openApp': 'Open app',
+      'citizenApp': 'Citizen app (VETO)',
+      'refresh': 'Refresh',
+      'logout': 'Log out',
+      'quickStats': 'Quick stats',
+      'users': 'Users',
+      'lawyers': 'Lawyers',
+      'pending': 'Pending',
+      'pendingApprovals': 'Lawyers waiting for approval',
+      'pendingApprovalsAction': 'Review lawyer approvals',
+      'systemOverview': 'System overview',
+      'serverStatus': 'Server status',
+      'database': 'Database',
+      'appVersion': 'App version',
+      'userManagement': 'User management',
+      'allUsers': 'All users',
+      'allLawyers': 'All lawyers',
+      'emergencyLogs': 'Emergency logs',
+      'systemSettings': 'System settings',
+      'fixedOtp': 'Fixed OTP for admins',
+      'fixedOtpHint': 'Code 123456 for development and testing',
+      'settingUpdateError': 'Could not update the setting',
+      'settingUpdated': 'Setting updated successfully',
+      'addUser': 'Add user',
+      'editUser': 'Edit user',
+      'fullName': 'Full name',
+      'phone': 'Phone (+972...)',
+      'role': 'Role',
+      'language': 'Language',
+      'citizen': 'Citizen',
+      'admin': 'Admin',
+      'cancel': 'Cancel',
+      'add': 'Add',
+      'save': 'Save',
+      'manualExempt': 'Payment exempt (manually added)',
+      'manualExemptHint': 'This user will not need a subscription',
+      'deleteUser': 'Delete user',
+      'deleteUserConfirm': 'Delete this user permanently? This cannot be undone.',
+      'noUsers': 'No users found',
+      'noName': 'No name',
+      'verified': 'Verified',
+      'unverified': 'Unverified',
+      'exempt': 'Exempt',
+      'edit': 'Edit',
+      'delete': 'Delete',
+      'addLawyer': 'Add lawyer',
+      'editLawyer': 'Edit lawyer',
+      'email': 'Email',
+      'license': 'License number',
+      'experience': 'Years of experience',
+      'specializations': 'Specializations (comma separated)',
+      'availableForCalls': 'Available for calls',
+      'deleteLawyer': 'Delete lawyer',
+      'deleteLawyerConfirm': 'Delete this lawyer permanently?',
+      'noLawyers': 'No lawyers found',
+      'available': 'Available',
+      'unavailable': 'Unavailable',
+      'pendingSingle': 'Pending',
+      'pendingLawyersTitle': 'Lawyers pending approval',
+      'noPendingLawyers': 'No pending requests',
+      'approve': 'Approve',
+      'reject': 'Reject',
+      'approveSuccess': 'Approved',
+      'approveError': 'Approval failed',
+      'rejectSuccess': 'Rejected',
+      'rejectError': 'Rejection failed',
+      'rejectRequest': 'Reject request',
+      'rejectRequestConfirm': 'Reject this request?',
+      'experienceYears': 'Experience',
+      'specializationsLabel': 'Specializations',
+      'changeStatus': 'Change status',
+      'statusDispatching': 'Dispatching',
+      'statusAccepted': 'Accepted',
+      'statusInProgress': 'In progress',
+      'statusCompleted': 'Completed',
+      'statusCancelled': 'Cancelled',
+      'statusFailed': 'Failed',
+      'statusDocumentation': 'Documentation',
+      'active': 'Active',
+      'resolved': 'Resolved',
+      'pendingStatus': 'Pending',
+      'deleteEvent': 'Delete event',
+      'deleteEventConfirm': 'Delete this emergency record permanently?',
+      'noEmergencyEvents': 'No emergency events',
+      'lawyerPrefix': 'Lawyer',
+      'online': 'Online',
+      'connected': 'Connected',
+      'saveUserFailed': 'Failed to save user. Check phone format (+972...).',
+      'saveLawyerFailed': 'Failed to save lawyer. Check phone format (+972...).',
+      'dispatchingTitle': 'Emergency dispatch',
+      'dispatchTimeoutSec': 'Response timeout (seconds)',
+      'dispatchRadiusKm': 'Radius (km)',
+      'dispatchMaxLawyers': 'Max lawyers per call',
+      'commTitle': 'Communication & integrations',
+      'commTwilio': 'Twilio SMS / Voice',
+      'commAgora': 'Agora RTC',
+      'commFcm': 'Firebase Cloud Messaging',
+      'commGemini': 'Google Gemini',
+      'badgeActive': 'Live',
+      'maintenanceTitle': 'Maintenance',
+      'maintenanceMode': 'Maintenance mode',
+      'maintenanceHint': 'Shows maintenance screen to end users',
+      'cacheReset': 'Reset cache',
+      'cacheResetSnack': 'Cache reset requested (demo)',
+    },
+    'ru': {
+      'loading': 'Загрузка...',
+      'unknown': 'Неизвестно',
+      'adminPanel': 'Панель администратора',
+      'openApp': 'Открыть приложение',
+      'citizenApp': 'Приложение для граждан (VETO)',
+      'refresh': 'Обновить',
+      'logout': 'Выйти',
+      'quickStats': 'Быстрая статистика',
+      'users': 'Пользователи',
+      'lawyers': 'Адвокаты',
+      'pending': 'Ожидают',
+      'pendingApprovals': 'Адвокаты ожидают одобрения',
+      'pendingApprovalsAction': 'Проверить заявки адвокатов',
+      'systemOverview': 'Обзор системы',
+      'serverStatus': 'Статус сервера',
+      'database': 'База данных',
+      'appVersion': 'Версия приложения',
+      'userManagement': 'Управление пользователями',
+      'allUsers': 'Все пользователи',
+      'allLawyers': 'Все адвокаты',
+      'emergencyLogs': 'Журналы экстренных событий',
+      'systemSettings': 'Системные настройки',
+      'fixedOtp': 'Фиксированный OTP для админов',
+      'fixedOtpHint': 'Код 123456 для разработки и тестов',
+      'settingUpdateError': 'Не удалось обновить настройку',
+      'settingUpdated': 'Настройка успешно обновлена',
+      'addUser': 'Добавить пользователя',
+      'editUser': 'Редактировать пользователя',
+      'fullName': 'Полное имя',
+      'phone': 'Телефон (+972...)',
+      'role': 'Роль',
+      'language': 'Язык',
+      'citizen': 'Гражданин',
+      'admin': 'Администратор',
+      'cancel': 'Отмена',
+      'add': 'Добавить',
+      'save': 'Сохранить',
+      'manualExempt': 'Освобожден от оплаты (добавлен вручную)',
+      'manualExemptHint': 'Этому пользователю не нужна подписка',
+      'deleteUser': 'Удалить пользователя',
+      'deleteUserConfirm': 'Удалить пользователя навсегда? Это действие нельзя отменить.',
+      'noUsers': 'Пользователи не найдены',
+      'noName': 'Без имени',
+      'verified': 'Подтвержден',
+      'unverified': 'Не подтвержден',
+      'exempt': 'Освобожден',
+      'edit': 'Изменить',
+      'delete': 'Удалить',
+      'addLawyer': 'Добавить адвоката',
+      'editLawyer': 'Редактировать адвоката',
+      'email': 'Эл. почта',
+      'license': 'Номер лицензии',
+      'experience': 'Лет опыта',
+      'specializations': 'Специализации (через запятую)',
+      'availableForCalls': 'Доступен для вызовов',
+      'deleteLawyer': 'Удалить адвоката',
+      'deleteLawyerConfirm': 'Удалить этого адвоката навсегда?',
+      'noLawyers': 'Адвокаты не найдены',
+      'available': 'Доступен',
+      'unavailable': 'Недоступен',
+      'pendingSingle': 'Ожидает',
+      'pendingLawyersTitle': 'Адвокаты ожидают одобрения',
+      'noPendingLawyers': 'Нет ожидающих заявок',
+      'approve': 'Одобрить',
+      'reject': 'Отклонить',
+      'approveSuccess': 'Одобрено',
+      'approveError': 'Ошибка одобрения',
+      'rejectSuccess': 'Отклонено',
+      'rejectError': 'Ошибка отклонения',
+      'rejectRequest': 'Отклонить заявку',
+      'rejectRequestConfirm': 'Отклонить эту заявку?',
+      'experienceYears': 'Опыт',
+      'specializationsLabel': 'Специализации',
+      'changeStatus': 'Изменить статус',
+      'statusDispatching': 'Диспетчеризация',
+      'statusAccepted': 'Принято',
+      'statusInProgress': 'В процессе',
+      'statusCompleted': 'Завершено',
+      'statusCancelled': 'Отменено',
+      'statusFailed': 'Сбой',
+      'statusDocumentation': 'Документирование',
+      'active': 'Активно',
+      'resolved': 'Закрыто',
+      'pendingStatus': 'Ожидает',
+      'deleteEvent': 'Удалить событие',
+      'deleteEventConfirm': 'Удалить эту запись экстренного события навсегда?',
+      'noEmergencyEvents': 'Нет экстренных событий',
+      'lawyerPrefix': 'Адвокат',
+      'online': 'Online',
+      'connected': 'Connected',
+      'saveUserFailed': 'Не удалось сохранить пользователя. Проверьте формат телефона (+972...).',
+      'saveLawyerFailed': 'Не удалось сохранить адвоката. Проверьте формат телефона (+972...).',
+      'dispatchingTitle': 'Экстренная диспетчеризация',
+      'dispatchTimeoutSec': 'Таймаут ответа (сек)',
+      'dispatchRadiusKm': 'Радиус (км)',
+      'dispatchMaxLawyers': 'Макс. юристов на вызов',
+      'commTitle': 'Связь и интеграции',
+      'commTwilio': 'Twilio SMS / Voice',
+      'commAgora': 'Agora RTC',
+      'commFcm': 'Firebase Cloud Messaging',
+      'commGemini': 'Google Gemini',
+      'badgeActive': 'Активно',
+      'maintenanceTitle': 'Обслуживание',
+      'maintenanceMode': 'Режим обслуживания',
+      'maintenanceHint': 'Показывает экран обслуживания пользователям',
+      'cacheReset': 'Сброс кэша',
+      'cacheResetSnack': 'Запрос сброса кэша отправлен (демо)',
+    },
+  };
+
+  static String t(String code, String key) {
+    return _copy[AppLanguage.normalize(code)]?[key] ??
+        _copy[AppLanguage.hebrew]![key] ??
+        key;
   }
 
-  static String roleLabel(BuildContext context, String? role) {
-    return role == 'admin' ? t(context, 'admin') : t(context, 'citizen');
+  static String roleLabel(String code, String? role) {
+    switch (role) {
+      case 'admin':
+        return t(code, 'admin');
+      default:
+        return t(code, 'citizen');
+    }
   }
 
-  static String languageLabel(BuildContext context, String? language) {
-    final l = AppLocalizations.of(context);
-    if (l == null) return '';
+  static String languageLabel(String code, String? language) {
     switch (AppLanguage.normalize(language)) {
       case AppLanguage.english:
-        return l.csetEnglish;
+        return 'English';
       case AppLanguage.russian:
-        return l.csetRussian;
+        return 'Русский';
       default:
-        return l.csetHebrew;
+        return 'עברית';
     }
   }
 
@@ -40,36 +368,31 @@ class AdminStrings {
     'documentation',
   ];
 
-  static String eventStatus(BuildContext context, String? status) {
-    final l = AppLocalizations.of(context);
-    if (l == null) {
-      if (status != null && status.isNotEmpty) return status;
-      return '';
-    }
+  static String eventStatus(String code, String? status) {
     switch (status) {
       case 'dispatching':
-        return l.admStatusDispatching;
+        return t(code, 'statusDispatching');
       case 'accepted':
-        return l.admStatusAccepted;
+        return t(code, 'statusAccepted');
       case 'in_progress':
-        return l.admStatusInProgress;
+        return t(code, 'statusInProgress');
       case 'completed':
-        return l.admStatusCompleted;
+        return t(code, 'statusCompleted');
       case 'cancelled':
-        return l.admStatusCancelled;
+        return t(code, 'statusCancelled');
       case 'failed':
-        return l.admStatusFailed;
+        return t(code, 'statusFailed');
       case 'documentation':
-        return l.admStatusDocumentation;
+        return t(code, 'statusDocumentation');
       case 'active':
-        return l.admActive;
+        return t(code, 'active');
       case 'resolved':
-        return l.admResolved;
+        return t(code, 'resolved');
       case 'pending':
-        return l.admPendingStatus;
+        return t(code, 'pendingStatus');
       default:
         if (status != null && status.isNotEmpty) return status;
-        return l.admUnknown;
+        return t(code, 'unknown');
     }
   }
 }

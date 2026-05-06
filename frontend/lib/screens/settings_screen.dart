@@ -1,4 +1,4 @@
-﻿// ============================================================
+// ============================================================
 //  SettingsScreen.dart — Per-role user settings
 //  Roles: user (citizen), lawyer, admin
 //  Sections: profile, notifications, language, subscription,
@@ -14,10 +14,262 @@ import '../config/app_config.dart';
 import '../core/i18n/app_language.dart';
 import '../core/theme/veto_2026.dart';
 import '../core/theme/veto_mockup_tokens.dart';
-import '../l10n/app_localizations.dart';
 import '../services/auth_service.dart';
 import '../widgets/app_language_menu.dart';
 import '../widgets/citizen_mockup_shell.dart';
+
+// ── i18n ──────────────────────────────────────────────────────
+const _i18n = {
+  'he': {
+    'title': 'הגדרות',
+    'profile': 'פרופיל',
+    'name': 'שם',
+    'phone': 'טלפון',
+    'email': 'כתובת מייל',
+    'language': 'שפה',
+    'hebrew': 'עברית',
+    'english': 'English',
+    'russian': 'Русский',
+    'notifications': 'התראות',
+    'notifyEmergency': 'התראות חירום',
+    'notifyUpdates': 'עדכוני מערכת',
+    'notifySms': 'SMS',
+    'subscription': 'מנוי',
+    'currentPlan': 'תוכנית נוכחית',
+    'upgrade': 'שדרג',
+    'managePayment': 'ניהול תשלום',
+    'lawyerSettings': 'הגדרות עורך דין',
+    'availability': 'זמינות',
+    'specializations': 'התמחויות',
+    'contactLinks': 'קישורי יצירת קשר',
+    'whatsapp': 'WhatsApp',
+    'telegram': 'Telegram',
+    'adminSettings': 'הגדרות מנהל',
+    'systemEmail': 'מייל מערכת',
+    'maintenanceMode': 'מצב תחזוקה',
+    'maxFileSizeMb': 'גודל קובץ מקסימלי (MB)',
+    'defaultQuotaMb': 'מכסת קבצים ברירת מחדל (MB)',
+    'danger': 'אזור מסוכן',
+    'deleteAccount': 'מחק חשבון',
+    'deleteConfirm': 'פעולה זו בלתי הפיכה. לאשר?',
+    'save': 'שמור שינויים',
+    'saved': 'הגדרות נשמרו',
+    'cancel': 'ביטול',
+    'yes': 'כן',
+    'no': 'לא',
+    'logout': 'התנתק',
+    'legalSection': 'מסמכים משפטיים',
+    'privacyPolicy': 'מדיניות פרטיות',
+    'termsOfService': 'תנאי שימוש',
+    'deployBuild': 'מזהה גרסה',
+    'addLink': 'הוסף קישור',
+    'planFree': 'חינמי',
+    'planBasic': 'בסיסי',
+    'planPro': 'מקצועי',
+    'agoraCallTitle': 'שיחות וידאו/אודיו (Agora)',
+    'agoraCallBody':
+        'שיחות הווידאו והאודיו ב-VETO מנותבות דרך Agora. אין צורך בהגדרת STUN/TURN ידנית. ודאו הרשאות מצלמה ומיקרופן במכשיר.',
+    'webrtcTitle': 'שיחות WebRTC',
+    'webrtcHint': 'חל על השיחה הבאה. STUN מההגדרות כאן; אם בשרת הוגדרו TURN/ICE (משתני סביבה), הם יתווספו אוטומטית לשיחה.',
+    'webrtcIce': 'רשימת STUN',
+    'webrtcIceMin': 'מינימלי (3 שרתים)',
+    'webrtcIceExt': 'מורחב (5 שרתים)',
+    'webrtcPool': 'גודל מאגר ICE',
+    'webrtcEcho': 'ביטול הד (אודיו)',
+    'webrtcNoise': 'דיכוי רעש',
+    'webrtcAgc': 'בקרת רווח אוטומטית',
+    'webrtcRes': 'רזולוציית וידאו',
+    'webrtcResSd': 'SD ‎640×480',
+    'webrtcResHd': 'HD ‎1280×720',
+    'webrtcResFhd': 'Full HD ‎1920×1080',
+    'webrtcFacing': 'כיוון מצלמה',
+    'webrtcFacingUser': 'קדמית (selfie)',
+    'webrtcFacingEnv': 'אחורית',
+    'webrtcBundle': 'מדיניות Bundle',
+    'webrtcBundleBalanced': 'balanced',
+    'webrtcBundleMaxBundle': 'max-bundle (מומלץ)',
+    'webrtcBundleMaxCompat': 'max-compat',
+    'webrtcMux': 'RTCP mux',
+    'webrtcMuxReq': 'require (מומלץ)',
+    'webrtcMuxNeg': 'negotiate',
+    'wizStep': 'שלב',
+    'wizOf': 'מתוך',
+    'wizNext': 'הבא',
+    'wizBack': 'חזרה',
+    'wiz1Title': 'כללי',
+    'wiz2Title': 'שפה והתראות',
+    'wiz3Title': 'שיחות ומדיה',
+    'wiz4Title': 'חשבון ומנוי',
+    'wiz5Title': 'בטיחות',
+  },
+  'en': {
+    'title': 'Settings',
+    'profile': 'Profile',
+    'name': 'Name',
+    'phone': 'Phone',
+    'email': 'Email',
+    'language': 'Language',
+    'hebrew': 'עברית',
+    'english': 'English',
+    'russian': 'Русский',
+    'notifications': 'Notifications',
+    'notifyEmergency': 'Emergency alerts',
+    'notifyUpdates': 'System updates',
+    'notifySms': 'SMS alerts',
+    'subscription': 'Subscription',
+    'currentPlan': 'Current plan',
+    'upgrade': 'Upgrade',
+    'managePayment': 'Manage payment',
+    'lawyerSettings': 'Lawyer settings',
+    'availability': 'Availability',
+    'specializations': 'Specializations',
+    'contactLinks': 'Contact links',
+    'whatsapp': 'WhatsApp',
+    'telegram': 'Telegram',
+    'adminSettings': 'Admin settings',
+    'systemEmail': 'System email',
+    'maintenanceMode': 'Maintenance mode',
+    'maxFileSizeMb': 'Max file size (MB)',
+    'defaultQuotaMb': 'Default file quota (MB)',
+    'danger': 'Danger Zone',
+    'deleteAccount': 'Delete account',
+    'deleteConfirm': 'This is irreversible. Confirm?',
+    'save': 'Save changes',
+    'saved': 'Settings saved',
+    'cancel': 'Cancel',
+    'yes': 'Yes',
+    'no': 'No',
+    'logout': 'Sign out',
+    'legalSection': 'Legal',
+    'privacyPolicy': 'Privacy policy',
+    'termsOfService': 'Terms of service',
+    'deployBuild': 'Deploy build',
+    'addLink': 'Add link',
+    'planFree': 'Free',
+    'planBasic': 'Basic',
+    'planPro': 'Pro',
+    'agoraCallTitle': 'Video/audio calls (Agora)',
+    'agoraCallBody':
+        'VETO routes video and audio calls through Agora RTC. No manual STUN/TURN settings are required. Allow camera and microphone in your browser or device settings.',
+    'webrtcTitle': 'WebRTC calls',
+    'webrtcHint': 'Applies to the next call. STUN from here; if the backend exposes TURN/ICE env vars, they are merged automatically.',
+    'webrtcIce': 'STUN server set',
+    'webrtcIceMin': 'Minimal (3 servers)',
+    'webrtcIceExt': 'Extended (5 servers)',
+    'webrtcPool': 'ICE candidate pool size',
+    'webrtcEcho': 'Echo cancellation',
+    'webrtcNoise': 'Noise suppression',
+    'webrtcAgc': 'Auto gain control',
+    'webrtcRes': 'Video resolution',
+    'webrtcResSd': 'SD 640×480',
+    'webrtcResHd': 'HD 1280×720',
+    'webrtcResFhd': 'Full HD 1920×1080',
+    'webrtcFacing': 'Camera facing',
+    'webrtcFacingUser': 'Front (user)',
+    'webrtcFacingEnv': 'Back (environment)',
+    'webrtcBundle': 'Bundle policy',
+    'webrtcBundleBalanced': 'balanced',
+    'webrtcBundleMaxBundle': 'max-bundle (recommended)',
+    'webrtcBundleMaxCompat': 'max-compat',
+    'webrtcMux': 'RTCP mux policy',
+    'webrtcMuxReq': 'require (recommended)',
+    'webrtcMuxNeg': 'negotiate',
+    'wizStep': 'Step',
+    'wizOf': 'of',
+    'wizNext': 'Next',
+    'wizBack': 'Back',
+    'wiz1Title': 'General',
+    'wiz2Title': 'Language & alerts',
+    'wiz3Title': 'Calls & media',
+    'wiz4Title': 'Account & plan',
+    'wiz5Title': 'Safety',
+  },
+  'ru': {
+    'title': 'Настройки',
+    'profile': 'Профиль',
+    'name': 'Имя',
+    'phone': 'Телефон',
+    'email': 'Email',
+    'language': 'Язык',
+    'hebrew': 'עברית',
+    'english': 'English',
+    'russian': 'Русский',
+    'notifications': 'Уведомления',
+    'notifyEmergency': 'Экстренные уведомления',
+    'notifyUpdates': 'Системные обновления',
+    'notifySms': 'SMS-уведомления',
+    'subscription': 'Подписка',
+    'currentPlan': 'Текущий план',
+    'upgrade': 'Обновить',
+    'managePayment': 'Управление оплатой',
+    'lawyerSettings': 'Настройки адвоката',
+    'availability': 'Доступность',
+    'specializations': 'Специализации',
+    'contactLinks': 'Контакты',
+    'whatsapp': 'WhatsApp',
+    'telegram': 'Telegram',
+    'adminSettings': 'Настройки администратора',
+    'systemEmail': 'Системный email',
+    'maintenanceMode': 'Режим обслуживания',
+    'maxFileSizeMb': 'Макс. размер файла (МБ)',
+    'defaultQuotaMb': 'Квота файлов по умолчанию (МБ)',
+    'danger': 'Опасная зона',
+    'deleteAccount': 'Удалить аккаунт',
+    'deleteConfirm': 'Это необратимо. Подтвердить?',
+    'save': 'Сохранить изменения',
+    'saved': 'Настройки сохранены',
+    'cancel': 'Отмена',
+    'yes': 'Да',
+    'no': 'Нет',
+    'logout': 'Выйти',
+    'legalSection': 'Документы',
+    'privacyPolicy': 'Конфиденциальность',
+    'termsOfService': 'Условия',
+    'deployBuild': 'Сборка',
+    'addLink': 'Добавить ссылку',
+    'planFree': 'Бесплатный',
+    'planBasic': 'Базовый',
+    'planPro': 'Pro',
+    'agoraCallTitle': 'Видео/аудио (Agora)',
+    'agoraCallBody':
+        'Звонки VETO идут через Agora RTC. Ручная настройка STUN/TURN не нужна. Разрешите камеру и микрофон в настройках устройства или браузера.',
+    'webrtcTitle': 'Звонки WebRTC',
+    'webrtcHint': 'Со следующего звонка. STUN — здесь; TURN/ICE с сервера (env) подмешиваются автоматически.',
+    'webrtcIce': 'Набор STUN',
+    'webrtcIceMin': 'Минимальный (3 сервера)',
+    'webrtcIceExt': 'Расширенный (5 серверов)',
+    'webrtcPool': 'Размер пула ICE',
+    'webrtcEcho': 'Подавление эха',
+    'webrtcNoise': 'Шумоподавление',
+    'webrtcAgc': 'Автоусиление (AGC)',
+    'webrtcRes': 'Разрешение видео',
+    'webrtcResSd': 'SD 640×480',
+    'webrtcResHd': 'HD 1280×720',
+    'webrtcResFhd': 'Full HD 1920×1080',
+    'webrtcFacing': 'Камера',
+    'webrtcFacingUser': 'Передняя',
+    'webrtcFacingEnv': 'Задняя',
+    'webrtcBundle': 'Политика bundle',
+    'webrtcBundleBalanced': 'balanced',
+    'webrtcBundleMaxBundle': 'max-bundle (рекомендуется)',
+    'webrtcBundleMaxCompat': 'max-compat',
+    'webrtcMux': 'Политика RTCP mux',
+    'webrtcMuxReq': 'require (рекомендуется)',
+    'webrtcMuxNeg': 'negotiate',
+    'wizStep': 'Шаг',
+    'wizOf': 'из',
+    'wizNext': 'Далее',
+    'wizBack': 'Назад',
+    'wiz1Title': 'Общие',
+    'wiz2Title': 'Язык и уведомления',
+    'wiz3Title': 'Звонки и медиа',
+    'wiz4Title': 'Аккаунт и план',
+    'wiz5Title': 'Безопасность',
+  },
+};
+
+String _t(String code, String key) =>
+    (_i18n[code] ?? _i18n['en']!)[key] ?? key;
 
 // ── Screen ────────────────────────────────────────────────────
 class SettingsScreen extends StatefulWidget {
@@ -58,7 +310,7 @@ class _SettingsScreenState extends State<SettingsScreen>
   late TextEditingController _maxFileSizeCtrl;
   late TextEditingController _defaultQuotaCtrl;
 
-  /// Wizard: 0 general, 1 calls & media, 2 account & safety
+  /// Wizard: 0 general → 1 call stack → 2 account & safety
   late TabController _wizardTab;
 
   @override
@@ -151,7 +403,6 @@ class _SettingsScreenState extends State<SettingsScreen>
 
   Future<void> _save(String code) async {
     if (!mounted) return;
-    final savedMsg = AppLocalizations.of(context)!.csetSaved;
     setState(() => _saving = true);
     try {
       final tok = await _auth.getToken();
@@ -194,15 +445,14 @@ class _SettingsScreenState extends State<SettingsScreen>
         ).timeout(const Duration(seconds: 10));
       }
 
-      _snack(savedMsg);
+      _snack(_t(code, 'saved'));
     } catch (_) {}
     finally {
       if (mounted) setState(() => _saving = false);
     }
   }
 
-  Future<void> _deleteAccount() async {
-    final loc = AppLocalizations.of(context)!;
+  Future<void> _deleteAccount(String code) async {
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -210,15 +460,15 @@ class _SettingsScreenState extends State<SettingsScreen>
         shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
             side: const BorderSide(color: V26.hairline)),
-        title: Text(loc.csetDeleteAccount,
+        title: Text(_t(code, 'deleteAccount'),
             style: const TextStyle(
                 color: V26.emerg, fontWeight: FontWeight.w700)),
-        content: Text(loc.csetDeleteConfirm,
+        content: Text(_t(code, 'deleteConfirm'),
             style: const TextStyle(color: V26.ink900)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: Text(loc.csetNo,
+            child: Text(_t(code, 'no'),
                 style: const TextStyle(color: V26.ink500)),
           ),
           FilledButton(
@@ -226,7 +476,7 @@ class _SettingsScreenState extends State<SettingsScreen>
             style: FilledButton.styleFrom(
                 backgroundColor: V26.emerg,
                 foregroundColor: Colors.white),
-            child: Text(loc.csetYes),
+            child: Text(_t(code, 'yes')),
           ),
         ],
       ),
@@ -256,10 +506,10 @@ class _SettingsScreenState extends State<SettingsScreen>
     ));
   }
 
+  // ── Build ─────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
     final code = context.watch<AppLanguageController>().code;
-    final l10n = AppLocalizations.of(context)!;
     final isRtl = AppLanguage.directionOf(code) == TextDirection.rtl;
     final isWide =
         MediaQuery.sizeOf(context).width >= V26AppShell.desktopBreakpoint;
@@ -276,9 +526,9 @@ class _SettingsScreenState extends State<SettingsScreen>
       ),
       isScrollable: true,
       tabs: [
-        Tab(text: l10n.csetWiz1Title),
-        Tab(text: l10n.csetWiz3Title),
-        Tab(text: l10n.csetWiz5Title),
+        Tab(text: _t(code, 'wiz1Title')),
+        Tab(text: _t(code, 'wiz3Title')),
+        Tab(text: _t(code, 'wiz5Title')),
       ],
     );
 
@@ -293,10 +543,10 @@ class _SettingsScreenState extends State<SettingsScreen>
                     child: wizardTabBar,
                   ),
                   const Divider(height: 1, color: VetoMockup.hairline),
-                  Expanded(child: _settingsWizardTabs(code, isRtl, l10n)),
+                  Expanded(child: _settingsWizardTabs(code, isRtl)),
                 ],
               )
-            : _settingsWizardTabs(code, isRtl, l10n),
+            : _settingsWizardTabs(code, isRtl),
       );
       return Directionality(
         textDirection: isRtl ? TextDirection.rtl : TextDirection.ltr,
@@ -307,7 +557,7 @@ class _SettingsScreenState extends State<SettingsScreen>
             Padding(
               padding: const EdgeInsetsDirectional.only(end: 8),
               child: V26PillCTA(
-                label: l10n.csetSave,
+                label: _t(code, 'save'),
                 icon: Icons.check,
                 onTap: _saving ? null : () => _save(code),
               ),
@@ -329,7 +579,7 @@ class _SettingsScreenState extends State<SettingsScreen>
                     onPressed: () => Navigator.of(context).pop(),
                   ),
                   title: Text(
-                    l10n.csetTitle,
+                    _t(code, 'title'),
                     style: const TextStyle(
                       fontFamily: V26.serif,
                       color: VetoMockup.ink,
@@ -344,7 +594,7 @@ class _SettingsScreenState extends State<SettingsScreen>
                       padding: const EdgeInsetsDirectional.only(end: 8),
                       child: Center(
                         child: V26CTA(
-                          l10n.csetSave,
+                          _t(code, 'save'),
                           onPressed: _saving ? null : () => _save(code),
                           loading: _saving,
                         ),
@@ -376,10 +626,10 @@ class _SettingsScreenState extends State<SettingsScreen>
                 onSelected: (i) => V26CitizenNav.go(
                     context, V26CitizenNav.routes[i],
                     current: '/settings'),
-                statusText: l10n.csetTitle,
+                statusText: _t(code, 'title'),
                 trailing: [
                   V26PillCTA(
-                    label: l10n.csetSave,
+                    label: _t(code, 'save'),
                     icon: Icons.check,
                     onTap: _saving ? null : () => _save(code),
                   ),
@@ -396,7 +646,7 @@ class _SettingsScreenState extends State<SettingsScreen>
             onPressed: () => Navigator.of(context).pop(),
           ),
           title: Text(
-            l10n.csetTitle,
+            _t(code, 'title'),
             style: const TextStyle(
               fontFamily: V26.serif,
               color: V26.ink900,
@@ -411,7 +661,7 @@ class _SettingsScreenState extends State<SettingsScreen>
               padding: const EdgeInsetsDirectional.only(end: 12),
               child: Center(
                 child: V26CTA(
-                  l10n.csetSave,
+                  _t(code, 'save'),
                   onPressed: _saving ? null : () => _save(code),
                   loading: _saving,
                 ),
@@ -430,23 +680,22 @@ class _SettingsScreenState extends State<SettingsScreen>
             ),
             isScrollable: true,
             tabs: [
-              Tab(text: l10n.csetWiz1Title),
-              Tab(text: l10n.csetWiz3Title),
-              Tab(text: l10n.csetWiz5Title),
+              Tab(text: _t(code, 'wiz1Title')),
+              Tab(text: _t(code, 'wiz3Title')),
+              Tab(text: _t(code, 'wiz5Title')),
             ],
           ),
         ),
         body: V26Backdrop(
           child: _loading
               ? const Center(child: CircularProgressIndicator(color: V26.navy600))
-              : _settingsWizardTabs(code, isRtl, l10n),
+              : _settingsWizardTabs(code, isRtl),
         ),
       ),
     );
   }
 
-  Widget _settingsWizardTabs(
-      String code, bool isRtl, AppLocalizations l10n) {
+  Widget _settingsWizardTabs(String code, bool isRtl) {
     return TabBarView(
                 controller: _wizardTab,
                 children: [
@@ -455,7 +704,7 @@ class _SettingsScreenState extends State<SettingsScreen>
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                  // Avatar header
+                  // ── Avatar header (dark glass) ────────────
                   V26Card(
                     radius: 20,
                     padding: EdgeInsets.zero,
@@ -485,11 +734,7 @@ class _SettingsScreenState extends State<SettingsScreen>
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        _role == 'lawyer'
-                            ? (isRtl ? 'עורך דין' : 'Lawyer')
-                            : _role == 'admin'
-                                ? (isRtl ? 'מנהל' : 'Admin')
-                                : (isRtl ? 'אזרח' : 'Citizen'),
+                        _role == 'lawyer' ? (isRtl ? 'עורך דין' : 'Lawyer') : _role == 'admin' ? (isRtl ? 'מנהל' : 'Admin') : (isRtl ? 'אזרח' : 'Citizen'),
                         style: const TextStyle(color: V26.ink500, fontSize: 13),
                       ),
                       const SizedBox(height: 4),
@@ -519,24 +764,24 @@ class _SettingsScreenState extends State<SettingsScreen>
                     ),
                   ),
                   const SizedBox(height: 16),
-                  // Profile section
+                  // ── Profile section ─────────────────────
                   _Section(
                     icon: Icons.person_rounded,
-                    title: l10n.csetProfile,
+                    title: _t(code, 'profile'),
                     children: [
                       _FieldTile(
-                        label: l10n.csetName,
+                        label: _t(code, 'name'),
                         controller: _nameCtrl,
                         icon: Icons.badge_outlined,
                       ),
                       _FieldTile(
-                        label: l10n.csetPhone,
+                        label: _t(code, 'phone'),
                         controller: _phoneCtrl,
                         icon: Icons.phone_outlined,
                         keyboardType: TextInputType.phone,
                       ),
                       _FieldTile(
-                        label: l10n.csetEmail,
+                        label: _t(code, 'email'),
                         controller: _emailCtrl,
                         icon: Icons.email_outlined,
                         keyboardType: TextInputType.emailAddress,
@@ -544,36 +789,36 @@ class _SettingsScreenState extends State<SettingsScreen>
                     ],
                   ),
                   const SizedBox(height: 16),
-                  // Language section
+                  // ── Language section ────────────────────
                   _Section(
                     icon: Icons.translate_rounded,
-                    title: l10n.csetLanguage,
+                    title: _t(code, 'language'),
                     children: [
                       _LanguagePicker(currentCode: code),
                     ],
                   ),
                   const SizedBox(height: 16),
-                  // Notifications section
+                  // ── Notifications section ───────────────
                   _Section(
                     icon: Icons.notifications_rounded,
-                    title: l10n.csetNotifications,
+                    title: _t(code, 'notifications'),
                     children: [
                       _ToggleTile(
-                        label: l10n.csetNotifyEmergency,
+                        label: _t(code, 'notifyEmergency'),
                         icon: Icons.warning_amber_rounded,
                         color: V26.emerg,
                         value: _notifyEmergency,
                         onChanged: (v) => setState(() => _notifyEmergency = v),
                       ),
                       _ToggleTile(
-                        label: l10n.csetNotifyUpdates,
+                        label: _t(code, 'notifyUpdates'),
                         icon: Icons.update_rounded,
                         color: V26.navy600,
                         value: _notifyUpdates,
                         onChanged: (v) => setState(() => _notifyUpdates = v),
                       ),
                       _ToggleTile(
-                        label: l10n.csetNotifySms,
+                        label: _t(code, 'notifySms'),
                         icon: Icons.sms_outlined,
                         color: V26.ok,
                         value: _notifySms,
@@ -590,15 +835,15 @@ class _SettingsScreenState extends State<SettingsScreen>
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                  // Agora video/audio
+                  // ── Agora: video/audio path (no manual ICE) ─
                   _Section(
                     icon: Icons.video_call_rounded,
-                    title: l10n.csetAgoraCallTitle,
+                    title: _t(code, 'agoraCallTitle'),
                     children: [
                       Padding(
                         padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
                         child: Text(
-                          l10n.csetAgoraCallBody,
+                          _t(code, 'agoraCallBody'),
                           style: const TextStyle(
                             color: V26.ink500,
                             fontSize: 12,
@@ -609,56 +854,6 @@ class _SettingsScreenState extends State<SettingsScreen>
                     ],
                   ),
                   const SizedBox(height: 16),
-                  Material(
-                    color: V26.surface,
-                    borderRadius: BorderRadius.circular(16),
-                    clipBehavior: Clip.antiAlias,
-                    child: ExpansionTile(
-                      leading: const Icon(Icons.tune_rounded,
-                          color: V26.navy600, size: 22),
-                      title: Text(
-                        l10n.csetAdvancedCalls,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w700,
-                          fontSize: 14,
-                          color: V26.ink900,
-                        ),
-                      ),
-                      subtitle: Text(
-                        l10n.csetAdvancedCallsSubtitle,
-                        style: const TextStyle(
-                            fontSize: 12, color: V26.ink500),
-                      ),
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              Text(
-                                l10n.csetWebrtcTitle,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w700,
-                                  color: V26.ink900,
-                                  fontSize: 13,
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                l10n.csetWebrtcHint,
-                                style: const TextStyle(
-                                  color: V26.ink500,
-                                  fontSize: 12,
-                                  height: 1.45,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 16),
                     ],
                   ),
                 ),
@@ -667,19 +862,19 @@ class _SettingsScreenState extends State<SettingsScreen>
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                  // Subscription section (non-admin)
+                  // ── Subscription section (non-admin) ────
                   if (_role != 'admin') ...[
                     _Section(
                       icon: Icons.card_membership_rounded,
-                      title: l10n.csetSubscription,
+                      title: _t(code, 'subscription'),
                       children: [
                         _InfoRow(
-                          label: l10n.csetCurrentPlan,
+                          label: _t(code, 'currentPlan'),
                           value: _plan == 'pro'
-                              ? l10n.csetPlanPro
+                              ? _t(code, 'planPro')
                               : _plan == 'basic'
-                                  ? l10n.csetPlanBasic
-                                  : l10n.csetPlanFree,
+                                  ? _t(code, 'planBasic')
+                                  : _t(code, 'planFree'),
                           color: _plan == 'pro'
                               ? V26.navy600
                               : _plan == 'basic'
@@ -690,7 +885,7 @@ class _SettingsScreenState extends State<SettingsScreen>
                           dense: true,
                           leading: const Icon(Icons.upgrade_rounded,
                               color: V26.navy600, size: 20),
-                          title: Text(l10n.csetUpgrade,
+                          title: Text(_t(code, 'upgrade'),
                               style: const TextStyle(
                                   color: V26.navy600,
                                   fontWeight: FontWeight.w600)),
@@ -703,14 +898,14 @@ class _SettingsScreenState extends State<SettingsScreen>
                     ),
                     const SizedBox(height: 16),
                   ],
-                  // Lawyer section
+                  // ── Lawyer section ──────────────────────
                   if (_role == 'lawyer') ...[
                     _Section(
                       icon: Icons.balance_rounded,
-                      title: l10n.csetLawyerSettings,
+                      title: _t(code, 'lawyerSettings'),
                       children: [
                         _ToggleTile(
-                          label: l10n.csetAvailability,
+                          label: _t(code, 'availability'),
                           icon: Icons.circle,
                           color: V26.ok,
                           value: _isAvailable,
@@ -718,45 +913,45 @@ class _SettingsScreenState extends State<SettingsScreen>
                               setState(() => _isAvailable = v),
                         ),
                         _FieldTile(
-                          label: l10n.csetWhatsapp,
+                          label: _t(code, 'whatsapp'),
                           controller: _whatsappCtrl,
                           icon: Icons.chat_rounded,
                           keyboardType: TextInputType.url,
                         ),
                         _FieldTile(
-                          label: l10n.csetTelegram,
+                          label: _t(code, 'telegram'),
                           controller: _telegramCtrl,
                           icon: Icons.send_rounded,
                           keyboardType: TextInputType.url,
                         ),
                         _SpecializationChips(
-                          label: l10n.csetSpecializations,
+                          label: _t(code, 'specializations'),
                           items: _specializations,
                           onChanged: (items) =>
                               setState(() {
                                 _specializations.clear();
                                 _specializations.addAll(items);
                               }),
-                          addLabel: l10n.csetAddLink,
+                          addLabel: _t(code, 'addLink'),
                         ),
                       ],
                     ),
                     const SizedBox(height: 16),
                   ],
-                  // Admin section
+                  // ── Admin section ───────────────────────
                   if (_role == 'admin') ...[
                     _Section(
                       icon: Icons.admin_panel_settings_rounded,
-                      title: l10n.csetAdminSettings,
+                      title: _t(code, 'adminSettings'),
                       children: [
                         _FieldTile(
-                          label: l10n.csetSystemEmail,
+                          label: _t(code, 'systemEmail'),
                           controller: _systemEmailCtrl,
                           icon: Icons.email_outlined,
                           keyboardType: TextInputType.emailAddress,
                         ),
                         _ToggleTile(
-                          label: l10n.csetMaintenanceMode,
+                          label: _t(code, 'maintenanceMode'),
                           icon: Icons.build_rounded,
                           color: V26.warn,
                           value: _maintenanceMode,
@@ -764,13 +959,13 @@ class _SettingsScreenState extends State<SettingsScreen>
                               setState(() => _maintenanceMode = v),
                         ),
                         _FieldTile(
-                          label: l10n.csetMaxFileSizeMb,
+                          label: _t(code, 'maxFileSizeMb'),
                           controller: _maxFileSizeCtrl,
                           icon: Icons.storage_rounded,
                           keyboardType: TextInputType.number,
                         ),
                         _FieldTile(
-                          label: l10n.csetDefaultQuotaMb,
+                          label: _t(code, 'defaultQuotaMb'),
                           controller: _defaultQuotaCtrl,
                           icon: Icons.folder_open_rounded,
                           keyboardType: TextInputType.number,
@@ -779,16 +974,16 @@ class _SettingsScreenState extends State<SettingsScreen>
                     ),
                     const SizedBox(height: 16),
                   ],
-                  // Legal links
+                  // ── Legal (privacy / terms) ───────────────
                   _Section(
                     icon: Icons.policy_outlined,
-                    title: l10n.csetLegalSection,
+                    title: _t(code, 'legalSection'),
                     children: [
                       ListTile(
                         dense: true,
                         leading: const Icon(Icons.privacy_tip_outlined,
                             color: V26.ink500, size: 20),
-                        title: Text(l10n.csetPrivacyPolicy,
+                        title: Text(_t(code, 'privacyPolicy'),
                             style: const TextStyle(
                                 color: V26.ink900,
                                 fontWeight: FontWeight.w600)),
@@ -801,7 +996,7 @@ class _SettingsScreenState extends State<SettingsScreen>
                         dense: true,
                         leading: const Icon(Icons.article_outlined,
                             color: V26.ink500, size: 20),
-                        title: Text(l10n.csetTermsOfService,
+                        title: Text(_t(code, 'termsOfService'),
                             style: const TextStyle(
                                 color: V26.ink900,
                                 fontWeight: FontWeight.w600)),
@@ -813,10 +1008,10 @@ class _SettingsScreenState extends State<SettingsScreen>
                     ],
                   ),
                   const SizedBox(height: 16),
-                  // Danger zone
+                  // ── Danger zone ─────────────────────────
                   _Section(
                     icon: Icons.warning_amber_rounded,
-                    title: l10n.csetDanger,
+                    title: _t(code, 'danger'),
                     iconColor: V26.emerg,
                     borderColor: V26.emerg.withValues(alpha: 0.25),
                     children: [
@@ -824,7 +1019,7 @@ class _SettingsScreenState extends State<SettingsScreen>
                         dense: true,
                         leading: const Icon(Icons.logout_rounded,
                             color: V26.ink500, size: 20),
-                        title: Text(l10n.csetLogout,
+                        title: Text(_t(code, 'logout'),
                             style: const TextStyle(
                                 color: V26.ink900,
                                 fontWeight: FontWeight.w600)),
@@ -838,13 +1033,13 @@ class _SettingsScreenState extends State<SettingsScreen>
                         dense: true,
                         leading: const Icon(Icons.delete_forever_rounded,
                             color: V26.emerg, size: 20),
-                        title: Text(l10n.csetDeleteAccount,
+                        title: Text(_t(code, 'deleteAccount'),
                             style: const TextStyle(
                                 color: V26.emerg,
                                 fontWeight: FontWeight.w600)),
                         trailing: const Icon(Icons.chevron_right_rounded,
                             color: V26.emerg),
-                        onTap: _deleteAccount,
+                        onTap: () => _deleteAccount(code),
                       ),
                     ],
                   ),
@@ -853,7 +1048,7 @@ class _SettingsScreenState extends State<SettingsScreen>
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 8),
                       child: SelectableText(
-                        '${l10n.csetDeployBuild}: ${AppConfig.deployBuildLabel}',
+                        '${_t(code, 'deployBuild')}: ${AppConfig.deployBuildLabel}',
                         style: const TextStyle(
                           fontSize: 11,
                           color: V26.ink300,
@@ -1015,9 +1210,9 @@ class _LanguagePicker extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final langs = [
-      ('he', '׳¢׳‘׳¨׳™׳×', 'נ‡®נ‡±'),
-      ('en', 'English', 'נ‡÷נ‡¸'),
-      ('ru', '׀ ׁƒׁׁ׀÷׀¸׀¹', 'נ‡·נ‡÷'),
+      ('he', 'עברית', '🇮🇱'),
+      ('en', 'English', '🇺🇸'),
+      ('ru', 'Русский', '🇷🇺'),
     ];
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),

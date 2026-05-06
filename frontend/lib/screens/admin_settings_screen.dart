@@ -48,7 +48,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
     _loadAll();
   }
 
-  String _t(BuildContext context, String key) => AdminStrings.t(context, key);
+  String _t(String code, String key) => AdminStrings.t(code, key);
 
   Future<void> _loadAll() async {
     setState(() => _loading = true);
@@ -87,12 +87,13 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
     setState(() { _enableFixedOtp = value; _loading = true; });
     final ok = await _adminService.updateFixedOtpSetting(value);
     if (mounted) {
+      final code = context.read<AppLanguageController>().code;
       setState(() => _loading = false);
       if (!ok) {
         setState(() => _enableFixedOtp = !value);
-        _snack(_t(context, 'settingUpdateError'), error: true);
+        _snack(_t(code, 'settingUpdateError'), error: true);
       } else {
-        _snack(_t(context, 'settingUpdated'));
+        _snack(_t(code, 'settingUpdated'));
       }
     }
   }
@@ -113,7 +114,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
       textDirection: AppLanguage.directionOf(code),
       child: AdminShell(
         active: AdminSection.settings,
-        title: _t(context, 'adminPanel'),
+        title: _t(code, 'adminPanel'),
         onRefresh: _loadAll,
         actions: [
           if (_loading)
@@ -128,12 +129,12 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
             ),
           IconButton(
             icon: const Icon(Icons.apps_rounded, color: V26.ink700),
-            tooltip: _t(context, 'openApp'),
+            tooltip: _t(code, 'openApp'),
             onPressed: () => Navigator.of(context).pushNamed('/veto_screen'),
           ),
           IconButton(
             icon: const Icon(Icons.logout, color: V26.emerg),
-            tooltip: _t(context, 'logout'),
+            tooltip: _t(code, 'logout'),
             onPressed: () => AuthService().logout(context),
           ),
         ],
@@ -150,21 +151,21 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    _sectionHeader(_t(context, 'quickStats')),
+                    _sectionHeader(_t(code, 'quickStats')),
                     Row(children: [
                       Expanded(
-                        child: _statCard(_t(context, 'users'), '$_totalUsers',
+                        child: _statCard(_t(code, 'users'), '$_totalUsers',
                             Icons.group_outlined, V26.navy600),
                       ),
                       const SizedBox(width: 10),
                       Expanded(
-                        child: _statCard(_t(context, 'lawyers'), '$_totalLawyers',
+                        child: _statCard(_t(code, 'lawyers'), '$_totalLawyers',
                             Icons.gavel_rounded, V26.ok),
                       ),
                       const SizedBox(width: 10),
                       Expanded(
                         child: _statCard(
-                          _t(context, 'pending'),
+                          _t(code, 'pending'),
                           '$_pendingLawyersCount',
                           Icons.pending_actions_rounded,
                           _pendingLawyersCount > 0
@@ -175,9 +176,9 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                     ]),
                     const SizedBox(height: 32),
                     if (_pendingLawyersCount > 0) ...[
-                      _sectionHeader(_t(context, 'pendingApprovals')),
+                      _sectionHeader(_t(code, 'pendingApprovals')),
                       _actionCard(
-                        '${_t(context, 'pendingApprovalsAction')} ($_pendingLawyersCount ${_t(context, 'pending')})',
+                        '${_t(code, 'pendingApprovalsAction')} ($_pendingLawyersCount ${_t(code, 'pending')})',
                         Icons.how_to_reg_rounded,
                         color: V26.emerg,
                         badge: _pendingLawyersCount,
@@ -195,8 +196,8 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                     LayoutBuilder(
                       builder: (ctx, c) {
                         final wide = c.maxWidth >= 900;
-                        final dispatch = _dispatchCard();
-                        final comm = _communicationCard();
+                        final dispatch = _dispatchCard(code);
+                        final comm = _communicationCard(code);
                         final row = wide
                             ? Row(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -219,35 +220,35 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                           children: [
                             row,
                             const SizedBox(height: 12),
-                            _maintenanceCard(),
+                            _maintenanceCard(code),
                             const SizedBox(height: 32),
                           ],
                         );
                       },
                     ),
-                    _sectionHeader(_t(context, 'systemOverview')),
+                    _sectionHeader(_t(code, 'systemOverview')),
                     _infoCard(
-                        _t(context, 'serverStatus'),
-                        _serverStatus.isEmpty ? _t(context, 'loading') : _serverStatus,
+                        _t(code, 'serverStatus'),
+                        _serverStatus.isEmpty ? _t(code, 'loading') : _serverStatus,
                         statusColor: _serverStatus == 'Online'
                             ? V26.ok
                             : V26.emerg),
                     _infoCard(
-                        _t(context, 'database'),
-                        _mongoDbStatus.isEmpty ? _t(context, 'loading') : _mongoDbStatus,
+                        _t(code, 'database'),
+                        _mongoDbStatus.isEmpty ? _t(code, 'loading') : _mongoDbStatus,
                         statusColor: _mongoDbStatus == 'Connected'
                             ? V26.ok
                             : V26.emerg),
                     _infoCard(
-                      _t(context, 'appVersion'),
-                      _appVersion.isEmpty ? _t(context, 'unknown') : _appVersion,
+                      _t(code, 'appVersion'),
+                      _appVersion.isEmpty ? _t(code, 'unknown') : _appVersion,
                     ),
                     const SizedBox(height: 32),
                     _sectionHeader(
                       code == 'he' ? 'כלי ניהול' : code == 'ru' ? 'Инструменты' : 'Admin Tools'
                     ),
                     _actionCard(
-                      _t(context, 'citizenApp'),
+                      _t(code, 'citizenApp'),
                       Icons.shield_outlined,
                       color: V26.ok,
                       onTap: () =>
@@ -266,9 +267,9 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                       onTap: () => Navigator.pushNamed(context, '/admin_subscriptions'),
                     ),
                     const SizedBox(height: 32),
-                    _sectionHeader(_t(context, 'userManagement')),
+                    _sectionHeader(_t(code, 'userManagement')),
                     _actionCard(
-                      '${_t(context, 'allUsers')} ($_totalUsers)',
+                      '${_t(code, 'allUsers')} ($_totalUsers)',
                       Icons.group_outlined,
                       onTap: () async {
                         await Navigator.push(
@@ -280,7 +281,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                       },
                     ),
                     _actionCard(
-                      '${_t(context, 'allLawyers')} ($_totalLawyers)',
+                      '${_t(code, 'allLawyers')} ($_totalLawyers)',
                       Icons.gavel_rounded,
                       onTap: () async {
                         await Navigator.push(
@@ -292,7 +293,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                       },
                     ),
                     _actionCard(
-                      _t(context, 'emergencyLogs'),
+                      _t(code, 'emergencyLogs'),
                       Icons.history_rounded,
                       onTap: () => Navigator.push(
                         context,
@@ -301,11 +302,11 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                       ),
                     ),
                     const SizedBox(height: 32),
-                    _sectionHeader(_t(context, 'systemSettings')),
+                    _sectionHeader(_t(code, 'systemSettings')),
                     _switchCard(
-                      _t(context, 'fixedOtp'),
+                      _t(code, 'fixedOtp'),
                       _enableFixedOtp,
-                      _t(context, 'fixedOtpHint'),
+                      _t(code, 'fixedOtpHint'),
                       _toggleFixedOtp,
                     ),
                     const SizedBox(height: 48),
@@ -320,7 +321,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
     );
   }
 
-  Widget _dispatchCard() {
+  Widget _dispatchCard(String code) {
     return V26Card(
       lift: true,
       padding: const EdgeInsets.all(16),
@@ -328,7 +329,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
-            _t(context, 'dispatchingTitle'),
+            _t(code, 'dispatchingTitle'),
             style: const TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w800,
@@ -336,7 +337,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
             ),
           ),
           const SizedBox(height: 12),
-          Text(_t(context, 'dispatchTimeoutSec'),
+          Text(_t(code, 'dispatchTimeoutSec'),
               style: const TextStyle(color: V26.ink500, fontSize: 12)),
           Slider(
             value: _dispatchTimeoutSec,
@@ -347,7 +348,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
             activeColor: V26.navy600,
             onChanged: (v) => setState(() => _dispatchTimeoutSec = v),
           ),
-          Text(_t(context, 'dispatchRadiusKm'),
+          Text(_t(code, 'dispatchRadiusKm'),
               style: const TextStyle(color: V26.ink500, fontSize: 12)),
           Slider(
             value: _dispatchRadiusKm,
@@ -358,7 +359,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
             activeColor: V26.navy600,
             onChanged: (v) => setState(() => _dispatchRadiusKm = v),
           ),
-          Text(_t(context, 'dispatchMaxLawyers'),
+          Text(_t(code, 'dispatchMaxLawyers'),
               style: const TextStyle(color: V26.ink500, fontSize: 12)),
           Slider(
             value: _dispatchMaxLawyers,
@@ -374,14 +375,14 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
     );
   }
 
-  Widget _communicationCard() {
+  Widget _communicationCard(String code) {
     Widget row(String labelKey) => Padding(
           padding: const EdgeInsets.symmetric(vertical: 6),
           child: Row(
             children: [
               Expanded(
                 child: Text(
-                  _t(context, labelKey),
+                  _t(code, labelKey),
                   style: const TextStyle(
                     color: V26.ink900,
                     fontWeight: FontWeight.w600,
@@ -389,7 +390,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                   ),
                 ),
               ),
-              V26Badge(_t(context, 'badgeActive'), tone: V26BadgeTone.ok),
+              V26Badge(_t(code, 'badgeActive'), tone: V26BadgeTone.ok),
             ],
           ),
         );
@@ -400,7 +401,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
-            _t(context, 'commTitle'),
+            _t(code, 'commTitle'),
             style: const TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w800,
@@ -417,7 +418,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
     );
   }
 
-  Widget _maintenanceCard() {
+  Widget _maintenanceCard(String code) {
     return V26Card(
       lift: true,
       padding: const EdgeInsets.all(16),
@@ -425,7 +426,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
-            _t(context, 'maintenanceTitle'),
+            _t(code, 'maintenanceTitle'),
             style: const TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w800,
@@ -435,10 +436,10 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
           const SizedBox(height: 4),
           SwitchListTile(
             contentPadding: EdgeInsets.zero,
-            title: Text(_t(context, 'maintenanceMode'),
+            title: Text(_t(code, 'maintenanceMode'),
                 style: const TextStyle(
                     color: V26.ink900, fontWeight: FontWeight.w600)),
-            subtitle: Text(_t(context, 'maintenanceHint'),
+            subtitle: Text(_t(code, 'maintenanceHint'),
                 style: const TextStyle(color: V26.ink500, fontSize: 12)),
             value: _maintenanceMode,
             onChanged: (v) => setState(() => _maintenanceMode = v),
@@ -447,9 +448,9 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
           Align(
             alignment: AlignmentDirectional.centerStart,
             child: OutlinedButton.icon(
-              onPressed: () => _snack(_t(context, 'cacheResetSnack')),
+              onPressed: () => _snack(_t(code, 'cacheResetSnack')),
               icon: const Icon(Icons.cleaning_services_outlined, size: 18),
-              label: Text(_t(context, 'cacheReset')),
+              label: Text(_t(code, 'cacheReset')),
               style: OutlinedButton.styleFrom(
                 foregroundColor: V26.navy700,
                 side: const BorderSide(color: V26.hairline),

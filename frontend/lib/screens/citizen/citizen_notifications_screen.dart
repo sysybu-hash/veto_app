@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/i18n/app_language.dart';
-import '../../l10n/app_localizations.dart';
 import '../../services/citizen_dashboard_api_service.dart';
 import '../../widgets/citizen_mockup_shell.dart';
 
@@ -10,8 +9,7 @@ class CitizenNotificationsScreen extends StatefulWidget {
   const CitizenNotificationsScreen({super.key});
 
   @override
-  State<CitizenNotificationsScreen> createState() =>
-      _CitizenNotificationsScreenState();
+  State<CitizenNotificationsScreen> createState() => _CitizenNotificationsScreenState();
 }
 
 class _CitizenNotificationsScreenState extends State<CitizenNotificationsScreen> {
@@ -42,8 +40,8 @@ class _CitizenNotificationsScreenState extends State<CitizenNotificationsScreen>
 
   @override
   Widget build(BuildContext context) {
-    context.watch<AppLanguageController>();
-    final l10n = AppLocalizations.of(context)!;
+    final code = context.watch<AppLanguageController>().code;
+    final he = code == 'he';
     return CitizenMockupShell(
       currentRoute: '/citizen_notifications',
       mobileNavIndex: citizenMobileNavIndexForRoute('/citizen_notifications'),
@@ -53,15 +51,11 @@ class _CitizenNotificationsScreenState extends State<CitizenNotificationsScreen>
             padding: const EdgeInsets.all(16),
             child: Align(
               alignment: AlignmentDirectional.centerStart,
-              child: Text(l10n.citizenPageNotifications,
-                  style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800)),
+              child: Text(he ? 'התראות' : 'Notifications', style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800)),
             ),
           ),
           if (_loading) const LinearProgressIndicator(),
-          if (_err != null)
-            Padding(
-                padding: const EdgeInsets.all(16),
-                child: Text(_err!, style: const TextStyle(color: Colors.red))),
+          if (_err != null) Padding(padding: const EdgeInsets.all(16), child: Text(_err!, style: const TextStyle(color: Colors.red))),
           Expanded(
             child: RefreshIndicator(
               onRefresh: _load,
@@ -83,8 +77,7 @@ class _CitizenNotificationsScreenState extends State<CitizenNotificationsScreen>
                       onTap: () async {
                         if (!read && id.isNotEmpty) {
                           try {
-                            await CitizenDashboardApiService.instance
-                                .markNotificationRead(id);
+                            await CitizenDashboardApiService.instance.markNotificationRead(id);
                             await _load();
                           } catch (_) {}
                         }

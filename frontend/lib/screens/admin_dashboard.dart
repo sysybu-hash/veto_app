@@ -13,13 +13,108 @@ import '../config/app_config.dart';
 import '../core/i18n/app_language.dart';
 import '../core/theme/veto_2026.dart';
 import '../core/theme/veto_mockup_tokens.dart';
-import '../l10n/app_localizations.dart';
 import '../services/auth_service.dart';
 import 'admin/_shell.dart';
-import 'admin/admin_l10n_lookups.dart';
 
-String _adash(BuildContext context, String key) =>
-    adashT(AppLocalizations.of(context)!, key);
+// ── i18n ──────────────────────────────────────────────────────
+const _i18n = {
+  'he': {
+    'title': 'לוח בקרה — מנהל',
+    'users': 'משתמשים',
+    'lawyers': 'עורכי דין',
+    'events': 'אירועים',
+    'eventsToday': 'אירועים היום',
+    'eventsWeek': 'השבוע',
+    'eventsMonth': 'החודש',
+    'active': 'פעילים',
+    'pending': 'ממתינים לאישור',
+    'recentActivity': 'פעילות אחרונה',
+    'systemHealth': 'מצב המערכת',
+    'backend': 'שרת',
+    'db': 'בסיס נתונים',
+    'socket': 'חיבור Socket',
+    'online': 'פעיל',
+    'offline': 'לא זמין',
+    'unknown': 'לא ידוע',
+    'quickLinks': 'קיצורי דרך',
+    'allUsers': 'כל המשתמשים',
+    'allLawyers': 'כל עורכי הדין',
+    'pendingLawyers': 'ממתינים לאישור',
+    'emergencyLogs': 'יומן חירום',
+    'subscriptions': 'מנויים',
+    'refresh': 'רענן',
+    'loading': 'טוען...',
+    'noActivity': 'אין פעילות אחרונה',
+    'resolvedStatus': 'נסגר',
+    'openStatus': 'פתוח',
+    'dispatchedStatus': 'בטיפול',
+  },
+  'en': {
+    'title': 'Admin Dashboard',
+    'users': 'Users',
+    'lawyers': 'Lawyers',
+    'events': 'Events',
+    'eventsToday': 'Today',
+    'eventsWeek': 'This Week',
+    'eventsMonth': 'This Month',
+    'active': 'Active',
+    'pending': 'Pending Approval',
+    'recentActivity': 'Recent Activity',
+    'systemHealth': 'System Health',
+    'backend': 'Backend',
+    'db': 'Database',
+    'socket': 'Socket',
+    'online': 'Online',
+    'offline': 'Offline',
+    'unknown': 'Unknown',
+    'quickLinks': 'Quick Links',
+    'allUsers': 'All Users',
+    'allLawyers': 'All Lawyers',
+    'pendingLawyers': 'Pending Approval',
+    'emergencyLogs': 'Emergency Logs',
+    'subscriptions': 'Subscriptions',
+    'refresh': 'Refresh',
+    'loading': 'Loading...',
+    'noActivity': 'No recent activity',
+    'resolvedStatus': 'Resolved',
+    'openStatus': 'Open',
+    'dispatchedStatus': 'Dispatched',
+  },
+  'ru': {
+    'title': 'Панель администратора',
+    'users': 'Пользователи',
+    'lawyers': 'Адвокаты',
+    'events': 'События',
+    'eventsToday': 'Сегодня',
+    'eventsWeek': 'За неделю',
+    'eventsMonth': 'За месяц',
+    'active': 'Активные',
+    'pending': 'Ожидают подтверждения',
+    'recentActivity': 'Последняя активность',
+    'systemHealth': 'Состояние системы',
+    'backend': 'Сервер',
+    'db': 'База данных',
+    'socket': 'Socket',
+    'online': 'В сети',
+    'offline': 'Не в сети',
+    'unknown': 'Неизвестно',
+    'quickLinks': 'Быстрые ссылки',
+    'allUsers': 'Все пользователи',
+    'allLawyers': 'Все адвокаты',
+    'pendingLawyers': 'Ожидают одобрения',
+    'emergencyLogs': 'Журнал экстренных случаев',
+    'subscriptions': 'Подписки',
+    'refresh': 'Обновить',
+    'loading': 'Загрузка...',
+    'noActivity': 'Нет последней активности',
+    'resolvedStatus': 'Решено',
+    'openStatus': 'Открыто',
+    'dispatchedStatus': 'В обработке',
+  },
+};
+
+String _t(String code, String key) =>
+    (_i18n[code] ?? _i18n['en']!)[key] ?? key;
 
 // ── Screen ────────────────────────────────────────────────────
 class AdminDashboard extends StatefulWidget {
@@ -116,7 +211,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
       textDirection: isRtl ? TextDirection.rtl : TextDirection.ltr,
       child: AdminShell(
         active: AdminSection.dashboard,
-        title: _adash(context, 'title'),
+        title: isRtl ? 'לוח בקרה' : 'Dashboard',
         onRefresh: _loadAll,
         body: V26Backdrop(
           child: _loading
@@ -152,17 +247,17 @@ class _AdminDashboardState extends State<AdminDashboard> {
                               _KpiCard(
                                   icon: Icons.people_alt_rounded,
                                   color: VetoMockup.primaryCta,
-                                  label: _adash(context, 'users'),
+                                  label: isRtl ? 'משתמשים רשומים' : 'Registered Users',
                                   value: _totalUsers.toString()),
                               _KpiCard(
                                   icon: Icons.balance_rounded,
                                   color: const Color(0xFF38BDF8),
-                                  label: _adash(context, 'lawyers'),
+                                  label: isRtl ? 'עורכי דין פעילים' : 'Active Lawyers',
                                   value: _activeLawyers.toString()),
                               _KpiCard(
                                   icon: Icons.pending_actions_rounded,
                                   color: const Color(0xFFF59E0B),
-                                  label: _adash(context, 'pending'),
+                                  label: isRtl ? 'ממתינים לאישור' : 'Pending Approval',
                                   value: _pendingLawyers.toString()),
                             ],
                           );
@@ -175,19 +270,19 @@ class _AdminDashboardState extends State<AdminDashboard> {
                               children: [
                                 Expanded(
                                     flex: 3,
-                                    child: _buildActivityPanel(context, isRtl)),
+                                    child: _buildActivityPanel(code, isRtl)),
                                 const SizedBox(width: 16),
                                 Expanded(
                                     flex: 2,
-                                    child: _buildHealthPanel(context, isRtl)),
+                                    child: _buildHealthPanel(code, isRtl)),
                               ],
                             );
                           }
                           return Column(
                             children: [
-                              _buildActivityPanel(context, isRtl),
+                              _buildActivityPanel(code, isRtl),
                               const SizedBox(height: 16),
-                              _buildHealthPanel(context, isRtl),
+                              _buildHealthPanel(code, isRtl),
                             ],
                           );
                         }),
@@ -200,7 +295,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
     );
   }
 
-  Widget _buildActivityPanel(BuildContext context, bool isRtl) {
+  Widget _buildActivityPanel(String code, bool isRtl) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -212,15 +307,15 @@ class _AdminDashboardState extends State<AdminDashboard> {
         ],
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text(_adash(context, 'recentActivity'),
+        Text(isRtl ? 'פעילות אחרונה' : 'Recent Activity',
           style: const TextStyle(color: V26.ink900, fontSize: 16, fontWeight: FontWeight.w800)),
         const SizedBox(height: 16),
-        _buildActivityFeed(context),
+        _buildActivityFeed(code),
       ]),
     );
   }
 
-  Widget _buildHealthPanel(BuildContext context, bool isRtl) {
+  Widget _buildHealthPanel(String code, bool isRtl) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -232,28 +327,26 @@ class _AdminDashboardState extends State<AdminDashboard> {
         ],
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text(_adash(context, 'systemHealth'),
+        Text(isRtl ? 'בריאות המערכת' : 'System Health',
           style: const TextStyle(color: V26.ink900, fontSize: 16, fontWeight: FontWeight.w800)),
         const SizedBox(height: 16),
-        _buildHealthBar(context, _adash(context, 'backend'), _backendStatus),
+        _buildHealthBar('API', _backendStatus),
         const SizedBox(height: 10),
-        _buildHealthBar(context, _adash(context, 'db'), _dbStatus),
+        _buildHealthBar('DB', _dbStatus),
         const SizedBox(height: 10),
-        _buildHealthBar(context, _adash(context, 'socket'), _socketStatus),
+        _buildHealthBar('Socket', _socketStatus),
       ]),
     );
   }
 
-  Widget _buildHealthBar(BuildContext context, String label, String status) {
+  Widget _buildHealthBar(String label, String status) {
     final good = status == 'online';
     final pct = good ? 0.95 : 0.1;
     final color = good ? const Color(0xFF22C55E) : const Color(0xFFFF3B3B);
-    final statusWord =
-        good ? _adash(context, 'online') : _adash(context, 'offline');
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       Row(children: [
         Expanded(child: Text(label, style: const TextStyle(color: V26.ink500, fontSize: 13, fontWeight: FontWeight.w600))),
-        Text(statusWord, style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.w600)),
+        Text(good ? 'Online' : 'Offline', style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.w600)),
       ]),
       const SizedBox(height: 6),
       ClipRRect(
@@ -268,7 +361,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
     ]);
   }
 
-  Widget _buildActivityFeed(BuildContext context) {
+  Widget _buildActivityFeed(String code) {
     if (_recentEvents.isEmpty) {
       return Container(
         padding: const EdgeInsets.all(24),
@@ -277,7 +370,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
             borderRadius: BorderRadius.circular(14),
             border: Border.all(color: V26.hairline)),
         child: Center(
-          child: Text(_adash(context, 'noActivity'),
+          child: Text(_t(code, 'noActivity'),
               style: const TextStyle(color: V26.ink500, fontSize: 14)),
         ),
       );
@@ -296,7 +389,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
         physics: const NeverScrollableScrollPhysics(),
         itemCount: _recentEvents.length,
         separatorBuilder: (_, __) => const Divider(height: 1, color: V26.hairline),
-        itemBuilder: (ctx, i) {
+        itemBuilder: (context, i) {
           final ev = _recentEvents[i];
           final status = ev['status'] ?? 'open';
           final statusColor = status == 'resolved'
@@ -305,10 +398,10 @@ class _AdminDashboardState extends State<AdminDashboard> {
                   ? VetoMockup.primaryCta
                   : V26.emerg;
           final statusLabel = status == 'resolved'
-              ? _adash(ctx, 'resolvedStatus')
+              ? _t(code, 'resolvedStatus')
               : status == 'dispatched'
-                  ? _adash(ctx, 'dispatchedStatus')
-                  : _adash(ctx, 'openStatus');
+                  ? _t(code, 'dispatchedStatus')
+                  : _t(code, 'openStatus');
           final ts = ev['createdAt'] ?? ev['timestamp'];
           final dt = ts != null ? DateTime.tryParse(ts as String) : null;
 
