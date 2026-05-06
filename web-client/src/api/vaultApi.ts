@@ -12,6 +12,8 @@ export type ApiVaultFile = {
   sizeBytes: number;
   folderId?: string | null;
   uploadedAt?: string;
+  /** Present after upload / Mongo document */
+  url?: string;
 };
 
 /** Raw folder from GET /api/vault/folders */
