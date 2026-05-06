@@ -1,5 +1,7 @@
 # VETO 2026 — Manual QA Checklist
 
+> **עדכון:** תיקיית `2026/` הוסרה משורש ה-repo. הרשימה למטה עדיין מתייחסת לקבצים הללו כהיסטוריה; לבדיקות עדכניות השתמשו ב־`design_mockups/` וב־`web-client` או Flutter.
+
 This is the release gate for visual alignment between the Flutter app and the
 VETO 2026 HTML/CSS mockups in `2026/*.html`. Run through it before promoting
 any redesign change to `main` or to production.

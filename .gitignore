@@ -33,5 +33,8 @@ frontend/.flutter-plugins-dependencies
 # Local Flutter SDK checkout (do not commit)
 flutter/
 
+# Nested / scratch app dirs (never commit)
+veto_app/
+
 .vercel
 .env*.local
