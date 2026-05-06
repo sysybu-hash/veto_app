@@ -5,19 +5,20 @@
 import 'package:flutter/material.dart';
 
 import '../../core/theme/veto_2026.dart';
-import '../../l10n/app_localizations.dart';
 import '../../core/theme/veto_mockup_tokens.dart';
 import '../../services/citizen_dashboard_api_service.dart';
 
 class CitizenHomeHub extends StatefulWidget {
   const CitizenHomeHub({
     super.key,
+    required this.langKey,
     required this.userName,
     required this.onSendVeto,
     required this.onOpenLegalTool,
     this.inlineAiPanel,
   });
 
+  final String langKey;
   final String userName;
   final VoidCallback onSendVeto;
   final void Function(String route, {Object? arguments}) onOpenLegalTool;
@@ -46,23 +47,30 @@ class _CitizenHomeHubState extends State<CitizenHomeHub> {
     }
   }
 
+  String _t(String he, String en, String ru) {
+    if (widget.langKey == 'en') return en;
+    if (widget.langKey == 'ru') return ru;
+    return he;
+  }
+
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
     final w = MediaQuery.sizeOf(context).width;
     final isDesktop = w >= 1080;
     final isTablet = w >= 700 && !isDesktop;
     final pad = isDesktop ? 32.0 : (isTablet ? 24.0 : 16.0);
     final name = widget.userName.trim().isEmpty
-        ? l10n.landingGuestName
+        ? _t('משתמש', 'User', 'Пользователь')
         : widget.userName;
 
     final welcomeCard = _WelcomeCard(
       name: name,
+      langKey: widget.langKey,
       onSendVeto: widget.onSendVeto,
       aiPanel: widget.inlineAiPanel,
     );
     final shieldCard = _LegalShieldCard(
+      langKey: widget.langKey,
       onTapTool: widget.onOpenLegalTool,
     );
 
@@ -90,7 +98,7 @@ class _CitizenHomeHubState extends State<CitizenHomeHub> {
             ],
             const SizedBox(height: 24),
             Text(
-              l10n.citizenHubYourTools,
+              _t('הכלים שלך', 'Your tools', 'Ваши инструменты'),
               style: const TextStyle(
                 fontFamily: V26.sans,
                 fontSize: 20,
@@ -99,12 +107,12 @@ class _CitizenHomeHubState extends State<CitizenHomeHub> {
               ),
             ),
             const SizedBox(height: 12),
-            _ToolsGrid(onRoute: widget.onOpenLegalTool),
+            _ToolsGrid(langKey: widget.langKey, onRoute: widget.onOpenLegalTool),
             const SizedBox(height: 28),
             if (_err != null)
               Text(_err!, style: const TextStyle(color: Colors.red, fontSize: 12))
             else
-              _MetricsRow(summary: _summary),
+              _MetricsRow(summary: _summary, langKey: widget.langKey),
           ],
         ),
       ),
@@ -115,17 +123,24 @@ class _CitizenHomeHubState extends State<CitizenHomeHub> {
 class _WelcomeCard extends StatelessWidget {
   const _WelcomeCard({
     required this.name,
+    required this.langKey,
     required this.onSendVeto,
     this.aiPanel,
   });
 
   final String name;
+  final String langKey;
   final VoidCallback onSendVeto;
   final Widget? aiPanel;
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    String t(String he, String en, String ru) {
+      if (langKey == 'en') return en;
+      if (langKey == 'ru') return ru;
+      return he;
+    }
+
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
@@ -138,7 +153,7 @@ class _WelcomeCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
-            l10n.citizenHubWelcomeName(name),
+            t('שלום, $name', 'Hello, $name', 'Здравствуйте, $name'),
             style: const TextStyle(
               fontFamily: V26.serif,
               fontSize: 28,
@@ -148,7 +163,11 @@ class _WelcomeCard extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            l10n.citizenHubWelcomeSubtitle,
+            t(
+              'הגנה משפטית חכמה במקום אחד.',
+              'Smart legal protection in one place.',
+              'Умная юридическая защита в одном месте.',
+            ),
             style: const TextStyle(
               fontFamily: V26.sans,
               color: VetoMockup.inkSecondary,
@@ -159,7 +178,7 @@ class _WelcomeCard extends StatelessWidget {
           FilledButton.icon(
             onPressed: onSendVeto,
             icon: const Icon(Icons.send_rounded),
-            label: Text(l10n.citizenHubSendVetoCta),
+            label: Text(t('שליחת VETO', 'Send VETO', 'Отправить VETO')),
           ),
           if (aiPanel != null) ...[
             const SizedBox(height: 16),
@@ -172,104 +191,138 @@ class _WelcomeCard extends StatelessWidget {
 }
 
 class _LegalShieldItem {
+  final String route;
+  final String he;
+  final String en;
+  final String ru;
+  final IconData icon;
+  final String? intent;
+  final String? domain;
+
   const _LegalShieldItem({
     required this.route,
-    required this.label,
+    required this.he,
+    required this.en,
+    required this.ru,
     required this.icon,
     this.intent,
     this.domain,
   });
-
-  final String route;
-  final String Function(AppLocalizations l10n) label;
-  final IconData icon;
-  final String? intent;
-  final String? domain;
 }
 
 class _LegalShieldCard extends StatelessWidget {
-  const _LegalShieldCard({required this.onTapTool});
+  const _LegalShieldCard({required this.langKey, required this.onTapTool});
 
+  final String langKey;
   final void Function(String route, {Object? arguments}) onTapTool;
-
-  static final List<_LegalShieldItem> _items = [
-    _LegalShieldItem(
-      route: '/chat',
-      label: (l) => l.citizenHubShieldRiskCheck,
-      icon: Icons.security_rounded,
-      intent: 'risk_check',
-      domain: 'general',
-    ),
-    _LegalShieldItem(
-      route: '/legal_notebook',
-      label: (l) => l.nbScrIntentContractReview,
-      icon: Icons.fact_check_rounded,
-      intent: 'contract_review',
-      domain: 'contracts',
-    ),
-    _LegalShieldItem(
-      route: '/legal_notebook',
-      label: (l) => l.nbScrIntentDemandLetter,
-      icon: Icons.campaign_rounded,
-      intent: 'demand_letter',
-      domain: 'civil',
-    ),
-    _LegalShieldItem(
-      route: '/legal_notebook',
-      label: (l) => l.nbScrIntentCivilClaim,
-      icon: Icons.balance_rounded,
-      intent: 'civil_claim',
-      domain: 'civil',
-    ),
-    _LegalShieldItem(
-      route: '/legal_notebook',
-      label: (l) => l.nbScrIntentLaborDoc,
-      icon: Icons.work_outline_rounded,
-      intent: 'labor_doc',
-      domain: 'labor',
-    ),
-    _LegalShieldItem(
-      route: '/legal_notebook',
-      label: (l) => l.nbScrIntentFamilyDoc,
-      icon: Icons.family_restroom_rounded,
-      intent: 'family_doc',
-      domain: 'family',
-    ),
-    _LegalShieldItem(
-      route: '/legal_calendar',
-      label: (l) => l.citizenHubShieldDeadlines,
-      icon: Icons.calendar_today_rounded,
-    ),
-    _LegalShieldItem(
-      route: '/maps',
-      label: (l) => l.citizenHubShieldCourtMap,
-      icon: Icons.map_rounded,
-    ),
-    _LegalShieldItem(
-      route: '/citizen_contracts',
-      label: (l) => l.citizenHubShieldManageContracts,
-      icon: Icons.description_rounded,
-    ),
-    _LegalShieldItem(
-      route: '/citizen_tasks',
-      label: (l) => l.citizenHubShieldLegalTasks,
-      icon: Icons.task_rounded,
-    ),
-    _LegalShieldItem(
-      route: '/citizen_reports',
-      label: (l) => l.citizenHubShieldCaseReport,
-      icon: Icons.summarize_rounded,
-    ),
-    _LegalShieldItem(
-      route: '/files_vault',
-      label: (l) => l.citizenHubShieldVaultExport,
-      icon: Icons.inventory_2_rounded,
-    ),
-  ];
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    String t(String he, String en, String ru) {
+      if (langKey == 'en') return en;
+      if (langKey == 'ru') return ru;
+      return he;
+    }
+
+    const items = <_LegalShieldItem>[
+      _LegalShieldItem(
+        route: '/chat',
+        he: 'בדיקת סיכון מיידית',
+        en: 'Instant risk check',
+        ru: 'Проверка рисков',
+        icon: Icons.security_rounded,
+        intent: 'risk_check',
+        domain: 'general',
+      ),
+      _LegalShieldItem(
+        route: '/legal_notebook',
+        he: 'סקירת חוזה עם AI',
+        en: 'AI contract review',
+        ru: 'Проверка договора AI',
+        icon: Icons.fact_check_rounded,
+        intent: 'contract_review',
+        domain: 'contracts',
+      ),
+      _LegalShieldItem(
+        route: '/legal_notebook',
+        he: 'יצירת מכתב התראה',
+        en: 'Demand letter draft',
+        ru: 'Письмо-претензия',
+        icon: Icons.campaign_rounded,
+        intent: 'demand_letter',
+        domain: 'civil',
+      ),
+      _LegalShieldItem(
+        route: '/legal_notebook',
+        he: 'הכנת תביעה אזרחית',
+        en: 'Civil claim draft',
+        ru: 'Гражданский иск',
+        icon: Icons.balance_rounded,
+        intent: 'civil_claim',
+        domain: 'civil',
+      ),
+      _LegalShieldItem(
+        route: '/legal_notebook',
+        he: 'מסמכי דיני עבודה',
+        en: 'Labor law docs',
+        ru: 'Документы по труду',
+        icon: Icons.work_outline_rounded,
+        intent: 'labor_doc',
+        domain: 'labor',
+      ),
+      _LegalShieldItem(
+        route: '/legal_notebook',
+        he: 'מסמכי דיני משפחה',
+        en: 'Family law docs',
+        ru: 'Семейные документы',
+        icon: Icons.family_restroom_rounded,
+        intent: 'family_doc',
+        domain: 'family',
+      ),
+      _LegalShieldItem(
+        route: '/legal_calendar',
+        he: 'תזכורות ודדליינים',
+        en: 'Deadlines',
+        ru: 'Сроки',
+        icon: Icons.calendar_today_rounded,
+      ),
+      _LegalShieldItem(
+        route: '/maps',
+        he: 'איתור תחנה/בית משפט',
+        en: 'Court & station map',
+        ru: 'Карта судов',
+        icon: Icons.map_rounded,
+      ),
+      _LegalShieldItem(
+        route: '/citizen_contracts',
+        he: 'ניהול חוזים פעילים',
+        en: 'Manage contracts',
+        ru: 'Управление договорами',
+        icon: Icons.description_rounded,
+      ),
+      _LegalShieldItem(
+        route: '/citizen_tasks',
+        he: 'רשימת פעולות משפטיות',
+        en: 'Legal task list',
+        ru: 'Юридические задачи',
+        icon: Icons.task_rounded,
+      ),
+      _LegalShieldItem(
+        route: '/citizen_reports',
+        he: 'דוח מצב תיק',
+        en: 'Case status report',
+        ru: 'Отчёт по делу',
+        icon: Icons.summarize_rounded,
+      ),
+      _LegalShieldItem(
+        route: '/files_vault',
+        he: 'ייצוא מסמכים לכספת',
+        en: 'Export to vault',
+        ru: 'Экспорт в хранилище',
+        icon: Icons.inventory_2_rounded,
+      ),
+    ];
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -282,7 +335,7 @@ class _LegalShieldCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
-            l10n.citizenHubLegalShieldTitle,
+            t('מגן משפטי', 'Legal shield', 'Юридический щит'),
             style: const TextStyle(
               fontFamily: V26.sans,
               fontSize: 18,
@@ -299,9 +352,9 @@ class _LegalShieldCard extends StatelessWidget {
               crossAxisSpacing: 8,
               childAspectRatio: 2.45,
             ),
-            itemCount: _items.length,
+            itemCount: items.length,
             itemBuilder: (_, i) {
-              final it = _items[i];
+              final it = items[i];
               return OutlinedButton.icon(
                 onPressed: () => onTapTool(
                   it.route,
@@ -314,7 +367,7 @@ class _LegalShieldCard extends StatelessWidget {
                 ),
                 icon: Icon(it.icon, size: 18, color: VetoMockup.primaryCta),
                 label: Text(
-                  it.label(l10n),
+                  t(it.he, it.en, it.ru),
                   style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
                 ),
               );
@@ -327,22 +380,28 @@ class _LegalShieldCard extends StatelessWidget {
 }
 
 class _ToolsGrid extends StatelessWidget {
-  const _ToolsGrid({required this.onRoute});
+  const _ToolsGrid({required this.langKey, required this.onRoute});
 
+  final String langKey;
   final void Function(String route, {Object? arguments}) onRoute;
-
-  static final List<({String r, IconData i, String Function(AppLocalizations l) title})> _tools = [
-    (r: '/files_vault', i: Icons.folder_open_rounded, title: (l) => l.citizenHubToolCaseTracking),
-    (r: '/citizen_contracts', i: Icons.handshake_outlined, title: (l) => l.citizenHubToolContracts),
-    (r: '/citizen_tasks', i: Icons.checklist_rounded, title: (l) => l.citizenHubToolOpenTasks),
-    (r: '/citizen_contacts', i: Icons.people_alt_outlined, title: (l) => l.citizenHubToolContacts),
-    (r: '/citizen_reports', i: Icons.insights_outlined, title: (l) => l.citizenHubToolReports),
-    (r: '/citizen_tools', i: Icons.apps_rounded, title: (l) => l.citizenHubToolAdvanced),
-  ];
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    String t(String he, String en, String ru) {
+      if (langKey == 'en') return en;
+      if (langKey == 'ru') return ru;
+      return he;
+    }
+
+    final tools = [
+      (r: '/files_vault', he: 'מעקב תיקים', en: 'Case tracking', ru: 'Дела', i: Icons.folder_open_rounded),
+      (r: '/citizen_contracts', he: 'ניהול חוזים', en: 'Contracts', ru: 'Договоры', i: Icons.handshake_outlined),
+      (r: '/citizen_tasks', he: 'משימות פתוחות', en: 'Open tasks', ru: 'Задачи', i: Icons.checklist_rounded),
+      (r: '/citizen_contacts', he: 'אנשי קשר', en: 'Contacts', ru: 'Контакты', i: Icons.people_alt_outlined),
+      (r: '/citizen_reports', he: 'דוחות', en: 'Reports', ru: 'Отчёты', i: Icons.insights_outlined),
+      (r: '/citizen_tools', he: 'כלים מתקדמים', en: 'Advanced', ru: 'Ещё', i: Icons.apps_rounded),
+    ];
+
     return LayoutBuilder(
       builder: (_, c) {
         return GridView.builder(
@@ -354,9 +413,9 @@ class _ToolsGrid extends StatelessWidget {
             crossAxisSpacing: 12,
             mainAxisExtent: 132,
           ),
-          itemCount: _tools.length,
+          itemCount: tools.length,
           itemBuilder: (_, i) {
-            final e = _tools[i];
+            final e = tools[i];
             return Material(
               color: VetoMockup.surfaceCard,
               borderRadius: BorderRadius.circular(VetoMockup.radiusCard),
@@ -377,7 +436,7 @@ class _ToolsGrid extends StatelessWidget {
                       Icon(e.i, color: VetoMockup.primaryCta, size: 28),
                       const Spacer(),
                       Text(
-                        e.title(l10n),
+                        t(e.he, e.en, e.ru),
                         style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
                       ),
                     ],
@@ -393,13 +452,19 @@ class _ToolsGrid extends StatelessWidget {
 }
 
 class _MetricsRow extends StatelessWidget {
-  const _MetricsRow({required this.summary});
+  const _MetricsRow({required this.summary, required this.langKey});
 
   final Map<String, dynamic>? summary;
+  final String langKey;
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    String t(String he, String en, String ru) {
+      if (langKey == 'en') return en;
+      if (langKey == 'ru') return ru;
+      return he;
+    }
+
     final s = summary;
     final tasks = s == null ? '—' : '${s['openTasks'] ?? 0}';
     final cases = s == null ? '—' : '${s['trackedCases'] ?? 0}';
@@ -441,19 +506,19 @@ class _MetricsRow extends StatelessWidget {
 
     final entries = <Widget>[
       card(
-        l10n.citizenHubMetricOpenTasks,
+        t('משימות פתוחות', 'Open tasks', 'Задачи'),
         tasks,
         VetoMockup.primaryCta,
         Icons.task_alt_rounded,
       ),
       card(
-        l10n.citizenHubMetricTrackedCases,
+        t('תיקים במעקב', 'Tracked cases', 'Дела'),
         cases,
         VetoMockup.metricBlue,
         Icons.folder_rounded,
       ),
       card(
-        l10n.citizenHubMetricActiveContracts,
+        t('חוזים פעילים', 'Active contracts', 'Договоры'),
         contracts,
         VetoMockup.metricPurple,
         Icons.description_rounded,
@@ -464,7 +529,7 @@ class _MetricsRow extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          l10n.citizenHubQuickSummary,
+          t('סיכום מהיר', 'Quick summary', 'Сводка'),
           style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
         ),
         const SizedBox(height: 12),

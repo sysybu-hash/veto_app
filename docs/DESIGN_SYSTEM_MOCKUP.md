@@ -1,40 +1,37 @@
-# VETO — שפת עיצוב 2026 (Pango-class)
+# VETO — שפת עיצוב מונחה מוקאפ (2026)
 
-מסמך רפרנס ליישום ב-Flutter. **רפרנס ויזואלי:** מוצר צרכני ישראלי — בהירות, כחול מותג, פינות עגולות, מגירות, FABs (ראו צילומי פנגו בפרויקט).
+מסמך רפרנס ליישום ב-Flutter. מקורות ויזואליים:
 
-## טוקנים (`lib/core/theme/veto_mockup_tokens.dart`)
+- דסקטופ: `assets/` + קבצי PNG ב-workspace (מוקאפ סרגל ימין, חיפוש, Hub, מדדים).
+- מובייל: מוקאפ עם הירו, מגן משפטי 2×2, צ'יפים, כלים עגולים, פעילות, Bottom Nav עם כפתור מרכזי.
+
+## טוקנים
 
 | טוקן | ערך / כלל |
 |------|------------|
-| `pageBackground` | `#F4F6FA` — אפור־כחלחל בהיר |
-| `surfaceCard` | `#FFFFFF`, צל רך |
-| `radiusCard` | 24px (כרטיסים גדולים); pill לכפתורים |
-| `primaryCta` | כחול מותג `#2B65EC` |
-| `primaryCtaDeep` / `Dark` | כחול כהה לגרדיאנט / לחיץ |
-| `drawerTint` | `#E8F1FF` — מגירת תפריט |
-| `drawerHeader` | `#0E2A5A` — כותרות מגירת נגישות |
-| `emerg` | אדום חירום (לא מחליף primary) |
-| `textPrimary` | `#1A1A1A` |
+| `pageBackground` | לבן / `#F7F5F0` — אפור-קרם בהיר |
+| `surfaceCard` | `#FFFFFF`, צל `0 4px 24px rgba(0,0,0,0.06)` |
+| `radiusCard` | 16–20px |
+| `radiusButton` | 12–16px (pill לחיפוש) |
+| `primaryCta` | בורדו/אדום `#B91C3C`–`#7A1E2E`, טקסט לבן מודגש |
+| `navActive` | אדום + קו תחתון / זוהר עדין |
+| `textPrimary` | `#1A1A1A`, כותרות `FontWeight.w700`–`w800` |
 | `textSecondary` | `#4A5568` |
-| `hairline` | `#E2E8EF` |
-| `wheelRed/Teal/Orange/Yellow/Sky` | דיסקיות אייקון בגלגל שירותים |
+| `metricBlue` / `metricPurple` | כרטיסי סטטיסטיקה (איקון + מספר) |
+| `hairline` | `#E8E4DC` |
 
 ## מבנה
 
-- **דסקטופ RTL:** כמו קודם — סרגל ימין באפליקציה; **דף נחיתה** — הירו מרכזי עם גלגל תרחישים, מגירה מקצה המסך.
-- **מובייל:** כרטיס לבן גדול, שורת שירותים, CTA עגול עם הילה עדינה.
+- **דסקטופ RTL**: סרגל ניווט אנכי **ימין**; תוכן משמאל; שורת עליון: חיפוש, פעמון, פרופיל.
+- **מובייל**: Bottom navigation — בית | הגנות | **שלח VETO** (מרכז מורם) | מסמכים | עוד (מגירה).
 
-## רכיבים
+## רכיבים משותפים (קוד)
 
-- `lib/core/theme/veto_mockup_tokens.dart`
-- `lib/widgets/citizen_mockup_shell.dart`
-- `lib/widgets/veto_landing_service_hub.dart` — גלגל תרחישים (דף נחיתה)
-- `lib/l10n/*.arb` — מחרוזות רב־לשוניות (מבנה זהה בין שפות)
+- `lib/core/theme/veto_mockup_tokens.dart` — קבועי צבע/רדיוס.
+- `lib/widgets/veto_shell_sidebar.dart` — מעטפת דסקטופ.
+- `lib/widgets/veto_mobile_nav.dart` — ניווט תחתון עם כפתור מרכזי.
+- `lib/widgets/veto_dialogs.dart` — דיאלוגים אחידים.
 
 ## הגבלות Web
 
-- `web/index.html`: `dir="ltr"` ל-WebRTC; RTL ב-`Directionality` של Flutter בלבד.
-
-## מסכים מול מוקאפ
-
-ראו [VETO_SCREEN_MATRIX_2026.md](VETO_SCREEN_MATRIX_2026.md).
+- `web/index.html`: `dir="ltr"` נשמר ל-WebRTC; RTL רק ב-`Directionality` של Flutter.

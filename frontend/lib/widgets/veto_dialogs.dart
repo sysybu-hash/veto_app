@@ -5,19 +5,15 @@
 import 'package:flutter/material.dart';
 
 import '../core/theme/veto_mockup_tokens.dart';
-import '../l10n/app_localizations.dart';
 
 Future<T?> showVetoConfirmDialog<T>({
   required BuildContext context,
   required String title,
   required String message,
-  String? confirmLabel,
-  String? cancelLabel,
+  String confirmLabel = 'אישור',
+  String cancelLabel = 'ביטול',
   bool danger = false,
 }) {
-  final loc = AppLocalizations.of(context)!;
-  final confirm = confirmLabel ?? loc.commonOk;
-  final cancel = cancelLabel ?? loc.vetoUiCancel;
   return showDialog<T>(
     context: context,
     builder: (ctx) => AlertDialog(
@@ -25,13 +21,13 @@ Future<T?> showVetoConfirmDialog<T>({
       title: Text(title, style: const TextStyle(fontWeight: FontWeight.w800)),
       content: Text(message),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(cancel)),
+        TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(cancelLabel)),
         FilledButton(
           style: danger
               ? FilledButton.styleFrom(backgroundColor: VetoMockup.primaryCta)
               : null,
           onPressed: () => Navigator.pop(ctx, true),
-          child: Text(confirm),
+          child: Text(confirmLabel),
         ),
       ],
     ),

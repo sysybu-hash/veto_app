@@ -6,26 +6,31 @@
 import 'package:flutter/material.dart';
 
 import '../core/theme/veto_mockup_tokens.dart';
-import '../l10n/app_localizations.dart';
 import '../services/auth_service.dart';
 
 class MockupDesktopTopBar extends StatelessWidget {
   const MockupDesktopTopBar({
     super.key,
     required this.searchController,
+    required this.langCode,
     this.trailing,
     required this.onProfile,
     required this.onNotifications,
   });
 
   final TextEditingController searchController;
+  final String langCode;
   final List<Widget>? trailing;
   final VoidCallback onProfile;
   final VoidCallback onNotifications;
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final he = langCode == 'he';
+    final ru = langCode == 'ru';
+    final hint = he
+        ? 'חיפוש תיקים, חוזים, אנשי קשר...'
+        : (ru ? 'Поиск...' : 'Search cases, contracts...');
     return Material(
       color: VetoMockup.surfaceCard,
       elevation: 0,
@@ -40,7 +45,7 @@ class MockupDesktopTopBar extends StatelessWidget {
               child: TextField(
                 controller: searchController,
                 decoration: InputDecoration(
-                  hintText: l10n.citizenShellSearchHint,
+                  hintText: hint,
                   prefixIcon: const Icon(Icons.search_rounded,
                       color: VetoMockup.inkSecondary),
                   filled: true,
@@ -53,7 +58,9 @@ class MockupDesktopTopBar extends StatelessWidget {
                   ),
                 ),
                 onSubmitted: (_) => ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(l10n.citizenShellSearchSnackbar)),
+                  SnackBar(
+                      content: Text(
+                          he ? 'חיפוש יתווסף בהמשך' : 'Search coming soon')),
                 ),
               ),
             ),

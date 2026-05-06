@@ -14,114 +14,219 @@ import '../../core/theme/veto_2026.dart';
 import '../../core/theme/veto_2026_wizard.dart';
 import '../../services/auth_service.dart';
 import '../../widgets/app_language_menu.dart';
-import '../../l10n/app_localizations.dart';
 
 /// Single option definition (role / scenario / alerts / privacy).
 class _Opt {
   final String id;
   final IconData icon;
-  final String Function(AppLocalizations) title;
-  final String Function(AppLocalizations) desc;
+  final Map<String, String> title;
+  final Map<String, String> desc;
   const _Opt(this.id, this.icon, this.title, this.desc);
-  String t(AppLocalizations l) => title(l);
-  String d(AppLocalizations l) => desc(l);
+  String t(String code) => title[code] ?? title['he'] ?? id;
+  String d(String code) => desc[code] ?? desc['he'] ?? '';
 }
 
-List<_Opt> _roleOpts() => [
-      _Opt(
-        'citizen',
-        Icons.shield_rounded,
-        (l) => l.wizOnbRoleCitizenTitle,
-        (l) => l.wizOnbRoleCitizenDesc,
-      ),
-      _Opt(
-        'lawyer',
-        Icons.gavel_rounded,
-        (l) => l.wizOnbRoleLawyerTitle,
-        (l) => l.wizOnbRoleLawyerDesc,
-      ),
-    ];
+/// Step 1 — role. Always defaulted to citizen on this path; we still
+/// surface the question because the mockup shows it explicitly.
+const List<_Opt> _roleOpts = [
+  _Opt(
+    'citizen',
+    Icons.shield_rounded,
+    {'he': 'אזרח', 'en': 'Citizen', 'ru': 'Гражданин'},
+    {
+      'he': 'גישה להגנה משפטית מיידית וכפתור SOS',
+      'en': 'Instant legal defense and SOS button',
+      'ru': 'Мгновенная защита и кнопка SOS',
+    },
+  ),
+  _Opt(
+    'lawyer',
+    Icons.gavel_rounded,
+    {'he': 'עו״ד', 'en': 'Lawyer', 'ru': 'Адвокат'},
+    {
+      'he': 'קבלת תיקים מ-VETO בזמן אמת',
+      'en': 'Receive cases from VETO in real time',
+      'ru': 'Принимать дела от VETO в реальном времени',
+    },
+  ),
+];
 
-List<_Opt> _scenarioOpts() => [
-      _Opt(
-        'police',
-        Icons.shield_rounded,
-        (l) => l.wizOnbScnPoliceTitle,
-        (l) => l.wizOnbScnPoliceDesc,
-      ),
-      _Opt(
-        'traffic',
-        Icons.traffic_rounded,
-        (l) => l.wizOnbScnTrafficTitle,
-        (l) => l.wizOnbScnTrafficDesc,
-      ),
-      _Opt(
-        'civil',
-        Icons.description_rounded,
-        (l) => l.wizOnbScnCivilTitle,
-        (l) => l.wizOnbScnCivilDesc,
-      ),
-      _Opt(
-        'labor',
-        Icons.work_rounded,
-        (l) => l.wizOnbScnLaborTitle,
-        (l) => l.wizOnbScnLaborDesc,
-      ),
-      _Opt(
-        'family',
-        Icons.family_restroom_rounded,
-        (l) => l.wizOnbScnFamilyTitle,
-        (l) => l.wizOnbScnFamilyDesc,
-      ),
-      _Opt(
-        'consumer',
-        Icons.shopping_bag_rounded,
-        (l) => l.wizOnbScnConsumerTitle,
-        (l) => l.wizOnbScnConsumerDesc,
-      ),
-    ];
+const List<_Opt> _scenarioOpts = [
+  _Opt(
+    'police',
+    Icons.shield_rounded,
+    {
+      'he': 'חקירה במשטרה',
+      'en': 'Police investigation',
+      'ru': 'Допрос в полиции',
+    },
+    {
+      'he': 'זימון, חקירה תחת אזהרה, מעצר ראשוני',
+      'en': 'Summons, caution, initial arrest',
+      'ru': 'Повестка, допрос под предупреждением, задержание',
+    },
+  ),
+  _Opt(
+    'traffic',
+    Icons.traffic_rounded,
+    {
+      'he': 'עצירת תנועה',
+      'en': 'Traffic stop',
+      'ru': 'Остановка ГИБДД',
+    },
+    {
+      'he': 'בקרת מהירות, אלכוהול, רישיון',
+      'en': 'Speed, alcohol, license check',
+      'ru': 'Скорость, алкоголь, права',
+    },
+  ),
+  _Opt(
+    'civil',
+    Icons.description_rounded,
+    {
+      'he': 'סכסוך אזרחי',
+      'en': 'Civil dispute',
+      'ru': 'Гражданский спор',
+    },
+    {
+      'he': 'חוזה, נדל"ן, נזיקין',
+      'en': 'Contract, real estate, tort',
+      'ru': 'Договор, недвижимость, ущерб',
+    },
+  ),
+  _Opt(
+    'labor',
+    Icons.work_rounded,
+    {
+      'he': 'דיני עבודה',
+      'en': 'Labor law',
+      'ru': 'Трудовое право',
+    },
+    {
+      'he': 'פיטורין, זכויות, הטרדה',
+      'en': 'Dismissal, rights, harassment',
+      'ru': 'Увольнение, права, домогательства',
+    },
+  ),
+  _Opt(
+    'family',
+    Icons.family_restroom_rounded,
+    {
+      'he': 'דיני משפחה',
+      'en': 'Family law',
+      'ru': 'Семейное право',
+    },
+    {
+      'he': 'גירושין, ילדים, מזונות',
+      'en': 'Divorce, custody, alimony',
+      'ru': 'Развод, дети, алименты',
+    },
+  ),
+  _Opt(
+    'consumer',
+    Icons.shopping_bag_rounded,
+    {
+      'he': 'צרכנות',
+      'en': 'Consumer',
+      'ru': 'Потребители',
+    },
+    {
+      'he': 'החזר, אחריות, הונאה',
+      'en': 'Refund, warranty, fraud',
+      'ru': 'Возврат, гарантия, мошенничество',
+    },
+  ),
+];
 
-List<_Opt> _alertsOpts() => [
-      _Opt(
-        'push_sms',
-        Icons.notifications_active_rounded,
-        (l) => l.wizOnbAlertPushSmsTitle,
-        (l) => l.wizOnbAlertPushSmsDesc,
-      ),
-      _Opt(
-        'push',
-        Icons.phone_android_rounded,
-        (l) => l.wizOnbAlertPushTitle,
-        (l) => l.wizOnbAlertPushDesc,
-      ),
-      _Opt(
-        'sms',
-        Icons.sms_rounded,
-        (l) => l.wizOnbAlertSmsTitle,
-        (l) => l.wizOnbAlertSmsDesc,
-      ),
-      _Opt(
-        'call',
-        Icons.call_rounded,
-        (l) => l.wizOnbAlertCallTitle,
-        (l) => l.wizOnbAlertCallDesc,
-      ),
-    ];
+const List<_Opt> _alertsOpts = [
+  _Opt(
+    'push_sms',
+    Icons.notifications_active_rounded,
+    {
+      'he': 'Push + SMS',
+      'en': 'Push + SMS',
+      'ru': 'Push + SMS',
+    },
+    {
+      'he': 'לא תפספס קריאה — שילוב של שני הערוצים',
+      'en': "Won't miss a call — both channels combined",
+      'ru': 'Не пропустите вызов — оба канала',
+    },
+  ),
+  _Opt(
+    'push',
+    Icons.phone_android_rounded,
+    {
+      'he': 'Push בלבד',
+      'en': 'Push only',
+      'ru': 'Только Push',
+    },
+    {
+      'he': 'בהתראה אחת על המכשיר',
+      'en': 'Single device notification',
+      'ru': 'Одно уведомление на устройстве',
+    },
+  ),
+  _Opt(
+    'sms',
+    Icons.sms_rounded,
+    {
+      'he': 'SMS בלבד',
+      'en': 'SMS only',
+      'ru': 'Только SMS',
+    },
+    {
+      'he': 'ללא תלות באפליקציה',
+      'en': 'App-independent',
+      'ru': 'Без приложения',
+    },
+  ),
+  _Opt(
+    'call',
+    Icons.call_rounded,
+    {
+      'he': 'שיחה אוטומטית',
+      'en': 'Auto call',
+      'ru': 'Автозвонок',
+    },
+    {
+      'he': 'לכוח עליון — שיחה מיידית',
+      'en': 'Emergency only — instant call',
+      'ru': 'Только экстренно — мгновенный вызов',
+    },
+  ),
+];
 
-List<_Opt> _privacyOpts() => [
-      _Opt(
-        'anonymous',
-        Icons.visibility_off_rounded,
-        (l) => l.wizOnbPrivAnonTitle,
-        (l) => l.wizOnbPrivAnonDesc,
-      ),
-      _Opt(
-        'verified',
-        Icons.verified_user_rounded,
-        (l) => l.wizOnbPrivVerifiedTitle,
-        (l) => l.wizOnbPrivVerifiedDesc,
-      ),
-    ];
+const List<_Opt> _privacyOpts = [
+  _Opt(
+    'anonymous',
+    Icons.visibility_off_rounded,
+    {
+      'he': 'אנונימי לעו״ד',
+      'en': 'Anonymous to lawyer',
+      'ru': 'Анонимно для адвоката',
+    },
+    {
+      'he': 'שם נחשף רק אם תאשר',
+      'en': 'Name revealed only on your approval',
+      'ru': 'Имя — только с вашего согласия',
+    },
+  ),
+  _Opt(
+    'verified',
+    Icons.verified_user_rounded,
+    {
+      'he': 'מזוהה',
+      'en': 'Verified',
+      'ru': 'Идентифицирован',
+    },
+    {
+      'he': 'שמך יוצג לעו״ד מהרגע הראשון',
+      'en': 'Name shown to lawyer from the start',
+      'ru': 'Имя показано адвокату с самого начала',
+    },
+  ),
+];
 
 class OnboardingWizardScreen extends StatefulWidget {
   const OnboardingWizardScreen({super.key});
@@ -159,53 +264,68 @@ class _OnboardingWizardScreenState extends State<OnboardingWizardScreen> {
 
   void _touchSaved() => _lastSaved = DateTime.now();
 
-  String _saveStatusText(AppLocalizations l) {
+  String _saveStatusText(String code) {
     final secs = DateTime.now().difference(_lastSaved).inSeconds;
     final n = secs.clamp(0, 999);
-    if (n == 0) return l.wizOnbSaveJustNow;
-    return l.wizOnbSaveSecondsAgo(n);
+    if (code == 'he') return 'נשמר אוטומטית · לפני ${n == 0 ? 'רגע' : '$n שניות'}';
+    if (code == 'ru') {
+      return n == 0
+          ? 'Сохранено автоматически · только что'
+          : 'Сохранено автоматически · $n сек назад';
+    }
+    return n == 0
+        ? 'Auto-saved · just now'
+        : 'Auto-saved · ${n}s ago';
   }
 
-  String _stepTitle(int idx, AppLocalizations l) {
-    switch (idx) {
-      case 1:
-        return l.wizOnbStepTitle1;
-      case 2:
-        return l.wizOnbStepTitle2;
-      case 3:
-        return l.wizOnbStepTitle3;
-      case 4:
-        return l.wizOnbStepTitle4;
-    }
-    return '';
+  String _stepTitle(int idx, String code) {
+    const titles = {
+      1: {'he': 'תפקיד', 'en': 'Role', 'ru': 'Роль'},
+      2: {'he': 'תרחיש מרכזי', 'en': 'Main scenario', 'ru': 'Сценарий'},
+      3: {'he': 'העדפות התראות', 'en': 'Alert preferences', 'ru': 'Уведомления'},
+      4: {'he': 'פרטיות', 'en': 'Privacy', 'ru': 'Приватность'},
+    };
+    return titles[idx]?[code] ?? titles[idx]?['he'] ?? '';
   }
 
-  String _stepSubtitle(int idx, AppLocalizations l) {
-    switch (idx) {
-      case 1:
-        return l.wizOnbStepSubtitle1;
-      case 2:
-        return l.wizOnbStepSubtitle2;
-      case 3:
-        return l.wizOnbStepSubtitle3;
-      case 4:
-        return l.wizOnbStepSubtitle4;
-    }
-    return '';
+  String _stepSubtitle(int idx, String code) {
+    const subtitles = {
+      1: {
+        'he': 'האם אתה אזרח או עו״ד?',
+        'en': 'Citizen or lawyer?',
+        'ru': 'Гражданин или адвокат?',
+      },
+      2: {
+        'he': 'איזה סוג חירום הכי רלוונטי לך?',
+        'en': 'Which emergency type is most relevant?',
+        'ru': 'Какой сценарий самый важный?',
+      },
+      3: {
+        'he': 'איך נדע לאתר אותך מהר?',
+        'en': 'How should we reach you fast?',
+        'ru': 'Как быстрее с вами связаться?',
+      },
+      4: {
+        'he': 'מי רואה את הנתונים שלך',
+        'en': 'Who sees your data',
+        'ru': 'Кто видит ваши данные',
+      },
+    };
+    return subtitles[idx]?[code] ?? subtitles[idx]?['he'] ?? '';
   }
 
   List<_Opt> _optsFor(int step) {
     switch (step) {
       case 1:
-        return _roleOpts();
+        return _roleOpts;
       case 2:
-        return _scenarioOpts();
+        return _scenarioOpts;
       case 3:
-        return _alertsOpts();
+        return _alertsOpts;
       case 4:
-        return _privacyOpts();
+        return _privacyOpts;
     }
-    return <_Opt>[];
+    return const [];
   }
 
   String _currentSelection() {
@@ -296,7 +416,6 @@ class _OnboardingWizardScreenState extends State<OnboardingWizardScreen> {
   @override
   Widget build(BuildContext context) {
     final code = context.watch<AppLanguageController>().code;
-    final l = AppLocalizations.of(context)!;
     final width = MediaQuery.sizeOf(context).width;
     final isWide = width >= V26AppShell.desktopBreakpoint;
 
@@ -305,50 +424,74 @@ class _OnboardingWizardScreenState extends State<OnboardingWizardScreen> {
       child: Scaffold(
         backgroundColor: V26.paper,
         body: SafeArea(
-          child: isWide ? _buildDesktop(l) : _buildMobile(l),
+          child: isWide ? _buildDesktop(code) : _buildMobile(code),
         ),
       ),
     );
   }
 
-  Widget _buildDesktop(AppLocalizations l) {
+  Widget _buildDesktop(String code) {
     return Row(
       children: [
         V26WizardRail(
-          brandEm: l.wizOnbRailBrandEm,
-          headlineLine1: l.wizOnbRailHeadline1,
-          headlineBeforeEm: l.wizOnbRailHeadlineBeforeEm,
+          brandEm: code == 'he'
+              ? 'Wizard'
+              : (code == 'ru' ? 'Мастер' : 'Wizard'),
+          headlineLine1: code == 'he'
+              ? 'בוא נכין'
+              : (code == 'ru' ? 'Настроим' : 'Let\'s prepare'),
+          headlineBeforeEm: code == 'he'
+              ? 'את '
+              : (code == 'ru' ? '' : ''),
           headlineEm: 'VETO',
-          headlineLine3: l.wizOnbRailHeadline3,
-          description: l.wizOnbRailDescription,
+          headlineLine3: code == 'he'
+              ? 'בדיוק לך'
+              : (code == 'ru' ? 'именно под вас' : 'just for you'),
+          description: code == 'he'
+              ? '4 שאלות קצרות שיעזרו לנו להתאים את המסך, את ההתראות ואת זמן התגובה — בהתאם למה שאתה צריך.'
+              : (code == 'ru'
+                  ? '4 коротких вопроса помогут нам настроить экран, уведомления и время реакции — под ваши нужды.'
+                  : '4 short questions help us tailor the screen, alerts and response time — to what you need.'),
           stepTitles: [
-            _stepTitle(1, l),
-            _stepTitle(2, l),
-            _stepTitle(3, l),
-            _stepTitle(4, l),
+            _stepTitle(1, code),
+            _stepTitle(2, code),
+            _stepTitle(3, code),
+            _stepTitle(4, code),
           ],
           stepSubtitles: [
-            _stepSubtitleShort(1, l, _role),
-            _stepSubtitleShort(2, l, _scenario),
-            _stepSubtitleShort(3, l, _alerts),
-            _stepSubtitleShort(4, l, _privacy),
+            _stepSubtitleShort(1, code, _role),
+            _stepSubtitleShort(2, code, _scenario),
+            _stepSubtitleShort(3, code, _alerts),
+            _stepSubtitleShort(4, code, _privacy),
           ],
           currentStepIndex: _step - 1,
-          saveStatusLine: _saveStatusText(l),
-          saveExitLabel: l.wizOnbSaveExit,
+          saveStatusLine: _saveStatusText(code),
+          saveExitLabel: code == 'he'
+              ? 'שמור וצא'
+              : (code == 'ru' ? 'Сохранить и выйти' : 'Save & exit'),
           onSaveExit: _saveExit,
         ),
         Expanded(
           child: Column(
             children: [
-              _wizTopbar(l, compact: false),
-              Expanded(child: _wizBody(l, compact: false)),
+              _wizTopbar(code, compact: false),
+              Expanded(child: _wizBody(code, compact: false)),
               V26WizFoot(
-                backLabel: _step > 1 ? l.wizOnbBack : null,
+                backLabel: _step > 1
+                    ? (code == 'he'
+                        ? '← חזרה'
+                        : (code == 'ru' ? '← Назад' : '← Back'))
+                    : null,
                 onBack: _back,
-                nextLabel: _step < _stepCount ? l.wizOnbContinue : l.wizOnbFinish,
+                nextLabel: _step < _stepCount
+                    ? (code == 'he'
+                        ? 'המשך →'
+                        : (code == 'ru' ? 'Продолжить →' : 'Continue →'))
+                    : (code == 'he'
+                        ? 'סיים והתחל →'
+                        : (code == 'ru' ? 'Завершить →' : 'Finish →')),
                 onNext: _submitting ? null : _next,
-                hint: _step < _stepCount ? _nextHint(l) : null,
+                hint: _step < _stepCount ? _nextHint(code) : null,
                 compact: false,
               ),
             ],
@@ -358,35 +501,48 @@ class _OnboardingWizardScreenState extends State<OnboardingWizardScreen> {
     );
   }
 
-  String _stepSubtitleShort(int idx, AppLocalizations l, String selectedId) {
-    if (idx > _step) return _stepSubtitle(idx, l);
+  String _stepSubtitleShort(int idx, String code, String selectedId) {
+    if (idx > _step) return _stepSubtitle(idx, code);
     final selected = _optsFor(idx).firstWhere(
       (o) => o.id == selectedId,
       orElse: () => _optsFor(idx).first,
     );
     if (idx < _step) {
-      return '${selected.t(l)} · ${l.wizOnbSelectedLabel}';
+      final label = code == 'he'
+          ? 'נבחר'
+          : (code == 'ru' ? 'выбрано' : 'selected');
+      return '${selected.t(code)} · $label';
     }
-    return _stepSubtitle(idx, l);
+    return _stepSubtitle(idx, code);
   }
 
-  Widget _buildMobile(AppLocalizations l) {
+  Widget _buildMobile(String code) {
     return Column(
       children: [
-        _wizTopbar(l, compact: true),
+        _wizTopbar(code, compact: true),
         V26WizardPhoneProgress(
           stepIndexZeroBased: _step - 1,
           stepCount: _stepCount,
-          labelBold: l.wizOnbQuestionProgress(_step, _stepCount),
-          labelDetail: _stepTitle(_step, l),
+          labelBold: code == 'he'
+              ? 'שאלה $_step מתוך $_stepCount'
+              : (code == 'ru'
+                  ? 'Вопрос $_step из $_stepCount'
+                  : 'Question $_step of $_stepCount'),
+          labelDetail: _stepTitle(_step, code),
         ),
-        Expanded(child: _wizBody(l, compact: true)),
+        Expanded(child: _wizBody(code, compact: true)),
         V26WizFoot(
-          backLabel: _step > 1 ? '←' : null,
+          backLabel: _step > 1
+              ? (code == 'he' ? '←' : (code == 'ru' ? '←' : '←'))
+              : null,
           onBack: _back,
           nextLabel: _step < _stepCount
-              ? l.wizOnbContinue.replaceAll(' →', '')
-              : l.wizOnbFinish,
+              ? (code == 'he'
+                  ? 'המשך'
+                  : (code == 'ru' ? 'Продолжить' : 'Continue'))
+              : (code == 'he'
+                  ? 'סיים והתחל →'
+                  : (code == 'ru' ? 'Завершить →' : 'Finish →')),
           onNext: _submitting ? null : _next,
           compact: true,
         ),
@@ -394,14 +550,21 @@ class _OnboardingWizardScreenState extends State<OnboardingWizardScreen> {
     );
   }
 
-  String _nextHint(AppLocalizations l) {
+  String _nextHint(String code) {
     final nextIdx = _step + 1;
     if (nextIdx > _stepCount) return '';
-    return '${l.wizOnbNextHintPrefix}${_stepTitle(nextIdx, l)}';
+    final prefix = code == 'he'
+        ? 'השאלה הבאה: '
+        : (code == 'ru' ? 'Следующий вопрос: ' : 'Next: ');
+    return '$prefix${_stepTitle(nextIdx, code)}';
   }
 
-  Widget _wizTopbar(AppLocalizations l, {required bool compact}) {
-    final stepLabel = l.wizOnbQuestionProgress(_step, _stepCount);
+  Widget _wizTopbar(String code, {required bool compact}) {
+    final stepLabel = code == 'he'
+        ? 'שאלה $_step מתוך $_stepCount'
+        : (code == 'ru'
+            ? 'Вопрос $_step из $_stepCount'
+            : 'Question $_step of $_stepCount');
     return Container(
       padding: compact
           ? const EdgeInsets.fromLTRB(14, 14, 14, 12)
@@ -436,7 +599,7 @@ class _OnboardingWizardScreenState extends State<OnboardingWizardScreen> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  _stepTitle(_step, l),
+                  _stepTitle(_step, code),
                   style: TextStyle(
                     fontFamily: V26.serif,
                     fontSize: compact ? 18 : 20,
@@ -462,9 +625,9 @@ class _OnboardingWizardScreenState extends State<OnboardingWizardScreen> {
     );
   }
 
-  Widget _wizBody(AppLocalizations l, {required bool compact}) {
+  Widget _wizBody(String code, {required bool compact}) {
     if (_step == _stepCount) {
-      return _summaryBody(l, compact: compact);
+      return _summaryBody(code, compact: compact);
     }
     final opts = _optsFor(_step);
     final selected = _currentSelection();
@@ -483,8 +646,8 @@ class _OnboardingWizardScreenState extends State<OnboardingWizardScreen> {
             child: SizedBox(
               width: cardWidth,
               child: V26QuizCard(
-                title: _buildQuestionHeadline(l),
-                lede: _buildQuestionLede(l),
+                title: _buildQuestionHeadline(code),
+                lede: _buildQuestionLede(code),
                 compact: compact,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -495,8 +658,8 @@ class _OnboardingWizardScreenState extends State<OnboardingWizardScreen> {
                         for (final o in opts)
                           V26OptTile(
                             icon: o.icon,
-                            title: o.t(l),
-                            description: o.d(l),
+                            title: o.t(code),
+                            description: o.d(code),
                             selected: selected == o.id,
                             onTap: () => _select(o.id),
                           ),
@@ -504,7 +667,7 @@ class _OnboardingWizardScreenState extends State<OnboardingWizardScreen> {
                     ),
                     if (_step == 2) ...[
                       const SizedBox(height: 24),
-                      _calloutInfo(l),
+                      _calloutInfo(code),
                     ],
                   ],
                 ),
@@ -516,36 +679,72 @@ class _OnboardingWizardScreenState extends State<OnboardingWizardScreen> {
     );
   }
 
-  String _buildQuestionHeadline(AppLocalizations l) {
+  String _buildQuestionHeadline(String code) {
     switch (_step) {
       case 1:
-        return l.wizOnbQ1Head;
+        return code == 'he'
+            ? 'איך תשתמש ב-VETO?'
+            : (code == 'ru'
+                ? 'Как вы будете использовать VETO?'
+                : 'How will you use VETO?');
       case 2:
-        return l.wizOnbQ2Head;
+        return code == 'he'
+            ? 'איזה תרחיש הכי רלוונטי לך?'
+            : (code == 'ru'
+                ? 'Какой сценарий самый важный?'
+                : 'Which scenario is most relevant?');
       case 3:
-        return l.wizOnbQ3Head;
+        return code == 'he'
+            ? 'איך נדע לאתר אותך מהר?'
+            : (code == 'ru'
+                ? 'Как с вами связаться быстрее?'
+                : 'How should we reach you fast?');
       case 4:
-        return l.wizOnbQ4Head;
+        return code == 'he'
+            ? 'מי רואה את הנתונים שלך?'
+            : (code == 'ru'
+                ? 'Кто видит ваши данные?'
+                : 'Who sees your data?');
     }
     return '';
   }
 
-  String _buildQuestionLede(AppLocalizations l) {
+  String _buildQuestionLede(String code) {
     switch (_step) {
       case 1:
-        return l.wizOnbQ1Lede;
+        return code == 'he'
+            ? 'נתאים את המסך ואת הפעולות בהתאם לתפקיד שלך. תוכל לשנות בכל זמן בהגדרות.'
+            : (code == 'ru'
+                ? 'Настроим интерфейс под вашу роль. Можно поменять в настройках.'
+                : 'We tailor the UI to your role. You can change this later in settings.');
       case 2:
-        return l.wizOnbQ2Lede;
+        return code == 'he'
+            ? 'בחר את התרחיש שאתה הכי צופה שיקרה — נתאים לך מסך מותאם, זכויות מוקרנות מראש, ועו"ד מתחום ההתמחות הנכון. תוכל לשנות בכל זמן בהגדרות.'
+            : (code == 'ru'
+                ? 'Выберите самый ожидаемый сценарий — подстроим экран, права и специализацию адвоката. Можно изменить в любое время.'
+                : 'Pick the scenario you expect most — we preload rights and route to the right lawyer. Change any time.');
       case 3:
-        return l.wizOnbQ3Lede;
+        return code == 'he'
+            ? 'בחר את האופן שבו נעדיף להתריע אם יש אירוע דחוף. תוכל לשנות בכל זמן.'
+            : (code == 'ru'
+                ? 'Как предпочтительно уведомлять о срочных событиях?'
+                : 'Pick how we should notify you of urgent events.');
       case 4:
-        return l.wizOnbQ4Lede;
+        return code == 'he'
+            ? 'בחר את רמת הפרטיות שתרצה שלעו״ד הזמין יהיה אליך. תוכל לשנות בכל זמן.'
+            : (code == 'ru'
+                ? 'Выберите уровень приватности для адвоката.'
+                : 'Choose the privacy level you want toward the on-duty lawyer.');
     }
     return '';
   }
 
-  Widget _calloutInfo(AppLocalizations l) {
-    final body = l.wizOnbCalloutScenario;
+  Widget _calloutInfo(String code) {
+    final body = code == 'he'
+        ? 'הבחירה משפיעה על המסך הראשי בלבד. כל שאר התרחישים יישארו זמינים בכל רגע — כפתור SOS לא מבחין בין סוגים.'
+        : (code == 'ru'
+            ? 'Выбор влияет только на главный экран. Все сценарии остаются доступны в любой момент — кнопка SOS не делит их по типам.'
+            : 'This affects only the main screen. All scenarios remain available — the SOS button doesn\'t distinguish between types.');
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
@@ -584,25 +783,49 @@ class _OnboardingWizardScreenState extends State<OnboardingWizardScreen> {
     );
   }
 
-  Widget _summaryBody(AppLocalizations l, {required bool compact}) {
+  Widget _summaryBody(String code, {required bool compact}) {
     final items = <_SummaryRow>[
       _SummaryRow(
-        title: '${l.wizOnbSumRolePrefix} ${_optLabel(_roleOpts(), _role, l)}',
-        subtitle: l.wizOnbSumRoleSub,
+        title: code == 'he'
+            ? 'תפקיד · ${_optLabel(_roleOpts, _role, code)}'
+            : (code == 'ru'
+                ? 'Роль · ${_optLabel(_roleOpts, _role, code)}'
+                : 'Role · ${_optLabel(_roleOpts, _role, code)}'),
+        subtitle: code == 'he'
+            ? 'מסך שלך מותאם'
+            : (code == 'ru' ? 'Экран адаптирован' : 'Your screen is tailored'),
       ),
       _SummaryRow(
-        title:
-            '${l.wizOnbSumScenarioPrefix} ${_optLabel(_scenarioOpts(), _scenario, l)}',
-        subtitle: l.wizOnbSumScenarioSub,
+        title: code == 'he'
+            ? 'תרחיש · ${_optLabel(_scenarioOpts, _scenario, code)}'
+            : (code == 'ru'
+                ? 'Сценарий · ${_optLabel(_scenarioOpts, _scenario, code)}'
+                : 'Scenario · ${_optLabel(_scenarioOpts, _scenario, code)}'),
+        subtitle: code == 'he'
+            ? 'זכויות מותאמות'
+            : (code == 'ru' ? 'Права подстроены' : 'Rights pre-loaded'),
       ),
       _SummaryRow(
-        title: '${l.wizOnbSumAlertsPrefix} ${_optLabel(_alertsOpts(), _alerts, l)}',
-        subtitle: l.wizOnbSumAlertsSub,
+        title: code == 'he'
+            ? 'התראות · ${_optLabel(_alertsOpts, _alerts, code)}'
+            : (code == 'ru'
+                ? 'Уведомления · ${_optLabel(_alertsOpts, _alerts, code)}'
+                : 'Alerts · ${_optLabel(_alertsOpts, _alerts, code)}'),
+        subtitle: code == 'he'
+            ? 'לא תפספס קריאה'
+            : (code == 'ru' ? 'Не пропустите вызов' : 'Won\'t miss a call'),
       ),
       _SummaryRow(
-        title:
-            '${l.wizOnbSumPrivacyPrefix} ${_optLabel(_privacyOpts(), _privacy, l)}',
-        subtitle: l.wizOnbSumPrivacySub,
+        title: code == 'he'
+            ? 'פרטיות · ${_optLabel(_privacyOpts, _privacy, code)}'
+            : (code == 'ru'
+                ? 'Приватность · ${_optLabel(_privacyOpts, _privacy, code)}'
+                : 'Privacy · ${_optLabel(_privacyOpts, _privacy, code)}'),
+        subtitle: code == 'he'
+            ? 'שם נחשף רק אם תאשר'
+            : (code == 'ru'
+                ? 'Имя — только с согласия'
+                : 'Name shown only if you approve'),
       ),
     ];
 
@@ -621,8 +844,14 @@ class _OnboardingWizardScreenState extends State<OnboardingWizardScreen> {
             child: SizedBox(
               width: cardWidth,
               child: V26QuizCard(
-                title: l.wizOnbSumAllSet,
-                lede: l.wizOnbSumSummaryLede,
+                title: code == 'he'
+                    ? 'הכל מוכן'
+                    : (code == 'ru' ? 'Всё готово' : 'All set'),
+                lede: code == 'he'
+                    ? 'סיכום ההגדרות שלך — תוכל לשנות בכל זמן.'
+                    : (code == 'ru'
+                        ? 'Сводка настроек — можно поменять позже.'
+                        : 'Summary of your settings — change any time.'),
                 compact: compact,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -632,7 +861,7 @@ class _OnboardingWizardScreenState extends State<OnboardingWizardScreen> {
                       _summaryTile(items[i]),
                     ],
                     const SizedBox(height: 18),
-                    _calloutSuccess(l),
+                    _calloutSuccess(code),
                   ],
                 ),
               ),
@@ -643,10 +872,10 @@ class _OnboardingWizardScreenState extends State<OnboardingWizardScreen> {
     );
   }
 
-  String _optLabel(List<_Opt> opts, String id, AppLocalizations l) {
+  String _optLabel(List<_Opt> opts, String id, String code) {
     return opts
         .firstWhere((o) => o.id == id, orElse: () => opts.first)
-        .t(l);
+        .t(code);
   }
 
   Widget _summaryTile(_SummaryRow row) {
@@ -702,9 +931,15 @@ class _OnboardingWizardScreenState extends State<OnboardingWizardScreen> {
     );
   }
 
-  Widget _calloutSuccess(AppLocalizations l) {
-    final head = l.wizOnbSuccessHead;
-    final body = l.wizOnbSuccessBody;
+  Widget _calloutSuccess(String code) {
+    final head = code == 'he'
+        ? 'VETO מוכן.'
+        : (code == 'ru' ? 'VETO готов.' : 'VETO is ready.');
+    final body = code == 'he'
+        ? 'כפתור ה-SOS שלך פעיל בכל רגע.'
+        : (code == 'ru'
+            ? 'Ваша кнопка SOS активна в любой момент.'
+            : 'Your SOS button is active at all times.');
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(

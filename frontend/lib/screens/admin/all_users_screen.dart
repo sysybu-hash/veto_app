@@ -20,7 +20,7 @@ class _AllUsersScreenState extends State<AllUsersScreen> {
   bool _loading = true;
   final _svc = AdminService();
 
-  String _t(BuildContext context, String key) => AdminStrings.t(context, key);
+  String _t(String code, String key) => AdminStrings.t(code, key);
 
   @override
   void initState() { super.initState(); _load(); }
@@ -50,13 +50,13 @@ class _AllUsersScreenState extends State<AllUsersScreen> {
             borderRadius: BorderRadius.circular(16),
             side: const BorderSide(color: V26.hairline),
           ),
-          title: Text(id == null ? _t(context, 'addUser') : _t(context, 'editUser'),
+          title: Text(id == null ? _t(code, 'addUser') : _t(code, 'editUser'),
               style: const TextStyle(color: V26.ink900)),
           content: SingleChildScrollView(
             child: Column(mainAxisSize: MainAxisSize.min, children: [
-              _field(nameCtrl,  _t(context, 'fullName'),    Icons.badge_outlined),
+              _field(nameCtrl,  _t(code, 'fullName'),    Icons.badge_outlined),
               const SizedBox(height: 10),
-              _field(phoneCtrl, _t(context, 'phone'), Icons.phone_iphone_rounded,
+              _field(phoneCtrl, _t(code, 'phone'), Icons.phone_iphone_rounded,
                   dir: TextDirection.ltr),
               const SizedBox(height: 10),
               StatefulBuilder(builder: (_, ss) => Column(children: [
@@ -64,10 +64,10 @@ class _AllUsersScreenState extends State<AllUsersScreen> {
                   initialValue: role,
                   dropdownColor: V26.surface,
                   style: const TextStyle(color: V26.ink900),
-                  decoration: _dec(_t(context, 'role'), Icons.shield_outlined),
+                  decoration: _dec(_t(code, 'role'), Icons.shield_outlined),
                   items: [
-                    DropdownMenuItem(value: 'user',  child: Text(_t(context, 'citizen'))),
-                    DropdownMenuItem(value: 'admin', child: Text(_t(context, 'admin'))),
+                    DropdownMenuItem(value: 'user',  child: Text(_t(code, 'citizen'))),
+                    DropdownMenuItem(value: 'admin', child: Text(_t(code, 'admin'))),
                   ],
                   onChanged: (v) => ss(() => role = v!),
                 ),
@@ -76,7 +76,7 @@ class _AllUsersScreenState extends State<AllUsersScreen> {
                   initialValue: lang,
                   dropdownColor: V26.surface,
                   style: const TextStyle(color: V26.ink900),
-                  decoration: _dec(_t(context, 'language'), Icons.language),
+                  decoration: _dec(_t(code, 'language'), Icons.language),
                   items: const [
                     DropdownMenuItem(value: 'he', child: Text('עברית')),
                     DropdownMenuItem(value: 'en', child: Text('English')),
@@ -91,16 +91,16 @@ class _AllUsersScreenState extends State<AllUsersScreen> {
                   contentPadding: EdgeInsets.zero,
                   activeThumbColor: V26.ok,
                   activeTrackColor: V26.ok.withValues(alpha: 0.5),
-                  title: Text(_t(context, 'manualExempt'),
+                  title: Text(_t(code, 'manualExempt'),
                       style: const TextStyle(color: V26.ink900, fontSize: 14)),
-                  subtitle: Text(_t(context, 'manualExemptHint'),
+                  subtitle: Text(_t(code, 'manualExemptHint'),
                       style: const TextStyle(color: V26.ink500, fontSize: 12)),
                 ),
               ])),
             ]),
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx), child: Text(_t(context, 'cancel'))),
+            TextButton(onPressed: () => Navigator.pop(ctx), child: Text(_t(code, 'cancel'))),
             FilledButton(
               style: FilledButton.styleFrom(
                 backgroundColor: VetoMockup.primaryCta,
@@ -123,12 +123,12 @@ class _AllUsersScreenState extends State<AllUsersScreen> {
                   _load();
                 } else if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                    content: Text(_t(context, 'saveUserFailed')),
+                    content: Text(_t(code, 'saveUserFailed')),
                     backgroundColor: V26.emerg,
                   ));
                 }
               },
-              child: Text(id == null ? _t(context, 'add') : _t(context, 'save')),
+              child: Text(id == null ? _t(code, 'add') : _t(code, 'save')),
             ),
           ],
         ),
@@ -148,16 +148,16 @@ class _AllUsersScreenState extends State<AllUsersScreen> {
             borderRadius: BorderRadius.circular(16),
             side: const BorderSide(color: V26.hairline),
           ),
-          title: Text(_t(context, 'deleteUser'), style: const TextStyle(color: V26.ink900)),
-          content: Text('${_t(context, 'deleteUserConfirm')}\n$name',
+          title: Text(_t(code, 'deleteUser'), style: const TextStyle(color: V26.ink900)),
+          content: Text('${_t(code, 'deleteUserConfirm')}\n$name',
               style: const TextStyle(color: V26.ink500)),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(_t(context, 'cancel'))),
+            TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(_t(code, 'cancel'))),
             FilledButton(
               style: FilledButton.styleFrom(
                   backgroundColor: V26.emerg, foregroundColor: Colors.white),
               onPressed: () => Navigator.pop(ctx, true),
-              child: Text(_t(context, 'delete')),
+              child: Text(_t(code, 'delete')),
             ),
           ],
         ),
@@ -174,19 +174,19 @@ class _AllUsersScreenState extends State<AllUsersScreen> {
       textDirection: AppLanguage.directionOf(code),
       child: AdminShell(
         active: AdminSection.users,
-        title: '${_t(context, 'users')} (${_loading ? _t(context, 'loading') : _users.length})',
+        title: '${_t(code, 'users')} (${_loading ? _t(code, 'loading') : _users.length})',
         onRefresh: _load,
         floatingAction: FloatingActionButton.extended(
           onPressed: () => _showForm(),
           backgroundColor: VetoMockup.primaryCta,
           icon: const Icon(Icons.person_add_rounded),
-          label: Text(_t(context, 'addUser')),
+          label: Text(_t(code, 'addUser')),
         ),
         body: V26Backdrop(
           child: _loading
             ? const Center(child: CircularProgressIndicator(color: VetoMockup.primaryCta))
             : _users.isEmpty
-                ? Center(child: Text(_t(context, 'noUsers'), style: const TextStyle(color: V26.ink500)))
+                ? Center(child: Text(_t(code, 'noUsers'), style: const TextStyle(color: V26.ink500)))
                 : ListView.separated(
                     padding: const EdgeInsets.fromLTRB(16, 16, 16, 80),
                     itemCount: _users.length,
@@ -220,13 +220,13 @@ class _AllUsersScreenState extends State<AllUsersScreen> {
                           ),
                           const SizedBox(width: 12),
                           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                            Text(u['full_name'] ?? _t(context, 'noName'),
+                            Text(u['full_name'] ?? _t(code, 'noName'),
                                 style: const TextStyle(color: V26.ink900, fontWeight: FontWeight.w600)),
                             Text(u['phone'] ?? '', textDirection: TextDirection.ltr,
                                 style: const TextStyle(color: V26.ink500, fontSize: 12)),
-                            Text(AdminStrings.roleLabel(context, u['role']?.toString()),
+                            Text(AdminStrings.roleLabel(code, u['role']?.toString()),
                                 style: const TextStyle(color: V26.ink300, fontSize: 11)),
-                            Text(AdminStrings.languageLabel(context, u['preferred_language']?.toString()),
+                            Text(AdminStrings.languageLabel(code, u['preferred_language']?.toString()),
                               style: const TextStyle(color: VetoMockup.primaryCta, fontSize: 11)),
                           ])),
                           Container(
@@ -236,7 +236,7 @@ class _AllUsersScreenState extends State<AllUsersScreen> {
                               color: (verified ? V26.ok : V26.warn).withValues(alpha: 0.15),
                               borderRadius: BorderRadius.circular(8),
                             ),
-                            child: Text(verified ? _t(context, 'verified') : _t(context, 'unverified'),
+                            child: Text(verified ? _t(code, 'verified') : _t(code, 'unverified'),
                                 style: TextStyle(color: verified ? V26.ok : V26.warn, fontSize: 10)),
                           ),
                           if (u['manually_added'] == true)
@@ -247,18 +247,18 @@ class _AllUsersScreenState extends State<AllUsersScreen> {
                                 color: V26.ok.withValues(alpha: 0.15),
                                 borderRadius: BorderRadius.circular(8),
                               ),
-                              child: Text(_t(context, 'exempt'),
+                              child: Text(_t(code, 'exempt'),
                                   style: const TextStyle(color: V26.ok, fontSize: 10)),
                             ),
                           IconButton(
                             icon: const Icon(Icons.edit_outlined, size: 20, color: VetoMockup.primaryCta),
                             onPressed: () => _showForm(user: Map<String, dynamic>.from(u as Map)),
-                            tooltip: _t(context, 'edit'),
+                            tooltip: _t(code, 'edit'),
                           ),
                           IconButton(
                             icon: const Icon(Icons.delete_outline, size: 20, color: V26.emerg),
                             onPressed: () => _confirmDelete(uid, u['full_name']?.toString() ?? ''),
-                            tooltip: _t(context, 'delete'),
+                            tooltip: _t(code, 'delete'),
                           ),
                         ]),
                       );
