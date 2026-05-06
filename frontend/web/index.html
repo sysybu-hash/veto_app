@@ -332,12 +332,27 @@
   <script>
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.getRegistrations().then(function(registrations) {
-        for (let registration of registrations) {
-          // Unregister the old Flutter service worker that caches old files
-          if (registration.active && registration.active.scriptURL.includes('flutter_service_worker.js')) {
-            console.log('[VETO SW] Unregistering old flutter_service_worker.js (no reload)');
+        var hadOldFlutterSw = false;
+        registrations.forEach(function(registration) {
+          var scriptUrl = '';
+          try { scriptUrl = registration && registration.active ? registration.active.scriptURL : ''; } catch (_) {}
+          if (scriptUrl.includes('flutter_service_worker.js')) {
+            hadOldFlutterSw = true;
+            console.log('[VETO SW] Unregistering old flutter_service_worker.js');
             registration.unregister();
           }
+        });
+
+        // Mobile browsers can keep stale SW-controlled shells until a reload.
+        if (hadOldFlutterSw && navigator.serviceWorker.controller) {
+          try {
+            var key = 'veto_sw_cleanup_reload_done';
+            if (!sessionStorage.getItem(key)) {
+              sessionStorage.setItem(key, '1');
+              location.reload();
+              return;
+            }
+          } catch (_) {}
         }
       });
 
