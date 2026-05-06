@@ -1,4 +1,4 @@
-# CI: backend + Flutter checks; production web = Next.js via Vercel (web-client).
+# CI: secrets check, backend, deploy Next.js (web-client) to Vercel.
 name: CI
 
 on:
@@ -35,21 +35,6 @@ jobs:
       - run: node --check server.js
       - run: npm run lint
       - run: npm test
-
-  flutter-ci:
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: frontend
-    steps:
-      - uses: actions/checkout@v6
-      - uses: subosito/flutter-action@v2
-        with:
-          flutter-version: '3.41.6'
-          channel: 'stable'
-      - run: flutter pub get
-      - run: flutter analyze
-      - run: flutter test
 
   # Root Directory in Vercel project must stay `web-client`. Run `vercel deploy` from repo
   # root — if cwd is already `web-client`, Vercel appends the setting → web-client/web-client.
