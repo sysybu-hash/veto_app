@@ -56,6 +56,9 @@
       padding: 0;
       height: 100%;
       width: 100%;
+      /* iOS Safari: dynamic toolbar can make % height collapse; fill-available matches the visual viewport. */
+      min-height: 100%;
+      min-height: -webkit-fill-available;
       overflow: hidden;
       background: #F7F5F0;
       /* Prevent pull-to-refresh on mobile Chrome/Safari */
@@ -402,7 +405,8 @@
   <!-- Agora Web RTC (agora_rtc_engine web / alpha): load ONLY iris-web-rtc (official example).
        Do NOT add AgoraRTC_N-*.js separately — iris bundles the matching Web SDK; loading both
        creates duplicate globals (two [lock-safari-1], unstable WS / video). -->
-  <script src="https://download.agora.io/sdk/release/iris-web-rtc_n450_w4220_0.8.6.js"></script>
+  <!-- Defer heavy WebRTC SDK so first paint / Flutter bootstrap are not blocked on slow mobile radios. -->
+  <script src="https://download.agora.io/sdk/release/iris-web-rtc_n450_w4220_0.8.6.js" defer></script>
   <script src="flutter_bootstrap.js" defer></script>
 </body>
 </html>
