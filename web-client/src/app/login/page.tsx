@@ -4,7 +4,17 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { getRoleFromJwt, setJwt } from "@/lib/authToken";
 import { setSocketAuthToken } from "@/lib/socketClient";
-import { apiUrl, tunnelBypassHeaders } from "@/lib/env";
+import {
+  apiUrl,
+  isApiOriginConfigured,
+  tunnelBypassHeaders,
+} from "@/lib/env";
+import {
+  btnPrimaryDark,
+  btnSecondaryGlass,
+  glassInput,
+  glassPanelNested,
+} from "@/lib/vetoGlass";
 
 async function postJson(path: string, body: object) {
   const headers: HeadersInit = {
@@ -27,6 +37,30 @@ async function postJson(path: string, body: object) {
   return data as Record<string, unknown>;
 }
 
+function pickOtpFromResponse(data: Record<string, unknown>): string | null {
+  const o = data.otp;
+  const s = o == null ? "" : String(o).trim();
+  return /^\d{4,8}$/.test(s) ? s : null;
+}
+
+function formatLoginError(e: unknown): string {
+  const raw = e instanceof Error ? e.message : String(e);
+  if (raw.includes("NEXT_PUBLIC_API_ORIGIN")) {
+    return "חסרה הגדרת שרת: ב-Vercel → Environment Variables הגדירו NEXT_PUBLIC_API_ORIGIN לכתובת ה-API (HTTPS, בלי סיומת /api), ואז Redeploy.";
+  }
+  if (
+    /failed to fetch|networkerror|load failed|connection refused|err_connection_refused/i.test(
+      raw,
+    )
+  ) {
+    return "לא ניתן להתחבר לשרת. ודאו ש-NEXT_PUBLIC_API_ORIGIN מצביע לשרת ה-API הפעיל (למשל Render), ש-CORS בשרת מאשר את דומיין האתר, והשרת רץ.";
+  }
+  if (raw === "No token in response") {
+    return "אין אסימון בתשובת השרת. נסו שוב או בדקו לוגים.";
+  }
+  return raw;
+}
+
 export default function LoginPage() {
   const router = useRouter();
   const [phone, setPhone] = useState("");
@@ -34,6 +68,8 @@ export default function LoginPage() {
   const [devToken, setDevToken] = useState("");
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [devOtp, setDevOtp] = useState<string | null>(null);
+  const [otpCopied, setOtpCopied] = useState(false);
 
   const googleLoginUrl = process.env.NEXT_PUBLIC_GOOGLE_LOGIN_URL;
 
@@ -51,13 +87,35 @@ export default function LoginPage() {
   const handleOtpLogin = async () => {
     setBusy(true);
     setMessage(null);
+    setDevOtp(null);
+    setOtpCopied(false);
     try {
-      await postJson("/api/auth/request-otp", { phone });
-      setMessage("נשלח קוד. בדקו את הטלפון או לוג שרת בפיתוח.");
+      const data = await postJson("/api/auth/request-otp", { phone });
+      const returned = pickOtpFromResponse(data);
+      if (returned) {
+        setDevOtp(returned);
+        setOtp(returned);
+        setMessage(
+          "הקוד הוחזר מהשרת (פיתוח או SMS לא מוגדר). אפשר להעתיק או לאמת למטה.",
+        );
+      } else {
+        setMessage("נשלח קוד. בדקו את הטלפון או לוג שרת בפיתוח.");
+      }
     } catch (e) {
-      setMessage(e instanceof Error ? e.message : "Request failed");
+      setMessage(formatLoginError(e));
     } finally {
       setBusy(false);
+    }
+  };
+
+  const copyDevOtp = async () => {
+    if (!devOtp) return;
+    try {
+      await navigator.clipboard.writeText(devOtp);
+      setOtpCopied(true);
+      window.setTimeout(() => setOtpCopied(false), 2000);
+    } catch {
+      setMessage("העתקה נכשלה — סמנו את הקוד ידנית.");
     }
   };
 
@@ -79,7 +137,7 @@ export default function LoginPage() {
         router.replace("/hub");
       }
     } catch (e) {
-      setMessage(e instanceof Error ? e.message : "Verification failed");
+      setMessage(formatLoginError(e));
     } finally {
       setBusy(false);
     }
@@ -106,16 +164,28 @@ export default function LoginPage() {
   return (
     <div className="flex min-h-screen w-full items-center justify-center px-4 py-12 md:px-6 md:py-16">
       <main
-        className="w-full max-w-md rounded-3xl border border-white/60 bg-white/30 p-6 shadow-[0_24px_64px_rgba(15,23,42,0.15)] backdrop-blur-2xl md:p-8"
+        className={`w-full max-w-md p-6 shadow-[0_24px_64px_rgba(15,23,42,0.15)] backdrop-blur-2xl md:p-8 ${glassPanelNested}`}
         dir="rtl"
       >
         <div className="text-center">
+          {!isApiOriginConfigured() && (
+            <div
+              className="mb-4 rounded-xl border border-amber-600/80 bg-amber-100/95 px-3 py-2.5 text-xs font-semibold leading-snug text-amber-950 shadow-sm"
+              role="alert"
+            >
+              חסר NEXT_PUBLIC_API_ORIGIN — ב-Vercel יש להגדיר את כתובת ה-API (למשל
+              https://…onrender.com) ולבצע Redeploy.
+            </div>
+          )}
           <h1 className="font-display text-2xl font-semibold text-slate-900 md:text-3xl">
             כניסה ל-VETO
           </h1>
           <p className="mt-2 text-sm leading-relaxed text-slate-700">
             חשבון אזרח: אימות OTP מול שרת VETO. בפיתוח ניתן להדביק JWT
-            (<code className="rounded bg-white/50 px-1 text-xs">veto_jwt</code>
+            (
+            <code className="rounded border border-white/45 bg-white/45 px-1.5 py-0.5 text-xs backdrop-blur-sm">
+              veto_jwt
+            </code>
             ).
           </p>
         </div>
@@ -125,7 +195,7 @@ export default function LoginPage() {
             type="button"
             onClick={handleGoogle}
             disabled={busy}
-            className="flex w-full items-center justify-center gap-3 rounded-2xl border border-white/70 bg-white/90 px-4 py-3 text-sm font-semibold text-slate-800 shadow-sm transition hover:bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900 disabled:opacity-50"
+            className={`flex w-full items-center justify-center gap-3 px-4 py-3 text-sm font-semibold shadow-sm transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900 disabled:opacity-50 ${btnSecondaryGlass}`}
           >
             <svg className="h-5 w-5 shrink-0" viewBox="0 0 24 24" aria-hidden>
               <path
@@ -156,7 +226,7 @@ export default function LoginPage() {
               <div className="w-full border-t border-white/50" />
             </div>
             <div className="relative flex justify-center text-xs font-medium">
-              <span className="bg-white/40 px-3 text-slate-600 backdrop-blur-sm rounded-full border border-white/40">
+              <span className="rounded-full border border-white/40 bg-white/45 px-3 py-0.5 text-slate-600 backdrop-blur-sm">
                 או עם טלפון
               </span>
             </div>
@@ -170,8 +240,12 @@ export default function LoginPage() {
             </label>
             <input
               value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              className="rounded-xl border border-white/60 bg-white/40 px-3 py-2.5 text-sm text-slate-900 outline-none ring-slate-900/10 placeholder:text-slate-500 focus:border-white focus:ring-2 focus:ring-slate-800/20"
+              onChange={(e) => {
+                setPhone(e.target.value);
+                setDevOtp(null);
+                setOtpCopied(false);
+              }}
+              className={glassInput}
               placeholder="+972..."
               autoComplete="tel"
             />
@@ -182,18 +256,45 @@ export default function LoginPage() {
               type="button"
               disabled={busy || !phone.trim()}
               onClick={() => void handleOtpLogin()}
-              className="rounded-xl border border-slate-800/15 bg-slate-900/90 px-4 py-2.5 text-sm font-semibold text-white shadow-md transition hover:bg-slate-900 disabled:opacity-50"
+              className={`px-4 py-2.5 text-sm font-semibold shadow-md ${btnPrimaryDark} disabled:opacity-50`}
             >
               שלח קוד OTP
             </button>
           </div>
+
+          {devOtp && (
+            <div
+              className="rounded-2xl border border-amber-500/60 bg-amber-50/95 px-4 py-4 shadow-sm"
+              role="region"
+              aria-label="קוד OTP להדגמה"
+            >
+              <p className="text-center text-xs font-semibold text-amber-950">
+                קוד OTP (הוצג מהשרת)
+              </p>
+              <div className="mt-3 flex flex-wrap items-center justify-center gap-3">
+                <code
+                  className={`min-w-[8.5rem] px-4 py-2 text-center text-2xl font-bold tracking-[0.35em] text-slate-900 shadow-inner ${glassPanelNested}`}
+                  dir="ltr"
+                >
+                  {devOtp}
+                </code>
+                <button
+                  type="button"
+                  onClick={() => void copyDevOtp()}
+                  className="rounded-xl bg-amber-600 px-4 py-2.5 text-sm font-bold text-white shadow transition hover:bg-amber-700"
+                >
+                  {otpCopied ? "הועתק" : "העתק"}
+                </button>
+              </div>
+            </div>
+          )}
 
           <div className="flex flex-col gap-2">
             <label className="text-xs font-medium text-slate-700">קוד OTP</label>
             <input
               value={otp}
               onChange={(e) => setOtp(e.target.value)}
-              className="rounded-xl border border-white/60 bg-white/40 px-3 py-2.5 text-sm text-slate-900 outline-none ring-slate-900/10 placeholder:text-slate-500 focus:border-white focus:ring-2 focus:ring-slate-800/20"
+              className={glassInput}
               placeholder="6 ספרות"
               autoComplete="one-time-code"
             />
@@ -215,13 +316,13 @@ export default function LoginPage() {
               value={devToken}
               onChange={(e) => setDevToken(e.target.value)}
               rows={3}
-              className="mt-2 w-full rounded-xl border border-white/60 bg-white/40 px-3 py-2 text-xs text-slate-900 outline-none focus:ring-2 focus:ring-slate-800/20"
+              className={`mt-2 resize-y ${glassInput} text-xs`}
               placeholder="eyJ..."
             />
             <button
               type="button"
               onClick={handleDevToken}
-              className="mt-2 w-full rounded-xl border border-slate-800/20 bg-white/30 px-4 py-2.5 text-sm font-medium text-slate-800 transition hover:bg-white/50"
+              className={`mt-2 w-full px-4 py-2.5 text-sm font-medium ${btnSecondaryGlass}`}
             >
               השתמש ב-JWT שהודבק
             </button>

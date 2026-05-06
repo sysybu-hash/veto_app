@@ -66,6 +66,36 @@ let ioReady    = false;
 const app = express();
 const server = http.createServer(app);
 
+/**
+ * CORS: default `origin: true` reflects the browser Origin (credentials-safe).
+ * Works for Next.js on Vercel (`*.vercel.app`), custom domains, Flutter web, localtunnel, etc.
+ * Optional: set CORS_ALLOWED_ORIGINS=https://a.vercel.app,https://b.vercel.app (exact origins, no trailing slash)
+ * to restrict — Socket.io uses the same rule.
+ */
+function buildCorsOrigin() {
+  const raw = process.env.CORS_ALLOWED_ORIGINS?.trim();
+  if (!raw) return true;
+  const allowed = new Set(
+    raw
+      .split(',')
+      .map((s) => s.trim().replace(/\/$/, ''))
+      .filter(Boolean),
+  );
+  return (origin, callback) => {
+    if (!origin) {
+      callback(null, true);
+      return;
+    }
+    if (allowed.has(origin)) {
+      callback(null, true);
+      return;
+    }
+    callback(new Error(`CORS: origin not in CORS_ALLOWED_ORIGINS: ${origin}`));
+  };
+}
+
+const corsOrigin = buildCorsOrigin();
+
 // Render / other reverse proxies send X-Forwarded-For. express-rate-limit v7 validates this
 // and throws ERR_ERL_UNEXPECTED_X_FORWARDED_FOR unless trust proxy is enabled.
 if (process.env.RENDER === 'true' || process.env.NODE_ENV === 'production') {
@@ -74,8 +104,7 @@ if (process.env.RENDER === 'true' || process.env.NODE_ENV === 'production') {
 
 app.use(
   cors({
-    // Reflect request Origin so Flutter web (Vercel) and mobile clients work.
-    origin: true,
+    origin: corsOrigin,
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: [
@@ -149,7 +178,7 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 const io = new Server(server, {
   cors: {
-    origin: true,
+    origin: corsOrigin,
     methods: ['GET', 'POST'],
     credentials: true,
   },
