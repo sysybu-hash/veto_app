@@ -1,7 +1,8 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import Script from "next/script";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { getRoleFromJwt, setJwt } from "@/lib/authToken";
 import { setSocketAuthToken } from "@/lib/socketClient";
 import {
@@ -45,6 +46,9 @@ function pickOtpFromResponse(data: Record<string, unknown>): string | null {
 
 function formatLoginError(e: unknown): string {
   const raw = e instanceof Error ? e.message : String(e);
+  if (/Google OAuth not configured/i.test(raw)) {
+    return "כניסה עם Google לא מוגדרת בשרת. הגדירו GOOGLE_CLIENT_ID ב-API (Render וכו׳).";
+  }
   if (raw.includes("NEXT_PUBLIC_API_ORIGIN")) {
     return "חסרה הגדרת שרת: ב-Vercel → Environment Variables הגדירו NEXT_PUBLIC_API_ORIGIN לכתובת ה-API (HTTPS, בלי סיומת /api), ואז Redeploy.";
   }
@@ -61,6 +65,28 @@ function formatLoginError(e: unknown): string {
   return raw;
 }
 
+type GoogleOAuthTokenResponse = {
+  access_token?: string;
+  error?: string;
+  error_description?: string;
+};
+
+declare global {
+  interface Window {
+    google?: {
+      accounts?: {
+        oauth2?: {
+          initTokenClient: (config: {
+            client_id: string;
+            scope: string;
+            callback: (resp: GoogleOAuthTokenResponse) => void;
+          }) => { requestAccessToken: (opts?: { prompt?: string }) => void };
+        };
+      };
+    };
+  }
+}
+
 export default function LoginPage() {
   const router = useRouter();
   const [phone, setPhone] = useState("");
@@ -70,18 +96,100 @@ export default function LoginPage() {
   const [message, setMessage] = useState<string | null>(null);
   const [devOtp, setDevOtp] = useState<string | null>(null);
   const [otpCopied, setOtpCopied] = useState(false);
+  const [gsiLoaded, setGsiLoaded] = useState(false);
 
-  const googleLoginUrl = process.env.NEXT_PUBLIC_GOOGLE_LOGIN_URL;
+  const googleClientId =
+    process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID?.trim() ?? "";
+  const legacyGoogleLoginUrl =
+    process.env.NEXT_PUBLIC_GOOGLE_LOGIN_URL?.trim() ?? "";
+
+  const tokenClientRef = useRef<{
+    requestAccessToken: (opts?: { prompt?: string }) => void;
+  } | null>(null);
+
+  const completeGoogleLogin = useCallback(
+    async (accessToken: string) => {
+      setBusy(true);
+      setMessage(null);
+      try {
+        const data = await postJson("/api/auth/google", {
+          access_token: accessToken,
+        });
+        const token = typeof data.token === "string" ? data.token : null;
+        if (!token) throw new Error("No token in response");
+        setJwt(token);
+        setSocketAuthToken(token);
+        const role = getRoleFromJwt();
+        if (role === "admin") {
+          router.replace("/admin/dashboard");
+        } else if (role === "lawyer") {
+          router.replace("/dashboard");
+        } else {
+          router.replace("/hub");
+        }
+      } catch (e) {
+        setMessage(formatLoginError(e));
+      } finally {
+        setBusy(false);
+      }
+    },
+    [router],
+  );
+
+  useEffect(() => {
+    if (!gsiLoaded || !googleClientId) return;
+    const oauth2 = window.google?.accounts?.oauth2;
+    if (!oauth2) return;
+    tokenClientRef.current = oauth2.initTokenClient({
+      client_id: googleClientId,
+      scope: "openid email profile",
+      callback: (resp) => {
+        if (resp.error) {
+          const ephemeral =
+            /popup_closed|access_denied|user_cancel/i.test(
+              String(resp.error) + (resp.error_description ?? ""),
+            );
+          if (!ephemeral) {
+            const detail = resp.error_description?.trim()
+              ? `${resp.error}: ${resp.error_description}`
+              : resp.error;
+            setMessage(
+              String(detail).includes("403") ||
+                /blocked|disallowed_useragent/i.test(String(detail))
+                ? "הדפדפן חסם את Google או שחסרה הרשאה. נסו שוב, התירו חלונות קופצים, או נסו דפדפן אחר."
+                : `Google: ${detail}`,
+            );
+          }
+          setBusy(false);
+          return;
+        }
+        if (!resp.access_token) {
+          setBusy(false);
+          return;
+        }
+        void completeGoogleLogin(resp.access_token);
+      },
+    });
+  }, [gsiLoaded, googleClientId, completeGoogleLogin]);
 
   const handleGoogle = () => {
     setMessage(null);
-    if (googleLoginUrl) {
-      window.location.href = googleLoginUrl;
+    if (legacyGoogleLoginUrl) {
+      window.location.href = legacyGoogleLoginUrl;
       return;
     }
-    setMessage(
-      "כניסה עם Google תופעל לאחר חיבור OAuth. ניתן להמשיך בטלפון והקוד בינתיים.",
-    );
+    if (!googleClientId) {
+      setMessage(
+        "חסר NEXT_PUBLIC_GOOGLE_CLIENT_ID — הוסיפו את מזהה לקוח ה-OAuth מהקונסול של Google (אותו GOOGLE_CLIENT_ID כמו בשרת), ואז npm run dev מחדש.",
+      );
+      return;
+    }
+    if (!tokenClientRef.current) {
+      setMessage("טוען את Google… נסו שוב בעוד רגע.");
+      return;
+    }
+    setBusy(true);
+    tokenClientRef.current.requestAccessToken();
   };
 
   const handleOtpLogin = async () => {
@@ -162,7 +270,13 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen w-full items-center justify-center px-4 py-12 md:px-6 md:py-16">
+    <>
+      <Script
+        src="https://accounts.google.com/gsi/client"
+        strategy="afterInteractive"
+        onLoad={() => setGsiLoaded(true)}
+      />
+      <div className="flex min-h-screen w-full items-center justify-center px-4 py-12 md:px-6 md:py-16">
       <main
         className={`w-full max-w-md p-6 shadow-[0_24px_64px_rgba(15,23,42,0.15)] backdrop-blur-2xl md:p-8 ${glassPanelNested}`}
         dir="rtl"
@@ -180,14 +294,6 @@ export default function LoginPage() {
           <h1 className="font-display text-2xl font-semibold text-slate-900 md:text-3xl">
             כניסה ל-VETO
           </h1>
-          <p className="mt-2 text-sm leading-relaxed text-slate-700">
-            חשבון אזרח: אימות OTP מול שרת VETO. בפיתוח ניתן להדביק JWT
-            (
-            <code className="rounded border border-white/45 bg-white/45 px-1.5 py-0.5 text-xs backdrop-blur-sm">
-              veto_jwt
-            </code>
-            ).
-          </p>
         </div>
 
         <div className="mt-8 flex flex-col gap-4">
@@ -336,5 +442,6 @@ export default function LoginPage() {
         </div>
       </main>
     </div>
+    </>
   );
 }

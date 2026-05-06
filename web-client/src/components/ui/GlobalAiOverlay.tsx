@@ -132,6 +132,21 @@ export function GlobalAiOverlay() {
 
   const isAssistantActive = isOpen || isLoading;
 
+  const setAssistantMode = useCallback((m: AiAssistantMode) => {
+    if (m !== "vision") {
+      setVisionError(null);
+    }
+    setMode(m);
+  }, []);
+
+  const handleToggleChat = useCallback(() => {
+    if (isOpen) {
+      setAssistantMode("text");
+      setLastVisionAnalysis(null);
+    }
+    toggleChat();
+  }, [isOpen, setAssistantMode, toggleChat]);
+
   const captureAndAnalyze = useCallback(async () => {
     const video = videoRef.current;
     if (!video || video.videoWidth === 0 || visionBusy) return;
@@ -215,20 +230,6 @@ export function GlobalAiOverlay() {
   }, [isOpen, mode]);
 
   useEffect(() => {
-    if (!isOpen) {
-      setMode("text");
-      setVisionError(null);
-      setLastVisionAnalysis(null);
-    }
-  }, [isOpen]);
-
-  useEffect(() => {
-    if (mode !== "vision") {
-      setVisionError(null);
-    }
-  }, [mode]);
-
-  useEffect(() => {
     if (!isOpen || mode !== "vision") {
       if (streamRef.current) {
         streamRef.current.getTracks().forEach((t) => t.stop());
@@ -241,6 +242,7 @@ export function GlobalAiOverlay() {
     }
 
     let cancelled = false;
+    let attachedVideo: HTMLVideoElement | null = null;
 
     (async () => {
       try {
@@ -255,6 +257,7 @@ export function GlobalAiOverlay() {
         streamRef.current = stream;
         const el = videoRef.current;
         if (el) {
+          attachedVideo = el;
           el.srcObject = stream;
           await el.play().catch(() => {});
         }
@@ -273,8 +276,8 @@ export function GlobalAiOverlay() {
         streamRef.current.getTracks().forEach((t) => t.stop());
         streamRef.current = null;
       }
-      if (videoRef.current) {
-        videoRef.current.srcObject = null;
+      if (attachedVideo) {
+        attachedVideo.srcObject = null;
       }
     };
   }, [isOpen, mode]);
@@ -367,7 +370,7 @@ export function GlobalAiOverlay() {
         : "VETO Vision — ניתוח ויזואלי (בקרוב)";
 
   return (
-    <>
+    <div className="pointer-events-none fixed inset-0 z-50">
       <AnimatePresence>
         {!isOpen && (
           <motion.button
@@ -377,8 +380,8 @@ export function GlobalAiOverlay() {
             animate={{ opacity: 1, scale: 1 }}
             whileHover={{ scale: 1.08 }}
             whileTap={{ scale: 0.92 }}
-            onClick={toggleChat}
-            className="fixed bottom-8 start-8 z-50 flex h-16 w-16 items-center justify-center rounded-full border-2 border-white/30 bg-[#C5A059] text-slate-900 shadow-[0_0_30px_rgba(197,160,89,0.45)] focus:outline-none focus-visible:ring-4 focus-visible:ring-[#C5A059]/45"
+            onClick={handleToggleChat}
+            className="pointer-events-auto fixed bottom-8 start-8 flex h-16 w-16 items-center justify-center rounded-full border-2 border-white/30 bg-[#C5A059] text-slate-900 shadow-[0_0_30px_rgba(197,160,89,0.45)] focus:outline-none focus-visible:ring-4 focus-visible:ring-[#C5A059]/45"
             aria-label="Open VETO AI Assistant"
           >
             <motion.span
@@ -417,7 +420,7 @@ export function GlobalAiOverlay() {
                   ? "min(600px, calc(100dvh - 7rem))"
                   : "min(520px, calc(100dvh - 7rem))",
             }}
-            className={`fixed bottom-28 z-50 flex max-h-[calc(100dvh-6rem)] w-[min(calc(100%-2rem),450px)] max-w-[450px] flex-col overflow-hidden max-sm:inset-x-4 sm:start-8 sm:end-auto ${glassPanel} shadow-2xl`}
+            className={`pointer-events-auto fixed bottom-28 flex max-h-[calc(100dvh-6rem)] w-[min(calc(100%-2rem),450px)] max-w-[450px] flex-col overflow-hidden max-sm:inset-x-4 sm:start-8 sm:end-auto ${glassPanel} shadow-2xl`}
           >
             <header className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-b border-white/40 bg-white/25 px-3 py-3 backdrop-blur-md sm:gap-3 sm:px-4">
               <div className="flex min-w-0 flex-1 items-center gap-2 sm:flex-initial sm:gap-3">
@@ -440,21 +443,21 @@ export function GlobalAiOverlay() {
               >
                 <ModeToggleButton
                   active={mode === "text"}
-                  onClick={() => setMode("text")}
+                  onClick={() => setAssistantMode("text")}
                   label="מצב טקסט"
                 >
                   <MessageSquare className="h-[18px] w-[18px]" aria-hidden />
                 </ModeToggleButton>
                 <ModeToggleButton
                   active={mode === "live"}
-                  onClick={() => setMode("live")}
+                  onClick={() => setAssistantMode("live")}
                   label="מצב Live — קול"
                 >
                   <Mic className="h-[18px] w-[18px]" aria-hidden />
                 </ModeToggleButton>
                 <ModeToggleButton
                   active={mode === "vision"}
-                  onClick={() => setMode("vision")}
+                  onClick={() => setAssistantMode("vision")}
                   label="מצב Vision — מצלמה"
                 >
                   <Camera className="h-[18px] w-[18px]" aria-hidden />
@@ -473,7 +476,7 @@ export function GlobalAiOverlay() {
                 )}
                 <button
                   type="button"
-                  onClick={toggleChat}
+                  onClick={handleToggleChat}
                   className={`rounded-full p-2 text-slate-700 hover:bg-white/30 ${btnSecondaryGlass} border-transparent`}
                   aria-label="סגור"
                 >
@@ -706,6 +709,6 @@ export function GlobalAiOverlay() {
           </motion.div>
         )}
       </AnimatePresence>
-    </>
+    </div>
   );
 }
