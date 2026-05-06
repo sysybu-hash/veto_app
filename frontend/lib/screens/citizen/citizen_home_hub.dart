@@ -74,15 +74,35 @@ class _CitizenHomeHubState extends State<CitizenHomeHub> {
       onTapTool: widget.onOpenLegalTool,
     );
 
-    return RefreshIndicator(
-      onRefresh: _load,
-      child: SingleChildScrollView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        padding: EdgeInsets.all(pad),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            if (isDesktop)
+    final toolsHeading = Text(
+      _t('הכלים שלך', 'Your tools', 'Ваши инструменты'),
+      style: const TextStyle(
+        fontFamily: V26.sans,
+        fontSize: 20,
+        fontWeight: FontWeight.w800,
+        color: VetoMockup.ink,
+      ),
+    );
+    final toolsGrid = _ToolsGrid(
+      langKey: widget.langKey,
+      onRoute: widget.onOpenLegalTool,
+    );
+    final metricsOrErr = _err != null
+        ? Text(_err!, style: const TextStyle(color: Colors.red, fontSize: 12))
+        : _MetricsRow(summary: _summary, langKey: widget.langKey);
+
+    // Desktop: SingleChildScrollView + Row/Expanded.
+    // Mobile web: ListView — nested shrink-wrapped GridViews inside a scroll view
+    // can resolve to zero height on web.
+    if (isDesktop) {
+      return RefreshIndicator(
+        onRefresh: _load,
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: EdgeInsets.all(pad),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -90,33 +110,36 @@ class _CitizenHomeHubState extends State<CitizenHomeHub> {
                   const SizedBox(width: 20),
                   Expanded(flex: 3, child: shieldCard),
                 ],
-              )
-            else ...[
-              welcomeCard,
-              const SizedBox(height: 16),
-              shieldCard,
-            ],
-            const SizedBox(height: 24),
-            Text(
-              _t('הכלים שלך', 'Your tools', 'Ваши инструменты'),
-              style: const TextStyle(
-                fontFamily: V26.sans,
-                fontSize: 20,
-                fontWeight: FontWeight.w800,
-                color: VetoMockup.ink,
               ),
-            ),
-            const SizedBox(height: 12),
-            _ToolsGrid(
-                langKey: widget.langKey, onRoute: widget.onOpenLegalTool),
-            const SizedBox(height: 28),
-            if (_err != null)
-              Text(_err!,
-                  style: const TextStyle(color: Colors.red, fontSize: 12))
-            else
-              _MetricsRow(summary: _summary, langKey: widget.langKey),
-          ],
+              const SizedBox(height: 24),
+              toolsHeading,
+              const SizedBox(height: 12),
+              toolsGrid,
+              const SizedBox(height: 28),
+              metricsOrErr,
+            ],
+          ),
         ),
+      );
+    }
+
+    final bottomSafe = MediaQuery.paddingOf(context).bottom;
+    return RefreshIndicator(
+      onRefresh: _load,
+      child: ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: EdgeInsets.fromLTRB(pad, pad, pad, pad + bottomSafe + 24),
+        children: [
+          welcomeCard,
+          const SizedBox(height: 16),
+          shieldCard,
+          const SizedBox(height: 24),
+          toolsHeading,
+          const SizedBox(height: 12),
+          toolsGrid,
+          const SizedBox(height: 28),
+          metricsOrErr,
+        ],
       ),
     );
   }
@@ -345,38 +368,61 @@ class _LegalShieldCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 12),
-          GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              mainAxisSpacing: 8,
-              crossAxisSpacing: 8,
-              childAspectRatio: 2.45,
-            ),
-            itemCount: items.length,
-            itemBuilder: (_, i) {
-              final it = items[i];
-              return OutlinedButton.icon(
-                onPressed: () => onTapTool(
-                  it.route,
-                  arguments: (it.intent == null && it.domain == null)
-                      ? null
-                      : {
-                          if (it.intent != null) 'intent': it.intent,
-                          if (it.domain != null) 'domain': it.domain,
-                        },
-                ),
-                icon: Icon(it.icon, size: 18, color: VetoMockup.primaryCta),
-                label: Text(
-                  t(it.he, it.en, it.ru),
-                  style: const TextStyle(
-                      fontWeight: FontWeight.w700, fontSize: 12),
-                ),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              const gap = 8.0;
+              final maxW = constraints.maxWidth;
+              if (!maxW.isFinite || maxW <= gap) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    for (var i = 0; i < items.length; i++) ...[
+                      _shieldButton(it: items[i], t: t, onTap: onTapTool),
+                      if (i < items.length - 1) const SizedBox(height: 8),
+                    ],
+                  ],
+                );
+              }
+              final cellW = (maxW - gap) / 2;
+              return Wrap(
+                spacing: gap,
+                runSpacing: gap,
+                children: [
+                  for (final it in items)
+                    SizedBox(
+                      width: cellW,
+                      child: _shieldButton(it: it, t: t, onTap: onTapTool),
+                    ),
+                ],
               );
             },
           ),
         ],
+      ),
+    );
+  }
+
+  static Widget _shieldButton({
+    required _LegalShieldItem it,
+    required String Function(String he, String en, String ru) t,
+    required void Function(String route, {Object? arguments}) onTap,
+  }) {
+    return OutlinedButton.icon(
+      onPressed: () => onTap(
+        it.route,
+        arguments: (it.intent == null && it.domain == null)
+            ? null
+            : {
+                if (it.intent != null) 'intent': it.intent,
+                if (it.domain != null) 'domain': it.domain,
+              },
+      ),
+      icon: Icon(it.icon, size: 18, color: VetoMockup.primaryCta),
+      label: Text(
+        t(it.he, it.en, it.ru),
+        maxLines: 3,
+        overflow: TextOverflow.ellipsis,
+        style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
       ),
     );
   }
@@ -441,51 +487,87 @@ class _ToolsGrid extends StatelessWidget {
       ),
     ];
 
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-        maxCrossAxisExtent: 320,
-        mainAxisSpacing: 12,
-        crossAxisSpacing: 12,
-        mainAxisExtent: 132,
-      ),
-      itemCount: tools.length,
-      itemBuilder: (_, i) {
-        final e = tools[i];
-        return Material(
-          color: VetoMockup.surfaceCard,
-          borderRadius: BorderRadius.circular(VetoMockup.radiusCard),
-          elevation: 0,
-          child: InkWell(
-            borderRadius: BorderRadius.circular(VetoMockup.radiusCard),
-            onTap: () => onRoute(e.r),
-            child: Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(VetoMockup.radiusCard),
-                border: Border.all(color: VetoMockup.hairline),
-                boxShadow: VetoMockup.cardShadow,
-              ),
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                mainAxisSize: MainAxisSize.max,
-                children: [
-                  Icon(e.i, color: VetoMockup.primaryCta, size: 28),
-                  Text(
-                    t(e.he, e.en, e.ru),
-                    style: const TextStyle(
-                        fontWeight: FontWeight.w800, fontSize: 15),
-                    maxLines: 3,
-                    overflow: TextOverflow.ellipsis,
+    return LayoutBuilder(
+      builder: (context, c) {
+        const gap = 12.0;
+        final mw = c.maxWidth;
+        if (!mw.isFinite || mw <= gap) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              for (var i = 0; i < tools.length; i++) ...[
+                SizedBox(
+                  height: 88,
+                  child: _toolTile(
+                    e: tools[i],
+                    t: t,
+                    onRoute: onRoute,
                   ),
-                ],
+                ),
+                if (i < tools.length - 1) const SizedBox(height: 12),
+              ],
+            ],
+          );
+        }
+        final cols = mw >= 720 ? 3 : 2;
+        final tileW = (mw - gap * (cols - 1)) / cols;
+        return Wrap(
+          spacing: gap,
+          runSpacing: gap,
+          children: [
+            for (final e in tools)
+              SizedBox(
+                width: tileW,
+                height: 132,
+                child: _toolTile(e: e, t: t, onRoute: onRoute),
               ),
-            ),
-          ),
+          ],
         );
       },
+    );
+  }
+
+  static Widget _toolTile({
+    required ({
+      String r,
+      String he,
+      String en,
+      String ru,
+      IconData i
+    }) e,
+    required String Function(String he, String en, String ru) t,
+    required void Function(String route, {Object? arguments}) onRoute,
+  }) {
+    return Material(
+      color: VetoMockup.surfaceCard,
+      borderRadius: BorderRadius.circular(VetoMockup.radiusCard),
+      elevation: 0,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(VetoMockup.radiusCard),
+        onTap: () => onRoute(e.r),
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(VetoMockup.radiusCard),
+            border: Border.all(color: VetoMockup.hairline),
+            boxShadow: VetoMockup.cardShadow,
+          ),
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            mainAxisSize: MainAxisSize.max,
+            children: [
+              Icon(e.i, color: VetoMockup.primaryCta, size: 28),
+              Text(
+                t(e.he, e.en, e.ru),
+                style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
