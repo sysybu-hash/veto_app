@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 
 import '../../core/i18n/app_language.dart';
 import '../../core/theme/veto_mockup_tokens.dart';
-import '../../l10n/app_localizations.dart';
 import '../../widgets/citizen_mockup_shell.dart';
 
 class CitizenToolsScreen extends StatelessWidget {
@@ -11,16 +10,18 @@ class CitizenToolsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    context.watch<AppLanguageController>();
-    final l10n = AppLocalizations.of(context)!;
+    final code = context.watch<AppLanguageController>().code;
+    final he = code == 'he';
+    final ru = code == 'ru';
+    String t(String a, String b, String c) => he ? a : (ru ? c : b);
 
-    final tools = <(IconData, String route, String Function(AppLocalizations l))>[
-      (Icons.chat_bubble_outline, '/chat', (l) => l.citizenShellMoreAiChat),
-      (Icons.event_note, '/legal_calendar', (l) => l.citizenShellMoreCalendar),
-      (Icons.edit_note, '/legal_notebook', (l) => l.citizenShellMoreNotebook),
-      (Icons.map_outlined, '/maps', (l) => l.citizenShellMoreMap),
-      (Icons.folder_open, '/files_vault', (l) => l.citizenToolVault),
-      (Icons.security, '/security_center', (l) => l.citizenSecurityTitle),
+    final tools = <({IconData i, String route, String la, String lb, String lc})>[
+      (i: Icons.chat_bubble_outline, route: '/chat', la: 'צ\'אט AI', lb: 'AI Chat', lc: 'AI-чат'),
+      (i: Icons.event_note, route: '/legal_calendar', la: 'יומן', lb: 'Calendar', lc: 'Календарь'),
+      (i: Icons.edit_note, route: '/legal_notebook', la: 'מחברת', lb: 'Notebook', lc: 'Блокнот'),
+      (i: Icons.map_outlined, route: '/maps', la: 'מפה', lb: 'Map', lc: 'Карта'),
+      (i: Icons.folder_open, route: '/files_vault', la: 'כספת', lb: 'Vault', lc: 'Хранилище'),
+      (i: Icons.security, route: '/security_center', la: 'מרכז ביטחון', lb: 'Security', lc: 'Безопасность'),
     ];
 
     return CitizenMockupShell(
@@ -43,7 +44,7 @@ class CitizenToolsScreen extends StatelessWidget {
               borderRadius: BorderRadius.circular(VetoMockup.radiusCard),
               child: InkWell(
                 borderRadius: BorderRadius.circular(VetoMockup.radiusCard),
-                onTap: () => Navigator.pushNamed(context, e.$2),
+                onTap: () => Navigator.pushNamed(context, e.route),
                 child: Container(
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(VetoMockup.radiusCard),
@@ -54,10 +55,10 @@ class CitizenToolsScreen extends StatelessWidget {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(e.$1, size: 36, color: VetoMockup.primaryCta),
+                      Icon(e.i, size: 36, color: VetoMockup.primaryCta),
                       const SizedBox(height: 10),
                       Text(
-                        e.$3(l10n),
+                        t(e.la, e.lb, e.lc),
                         textAlign: TextAlign.center,
                         style: const TextStyle(fontWeight: FontWeight.w800),
                       ),

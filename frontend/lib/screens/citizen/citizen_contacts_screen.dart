@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/i18n/app_language.dart';
-import '../../l10n/app_localizations.dart';
 import '../../services/citizen_dashboard_api_service.dart';
 import '../../widgets/citizen_mockup_shell.dart';
 import '../../widgets/veto_dialogs.dart';
@@ -43,29 +42,22 @@ class _CitizenContactsScreenState extends State<CitizenContactsScreen> {
   Future<void> _add() async {
     final name = TextEditingController();
     final phone = TextEditingController();
-    final l10n = AppLocalizations.of(context)!;
+    final code = context.read<AppLanguageController>().code;
+    final he = code == 'he';
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text(l10n.citizenContactDialogTitle),
+        title: Text(he ? 'איש קשר' : 'Contact'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            TextField(
-                controller: name,
-                decoration: InputDecoration(labelText: l10n.citizenContactNameLabel)),
-            TextField(
-                controller: phone,
-                decoration: InputDecoration(labelText: l10n.citizenContactPhoneLabel)),
+            TextField(controller: name, decoration: InputDecoration(labelText: he ? 'שם' : 'Name')),
+            TextField(controller: phone, decoration: InputDecoration(labelText: he ? 'טלפון' : 'Phone')),
           ],
         ),
         actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
-              child: Text(l10n.commonCancel)),
-          FilledButton(
-              onPressed: () => Navigator.pop(ctx, true),
-              child: Text(l10n.commonSave)),
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(he ? 'ביטול' : 'Cancel')),
+          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: Text(he ? 'שמירה' : 'Save')),
         ],
       ),
     );
@@ -77,18 +69,17 @@ class _CitizenContactsScreenState extends State<CitizenContactsScreen> {
       });
       await _load();
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
-      }
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
     }
   }
 
   Future<void> _delete(String id) async {
-    final l10n = AppLocalizations.of(context)!;
+    final code = context.read<AppLanguageController>().code;
+    final he = code == 'he';
     final ok = await showVetoConfirmDialog<bool>(
       context: context,
-      title: l10n.commonDelete,
-      message: l10n.citizenDeleteContactBody,
+      title: he ? 'מחיקה' : 'Delete',
+      message: he ? 'למחוק?' : 'Delete?',
       danger: true,
     );
     if (ok != true) return;
@@ -96,16 +87,14 @@ class _CitizenContactsScreenState extends State<CitizenContactsScreen> {
       await CitizenDashboardApiService.instance.deleteContact(id);
       await _load();
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
-      }
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    context.watch<AppLanguageController>();
-    final l10n = AppLocalizations.of(context)!;
+    final code = context.watch<AppLanguageController>().code;
+    final he = code == 'he';
     return CitizenMockupShell(
       currentRoute: '/citizen_contacts',
       mobileNavIndex: citizenMobileNavIndexForRoute('/citizen_contacts'),
@@ -115,21 +104,14 @@ class _CitizenContactsScreenState extends State<CitizenContactsScreen> {
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
             child: Row(
               children: [
-                Text(l10n.citizenShellNavContacts,
-                    style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800)),
+                Text(he ? 'אנשי קשר' : 'Contacts', style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800)),
                 const Spacer(),
-                FilledButton.icon(
-                    onPressed: _add,
-                    icon: const Icon(Icons.add),
-                    label: Text(l10n.citizenBtnNew)),
+                FilledButton.icon(onPressed: _add, icon: const Icon(Icons.add), label: Text(he ? 'חדש' : 'New')),
               ],
             ),
           ),
           if (_loading) const LinearProgressIndicator(),
-          if (_err != null)
-            Padding(
-                padding: const EdgeInsets.all(16),
-                child: Text(_err!, style: const TextStyle(color: Colors.red))),
+          if (_err != null) Padding(padding: const EdgeInsets.all(16), child: Text(_err!, style: const TextStyle(color: Colors.red))),
           Expanded(
             child: ListView.builder(
               padding: const EdgeInsets.all(16),
@@ -144,9 +126,7 @@ class _CitizenContactsScreenState extends State<CitizenContactsScreen> {
                   child: ListTile(
                     title: Text(name, style: const TextStyle(fontWeight: FontWeight.w700)),
                     subtitle: Text(phone),
-                    trailing: IconButton(
-                        icon: const Icon(Icons.delete_outline),
-                        onPressed: () => _delete(id)),
+                    trailing: IconButton(icon: const Icon(Icons.delete_outline), onPressed: () => _delete(id)),
                   ),
                 );
               },

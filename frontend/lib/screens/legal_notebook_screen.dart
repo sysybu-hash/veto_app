@@ -8,7 +8,6 @@ import 'package:provider/provider.dart';
 import '../core/i18n/app_language.dart';
 import '../core/theme/veto_2026.dart';
 import '../core/theme/veto_mockup_tokens.dart';
-import '../l10n/app_localizations.dart';
 import '../services/auth_service.dart';
 import '../services/legal_notebook_api_service.dart';
 import '../widgets/citizen_mockup_shell.dart';
@@ -25,8 +24,6 @@ class _LegalNotebookScreenState extends State<LegalNotebookScreen> {
   final _api = LegalNotebookApiService();
   final _auth = AuthService();
   late final Future<String?> _citizenChromeFuture = _auth.getStoredRole();
-
-  AppLocalizations get _l10n => AppLocalizations.of(context)!;
   bool _load = true;
   bool _intentBannerHandled = false;
   String? _intent;
@@ -78,7 +75,7 @@ class _LegalNotebookScreenState extends State<LegalNotebookScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  (r['name'] ?? _l10n.nbScrDefaultNotebookName) as String,
+                  (r['name'] ?? 'Notebook') as String,
                   style: const TextStyle(
                     fontFamily: V26.sans,
                     color: V26.ink900,
@@ -98,7 +95,7 @@ class _LegalNotebookScreenState extends State<LegalNotebookScreen> {
             ),
           ),
           IconButton(
-            tooltip: _l10n.nbScrSyncTooltip,
+            tooltip: 'סנכרון',
             icon: const Icon(Icons.sync, color: V26.navy600, size: 20),
             onPressed: () async {
               final res = await _api.sync(id);
@@ -107,10 +104,10 @@ class _LegalNotebookScreenState extends State<LegalNotebookScreen> {
                 SnackBar(
                   content: Text(
                     res?['sync']?['ok'] == true
-                        ? _l10n.nbScrSyncOkTesting
+                        ? 'הסנכרון הושלם (בבדיקת API)'
                         : (res?['sync']?['message'] as String? ??
                             res?['sync']?['error'] as String? ??
-                            _l10n.nbScrSyncFallback),
+                            'סנכרון'),
                   ),
                 ),
               );
@@ -118,25 +115,25 @@ class _LegalNotebookScreenState extends State<LegalNotebookScreen> {
             },
           ),
           IconButton(
-            tooltip: _l10n.nbScrOpenBrowserTooltip,
+            tooltip: 'NotebookLM בדפדפן',
             icon: const Icon(Icons.open_in_new,
                 color: V26.ink500, size: 20),
             onPressed: () => _api.openInBrowser(id),
           ),
           IconButton(
-            tooltip: _l10n.nbScrExportPdfTooltip,
+            tooltip: 'ייצוא PDF',
             icon: const Icon(Icons.picture_as_pdf_outlined,
                 color: VetoMockup.primaryCta, size: 20),
             onPressed: () => _exportNotebook(r, 'pdf'),
           ),
           IconButton(
-            tooltip: _l10n.nbScrExportDocxTooltip,
+            tooltip: 'ייצוא DOCX',
             icon: const Icon(Icons.description_outlined,
                 color: VetoMockup.primaryCta, size: 20),
             onPressed: () => _exportNotebook(r, 'docx'),
           ),
           V26CTA(
-            _l10n.nbScrEdit,
+            'עריכה',
             variant: V26CtaVariant.ghost,
             onPressed: () {
               Navigator.push<void>(
@@ -153,20 +150,41 @@ class _LegalNotebookScreenState extends State<LegalNotebookScreen> {
     );
   }
 
-  String _intentLabel(AppLocalizations loc) {
+  String _intentLabel(String code) {
+    if (_intent == null) return '';
     switch (_intent) {
       case 'contract_review':
-        return loc.nbScrIntentContractReview;
+        return code == 'he'
+            ? 'סקירת חוזה עם AI'
+            : code == 'ru'
+                ? 'Проверка договора AI'
+                : 'AI contract review';
       case 'demand_letter':
-        return loc.nbScrIntentDemandLetter;
+        return code == 'he'
+            ? 'יצירת מכתב התראה'
+            : code == 'ru'
+                ? 'Письмо-претензия'
+                : 'Demand letter draft';
       case 'civil_claim':
-        return loc.nbScrIntentCivilClaim;
+        return code == 'he'
+            ? 'הכנת תביעה אזרחית'
+            : code == 'ru'
+                ? 'Гражданский иск'
+                : 'Civil claim draft';
       case 'labor_doc':
-        return loc.nbScrIntentLaborDoc;
+        return code == 'he'
+            ? 'מסמך דיני עבודה'
+            : code == 'ru'
+                ? 'Документ по труду'
+                : 'Labor law document';
       case 'family_doc':
-        return loc.nbScrIntentFamilyDoc;
+        return code == 'he'
+            ? 'מסמך דיני משפחה'
+            : code == 'ru'
+                ? 'Семейный документ'
+                : 'Family law document';
       default:
-        return _intent ?? '';
+        return _intent!;
     }
   }
 
@@ -181,7 +199,7 @@ class _LegalNotebookScreenState extends State<LegalNotebookScreen> {
   }
 
   Future<void> _exportNotebook(Map<String, dynamic> row, String format) async {
-    final title = (row['name'] ?? _l10n.nbScrTitle) as String;
+    final title = (row['name'] ?? 'Legal Notebook') as String;
     final body =
         'Generated from notebook: $title\nStatus: ${(row['status'] ?? 'draft')}';
     final ok = await _api.exportLegalDocument(
@@ -196,10 +214,8 @@ class _LegalNotebookScreenState extends State<LegalNotebookScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(ok
-            ? (format == 'pdf'
-                ? _l10n.nbScrExportPdfOk
-                : _l10n.nbScrExportDocxOk)
-            : _l10n.nbScrExportFailed),
+            ? (format == 'pdf' ? 'PDF יוצא בהצלחה' : 'DOCX יוצא בהצלחה')
+            : 'הייצוא נכשל'),
       ),
     );
   }
@@ -212,7 +228,11 @@ class _LegalNotebookScreenState extends State<LegalNotebookScreen> {
     final code = context.watch<AppLanguageController>().code;
     final isWide =
         MediaQuery.sizeOf(context).width >= V26AppShell.desktopBreakpoint;
-    final statusText = _l10n.nbScrDesktopStatus;
+    final statusText = code == 'he'
+        ? 'מחברת משפטית · VETO'
+        : (code == 'ru'
+            ? 'Юр. блокнот · VETO'
+            : 'Legal notebook · VETO');
     final intentBanner = (_intent != null)
         ? Container(
             margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
@@ -230,10 +250,11 @@ class _LegalNotebookScreenState extends State<LegalNotebookScreen> {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    _l10n.nbScrIntentBanner(
-                      _intentLabel(_l10n),
-                      _domain ?? _l10n.nbScrIntentDomainFallback,
-                    ),
+                    code == 'he'
+                        ? 'נבחר זרם משפטי: ${_intentLabel(code)} (${_domain ?? "כללי"}) — צור מחברת חדשה כדי להתחיל.'
+                        : code == 'ru'
+                            ? 'Юридический поток: ${_intentLabel(code)} (${_domain ?? "общий"}) — создайте новый блокнот.'
+                            : 'Selected flow: ${_intentLabel(code)} (${_domain ?? "general"}) — create a new notebook to begin.',
                     style: const TextStyle(
                       color: VetoMockup.ink,
                       fontWeight: FontWeight.w700,
@@ -247,7 +268,7 @@ class _LegalNotebookScreenState extends State<LegalNotebookScreen> {
                     await _reload();
                   },
                   icon: const Icon(Icons.add_rounded, size: 16),
-                  label: Text(_l10n.nbScrNewNotebook),
+                  label: Text(code == 'he' ? 'מחברת חדשה' : 'New'),
                   style: FilledButton.styleFrom(
                     backgroundColor: VetoMockup.primaryCta,
                     padding: const EdgeInsets.symmetric(
@@ -283,8 +304,8 @@ class _LegalNotebookScreenState extends State<LegalNotebookScreen> {
             backgroundColor: VetoMockup.primaryCta,
             foregroundColor: Colors.white,
             icon: const Icon(Icons.add),
-            label: Text(_l10n.nbScrNotebookShort,
-                style: const TextStyle(
+            label: const Text('מחברת',
+                style: TextStyle(
                     fontFamily: V26.sans, fontWeight: FontWeight.w700)),
             heroTag: 'nb_ent_fab',
           )
@@ -299,8 +320,8 @@ class _LegalNotebookScreenState extends State<LegalNotebookScreen> {
             backgroundColor: V26.navy600,
             foregroundColor: Colors.white,
             icon: const Icon(Icons.add),
-            label: Text(_l10n.nbScrNotebookShort,
-                style: const TextStyle(
+            label: const Text('מחברת',
+                style: TextStyle(
                     fontFamily: V26.sans, fontWeight: FontWeight.w700)),
             heroTag: 'nb_ent_fab',
           )
@@ -320,7 +341,7 @@ class _LegalNotebookScreenState extends State<LegalNotebookScreen> {
               desktopTrailing: [
                 IconButton(
                   icon: const Icon(Icons.refresh, color: VetoMockup.ink),
-                  tooltip: _l10n.nbScrRefreshTooltip,
+                  tooltip: 'רענון',
                   onPressed: _load ? null : _reload,
                 ),
                 const SizedBox(width: 8),
@@ -330,8 +351,8 @@ class _LegalNotebookScreenState extends State<LegalNotebookScreen> {
                     await _reload();
                   },
                   icon: const Icon(Icons.add_rounded, color: Colors.white),
-                  label: Text(_l10n.nbScrNewNotebook,
-                      style: const TextStyle(fontWeight: FontWeight.w800)),
+                  label: const Text('מחברת חדשה',
+                      style: TextStyle(fontWeight: FontWeight.w800)),
                   style: FilledButton.styleFrom(
                     backgroundColor: VetoMockup.primaryCta,
                     padding: const EdgeInsets.symmetric(
@@ -344,9 +365,9 @@ class _LegalNotebookScreenState extends State<LegalNotebookScreen> {
                 backgroundColor: VetoMockup.surfaceCard,
                 foregroundColor: VetoMockup.ink,
                 elevation: 0,
-                title: Text(
-                  _l10n.nbScrTitle,
-                  style: const TextStyle(
+                title: const Text(
+                  'מחברת משפטית',
+                  style: TextStyle(
                     fontFamily: V26.serif,
                     color: VetoMockup.ink,
                     fontWeight: FontWeight.w800,
@@ -361,7 +382,6 @@ class _LegalNotebookScreenState extends State<LegalNotebookScreen> {
                 actions: [
                   IconButton(
                     onPressed: _load ? null : _reload,
-                    tooltip: _l10n.nbScrRefreshTooltip,
                     icon: const Icon(Icons.refresh, color: VetoMockup.inkSecondary),
                   ),
                 ],
@@ -386,12 +406,12 @@ class _LegalNotebookScreenState extends State<LegalNotebookScreen> {
             desktopTrailing: [
               V26IconBtn(
                 icon: Icons.refresh,
-                tooltip: _l10n.nbScrRefreshTooltip,
+                tooltip: 'רענון',
                 onTap: _load ? null : _reload,
               ),
               const SizedBox(width: 8),
               V26PillCTA(
-                label: _l10n.nbScrNewNotebook,
+                label: 'מחברת חדשה',
                 icon: Icons.add,
                 onTap: () async {
                   await _api.create();
@@ -403,9 +423,9 @@ class _LegalNotebookScreenState extends State<LegalNotebookScreen> {
               backgroundColor: V26.surface,
               foregroundColor: V26.ink900,
               elevation: 0,
-              title: Text(
-                _l10n.nbScrTitle,
-                style: const TextStyle(
+              title: const Text(
+                'מחברת משפטית',
+                style: TextStyle(
                   fontFamily: V26.serif,
                   color: V26.ink900,
                   fontWeight: FontWeight.w800,
@@ -420,7 +440,6 @@ class _LegalNotebookScreenState extends State<LegalNotebookScreen> {
               actions: [
                 IconButton(
                   onPressed: _load ? null : _reload,
-                  tooltip: _l10n.nbScrRefreshTooltip,
                   icon: const Icon(Icons.refresh, color: V26.ink700),
                 ),
               ],

@@ -20,7 +20,6 @@ import 'core/accessibility/accessibility_settings.dart';
 import 'core/i18n/app_language.dart';
 import 'core/theme/veto_theme.dart';
 import 'core/theme/veto_2026.dart';
-import 'l10n/app_localizations.dart';
 import 'screens/login_screen.dart';
 import 'screens/landing_screen.dart';
 import 'screens/lawyer_dashboard.dart';
@@ -308,9 +307,8 @@ class VetoApp extends StatelessWidget {
         },
       ),
       locale: language.locale,
-      supportedLocales: AppLocalizations.supportedLocales,
+      supportedLocales: const [Locale('he'), Locale('en'), Locale('ru')],
       localizationsDelegates: const [
-        AppLocalizations.delegate,
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,

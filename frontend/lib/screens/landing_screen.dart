@@ -1,6 +1,6 @@
 ﻿// ═══════════════════════════════════════════════════════════════════
-//  VETO Landing — 2026 Pango-class marketing
-//  Blue primary, light surfaces, drawer + service hub + line-art hero
+//  VETO Landing — 2026 Light Professional-Luxury
+//  Navy + Gold + Paper, serif headlines, gold micro-rule
 // ═══════════════════════════════════════════════════════════════════
 
 import 'dart:async' show unawaited;
@@ -13,14 +13,10 @@ import '../core/i18n/app_language.dart';
 import '../core/theme/veto_2026.dart';
 import '../core/theme/veto_mockup_tokens.dart';
 import '../core/theme/veto_2026_splash.dart';
-import '../l10n/app_localizations.dart';
 import '../services/auth_service.dart';
 import '../widgets/app_language_menu.dart';
 import '../widgets/accessibility_toolbar.dart';
 import '../widgets/ai_chat_dialog.dart';
-import '../widgets/veto_landing_service_hub.dart';
-import '../widgets/veto_line_art_painter.dart';
-import '../widgets/veto_marketing_drawer.dart';
 
 // ── Palette — 2026 Navy / Gold / Paper ─────────────────────────────
 class _C {
@@ -32,18 +28,251 @@ class _C {
   static const accent = VetoMockup.primaryCta;
 }
 
+// ── i18n ──────────────────────────────────────────────────────────
+class _T {
+  static String get(String code, String k) =>
+      (_copy[AppLanguage.normalize(code)] ?? _copy['he']!)[k] ?? k;
+
+  static const _copy = <String, Map<String, String>>{
+    'he': {
+      'brandEyebrow': 'הגנה משפטית מיידית',
+      'navHome': 'בית',
+      'navFeatures': 'תכונות',
+      'navPricing': 'תמחור',
+      'navHow': 'איך זה עובד',
+      'navContact': 'צור קשר',
+      'navCareers': 'קריירה',
+      'navLogin': 'כניסה',
+      'navRegister': 'הרשמה',
+      'heroEyebrow': 'VETO · זמין 24/7 בכל הארץ',
+      'heroTitleL1': 'ההגנה המשפטית',
+      'heroTitleL2': 'שלך — תמיד ',
+      'heroTitleEm': 'בהישג יד',
+      'heroBody':
+          'VETO מחבר אותך לעורך דין מתמחה תוך שניות בכל מצב חירום, עם תיעוד שיחה מלא וכספת מוצפנת.',
+      'heroCta': 'לחץ SOS',
+      'heroSecondary': 'גלה עוד',
+      'miniStatBefore': 'חיבור ב-',
+      'miniStatEm': '3 שניות',
+      'miniStatSuffix': 'עו״ד פלילי זמין',
+      'proof1Num': '4.9',
+      'proof1Lbl': 'דירוג ממשתמשים',
+      'proof2Num': '3″',
+      'proof2Lbl': 'זמן חיבור ממוצע',
+      'proof3Num': '+200',
+      'proof3Lbl': 'עורכי דין רשומים',
+      'feat1Title': 'הגנה מיידית',
+      'feat1Body':
+          'חיבור לעורך דין מתמחה תוך שניות, בכל מצב חירום משפטי — חקירה, עצירה, סכסוך.',
+      'feat2Title': 'קשר ישיר עם עו"ד',
+      'feat2Body':
+          'קולי, וידאו או טקסט — הבחירה שלך. תיעוד שיחה מלא, נשמר אך ורק בכספת המוצפנת שלך.',
+      'feat3Title': 'פרטיות מלאה',
+      'feat3Body':
+          'הצפנה End-to-End, גיבוי בכספת אישית, וגישה רק לידיך — לא לחברה ולא לרשויות.',
+      'stat1num': '24/7',
+      'stat1lbl': 'הגנה משפטית',
+      'stat2num': 'Real',
+      'stat2lbl': 'עורכי דין אמיתיים',
+      'stat3num': '+3',
+      'stat3lbl': 'שפות נתמכות',
+      'stat4num': 'Live',
+      'stat4lbl': 'שיגור בזמן אמת',
+      'stackTitle': 'רצף תגובה אחד',
+      'stackKicker': 'איך זה עובד',
+      'stack1Title': 'זיהוי מצב',
+      'stack1Body':
+          'נחקרים, עצורים, או מעורבים בתאונה? המערכת מתאימה מענה מיידי.',
+      'stack2Title': 'שיחה עם AI',
+      'stack2Body': 'הסוכן מסדר את הידע, מחדד שאלות, ומכוון לצעד המשפטי הבא.',
+      'stack3Title': 'חיבור אנושי',
+      'stack3Body':
+          'אם נדרש עו"ד — המשרד מזניק איש מקצוע זמין עם עדיפות לשפה הרלוונטית.',
+      'pricingTitle': 'מנוי חודשי',
+      'pricingHeroTitle': 'שכבת הגנה תמידית',
+      'pricingIntro':
+          'הכל במסלול אחד — עוזר AI, ספריית זכויות, כספת מוצפנת ושיגור עורך דין בזמן אמת.',
+      'pricingPrice': '₪19.90',
+      'pricingPeriod': 'לחודש',
+      'pricingLine1': 'עוזר AI משפטי ללא הגבלה',
+      'pricingLine2': 'תרחישים, זכויות ותיעוד ראיות',
+      'pricingLine3': 'שיגור עורך דין באירוע חי לפי שימוש',
+      'pricingLine4': 'כספת מוצפנת לשמירת מסמכים',
+      'pricingLine5': 'תמיכה בעברית · English · Русский',
+      'ctaTitle': 'בונים שכבת הגנה לפני שהאירוע מתחיל',
+      'ctaBody':
+          'ההרשמה קצרה. מהרגע שהיא מסתיימת, כל חירום משפטי מקבל מסך ברור ומוכן לפעולה.',
+      'ctaBtn': 'לעבור לאשף',
+      'ctaSecondary': 'דבר עם איש מכירות',
+      'footer': 'VETO LEGAL · מערכת תגובה משפטית חכמה, מהירה ורב-לשונית',
+      'linkPrivacy': 'מדיניות פרטיות',
+      'linkTerms': 'תנאי שימוש',
+      'linkContact': 'צור קשר',
+      'linkCareers': 'קריירה',
+    },
+    'en': {
+      'brandEyebrow': 'Instant legal defense',
+      'navHome': 'Home',
+      'navFeatures': 'Features',
+      'navPricing': 'Pricing',
+      'navHow': 'How it works',
+      'navContact': 'Contact',
+      'navCareers': 'Careers',
+      'navLogin': 'Sign in',
+      'navRegister': 'Sign up',
+      'heroEyebrow': 'VETO · 24/7 nationwide',
+      'heroTitleL1': 'Your legal protection',
+      'heroTitleL2': ' — always ',
+      'heroTitleEm': 'within reach',
+      'heroBody':
+          'VETO connects you with a specialized lawyer within seconds in any emergency — full conversation logging and an encrypted vault.',
+      'heroCta': 'SOS',
+      'heroSecondary': 'Learn more',
+      'miniStatBefore': 'Connect in ',
+      'miniStatEm': '3 seconds',
+      'miniStatSuffix': 'criminal lawyer on duty',
+      'proof1Num': '4.9',
+      'proof1Lbl': 'User rating',
+      'proof2Num': '3″',
+      'proof2Lbl': 'Avg. connect time',
+      'proof3Num': '+200',
+      'proof3Lbl': 'Registered lawyers',
+      'feat1Title': 'Immediate protection',
+      'feat1Body':
+          'Connect with a specialized lawyer within seconds — investigations, detention, disputes.',
+      'feat2Title': 'Direct lawyer access',
+      'feat2Body':
+          'Voice, video, or text — your choice. Full call logs stored only in your encrypted vault.',
+      'feat3Title': 'Full privacy',
+      'feat3Body':
+          'End-to-end encryption, backup in your vault, access only for you — not the company or authorities.',
+      'stat1num': '24/7',
+      'stat1lbl': 'Legal Protection',
+      'stat2num': 'Real',
+      'stat2lbl': 'Lawyers',
+      'stat3num': '+3',
+      'stat3lbl': 'Languages',
+      'stat4num': 'Live',
+      'stat4lbl': 'Dispatch',
+      'stackTitle': 'One response chain',
+      'stackKicker': 'How it works',
+      'stack1Title': 'Situation awareness',
+      'stack1Body':
+          'Questioned, detained, or in an accident? The system responds immediately.',
+      'stack2Title': 'AI conversation',
+      'stack2Body':
+          'The agent organizes facts, sharpens questions, and guides your next legal step.',
+      'stack3Title': 'Human handoff',
+      'stack3Body':
+          'When a lawyer is required — dispatch with priority for the right language.',
+      'pricingTitle': 'Monthly Plan',
+      'pricingHeroTitle': 'Always-on protection layer',
+      'pricingIntro':
+          'Everything on one plan — AI assistant, rights library, encrypted vault and live lawyer dispatch.',
+      'pricingPrice': '₪19.90',
+      'pricingPeriod': 'per month',
+      'pricingLine1': 'Unlimited legal AI assistant',
+      'pricingLine2': 'Rights scenarios and evidence tools',
+      'pricingLine3': 'Live lawyer dispatch billed by event',
+      'pricingLine4': 'Encrypted vault for your documents',
+      'pricingLine5': 'Hebrew · English · Русский support',
+      'ctaTitle': 'Build your legal safety layer before the incident begins',
+      'ctaBody':
+          'Registration is short. Once done, every legal emergency starts from one clear interface.',
+      'ctaBtn': 'Open the wizard',
+      'ctaSecondary': 'Talk to sales',
+      'footer': 'VETO LEGAL · Fast, intelligent, multilingual legal response',
+      'linkPrivacy': 'Privacy',
+      'linkTerms': 'Terms',
+      'linkContact': 'Contact',
+      'linkCareers': 'Careers',
+    },
+    'ru': {
+      'brandEyebrow': 'Мгновенная защита',
+      'navHome': 'Главная',
+      'navFeatures': 'Функции',
+      'navPricing': 'Тарифы',
+      'navHow': 'Как это работает',
+      'navContact': 'Контакты',
+      'navCareers': 'Карьера',
+      'navLogin': 'Вход',
+      'navRegister': 'Регистрация',
+      'heroEyebrow': 'VETO · 24/7 по всей стране',
+      'heroTitleL1': 'Ваша юридическая защита',
+      'heroTitleL2': ' — всегда ',
+      'heroTitleEm': 'рядом',
+      'heroBody':
+          'VETO соединяет вас со специализированным адвокатом за секунды в любой экстренной ситуации — полное журналирование и зашифрованное хранилище.',
+      'heroCta': 'SOS',
+      'heroSecondary': 'Узнать больше',
+      'miniStatBefore': 'Подключение за ',
+      'miniStatEm': '3 секунды',
+      'miniStatSuffix': 'адвокат на линии',
+      'proof1Num': '4.9',
+      'proof1Lbl': 'Оценка пользователей',
+      'proof2Num': '3″',
+      'proof2Lbl': 'Среднее время связи',
+      'proof3Num': '+200',
+      'proof3Lbl': 'Зарегистрированных адвокатов',
+      'feat1Title': 'Мгновенная защита',
+      'feat1Body':
+          'Связь со специализированным адвокатом за секунды — допрос, задержание, конфликт.',
+      'feat2Title': 'Прямой контакт с адвокатом',
+      'feat2Body':
+          'Голос, видео или текст — как удобно. Полные логи только в вашем зашифрованном хранилище.',
+      'feat3Title': 'Полная конфиденциальность',
+      'feat3Body':
+          'Сквозное шифрование, резерв в хранилище, доступ только у вас — не у компании и не у органов.',
+      'stat1num': '24/7',
+      'stat1lbl': 'Защита',
+      'stat2num': 'Живые',
+      'stat2lbl': 'Адвокаты',
+      'stat3num': '+3',
+      'stat3lbl': 'Языка',
+      'stat4num': 'Живой',
+      'stat4lbl': 'Вызов',
+      'stackTitle': 'Одна цепочка реакции',
+      'stackKicker': 'Как это работает',
+      'stack1Title': 'Определение ситуации',
+      'stack1Body':
+          'Допрос, задержание или ДТП? Система сразу подбирает ответ.',
+      'stack2Title': 'Диалог с AI',
+      'stack2Body':
+          'Агент структурирует факты, уточняет вопросы и ведёт к следующему шагу.',
+      'stack3Title': 'Связь с человеком',
+      'stack3Body':
+          'Если нужен адвокат — оперативный вызов с приоритетом языка.',
+      'pricingTitle': 'Ежемесячный план',
+      'pricingHeroTitle': 'Постоянная защита',
+      'pricingIntro':
+          'Всё в одном тарифе — AI-ассистент, библиотека прав, хранилище и вызов адвоката.',
+      'pricingPrice': '₪19.90',
+      'pricingPeriod': 'в месяц',
+      'pricingLine1': 'Безлимитный юридический AI',
+      'pricingLine2': 'Сценарии прав и сбор доказательств',
+      'pricingLine3': 'Вызов адвоката по событию',
+      'pricingLine4': 'Зашифрованное хранилище документов',
+      'pricingLine5': 'Иврит · English · Русский',
+      'ctaTitle': 'Создайте защитный слой до начала инцидента',
+      'ctaBody':
+          'Регистрация занимает минуту. После этого любая экстренная ситуация начинается с одного экрана.',
+      'ctaBtn': 'Перейти к мастеру',
+      'ctaSecondary': 'Связаться с отделом продаж',
+      'footer':
+          'VETO LEGAL · Быстрая, умная и мультиязычная юридическая реакция',
+      'linkPrivacy': 'Конфиденциальность',
+      'linkTerms': 'Условия',
+      'linkContact': 'Контакты',
+      'linkCareers': 'Карьера',
+    },
+  };
+}
+
 // ══════════════════════════════════════════════════════════════════
 //  ROOT WIDGET
 // ══════════════════════════════════════════════════════════════════
-class LandingScreen extends StatefulWidget {
+class LandingScreen extends StatelessWidget {
   const LandingScreen({super.key});
-
-  @override
-  State<LandingScreen> createState() => _LandingScreenState();
-}
-
-class _LandingScreenState extends State<LandingScreen> {
-  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   Future<void> _goNext(BuildContext context) async {
     final auth = AuthService();
@@ -57,6 +286,8 @@ class _LandingScreenState extends State<LandingScreen> {
       } else if (role == 'admin') {
         Navigator.pushNamed(context, '/admin_settings');
       } else {
+        // Citizens: honor the onboarding flag — first-time users land on the
+        // 2026 4-step wizard; returning users go straight to the VETO shell.
         final onboarded = await auth.getOnboarded();
         if (!context.mounted) return;
         Navigator.pushNamed(
@@ -69,105 +300,63 @@ class _LandingScreenState extends State<LandingScreen> {
     Navigator.pushNamed(context, '/login');
   }
 
-  void _openDrawer() => _scaffoldKey.currentState?.openEndDrawer();
-
   @override
   Widget build(BuildContext context) {
     final code = context.watch<AppLanguageController>().code;
-    final l10n = AppLocalizations.of(context)!;
     final dir = AppLanguage.directionOf(code);
-    final w = MediaQuery.sizeOf(context).width;
+    final w = MediaQuery.of(context).size.width;
     final compact = w < V26AppShell.desktopBreakpoint;
 
     return Directionality(
       textDirection: dir,
       child: Scaffold(
-        key: _scaffoldKey,
         backgroundColor: _C.bg,
-        endDrawer: VetoMarketingDrawer(l10n: l10n),
-        floatingActionButton: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            FloatingActionButton.small(
-              heroTag: 'landing_a11y',
-              backgroundColor: Colors.white,
-              foregroundColor: VetoMockup.primaryCta,
-              tooltip: l10n.fabAccessibility,
-              onPressed: () => showAccessibilitySheet(context),
-              child: const Icon(Icons.accessibility_new_rounded),
+        floatingActionButton: FloatingActionButton.extended(
+          onPressed: () => showDialog(
+            context: context,
+            builder: (_) => AiChatDialog(code: code),
+          ),
+          backgroundColor: VetoMockup.primaryCta,
+          foregroundColor: Colors.white,
+          elevation: 0,
+          icon: const Icon(Icons.auto_awesome_rounded),
+          label: Text(
+            code == 'he'
+                ? 'שאל את VETO AI'
+                : code == 'ru'
+                    ? 'Спросить VETO AI'
+                    : 'Ask VETO AI',
+            style: const TextStyle(
+              fontFamily: V26.sans,
+              fontWeight: FontWeight.w700,
             ),
-            const SizedBox(height: 10),
-            FloatingActionButton.small(
-              heroTag: 'landing_support',
-              backgroundColor: Colors.white,
-              foregroundColor: VetoMockup.primaryCta,
-              tooltip: l10n.fabCustomerSupport,
-              onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(l10n.menuContact)),
-                );
-              },
-              child: const Icon(Icons.support_agent_rounded),
-            ),
-            const SizedBox(height: 10),
-            FloatingActionButton.extended(
-              heroTag: 'landing_ai',
-              onPressed: () => showDialog<void>(
-                context: context,
-                builder: (_) => AiChatDialog(code: code),
-              ),
-              backgroundColor: VetoMockup.primaryCta,
-              foregroundColor: Colors.white,
-              elevation: 0,
-              icon: const Icon(Icons.auto_awesome_rounded),
-              label: Text(
-                l10n.fabAskAi,
-                style: const TextStyle(
-                  fontFamily: V26.sans,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ),
-          ],
+          ),
         ),
-        floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
         body: V26Backdrop(
           child: SingleChildScrollView(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 _NavBar(
-                  l10n: l10n,
-                  code: code,
-                  compact: compact,
-                  onTap: () => _goNext(context),
-                  onOpenDrawer: _openDrawer,
-                ),
+                    code: code,
+                    compact: compact,
+                    onTap: () => _goNext(context)),
                 _HeroSection(
-                  l10n: l10n,
-                  compact: compact,
-                  onTap: () => _goNext(context),
-                ),
-                VetoLandingServiceHub(
-                  l10n: l10n,
-                  compact: compact,
-                  onSos: () => _goNext(context),
-                ),
-                _FeaturesSection(l10n: l10n, compact: compact),
-                _StatsBar(l10n: l10n, compact: compact),
-                _StackSection(l10n: l10n, compact: compact),
+                    code: code,
+                    compact: compact,
+                    onTap: () => _goNext(context)),
+                _FeaturesSection(code: code, compact: compact),
+                _StatsBar(code: code, compact: compact),
+                _StackSection(code: code, compact: compact),
                 _PricingSection(
-                  l10n: l10n,
-                  compact: compact,
-                  onTap: () => _goNext(context),
-                ),
+                    code: code,
+                    compact: compact,
+                    onTap: () => _goNext(context)),
                 _CtaSection(
-                  l10n: l10n,
-                  compact: compact,
-                  onTap: () => _goNext(context),
-                ),
-                _Footer(l10n: l10n),
+                    code: code,
+                    compact: compact,
+                    onTap: () => _goNext(context)),
+                _Footer(code: code),
               ],
             ),
           ),
@@ -181,18 +370,11 @@ class _LandingScreenState extends State<LandingScreen> {
 //  NAV BAR — white frosted, logo right, links + buttons left
 // ══════════════════════════════════════════════════════════════════
 class _NavBar extends StatefulWidget {
-  final AppLocalizations l10n;
   final String code;
   final bool compact;
   final VoidCallback onTap;
-  final VoidCallback onOpenDrawer;
-  const _NavBar({
-    required this.l10n,
-    required this.code,
-    required this.compact,
-    required this.onTap,
-    required this.onOpenDrawer,
-  });
+  const _NavBar(
+      {required this.code, required this.compact, required this.onTap});
 
   @override
   State<_NavBar> createState() => _NavBarState();
@@ -240,15 +422,45 @@ class _NavBarState extends State<_NavBar> {
     }
   }
 
+  void _showCompactNav(BuildContext context, List<String> navItemLabels) {
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: V26.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 8),
+            for (final label in navItemLabels)
+              ListTile(
+                title: Text(label,
+                    style: const TextStyle(
+                        color: _C.inkDark, fontWeight: FontWeight.w600)),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  widget.onTap();
+                },
+              ),
+            const SizedBox(height: 12),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final l = widget.l10n;
+    const t = _T.get;
+    final c = widget.code;
     final navItems = <String>[
-      l.navHome,
-      l.navFeatures,
-      l.navPricing,
-      l.navHow,
-      l.navContact,
+      t(c, 'navHome'),
+      t(c, 'navFeatures'),
+      t(c, 'navPricing'),
+      t(c, 'navHow'),
+      t(c, 'navContact'),
     ];
 
     return Container(
@@ -279,7 +491,7 @@ class _NavBarState extends State<_NavBar> {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  widget.compact ? 'LEGAL' : l.brandEyebrow,
+                  widget.compact ? 'LEGAL' : t(c, 'brandEyebrow'),
                   style: TextStyle(
                     fontFamily: V26.sans,
                     color: VetoMockup.primaryCta,
@@ -304,26 +516,6 @@ class _NavBarState extends State<_NavBar> {
                       ),
                       child: Text(item),
                     )),
-                const SizedBox(width: 8),
-                OutlinedButton(
-                  onPressed: widget.onOpenDrawer,
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: VetoMockup.primaryCta,
-                    side: BorderSide(
-                      color: VetoMockup.primaryCta.withValues(alpha: 0.35),
-                    ),
-                    shape: const StadiumBorder(),
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 8),
-                  ),
-                  child: Text(
-                    l.navMenu,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 13,
-                    ),
-                  ),
-                ),
               ],
 
               const Spacer(),
@@ -335,8 +527,14 @@ class _NavBarState extends State<_NavBar> {
                 IconButton(
                   icon: const Icon(Icons.menu_rounded,
                       color: _C.inkMid, size: 22),
-                  onPressed: widget.onOpenDrawer,
-                  tooltip: kIsWeb ? null : l.navMenu,
+                  onPressed: () => _showCompactNav(context, navItems),
+                  tooltip: kIsWeb
+                      ? null
+                      : (c == 'he'
+                          ? 'תפריט'
+                          : c == 'ru'
+                              ? 'Меню'
+                              : 'Menu'),
                   constraints:
                       const BoxConstraints(minWidth: 40, minHeight: 40),
                 ),
@@ -345,44 +543,45 @@ class _NavBarState extends State<_NavBar> {
                   Icons.accessibility_new_rounded,
                   color: _C.inkMid,
                   size: 20,
-                  semanticLabel: kIsWeb ? null : l.fabAccessibility,
+                  semanticLabel: kIsWeb
+                      ? (c == 'he'
+                          ? 'נגישות'
+                          : c == 'ru'
+                              ? 'Доступность'
+                              : 'Accessibility')
+                      : null,
                 ),
                 onPressed: () => showAccessibilitySheet(context),
-                tooltip: kIsWeb ? null : l.fabAccessibility,
+                tooltip: kIsWeb
+                    ? null
+                    : (c == 'he'
+                        ? 'נגישות'
+                        : c == 'ru'
+                            ? 'Доступность'
+                            : 'Accessibility'),
                 constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
               ),
               if (widget.compact) const AppLanguageMenu(compact: true),
               const SizedBox(width: 8),
 
               // ── Auth: user bubble or login buttons ──
-              if (_loggedIn) ...[
-                TextButton(
-                  onPressed: () => unawaited(_enterApp(context)),
-                  child: Text(
-                    l.navPersonalArea,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w700,
-                      color: VetoMockup.primaryCta,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 4),
+              if (_loggedIn)
                 _UserBubble(
                   name: _name,
                   role: _role,
-                  l10n: l,
+                  code: c,
                   onEnterApp: () {
                     unawaited(_enterApp(context));
                   },
-                ),
-              ] else ...[
+                )
+              else ...[
                 _NavBtn(
-                    label: l.navLogin,
+                    label: t(c, 'navLogin'),
                     filled: false,
                     onTap: widget.onTap),
                 const SizedBox(width: 8),
                 _NavBtn(
-                    label: l.navRegister,
+                    label: t(c, 'navRegister'),
                     filled: true,
                     onTap: widget.onTap),
               ],
@@ -417,13 +616,13 @@ class _NavBtn extends StatelessWidget {
 class _UserBubble extends StatelessWidget {
   final String? name;
   final String? role;
-  final AppLocalizations l10n;
+  final String code;
   final VoidCallback onEnterApp;
 
   const _UserBubble({
     required this.name,
     required this.role,
-    required this.l10n,
+    required this.code,
     required this.onEnterApp,
   });
 
@@ -433,11 +632,23 @@ class _UserBubble extends StatelessWidget {
   String _roleLabel(String? r) {
     switch (r) {
       case 'lawyer':
-        return l10n.landingRoleLawyer;
+        return code == 'he'
+            ? 'עו"ד'
+            : code == 'ru'
+                ? 'Адвокат'
+                : 'Lawyer';
       case 'admin':
-        return l10n.landingRoleAdmin;
+        return code == 'he'
+            ? 'מנהל'
+            : code == 'ru'
+                ? 'Админ'
+                : 'Admin';
       default:
-        return l10n.landingRoleUser;
+        return code == 'he'
+            ? 'משתמש'
+            : code == 'ru'
+                ? 'Польз.'
+                : 'User';
     }
   }
 
@@ -493,7 +704,7 @@ class _UserBubble extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  name ?? l10n.landingGuestName,
+                  name ?? (code == 'he' ? 'משתמש' : 'User'),
                   style: const TextStyle(
                     fontFamily: V26.sans,
                     color: V26.ink900,
@@ -531,15 +742,15 @@ class _UserBubble extends StatelessWidget {
 //  HERO — `2026/landing.html` · eyebrow · split serif title · mini device · proof row
 // ══════════════════════════════════════════════════════════════════
 class _HeroSection extends StatelessWidget {
-  final AppLocalizations l10n;
+  final String code;
   final bool compact;
   final VoidCallback onTap;
   const _HeroSection(
-      {required this.l10n, required this.compact, required this.onTap});
+      {required this.code, required this.compact, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    final l = l10n;
+    const t = _T.get;
     final titleSize = compact ? 34.0 : 64.0;
     final pad = EdgeInsets.fromLTRB(
       compact ? 20 : 56,
@@ -557,22 +768,22 @@ class _HeroSection extends StatelessWidget {
           letterSpacing: 0.5,
         ),
         children: [
-          TextSpan(text: l.miniStatBefore),
+          TextSpan(text: t(code, 'miniStatBefore')),
           TextSpan(
-            text: l.miniStatEm,
+            text: t(code, 'miniStatEm'),
             style: const TextStyle(
               color: V26.ink900,
               fontWeight: FontWeight.w800,
             ),
           ),
-          if (!compact) TextSpan(text: ' · ${l.miniStatSuffix}'),
+          if (!compact) TextSpan(text: ' · ${t(code, 'miniStatSuffix')}'),
         ],
       ),
       textAlign: TextAlign.center,
     );
 
     final textBlock = _HeroCopyColumn(
-      l10n: l,
+      code: code,
       compact: compact,
       titleSize: titleSize,
       onTap: onTap,
@@ -580,43 +791,41 @@ class _HeroSection extends StatelessWidget {
 
     final mini = V26LandingMiniDevice(caption: caption);
 
-    return VetoLineArtBackground(
-      child: Container(
-        width: double.infinity,
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: AlignmentDirectional.topEnd,
-            end: AlignmentDirectional.bottomStart,
-            colors: [
-              Color(0x1A2E69E7),
-              Colors.transparent,
-            ],
-            stops: [0, 0.65],
-          ),
+    return Container(
+      width: double.infinity,
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: AlignmentDirectional.topEnd,
+          end: AlignmentDirectional.bottomStart,
+          colors: [
+            Color(0x1A2E69E7),
+            Colors.transparent,
+          ],
+          stops: [0, 0.65],
         ),
-        child: Padding(
-          padding: pad,
-          child: Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 1180),
-              child: compact
-                  ? Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        textBlock,
-                        const SizedBox(height: 28),
-                        mini,
-                      ],
-                    )
-                  : Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Expanded(flex: 105, child: textBlock),
-                        const SizedBox(width: 48),
-                        Expanded(flex: 95, child: mini),
-                      ],
-                    ),
-            ),
+      ),
+      child: Padding(
+        padding: pad,
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 1180),
+            child: compact
+                ? Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      textBlock,
+                      const SizedBox(height: 28),
+                      mini,
+                    ],
+                  )
+                : Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Expanded(flex: 105, child: textBlock),
+                      const SizedBox(width: 48),
+                      Expanded(flex: 95, child: mini),
+                    ],
+                  ),
           ),
         ),
       ),
@@ -625,12 +834,12 @@ class _HeroSection extends StatelessWidget {
 }
 
 class _HeroCopyColumn extends StatelessWidget {
-  final AppLocalizations l10n;
+  final String code;
   final bool compact;
   final double titleSize;
   final VoidCallback onTap;
   const _HeroCopyColumn({
-    required this.l10n,
+    required this.code,
     required this.compact,
     required this.titleSize,
     required this.onTap,
@@ -638,7 +847,7 @@ class _HeroCopyColumn extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final t = l10n;
+    const t = _T.get;
     final align =
         compact ? CrossAxisAlignment.center : CrossAxisAlignment.start;
     final textAlign = compact ? TextAlign.center : TextAlign.start;
@@ -674,7 +883,7 @@ class _HeroCopyColumn extends StatelessWidget {
               ),
               const SizedBox(width: 8),
               Text(
-                t.heroEyebrow,
+                t(code, 'heroEyebrow'),
                 style: const TextStyle(
                   fontFamily: V26.sans,
                   color: VetoMockup.primaryCta,
@@ -688,7 +897,7 @@ class _HeroCopyColumn extends StatelessWidget {
         ),
         const SizedBox(height: 18),
         Text(
-          t.heroTitleL1,
+          t(code, 'heroTitleL1'),
           textAlign: textAlign,
           style: TextStyle(
             fontFamily: V26.serif,
@@ -707,7 +916,7 @@ class _HeroCopyColumn extends StatelessWidget {
           runSpacing: 4,
           children: [
             Text(
-              t.heroTitleL2,
+              t(code, 'heroTitleL2'),
               style: TextStyle(
                 fontFamily: V26.serif,
                 color: V26.ink900,
@@ -717,12 +926,12 @@ class _HeroCopyColumn extends StatelessWidget {
                 letterSpacing: -0.02 * titleSize,
               ),
             ),
-            _HeroEmphasis(text: t.heroTitleEm, size: titleSize),
+            _HeroEmphasis(text: t(code, 'heroTitleEm'), size: titleSize),
           ],
         ),
         const SizedBox(height: 18),
         Text(
-          t.heroBody,
+          t(code, 'heroBody'),
           textAlign: textAlign,
           style: TextStyle(
             fontFamily: V26.sans,
@@ -739,14 +948,14 @@ class _HeroCopyColumn extends StatelessWidget {
           runSpacing: 12,
           children: [
             V26CTA(
-              t.heroCta,
+              t(code, 'heroCta'),
               onPressed: onTap,
               variant: V26CtaVariant.danger,
               large: true,
               icon: Icons.warning_amber_rounded,
             ),
             V26CTA(
-              t.heroSecondary,
+              t(code, 'heroSecondary'),
               onPressed: onTap,
               variant: V26CtaVariant.ghost,
               large: true,
@@ -765,17 +974,17 @@ class _HeroCopyColumn extends StatelessWidget {
             alignment: compact ? WrapAlignment.center : WrapAlignment.start,
             children: [
               _LandingProofPair(
-                numeral: t.proof1Num,
-                label: t.proof1Lbl,
+                numeral: t(code, 'proof1Num'),
+                label: t(code, 'proof1Lbl'),
               ),
               _LandingProofPair(
-                numeral: t.proof2Num,
-                label: t.proof2Lbl,
+                numeral: t(code, 'proof2Num'),
+                label: t(code, 'proof2Lbl'),
               ),
               if (!compact)
                 _LandingProofPair(
-                  numeral: t.proof3Num,
-                  label: t.proof3Lbl,
+                  numeral: t(code, 'proof3Num'),
+                  label: t(code, 'proof3Lbl'),
                 ),
             ],
           ),
@@ -867,18 +1076,18 @@ class _LandingProofPair extends StatelessWidget {
 //  STATS BAR
 // ══════════════════════════════════════════════════════════════════
 class _StatsBar extends StatelessWidget {
-  final AppLocalizations l10n;
+  final String code;
   final bool compact;
-  const _StatsBar({required this.l10n, required this.compact});
+  const _StatsBar({required this.code, required this.compact});
 
   @override
   Widget build(BuildContext context) {
-    final l = l10n;
+    const t = _T.get;
     final stats = [
-      (l.stat1num, l.stat1lbl),
-      (l.stat2num, l.stat2lbl),
-      (l.stat3num, l.stat3lbl),
-      (l.stat4num, l.stat4lbl),
+      (t(code, 'stat1num'), t(code, 'stat1lbl')),
+      (t(code, 'stat2num'), t(code, 'stat2lbl')),
+      (t(code, 'stat3num'), t(code, 'stat3lbl')),
+      (t(code, 'stat4num'), t(code, 'stat4lbl')),
     ];
     final hPad = compact ? 20.0 : 56.0;
 
@@ -949,17 +1158,17 @@ class _StatsBar extends StatelessWidget {
 //  STACK SECTION — the 3-step "רצף תגובה" panel (matches mockup card)
 // ══════════════════════════════════════════════════════════════════
 class _StackSection extends StatelessWidget {
-  final AppLocalizations l10n;
+  final String code;
   final bool compact;
-  const _StackSection({required this.l10n, required this.compact});
+  const _StackSection({required this.code, required this.compact});
 
   @override
   Widget build(BuildContext context) {
-    final t = l10n;
+    const t = _T.get;
     final steps = [
-      ('01', t.stack1Title, t.stack1Body),
-      ('02', t.stack2Title, t.stack2Body),
-      ('03', t.stack3Title, t.stack3Body),
+      ('01', t(code, 'stack1Title'), t(code, 'stack1Body')),
+      ('02', t(code, 'stack2Title'), t(code, 'stack2Body')),
+      ('03', t(code, 'stack3Title'), t(code, 'stack3Body')),
     ];
     final hPad = compact ? 20.0 : 56.0;
     final vPad = compact ? 24.0 : 48.0;
@@ -1007,10 +1216,10 @@ class _StackSection extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Center(child: V26Kicker(t.stackKicker)),
+                Center(child: V26Kicker(t(code, 'stackKicker'))),
                 const SizedBox(height: 8),
                 Text(
-                  t.stackTitle,
+                  t(code, 'stackTitle'),
                   textAlign: TextAlign.center,
                   style: const TextStyle(
                     fontFamily: V26.serif,
@@ -1084,27 +1293,27 @@ class _StackStepBlock extends StatelessWidget {
 //  FEATURES — white `.feature` cards (`2026/landing.html`)
 // ══════════════════════════════════════════════════════════════════
 class _FeaturesSection extends StatelessWidget {
-  final AppLocalizations l10n;
+  final String code;
   final bool compact;
-  const _FeaturesSection({required this.l10n, required this.compact});
+  const _FeaturesSection({required this.code, required this.compact});
 
   @override
   Widget build(BuildContext context) {
-    final t = l10n;
+    const t = _T.get;
     final features = [
       (
         Icons.bolt_rounded,
         VetoMockup.primaryCtaDeep,
-        t.feat1Title,
-        t.feat1Body
+        t(code, 'feat1Title'),
+        t(code, 'feat1Body')
       ),
       (
         Icons.chat_bubble_rounded,
         VetoMockup.primaryCta,
-        t.feat2Title,
-        t.feat2Body
+        t(code, 'feat2Title'),
+        t(code, 'feat2Body')
       ),
-      (Icons.lock_rounded, V26.ok, t.feat3Title, t.feat3Body),
+      (Icons.lock_rounded, V26.ok, t(code, 'feat3Title'), t(code, 'feat3Body')),
     ];
     final hPad = compact ? 20.0 : 56.0;
     final gap = compact ? 12.0 : 18.0;
@@ -1215,21 +1424,21 @@ class _FeatureCard extends StatelessWidget {
 //  PRICING
 // ══════════════════════════════════════════════════════════════════
 class _PricingSection extends StatelessWidget {
-  final AppLocalizations l10n;
+  final String code;
   final bool compact;
   final VoidCallback onTap;
   const _PricingSection(
-      {required this.l10n, required this.compact, required this.onTap});
+      {required this.code, required this.compact, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    final t = l10n;
+    const t = _T.get;
     final lines = <String>[
-      t.pricingLine1,
-      t.pricingLine2,
-      t.pricingLine3,
-      t.pricingLine4,
-      t.pricingLine5,
+      t(code, 'pricingLine1'),
+      t(code, 'pricingLine2'),
+      t(code, 'pricingLine3'),
+      t(code, 'pricingLine4'),
+      t(code, 'pricingLine5'),
     ];
     final hPad = compact ? 24.0 : 56.0;
 
@@ -1277,10 +1486,10 @@ class _PricingSection extends StatelessWidget {
       crossAxisAlignment:
           compact ? CrossAxisAlignment.center : CrossAxisAlignment.start,
       children: [
-        V26Badge(t.pricingTitle, tone: V26BadgeTone.brand),
+        V26Badge(t(code, 'pricingTitle'), tone: V26BadgeTone.brand),
         const SizedBox(height: 12),
         Text(
-          t.pricingHeroTitle,
+          t(code, 'pricingHeroTitle'),
           style: TextStyle(
             fontFamily: V26.serif,
             fontSize: compact ? 32 : 38,
@@ -1297,7 +1506,7 @@ class _PricingSection extends StatelessWidget {
               compact ? MainAxisAlignment.center : MainAxisAlignment.start,
           children: [
             Text(
-              t.pricingPrice,
+              t(code, 'pricingPrice'),
               style: const TextStyle(
                 fontFamily: V26.serif,
                 fontSize: 54,
@@ -1308,7 +1517,7 @@ class _PricingSection extends StatelessWidget {
             ),
             const SizedBox(width: 6),
             Text(
-              t.pricingPeriod,
+              t(code, 'pricingPeriod'),
               style: const TextStyle(
                 fontFamily: V26.sans,
                 fontSize: 14,
@@ -1320,7 +1529,7 @@ class _PricingSection extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         Text(
-          t.pricingIntro,
+          t(code, 'pricingIntro'),
           style: const TextStyle(
             fontFamily: V26.sans,
             fontSize: 14,
@@ -1331,7 +1540,11 @@ class _PricingSection extends StatelessWidget {
         ),
         const SizedBox(height: 16),
         V26CTA(
-          t.pricingGetStarted,
+          code == 'he'
+              ? 'התחל עכשיו'
+              : code == 'ru'
+                  ? 'Начать'
+                  : 'Get started',
           onPressed: onTap,
           variant: V26CtaVariant.primary,
           large: true,
@@ -1389,15 +1602,15 @@ class _PricingSection extends StatelessWidget {
 //  CTA SECTION
 // ══════════════════════════════════════════════════════════════════
 class _CtaSection extends StatelessWidget {
-  final AppLocalizations l10n;
+  final String code;
   final bool compact;
   final VoidCallback onTap;
   const _CtaSection(
-      {required this.l10n, required this.compact, required this.onTap});
+      {required this.code, required this.compact, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    final t = l10n;
+    const t = _T.get;
     final hPad = compact ? 24.0 : 56.0;
     return Padding(
       padding: EdgeInsets.fromLTRB(hPad, 24, hPad, compact ? 48 : 64),
@@ -1442,7 +1655,7 @@ class _CtaSection extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          t.ctaTitle,
+                          t(code, 'ctaTitle'),
                           style: TextStyle(
                             fontFamily: V26.serif,
                             color: Colors.white,
@@ -1453,7 +1666,7 @@ class _CtaSection extends StatelessWidget {
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          t.ctaBody,
+                          t(code, 'ctaBody'),
                           style: const TextStyle(
                             fontFamily: V26.sans,
                             color: Color(0xFFC7D5EE),
@@ -1467,13 +1680,13 @@ class _CtaSection extends StatelessWidget {
                           runSpacing: 10,
                           children: [
                             V26CTA(
-                              t.ctaBtn,
+                              t(code, 'ctaBtn'),
                               onPressed: onTap,
                               variant: V26CtaVariant.gold,
                               large: true,
                             ),
                             V26CTA(
-                              t.ctaSecondary,
+                              t(code, 'ctaSecondary'),
                               onPressed: onTap,
                               variant: V26CtaVariant.ghostLight,
                               large: true,
@@ -1497,12 +1710,11 @@ class _CtaSection extends StatelessWidget {
 //  FOOTER
 // ══════════════════════════════════════════════════════════════════
 class _Footer extends StatelessWidget {
-  final AppLocalizations l10n;
-  const _Footer({required this.l10n});
+  final String code;
+  const _Footer({required this.code});
 
   @override
   Widget build(BuildContext context) {
-    final l = l10n;
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 24),
       decoration: const BoxDecoration(
@@ -1514,7 +1726,7 @@ class _Footer extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            l.footer,
+            _T.get(code, 'footer'),
             textAlign: TextAlign.center,
             style:
                 const TextStyle(color: _C.inkLight, fontSize: 12, height: 1.8),
@@ -1526,22 +1738,22 @@ class _Footer extends StatelessWidget {
             runSpacing: 4,
             children: [
               _FooterLink(
-                label: l.linkPrivacy,
+                label: _T.get(code, 'linkPrivacy'),
                 onTap: () => Navigator.pushNamed(context, '/privacy'),
               ),
               _footerDot(),
               _FooterLink(
-                label: l.linkTerms,
+                label: _T.get(code, 'linkTerms'),
                 onTap: () => Navigator.pushNamed(context, '/terms'),
               ),
               _footerDot(),
               _FooterLink(
-                label: l.linkContact,
+                label: _T.get(code, 'linkContact'),
                 onTap: () {},
               ),
               _footerDot(),
               _FooterLink(
-                label: l.linkCareers,
+                label: _T.get(code, 'linkCareers'),
                 onTap: () {},
               ),
             ],

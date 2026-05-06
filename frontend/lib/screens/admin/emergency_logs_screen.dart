@@ -32,7 +32,7 @@ class _EmergencyLogsScreenState extends State<EmergencyLogsScreen> {
   bool _loading = true;
   final _svc = AdminService();
 
-  String _t(BuildContext context, String key) => AdminStrings.t(context, key);
+  String _t(String code, String key) => AdminStrings.t(code, key);
 
   @override
   void initState() { super.initState(); _load(); }
@@ -68,7 +68,8 @@ class _EmergencyLogsScreenState extends State<EmergencyLogsScreen> {
   }
 
   String _sl(String? s) {
-    return AdminStrings.eventStatus(context, s);
+    final code = context.read<AppLanguageController>().code;
+    return AdminStrings.eventStatus(code, s);
   }
 
   String _fmt(String? iso) {
@@ -98,7 +99,7 @@ class _EmergencyLogsScreenState extends State<EmergencyLogsScreen> {
             borderRadius: BorderRadius.circular(16),
             side: const BorderSide(color: V26.hairline),
           ),
-          title: Text(_t(context, 'changeStatus'), style: const TextStyle(color: V26.ink900)),
+          title: Text(_t(code, 'changeStatus'), style: const TextStyle(color: V26.ink900)),
           content: StatefulBuilder(
             builder: (_, ss) => DropdownButton<String>(
               isExpanded: true,
@@ -110,7 +111,7 @@ class _EmergencyLogsScreenState extends State<EmergencyLogsScreen> {
                   .map(
                     (v) => DropdownMenuItem<String>(
                       value: v,
-                      child: Text(AdminStrings.eventStatus(context, v)),
+                      child: Text(AdminStrings.eventStatus(code, v)),
                     ),
                   )
                   .toList(),
@@ -122,7 +123,7 @@ class _EmergencyLogsScreenState extends State<EmergencyLogsScreen> {
           actions: [
             TextButton(
                 onPressed: () => Navigator.pop(ctx, false),
-                child: Text(_t(context, 'cancel'),
+                child: Text(_t(code, 'cancel'),
                     style: const TextStyle(color: V26.ink500))),
             FilledButton(
                 style: FilledButton.styleFrom(
@@ -130,7 +131,7 @@ class _EmergencyLogsScreenState extends State<EmergencyLogsScreen> {
                   foregroundColor: Colors.white,
                 ),
                 onPressed: () => Navigator.pop(ctx, true),
-                child: Text(_t(context, 'save'))),
+                child: Text(_t(code, 'save'))),
           ],
         ),
       ),
@@ -167,19 +168,19 @@ class _EmergencyLogsScreenState extends State<EmergencyLogsScreen> {
             borderRadius: BorderRadius.circular(16),
             side: const BorderSide(color: V26.hairline),
           ),
-          title: Text(_t(context, 'deleteEvent'), style: const TextStyle(color: V26.ink900)),
-          content: Text(_t(context, 'deleteEventConfirm'),
+          title: Text(_t(code, 'deleteEvent'), style: const TextStyle(color: V26.ink900)),
+          content: Text(_t(code, 'deleteEventConfirm'),
               style: const TextStyle(color: V26.ink500)),
           actions: [
             TextButton(
                 onPressed: () => Navigator.pop(ctx, false),
-                child: Text(_t(context, 'cancel'),
+                child: Text(_t(code, 'cancel'),
                     style: const TextStyle(color: V26.ink500))),
             FilledButton(
               style: FilledButton.styleFrom(
                   backgroundColor: V26.emerg, foregroundColor: Colors.white),
               onPressed: () => Navigator.pop(ctx, true),
-              child: Text(_t(context, 'delete')),
+              child: Text(_t(code, 'delete')),
             ),
           ],
         ),
@@ -196,7 +197,7 @@ class _EmergencyLogsScreenState extends State<EmergencyLogsScreen> {
       textDirection: AppLanguage.directionOf(code),
       child: AdminShell(
         active: AdminSection.logs,
-        title: '${_t(context, 'emergencyLogs')} (${_loading ? _t(context, 'loading') : _events.length})',
+        title: '${_t(code, 'emergencyLogs')} (${_loading ? _t(code, 'loading') : _events.length})',
         onRefresh: _load,
         body: V26Backdrop(
           child: _loading
@@ -205,7 +206,7 @@ class _EmergencyLogsScreenState extends State<EmergencyLogsScreen> {
                 ? Center(child: Column(mainAxisSize: MainAxisSize.min, children: [
                     const Icon(Icons.check_circle_outline, color: V26.ok, size: 48),
                     const SizedBox(height: 12),
-                    Text(_t(context, 'noEmergencyEvents'), style: const TextStyle(color: V26.ink500)),
+                    Text(_t(code, 'noEmergencyEvents'), style: const TextStyle(color: V26.ink500)),
                   ]))
                 : ListView.separated(
                     padding: const EdgeInsets.all(16),
@@ -236,8 +237,8 @@ class _EmergencyLogsScreenState extends State<EmergencyLogsScreen> {
                             const SizedBox(width: 8),
                             Expanded(child: Text(
                               user != null
-                                  ? (user['full_name'] ?? user['phone'] ?? _t(context, 'unknown'))
-                                  : _t(context, 'unknown'),
+                                  ? (user['full_name'] ?? user['phone'] ?? _t(code, 'unknown'))
+                                  : _t(code, 'unknown'),
                               style: const TextStyle(color: V26.ink900, fontWeight: FontWeight.w600),
                             )),
                             // Status badge — tap to change
@@ -270,7 +271,7 @@ class _EmergencyLogsScreenState extends State<EmergencyLogsScreen> {
                             Row(children: [
                               const Icon(Icons.gavel_rounded, color: VetoMockup.primaryCta, size: 14),
                               const SizedBox(width: 4),
-                              Text('${_t(context, 'lawyerPrefix')}: ${lawyer['full_name'] ?? lawyer['phone'] ?? ""}',
+                              Text('${_t(code, 'lawyerPrefix')}: ${lawyer['full_name'] ?? lawyer['phone'] ?? ""}',
                                   style: const TextStyle(color: VetoMockup.primaryCta, fontSize: 12)),
                             ]),
                           ],

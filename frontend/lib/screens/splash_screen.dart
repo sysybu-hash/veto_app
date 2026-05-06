@@ -7,7 +7,6 @@ import '../core/i18n/app_language.dart';
 import '../core/theme/veto_2026.dart';
 import '../core/theme/veto_2026_splash.dart';
 import '../core/theme/veto_mockup_tokens.dart';
-import '../l10n/app_localizations.dart';
 
 /// Splash — matches `2026/splash.html` (light · crest-xl · 3 dots · 1.8s).
 class SplashScreen extends StatefulWidget {
@@ -58,10 +57,17 @@ class _SplashScreenState extends State<SplashScreen>
     super.dispose();
   }
 
+  String _tagline(String code) {
+    return switch (AppLanguage.normalize(code)) {
+      'en' => 'Your rights protection system',
+      'ru' => 'Система защиты ваших прав',
+      _ => 'מערכת הגנת הזכויות שלך',
+    };
+  }
+
   @override
   Widget build(BuildContext context) {
-    context.watch<AppLanguageController>();
-    final l10n = AppLocalizations.of(context)!;
+    final code = context.watch<AppLanguageController>().code;
 
     return Scaffold(
       backgroundColor: VetoMockup.pageBackground,
@@ -91,7 +97,7 @@ class _SplashScreenState extends State<SplashScreen>
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      l10n.splashTagline,
+                      _tagline(code),
                       style: const TextStyle(
                         fontFamily: V26.sans,
                         color: V26.ink500,

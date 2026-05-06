@@ -13,11 +13,241 @@ import '../core/i18n/app_language.dart';
 import '../core/theme/veto_2026.dart';
 import '../services/auth_service.dart';
 import 'admin/_shell.dart';
-import '../l10n/app_localizations.dart';
-import 'admin/admin_l10n_lookups.dart';
 
-String _sub(BuildContext context, String key) =>
-    subAdmT(AppLocalizations.of(context)!, key);
+// ── i18n ──────────────────────────────────────────────────────
+const _i18n = {
+  'he': {
+    'title': 'משתמשים ומנויים',
+    'tabUsers': 'כל המשתמשים',
+    'tabLogs': 'לוג כניסות',
+    'revenue': 'הכנסות',
+    'total': 'סה"כ משתמשים',
+    'active': 'מנויים פעילים',
+    'expired': 'פגי תוקף',
+    'cancelled': 'בוטלו',
+    'monthly': 'הכנסה חודשית',
+    'allTime': 'סה"כ הכנסות',
+    'user': 'משתמש',
+    'plan': 'תוכנית',
+    'status': 'סטטוס',
+    'startDate': 'הצטרף',
+    'endDate': 'פקיעה',
+    'amount': 'סכום',
+    'actions': 'פעולות',
+    'activate': 'הפעל',
+    'cancel': 'בטל',
+    'extend': 'הארך 30 יום',
+    'search': 'חיפוש לפי שם/מייל/טלפון',
+    'noSubs': 'אין משתמשים',
+    'noLogs': 'אין לוג',
+    'loading': 'טוען...',
+    'refresh': 'רענן',
+    'statusActive': 'מנוי פעיל',
+    'statusExpired': 'פג תוקף',
+    'statusCancelled': 'בוטל',
+    'statusTrial': 'ניסיון',
+    'statusFree': 'חינמי',
+    'statusNoSub': 'ללא מנוי',
+    'statusUnverified': 'לא מאומת',
+    'planFree': 'חינמי',
+    'planBasic': 'בסיסי',
+    'planPro': 'מקצועי',
+    'planNone': 'ללא',
+    'confirmCancel': 'לבטל מנוי זה?',
+    'confirmActivate': 'להפעיל מנוי זה?',
+    'confirmExtend': 'להאריך ב-30 יום?',
+    'confirmDeleteUser': 'למחוק משתמש זה לצמיתות? פעולה בלתי הפיכה.',
+    'yes': 'כן',
+    'no': 'לא',
+    'updated': 'עודכן',
+    'edit': 'עריכה',
+    'delete': 'מחיקה',
+    'save': 'שמור',
+    'deleted': 'נמחק',
+    'errorSave': 'שגיאה',
+    'fullName': 'שם מלא',
+    'phoneLabel': 'טלפון',
+    'emailLabel': 'אימייל',
+    'subscriptionExpiry': 'תאריך פקיעת מנוי',
+    'subscribed': 'מנוי פעיל',
+    'manualExempt': 'פטור ידני (מנהל)',
+    'accountEnabled': 'חשבון פעיל',
+    'clearExpiry': 'נקה תאריך',
+    'logSuccess': 'הצליח',
+    'logFail': 'נכשל',
+    'logRegister': 'הרשמה',
+    'logOtpReq': 'בקשת OTP',
+    'logOtpOk': 'OTP אושר',
+    'logOtpFail': 'OTP נכשל',
+    'logGoogle': 'Google כניסה',
+    'logGoogleFail': 'Google נכשל',
+    'retry': 'נסה שוב',
+    'renewalsThisMonth': 'חידושים החודש',
+    'arpu': 'ARPU',
+    'mrrBadge': 'MRR',
+    'newPlan': '+ תוכנית חדשה',
+    'plansTitle': 'תוכניות מחיר',
+    'premiumMonthly': 'פרימיום חודשי',
+    'premiumYearly': 'פרימיום שנתי',
+    'freeTier': 'חינם',
+    'newPlanHint': 'יצירת תוכנית חדשה — בקרוב',
+  },
+  'en': {
+    'title': 'Users & Subscriptions',
+    'tabUsers': 'All Users',
+    'tabLogs': 'Login Logs',
+    'revenue': 'Revenue',
+    'total': 'Total Users',
+    'active': 'Active Subscribers',
+    'expired': 'Expired',
+    'cancelled': 'Cancelled',
+    'monthly': 'Monthly Revenue',
+    'allTime': 'Total Revenue',
+    'user': 'User',
+    'plan': 'Plan',
+    'status': 'Status',
+    'startDate': 'Joined',
+    'endDate': 'Expires',
+    'amount': 'Amount',
+    'actions': 'Actions',
+    'activate': 'Activate',
+    'cancel': 'Cancel',
+    'extend': 'Extend 30d',
+    'search': 'Search by name/email/phone',
+    'noSubs': 'No users found',
+    'noLogs': 'No logs',
+    'loading': 'Loading...',
+    'refresh': 'Refresh',
+    'statusActive': 'Active',
+    'statusExpired': 'Expired',
+    'statusCancelled': 'Cancelled',
+    'statusTrial': 'Trial',
+    'statusFree': 'Free',
+    'statusNoSub': 'No Subscription',
+    'statusUnverified': 'Unverified',
+    'planFree': 'Free',
+    'planBasic': 'Basic',
+    'planPro': 'Pro',
+    'planNone': 'None',
+    'confirmCancel': 'Cancel this subscription?',
+    'confirmActivate': 'Activate this subscription?',
+    'confirmExtend': 'Extend by 30 days?',
+    'confirmDeleteUser': 'Delete this user permanently? This cannot be undone.',
+    'yes': 'Yes',
+    'no': 'No',
+    'updated': 'Updated',
+    'edit': 'Edit',
+    'delete': 'Delete',
+    'save': 'Save',
+    'deleted': 'Deleted',
+    'errorSave': 'Error',
+    'fullName': 'Full name',
+    'phoneLabel': 'Phone',
+    'emailLabel': 'Email',
+    'subscriptionExpiry': 'Subscription expiry',
+    'subscribed': 'Subscribed',
+    'manualExempt': 'Manual exempt (admin)',
+    'accountEnabled': 'Account active',
+    'clearExpiry': 'Clear expiry',
+    'logSuccess': 'Success',
+    'logFail': 'Failed',
+    'logRegister': 'Register',
+    'logOtpReq': 'OTP Request',
+    'logOtpOk': 'OTP Verified',
+    'logOtpFail': 'OTP Failed',
+    'logGoogle': 'Google Login',
+    'logGoogleFail': 'Google Failed',
+    'retry': 'Try again',
+    'renewalsThisMonth': 'Renewals this month',
+    'arpu': 'ARPU',
+    'mrrBadge': 'MRR',
+    'newPlan': '+ New plan',
+    'plansTitle': 'Plans',
+    'premiumMonthly': 'Premium monthly',
+    'premiumYearly': 'Premium yearly',
+    'freeTier': 'Free',
+    'newPlanHint': 'New plan creation — coming soon',
+  },
+  'ru': {
+    'title': 'Пользователи и подписки',
+    'tabUsers': 'Все пользователи',
+    'tabLogs': 'Журнал входов',
+    'revenue': 'Доход',
+    'total': 'Всего',
+    'active': 'Активных',
+    'expired': 'Истекших',
+    'cancelled': 'Отменённых',
+    'monthly': 'Ежемесячный доход',
+    'allTime': 'Общий доход',
+    'user': 'Пользователь',
+    'plan': 'Тариф',
+    'status': 'Статус',
+    'startDate': 'Зарегистрирован',
+    'endDate': 'Истекает',
+    'amount': 'Сумма',
+    'actions': 'Действия',
+    'activate': 'Активировать',
+    'cancel': 'Отменить',
+    'extend': 'Продлить 30д',
+    'search': 'Поиск по имени/email/тел.',
+    'noSubs': 'Нет пользователей',
+    'noLogs': 'Нет записей',
+    'loading': 'Загрузка...',
+    'refresh': 'Обновить',
+    'statusActive': 'Активна',
+    'statusExpired': 'Истекла',
+    'statusCancelled': 'Отменена',
+    'statusTrial': 'Пробная',
+    'statusFree': 'Бесплатный',
+    'statusNoSub': 'Без подписки',
+    'statusUnverified': 'Не подтверждён',
+    'planFree': 'Бесплатный',
+    'planBasic': 'Базовый',
+    'planPro': 'Pro',
+    'planNone': 'Нет',
+    'confirmCancel': 'Отменить подписку?',
+    'confirmActivate': 'Активировать?',
+    'confirmExtend': 'Продлить на 30 дней?',
+    'confirmDeleteUser': 'Удалить этого пользователя навсегда?',
+    'yes': 'Да',
+    'no': 'Нет',
+    'updated': 'Обновлено',
+    'edit': 'Изменить',
+    'delete': 'Удалить',
+    'save': 'Сохранить',
+    'deleted': 'Удалено',
+    'errorSave': 'Ошибка',
+    'fullName': 'Имя',
+    'phoneLabel': 'Телефон',
+    'emailLabel': 'Email',
+    'subscriptionExpiry': 'Окончание подписки',
+    'subscribed': 'Подписка',
+    'manualExempt': 'Вручную (админ)',
+    'accountEnabled': 'Аккаунт активен',
+    'clearExpiry': 'Сброс даты',
+    'logSuccess': 'Успех',
+    'logFail': 'Ошибка',
+    'logRegister': 'Регистрация',
+    'logOtpReq': 'Запрос OTP',
+    'logOtpOk': 'OTP принят',
+    'logOtpFail': 'OTP ошибка',
+    'logGoogle': 'Вход Google',
+    'logGoogleFail': 'Google ошибка',
+    'retry': 'Повторить',
+    'renewalsThisMonth': 'Продления в этом месяце',
+    'arpu': 'ARPU',
+    'mrrBadge': 'MRR',
+    'newPlan': '+ Новый тариф',
+    'plansTitle': 'Тарифы',
+    'premiumMonthly': 'Премиум (месяц)',
+    'premiumYearly': 'Премиум (год)',
+    'freeTier': 'Бесплатно',
+    'newPlanHint': 'Новый тариф — скоро',
+  },
+};
+
+String _t(String code, String key) =>
+    (_i18n[code] ?? _i18n['en']!)[key] ?? key;
 
 // ── Data model ────────────────────────────────────────────────
 class _Sub {
@@ -74,25 +304,25 @@ class _Sub {
     }
   }
 
-  String statusLabel(BuildContext context) {
+  String statusLabel(String code) {
     switch (status) {
-      case 'active': return _sub(context, 'statusActive');
-      case 'free': return _sub(context, 'statusFree');
-      case 'trial': return _sub(context, 'statusTrial');
-      case 'expired': return _sub(context, 'statusExpired');
-      case 'cancelled': return _sub(context, 'statusCancelled');
-      case 'no_subscription': return _sub(context, 'statusNoSub');
-      case 'unverified': return _sub(context, 'statusUnverified');
+      case 'active': return _t(code, 'statusActive');
+      case 'free': return _t(code, 'statusFree');
+      case 'trial': return _t(code, 'statusTrial');
+      case 'expired': return _t(code, 'statusExpired');
+      case 'cancelled': return _t(code, 'statusCancelled');
+      case 'no_subscription': return _t(code, 'statusNoSub');
+      case 'unverified': return _t(code, 'statusUnverified');
       default: return status;
     }
   }
 
-  String planLabel(BuildContext context) {
+  String planLabel(String code) {
     switch (plan) {
-      case 'free': return _sub(context, 'planFree');
-      case 'basic': return _sub(context, 'planBasic');
-      case 'pro': return _sub(context, 'planPro');
-      case 'none': return _sub(context, 'planNone');
+      case 'free': return _t(code, 'planFree');
+      case 'basic': return _t(code, 'planBasic');
+      case 'pro': return _t(code, 'planPro');
+      case 'none': return _t(code, 'planNone');
       default: return plan;
     }
   }
@@ -119,14 +349,14 @@ class _LoginLog {
     createdAt: DateTime.tryParse(j['createdAt'] ?? '') ?? DateTime.now(),
   );
 
-  String eventLabel(BuildContext context) {
+  String eventLabel(String code) {
     switch (event) {
-      case 'register':     return _sub(context, 'logRegister');
-      case 'otp_request':  return _sub(context, 'logOtpReq');
-      case 'otp_success':  return _sub(context, 'logOtpOk');
-      case 'otp_fail':     return _sub(context, 'logOtpFail');
-      case 'google_login': return _sub(context, 'logGoogle');
-      case 'google_fail':  return _sub(context, 'logGoogleFail');
+      case 'register':     return _t(code, 'logRegister');
+      case 'otp_request':  return _t(code, 'logOtpReq');
+      case 'otp_success':  return _t(code, 'logOtpOk');
+      case 'otp_fail':     return _t(code, 'logOtpFail');
+      case 'google_login': return _t(code, 'logGoogle');
+      case 'google_fail':  return _t(code, 'logGoogleFail');
       default: return event;
     }
   }
@@ -249,7 +479,8 @@ class _SubscriptionAdminScreenState
   String _userApiId(_Sub s) =>
       s.userId.isNotEmpty ? s.userId : s.id;
 
-  Future<void> _putUser(String userId, Map<String, dynamic> body) async {
+  Future<void> _putUser(
+      String userId, Map<String, dynamic> body, String code) async {
     try {
       final tok = await _auth.getToken();
       if (tok == null) return;
@@ -261,20 +492,17 @@ class _SubscriptionAdminScreenState
           )
           .timeout(const Duration(seconds: 15));
       if (res.statusCode == 200) {
-        if (!mounted) return;
-        _snack(_sub(context, 'updated'));
+        _snack(_t(code, 'updated'));
         await _load();
-      } else {
-        if (!mounted) return;
-        _snack('${_sub(context, 'errorSave')}: ${res.statusCode}', ok: false);
+      } else if (mounted) {
+        _snack('${_t(code, 'errorSave')}: ${res.statusCode}', ok: false);
       }
     } catch (e) {
-      if (!mounted) return;
-      _snack('${_sub(context, 'errorSave')}: $e', ok: false);
+      if (mounted) _snack('${_t(code, 'errorSave')}: $e', ok: false);
     }
   }
 
-  Future<void> _deleteUserApi(String userId) async {
+  Future<void> _deleteUserApi(String userId, String code) async {
     try {
       final tok = await _auth.getToken();
       if (tok == null) return;
@@ -285,16 +513,13 @@ class _SubscriptionAdminScreenState
           )
           .timeout(const Duration(seconds: 15));
       if (res.statusCode == 200) {
-        if (!mounted) return;
-        _snack(_sub(context, 'deleted'));
+        _snack(_t(code, 'deleted'));
         await _load();
-      } else {
-        if (!mounted) return;
-        _snack('${_sub(context, 'errorSave')}: ${res.statusCode}', ok: false);
+      } else if (mounted) {
+        _snack('${_t(code, 'errorSave')}: ${res.statusCode}', ok: false);
       }
     } catch (e) {
-      if (!mounted) return;
-      _snack('${_sub(context, 'errorSave')}: $e', ok: false);
+      if (mounted) _snack('${_t(code, 'errorSave')}: $e', ok: false);
     }
   }
 
@@ -319,7 +544,7 @@ class _SubscriptionAdminScreenState
             borderRadius: BorderRadius.circular(16),
             side: const BorderSide(color: V26.hairline),
           ),
-          title: Text(_sub(context, 'edit'),
+          title: Text(_t(code, 'edit'),
               style: const TextStyle(
                   color: V26.ink900, fontWeight: FontWeight.w800)),
           content: SingleChildScrollView(
@@ -331,7 +556,7 @@ class _SubscriptionAdminScreenState
                   controller: nameCtrl,
                   cursorColor: V26.navy600,
                   decoration: InputDecoration(
-                    labelText: _sub(context, 'fullName'),
+                    labelText: _t(code, 'fullName'),
                     labelStyle: const TextStyle(color: V26.ink500),
                     filled: true,
                     fillColor: const Color(0xFF0F1A24),
@@ -348,7 +573,7 @@ class _SubscriptionAdminScreenState
                   controller: phoneCtrl,
                   cursorColor: V26.navy600,
                   decoration: InputDecoration(
-                    labelText: _sub(context, 'phoneLabel'),
+                    labelText: _t(code, 'phoneLabel'),
                     labelStyle: const TextStyle(color: V26.ink500),
                     filled: true,
                     fillColor: const Color(0xFF0F1A24),
@@ -366,7 +591,7 @@ class _SubscriptionAdminScreenState
                   controller: emailCtrl,
                   cursorColor: V26.navy600,
                   decoration: InputDecoration(
-                    labelText: _sub(context, 'emailLabel'),
+                    labelText: _t(code, 'emailLabel'),
                     labelStyle: const TextStyle(color: V26.ink500),
                     filled: true,
                     fillColor: const Color(0xFF0F1A24),
@@ -383,7 +608,7 @@ class _SubscriptionAdminScreenState
                 const SizedBox(height: 8),
                 ListTile(
                   contentPadding: EdgeInsets.zero,
-                  title: Text(_sub(context, 'subscribed'),
+                  title: Text(_t(code, 'subscribed'),
                       style: const TextStyle(color: V26.ink900, fontSize: 14)),
                   trailing: Switch(
                     value: subscribed,
@@ -394,7 +619,7 @@ class _SubscriptionAdminScreenState
                 ),
                 ListTile(
                   contentPadding: EdgeInsets.zero,
-                  title: Text(_sub(context, 'manualExempt'),
+                  title: Text(_t(code, 'manualExempt'),
                       style: const TextStyle(color: V26.ink900, fontSize: 14)),
                   trailing: Switch(
                     value: manual,
@@ -405,7 +630,7 @@ class _SubscriptionAdminScreenState
                 ),
                 ListTile(
                   contentPadding: EdgeInsets.zero,
-                  title: Text(_sub(context, 'accountEnabled'),
+                  title: Text(_t(code, 'accountEnabled'),
                       style: const TextStyle(color: V26.ink900, fontSize: 14)),
                   trailing: Switch(
                     value: active,
@@ -418,10 +643,10 @@ class _SubscriptionAdminScreenState
                   Expanded(
                     child: Text(
                       expiry == null
-                          ? _sub(context, 'subscriptionExpiry')
+                          ? _t(code, 'subscriptionExpiry')
                           : () {
                               final x = expiry!;
-                              return '${_sub(context, 'subscriptionExpiry')}: '
+                              return '${_t(code, 'subscriptionExpiry')}: '
                                   '${x.day}/${x.month}/${x.year}';
                             }(),
                       style: const TextStyle(
@@ -439,11 +664,11 @@ class _SubscriptionAdminScreenState
                       );
                       if (d != null) setDlg(() => expiry = d);
                     },
-                    child: Text(_sub(context, 'endDate')),
+                    child: Text(_t(code, 'endDate')),
                   ),
                   TextButton(
                     onPressed: () => setDlg(() => expiry = null),
-                    child: Text(_sub(context, 'clearExpiry')),
+                    child: Text(_t(code, 'clearExpiry')),
                   ),
                 ]),
               ],
@@ -452,7 +677,7 @@ class _SubscriptionAdminScreenState
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx, false),
-              child: Text(_sub(context, 'no'),
+              child: Text(_t(code, 'no'),
                   style: const TextStyle(color: V26.ink500)),
             ),
             FilledButton(
@@ -461,7 +686,7 @@ class _SubscriptionAdminScreenState
                 backgroundColor: V26.navy600,
                 foregroundColor: Colors.white,
               ),
-              child: Text(_sub(context, 'save')),
+              child: Text(_t(code, 'save')),
             ),
           ],
         ),
@@ -496,7 +721,7 @@ class _SubscriptionAdminScreenState
     phoneCtrl.dispose();
     emailCtrl.dispose();
 
-    await _putUser(uid, body);
+    await _putUser(uid, body, code);
   }
 
   Future<bool> _confirm(String msg) async =>
@@ -513,7 +738,7 @@ class _SubscriptionAdminScreenState
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx, false),
-              child: Text(_sub(context, 'no'),
+              child: Text(_t(context.read<AppLanguageController>().code, 'no'),
                   style: const TextStyle(color: V26.ink500)),
             ),
             FilledButton(
@@ -522,7 +747,7 @@ class _SubscriptionAdminScreenState
                 backgroundColor: V26.navy600,
                 foregroundColor: Colors.white,
               ),
-              child: Text(_sub(context, 'yes')),
+              child: Text(_t(context.read<AppLanguageController>().code, 'yes')),
             ),
           ],
         ),
@@ -552,7 +777,7 @@ class _SubscriptionAdminScreenState
       textDirection: isRtl ? TextDirection.rtl : TextDirection.ltr,
       child: AdminShell(
         active: AdminSection.subscriptions,
-        title: _sub(context, 'title'),
+        title: _t(code, 'title'),
         onRefresh: _load,
         bottom: TabBar(
           controller: _tabController,
@@ -560,8 +785,8 @@ class _SubscriptionAdminScreenState
           unselectedLabelColor: V26.ink500,
           indicatorColor: V26.navy600,
           tabs: [
-            Tab(text: _sub(context, 'tabUsers'), icon: const Icon(Icons.people_rounded, size: 18)),
-            Tab(text: _sub(context, 'tabLogs'), icon: const Icon(Icons.history_rounded, size: 18)),
+            Tab(text: _t(code, 'tabUsers'), icon: const Icon(Icons.people_rounded, size: 18)),
+            Tab(text: _t(code, 'tabLogs'), icon: const Icon(Icons.history_rounded, size: 18)),
           ],
         ),
         body: V26Backdrop(
@@ -582,7 +807,7 @@ class _SubscriptionAdminScreenState
                       FilledButton.icon(
                         onPressed: _load,
                         icon: const Icon(Icons.refresh_rounded),
-                        label: Text(_sub(context, 'retry')),
+                        label: Text(_t(code, 'retry')),
                         style: FilledButton.styleFrom(
                             backgroundColor: V26.navy600),
                       ),
@@ -620,7 +845,7 @@ class _SubscriptionAdminScreenState
           children: [
             Row(
               children: [
-                V26Badge(_sub(context, 'mrrBadge'), tone: V26BadgeTone.gold),
+                V26Badge(_t(code, 'mrrBadge'), tone: V26BadgeTone.gold),
                 const SizedBox(width: 10),
                 Text(
                   '₪${_monthlyRevenue.toStringAsFixed(0)}',
@@ -632,9 +857,9 @@ class _SubscriptionAdminScreenState
                 ),
                 const Spacer(),
                 V26PillCTA(
-                  label: _sub(context, 'newPlan'),
+                  label: _t(code, 'newPlan'),
                   icon: Icons.add_rounded,
-                  onTap: () => _snack(_sub(context, 'newPlanHint')),
+                  onTap: () => _snack(_t(code, 'newPlanHint')),
                 ),
               ],
             ),
@@ -645,7 +870,7 @@ class _SubscriptionAdminScreenState
                   child: _StatChip(
                     icon: Icons.verified_user_outlined,
                     color: V26.ok,
-                    label: _sub(context, 'active'),
+                    label: _t(code, 'active'),
                     value: '$activeCount',
                     onDark: true,
                   ),
@@ -655,7 +880,7 @@ class _SubscriptionAdminScreenState
                   child: _StatChip(
                     icon: Icons.autorenew_rounded,
                     color: V26.goldDeep,
-                    label: _sub(context, 'renewalsThisMonth'),
+                    label: _t(code, 'renewalsThisMonth'),
                     value: '$_renewalsThisMonth',
                     onDark: true,
                   ),
@@ -665,7 +890,7 @@ class _SubscriptionAdminScreenState
                   child: _StatChip(
                     icon: Icons.analytics_outlined,
                     color: V26.navy500,
-                    label: _sub(context, 'arpu'),
+                    label: _t(code, 'arpu'),
                     value: '₪${_arpu.toStringAsFixed(0)}',
                     onDark: true,
                   ),
@@ -674,7 +899,7 @@ class _SubscriptionAdminScreenState
             ),
             const SizedBox(height: 12),
             Text(
-              _sub(context, 'plansTitle'),
+              _t(code, 'plansTitle'),
               style: TextStyle(
                 color: Colors.white.withValues(alpha: 0.55),
                 fontSize: 11,
@@ -687,21 +912,21 @@ class _SubscriptionAdminScreenState
               children: [
                 Expanded(
                   child: _PlanPriceCell(
-                    label: _sub(context, 'premiumMonthly'),
+                    label: _t(code, 'premiumMonthly'),
                     price: '₪99',
                   ),
                 ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: _PlanPriceCell(
-                    label: _sub(context, 'premiumYearly'),
+                    label: _t(code, 'premiumYearly'),
                     price: '₪899',
                   ),
                 ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: _PlanPriceCell(
-                    label: _sub(context, 'freeTier'),
+                    label: _t(code, 'freeTier'),
                     price: '₪0',
                   ),
                 ),
@@ -714,7 +939,7 @@ class _SubscriptionAdminScreenState
                   child: _StatChip(
                     icon: Icons.account_balance_wallet_rounded,
                     color: V26.navy500,
-                    label: _sub(context, 'allTime'),
+                    label: _t(code, 'allTime'),
                     value: '₪${_totalRevenue.toStringAsFixed(0)}',
                     onDark: true,
                   ),
@@ -724,7 +949,7 @@ class _SubscriptionAdminScreenState
                   child: _StatChip(
                     icon: Icons.groups_outlined,
                     color: V26.ink500,
-                    label: _sub(context, 'total'),
+                    label: _t(code, 'total'),
                     value: '${_subs.length}',
                     onDark: true,
                   ),
@@ -736,9 +961,9 @@ class _SubscriptionAdminScreenState
               spacing: 8,
               runSpacing: 6,
               children: [
-                _CountBadge(_sub(context, 'active'), activeCount, V26.ok),
-                _CountBadge(_sub(context, 'statusFree'), freeCount, V26.navy500),
-                _CountBadge(_sub(context, 'expired'), expiredCount, V26.warn),
+                _CountBadge(_t(code, 'active'), activeCount, V26.ok),
+                _CountBadge(_t(code, 'statusFree'), freeCount, V26.navy500),
+                _CountBadge(_t(code, 'expired'), expiredCount, V26.warn),
               ],
             ),
           ],
@@ -753,7 +978,7 @@ class _SubscriptionAdminScreenState
           style: const TextStyle(color: V26.ink900, fontSize: 14),
           cursorColor: V26.navy600,
           decoration: InputDecoration(
-            hintText: _sub(context, 'search'),
+            hintText: _t(code, 'search'),
             hintStyle: const TextStyle(color: V26.ink500),
             prefixIcon: const Icon(Icons.search_rounded, color: V26.ink500, size: 20),
             filled: true,
@@ -774,7 +999,7 @@ class _SubscriptionAdminScreenState
       const Divider(height: 1, color: V26.hairline),
       Expanded(
         child: _filtered.isEmpty
-            ? Center(child: Text(_sub(context, 'noSubs'),
+            ? Center(child: Text(_t(code, 'noSubs'),
                 style: const TextStyle(color: V26.ink500, fontSize: 15)))
             : ListView.separated(
                 padding: const EdgeInsets.all(14),
@@ -787,27 +1012,27 @@ class _SubscriptionAdminScreenState
                     sub: s,
                     code: code,
                     onActivate: () async {
-                      if (await _confirm(_sub(context, 'confirmActivate'))) {
+                      if (await _confirm(_t(code, 'confirmActivate'))) {
                         await _putUser(uid, {
                           'is_subscribed': true,
                           'extendDays': 30,
-                        });
+                        }, code);
                       }
                     },
                     onCancel: () async {
-                      if (await _confirm(_sub(context, 'confirmCancel'))) {
-                        await _putUser(uid, {'is_subscribed': false});
+                      if (await _confirm(_t(code, 'confirmCancel'))) {
+                        await _putUser(uid, {'is_subscribed': false}, code);
                       }
                     },
                     onExtend: () async {
-                      if (await _confirm(_sub(context, 'confirmExtend'))) {
-                        await _putUser(uid, {'extendDays': 30});
+                      if (await _confirm(_t(code, 'confirmExtend'))) {
+                        await _putUser(uid, {'extendDays': 30}, code);
                       }
                     },
                     onEdit: () => _openEditDialog(s, code),
                     onDelete: () async {
-                      if (await _confirm(_sub(context, 'confirmDeleteUser'))) {
-                        await _deleteUserApi(uid);
+                      if (await _confirm(_t(code, 'confirmDeleteUser'))) {
+                        await _deleteUserApi(uid, code);
                       }
                     },
                   );
@@ -819,7 +1044,7 @@ class _SubscriptionAdminScreenState
 
   Widget _buildLogsTab(String code) {
     if (_logs.isEmpty) {
-      return Center(child: Text(_sub(context, 'noLogs'),
+      return Center(child: Text(_t(code, 'noLogs'),
           style: const TextStyle(color: V26.ink500)));
     }
     return ListView.separated(
@@ -856,7 +1081,7 @@ class _LogCard extends StatelessWidget {
         const SizedBox(width: 10),
         Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Row(children: [
-            Text(log.eventLabel(context),
+            Text(log.eventLabel(code),
                 style: TextStyle(color: color, fontWeight: FontWeight.w700, fontSize: 13)),
             const SizedBox(width: 8),
             if (log.role != null)
@@ -942,7 +1167,7 @@ class _SubCard extends StatelessWidget {
               borderRadius: BorderRadius.circular(20),
               border: Border.all(color: sub.statusColor.withValues(alpha: 0.3)),
             ),
-            child: Text(sub.statusLabel(context),
+            child: Text(sub.statusLabel(code),
                 style: TextStyle(
                     color: sub.statusColor, fontSize: 12,
                     fontWeight: FontWeight.w700)),
@@ -951,7 +1176,7 @@ class _SubCard extends StatelessWidget {
         const SizedBox(height: 10),
         // Plan + dates + amount
         Wrap(spacing: 14, runSpacing: 4, children: [
-          _InfoPill(Icons.card_membership_rounded, sub.planLabel(context),
+          _InfoPill(Icons.card_membership_rounded, sub.planLabel(code),
               V26.navy500),
           if (sub.amount > 0)
             _InfoPill(Icons.payments_rounded,
@@ -969,29 +1194,29 @@ class _SubCard extends StatelessWidget {
         // Action buttons
         Wrap(spacing: 8, runSpacing: 6, children: [
           _ActionBtn(
-              label: _sub(context, 'edit'),
+              label: _t(code, 'edit'),
               icon: Icons.edit_outlined,
               color: V26.navy600,
               onTap: onEdit),
           _ActionBtn(
-              label: _sub(context, 'delete'),
+              label: _t(code, 'delete'),
               icon: Icons.delete_outline_rounded,
               color: V26.emerg,
               onTap: onDelete),
           if (sub.status != 'active')
             _ActionBtn(
-                label: _sub(context, 'activate'),
+                label: _t(code, 'activate'),
                 icon: Icons.check_circle_outline_rounded,
                 color: V26.ok,
                 onTap: onActivate),
           if (sub.status == 'active')
             _ActionBtn(
-                label: _sub(context, 'cancel'),
+                label: _t(code, 'cancel'),
                 icon: Icons.cancel_outlined,
                 color: V26.emerg,
                 onTap: onCancel),
           _ActionBtn(
-              label: _sub(context, 'extend'),
+              label: _t(code, 'extend'),
               icon: Icons.add_circle_outline_rounded,
               color: V26.navy500,
               onTap: onExtend),

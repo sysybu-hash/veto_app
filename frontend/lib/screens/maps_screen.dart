@@ -11,7 +11,6 @@ import 'package:provider/provider.dart';
 import '../core/i18n/app_language.dart';
 import '../core/theme/veto_2026.dart';
 import '../core/theme/veto_mockup_tokens.dart';
-import '../l10n/app_localizations.dart';
 import '../services/auth_service.dart';
 import '../platform/maps_embed_export.dart';
 import '../widgets/citizen_mockup_shell.dart';
@@ -81,7 +80,9 @@ class _MapsScreenState extends State<MapsScreen> {
   @override
   Widget build(BuildContext context) {
     final code = context.watch<AppLanguageController>().code;
-    final title = AppLocalizations.of(context)!.mapsScrTitle;
+    final title = code == 'he'
+        ? 'מפת Google'
+        : (code == 'ru' ? 'Карты Google' : 'Google Maps');
     final isWide =
         MediaQuery.sizeOf(context).width >= V26AppShell.desktopBreakpoint;
 

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/i18n/app_language.dart';
-import '../../l10n/app_localizations.dart';
 import '../legal_document_screen.dart';
 import '../../widgets/citizen_mockup_shell.dart';
 
@@ -11,8 +10,8 @@ class SecurityCenterScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    context.watch<AppLanguageController>();
-    final l10n = AppLocalizations.of(context)!;
+    final code = context.watch<AppLanguageController>().code;
+    final he = code == 'he';
     return CitizenMockupShell(
       currentRoute: '/security_center',
       mobileNavIndex: citizenMobileNavIndexForRoute('/security_center'),
@@ -20,24 +19,23 @@ class SecurityCenterScreen extends StatelessWidget {
         padding: const EdgeInsets.all(20),
         children: [
           Text(
-            l10n.citizenSecurityTitle,
+            he ? 'מרכז ביטחון' : 'Security center',
             style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800),
           ),
           const SizedBox(height: 16),
           ListTile(
             leading: const Icon(Icons.privacy_tip_outlined),
-            title: Text(l10n.citizenSecurityPrivacy),
+            title: Text(he ? 'מדיניות פרטיות' : 'Privacy'),
             onTap: () => Navigator.push(
               context,
               MaterialPageRoute<void>(
-                builder: (_) =>
-                    const LegalDocumentScreen(kind: LegalDocKind.privacy),
+                builder: (_) => const LegalDocumentScreen(kind: LegalDocKind.privacy),
               ),
             ),
           ),
           ListTile(
             leading: const Icon(Icons.article_outlined),
-            title: Text(l10n.citizenSecurityTerms),
+            title: Text(he ? 'תנאי שימוש' : 'Terms'),
             onTap: () => Navigator.push(
               context,
               MaterialPageRoute<void>(
@@ -47,7 +45,7 @@ class SecurityCenterScreen extends StatelessWidget {
           ),
           ListTile(
             leading: const Icon(Icons.settings_outlined),
-            title: Text(l10n.citizenSecurityAccount),
+            title: Text(he ? 'הגדרות חשבון' : 'Account settings'),
             onTap: () => Navigator.pushNamed(context, '/settings'),
           ),
         ],

@@ -19,7 +19,6 @@ import '../services/auth_service.dart';
 import '../widgets/citizen_mockup_shell.dart';
 import '../services/calendar_api_service.dart';
 import '../services/gcal_api_service.dart';
-import '../l10n/app_localizations.dart';
 
 enum _CalView { month, week, agenda }
 
@@ -29,15 +28,75 @@ class _CaseOption {
   final String name;
 }
 
-String _calEventTypeLabel(AppLocalizations loc, String t) {
-  switch (t) {
-    case 'hearing':
-      return loc.calScrTypeHearing;
-    case 'meeting':
-      return loc.calScrTypeMeeting;
-    default:
-      return loc.calScrTypeOther;
+class _CalStrings {
+  _CalStrings(this.code);
+  final String code;
+
+  String get title {
+    switch (code) {
+      case 'en':
+        return 'Legal calendar';
+      case 'ru':
+        return 'Юридический календарь';
+      default:
+        return 'יומן משפטי';
+    }
   }
+
+  String get monthTab => code == 'en' ? 'Month' : (code == 'ru' ? 'Месяц' : 'חודש');
+  String get weekTab => code == 'en' ? 'Week' : (code == 'ru' ? 'Неделя' : 'שבוע');
+  String get agendaTab => code == 'en' ? 'Agenda' : (code == 'ru' ? 'Список' : 'אג׳נדה');
+  String get refresh => code == 'en' ? 'Refresh' : (code == 'ru' ? 'Обновить' : 'רענון');
+  String get prev => code == 'en' ? 'Previous' : (code == 'ru' ? 'Назад' : 'הקודם');
+  String get next => code == 'en' ? 'Next' : (code == 'ru' ? 'Вперёд' : 'הבא');
+  String get addEvent => code == 'en' ? 'Event' : (code == 'ru' ? 'Событие' : 'אירוע');
+  String get noEvents => code == 'en' ? 'No events' : (code == 'ru' ? 'Нет событий' : 'אין אירועים');
+  String get icalTitle =>
+      code == 'en' ? 'iCal (sync)' : (code == 'ru' ? 'iCal (синхр.)' : 'iCal (לסנכרון)');
+  String get copyUrl => code == 'en' ? 'Copy URL' : (code == 'ru' ? 'Копировать' : 'העתקת קישור');
+  String get copied => code == 'en' ? 'Copied' : (code == 'ru' ? 'Скопировано' : 'הועתק');
+  String get googleOutlookHint => code == 'en'
+      ? 'Paste into Google Calendar → Settings → Add calendar → From URL, or Outlook Subscribe.'
+      : (code == 'ru'
+          ? 'Вставьте в Google Календарь или Outlook как подписку по URL.'
+          : 'הדביקו ב-Google Calendar או Outlook כמנוי ללוח שנה (URL).');
+  String get gcalTitle =>
+      code == 'en' ? 'Google Calendar sync' : (code == 'ru' ? 'Синхр. Google' : 'סנכרון Google Calendar');
+  String get gcalConnect => code == 'en' ? 'Connect' : (code == 'ru' ? 'Подключить' : 'חיבור');
+  String get gcalDisconnect =>
+      code == 'en' ? 'Disconnect' : (code == 'ru' ? 'Отключить' : 'ניתוק');
+  String get gcalConnected =>
+      code == 'en' ? 'Connected' : (code == 'ru' ? 'Подключено' : 'מחובר');
+  String get gcalNotConfigured => code == 'en'
+      ? 'Google sync not configured on server.'
+      : (code == 'ru' ? 'Синхронизация не настроена.' : 'הסנכרון לא מוגדר בשרת.');
+  String typeLabel(String t) {
+    switch (t) {
+      case 'hearing':
+        return code == 'en' ? 'Hearing' : (code == 'ru' ? 'Суд' : 'דיון');
+      case 'meeting':
+        return code == 'en' ? 'Meeting' : (code == 'ru' ? 'Встреча' : 'ייעוץ');
+      default:
+        return code == 'en' ? 'Other' : (code == 'ru' ? 'Другое' : 'אחר');
+    }
+  }
+
+  String get newEvent => code == 'en' ? 'New event' : (code == 'ru' ? 'Новое' : 'אירוע חדש');
+  String get editEvent => code == 'en' ? 'Edit event' : (code == 'ru' ? 'Изменить' : 'עריכת אירוע');
+  String get save => code == 'en' ? 'Save' : (code == 'ru' ? 'Сохранить' : 'שמירה');
+  String get cancel => code == 'en' ? 'Cancel' : (code == 'ru' ? 'Отмена' : 'ביטול');
+  String get delete => code == 'en' ? 'Delete' : (code == 'ru' ? 'Удалить' : 'מחיקה');
+  String get titleField => code == 'en' ? 'Title' : (code == 'ru' ? 'Заголовок' : 'כותרת');
+  String get typeField => code == 'en' ? 'Type' : (code == 'ru' ? 'Тип' : 'סוג');
+  String get addressField => code == 'en' ? 'Address (maps)' : (code == 'ru' ? 'Адрес' : 'כתובת (לניווט)');
+  String get notesField => code == 'en' ? 'Notes' : (code == 'ru' ? 'Заметки' : 'הערות');
+  String get reminders => code == 'en' ? 'Reminders' : (code == 'ru' ? 'Напоминания' : 'תזכורות');
+  String get linkCase => code == 'en' ? 'Vault case' : (code == 'ru' ? 'Дело' : 'תיק בכספת');
+  String get noCase => code == 'en' ? 'None' : (code == 'ru' ? 'Нет' : 'ללא');
+  String get startLbl => code == 'en' ? 'Start' : (code == 'ru' ? 'Начало' : 'התחלה');
+  String get endLbl => code == 'en' ? 'End' : (code == 'ru' ? 'Конец' : 'סיום');
+  String get confirmDelete =>
+      code == 'en' ? 'Delete this event?' : (code == 'ru' ? 'Удалить?' : 'למחוק את האירוע?');
 }
 
 Color _typeColor(String type) {
@@ -93,8 +152,6 @@ class LegalCalendarScreen extends StatefulWidget {
 }
 
 class _LegalCalendarScreenState extends State<LegalCalendarScreen> {
-  AppLocalizations get _l10n => AppLocalizations.of(context)!;
-
   final _api = CalendarApiService();
   final _gcalApi = GcalApiService();
   final _auth = AuthService();
@@ -189,11 +246,11 @@ class _LegalCalendarScreenState extends State<LegalCalendarScreen> {
     });
   }
 
-  Future<void> _openGcalConnect() async {
+  Future<void> _openGcalConnect(_CalStrings L) async {
     final url = await _gcalApi.connectAuthUrl();
     if (url == null || url.isEmpty) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(_l10n.calScrGcalNotConfigured)));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(L.gcalNotConfigured)));
       return;
     }
     final u = Uri.parse(url);
@@ -202,11 +259,11 @@ class _LegalCalendarScreenState extends State<LegalCalendarScreen> {
     }
   }
 
-  Future<void> _gcalDisconnect() async {
+  Future<void> _gcalDisconnect(_CalStrings L) async {
     final ok = await _gcalApi.disconnect();
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(ok ? _l10n.calScrGcalDisconnect : _l10n.calScrGenericError)),
+      SnackBar(content: Text(ok ? L.gcalDisconnect : 'Error')),
     );
     await _load();
   }
@@ -248,7 +305,8 @@ class _LegalCalendarScreenState extends State<LegalCalendarScreen> {
       ..sort((a, b) => a.start.compareTo(b.start));
   }
 
-  Future<void> _showEventEditor({
+  Future<void> _showEventEditor(
+    _CalStrings L, {
     CalendarEventDto? existing,
     DateTime? suggestedStart,
   }) async {
@@ -338,7 +396,7 @@ class _LegalCalendarScreenState extends State<LegalCalendarScreen> {
                         ),
                       ),
                       Text(
-                        existing == null ? _l10n.calScrNewEvent : _l10n.calScrEditEvent,
+                        existing == null ? L.newEvent : L.editEvent,
                         style: const TextStyle(
                           color: V26.ink900,
                           fontFamily: V26.serif,
@@ -351,7 +409,7 @@ class _LegalCalendarScreenState extends State<LegalCalendarScreen> {
                         controller: titleCtrl,
                         style: const TextStyle(color: V26.ink900),
                         decoration: InputDecoration(
-                          labelText: _l10n.calScrTitleField,
+                          labelText: L.titleField,
                           labelStyle: const TextStyle(color: V26.ink500),
                         ),
                       ),
@@ -359,12 +417,12 @@ class _LegalCalendarScreenState extends State<LegalCalendarScreen> {
                       DropdownMenu<String>(
                         initialSelection:
                             ['hearing', 'meeting', 'other'].contains(type) ? type : 'other',
-                        label: Text(_l10n.calScrTypeField, style: const TextStyle(color: V26.ink500)),
+                        label: Text(L.typeField, style: const TextStyle(color: V26.ink500)),
                         dropdownMenuEntries: ['hearing', 'meeting', 'other']
                             .map(
                               (t) => DropdownMenuEntry(
                                 value: t,
-                                label: _calEventTypeLabel(_l10n, t),
+                                label: L.typeLabel(t),
                               ),
                             )
                             .toList(),
@@ -376,7 +434,7 @@ class _LegalCalendarScreenState extends State<LegalCalendarScreen> {
                       ListTile(
                         contentPadding: EdgeInsets.zero,
                         title: Text(
-                          '${_l10n.calScrStart}: ${start.toLocal().toString().substring(0, 16)}',
+                          '${L.startLbl}: ${start.toLocal().toString().substring(0, 16)}',
                           style: const TextStyle(color: V26.ink700, fontSize: 14),
                         ),
                         trailing: const Icon(Icons.edit_calendar_outlined, color: V26.navy600),
@@ -385,7 +443,7 @@ class _LegalCalendarScreenState extends State<LegalCalendarScreen> {
                       ListTile(
                         contentPadding: EdgeInsets.zero,
                         title: Text(
-                          '${_l10n.calScrEnd}: ${end.toLocal().toString().substring(0, 16)}',
+                          '${L.endLbl}: ${end.toLocal().toString().substring(0, 16)}',
                           style: const TextStyle(color: V26.ink700, fontSize: 14),
                         ),
                         trailing: const Icon(Icons.edit_calendar_outlined, color: V26.navy600),
@@ -395,7 +453,7 @@ class _LegalCalendarScreenState extends State<LegalCalendarScreen> {
                         controller: addrCtrl,
                         style: const TextStyle(color: V26.ink900),
                         decoration: InputDecoration(
-                          labelText: _l10n.calScrAddressField,
+                          labelText: L.addressField,
                           labelStyle: const TextStyle(color: V26.ink500),
                         ),
                       ),
@@ -405,12 +463,12 @@ class _LegalCalendarScreenState extends State<LegalCalendarScreen> {
                         maxLines: 3,
                         style: const TextStyle(color: V26.ink900),
                         decoration: InputDecoration(
-                          labelText: _l10n.calScrNotesField,
+                          labelText: L.notesField,
                           labelStyle: const TextStyle(color: V26.ink500),
                         ),
                       ),
                       const SizedBox(height: 12),
-                      Text(_l10n.calScrReminders, style: const TextStyle(color: V26.ink900, fontWeight: FontWeight.w600)),
+                      Text(L.reminders, style: const TextStyle(color: V26.ink900, fontWeight: FontWeight.w600)),
                       Wrap(
                         spacing: 8,
                         children: [
@@ -433,9 +491,9 @@ class _LegalCalendarScreenState extends State<LegalCalendarScreen> {
                       const SizedBox(height: 8),
                       DropdownMenu<String>(
                         initialSelection: caseId ?? '__none__',
-                        label: Text(_l10n.calScrLinkCase, style: const TextStyle(color: V26.ink500)),
+                        label: Text(L.linkCase, style: const TextStyle(color: V26.ink500)),
                         dropdownMenuEntries: [
-                          DropdownMenuEntry(value: '__none__', label: _l10n.calScrNoCase),
+                          DropdownMenuEntry(value: '__none__', label: L.noCase),
                           ..._cases.map(
                             (c) => DropdownMenuEntry(value: c.id, label: c.name),
                           ),
@@ -449,18 +507,18 @@ class _LegalCalendarScreenState extends State<LegalCalendarScreen> {
                           if (existing != null)
                             TextButton(
                               onPressed: () => Navigator.pop(ctx, 2),
-                              child: Text(_l10n.commonDelete, style: const TextStyle(color: V26.emerg)),
+                              child: Text(L.delete, style: const TextStyle(color: V26.emerg)),
                             ),
                           const Spacer(),
                           TextButton(
                             onPressed: () => Navigator.pop(ctx, 0),
-                            child: Text(_l10n.commonCancel),
+                            child: Text(L.cancel),
                           ),
                           const SizedBox(width: 8),
                           FilledButton(
                             onPressed: () => Navigator.pop(ctx, 1),
                             style: FilledButton.styleFrom(backgroundColor: V26.navy600),
-                            child: Text(_l10n.commonSave),
+                            child: Text(L.save),
                           ),
                         ],
                       ),
@@ -514,12 +572,12 @@ class _LegalCalendarScreenState extends State<LegalCalendarScreen> {
         context: context,
         builder: (c) => AlertDialog(
           backgroundColor: V26.surface,
-          title: Text(_l10n.calScrConfirmDeleteEvent, style: const TextStyle(color: V26.ink900)),
+          title: Text(L.confirmDelete, style: const TextStyle(color: V26.ink900)),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(c, false), child: Text(_l10n.commonCancel)),
+            TextButton(onPressed: () => Navigator.pop(c, false), child: Text(L.cancel)),
             TextButton(
               onPressed: () => Navigator.pop(c, true),
-              child: Text(_l10n.commonDelete, style: const TextStyle(color: V26.emerg)),
+              child: Text(L.delete, style: const TextStyle(color: V26.emerg)),
             ),
           ],
         ),
@@ -535,14 +593,14 @@ class _LegalCalendarScreenState extends State<LegalCalendarScreen> {
     if (mounted) await _load();
   }
 
-  Widget _buildGcalCard() {
+  Widget _buildGcalCard(_CalStrings L) {
     final s = _gcalStatus;
     if (s == null) return const SizedBox.shrink();
     final enabled = s['enabled'] == true;
     if (!enabled) {
       return Padding(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-        child: Text(_l10n.calScrGcalNotConfigured, style: const TextStyle(color: V26.ink500, fontSize: 12)),
+        child: Text(L.gcalNotConfigured, style: const TextStyle(color: V26.ink500, fontSize: 12)),
       );
     }
     final connected = s['connected'] == true;
@@ -550,21 +608,21 @@ class _LegalCalendarScreenState extends State<LegalCalendarScreen> {
     return Material(
       color: V26.surface,
       child: ListTile(
-        title: Text(_l10n.calScrGcalTitle, style: const TextStyle(color: V26.ink900, fontSize: 14)),
+        title: Text(L.gcalTitle, style: const TextStyle(color: V26.ink900, fontSize: 14)),
         subtitle: Text(
           connected
-              ? '${_l10n.calScrGcalConnected}${last != null ? ' · $last' : ''}'
-              : _l10n.calScrGcalConnect,
+              ? '${L.gcalConnected}${last != null ? ' · $last' : ''}'
+              : L.gcalConnect,
           style: const TextStyle(color: V26.ink500, fontSize: 12),
         ),
         trailing: connected
-            ? TextButton(onPressed: () => _gcalDisconnect(), child: Text(_l10n.calScrGcalDisconnect))
-            : TextButton(onPressed: () => _openGcalConnect(), child: Text(_l10n.calScrGcalConnect)),
+            ? TextButton(onPressed: () => _gcalDisconnect(L), child: Text(L.gcalDisconnect))
+            : TextButton(onPressed: () => _openGcalConnect(L), child: Text(L.gcalConnect)),
       ),
     );
   }
 
-  Widget _buildIcalCard() {
+  Widget _buildIcalCard(_CalStrings L) {
     if (_icalHint == null || _icalHint!.isEmpty) return const SizedBox.shrink();
     final display = _icalDisplay(_icalHint);
     return Material(
@@ -576,25 +634,25 @@ class _LegalCalendarScreenState extends State<LegalCalendarScreen> {
           children: [
             ListTile(
               contentPadding: EdgeInsets.zero,
-              title: Text(_l10n.calScrIcalTitle, style: const TextStyle(color: V26.ink900, fontSize: 14)),
+              title: Text(L.icalTitle, style: const TextStyle(color: V26.ink900, fontSize: 14)),
               subtitle: Text(
                 display,
                 style: const TextStyle(color: V26.ink500, fontSize: 11),
                 maxLines: 3,
               ),
               trailing: IconButton(
-                tooltip: _l10n.calScrCopyUrl,
+                tooltip: L.copyUrl,
                 icon: const Icon(Icons.copy_rounded, color: V26.navy600),
                 onPressed: () async {
                   await Clipboard.setData(ClipboardData(text: display));
                   if (!mounted) return;
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(_l10n.calScrCopied)));
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(L.copied)));
                 },
               ),
             ),
             Padding(
               padding: const EdgeInsets.only(left: 16, right: 16, bottom: 8),
-              child: Text(_l10n.calScrGoogleOutlookHint, style: TextStyle(color: V26.ink500.withValues(alpha: 0.9), fontSize: 11)),
+              child: Text(L.googleOutlookHint, style: TextStyle(color: V26.ink500.withValues(alpha: 0.9), fontSize: 11)),
             ),
           ],
         ),
@@ -602,14 +660,14 @@ class _LegalCalendarScreenState extends State<LegalCalendarScreen> {
     );
   }
 
-  Widget _buildViewToggle() {
+  Widget _buildViewToggle(_CalStrings L) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       child: SegmentedButton<_CalView>(
         segments: [
-          ButtonSegment(value: _CalView.month, label: Text(_l10n.calScrMonthTab)),
-          ButtonSegment(value: _CalView.week, label: Text(_l10n.calScrWeekTab)),
-          ButtonSegment(value: _CalView.agenda, label: Text(_l10n.calScrAgendaTab)),
+          ButtonSegment(value: _CalView.month, label: Text(L.monthTab)),
+          ButtonSegment(value: _CalView.week, label: Text(L.weekTab)),
+          ButtonSegment(value: _CalView.agenda, label: Text(L.agendaTab)),
         ],
         selected: {_view},
         onSelectionChanged: (s) {
@@ -630,7 +688,7 @@ class _LegalCalendarScreenState extends State<LegalCalendarScreen> {
     );
   }
 
-  Widget _buildMonthGrid(MaterialLocalizations loc) {
+  Widget _buildMonthGrid(_CalStrings L, MaterialLocalizations loc) {
     final first = DateTime(_y, _m, 1);
     final daysInMonth = DateTime(_y, _m + 1, 0).day;
     final leading = _gridLeadingBlanks(first, loc.firstDayOfWeekIndex);
@@ -685,7 +743,7 @@ class _LegalCalendarScreenState extends State<LegalCalendarScreen> {
               onTap: () {
                 setState(() => _selectedDay = day);
               },
-              onLongPress: () => _showEventEditor(suggestedStart: DateTime(day.year, day.month, day.day, 9, 0)),
+              onLongPress: () => _showEventEditor(L, suggestedStart: DateTime(day.year, day.month, day.day, 9, 0)),
               borderRadius: BorderRadius.circular(10),
               child: DecoratedBox(
                 decoration: BoxDecoration(
@@ -738,23 +796,23 @@ class _LegalCalendarScreenState extends State<LegalCalendarScreen> {
             ),
           ),
           if (_eventsOnDay(_selectedDay!).isEmpty)
-            Text(_l10n.calScrNoEvents, style: const TextStyle(color: V26.ink500))
+            Text(L.noEvents, style: const TextStyle(color: V26.ink500))
           else
             ..._eventsOnDay(_selectedDay!).map(
-              (e) => _eventTile(e),
+              (e) => _eventTile(L, e),
             ),
         ],
       ],
     );
   }
 
-  Widget _eventTile(CalendarEventDto e) {
+  Widget _eventTile(_CalStrings L, CalendarEventDto e) {
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
       color: V26.surface,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: ListTile(
-        onTap: () => _showEventEditor(existing: e),
+        onTap: () => _showEventEditor(L, existing: e),
         leading: Container(
           width: 4,
           height: 40,
@@ -765,7 +823,7 @@ class _LegalCalendarScreenState extends State<LegalCalendarScreen> {
         ),
         title: Text(e.title, style: const TextStyle(color: V26.ink900, fontWeight: FontWeight.w700)),
         subtitle: Text(
-          '${e.start.toString().substring(11, 16)}–${e.end.toString().substring(11, 16)} · ${_calEventTypeLabel(_l10n, e.type)}'
+          '${e.start.toString().substring(11, 16)}–${e.end.toString().substring(11, 16)} · ${L.typeLabel(e.type)}'
           '${e.locationAddress.isNotEmpty ? '\n${e.locationAddress}' : ''}',
           style: const TextStyle(color: V26.ink500, fontSize: 12),
         ),
@@ -780,7 +838,7 @@ class _LegalCalendarScreenState extends State<LegalCalendarScreen> {
     );
   }
 
-  Widget _buildWeekView(MaterialLocalizations loc) {
+  Widget _buildWeekView(_CalStrings L, MaterialLocalizations loc) {
     final w0 = _startOfWeekContaining(_focusDate, loc.firstDayOfWeekIndex);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -816,10 +874,10 @@ class _LegalCalendarScreenState extends State<LegalCalendarScreen> {
                     if (evs.isEmpty)
                       Padding(
                         padding: const EdgeInsets.only(top: 4),
-                        child: Text(_l10n.calScrNoEvents, style: const TextStyle(color: V26.ink500, fontSize: 12)),
+                        child: Text(L.noEvents, style: const TextStyle(color: V26.ink500, fontSize: 12)),
                       )
                     else
-                      ...evs.map((e) => _eventTile(e)),
+                      ...evs.map((e) => _eventTile(L, e)),
                   ],
                 ),
               );
@@ -829,14 +887,14 @@ class _LegalCalendarScreenState extends State<LegalCalendarScreen> {
     );
   }
 
-  Widget _buildAgenda() {
+  Widget _buildAgenda(_CalStrings L) {
     final sorted = [..._items]..sort((a, b) => a.start.compareTo(b.start));
     if (sorted.isEmpty) {
       return ListView(
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.only(top: 48, bottom: 80),
         children: [
-          Center(child: Text(_l10n.calScrNoEvents, style: const TextStyle(color: V26.ink500))),
+          Center(child: Text(L.noEvents, style: const TextStyle(color: V26.ink500))),
         ],
       );
     }
@@ -845,13 +903,14 @@ class _LegalCalendarScreenState extends State<LegalCalendarScreen> {
       padding: const EdgeInsets.only(bottom: 80),
       itemCount: sorted.length,
       separatorBuilder: (_, __) => const SizedBox(height: 4),
-      itemBuilder: (context, i) => _eventTile(sorted[i]),
+      itemBuilder: (context, i) => _eventTile(L, sorted[i]),
     );
   }
 
   @override
   Widget build(BuildContext context) {
     final code = context.watch<AppLanguageController>().code;
+    final L = _CalStrings(code);
     final loc = MaterialLocalizations.of(context);
     final isWide = MediaQuery.sizeOf(context).width >= V26AppShell.desktopBreakpoint;
     final periodLabel = switch (_view) {
@@ -862,29 +921,31 @@ class _LegalCalendarScreenState extends State<LegalCalendarScreen> {
         }(),
       _ => '$_m/$_y',
     };
-    final statusText = '${_l10n.calScrTitle} · $periodLabel';
+    final statusText = code == 'he'
+        ? '${L.title} · $periodLabel'
+        : (code == 'ru' ? '${L.title} · $periodLabel' : '${L.title} · $periodLabel');
 
     final calendarBody = _loading
         ? const Center(child: CircularProgressIndicator())
         : Column(
             children: [
-              _buildIcalCard(),
-              _buildGcalCard(),
-              _buildViewToggle(),
+              _buildIcalCard(L),
+              _buildGcalCard(L),
+              _buildViewToggle(L),
               Expanded(
                 child: RefreshIndicator(
                   onRefresh: _load,
                   child: _view == _CalView.agenda
                       ? Padding(
                           padding: const EdgeInsets.fromLTRB(12, 0, 12, 0),
-                          child: _buildAgenda(),
+                          child: _buildAgenda(L),
                         )
                       : SingleChildScrollView(
                           physics: const AlwaysScrollableScrollPhysics(),
                           padding: const EdgeInsets.fromLTRB(12, 0, 12, 100),
                           child: _view == _CalView.week
-                              ? _buildWeekView(loc)
-                              : _buildMonthGrid(loc),
+                              ? _buildWeekView(L, loc)
+                              : _buildMonthGrid(L, loc),
                         ),
                 ),
               ),
@@ -892,19 +953,19 @@ class _LegalCalendarScreenState extends State<LegalCalendarScreen> {
           );
 
     final fabLegacy = FloatingActionButton.extended(
-      onPressed: () => _showEventEditor(),
+      onPressed: () => _showEventEditor(L),
       backgroundColor: V26.navy600,
       icon: const Icon(Icons.add, color: Colors.white),
-      label: Text(_l10n.calScrAddEvent,
+      label: Text(L.addEvent,
           style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
       heroTag: 'legal_cal_fab',
     );
 
     final fabCitizen = FloatingActionButton.extended(
-      onPressed: () => _showEventEditor(),
+      onPressed: () => _showEventEditor(L),
       backgroundColor: VetoMockup.primaryCta,
       icon: const Icon(Icons.add, color: Colors.white),
-      label: Text(_l10n.calScrAddEvent,
+      label: Text(L.addEvent,
           style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
       heroTag: 'legal_cal_fab',
     );
@@ -922,17 +983,17 @@ class _LegalCalendarScreenState extends State<LegalCalendarScreen> {
               desktopTrailing: [
                 IconButton(
                   icon: const Icon(Icons.refresh_rounded, color: VetoMockup.ink),
-                  tooltip: _l10n.calScrToolbarRefresh,
+                  tooltip: L.refresh,
                   onPressed: _loading ? null : _load,
                 ),
                 IconButton(
                   icon: const Icon(Icons.chevron_right, color: VetoMockup.ink),
-                  tooltip: _l10n.calScrPrev,
+                  tooltip: L.prev,
                   onPressed: _loading ? null : () => _stepPeriod(-1),
                 ),
                 IconButton(
                   icon: const Icon(Icons.chevron_left, color: VetoMockup.ink),
-                  tooltip: _l10n.calScrNext,
+                  tooltip: L.next,
                   onPressed: _loading ? null : () => _stepPeriod(1),
                 ),
               ],
@@ -942,7 +1003,7 @@ class _LegalCalendarScreenState extends State<LegalCalendarScreen> {
                 foregroundColor: VetoMockup.ink,
                 elevation: 0,
                 title: Text(
-                  '${_l10n.calScrTitle} · $periodLabel',
+                  '${L.title} · $periodLabel',
                   style: const TextStyle(
                     fontFamily: V26.serif,
                     fontWeight: FontWeight.w800,
@@ -951,17 +1012,17 @@ class _LegalCalendarScreenState extends State<LegalCalendarScreen> {
                 ),
                 actions: [
                   IconButton(
-                    tooltip: _l10n.calScrToolbarRefresh,
+                    tooltip: L.refresh,
                     onPressed: _loading ? null : _load,
                     icon: const Icon(Icons.refresh, color: VetoMockup.ink),
                   ),
                   IconButton(
-                    tooltip: _l10n.calScrPrev,
+                    tooltip: L.prev,
                     onPressed: _loading ? null : () => _stepPeriod(-1),
                     icon: const Icon(Icons.chevron_right, color: VetoMockup.ink),
                   ),
                   IconButton(
-                    tooltip: _l10n.calScrNext,
+                    tooltip: L.next,
                     onPressed: _loading ? null : () => _stepPeriod(1),
                     icon: const Icon(Icons.chevron_left, color: VetoMockup.ink),
                   ),
@@ -987,19 +1048,19 @@ class _LegalCalendarScreenState extends State<LegalCalendarScreen> {
             desktopTrailing: [
               V26IconBtn(
                 icon: Icons.refresh_rounded,
-                tooltip: _l10n.calScrToolbarRefresh,
+                tooltip: L.refresh,
                 onTap: _loading ? null : _load,
               ),
               const SizedBox(width: 8),
               V26IconBtn(
                 icon: Icons.chevron_right,
-                tooltip: _l10n.calScrPrev,
+                tooltip: L.prev,
                 onTap: _loading ? null : () => _stepPeriod(-1),
               ),
               const SizedBox(width: 8),
               V26IconBtn(
                 icon: Icons.chevron_left,
-                tooltip: _l10n.calScrNext,
+                tooltip: L.next,
                 onTap: _loading ? null : () => _stepPeriod(1),
               ),
             ],
@@ -1008,7 +1069,7 @@ class _LegalCalendarScreenState extends State<LegalCalendarScreen> {
               foregroundColor: V26.ink900,
               elevation: 0,
               title: Text(
-                '${_l10n.calScrTitle} · $periodLabel',
+                '${L.title} · $periodLabel',
                 style: const TextStyle(
                   fontFamily: V26.serif,
                   fontWeight: FontWeight.w800,
@@ -1016,17 +1077,17 @@ class _LegalCalendarScreenState extends State<LegalCalendarScreen> {
               ),
               actions: [
                 IconButton(
-                  tooltip: _l10n.calScrToolbarRefresh,
+                  tooltip: L.refresh,
                   onPressed: _loading ? null : _load,
                   icon: const Icon(Icons.refresh),
                 ),
                 IconButton(
-                  tooltip: _l10n.calScrPrev,
+                  tooltip: L.prev,
                   onPressed: _loading ? null : () => _stepPeriod(-1),
                   icon: const Icon(Icons.chevron_right),
                 ),
                 IconButton(
-                  tooltip: _l10n.calScrNext,
+                  tooltip: L.next,
                   onPressed: _loading ? null : () => _stepPeriod(1),
                   icon: const Icon(Icons.chevron_left),
                 ),
