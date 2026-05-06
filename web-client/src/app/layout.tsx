@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { Frank_Ruhl_Libre, Heebo } from "next/font/google";
+import { JwtCookieSync } from "@/components/providers/JwtCookieSync";
+import { AiOverlayErrorBoundary } from "@/components/ui/AiOverlayErrorBoundary";
 import { GlobalAiOverlay } from "@/components/ui/GlobalAiOverlay";
+import { ToastHost } from "@/components/ui/ToastHost";
 import "./globals.css";
 
 const heebo = Heebo({
@@ -10,10 +13,10 @@ const heebo = Heebo({
   display: "swap",
 });
 
-const frankRuhlLibre = Frank_Ruhl_Libre({
+const frank = Frank_Ruhl_Libre({
   subsets: ["latin", "hebrew"],
-  variable: "--font-frank-ruhl",
-  weight: ["400", "500", "600", "700"],
+  weight: ["700", "900"],
+  variable: "--font-frank",
   display: "swap",
 });
 
@@ -29,24 +32,24 @@ export default function RootLayout({
   children: ReactNode;
 }>) {
   return (
-    <html
-      lang="he"
-      dir="rtl"
-      className={`${heebo.variable} ${frankRuhlLibre.variable} h-full`}
-    >
-      <body className="font-sans min-h-screen antialiased text-slate-900 relative">
-        <div
-          className="fixed inset-0 -z-20 bg-cover bg-center bg-fixed"
-          style={{ backgroundImage: "url('/courtroom.jpg')" }}
-          aria-hidden
-        />
-        <div
-          className="fixed inset-0 -z-10 bg-linear-to-b from-black/40 via-white/80 to-white pointer-events-none"
-          aria-hidden
-        />
+    <html lang="he" dir="rtl" className={`${heebo.variable} ${frank.variable} h-full`}>
+      <body className="relative min-h-screen bg-transparent font-heebo text-slate-900 antialiased">
+        <JwtCookieSync />
+        <ToastHost />
+        <div className="fixed inset-0 -z-50 overflow-hidden" aria-hidden>
+          <div
+            className="absolute inset-0 scale-105 bg-cover bg-center bg-no-repeat"
+            style={{ backgroundImage: "url('/courtroom.jpg')" }}
+          />
+          <div className="absolute inset-0 bg-linear-to-b from-black/70 via-white/40 to-white/95" />
+        </div>
 
-        {children}
-        <GlobalAiOverlay />
+        <div className="relative z-10 min-h-screen">
+          {children}
+        </div>
+        <AiOverlayErrorBoundary>
+          <GlobalAiOverlay />
+        </AiOverlayErrorBoundary>
       </body>
     </html>
   );

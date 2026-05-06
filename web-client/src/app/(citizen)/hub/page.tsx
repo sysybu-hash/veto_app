@@ -2,7 +2,9 @@
 
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect } from "react";
+import { triggerSosAlert } from "@/app/actions/sos";
 import { CitizenBottomNav } from "@/components/citizen/CitizenBottomNav";
+import { btnSecondaryGlass } from "@/lib/vetoGlass";
 import { getJwt } from "@/lib/authToken";
 import { connectSocket, getSocket } from "@/lib/socketClient";
 import {
@@ -178,10 +180,22 @@ export default function CitizenHubPage() {
       sock.connect();
     }
 
-    const emitStart = (lat: number, lng: number) => {
+    const emitStart = (lat: number, lng: number, accuracy?: number) => {
       sock.emit("start_veto", {
         location: { lat, lng },
         preferredLanguage: "he",
+      });
+      void triggerSosAlert({
+        location:
+          typeof accuracy === "number" && Number.isFinite(accuracy)
+            ? { lat, lng, accuracy }
+            : { lat, lng },
+        stress_test: false,
+        urgency: "SOS",
+      }).then((r) => {
+        if (!r.success) {
+          console.warn("[hub] Ably SOS:", r.error);
+        }
       });
     };
 
@@ -192,7 +206,11 @@ export default function CitizenHubPage() {
 
     navigator.geolocation.getCurrentPosition(
       (pos) => {
-        emitStart(pos.coords.latitude, pos.coords.longitude);
+        emitStart(
+          pos.coords.latitude,
+          pos.coords.longitude,
+          pos.coords.accuracy,
+        );
       },
       () => {
         emitStart(DEFAULT_LOCATION.lat, DEFAULT_LOCATION.lng);
@@ -204,9 +222,11 @@ export default function CitizenHubPage() {
   return (
     <>
     <main className="mx-auto flex w-full max-w-lg flex-1 flex-col items-center justify-center gap-8 px-6 py-12 pb-28">
-      <div className="text-center">
-        <h1 className="text-2xl font-semibold text-white">Emergency legal help</h1>
-        <p className="mt-2 text-sm text-slate-400">
+      <div className="w-full rounded-2xl border border-white/50 bg-white/55 px-5 py-6 text-center shadow-sm backdrop-blur-xl">
+        <h1 className="font-frank text-2xl font-bold text-slate-900">
+          Emergency legal help
+        </h1>
+        <p className="mt-2 text-sm text-slate-600">
           Tap SOS to request a lawyer. Stay on this screen until the call opens.
         </p>
       </div>
@@ -221,13 +241,13 @@ export default function CitizenHubPage() {
       </button>
 
       {isSearching && !lawyerFound && (
-        <p className="text-center text-sm text-amber-200/90">
+        <p className="text-center text-sm font-medium text-amber-800">
           Searching for an available lawyer…
         </p>
       )}
 
       {lawyerFound && lawyerName && (
-        <p className="text-center text-sm text-emerald-300/90">
+        <p className="text-center text-sm font-medium text-emerald-800">
           {lawyerName} accepted — starting your video session…
         </p>
       )}
@@ -235,14 +255,14 @@ export default function CitizenHubPage() {
       {statusMessage && (
         <div
           role="alert"
-          className="w-full rounded-xl border border-red-500/40 bg-red-950/50 px-4 py-3 text-center text-sm text-red-100"
+          className="w-full rounded-xl border border-red-300/80 bg-red-50/90 px-4 py-3 text-center text-sm text-red-900 backdrop-blur-md"
         >
           {statusMessage}
           <div className="mt-3">
             <button
               type="button"
               onClick={() => reset()}
-              className="rounded-lg bg-white/10 px-3 py-1.5 text-xs font-medium text-white hover:bg-white/15"
+              className={`${btnSecondaryGlass} px-3 py-1.5 text-xs`}
             >
               Dismiss
             </button>

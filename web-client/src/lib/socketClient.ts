@@ -57,7 +57,13 @@ export function getSocket(explicitToken?: string | null): Socket {
   }
 
   if (!socket) {
-    socket = io(getPublicApiOrigin(), buildOptions(token));
+    const origin = getPublicApiOrigin();
+    if (!origin) {
+      throw new Error(
+        "NEXT_PUBLIC_API_ORIGIN is not set; cannot connect socket. Configure the backend URL in Vercel and redeploy.",
+      );
+    }
+    socket = io(origin, buildOptions(token));
     if (isLocaLtOrigin()) {
       socket.io.engine.on("open", () => {
         // Debug only — never log token

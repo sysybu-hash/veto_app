@@ -13,6 +13,7 @@ import {
   type ApiPendingLawyer,
 } from "@/api/adminApi";
 import { getJwt, getRoleFromJwt } from "@/lib/authToken";
+import { glassCard, glassPanel, glassPanelNested } from "@/lib/vetoGlass";
 
 type PendingLawyer = {
   id: string;
@@ -82,7 +83,7 @@ function statusBadgeClass(status: LogStatus): string {
     case "danger":
       return "bg-red-50 text-red-800 ring-red-200";
     default:
-      return "bg-slate-100 text-slate-700 ring-slate-200";
+      return "bg-white/45 text-slate-800 ring-white/35 backdrop-blur-sm";
   }
 }
 
@@ -101,22 +102,19 @@ function AdminDashboardSkeleton() {
   return (
     <div className="animate-pulse space-y-8" aria-busy="true" aria-label="Loading dashboard">
       <div className="space-y-2">
-        <div className="h-9 w-48 rounded-lg bg-slate-200 sm:w-64" />
-        <div className="h-4 w-full max-w-lg rounded-lg bg-slate-200" />
+        <div className="h-9 w-48 rounded-lg bg-white/40 sm:w-64" />
+        <div className="h-4 w-full max-w-lg rounded-lg bg-white/35" />
       </div>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {[1, 2, 3, 4].map((i) => (
-          <div
-            key={i}
-            className="h-28 rounded-2xl border border-slate-100 bg-white p-5 shadow-sm"
-          >
-            <div className="mb-3 h-3 w-24 rounded bg-slate-200" />
-            <div className="h-8 w-20 rounded bg-slate-200" />
-            <div className="mt-3 h-3 w-32 rounded bg-slate-100" />
+          <div key={i} className={`h-28 p-5 ${glassCard}`}>
+            <div className="mb-3 h-3 w-24 rounded bg-white/40" />
+            <div className="h-8 w-20 rounded bg-white/40" />
+            <div className="mt-3 h-3 w-32 rounded bg-white/30" />
           </div>
         ))}
       </div>
-      <div className="h-96 rounded-2xl border border-slate-100 bg-white shadow-sm" />
+      <div className={`h-96 ${glassPanel}`} />
     </div>
   );
 }
@@ -282,7 +280,7 @@ export default function AdminDashboardPage() {
       {!isLoading && !loadError && (
         <>
           <section className="mb-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <div className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm shadow-slate-900/5">
+            <div className={`p-5 shadow-slate-900/5 ${glassCard}`}>
               <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
                 Total users
               </p>
@@ -293,7 +291,7 @@ export default function AdminDashboardPage() {
                 Registered citizen accounts
               </p>
             </div>
-            <div className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm shadow-slate-900/5">
+            <div className={`p-5 shadow-slate-900/5 ${glassCard}`}>
               <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
                 Pending lawyer approvals
               </p>
@@ -302,7 +300,7 @@ export default function AdminDashboardPage() {
               </p>
               <p className="mt-1 text-xs text-slate-500">Awaiting manual review</p>
             </div>
-            <div className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm shadow-slate-900/5">
+            <div className={`p-5 shadow-slate-900/5 ${glassCard}`}>
               <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
                 SOS events today
               </p>
@@ -313,7 +311,7 @@ export default function AdminDashboardPage() {
                 Emergency dispatches (24h)
               </p>
             </div>
-            <div className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm shadow-slate-900/5">
+            <div className={`p-5 shadow-slate-900/5 ${glassCard}`}>
               <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
                 Active lawyers
               </p>
@@ -324,8 +322,8 @@ export default function AdminDashboardPage() {
             </div>
           </section>
 
-          <section className="overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm shadow-slate-900/5">
-            <div className="border-b border-slate-100 px-4 sm:px-6">
+          <section className={`overflow-hidden shadow-slate-900/5 ${glassPanel}`}>
+            <div className="border-b border-white/40 px-4 sm:px-6">
               <div className="flex gap-0">
                 <button
                   type="button"
@@ -354,9 +352,9 @@ export default function AdminDashboardPage() {
 
             <div className="p-4 sm:p-6">
               {tab === "lawyers" && (
-                <div className="overflow-x-auto rounded-xl border border-slate-100">
-                  <table className="min-w-full divide-y divide-slate-100 text-left text-sm">
-                    <thead className="bg-slate-50/80">
+                <div className={`overflow-x-auto ${glassPanelNested}`}>
+                  <table className="min-w-full divide-y divide-white/30 text-start text-sm">
+                    <thead className="bg-white/50 backdrop-blur-sm">
                       <tr>
                         <th className="whitespace-nowrap px-4 py-3 font-semibold text-slate-700 sm:px-6">
                           Name
@@ -367,12 +365,12 @@ export default function AdminDashboardPage() {
                         <th className="whitespace-nowrap px-4 py-3 font-semibold text-slate-700 sm:px-6">
                           Signup date
                         </th>
-                        <th className="whitespace-nowrap px-4 py-3 text-right font-semibold text-slate-700 sm:px-6">
+                        <th className="whitespace-nowrap px-4 py-3 text-end font-semibold text-slate-700 sm:px-6">
                           Actions
                         </th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-100 bg-white">
+                    <tbody className="divide-y divide-white/30 bg-white/30">
                       {pendingLawyers.length === 0 ? (
                         <tr>
                           <td
@@ -384,7 +382,7 @@ export default function AdminDashboardPage() {
                         </tr>
                       ) : (
                         pendingLawyers.map((row) => (
-                          <tr key={row.id} className="hover:bg-slate-50/80">
+                          <tr key={row.id} className="hover:bg-white/45">
                             <td className="whitespace-nowrap px-4 py-3 font-medium text-slate-900 sm:px-6">
                               {row.name}
                             </td>
@@ -394,7 +392,7 @@ export default function AdminDashboardPage() {
                             <td className="whitespace-nowrap px-4 py-3 text-slate-600 sm:px-6">
                               {row.signupDate}
                             </td>
-                            <td className="whitespace-nowrap px-4 py-3 text-right sm:px-6">
+                            <td className="whitespace-nowrap px-4 py-3 text-end sm:px-6">
                               <div className="flex flex-wrap justify-end gap-2">
                                 <button
                                   type="button"
@@ -423,9 +421,9 @@ export default function AdminDashboardPage() {
               )}
 
               {tab === "logs" && (
-                <div className="overflow-x-auto rounded-xl border border-slate-100">
-                  <table className="min-w-full divide-y divide-slate-100 text-left text-sm">
-                    <thead className="bg-slate-50/80">
+                <div className={`overflow-x-auto ${glassPanelNested}`}>
+                  <table className="min-w-full divide-y divide-white/30 text-start text-sm">
+                    <thead className="bg-white/50 backdrop-blur-sm">
                       <tr>
                         <th className="whitespace-nowrap px-4 py-3 font-semibold text-slate-700 sm:px-6">
                           Time
@@ -438,7 +436,7 @@ export default function AdminDashboardPage() {
                         </th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-100 bg-white">
+                    <tbody className="divide-y divide-white/30 bg-white/30">
                       {logs.length === 0 ? (
                         <tr>
                           <td
@@ -450,7 +448,7 @@ export default function AdminDashboardPage() {
                         </tr>
                       ) : (
                         logs.map((row) => (
-                          <tr key={row.id} className="hover:bg-slate-50/80">
+                          <tr key={row.id} className="hover:bg-white/45">
                             <td className="whitespace-nowrap px-4 py-3 text-slate-600 sm:px-6">
                               {formatTs(row.timestamp)}
                             </td>

@@ -232,6 +232,12 @@
   2. `VETO_API_BASE` / [app_config.dart](../frontend/lib/config/app_config.dart) / `package.json` `build:web` — **אותו origin** כמו ב־Dashboard.
   3. אחרי שינוי: `npm run build:web` מהשורש + commit ל־`frontend/build/web` + deploy ב־Vercel.
 
+#### web-client (Next.js) על Vercel + CORS
+
+- ב־[server.js](server.js) ברירת המחדל היא **שיקוף Origin** (`origin: true` כש־`CORS_ALLOWED_ORIGINS` לא מוגדר) — כל דומיין לגיטימי של האתר (כולל `https://….vercel.app` בפריוויו ובפרוד) מקבل ל־`fetch` / Socket.io עם `credentials`.
+- אם הגדרתם **`CORS_ALLOWED_ORIGINS`** (רשימה מופרדת בפסיקים, origins מדויקים בלי `/` בסוף), רק הם יאושרו — הוסיפו את כל דומייני Vercel שבהם אתם משתמשים + דומיין מותאם אם קיים.
+- חסימה טיפוסית היא **לא CORS** אלא לקוח שפונה ל־`localhost` מפריסת Vercel — ב־Vercel חובה **`NEXT_PUBLIC_API_ORIGIN`** לכתובת ה־API ב־Render (ראו [web-client/.env.example](../web-client/.env.example)).
+
 ### URL אחד, שירות אחד (פרודקשן)
 
 - **הדומיין הציבורי** של API מופיע ב־**Render → Web Service** תחת **Settings** (Default **onrender.com** hostname) או **Custom Domains**.  
