@@ -9,6 +9,12 @@ import {
   isApiOriginConfigured,
   tunnelBypassHeaders,
 } from "@/lib/env";
+import {
+  btnPrimaryDark,
+  btnSecondaryGlass,
+  glassInput,
+  glassPanelNested,
+} from "@/lib/vetoGlass";
 
 async function postJson(path: string, body: object) {
   const headers: HeadersInit = {
@@ -158,7 +164,7 @@ export default function LoginPage() {
   return (
     <div className="flex min-h-screen w-full items-center justify-center px-4 py-12 md:px-6 md:py-16">
       <main
-        className="w-full max-w-md rounded-3xl border border-white/60 bg-white/30 p-6 shadow-[0_24px_64px_rgba(15,23,42,0.15)] backdrop-blur-2xl md:p-8"
+        className={`w-full max-w-md p-6 shadow-[0_24px_64px_rgba(15,23,42,0.15)] backdrop-blur-2xl md:p-8 ${glassPanelNested}`}
         dir="rtl"
       >
         <div className="text-center">
@@ -176,7 +182,10 @@ export default function LoginPage() {
           </h1>
           <p className="mt-2 text-sm leading-relaxed text-slate-700">
             חשבון אזרח: אימות OTP מול שרת VETO. בפיתוח ניתן להדביק JWT
-            (<code className="rounded bg-white/50 px-1 text-xs">veto_jwt</code>
+            (
+            <code className="rounded border border-white/45 bg-white/45 px-1.5 py-0.5 text-xs backdrop-blur-sm">
+              veto_jwt
+            </code>
             ).
           </p>
         </div>
@@ -186,7 +195,7 @@ export default function LoginPage() {
             type="button"
             onClick={handleGoogle}
             disabled={busy}
-            className="flex w-full items-center justify-center gap-3 rounded-2xl border border-white/70 bg-white/90 px-4 py-3 text-sm font-semibold text-slate-800 shadow-sm transition hover:bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900 disabled:opacity-50"
+            className={`flex w-full items-center justify-center gap-3 px-4 py-3 text-sm font-semibold shadow-sm transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900 disabled:opacity-50 ${btnSecondaryGlass}`}
           >
             <svg className="h-5 w-5 shrink-0" viewBox="0 0 24 24" aria-hidden>
               <path
@@ -217,7 +226,7 @@ export default function LoginPage() {
               <div className="w-full border-t border-white/50" />
             </div>
             <div className="relative flex justify-center text-xs font-medium">
-              <span className="bg-white/40 px-3 text-slate-600 backdrop-blur-sm rounded-full border border-white/40">
+              <span className="rounded-full border border-white/40 bg-white/45 px-3 py-0.5 text-slate-600 backdrop-blur-sm">
                 או עם טלפון
               </span>
             </div>
@@ -236,7 +245,7 @@ export default function LoginPage() {
                 setDevOtp(null);
                 setOtpCopied(false);
               }}
-              className="rounded-xl border border-white/60 bg-white/40 px-3 py-2.5 text-sm text-slate-900 outline-none ring-slate-900/10 placeholder:text-slate-500 focus:border-white focus:ring-2 focus:ring-slate-800/20"
+              className={glassInput}
               placeholder="+972..."
               autoComplete="tel"
             />
@@ -247,7 +256,7 @@ export default function LoginPage() {
               type="button"
               disabled={busy || !phone.trim()}
               onClick={() => void handleOtpLogin()}
-              className="rounded-xl border border-slate-800/15 bg-slate-900/90 px-4 py-2.5 text-sm font-semibold text-white shadow-md transition hover:bg-slate-900 disabled:opacity-50"
+              className={`px-4 py-2.5 text-sm font-semibold shadow-md ${btnPrimaryDark} disabled:opacity-50`}
             >
               שלח קוד OTP
             </button>
@@ -264,7 +273,7 @@ export default function LoginPage() {
               </p>
               <div className="mt-3 flex flex-wrap items-center justify-center gap-3">
                 <code
-                  className="min-w-[8.5rem] rounded-lg bg-white/80 px-4 py-2 text-center text-2xl font-bold tracking-[0.35em] text-slate-900 shadow-inner"
+                  className={`min-w-[8.5rem] px-4 py-2 text-center text-2xl font-bold tracking-[0.35em] text-slate-900 shadow-inner ${glassPanelNested}`}
                   dir="ltr"
                 >
                   {devOtp}
@@ -285,7 +294,7 @@ export default function LoginPage() {
             <input
               value={otp}
               onChange={(e) => setOtp(e.target.value)}
-              className="rounded-xl border border-white/60 bg-white/40 px-3 py-2.5 text-sm text-slate-900 outline-none ring-slate-900/10 placeholder:text-slate-500 focus:border-white focus:ring-2 focus:ring-slate-800/20"
+              className={glassInput}
               placeholder="6 ספרות"
               autoComplete="one-time-code"
             />
@@ -307,13 +316,13 @@ export default function LoginPage() {
               value={devToken}
               onChange={(e) => setDevToken(e.target.value)}
               rows={3}
-              className="mt-2 w-full rounded-xl border border-white/60 bg-white/40 px-3 py-2 text-xs text-slate-900 outline-none focus:ring-2 focus:ring-slate-800/20"
+              className={`mt-2 resize-y ${glassInput} text-xs`}
               placeholder="eyJ..."
             />
             <button
               type="button"
               onClick={handleDevToken}
-              className="mt-2 w-full rounded-xl border border-slate-800/20 bg-white/30 px-4 py-2.5 text-sm font-medium text-slate-800 transition hover:bg-white/50"
+              className={`mt-2 w-full px-4 py-2.5 text-sm font-medium ${btnSecondaryGlass}`}
             >
               השתמש ב-JWT שהודבק
             </button>

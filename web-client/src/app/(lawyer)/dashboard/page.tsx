@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { SosQueue } from "@/components/lawyer/SosQueue";
 import { getJwt, getRoleFromJwt } from "@/lib/authToken";
 import { subscribeToPush } from "@/lib/pushClient";
 import { connectSocket, getSocket } from "@/lib/socketClient";
@@ -293,7 +294,7 @@ export default function LawyerDashboardPage() {
 
   return (
     <div className="min-h-full">
-      <header className="border-b border-slate-200 bg-white shadow-sm">
+      <header className="border-b border-white/40 bg-white/60 shadow-sm backdrop-blur-xl">
         <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-4 py-4 md:px-8">
           <div>
             <p className="text-xs font-semibold uppercase tracking-wider text-blue-600">
@@ -363,15 +364,15 @@ export default function LawyerDashboardPage() {
             <button
               type="button"
               onClick={() => setLastError(null)}
-              className="ml-3 font-semibold text-amber-800 underline"
+              className="ms-3 font-semibold text-amber-800 underline"
             >
               Dismiss
             </button>
           </div>
         )}
 
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm md:p-8">
-          <h2 className="text-base font-semibold text-slate-800">
+        <div className="rounded-2xl border border-white/40 bg-white/60 p-6 shadow-sm backdrop-blur-xl md:p-8">
+          <h2 className="font-frank text-base font-semibold text-slate-800">
             Incoming requests
           </h2>
           <p className="mt-1 text-sm text-slate-600">
@@ -381,7 +382,7 @@ export default function LawyerDashboardPage() {
           </p>
 
           {!activeAlert && (
-            <div className="mt-10 flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-200 bg-slate-50/80 py-16 text-center">
+            <div className="mt-10 flex flex-col items-center justify-center rounded-xl border border-dashed border-white/50 bg-white/35 py-16 text-center backdrop-blur-md">
               <p className="text-slate-600">No active emergency.</p>
               <p className="mt-2 max-w-md text-sm text-slate-500">
                 {isAvailable
@@ -391,6 +392,8 @@ export default function LawyerDashboardPage() {
             </div>
           )}
         </div>
+
+        <SosQueue />
       </main>
 
       {activeAlert && (
@@ -400,7 +403,7 @@ export default function LawyerDashboardPage() {
           aria-modal="true"
           aria-labelledby="incoming-emergency-title"
         >
-          <div className="w-full max-w-lg overflow-hidden rounded-2xl border-2 border-red-200 bg-white shadow-2xl shadow-red-900/20 ring-4 ring-red-100 sm:max-w-xl">
+          <div className="w-full max-w-lg overflow-hidden rounded-2xl border-2 border-red-200/90 bg-white/70 shadow-2xl shadow-red-900/20 ring-4 ring-red-100/80 backdrop-blur-xl sm:max-w-xl">
             <div className="bg-gradient-to-r from-red-600 to-red-500 px-6 py-4">
               <p className="text-xs font-bold uppercase tracking-widest text-red-100">
                 SOS
@@ -414,7 +417,7 @@ export default function LawyerDashboardPage() {
               <p className="mt-1 text-sm text-red-100">{formattedTime}</p>
             </div>
             <div className="space-y-4 px-6 py-6">
-              <div className="rounded-xl bg-slate-50 p-4">
+              <div className="rounded-xl border border-white/40 bg-white/50 p-4 backdrop-blur-sm">
                 <dl className="grid gap-3 text-sm">
                   <div className="flex justify-between gap-4">
                     <dt className="font-medium text-slate-500">Caller</dt>

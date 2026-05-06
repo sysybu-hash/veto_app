@@ -13,26 +13,27 @@ const linkBase =
   "relative flex min-w-0 flex-1 flex-col items-center gap-0.5 rounded-xl px-0.5 py-2 text-center sm:px-2";
 
 const idle =
-  "border-2 border-transparent text-slate-400 transition hover:bg-white/5 hover:text-white sm:border-transparent";
+  "border-2 border-transparent text-slate-700 transition hover:bg-white/35 hover:text-slate-900 sm:border-transparent";
 
 const activeStyle =
-  "relative border-2 border-blue-500 bg-blue-600/20 text-[10px] font-semibold text-blue-100 shadow-[0_0_20px_rgba(37,99,235,0.35)] sm:text-xs";
+  "relative border-2 border-[#C5A059] bg-[#C5A059]/25 text-[11px] font-bold text-slate-900 shadow-[0_0_22px_rgba(197,160,89,0.45)] sm:text-xs";
 
 export function CitizenBottomNav({ active }: { active: CitizenNavActive }) {
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-white/10 bg-slate-950/95 px-1 py-2 backdrop-blur-md sm:px-3 sm:py-3">
+    <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-white/40 bg-white/55 px-1 py-2 backdrop-blur-xl sm:px-3 sm:py-3">
       <div className="mx-auto flex max-w-lg justify-between gap-0.5 sm:gap-2">
         <Link
           href="/hub"
-          className={`${linkBase} text-[10px] font-medium sm:text-xs ${
-            active === "hub" ? activeStyle : idle
-          }`}
+          className={`${linkBase} text-[10px] font-medium sm:text-xs ${active === "hub" ? activeStyle : idle}`}
         >
           <svg
-            className={`mx-auto h-5 w-5 sm:h-6 sm:w-6 ${active === "hub" ? "text-blue-300" : ""}`}
+            className={`mx-auto h-5 w-5 stroke-[1.75] sm:h-6 sm:w-6 ${
+              active === "hub"
+                ? "text-slate-900"
+                : "text-slate-600"
+            }`}
             fill="none"
             stroke="currentColor"
-            strokeWidth={1.75}
             viewBox="0 0 24 24"
             aria-hidden
           >
@@ -40,7 +41,7 @@ export function CitizenBottomNav({ active }: { active: CitizenNavActive }) {
           </svg>
           <span className="truncate">Home</span>
           {active === "hub" && (
-            <span className="absolute -top-0.5 right-0 rounded-full bg-blue-500 px-1 text-[8px] font-bold text-white sm:right-0.5 sm:text-[9px]">
+            <span className="absolute -top-0.5 end-0 rounded-full bg-[#C5A059] px-1 text-[8px] font-bold text-slate-900 sm:end-0.5 sm:text-[9px]">
               SOS
             </span>
           )}
@@ -53,10 +54,11 @@ export function CitizenBottomNav({ active }: { active: CitizenNavActive }) {
           } ${active === "vault" ? "font-semibold" : ""}`}
         >
           <svg
-            className={`mx-auto h-5 w-5 sm:h-6 sm:w-6 ${active === "vault" ? "text-blue-300" : "text-blue-400"}`}
+            className={`mx-auto h-5 w-5 stroke-[1.75] sm:h-6 sm:w-6 ${
+              active === "vault" ? "text-slate-900" : "text-slate-600"
+            }`}
             fill="none"
             stroke="currentColor"
-            strokeWidth={1.75}
             viewBox="0 0 24 24"
             aria-hidden
           >
@@ -72,10 +74,11 @@ export function CitizenBottomNav({ active }: { active: CitizenNavActive }) {
           } ${active === "productivity" ? "font-semibold" : ""}`}
         >
           <svg
-            className={`mx-auto h-5 w-5 sm:h-6 sm:w-6 ${active === "productivity" ? "text-blue-300" : "text-blue-400"}`}
+            className={`mx-auto h-5 w-5 stroke-[1.75] sm:h-6 sm:w-6 ${
+              active === "productivity" ? "text-slate-900" : "text-slate-600"
+            }`}
             fill="none"
             stroke="currentColor"
-            strokeWidth={1.75}
             viewBox="0 0 24 24"
             aria-hidden
           >
@@ -91,10 +94,11 @@ export function CitizenBottomNav({ active }: { active: CitizenNavActive }) {
           } ${active === "calendar" ? "font-semibold" : ""}`}
         >
           <svg
-            className={`mx-auto h-5 w-5 sm:h-6 sm:w-6 ${active === "calendar" ? "text-blue-300" : "text-blue-400"}`}
+            className={`mx-auto h-5 w-5 stroke-[1.75] sm:h-6 sm:w-6 ${
+              active === "calendar" ? "text-slate-900" : "text-slate-600"
+            }`}
             fill="none"
             stroke="currentColor"
-            strokeWidth={1.75}
             viewBox="0 0 24 24"
             aria-hidden
           >
@@ -110,10 +114,11 @@ export function CitizenBottomNav({ active }: { active: CitizenNavActive }) {
           } ${active === "settings" ? "font-semibold" : ""}`}
         >
           <svg
-            className={`mx-auto h-5 w-5 sm:h-6 sm:w-6 ${active === "settings" ? "text-blue-300" : "text-blue-400"}`}
+            className={`mx-auto h-5 w-5 stroke-[1.75] sm:h-6 sm:w-6 ${
+              active === "settings" ? "text-slate-900" : "text-slate-600"
+            }`}
             fill="none"
             stroke="currentColor"
-            strokeWidth={1.75}
             viewBox="0 0 24 24"
             aria-hidden
           >

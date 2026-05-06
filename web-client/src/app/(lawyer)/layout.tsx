@@ -4,7 +4,7 @@ export default function LawyerLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <div className="min-h-full flex flex-col bg-slate-50 text-slate-900">
+    <div className="flex min-h-full flex-col text-slate-900">
       <div className="flex flex-1 flex-col">{children}</div>
     </div>
   );

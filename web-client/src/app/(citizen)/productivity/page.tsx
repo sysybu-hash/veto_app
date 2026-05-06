@@ -17,6 +17,14 @@ import {
 import { getJwt } from "@/lib/authToken";
 import { CitizenBottomNav } from "@/components/citizen/CitizenBottomNav";
 import { CreateTaskModal } from "@/components/productivity/CreateTaskModal";
+import {
+  btnPrimaryDark,
+  btnPrimaryGold,
+  btnSecondaryGlass,
+  glassInput,
+  glassPanel,
+  glassPanelNested,
+} from "@/lib/vetoGlass";
 
 /** UI contract status — maps to backend `CitizenContract.status`. */
 type ContractStatus = "pending_signature" | "active" | "expired" | "at_risk";
@@ -115,28 +123,28 @@ function mapApiTask(row: ApiCitizenTask): Task {
 function statusStyles(status: ContractStatus): string {
   switch (status) {
     case "pending_signature":
-      return "bg-amber-50 text-amber-800 ring-amber-200";
+      return "bg-amber-400/20 text-amber-900 ring-amber-400/50";
     case "active":
-      return "bg-emerald-50 text-emerald-800 ring-emerald-200";
+      return "bg-emerald-400/20 text-emerald-900 ring-emerald-400/50";
     case "expired":
-      return "bg-slate-100 text-slate-600 ring-slate-200";
+      return "bg-white/40 text-slate-700 ring-white/50";
     case "at_risk":
-      return "bg-orange-50 text-orange-900 ring-orange-200";
+      return "bg-orange-400/20 text-orange-950 ring-orange-400/50";
     default:
-      return "bg-slate-100 text-slate-700 ring-slate-200";
+      return "bg-white/35 text-slate-800 ring-white/45";
   }
 }
 
 function priorityStyles(p: TaskPriority): string {
   switch (p) {
     case "high":
-      return "bg-red-50 text-red-800 ring-red-200";
+      return "bg-red-400/20 text-red-900 ring-red-400/45";
     case "medium":
-      return "bg-amber-50 text-amber-800 ring-amber-200";
+      return "bg-amber-400/20 text-amber-900 ring-amber-400/45";
     case "low":
-      return "bg-slate-100 text-slate-700 ring-slate-200";
+      return "bg-white/40 text-slate-700 ring-white/50";
     default:
-      return "bg-slate-100 text-slate-700 ring-slate-200";
+      return "bg-white/35 text-slate-800 ring-white/45";
   }
 }
 
@@ -200,20 +208,20 @@ function CreateContractModal({
       }}
     >
       <div
-        className="w-full max-w-lg overflow-hidden rounded-2xl bg-white shadow-2xl"
+        className={`w-full max-w-lg overflow-hidden shadow-2xl shadow-slate-900/20 ${glassPanel}`}
         role="dialog"
         aria-modal="true"
         aria-labelledby="contract-modal-title"
         onMouseDown={(e) => e.stopPropagation()}
       >
-        <div className="border-b border-slate-100 px-5 py-4">
+        <div className="border-b border-white/40 px-5 py-4 backdrop-blur-sm">
           <h2
             id="contract-modal-title"
-            className="text-lg font-semibold text-slate-900"
+            className="font-frank text-lg font-bold text-slate-900"
           >
             New contract
           </h2>
-          <p className="mt-0.5 text-sm text-slate-500">
+          <p className="mt-0.5 text-sm text-slate-600">
             Add a contract you are negotiating or signing.
           </p>
         </div>
@@ -221,7 +229,7 @@ function CreateContractModal({
           <div>
             <label
               htmlFor="c-title"
-              className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500"
+              className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-600"
             >
               Contract title
             </label>
@@ -231,13 +239,13 @@ function CreateContractModal({
               value={title}
               disabled={saving}
               onChange={(e) => setTitle(e.target.value)}
-              className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 disabled:bg-slate-50"
+              className={glassInput}
             />
           </div>
           <div>
             <label
               htmlFor="c-party"
-              className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500"
+              className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-600"
             >
               Party name
             </label>
@@ -246,14 +254,14 @@ function CreateContractModal({
               value={partyName}
               disabled={saving}
               onChange={(e) => setPartyName(e.target.value)}
-              className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 disabled:bg-slate-50"
+              className={glassInput}
               placeholder="e.g. Organization or person"
             />
           </div>
           <div>
             <label
               htmlFor="c-status"
-              className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500"
+              className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-600"
             >
               Status
             </label>
@@ -262,7 +270,7 @@ function CreateContractModal({
               value={status}
               disabled={saving}
               onChange={(e) => setStatus(e.target.value as ContractStatus)}
-              className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 disabled:bg-slate-50"
+              className={glassInput}
             >
               <option value="pending_signature">Pending signature</option>
               <option value="active">Active</option>
@@ -272,19 +280,19 @@ function CreateContractModal({
           </div>
           {saveErr && (
             <p
-              className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800"
+              className="rounded-xl border border-red-300/70 bg-red-100/50 px-3 py-2 text-sm text-red-900 backdrop-blur-sm"
               role="alert"
             >
               {saveErr}
             </p>
           )}
         </div>
-        <div className="flex gap-3 border-t border-slate-100 px-5 py-4">
+        <div className="flex gap-3 border-t border-white/40 px-5 py-4">
           <button
             type="button"
             onClick={() => !saving && onClose()}
             disabled={saving}
-            className="flex-1 rounded-xl border border-slate-200 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+            className={`flex-1 py-3 text-sm ${btnSecondaryGlass} disabled:cursor-not-allowed disabled:opacity-50`}
           >
             Cancel
           </button>
@@ -292,7 +300,7 @@ function CreateContractModal({
             type="button"
             onClick={() => void save()}
             disabled={!title.trim() || !partyName.trim() || saving}
-            className="flex-1 rounded-xl bg-blue-600 py-3 text-sm font-semibold text-white hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
+            className={`flex-1 py-3 text-sm ${btnPrimaryGold} disabled:cursor-not-allowed disabled:opacity-50`}
           >
             {saving ? "Saving…" : "Save contract"}
           </button>
@@ -318,7 +326,7 @@ function ContractViewModal({
       }}
     >
       <div
-        className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl"
+        className={`w-full max-w-md p-6 shadow-2xl shadow-slate-900/20 ${glassPanel}`}
         onMouseDown={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
@@ -326,19 +334,23 @@ function ContractViewModal({
       >
         <h2
           id="view-contract-title"
-          className="text-lg font-semibold text-slate-900"
+          className="font-frank text-lg font-bold text-slate-900"
         >
           {contract.title}
         </h2>
-        <p className="mt-2 text-sm text-slate-600">Party: {contract.partyName}</p>
-        <p className="mt-2 text-sm text-slate-600">
-          Status: {statusLabels[contract.status]}
-        </p>
-        <p className="mt-1 text-xs text-slate-400">Last updated {contract.updatedAt}</p>
+        <div className={`mt-4 rounded-xl border border-white/40 p-4 ${glassPanelNested}`}>
+          <p className="text-sm text-slate-700">Party: {contract.partyName}</p>
+          <p className="mt-2 text-sm text-slate-700">
+            Status: {statusLabels[contract.status]}
+          </p>
+          <p className="mt-2 text-xs text-slate-600">
+            Last updated {contract.updatedAt}
+          </p>
+        </div>
         <button
           type="button"
           onClick={onClose}
-          className="mt-6 w-full rounded-xl bg-slate-900 py-3 text-sm font-semibold text-white hover:bg-slate-800"
+          className={`mt-6 w-full py-3 text-sm ${btnPrimaryDark}`}
         >
           Close
         </button>
@@ -352,7 +364,10 @@ function ProductivityLoadingSkeleton() {
     <div className="animate-pulse space-y-4 p-4 sm:p-6" aria-busy="true" aria-label="Loading">
       <div className="grid gap-4 sm:grid-cols-2">
         {[1, 2, 3, 4].map((i) => (
-          <div key={i} className="h-36 rounded-xl border border-slate-100 bg-slate-100" />
+          <div
+            key={i}
+            className="h-36 rounded-xl border border-white/30 bg-white/35 backdrop-blur-md"
+          />
         ))}
       </div>
     </div>
@@ -492,13 +507,13 @@ export default function ProductivityPage() {
 
   return (
     <div className="mx-auto min-h-0 w-full max-w-4xl flex-1 px-4 pb-28 pt-6 md:px-6">
-      <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm">
-        <div className="border-b border-slate-100 bg-slate-50/80 px-4 py-4 sm:flex sm:items-center sm:justify-between sm:px-6">
+      <div className={`overflow-hidden ${glassPanel}`}>
+        <div className="border-b border-white/40 bg-white/35 px-4 py-4 backdrop-blur-md sm:flex sm:items-center sm:justify-between sm:px-6">
           <div className="mb-4 sm:mb-0">
-            <p className="text-xs font-semibold uppercase tracking-wider text-blue-600">
+            <p className="text-xs font-semibold uppercase tracking-wider text-[#8a6d3d]">
               Citizen workspace
             </p>
-            <h1 className="mt-1 text-xl font-bold tracking-tight text-slate-900 sm:text-2xl">
+            <h1 className="font-frank mt-1 text-xl font-bold tracking-tight text-slate-900 sm:text-2xl">
               Contracts &amp; tasks
             </h1>
             <p className="mt-1 text-sm text-slate-600">
@@ -509,21 +524,21 @@ export default function ProductivityPage() {
             type="button"
             onClick={handleNewClick}
             disabled={isLoading || !!loadError}
-            className="w-full rounded-xl bg-blue-600 px-4 py-3 text-sm font-semibold text-white shadow-md shadow-blue-600/25 transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+            className={`w-full px-4 py-3 text-sm disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto ${btnPrimaryGold}`}
           >
             {tab === "contracts" ? "New contract" : "New task"}
           </button>
         </div>
 
-        <div className="border-b border-slate-100 px-4 sm:px-6">
+        <div className="border-b border-white/40 px-4 sm:px-6">
           <div className="flex gap-0">
             <button
               type="button"
               onClick={() => setTab("contracts")}
               className={`relative flex-1 border-b-2 py-3 text-sm font-semibold transition sm:flex-none sm:px-6 ${
                 tab === "contracts"
-                  ? "border-blue-600 text-blue-600"
-                  : "border-transparent text-slate-500 hover:text-slate-800"
+                  ? "border-[#C5A059] text-slate-900 shadow-[0_2px_12px_rgba(197,160,89,0.25)]"
+                  : "border-transparent text-slate-600 hover:text-slate-900"
               }`}
             >
               Contracts
@@ -533,8 +548,8 @@ export default function ProductivityPage() {
               onClick={() => setTab("tasks")}
               className={`relative flex-1 border-b-2 py-3 text-sm font-semibold transition sm:flex-none sm:px-6 ${
                 tab === "tasks"
-                  ? "border-blue-600 text-blue-600"
-                  : "border-transparent text-slate-500 hover:text-slate-800"
+                  ? "border-[#C5A059] text-slate-900 shadow-[0_2px_12px_rgba(197,160,89,0.25)]"
+                  : "border-transparent text-slate-600 hover:text-slate-900"
               }`}
             >
               Tasks
@@ -546,14 +561,14 @@ export default function ProductivityPage() {
 
         {!isLoading && loadError && (
           <div
-            className="m-4 flex flex-col gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-4 text-sm text-red-800 sm:m-6 sm:flex-row sm:items-center sm:justify-between"
+            className="m-4 flex flex-col gap-3 rounded-xl border border-red-300/70 bg-white/45 px-4 py-4 text-sm text-red-900 backdrop-blur-xl sm:m-6 sm:flex-row sm:items-center sm:justify-between"
             role="alert"
           >
             <p>{loadError}</p>
             <button
               type="button"
               onClick={() => void loadData()}
-              className="shrink-0 rounded-lg bg-red-700 px-4 py-2 text-sm font-semibold text-white hover:bg-red-600"
+              className="shrink-0 rounded-lg bg-red-800 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700"
             >
               Retry
             </button>
@@ -564,7 +579,7 @@ export default function ProductivityPage() {
           <div className="p-4 sm:p-6">
             {actionError && (
               <div
-                className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900"
+                className="mb-4 rounded-xl border border-amber-300/70 bg-white/45 px-4 py-3 text-sm text-amber-950 backdrop-blur-xl"
                 role="status"
               >
                 {actionError}
@@ -573,27 +588,27 @@ export default function ProductivityPage() {
             {tab === "contracts" && (
               <div className="grid gap-4 sm:grid-cols-2">
                 {sortedContracts.length === 0 && (
-                  <p className="col-span-full py-10 text-center text-sm text-slate-500">
+                  <p className="col-span-full py-10 text-center text-sm text-slate-600">
                     No contracts yet. Create one with &quot;New contract&quot;.
                   </p>
                 )}
                 {sortedContracts.map((c) => (
                   <article
                     key={c.id}
-                    className="flex flex-col rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition hover:border-slate-300 hover:shadow-md"
+                    className={`flex flex-col rounded-xl border border-white/50 p-4 shadow-sm backdrop-blur-xl transition hover:border-white hover:shadow-md ${glassPanelNested}`}
                   >
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0">
-                        <h3 className="font-semibold text-slate-900">{c.title}</h3>
+                        <h3 className="font-frank font-bold text-slate-900">{c.title}</h3>
                         <p className="mt-1 text-sm text-slate-600">{c.partyName}</p>
                       </div>
                       <span
-                        className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset ${statusStyles(c.status)}`}
+                        className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset backdrop-blur-sm ${statusStyles(c.status)}`}
                       >
                         {statusLabels[c.status]}
                       </span>
                     </div>
-                    <p className="mt-3 text-xs text-slate-400">Updated {c.updatedAt}</p>
+                    <p className="mt-3 text-xs text-slate-500">Updated {c.updatedAt}</p>
                     <div
                       className="relative mt-4"
                       ref={menuOpenId === c.id ? menuRef : undefined}
@@ -604,7 +619,7 @@ export default function ProductivityPage() {
                           e.stopPropagation();
                           setMenuOpenId((id) => (id === c.id ? null : c.id));
                         }}
-                        className="flex w-full items-center justify-center gap-2 rounded-lg border border-slate-200 bg-slate-50 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+                        className={`flex w-full items-center justify-center gap-2 py-2 text-sm font-medium ${btnSecondaryGlass}`}
                       >
                         Actions
                         <svg
@@ -618,10 +633,10 @@ export default function ProductivityPage() {
                         </svg>
                       </button>
                       {menuOpenId === c.id && (
-                        <div className="absolute left-0 right-0 z-10 mt-1 overflow-hidden rounded-xl border border-slate-200 bg-white py-1 shadow-lg">
+                        <div className="absolute inset-x-0 z-10 mt-1 overflow-hidden rounded-xl border border-white/40 bg-white/55 py-1 shadow-lg backdrop-blur-xl">
                           <button
                             type="button"
-                            className="block w-full px-4 py-2.5 text-left text-sm text-slate-700 hover:bg-slate-50"
+                            className="block w-full px-4 py-2.5 text-start text-sm text-slate-800 hover:bg-white/50"
                             onClick={() => {
                               setViewContract(c);
                               setMenuOpenId(null);
@@ -631,7 +646,7 @@ export default function ProductivityPage() {
                           </button>
                           <button
                             type="button"
-                            className="block w-full px-4 py-2.5 text-left text-sm text-blue-700 hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-40"
+                            className="block w-full px-4 py-2.5 text-start text-sm font-semibold text-[#8a6d3d] hover:bg-[#C5A059]/15 disabled:cursor-not-allowed disabled:opacity-40"
                             disabled={
                               c.status !== "pending_signature" ||
                               signingContractId === c.id
@@ -649,9 +664,9 @@ export default function ProductivityPage() {
             )}
 
             {tab === "tasks" && (
-              <ul className="divide-y divide-slate-100 rounded-xl border border-slate-200 bg-slate-50/50">
+              <ul className="divide-y divide-white/30 overflow-hidden rounded-2xl border border-white/40 bg-white/45 backdrop-blur-xl">
                 {sortedTasks.length === 0 && (
-                  <li className="px-4 py-10 text-center text-sm text-slate-500">
+                  <li className="px-4 py-10 text-center text-sm text-slate-600">
                     No tasks yet. Add one with &quot;New task&quot;.
                   </li>
                 )}
@@ -659,7 +674,7 @@ export default function ProductivityPage() {
                   <li
                     key={t.id}
                     className={`flex flex-col gap-3 p-4 transition sm:flex-row sm:items-center sm:gap-4 ${
-                      t.done ? "bg-slate-100/80" : "bg-white"
+                      t.done ? "bg-white/35" : "bg-white/20"
                     }`}
                   >
                     <label className="flex flex-1 cursor-pointer items-start gap-3">
@@ -668,7 +683,7 @@ export default function ProductivityPage() {
                         checked={t.done}
                         disabled={updatingTaskId === t.id}
                         onChange={() => void toggleTaskDone(t.id)}
-                        className="mt-1 h-4 w-4 shrink-0 rounded border-slate-300 text-blue-600 focus:ring-blue-500 disabled:cursor-wait disabled:opacity-50"
+                        className="mt-1 h-4 w-4 shrink-0 rounded border-slate-400 text-[#C5A059] focus:ring-[#C5A059]/40 disabled:cursor-wait disabled:opacity-50"
                       />
                       <span className="min-w-0">
                         <span
@@ -687,11 +702,11 @@ export default function ProductivityPage() {
                     </label>
                     <div className="flex shrink-0 flex-wrap items-center gap-2 sm:flex-col sm:items-end">
                       <span
-                        className={`rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset ${priorityStyles(t.priority)}`}
+                        className={`rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset backdrop-blur-sm ${priorityStyles(t.priority)}`}
                       >
                         {t.priority.charAt(0).toUpperCase() + t.priority.slice(1)}
                       </span>
-                      <span className="text-xs font-medium text-slate-500">
+                      <span className="text-xs font-medium text-slate-600">
                         Due {t.dueDate || "—"}
                       </span>
                     </div>
@@ -703,9 +718,9 @@ export default function ProductivityPage() {
         )}
       </div>
 
-      <p className="mt-4 text-center text-xs text-slate-500">
+      <p className="mt-4 text-center text-xs text-slate-600">
         Need files?{" "}
-        <Link href="/vault" className="font-semibold text-blue-400 hover:text-blue-300">
+        <Link href="/vault" className="font-semibold text-[#8a6d3d] hover:text-slate-900">
           Open your vault
         </Link>
       </p>
