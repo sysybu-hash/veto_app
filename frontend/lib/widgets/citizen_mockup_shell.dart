@@ -232,7 +232,17 @@ class _CitizenMockupShellState extends State<CitizenMockupShell> {
         backgroundColor: VetoMockup.pageBackground,
         appBar: widget.mobileAppBar,
         floatingActionButton: widget.floatingActionButton,
-        body: widget.child,
+        // Mobile web: ensure the body gets a definite min height (RefreshIndicator /
+        // Column+Expanded) — some WebKit builds under-report the first constraint pass.
+        body: LayoutBuilder(
+          builder: (context, c) => Align(
+            alignment: Alignment.topCenter,
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minWidth: c.maxWidth, minHeight: c.maxHeight),
+              child: widget.child,
+            ),
+          ),
+        ),
         bottomNavigationBar: widget.showMobileBottomBar
             ? _CitizenMobileBottomNav(
                 currentIndex: widget.mobileNavIndex,
