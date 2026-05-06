@@ -4,7 +4,11 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { getRoleFromJwt, setJwt } from "@/lib/authToken";
 import { setSocketAuthToken } from "@/lib/socketClient";
-import { apiUrl, tunnelBypassHeaders } from "@/lib/env";
+import {
+  apiUrl,
+  isApiOriginConfigured,
+  tunnelBypassHeaders,
+} from "@/lib/env";
 
 async function postJson(path: string, body: object) {
   const headers: HeadersInit = {
@@ -27,6 +31,30 @@ async function postJson(path: string, body: object) {
   return data as Record<string, unknown>;
 }
 
+function pickOtpFromResponse(data: Record<string, unknown>): string | null {
+  const o = data.otp;
+  const s = o == null ? "" : String(o).trim();
+  return /^\d{4,8}$/.test(s) ? s : null;
+}
+
+function formatLoginError(e: unknown): string {
+  const raw = e instanceof Error ? e.message : String(e);
+  if (raw.includes("NEXT_PUBLIC_API_ORIGIN")) {
+    return "חסרה הגדרת שרת: ב-Vercel → Environment Variables הגדירו NEXT_PUBLIC_API_ORIGIN לכתובת ה-API (HTTPS, בלי סיומת /api), ואז Redeploy.";
+  }
+  if (
+    /failed to fetch|networkerror|load failed|connection refused|err_connection_refused/i.test(
+      raw,
+    )
+  ) {
+    return "לא ניתן להתחבר לשרת. ודאו ש-NEXT_PUBLIC_API_ORIGIN מצביע לשרת ה-API הפעיל (למשל Render), ש-CORS בשרת מאשר את דומיין האתר, והשרת רץ.";
+  }
+  if (raw === "No token in response") {
+    return "אין אסימון בתשובת השרת. נסו שוב או בדקו לוגים.";
+  }
+  return raw;
+}
+
 export default function LoginPage() {
   const router = useRouter();
   const [phone, setPhone] = useState("");
@@ -34,6 +62,8 @@ export default function LoginPage() {
   const [devToken, setDevToken] = useState("");
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [devOtp, setDevOtp] = useState<string | null>(null);
+  const [otpCopied, setOtpCopied] = useState(false);
 
   const googleLoginUrl = process.env.NEXT_PUBLIC_GOOGLE_LOGIN_URL;
 
@@ -51,13 +81,35 @@ export default function LoginPage() {
   const handleOtpLogin = async () => {
     setBusy(true);
     setMessage(null);
+    setDevOtp(null);
+    setOtpCopied(false);
     try {
-      await postJson("/api/auth/request-otp", { phone });
-      setMessage("נשלח קוד. בדקו את הטלפון או לוג שרת בפיתוח.");
+      const data = await postJson("/api/auth/request-otp", { phone });
+      const returned = pickOtpFromResponse(data);
+      if (returned) {
+        setDevOtp(returned);
+        setOtp(returned);
+        setMessage(
+          "הקוד הוחזר מהשרת (פיתוח או SMS לא מוגדר). אפשר להעתיק או לאמת למטה.",
+        );
+      } else {
+        setMessage("נשלח קוד. בדקו את הטלפון או לוג שרת בפיתוח.");
+      }
     } catch (e) {
-      setMessage(e instanceof Error ? e.message : "Request failed");
+      setMessage(formatLoginError(e));
     } finally {
       setBusy(false);
+    }
+  };
+
+  const copyDevOtp = async () => {
+    if (!devOtp) return;
+    try {
+      await navigator.clipboard.writeText(devOtp);
+      setOtpCopied(true);
+      window.setTimeout(() => setOtpCopied(false), 2000);
+    } catch {
+      setMessage("העתקה נכשלה — סמנו את הקוד ידנית.");
     }
   };
 
@@ -79,7 +131,7 @@ export default function LoginPage() {
         router.replace("/hub");
       }
     } catch (e) {
-      setMessage(e instanceof Error ? e.message : "Verification failed");
+      setMessage(formatLoginError(e));
     } finally {
       setBusy(false);
     }
@@ -110,6 +162,15 @@ export default function LoginPage() {
         dir="rtl"
       >
         <div className="text-center">
+          {!isApiOriginConfigured() && (
+            <div
+              className="mb-4 rounded-xl border border-amber-600/80 bg-amber-100/95 px-3 py-2.5 text-xs font-semibold leading-snug text-amber-950 shadow-sm"
+              role="alert"
+            >
+              חסר NEXT_PUBLIC_API_ORIGIN — ב-Vercel יש להגדיר את כתובת ה-API (למשל
+              https://…onrender.com) ולבצע Redeploy.
+            </div>
+          )}
           <h1 className="font-display text-2xl font-semibold text-slate-900 md:text-3xl">
             כניסה ל-VETO
           </h1>
@@ -170,7 +231,11 @@ export default function LoginPage() {
             </label>
             <input
               value={phone}
-              onChange={(e) => setPhone(e.target.value)}
+              onChange={(e) => {
+                setPhone(e.target.value);
+                setDevOtp(null);
+                setOtpCopied(false);
+              }}
               className="rounded-xl border border-white/60 bg-white/40 px-3 py-2.5 text-sm text-slate-900 outline-none ring-slate-900/10 placeholder:text-slate-500 focus:border-white focus:ring-2 focus:ring-slate-800/20"
               placeholder="+972..."
               autoComplete="tel"
@@ -187,6 +252,33 @@ export default function LoginPage() {
               שלח קוד OTP
             </button>
           </div>
+
+          {devOtp && (
+            <div
+              className="rounded-2xl border border-amber-500/60 bg-amber-50/95 px-4 py-4 shadow-sm"
+              role="region"
+              aria-label="קוד OTP להדגמה"
+            >
+              <p className="text-center text-xs font-semibold text-amber-950">
+                קוד OTP (הוצג מהשרת)
+              </p>
+              <div className="mt-3 flex flex-wrap items-center justify-center gap-3">
+                <code
+                  className="min-w-[8.5rem] rounded-lg bg-white/80 px-4 py-2 text-center text-2xl font-bold tracking-[0.35em] text-slate-900 shadow-inner"
+                  dir="ltr"
+                >
+                  {devOtp}
+                </code>
+                <button
+                  type="button"
+                  onClick={() => void copyDevOtp()}
+                  className="rounded-xl bg-amber-600 px-4 py-2.5 text-sm font-bold text-white shadow transition hover:bg-amber-700"
+                >
+                  {otpCopied ? "הועתק" : "העתק"}
+                </button>
+              </div>
+            </div>
+          )}
 
           <div className="flex flex-col gap-2">
             <label className="text-xs font-medium text-slate-700">קוד OTP</label>
