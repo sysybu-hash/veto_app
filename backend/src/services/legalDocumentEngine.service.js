@@ -19,7 +19,6 @@ const {
   HeadingLevel,
   AlignmentType,
   Footer,
-  PageBreak,
 } = require('docx');
 
 const FOOTER_STAMP = 'מסמך זה נוצר על ידי VETO LEGAL בפענוח AI';
