@@ -138,7 +138,9 @@ Framework זוהה בדרך־כלל כ־**Next.js** אוטומטית. Build: `np
 
 #### GitHub Actions → Vercel
 
-ב־`main`, אחרי `backend-ci`, job **`deploy-vercel`** רץ מתוך **`web-client`**: `npm ci`, `npm run build`, ואז `vercel deploy --prod`.  
+ב־`main`, אחרי `backend-ci`, job **`deploy-vercel`**:
+1. בונה מקומית ב־**`web-client/`** (`npm ci`, `npm run build`) — לוודא שהקוד עובר build.
+2. מריץ **`vercel deploy --prod` משורש ה-repo** (לא מתוך `web-client/`). ב־Vercel מוגדר **Root Directory = `web-client`** — אם מריצים את ה-CLI מתוך `web-client`, Vercel מחבר פעמיים את הנתיב ומקבלים שגיאת `web-client/web-client`.  
 נדרשים Secrets ב-repo: `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`.
 
 אם ב-Vercel מופעל גם **Deploy מחיבור Git** לאותו branch, ייתכן **שני** deploys לכל push — כדאי לבחור שיטה אחת או לכבות את הכפול.
