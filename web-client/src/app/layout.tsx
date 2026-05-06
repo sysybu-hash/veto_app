@@ -10,10 +10,10 @@ const heebo = Heebo({
   display: "swap",
 });
 
-const frankRuhlLibre = Frank_Ruhl_Libre({
+const frank = Frank_Ruhl_Libre({
   subsets: ["latin", "hebrew"],
-  variable: "--font-frank-ruhl",
-  weight: ["400", "500", "600", "700"],
+  weight: ["700", "900"],
+  variable: "--font-frank",
   display: "swap",
 });
 
@@ -29,19 +29,15 @@ export default function RootLayout({
   children: ReactNode;
 }>) {
   return (
-    <html
-      lang="he"
-      dir="rtl"
-      className={`${heebo.variable} ${frankRuhlLibre.variable} h-full`}
-    >
-      <body className="font-sans min-h-screen antialiased text-slate-900 relative">
+    <html lang="he" dir="rtl" className={`${heebo.variable} ${frank.variable} h-full`}>
+      <body className="font-heebo min-h-screen overflow-x-hidden antialiased relative text-white">
         <div
-          className="fixed inset-0 -z-20 bg-cover bg-center bg-fixed"
+          className="fixed inset-0 -z-20 bg-cover bg-center bg-no-repeat"
           style={{ backgroundImage: "url('/courtroom.jpg')" }}
           aria-hidden
         />
         <div
-          className="fixed inset-0 -z-10 bg-linear-to-b from-black/40 via-white/80 to-white pointer-events-none"
+          className="fixed inset-0 -z-10 bg-linear-to-b from-black/60 via-black/20 to-black/80 pointer-events-none"
           aria-hidden
         />
 
