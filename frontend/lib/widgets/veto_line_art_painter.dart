@@ -13,11 +13,14 @@ class VetoLineArtBackground extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Use CustomPaint as parent so height comes from [child]. A Stack with
-    // StackFit.expand breaks inside unbounded parents (e.g. SingleChildScrollView).
-    return CustomPaint(
-      painter: const _LineArtPainter(),
-      child: child,
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        const Positioned.fill(
+          child: CustomPaint(painter: _LineArtPainter()),
+        ),
+        child,
+      ],
     );
   }
 }
