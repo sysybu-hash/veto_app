@@ -1111,7 +1111,29 @@ class _VetoScreenState extends State<VetoScreen> {
           ],
         );
       }
-      return wizardBody;
+      // Keep the same explicit exit affordance on mobile so users can always
+      // return to the hub if they landed in wizard mode by mistake.
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+            child: Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: TextButton.icon(
+                onPressed: () => setState(() => _citizenWizardMode = false),
+                icon: const Icon(Icons.arrow_back_rounded),
+                label: Text(
+                  _langKey == 'he'
+                      ? 'חזרה לדף הבית'
+                      : (_langKey == 'ru' ? 'На главную' : 'Back to home'),
+                ),
+              ),
+            ),
+          ),
+          Expanded(child: wizardBody),
+        ],
+      );
     }
 
     if (useCitizenMockup && isWide) {
