@@ -2,21 +2,26 @@
 
 import Link from "next/link";
 
-export type CitizenNavActive = "hub" | "vault" | "productivity";
+export type CitizenNavActive =
+  | "hub"
+  | "vault"
+  | "productivity"
+  | "calendar"
+  | "settings";
 
 const linkBase =
-  "relative flex flex-1 min-w-0 flex-col items-center gap-0.5 rounded-xl px-1 py-2 text-center sm:px-3";
+  "relative flex min-w-0 flex-1 flex-col items-center gap-0.5 rounded-xl px-0.5 py-2 text-center sm:px-2";
 
 const idle =
   "border-2 border-transparent text-slate-400 transition hover:bg-white/5 hover:text-white sm:border-transparent";
 
 const activeStyle =
-  "relative border-2 border-blue-500 bg-blue-600/20 text-xs font-semibold text-blue-100 shadow-[0_0_20px_rgba(37,99,235,0.35)]";
+  "relative border-2 border-blue-500 bg-blue-600/20 text-[10px] font-semibold text-blue-100 shadow-[0_0_20px_rgba(37,99,235,0.35)] sm:text-xs";
 
 export function CitizenBottomNav({ active }: { active: CitizenNavActive }) {
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-white/10 bg-slate-950/95 px-2 py-2 backdrop-blur-md sm:px-4 sm:py-3">
-      <div className="mx-auto flex max-w-lg justify-center gap-1 sm:gap-3">
+    <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-white/10 bg-slate-950/95 px-1 py-2 backdrop-blur-md sm:px-3 sm:py-3">
+      <div className="mx-auto flex max-w-lg justify-between gap-0.5 sm:gap-2">
         <Link
           href="/hub"
           className={`${linkBase} text-[10px] font-medium sm:text-xs ${
@@ -33,9 +38,9 @@ export function CitizenBottomNav({ active }: { active: CitizenNavActive }) {
           >
             <path d="M3 12l9-9 9 9M4 10v10a1 1 0 001 1h5v-6h4v6h5a1 1 0 001-1V10" />
           </svg>
-          <span className="truncate sm:max-none">Home</span>
+          <span className="truncate">Home</span>
           {active === "hub" && (
-            <span className="absolute -top-0.5 right-1 rounded-full bg-blue-500 px-1 text-[9px] font-bold text-white sm:right-2 sm:text-[10px]">
+            <span className="absolute -top-0.5 right-0 rounded-full bg-blue-500 px-1 text-[8px] font-bold text-white sm:right-0.5 sm:text-[9px]">
               SOS
             </span>
           )}
@@ -58,11 +63,6 @@ export function CitizenBottomNav({ active }: { active: CitizenNavActive }) {
             <path d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m0 0h-4M9 12h6M9 16h6" />
           </svg>
           <span className="truncate">Vault</span>
-          {active === "vault" && (
-            <span className="absolute -top-0.5 right-1 rounded-full bg-blue-500 px-1 text-[9px] font-bold text-white sm:right-2 sm:px-1.5 sm:text-[10px]">
-              Files
-            </span>
-          )}
         </Link>
 
         <Link
@@ -82,11 +82,45 @@ export function CitizenBottomNav({ active }: { active: CitizenNavActive }) {
             <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 012-2h2a2 2 0 012 2v0M9 5a2 2 0 012 2h2a2 2 0 012-2m-6 9h6m-6 4h6" />
           </svg>
           <span className="truncate">Work</span>
-          {active === "productivity" && (
-            <span className="absolute -top-0.5 right-1 rounded-full bg-blue-500 px-1 text-[9px] font-bold text-white sm:right-2 sm:px-1.5 sm:text-[10px]">
-              Plan
-            </span>
-          )}
+        </Link>
+
+        <Link
+          href="/calendar"
+          className={`${linkBase} text-[10px] font-medium sm:text-xs ${
+            active === "calendar" ? activeStyle : idle
+          } ${active === "calendar" ? "font-semibold" : ""}`}
+        >
+          <svg
+            className={`mx-auto h-5 w-5 sm:h-6 sm:w-6 ${active === "calendar" ? "text-blue-300" : "text-blue-400"}`}
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={1.75}
+            viewBox="0 0 24 24"
+            aria-hidden
+          >
+            <path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+          <span className="truncate">Calendar</span>
+        </Link>
+
+        <Link
+          href="/settings"
+          className={`${linkBase} text-[10px] font-medium sm:text-xs ${
+            active === "settings" ? activeStyle : idle
+          } ${active === "settings" ? "font-semibold" : ""}`}
+        >
+          <svg
+            className={`mx-auto h-5 w-5 sm:h-6 sm:w-6 ${active === "settings" ? "text-blue-300" : "text-blue-400"}`}
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={1.75}
+            viewBox="0 0 24 24"
+            aria-hidden
+          >
+            <path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+            <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+          </svg>
+          <span className="truncate">Settings</span>
         </Link>
       </div>
     </nav>
