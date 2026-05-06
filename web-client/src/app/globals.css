@@ -9,9 +9,19 @@
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-heebo), ui-sans-serif, system-ui, sans-serif;
-  --font-display: var(--font-frank-ruhl), "Frank Ruhl Libre", ui-serif, Georgia,
-    serif;
   --font-mono: ui-monospace, monospace;
+}
+
+@utility font-heebo {
+  font-family: var(--font-heebo), ui-sans-serif, system-ui, sans-serif;
+}
+
+@utility font-frank {
+  font-family: var(--font-frank), "Frank Ruhl Libre", ui-serif, Georgia, serif;
+}
+
+@utility font-display {
+  font-family: var(--font-frank), "Frank Ruhl Libre", ui-serif, Georgia, serif;
 }
 
 @media (prefers-color-scheme: dark) {

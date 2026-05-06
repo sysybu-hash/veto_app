@@ -1,68 +1,94 @@
 import Link from "next/link";
 
-const bento = [
-  {
-    title: "SOS מיידי",
-    body: "לחצן חירום משפטי מחובר לצוות ולמשתמשי קצה — תגובה בזמן אמת כשהזמן קריטי.",
-  },
-  {
-    title: "כספת ראיות",
-    body: "איסוף ושמירה מוצפנים של מסמכים, הקלטות וצילומים עם שרשרת שלמות דיגיטלית.",
-  },
-  {
-    title: "סנכרון מומחים",
-    body: "חיבור ישיר לעורכי דין ומומחים מתאימים לפי הקשר התיק — בלי גשרים מיותרים.",
-  },
-] as const;
-
 export default function Home() {
   return (
-    <div className="relative min-h-screen pb-28">
-      <main className="mx-auto flex max-w-6xl flex-col gap-16 px-4 pt-12 md:px-8 md:pt-20 lg:pt-24">
-        <header className="flex flex-col items-center text-center">
-          <h1
-            className="font-display text-4xl font-semibold leading-[1.05] tracking-tighter text-white drop-shadow-[0_4px_24px_rgba(0,0,0,0.55)] sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl"
-          >
-            עורך דין בלחיצת כפתור
-          </h1>
-          <p className="mt-8 max-w-3xl font-sans text-lg font-medium leading-relaxed text-slate-800 md:text-xl">
-            מערכת ההפעלה המשפטית הראשונה בישראל המשלבת הגנה מיידית, ניהול ראיות חכם
-            וחיבור ישיר למומחים ברגע האמת.
-          </p>
+    <div className="container relative z-10 mx-auto flex min-h-screen flex-col px-6">
+      <nav className="flex items-center justify-between py-10">
+        <div className="font-frank text-4xl font-black tracking-tighter text-white">
+          VETO<span className="text-[#C5A059]">.</span>
+        </div>
+
+        <div className="hidden items-center gap-10 text-lg font-bold text-white/90 md:flex">
+          <a href="#" className="transition-colors hover:text-[#C5A059]">
+            צוות משפטי
+          </a>
+          <a href="#" className="transition-colors hover:text-[#C5A059]">
+            אבטחה
+          </a>
+          <a href="#" className="transition-colors hover:text-[#C5A059]">
+            המערכת
+          </a>
+        </div>
+        <div className="flex items-center gap-4">
           <Link
             href="/login"
-            className="mt-10 inline-flex items-center justify-center rounded-2xl bg-slate-950 px-10 py-4 text-base font-semibold text-white shadow-[0_12px_40px_rgba(15,23,42,0.45)] ring-1 ring-white/10 transition hover:bg-slate-900 hover:shadow-[0_20px_50px_rgba(15,23,42,0.5)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-950"
+            className="rounded-full border border-white/20 bg-white/10 px-6 py-2 font-bold text-white backdrop-blur-md transition-all hover:bg-white/20"
           >
-            התחל הגנה עכשיו
+            אזור עורכי דין
           </Link>
-        </header>
+          <Link
+            href="/login"
+            className="rounded-full bg-[#C5A059] px-6 py-2 font-black text-black shadow-lg transition-all hover:scale-105"
+          >
+            כניסת משתמשים
+          </Link>
+        </div>
+      </nav>
 
-        <section
-          aria-label="יכולות מרכזיות"
-          className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 lg:gap-6"
+      <main className="flex grow flex-col items-center justify-center py-20 text-center">
+        <h1 className="mb-8 font-frank text-7xl leading-none font-black drop-shadow-2xl md:text-9xl">
+          עורך דין
+          <br />
+          בלחיצת כפתור
+        </h1>
+        <p className="mb-12 max-w-3xl text-xl font-medium leading-relaxed text-white/80 md:text-3xl">
+          מערכת ההפעלה המשפטית הראשונה בישראל המשלבת הגנה מיידית, ניהול ראיות חכם
+          וחיבור ישיר למומחים ברגע האמת.
+        </p>
+
+        <Link
+          href="/login"
+          className="rounded-xl bg-white px-16 py-6 text-2xl font-black text-black shadow-2xl transition-all hover:-translate-y-1 hover:bg-[#C5A059] hover:text-white"
         >
-          {bento.map((item) => (
-            <article
-              key={item.title}
-              className="flex flex-col rounded-3xl border border-white/60 bg-white/30 p-6 shadow-[0_8px_32px_rgba(15,23,42,0.08)] backdrop-blur-2xl md:p-8"
-            >
-              <h2 className="font-display text-xl font-semibold text-slate-900 md:text-2xl">
-                {item.title}
-              </h2>
-              <p className="mt-3 font-sans text-sm leading-relaxed text-slate-800 md:text-base">
-                {item.body}
-              </p>
-            </article>
-          ))}
-        </section>
-      </main>
+          התחל הגנה עכשיו
+        </Link>
 
-      <div className="pointer-events-none fixed bottom-6 left-1/2 z-20 -translate-x-1/2 px-4">
         <div
-          className="pointer-events-auto rounded-full border border-amber-400/60 bg-linear-to-r from-[#0f172a] to-[#1e3a5f] px-5 py-2.5 text-center text-sm font-medium text-amber-100 shadow-[0_8px_32px_rgba(15,23,42,0.35)] backdrop-blur-md md:px-8 md:text-base"
+          className="mt-12 inline-block rounded-full border border-[#C5A059]/30 bg-black/40 px-8 py-3 font-black text-[#C5A059] backdrop-blur-xl"
           role="status"
         >
           השירות ניתן מלבד שבתות וחגים
+        </div>
+      </main>
+
+      <div className="grid grid-cols-1 gap-6 pb-20 md:grid-cols-3">
+        <div className="rounded-3xl border border-white/10 bg-white/5 p-10 backdrop-blur-2xl transition-all hover:border-[#C5A059]/50">
+          <div className="mb-4 text-sm font-black tracking-tighter text-[#C5A059]">
+            EMERGENCY RESPONSE
+          </div>
+          <h3 className="mb-4 font-frank text-3xl font-bold">התערבות SOS</h3>
+          <p className="text-lg leading-relaxed text-white/60">
+            חיבור וידאו מיידי לעורך דין תורן שמקבל גישה למקום האירוע ולסטטוס שלך.
+          </p>
+        </div>
+        <div className="rounded-3xl border border-white/10 bg-white/5 p-10 backdrop-blur-2xl transition-all hover:border-[#C5A059]/50">
+          <div className="mb-4 text-sm font-black tracking-tighter text-[#C5A059]">
+            ENCRYPTION
+          </div>
+          <h3 className="mb-4 font-frank text-3xl font-bold">כספת ראיות</h3>
+          <p className="text-lg leading-relaxed text-white/60">
+            אחסון מוצפן בסטנדרט צבאי לכל המסמכים והראיות שלך עם שרשרת חזקה של
+            בלוקצ&apos;יין.
+          </p>
+        </div>
+        <div className="rounded-3xl border border-white/10 bg-white/5 p-10 backdrop-blur-2xl transition-all hover:border-[#C5A059]/50">
+          <div className="mb-4 text-sm font-black tracking-tighter text-[#C5A059]">
+            INTELLIGENCE
+          </div>
+          <h3 className="mb-4 font-frank text-3xl font-bold">ניהול חכם</h3>
+          <p className="text-lg leading-relaxed text-white/60">
+            סנכרון מלא ליומן גוגל ומערכת משימות משפטיות מתקדמת שדואגת שלא תפספס דבר.
+          </p>
         </div>
       </div>
     </div>
