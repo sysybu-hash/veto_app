@@ -38,13 +38,15 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
   const [locale, setLocaleState] = useState<Locale>("he");
 
   useEffect(() => {
-    try {
-      const stored = parseLocale(localStorage.getItem(STORAGE_KEY));
-      setLocaleState(stored);
-      applyDocumentLocale(stored);
-    } catch {
-      applyDocumentLocale("he");
-    }
+    queueMicrotask(() => {
+      try {
+        const stored = parseLocale(localStorage.getItem(STORAGE_KEY));
+        setLocaleState(stored);
+        applyDocumentLocale(stored);
+      } catch {
+        applyDocumentLocale("he");
+      }
+    });
   }, []);
 
   const setLocale = useCallback((next: Locale) => {

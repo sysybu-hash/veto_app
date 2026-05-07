@@ -117,6 +117,12 @@ const UserSchema = new mongoose.Schema(
       default: false,
     },
 
+    /** First-run onboarding (web citizen flow) — language / basics */
+    onboarding_completed: {
+      type: Boolean,
+      default: false,
+    },
+
     // ── Notification / App Settings ───────────────────────────
     settings: {
       notifyEmergency: { type: Boolean, default: true },

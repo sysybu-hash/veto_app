@@ -1,9 +1,9 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { EvidenceDTO } from "@/app/actions/vault";
-import { deleteEvidence } from "@/app/actions/vault";
+import { deleteEvidence, syncSosArtifactsToVault } from "@/app/actions/vault";
 import { getJwt } from "@/lib/authToken";
 import { useTranslation } from "@/lib/i18n/LocaleProvider";
 import {
@@ -160,12 +160,17 @@ export function VaultPageClient({
   const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
   const [uploadOpen, setUploadOpen] = useState(false);
   const [isHydrating, setIsHydrating] = useState(true);
-  const [loadError, setLoadError] = useState<string | null>(null);
+  const loadError: string | null = null;
   const [actionError, setActionError] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [syncBusy, setSyncBusy] = useState(false);
+  const [syncMsg, setSyncMsg] = useState<string | null>(null);
+  const syncOnce = useRef(false);
 
   useEffect(() => {
-    setEvidenceRows(initialEvidence);
+    queueMicrotask(() => {
+      setEvidenceRows(initialEvidence);
+    });
   }, [initialEvidence]);
 
   useEffect(() => {
@@ -173,7 +178,7 @@ export function VaultPageClient({
       router.replace("/login");
       return;
     }
-    setIsHydrating(false);
+    queueMicrotask(() => setIsHydrating(false));
   }, [router]);
 
   const folderList: FolderBase[] = useMemo(() => {
@@ -221,6 +226,36 @@ export function VaultPageClient({
     router.refresh();
   }, [router]);
 
+  const runSosSync = useCallback(async () => {
+    setSyncBusy(true);
+    setSyncMsg(null);
+    try {
+      const r = await syncSosArtifactsToVault();
+      if (!r.success) {
+        setSyncMsg(r.error);
+        return;
+      }
+      if (r.added > 0) {
+        setSyncMsg(t("vault.syncSosOk").replace("{n}", String(r.added)));
+        refreshVault();
+      } else {
+        setSyncMsg(t("vault.syncSosNone"));
+      }
+    } catch (e) {
+      setSyncMsg(e instanceof Error ? e.message : t("vault.syncSosErr"));
+    } finally {
+      setSyncBusy(false);
+    }
+  }, [refreshVault, t]);
+
+  useEffect(() => {
+    if (!getJwt() || syncOnce.current) return;
+    syncOnce.current = true;
+    queueMicrotask(() => {
+      void runSosSync();
+    });
+  }, [runSosSync]);
+
   const removeFile = async (id: string) => {
     setActionError(null);
     setDeletingId(id);
@@ -257,13 +292,27 @@ export function VaultPageClient({
             {t("vault.title")}
           </h1>
           <p className="mt-1 text-sm text-slate-600">{t("vault.subtitle")}</p>
+          {syncMsg && (
+            <p className="mt-2 text-xs text-slate-600" role="status">
+              {syncMsg}
+            </p>
+          )}
         </div>
-        <button
-          type="button"
-          disabled={!!loadError}
-          onClick={() => setUploadOpen(true)}
-          className={`inline-flex items-center justify-center gap-2 px-5 py-3 text-sm ${btnPrimaryGold} disabled:cursor-not-allowed disabled:opacity-50`}
-        >
+        <div className="flex flex-col gap-2 sm:items-end">
+          <button
+            type="button"
+            disabled={syncBusy || !!loadError}
+            onClick={() => void runSosSync()}
+            className={`inline-flex items-center justify-center gap-2 px-5 py-3 text-sm ${btnSecondaryGlass} disabled:cursor-not-allowed disabled:opacity-50`}
+          >
+            {syncBusy ? t("vault.syncSosBusy") : t("vault.syncSos")}
+          </button>
+          <button
+            type="button"
+            disabled={!!loadError}
+            onClick={() => setUploadOpen(true)}
+            className={`inline-flex items-center justify-center gap-2 px-5 py-3 text-sm ${btnPrimaryGold} disabled:cursor-not-allowed disabled:opacity-50`}
+          >
           <svg
             className="h-5 w-5"
             fill="none"
@@ -280,6 +329,7 @@ export function VaultPageClient({
           </svg>
           Upload file
         </button>
+        </div>
       </header>
 
       {loadError && (

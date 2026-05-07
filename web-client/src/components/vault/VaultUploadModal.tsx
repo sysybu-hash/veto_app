@@ -47,10 +47,11 @@ export function VaultUploadModal({
   const pushToast = useToastStore((s) => s.push);
 
   useEffect(() => {
-    if (open) {
+    if (!open) return;
+    queueMicrotask(() => {
       setFolderId(defaultFolderId);
       setUploadError(null);
-    }
+    });
   }, [open, defaultFolderId]);
 
   const reset = useCallback(() => {

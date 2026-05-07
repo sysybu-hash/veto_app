@@ -20,6 +20,9 @@ export type UserProfile = {
   is_subscribed?: boolean;
   subscription_expiry?: string | null;
   role?: string;
+  onboarding_completed?: boolean;
+  manually_added?: boolean;
+  is_payment_exempt?: boolean;
 };
 
 async function parseJsonError(res: Response): Promise<string> {
@@ -37,6 +40,7 @@ export type UpdateProfilePayload = {
   phone?: string;
   preferred_language?: string;
   settings?: UserSettings;
+  onboarding_completed?: boolean;
 };
 
 export async function fetchProfile(): Promise<UserProfile> {

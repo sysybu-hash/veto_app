@@ -45,12 +45,13 @@ export function CreateTaskModal({
   const titleRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (open) {
+    if (!open) return;
+    queueMicrotask(() => {
       setForm(emptyForm);
       setSubmitError(null);
       setIsSubmitting(false);
       queueMicrotask(() => titleRef.current?.focus());
-    }
+    });
   }, [open]);
 
   const handleClose = useCallback(() => {
