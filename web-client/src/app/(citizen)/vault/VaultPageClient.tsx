@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import type { EvidenceDTO } from "@/app/actions/vault";
 import { deleteEvidence } from "@/app/actions/vault";
 import { getJwt } from "@/lib/authToken";
+import { useTranslation } from "@/lib/i18n/LocaleProvider";
 import {
   VaultUploadModal,
   type VaultFolderOption,
@@ -122,9 +123,9 @@ function FileTypeIcon({ type }: { type: VaultFileEntry["type"] }) {
   );
 }
 
-function VaultLoadingSkeleton() {
+function VaultLoadingSkeleton({ label }: { label: string }) {
   return (
-    <div className="animate-pulse space-y-8" aria-busy="true" aria-label="Loading vault">
+    <div className="animate-pulse space-y-8" aria-busy="true" aria-label={label}>
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="space-y-2">
           <div className="h-8 w-56 rounded-lg bg-white/40 md:h-9 md:w-64" />
@@ -154,6 +155,7 @@ export function VaultPageClient({
   initialEvidence: EvidenceDTO[];
 }) {
   const router = useRouter();
+  const { t } = useTranslation();
   const [evidenceRows, setEvidenceRows] = useState<EvidenceDTO[]>(initialEvidence);
   const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
   const [uploadOpen, setUploadOpen] = useState(false);
@@ -178,10 +180,10 @@ export function VaultPageClient({
     const cats = [...new Set(evidenceRows.map((e) => e.category))];
     return cats.map((cat) => ({
       id: cat,
-      name: cat === "general" ? "כללי" : cat,
-      description: "ראיות בכספת (Neon)",
+      name: cat === "general" ? t("vault.categoryGeneral") : cat,
+      description: t("vault.folderCardDescription"),
     }));
-  }, [evidenceRows]);
+  }, [evidenceRows, t]);
 
   const files = useMemo(
     () => evidenceRows.map(mapEvidenceToEntry),
@@ -199,10 +201,10 @@ export function VaultPageClient({
 
   const uploadFolderOptions: VaultFolderOption[] = useMemo(
     () => [
-      { id: "", name: "כללי" },
+      { id: "", name: t("vault.categoryGeneral") },
       ...folders.map(({ id, name }) => ({ id, name })),
     ],
-    [folders],
+    [folders, t],
   );
 
   const recentFiles = useMemo(() => {
@@ -230,7 +232,7 @@ export function VaultPageClient({
       }
       refreshVault();
     } catch (e) {
-      setActionError(e instanceof Error ? e.message : "Remove failed");
+      setActionError(e instanceof Error ? e.message : t("vault.removeFailed"));
     } finally {
       setDeletingId(null);
     }
@@ -241,7 +243,7 @@ export function VaultPageClient({
   if (isHydrating) {
     return (
       <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col px-4 pb-28 pt-8 md:px-8">
-        <VaultLoadingSkeleton />
+        <VaultLoadingSkeleton label={t("vault.loadingAria")} />
         <CitizenBottomNav active="vault" />
       </div>
     );
@@ -252,11 +254,9 @@ export function VaultPageClient({
       <header className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="font-frank text-2xl font-bold tracking-tight text-slate-900 md:text-3xl">
-            Evidence Vault
+            {t("vault.title")}
           </h1>
-          <p className="mt-1 text-sm text-slate-600">
-            ראיות מאובטחות ב-Neon — קטגוריות, מטא-דאטה וחתימת קובץ (hash).
-          </p>
+          <p className="mt-1 text-sm text-slate-600">{t("vault.subtitle")}</p>
         </div>
         <button
           type="button"
@@ -293,7 +293,7 @@ export function VaultPageClient({
             onClick={() => void refreshVault()}
             className={`shrink-0 px-4 py-2 text-sm ${btnSecondaryGlass} border-red-200/60 text-red-800`}
           >
-            Retry
+            {t("common.retry")}
           </button>
         </div>
       )}
@@ -312,7 +312,7 @@ export function VaultPageClient({
           <section className="mb-10">
             <div className="mb-3 flex items-center justify-between">
               <h2 className="font-frank text-sm font-bold uppercase tracking-wide text-slate-600">
-                קטגוריות
+                {t("vault.categories")}
               </h2>
               {selectedFolderId && (
                 <button
@@ -320,7 +320,7 @@ export function VaultPageClient({
                   onClick={() => setSelectedFolderId(null)}
                   className={`text-xs ${btnSecondaryGlass} px-3 py-1.5`}
                 >
-                  Show all files
+                  {t("vault.showAllFiles")}
                 </button>
               )}
             </div>
@@ -360,7 +360,8 @@ export function VaultPageClient({
                       </div>
                     </div>
                     <p className="text-xs font-medium text-slate-600">
-                      {folder.fileCount} {folder.fileCount === 1 ? "file" : "files"}
+                      {folder.fileCount}{" "}
+                      {folder.fileCount === 1 ? t("vault.fileOne") : t("vault.files")}
                     </p>
                   </button>
                 );
@@ -368,7 +369,7 @@ export function VaultPageClient({
             </div>
             {folders.length === 0 && (
               <p className="mt-3 text-sm text-slate-500">
-                אין ראיות עדיין. העלה קובץ — הוא יישמר ב-API הקיים ויירשם גם ב-Neon.
+                {t("vault.emptyFoldersHint")}
               </p>
             )}
           </section>
@@ -376,13 +377,17 @@ export function VaultPageClient({
           <section>
             <h2 className="mb-3 font-frank text-sm font-bold uppercase tracking-wide text-slate-600">
               {selectedFolderId
-                ? `Files in ${folders.find((f) => f.id === selectedFolderId)?.name ?? "folder"}`
-                : "Document previews"}
+                ? t("vault.filesInFolder").replace(
+                    "{name}",
+                    folders.find((f) => f.id === selectedFolderId)?.name ??
+                      t("common.unknown"),
+                  )
+                : t("vault.documentPreviews")}
             </h2>
             <ul className={glassList}>
               {recentFiles.length === 0 && (
                 <li className="px-4 py-12 text-center text-sm text-slate-600">
-                  No files here yet. Upload to add evidence and documents.
+                  {t("vault.emptyFilesList")}
                 </li>
               )}
               {recentFiles.map((file) => (
@@ -401,9 +406,9 @@ export function VaultPageClient({
                       {file.isVerified ? (
                         <span
                           className="shrink-0 rounded-md border border-[#C5A059]/60 bg-[#C5A059]/20 px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-[#8a6d3d] shadow-[0_0_12px_rgba(197,160,89,0.35)]"
-                          title="Digital seal (SHA-512)"
+                          title={t("vault.sealTitle")}
                         >
-                          VETO SEALED
+                          {t("vault.sealedBadge")}
                         </span>
                       ) : null}
                     </div>
@@ -419,7 +424,7 @@ export function VaultPageClient({
                     rel="noreferrer"
                     className="shrink-0 rounded-lg px-2 py-1 text-xs font-semibold text-[#8a6d3d] hover:bg-white/40"
                   >
-                    פתח
+                    {t("vault.open")}
                   </a>
                   <button
                     type="button"
@@ -427,7 +432,7 @@ export function VaultPageClient({
                     onClick={() => void removeFile(file.id)}
                     className="shrink-0 rounded-lg px-2 py-1 text-xs font-semibold text-red-700 hover:bg-red-100/60 disabled:opacity-50"
                   >
-                    {deletingId === file.id ? "Removing…" : "Remove"}
+                    {deletingId === file.id ? t("vault.removing") : t("vault.remove")}
                   </button>
                 </li>
               ))}

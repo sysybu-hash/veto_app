@@ -10,6 +10,7 @@ import {
   glassPanel,
 } from "@/lib/vetoGlass";
 import { useToastStore } from "@/store/useToastStore";
+import { useTranslation } from "@/lib/i18n/LocaleProvider";
 
 export type VaultFolderOption = { id: string; name: string };
 
@@ -36,6 +37,7 @@ export function VaultUploadModal({
   onClose,
   onUploadSuccess,
 }: VaultUploadModalProps) {
+  const { t } = useTranslation();
   const inputRef = useRef<HTMLInputElement>(null);
   const [folderId, setFolderId] = useState(defaultFolderId);
   const [picked, setPicked] = useState<File[]>([]);
@@ -106,7 +108,7 @@ export function VaultUploadModal({
             ? created.url
             : "";
         if (!url) {
-          throw new Error("העלאה הצליחה אך חסר קישור קובץ מהשרת");
+          throw new Error(t("vault.uploadMissingUrl"));
         }
         const neon = await saveEvidence({
           title: file.name,
@@ -118,12 +120,12 @@ export function VaultUploadModal({
           throw new Error(neon.error);
         }
       }
-      pushToast("הקבצים הועלו ונרשמו בכספת", "success");
+      pushToast(t("vault.uploadSuccessToast"), "success");
       reset();
       onUploadSuccess();
       onClose();
     } catch (e) {
-      const msg = e instanceof Error ? e.message : "Upload failed";
+      const msg = e instanceof Error ? e.message : t("vault.uploadFailedGeneric");
       setUploadError(msg);
       pushToast(msg, "error");
     } finally {
@@ -154,10 +156,10 @@ export function VaultUploadModal({
               id="vault-upload-title"
               className="font-frank text-lg font-bold text-slate-900"
             >
-              Upload to vault
+              {t("vault.uploadModalTitle")}
             </h2>
             <p className="mt-0.5 text-sm text-slate-600">
-              Add documents or photos to your chosen folder.
+              {t("vault.uploadModalSubtitle")}
             </p>
           </div>
           <button
@@ -165,7 +167,7 @@ export function VaultUploadModal({
             onClick={handleClose}
             disabled={isUploading}
             className="rounded-lg p-2 text-slate-600 hover:bg-white/40 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-40"
-            aria-label="Close upload dialog"
+            aria-label={t("vault.uploadCloseAria")}
           >
             <svg
               className="h-5 w-5"
@@ -185,7 +187,7 @@ export function VaultUploadModal({
               htmlFor="vault-folder-select"
               className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-600"
             >
-              Destination folder
+              {t("vault.destinationFolder")}
             </label>
             <select
               id="vault-folder-select"
@@ -204,7 +206,7 @@ export function VaultUploadModal({
 
           <div>
             <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-slate-600">
-              Files
+              {t("vault.uploadFilesHeading")}
             </p>
             <div
               onDrop={onDrop}
@@ -230,12 +232,14 @@ export function VaultUploadModal({
                 className={`cursor-pointer text-sm text-slate-700 ${isUploading ? "cursor-not-allowed" : ""}`}
               >
                 <span className="font-semibold text-[#8a6d3d]">
-                  Browse files
+                  {t("vault.browseFiles")}
                 </span>
-                <span className="text-slate-600"> or drag and drop here</span>
+                <span className="text-slate-600">
+                  {t("vault.dragDropSuffix")}
+                </span>
               </label>
               <p className="mt-2 text-xs text-slate-500">
-                PDF, images, Word — uploaded securely to your VETO vault
+                {t("vault.fileTypesHint")}
               </p>
             </div>
           </div>
@@ -256,7 +260,7 @@ export function VaultUploadModal({
                       setPicked((prev) => prev.filter((_, idx) => idx !== i))
                     }
                   >
-                    Remove
+                    {t("vault.uploadRemoveSelected")}
                   </button>
                 </li>
               ))}
@@ -280,7 +284,7 @@ export function VaultUploadModal({
             disabled={isUploading}
             className={`flex-1 py-3 text-sm ${btnSecondaryGlass} disabled:cursor-not-allowed disabled:opacity-50`}
           >
-            Cancel
+            {t("common.cancel")}
           </button>
           <button
             type="button"
@@ -294,10 +298,15 @@ export function VaultUploadModal({
                   className="h-4 w-4 animate-pulse rounded-full bg-black/30 ring-2 ring-black/20"
                   aria-hidden
                 />
-                <span className="animate-pulse">מעלה ומרשום…</span>
+                <span className="animate-pulse">{t("vault.uploadingVault")}</span>
               </span>
+            ) : picked.length > 0 ? (
+              t("vault.uploadAddCount").replace(
+                "{count}",
+                String(picked.length),
+              )
             ) : (
-              `Add ${picked.length > 0 ? `(${picked.length})` : "files"}`
+              t("vault.uploadAddFilesPlain")
             )}
           </button>
         </div>

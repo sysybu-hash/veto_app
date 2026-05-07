@@ -11,6 +11,7 @@ import {
   glassInput,
   glassPanel,
 } from "@/lib/vetoGlass";
+import { useTranslation } from "@/lib/i18n/LocaleProvider";
 
 export type NewTaskPayload = {
   title: string;
@@ -37,6 +38,7 @@ export function CreateTaskModal({
   onClose,
   onTaskCreated,
 }: CreateTaskModalProps) {
+  const { t } = useTranslation();
   const [form, setForm] = useState<NewTaskPayload>(emptyForm);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -80,7 +82,9 @@ export function CreateTaskModal({
       onTaskCreated();
       onClose();
     } catch (e) {
-      setSubmitError(e instanceof Error ? e.message : "Could not create task");
+      setSubmitError(
+        e instanceof Error ? e.message : t("productivity.taskCreateFailed"),
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -109,10 +113,10 @@ export function CreateTaskModal({
               id="task-modal-title"
               className="font-frank text-lg font-bold text-slate-900"
             >
-              New task
+              {t("productivity.taskModalTitle")}
             </h2>
             <p className="mt-0.5 text-sm text-slate-600">
-              Track something you need to complete for your case.
+              {t("productivity.taskModalSubtitle")}
             </p>
           </div>
           <button
@@ -120,7 +124,7 @@ export function CreateTaskModal({
             onClick={handleClose}
             disabled={isSubmitting}
             className="rounded-lg p-2 text-slate-600 hover:bg-white/40 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-40"
-            aria-label="Close"
+            aria-label={t("common.close")}
           >
             <svg
               className="h-5 w-5"
@@ -140,7 +144,7 @@ export function CreateTaskModal({
               htmlFor="task-title"
               className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-600"
             >
-              Task title
+              {t("productivity.taskFieldTitle")}
             </label>
             <input
               ref={titleRef}
@@ -149,7 +153,7 @@ export function CreateTaskModal({
               disabled={isSubmitting}
               onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
               className={glassInput}
-              placeholder="e.g. Submit national ID copy"
+              placeholder={t("productivity.taskTitlePlaceholder")}
             />
           </div>
           <div>
@@ -157,7 +161,7 @@ export function CreateTaskModal({
               htmlFor="task-desc"
               className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-600"
             >
-              Description
+              {t("productivity.taskFieldDescription")}
             </label>
             <textarea
               id="task-desc"
@@ -168,7 +172,7 @@ export function CreateTaskModal({
               }
               rows={4}
               className={`${glassInput} resize-y`}
-              placeholder="Add context, links, or notes..."
+              placeholder={t("productivity.taskDescriptionPlaceholder")}
             />
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
@@ -177,7 +181,7 @@ export function CreateTaskModal({
                 htmlFor="task-due"
                 className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-600"
               >
-                Due date
+                {t("productivity.taskFieldDue")}
               </label>
               <input
                 id="task-due"
@@ -195,7 +199,7 @@ export function CreateTaskModal({
                 htmlFor="task-priority"
                 className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-600"
               >
-                Priority
+                {t("productivity.taskFieldPriority")}
               </label>
               <select
                 id="task-priority"
@@ -209,9 +213,9 @@ export function CreateTaskModal({
                 }
                 className={glassInput}
               >
-                <option value="high">High</option>
-                <option value="medium">Medium</option>
-                <option value="low">Low</option>
+                <option value="high">{t("productivity.priorityHigh")}</option>
+                <option value="medium">{t("productivity.priorityMedium")}</option>
+                <option value="low">{t("productivity.priorityLow")}</option>
               </select>
             </div>
           </div>
@@ -232,7 +236,7 @@ export function CreateTaskModal({
             disabled={isSubmitting}
             className={`flex-1 py-3 text-sm ${btnSecondaryGlass} disabled:cursor-not-allowed disabled:opacity-50`}
           >
-            Cancel
+            {t("common.cancel")}
           </button>
           <button
             type="button"
@@ -240,7 +244,7 @@ export function CreateTaskModal({
             disabled={!form.title.trim() || isSubmitting}
             className={`flex-1 py-3 text-sm ${btnPrimaryGold} disabled:cursor-not-allowed disabled:opacity-50`}
           >
-            {isSubmitting ? "Saving…" : "Save task"}
+            {isSubmitting ? t("settings.saving") : t("productivity.saveTask")}
           </button>
         </div>
       </div>

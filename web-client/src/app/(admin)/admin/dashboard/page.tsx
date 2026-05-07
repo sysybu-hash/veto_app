@@ -13,6 +13,7 @@ import {
   type ApiPendingLawyer,
 } from "@/api/adminApi";
 import { getJwt, getRoleFromJwt } from "@/lib/authToken";
+import { useTranslation } from "@/lib/i18n/LocaleProvider";
 import { glassCard, glassPanel, glassPanelNested } from "@/lib/vetoGlass";
 
 type PendingLawyer = {
@@ -98,9 +99,9 @@ function formatTs(iso: string): string {
   }
 }
 
-function AdminDashboardSkeleton() {
+function AdminDashboardSkeleton({ label }: { label: string }) {
   return (
-    <div className="animate-pulse space-y-8" aria-busy="true" aria-label="Loading dashboard">
+    <div className="animate-pulse space-y-8" aria-busy="true" aria-label={label}>
       <div className="space-y-2">
         <div className="h-9 w-48 rounded-lg bg-white/40 sm:w-64" />
         <div className="h-4 w-full max-w-lg rounded-lg bg-white/35" />
@@ -133,6 +134,7 @@ const defaultStats: AdminStats = {
  */
 export default function AdminDashboardPage() {
   const router = useRouter();
+  const { t } = useTranslation();
   const [mounted, setMounted] = useState(false);
   const [tab, setTab] = useState<"lawyers" | "logs">("lawyers");
   const [pendingLawyers, setPendingLawyers] = useState<PendingLawyer[]>([]);
@@ -164,7 +166,7 @@ export default function AdminDashboardPage() {
       setLogs(mappedLogs);
     } catch (e) {
       setLoadError(
-        e instanceof Error ? e.message : "Could not load admin dashboard",
+        e instanceof Error ? e.message : t("admin.loadFailed"),
       );
       setPendingLawyers([]);
       setLogs([]);
@@ -172,7 +174,7 @@ export default function AdminDashboardPage() {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     setMounted(true);
@@ -205,7 +207,7 @@ export default function AdminDashboardPage() {
       await loadDashboard();
     } catch (e) {
       setActionError(
-        e instanceof Error ? e.message : "Could not approve lawyer",
+        e instanceof Error ? e.message : t("admin.approveFailed"),
       );
     } finally {
       setRowBusyId(null);
@@ -220,7 +222,7 @@ export default function AdminDashboardPage() {
       await loadDashboard();
     } catch (e) {
       setActionError(
-        e instanceof Error ? e.message : "Could not reject lawyer",
+        e instanceof Error ? e.message : t("admin.rejectFailed"),
       );
     } finally {
       setRowBusyId(null);
@@ -230,7 +232,7 @@ export default function AdminDashboardPage() {
   if (!mounted) {
     return (
       <div className="flex flex-1 items-center justify-center p-8 text-sm text-slate-500">
-        Loading…
+        {t("admin.loading")}
       </div>
     );
   }
@@ -243,10 +245,10 @@ export default function AdminDashboardPage() {
     <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-8 sm:px-6 lg:px-8">
       <div className="mb-8">
         <h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
-          Dashboard
+          {t("admin.dashboardTitle")}
         </h1>
         <p className="mt-1 text-sm text-slate-600 sm:text-base">
-          Overview of users, compliance queue, and platform activity.
+          {t("admin.dashboardSubtitle")}
         </p>
       </div>
 
@@ -261,7 +263,7 @@ export default function AdminDashboardPage() {
             onClick={() => void loadDashboard()}
             className="shrink-0 rounded-lg bg-red-700 px-4 py-2 text-sm font-semibold text-white hover:bg-red-600"
           >
-            Retry
+            {t("admin.retry")}
           </button>
         </div>
       )}
@@ -275,50 +277,54 @@ export default function AdminDashboardPage() {
         </div>
       )}
 
-      {isLoading && !loadError && <AdminDashboardSkeleton />}
+      {isLoading && !loadError && (
+        <AdminDashboardSkeleton label={t("admin.loadingDashboard")} />
+      )}
 
       {!isLoading && !loadError && (
         <>
           <section className="mb-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <div className={`p-5 shadow-slate-900/5 ${glassCard}`}>
               <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                Total users
+                {t("admin.totalUsers")}
               </p>
               <p className="mt-2 text-2xl font-bold tabular-nums text-slate-900 sm:text-3xl">
                 {displayStats.totalUsers.toLocaleString()}
               </p>
               <p className="mt-1 text-xs text-slate-500">
-                Registered citizen accounts
+                {t("admin.totalUsersHint")}
               </p>
             </div>
             <div className={`p-5 shadow-slate-900/5 ${glassCard}`}>
               <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                Pending lawyer approvals
+                {t("admin.pendingApprovals")}
               </p>
               <p className="mt-2 text-2xl font-bold tabular-nums text-amber-600 sm:text-3xl">
                 {displayStats.pendingApprovals}
               </p>
-              <p className="mt-1 text-xs text-slate-500">Awaiting manual review</p>
+              <p className="mt-1 text-xs text-slate-500">{t("admin.pendingHint")}</p>
             </div>
             <div className={`p-5 shadow-slate-900/5 ${glassCard}`}>
               <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                SOS events today
+                {t("admin.sosToday")}
               </p>
               <p className="mt-2 text-2xl font-bold tabular-nums text-slate-900 sm:text-3xl">
                 {displayStats.sosToday}
               </p>
               <p className="mt-1 text-xs text-slate-500">
-                Emergency dispatches (24h)
+                {t("admin.sosTodayHint")}
               </p>
             </div>
             <div className={`p-5 shadow-slate-900/5 ${glassCard}`}>
               <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                Active lawyers
+                {t("admin.activeLawyers")}
               </p>
               <p className="mt-2 text-2xl font-bold tabular-nums text-emerald-600 sm:text-3xl">
                 {displayStats.activeLawyers}
               </p>
-              <p className="mt-1 text-xs text-slate-500">Online &amp; available</p>
+              <p className="mt-1 text-xs text-slate-500">
+                {t("admin.activeLawyersHint")}
+              </p>
             </div>
           </section>
 
@@ -334,7 +340,7 @@ export default function AdminDashboardPage() {
                       : "border-transparent text-slate-500 hover:text-slate-800"
                   }`}
                 >
-                  Pending lawyers
+                  {t("admin.tabLawyers")}
                 </button>
                 <button
                   type="button"
@@ -345,7 +351,7 @@ export default function AdminDashboardPage() {
                       : "border-transparent text-slate-500 hover:text-slate-800"
                   }`}
                 >
-                  System logs
+                  {t("admin.tabLogs")}
                 </button>
               </div>
             </div>
@@ -357,16 +363,16 @@ export default function AdminDashboardPage() {
                     <thead className="bg-white/50 backdrop-blur-sm">
                       <tr>
                         <th className="whitespace-nowrap px-4 py-3 font-semibold text-slate-700 sm:px-6">
-                          Name
+                          {t("admin.pendingTableName")}
                         </th>
                         <th className="whitespace-nowrap px-4 py-3 font-semibold text-slate-700 sm:px-6">
-                          License number
+                          {t("admin.pendingTableLicense")}
                         </th>
                         <th className="whitespace-nowrap px-4 py-3 font-semibold text-slate-700 sm:px-6">
-                          Signup date
+                          {t("admin.pendingTableDate")}
                         </th>
                         <th className="whitespace-nowrap px-4 py-3 text-end font-semibold text-slate-700 sm:px-6">
-                          Actions
+                          {t("admin.pendingTableActions")}
                         </th>
                       </tr>
                     </thead>
@@ -377,7 +383,7 @@ export default function AdminDashboardPage() {
                             colSpan={4}
                             className="px-4 py-10 text-center text-slate-500 sm:px-6"
                           >
-                            No pending lawyer applications. Great work.
+                            {t("admin.noPendingApplications")}
                           </td>
                         </tr>
                       ) : (
@@ -400,7 +406,7 @@ export default function AdminDashboardPage() {
                                   onClick={() => void approve(row)}
                                   className="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-50"
                                 >
-                                  Approve
+                                  {t("admin.approve")}
                                 </button>
                                 <button
                                   type="button"
@@ -408,7 +414,7 @@ export default function AdminDashboardPage() {
                                   onClick={() => void reject(row)}
                                   className="rounded-lg bg-red-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-red-500 disabled:cursor-not-allowed disabled:opacity-50"
                                 >
-                                  Reject
+                                  {t("admin.reject")}
                                 </button>
                               </div>
                             </td>
@@ -426,13 +432,13 @@ export default function AdminDashboardPage() {
                     <thead className="bg-white/50 backdrop-blur-sm">
                       <tr>
                         <th className="whitespace-nowrap px-4 py-3 font-semibold text-slate-700 sm:px-6">
-                          Time
+                          {t("admin.logColTime")}
                         </th>
                         <th className="whitespace-nowrap px-4 py-3 font-semibold text-slate-700 sm:px-6">
-                          Event
+                          {t("admin.logColEvent")}
                         </th>
                         <th className="whitespace-nowrap px-4 py-3 font-semibold text-slate-700 sm:px-6">
-                          Status
+                          {t("admin.logColStatus")}
                         </th>
                       </tr>
                     </thead>
@@ -443,7 +449,7 @@ export default function AdminDashboardPage() {
                             colSpan={3}
                             className="px-4 py-10 text-center text-slate-500 sm:px-6"
                           >
-                            No emergency events recorded yet.
+                            {t("admin.noLogs")}
                           </td>
                         </tr>
                       ) : (

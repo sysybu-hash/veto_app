@@ -6,6 +6,7 @@ import {
   btnSecondaryGlass,
   glassInput,
 } from "@/lib/vetoGlass";
+import { useTranslation } from "@/lib/i18n/LocaleProvider";
 
 export type CreateEventModalSubmit = {
   title: string;
@@ -21,6 +22,7 @@ type Props = {
 };
 
 export function CreateEventModal({ open, onClose, onSubmit }: Props) {
+  const { t } = useTranslation();
   const [title, setTitle] = useState("");
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
@@ -55,7 +57,7 @@ export function CreateEventModal({ open, onClose, onSubmit }: Props) {
       <button
         type="button"
         className="absolute inset-0 cursor-default"
-        aria-label="Close modal"
+        aria-label={t("calendar.modalBackdropClose")}
         onClick={handleClose}
       />
 
@@ -67,14 +69,14 @@ export function CreateEventModal({ open, onClose, onSubmit }: Props) {
             id="create-event-title"
             className="font-frank text-lg font-bold tracking-tight text-slate-900"
           >
-            New legal event
+            {t("calendar.modalTitle")}
           </h2>
           <button
             type="button"
             onClick={handleClose}
             disabled={submitting}
             className="rounded-lg p-1 text-slate-600 transition hover:bg-white/40 hover:text-slate-900 disabled:opacity-50"
-            aria-label="Close"
+            aria-label={t("common.close")}
           >
             <svg
               className="h-5 w-5"
@@ -94,7 +96,7 @@ export function CreateEventModal({ open, onClose, onSubmit }: Props) {
             e.preventDefault();
             setError(null);
             if (!title.trim() || !date || !time) {
-              setError("Title, date, and time are required.");
+              setError(t("calendar.requiredFields"));
               return;
             }
             setSubmitting(true);
@@ -108,7 +110,9 @@ export function CreateEventModal({ open, onClose, onSubmit }: Props) {
               reset();
               onClose();
             } catch (err) {
-              setError(err instanceof Error ? err.message : "Could not save.");
+              setError(
+                err instanceof Error ? err.message : t("calendar.saveFailed"),
+              );
             } finally {
               setSubmitting(false);
             }
@@ -116,20 +120,20 @@ export function CreateEventModal({ open, onClose, onSubmit }: Props) {
         >
           <div>
             <label className="mb-1 block text-xs font-medium text-slate-600">
-              Title
+              {t("calendar.fieldTitle")}
             </label>
             <input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               className={glassInput}
-              placeholder="Court hearing, meeting…"
+              placeholder={t("calendar.placeholderTitle")}
               autoComplete="off"
             />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="mb-1 block text-xs font-medium text-slate-600">
-                Date
+                {t("calendar.fieldDate")}
               </label>
               <input
                 type="date"
@@ -140,7 +144,7 @@ export function CreateEventModal({ open, onClose, onSubmit }: Props) {
             </div>
             <div>
               <label className="mb-1 block text-xs font-medium text-slate-600">
-                Time
+                {t("calendar.fieldTime")}
               </label>
               <input
                 type="time"
@@ -152,14 +156,14 @@ export function CreateEventModal({ open, onClose, onSubmit }: Props) {
           </div>
           <div>
             <label className="mb-1 block text-xs font-medium text-slate-600">
-              Notes
+              {t("calendar.fieldNotes")}
             </label>
             <textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               rows={3}
               className={`${glassInput} resize-none`}
-              placeholder="Optional details, location, case reference…"
+              placeholder={t("calendar.placeholderNotes")}
             />
           </div>
 
@@ -183,7 +187,7 @@ export function CreateEventModal({ open, onClose, onSubmit }: Props) {
               disabled={submitting}
               className={`flex-1 py-3 text-sm ${btnPrimaryGold} disabled:opacity-60`}
             >
-              {submitting ? "Saving…" : "Save event"}
+              {submitting ? t("settings.saving") : t("calendar.saveEvent")}
             </button>
           </div>
         </form>

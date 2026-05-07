@@ -42,29 +42,34 @@ async function ensureUserForExternalId(
 }
 
 export async function listEvidenceForSession(): Promise<EvidenceDTO[]> {
-  const externalId = await getVetoUserIdFromCookies();
-  if (!externalId) return [];
+  try {
+    const externalId = await getVetoUserIdFromCookies();
+    if (!externalId) return [];
 
-  const user = await prisma.user.findUnique({
-    where: { externalId },
-  });
-  if (!user) return [];
+    const user = await prisma.user.findUnique({
+      where: { externalId },
+    });
+    if (!user) return [];
 
-  const rows = await prisma.evidence.findMany({
-    where: { ownerId: user.id },
-    orderBy: { createdAt: "desc" },
-  });
+    const rows = await prisma.evidence.findMany({
+      where: { ownerId: user.id },
+      orderBy: { createdAt: "desc" },
+    });
 
-  return rows.map((e) => ({
-    id: e.id,
-    title: e.title,
-    fileUrl: e.fileUrl,
-    fileHash: e.fileHash,
-    category: e.category,
-    isVerified: e.isVerified,
-    digitalSeal: e.digitalSeal,
-    createdAt: e.createdAt.toISOString(),
-  }));
+    return rows.map((e) => ({
+      id: e.id,
+      title: e.title,
+      fileUrl: e.fileUrl,
+      fileHash: e.fileHash,
+      category: e.category,
+      isVerified: e.isVerified,
+      digitalSeal: e.digitalSeal,
+      createdAt: e.createdAt.toISOString(),
+    }));
+  } catch (e) {
+    console.error("[vault] listEvidenceForSession:", e);
+    return [];
+  }
 }
 
 export async function saveEvidence(data: {
