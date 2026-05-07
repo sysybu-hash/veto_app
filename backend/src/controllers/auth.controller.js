@@ -449,8 +449,20 @@ const googleAuth = async (req, res, next) => {
 //  Development-only login for local QA role switching.
 // ============================================================
 const devLogin = async (req, res) => {
-  if (process.env.NODE_ENV === 'production') {
+  const allowInProd =
+    process.env.ALLOW_DEV_LOGIN === '1' ||
+    process.env.ALLOW_DEV_LOGIN === 'true';
+  const devLoginAllowed =
+    process.env.NODE_ENV !== 'production' || allowInProd;
+
+  if (!devLoginAllowed) {
     return res.status(403).json({ error: 'Dev login is disabled in production.' });
+  }
+
+  if (process.env.NODE_ENV === 'production' && allowInProd) {
+    console.warn(
+      '[AUTH] ALLOW_DEV_LOGIN is set: POST /auth/dev-login is enabled on production. Remove for real production.',
+    );
   }
 
   const {
