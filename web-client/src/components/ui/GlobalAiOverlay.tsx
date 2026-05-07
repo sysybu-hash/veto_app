@@ -38,6 +38,29 @@ type AiChatApiResponse = {
 
 export type AiAssistantMode = "text" | "live" | "vision";
 
+type SpeechRecognitionLike = {
+  lang: string;
+  continuous: boolean;
+  interimResults: boolean;
+  onresult: ((event: {
+    resultIndex: number;
+    results: ArrayLike<{
+      isFinal: boolean;
+      0: { transcript: string };
+    }>;
+  }) => void) | null;
+  onerror: ((event: { error: string }) => void) | null;
+  onend: (() => void) | null;
+  start: () => void;
+  stop: () => void;
+};
+
+function localeToSpeechLang(locale: string): string {
+  if (locale === "he") return "he-IL";
+  if (locale === "ru") return "ru-RU";
+  return "en-US";
+}
+
 function newId(): string {
   if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
     return crypto.randomUUID();
@@ -122,6 +145,8 @@ export function GlobalAiOverlay() {
   const [visionError, setVisionError] = useState<string | null>(null);
   const [visionBusy, setVisionBusy] = useState(false);
   const [vaultSaveBusy, setVaultSaveBusy] = useState(false);
+  const [isLiveListening, setIsLiveListening] = useState(false);
+  const [liveTranscript, setLiveTranscript] = useState("");
   const [lastVisionAnalysis, setLastVisionAnalysis] = useState<string | null>(
     null,
   );
@@ -129,10 +154,24 @@ export function GlobalAiOverlay() {
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
+  const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
 
   const pushToast = useToastStore((s) => s.push);
 
   const isAssistantActive = isOpen || isLoading;
+  const speakText = useCallback((text: string) => {
+    if (typeof window === "undefined" || !("speechSynthesis" in window)) {
+      return;
+    }
+    const clean = text.trim();
+    if (!clean) return;
+    window.speechSynthesis.cancel();
+    const utter = new SpeechSynthesisUtterance(clean);
+    utter.lang = localeToSpeechLang(locale);
+    utter.rate = 1;
+    utter.pitch = 1;
+    window.speechSynthesis.speak(utter);
+  }, [locale]);
 
   const setAssistantMode = useCallback((m: AiAssistantMode) => {
     if (m !== "vision") {
@@ -284,8 +323,11 @@ export function GlobalAiOverlay() {
     };
   }, [isOpen, mode, t]);
 
-  const send = useCallback(async () => {
-    const text = draft.trim();
+  const sendMessage = useCallback(async (
+    rawText: string,
+    opts?: { speakResponse?: boolean },
+  ) => {
+    const text = rawText.trim();
     if (!text || isLoading) return;
 
     const token = getJwt();
@@ -301,7 +343,6 @@ export function GlobalAiOverlay() {
       content: text,
     };
     addMessage(userMessage);
-    setDraft("");
     setLoading(true);
 
     const history = buildHistoryBeforeUserMessage(
@@ -339,6 +380,9 @@ export function GlobalAiOverlay() {
         content: formatAssistantReply(data),
       };
       addMessage(assistantMessage);
+      if (opts?.speakResponse) {
+        speakText(assistantMessage.content);
+      }
     } catch (e) {
       const msg =
         e instanceof Error ? e.message : t("ai.errChatFallback");
@@ -350,7 +394,89 @@ export function GlobalAiOverlay() {
     } finally {
       setLoading(false);
     }
-  }, [addMessage, draft, isLoading, locale, setLoading, t]);
+  }, [addMessage, isLoading, locale, setLoading, speakText, t]);
+
+  const send = useCallback(async () => {
+    await sendMessage(draft);
+    setDraft("");
+  }, [draft, sendMessage]);
+
+  const stopLiveListening = useCallback(() => {
+    const rec = recognitionRef.current;
+    if (rec) {
+      rec.stop();
+    }
+    recognitionRef.current = null;
+    setIsLiveListening(false);
+  }, []);
+
+  const startLiveListening = useCallback(() => {
+    const token = getJwt();
+    if (!token) {
+      setErrorBanner(t("ai.signInBanner"));
+      return;
+    }
+    if (typeof window === "undefined") return;
+    const browserWindow = window as Window & {
+      SpeechRecognition?: new () => SpeechRecognitionLike;
+      webkitSpeechRecognition?: new () => SpeechRecognitionLike;
+    };
+    const SpeechCtor =
+      browserWindow.SpeechRecognition ?? browserWindow.webkitSpeechRecognition;
+    if (!SpeechCtor) {
+      pushToast(t("ai.errLiveNotSupported"), "error");
+      return;
+    }
+    if (recognitionRef.current) {
+      stopLiveListening();
+    }
+
+    const recognition = new SpeechCtor();
+    recognition.lang = localeToSpeechLang(locale);
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.onresult = (event) => {
+      let finalText = "";
+      let interim = "";
+      for (let i = event.resultIndex; i < event.results.length; i += 1) {
+        const part = event.results[i]?.[0]?.transcript?.trim() ?? "";
+        if (!part) continue;
+        if (event.results[i].isFinal) {
+          finalText += `${part} `;
+        } else {
+          interim += `${part} `;
+        }
+      }
+      setLiveTranscript((finalText || interim).trim());
+      const finalized = finalText.trim();
+      if (finalized) {
+        void sendMessage(finalized, { speakResponse: true });
+      }
+    };
+    recognition.onerror = (event) => {
+      if (event.error === "not-allowed") {
+        pushToast(t("ai.errLivePermission"), "error");
+      } else {
+        pushToast(t("ai.errLiveCapture"), "error");
+      }
+      stopLiveListening();
+    };
+    recognition.onend = () => {
+      recognitionRef.current = null;
+      setIsLiveListening(false);
+    };
+
+    recognitionRef.current = recognition;
+    setLiveTranscript("");
+    setIsLiveListening(true);
+    recognition.start();
+  }, [locale, pushToast, sendMessage, stopLiveListening, t]);
+
+  useEffect(() => {
+    if (mode !== "live" && recognitionRef.current) {
+      stopLiveListening();
+    }
+  }, [mode, stopLiveListening]);
 
   const onKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -378,6 +504,7 @@ export function GlobalAiOverlay() {
           <motion.button
             key="ai-fab"
             type="button"
+            suppressHydrationWarning
             initial={{ opacity: 0, scale: 0.85 }}
             animate={{ opacity: 1, scale: 1 }}
             whileHover={{ scale: 1.08 }}
@@ -512,8 +639,7 @@ export function GlobalAiOverlay() {
                         <p
                           className={`px-3 py-3 text-sm leading-relaxed ${glassBubbleAssistant}`}
                         >
-                          שלום, אני מוכן לנתח מסמכים או מצבים. שאל שאלה או הדבק
-                          טקסט — Enter לשליחה, Shift+Enter לשורה חדשה.
+                          {t("ai.assistantWelcome")}
                         </p>
                       )}
 
@@ -583,9 +709,21 @@ export function GlobalAiOverlay() {
                         {t("ai.geminiLive")}
                       </p>
                       <p className="mt-2 text-sm font-medium italic text-slate-600">
-                        {t("ai.liveAnalyzing")}
+                        {isLiveListening
+                          ? t("ai.liveListening")
+                          : t("ai.liveAnalyzing")}
+                      </p>
+                      <p className="mt-2 truncate text-xs text-slate-600">
+                        {liveTranscript || t("ai.liveTranscriptPlaceholder")}
                       </p>
                     </div>
+                    <button
+                      type="button"
+                      onClick={isLiveListening ? stopLiveListening : startLiveListening}
+                      className={`px-4 py-2 text-sm font-bold ${btnPrimaryGold}`}
+                    >
+                      {isLiveListening ? t("ai.liveStop") : t("ai.liveStart")}
+                    </button>
                   </motion.div>
                 )}
 

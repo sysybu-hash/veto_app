@@ -1,0 +1,17 @@
+<svg width="220" height="72" viewBox="0 0 220 72" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <title>VETO Logo</title>
+  <desc>VETO wordmark with a gold accent dot.</desc>
+  <circle cx="16" cy="39" r="4.5" fill="#C5A059"/>
+  <text
+    x="30"
+    y="50"
+    fill="#0B1736"
+    font-family="Georgia, 'Times New Roman', serif"
+    font-size="46"
+    font-weight="800"
+    letter-spacing="1.5"
+  >
+    VETO
+  </text>
+  <path d="M30 56H155" stroke="#C5A059" stroke-width="2" stroke-linecap="round"/>
+</svg>

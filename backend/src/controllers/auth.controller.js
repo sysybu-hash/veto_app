@@ -56,7 +56,51 @@ function modelFor(role) {
 
 /** Normalize phone: remove + for comparison */
 function cleanPhone(phone) {
-  return phone.replace(/\+/g, '');
+  return String(phone).replace(/\+/g, '');
+}
+
+/**
+ * Normalize user input to E.164 (+...) as stored in User/Lawyer.
+ * Accepts +972501111111, 972501111111, 0501111111, 501111111 (IL mobile), other intl digits.
+ */
+function normalizePhoneForVeto(raw) {
+  if (raw == null) return null;
+  const trimmed = String(raw).trim();
+  if (!trimmed) return null;
+
+  const s = trimmed.replace(/[\s\-().]/g, '');
+  if (!s) return null;
+
+  let d;
+  if (s.startsWith('+')) {
+    d = s.slice(1).replace(/\D/g, '');
+    if (!/^[1-9]\d{7,14}$/.test(d)) return null;
+    return `+${d}`;
+  }
+
+  d = s.replace(/\D/g, '');
+  if (!d) return null;
+
+  if (d.startsWith('972')) {
+    if (!/^[1-9]\d{7,14}$/.test(d)) return null;
+    return `+${d}`;
+  }
+
+  if (d.startsWith('0')) {
+    const rest = d.slice(1);
+    if (!/^[1-9]\d{6,12}$/.test(rest)) return null;
+    return `+972${rest}`;
+  }
+
+  if (d.length === 9 && d.startsWith('5')) {
+    return `+972${d}`;
+  }
+
+  if (/^[1-9]\d{7,14}$/.test(d)) {
+    return `+${d}`;
+  }
+
+  return null;
 }
 
 /** Check if phone belongs to a hardcoded admin */
@@ -88,19 +132,24 @@ const register = async (req, res, next) => {
       return res.status(400).json({ error: 'role must be "user" or "lawyer".' });
     }
 
-    const existing = await findByPhone(phone);
+    const normalizedPhone = normalizePhoneForVeto(phone);
+    if (!normalizedPhone) {
+      return res.status(400).json({ error: 'Invalid phone number.' });
+    }
+
+    const existing = await findByPhone(normalizedPhone);
     if (existing) {
       return res.status(409).json({ error: 'An account with this phone already exists.' });
     }
 
     const Model   = modelFor(role);
-    const payload = { full_name, phone, preferred_language };
+    const payload = { full_name, phone: normalizedPhone, preferred_language };
     if (email)          payload.email          = email;
     if (license_number) payload.license_number = license_number;
 
     const newDoc = await Model.create(payload);
 
-    logEvent({ phone, email: email || null, role, event: 'register', success: true, user_id: newDoc._id, ip: req.ip, user_agent: req.headers['user-agent'] });
+    logEvent({ phone: normalizedPhone, email: email || null, role, event: 'register', success: true, user_id: newDoc._id, ip: req.ip, user_agent: req.headers['user-agent'] });
 
     return res.status(201).json({
       message: 'Account created. Please verify your phone.',
@@ -127,49 +176,63 @@ const requestOTP = async (req, res, next) => {
     const { phone } = req.body;
     if (!phone) return res.status(400).json({ error: 'phone is required.' });
 
-    const found = await findByPhone(phone);
+    const normalizedPhone = normalizePhoneForVeto(phone);
+    if (!normalizedPhone) {
+      return res.status(400).json({ error: 'Invalid phone number.' });
+    }
+
+    const found = await findByPhone(normalizedPhone);
     if (!found) {
-      logEvent({ phone, event: 'otp_request', success: false, error_msg: 'not_found', ip: req.ip, user_agent: req.headers['user-agent'] });
+      logEvent({ phone: normalizedPhone, event: 'otp_request', success: false, error_msg: 'not_found', ip: req.ip, user_agent: req.headers['user-agent'] });
       return res.status(404).json({
         error: 'No account found with this phone number. Please register first.',
       });
     }
 
     const { doc, role } = found;
-    const useFixed = isAdminPhone(phone) || process.env.ENABLE_FIXED_OTP_FOR_ADMINS === 'true';
+    const useFixed = isAdminPhone(normalizedPhone) || process.env.ENABLE_FIXED_OTP_FOR_ADMINS === 'true';
 
     const otp = useFixed ? '123456' : generateOTP();
     doc.otp_code       = otp;
     doc.otp_expires_at = otpExpiry();
     await doc.save();
-    console.log(`[AUTH] OTP for ${phone}: ${otp}`);
+    console.log(`[AUTH] OTP for ${normalizedPhone}: ${otp}`);
 
-    console.log(`[AUTH] OTP requested for ${phone} (role: ${role})`);
+    console.log(`[AUTH] OTP requested for ${normalizedPhone} (role: ${role})`);
 
-    logEvent({ phone, role, event: 'otp_request', success: true, user_id: doc._id, ip: req.ip, user_agent: req.headers['user-agent'] });
+    logEvent({ phone: normalizedPhone, role, event: 'otp_request', success: true, user_id: doc._id, ip: req.ip, user_agent: req.headers['user-agent'] });
 
+    const isProd = process.env.NODE_ENV === 'production';
     const twilioConfigured = !!(
       process.env.TWILIO_ACCOUNT_SID &&
       process.env.TWILIO_AUTH_TOKEN
     );
-    // Until Twilio (or another SMS provider) sends the code, the client has no way to know the OTP.
-    // Expose it in JSON only when SMS is not wired up, or in dev / when explicitly enabled.
-    const exposeOtp =
-      process.env.NODE_ENV !== 'production' ||
+    /** Explicit opt-in (e.g. local/staging with NODE_ENV=production): return OTP in JSON */
+    const returnOtpInJson =
       process.env.RETURN_OTP_IN_JSON === '1' ||
-      process.env.RETURN_OTP_IN_JSON === 'true' ||
-      !twilioConfigured;
+      process.env.RETURN_OTP_IN_JSON === 'true';
 
-    if (exposeOtp && process.env.NODE_ENV === 'production' && !twilioConfigured) {
+    // Development / staging tests: always expose OTP unless hard production without flag.
+    const includeOtpInResponse = !isProd || returnOtpInJson;
+
+    if (isProd && returnOtpInJson) {
       console.warn(
-        '[AUTH] OTP returned in JSON because TWILIO_ACCOUNT_SID / TWILIO_AUTH_TOKEN are not set. Configure Twilio for production SMS.',
+        '[AUTH] RETURN_OTP_IN_JSON is set: OTP is included in JSON responses. Turn off for real production.',
+      );
+    }
+
+    if (isProd && !twilioConfigured) {
+      console.warn(
+        'CRITICAL: Twilio is not configured in production. SMS will not be sent.',
       );
     }
 
     return res.status(200).json({
-      message: 'OTP sent.',
+      success: true,
+      message: 'OTP generated successfully',
       role,
-      ...(exposeOtp && { otp }),
+      otp: includeOtpInResponse ? otp : undefined,
+      expiresIn: '5m',
     });
   } catch (err) {
     next(err);
@@ -188,26 +251,31 @@ const verifyOTP = async (req, res, next) => {
       return res.status(400).json({ error: 'phone and otp are required.' });
     }
 
+    const normalizedPhone = normalizePhoneForVeto(phone);
+    if (!normalizedPhone) {
+      return res.status(400).json({ error: 'Invalid phone number.' });
+    }
+
     let doc, role;
-    const user = await User.findOne({ phone }).select('+otp_code +otp_expires_at');
+    const user = await User.findOne({ phone: normalizedPhone }).select('+otp_code +otp_expires_at');
     if (user) {
       doc = user;
 
       // Auto-promote admin phones
-      if (isAdminPhone(phone) && doc.role !== 'admin') {
+      if (isAdminPhone(normalizedPhone) && doc.role !== 'admin') {
         doc.role = 'admin';
         await doc.save();
-        console.log(`[AUTH] ${phone} promoted to ADMIN.`);
+        console.log(`[AUTH] ${normalizedPhone} promoted to ADMIN.`);
       }
 
       role = doc.role === 'admin' ? 'admin' : 'user';
     } else {
-      const lawyer = await Lawyer.findOne({ phone }).select('+otp_code +otp_expires_at');
+      const lawyer = await Lawyer.findOne({ phone: normalizedPhone }).select('+otp_code +otp_expires_at');
       if (lawyer) { doc = lawyer; role = 'lawyer'; }
     }
 
     if (!doc) {
-      logEvent({ phone, event: 'otp_fail', success: false, error_msg: 'not_found', ip: req.ip, user_agent: req.headers['user-agent'] });
+      logEvent({ phone: normalizedPhone, event: 'otp_fail', success: false, error_msg: 'not_found', ip: req.ip, user_agent: req.headers['user-agent'] });
       return res.status(404).json({ error: 'Account not found.' });
     }
 
@@ -221,11 +289,11 @@ const verifyOTP = async (req, res, next) => {
 
     // ── Validate against DB OTP ────────────────────────
     if (!doc.otp_code || doc.otp_code !== String(otp)) {
-      logEvent({ phone, role, event: 'otp_fail', success: false, error_msg: 'invalid_otp', user_id: doc._id, ip: req.ip, user_agent: req.headers['user-agent'] });
+      logEvent({ phone: normalizedPhone, role, event: 'otp_fail', success: false, error_msg: 'invalid_otp', user_id: doc._id, ip: req.ip, user_agent: req.headers['user-agent'] });
       return res.status(401).json({ error: 'Invalid OTP.' });
     }
     if (!doc.otp_expires_at || doc.otp_expires_at < new Date()) {
-      logEvent({ phone, role, event: 'otp_fail', success: false, error_msg: 'otp_expired', user_id: doc._id, ip: req.ip, user_agent: req.headers['user-agent'] });
+      logEvent({ phone: normalizedPhone, role, event: 'otp_fail', success: false, error_msg: 'otp_expired', user_id: doc._id, ip: req.ip, user_agent: req.headers['user-agent'] });
       return res.status(401).json({ error: 'OTP has expired. Please request a new one.' });
     }
 
@@ -245,8 +313,10 @@ const verifyOTP = async (req, res, next) => {
 
     // Compute payment exemption: admin, lawyer, or manually_added user
     const isPaymentExempt = role === 'admin' || role === 'lawyer' || doc.manually_added === true;
+    const onboarding_completed =
+      role === 'admin' || role === 'lawyer' ? true : (doc.onboarding_completed ?? false);
 
-    logEvent({ phone, role, event: 'otp_success', success: true, user_id: doc._id, ip: req.ip, user_agent: req.headers['user-agent'] });
+    logEvent({ phone: normalizedPhone, role, event: 'otp_success', success: true, user_id: doc._id, ip: req.ip, user_agent: req.headers['user-agent'] });
 
     return res.status(200).json({
       message: 'Verification successful.',
@@ -262,6 +332,7 @@ const verifyOTP = async (req, res, next) => {
         subscription_expiry: doc.subscription_expiry ?? null,
         manually_added:      doc.manually_added   ?? false,
         is_payment_exempt:   isPaymentExempt,
+        onboarding_completed: onboarding_completed,
       },
     });
   } catch (err) {
@@ -344,6 +415,10 @@ const googleAuth = async (req, res, next) => {
       preferred_language: doc.preferred_language,
     });
 
+    const isPaymentExempt = userRole === 'admin' || userRole === 'lawyer' || doc.manually_added === true;
+    const onboarding_completed =
+      userRole === 'admin' || userRole === 'lawyer' ? true : (doc.onboarding_completed ?? false);
+
     logEvent({ email, role: userRole, event: 'google_login', success: true, user_id: doc._id, ip: req.ip, user_agent: req.headers['user-agent'] });
 
     return res.status(200).json({
@@ -359,7 +434,8 @@ const googleAuth = async (req, res, next) => {
         is_subscribed:       doc.is_subscribed    ?? false,
         subscription_expiry: doc.subscription_expiry ?? null,
         manually_added:      doc.manually_added   ?? false,
-        is_payment_exempt:   userRole === 'admin' || doc.manually_added === true,
+        is_payment_exempt:   isPaymentExempt,
+        onboarding_completed: onboarding_completed,
       },
     });
   } catch (err) {
@@ -367,4 +443,47 @@ const googleAuth = async (req, res, next) => {
   }
 };
 
-module.exports = { register, requestOTP, verifyOTP, googleAuth };
+// ============================================================
+//  POST /auth/dev-login
+//  Body: { username, password, role }
+//  Development-only login for local QA role switching.
+// ============================================================
+const devLogin = async (req, res) => {
+  if (process.env.NODE_ENV === 'production') {
+    return res.status(403).json({ error: 'Dev login is disabled in production.' });
+  }
+
+  const {
+    username = '',
+    password = '',
+    role = 'admin',
+  } = req.body || {};
+
+  const expectedUsername = (process.env.DEV_LOGIN_USERNAME || '***REDACTED***').toUpperCase();
+  const expectedPassword = process.env.DEV_LOGIN_PASSWORD || '***REDACTED***';
+  const normalizedUsername = String(username).trim().toUpperCase();
+
+  if (normalizedUsername !== expectedUsername || String(password).trim() !== expectedPassword) {
+    return res.status(401).json({ error: 'שם משתמש או סיסמה לא נכונים' });
+  }
+
+  const normalizedRole = ['admin', 'lawyer', 'user', 'citizen'].includes(String(role))
+    ? String(role)
+    : 'admin';
+  const appRole = normalizedRole === 'citizen' ? 'user' : normalizedRole;
+
+  const token = signToken({
+    userId: 'dev-user',
+    role: appRole,
+    full_name: 'Dev User',
+    preferred_language: 'he',
+  });
+
+  return res.status(200).json({
+    message: 'Dev login successful.',
+    token,
+    role: appRole,
+  });
+};
+
+module.exports = { register, requestOTP, verifyOTP, googleAuth, devLogin };

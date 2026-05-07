@@ -95,6 +95,16 @@ export default function LawyerDashboardPage() {
     NotificationPermission | "unsupported"
   >("unsupported");
 
+  useEffect(() => {
+    queueMicrotask(() => {
+      if (typeof window === "undefined" || typeof Notification === "undefined") {
+        setNotifPermission("unsupported");
+        return;
+      }
+      setNotifPermission(Notification.permission);
+    });
+  }, []);
+
   const isAvailable = useLawyerStore((s) => s.isAvailable);
   const activeAlert = useLawyerStore((s) => s.activeAlert);
   const isAccepting = useLawyerStore((s) => s.isAccepting);
@@ -118,14 +128,6 @@ export default function LawyerDashboardPage() {
       router.replace("/hub");
     }
   }, [router]);
-
-  useEffect(() => {
-    if (typeof window === "undefined" || typeof Notification === "undefined") {
-      setNotifPermission("unsupported");
-      return;
-    }
-    setNotifPermission(Notification.permission);
-  }, []);
 
   useEffect(() => {
     if (!getJwt() || getRoleFromJwt() !== "lawyer") return;

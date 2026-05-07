@@ -81,17 +81,38 @@ module.exports = function initDispatch(io) {
         return;
       }
 
-      const { location, preferredLanguage, specialization } = payload;
+      const { location, preferredLanguage, specialization } = payload || {};
 
       // Specialization → English DB terms map (mirrors ai.controller.js)
       const SPEC_MAP = {
         'פלילי':  ['criminal', 'Criminal', 'פלילי'],
+        criminal: ['criminal', 'Criminal', 'פלילי'],
         'משפחה':  ['family', 'Family', 'משפחה'],
+        family:  ['family', 'Family', 'משפחה'],
         'נדל"ן':  ['real estate', 'Real Estate', 'realestate', 'RealEstate', 'נדל"ן', 'נדלן'],
+        realestate: ['real estate', 'Real Estate', 'realestate', 'RealEstate', 'נדל"ן', 'נדלן'],
         'עבודה':  ['labor', 'Labor', 'employment', 'Employment', 'עבודה'],
+        labor:   ['labor', 'Labor', 'employment', 'Employment', 'עבודה'],
         'מסחרי':  ['commercial', 'Commercial', 'civil', 'Civil', 'מסחרי'],
+        civil:   ['commercial', 'Commercial', 'civil', 'Civil', 'מסחרי'],
         'תעבורה': ['traffic', 'Traffic', 'transportation', 'Transportation', 'תעבורה'],
+        traffic: ['traffic', 'Traffic', 'transportation', 'Transportation', 'תעבורה'],
       };
+
+      if (
+        !location ||
+        typeof location !== 'object' ||
+        !Number.isFinite(location.lat) ||
+        !Number.isFinite(location.lng)
+      ) {
+        socket.emit('veto_error', { message: 'Invalid location payload.' });
+        return;
+      }
+
+      if (specialization && !SPEC_MAP[specialization]) {
+        socket.emit('veto_error', { message: 'Unsupported specialization.' });
+        return;
+      }
 
       try {
         // 1. Create the EmergencyEvent in MongoDB ────────────

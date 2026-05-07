@@ -1,6 +1,9 @@
 import { cookies } from "next/headers";
 
-/** Synced from `authToken.setJwt` for server actions / RSC (SameSite=Lax, not HttpOnly). */
+/**
+ * Primary JWT cookie for server actions / RSC.
+ * Client sync also mirrors the token into `veto_session` and `jwt` for middleware parity — see `authToken.syncAllJwtCookies`.
+ */
 export const VETO_JWT_COOKIE = "veto_jwt";
 
 export type VetoJwtPayload = {

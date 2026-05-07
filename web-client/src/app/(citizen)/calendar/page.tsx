@@ -247,7 +247,9 @@ export default function CitizenCalendarPage() {
       router.replace("/login");
       return;
     }
-    void load();
+    queueMicrotask(() => {
+      void load();
+    });
   }, [router, load]);
 
   const handleGoogleSync = async () => {

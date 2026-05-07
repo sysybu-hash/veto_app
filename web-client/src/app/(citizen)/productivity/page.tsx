@@ -200,14 +200,15 @@ function CreateContractModal({
   const titleRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (open) {
+    if (!open) return;
+    queueMicrotask(() => {
       setTitle("");
       setPartyName("");
       setStatus("pending_signature");
       setSaveErr(null);
       setSaving(false);
       queueMicrotask(() => titleRef.current?.focus());
-    }
+    });
   }, [open]);
 
   if (!open) return null;
@@ -467,7 +468,9 @@ export default function ProductivityPage() {
       router.replace("/login");
       return;
     }
-    void loadData();
+    queueMicrotask(() => {
+      void loadData();
+    });
   }, [router, loadData]);
 
   useEffect(() => {

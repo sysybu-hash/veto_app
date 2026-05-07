@@ -1,9 +1,9 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import Script from "next/script";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { getRoleFromJwt, setJwt } from "@/lib/authToken";
+import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useCallback, useEffect, useState, Suspense } from "react";
+import { getRoleFromJwt, prepareLoginSession } from "@/lib/authToken";
 import { setSocketAuthToken } from "@/lib/socketClient";
 import {
   apiUrl,
@@ -11,12 +11,38 @@ import {
   tunnelBypassHeaders,
 } from "@/lib/env";
 import { useTranslation } from "@/lib/i18n/LocaleProvider";
+import { normalizePhoneForVeto } from "@/lib/phone";
 import {
   btnPrimaryDark,
   btnSecondaryGlass,
   glassInput,
   glassPanelNested,
 } from "@/lib/vetoGlass";
+
+type LoginRole = "admin" | "citizen" | "lawyer";
+
+function routeByRole(router: ReturnType<typeof useRouter>, role: string | null) {
+  if (role === "admin") {
+    router.replace("/admin/dashboard");
+  } else if (role === "lawyer") {
+    router.replace("/dashboard");
+  } else {
+    router.replace("/hub");
+  }
+}
+
+function routeAfterAuth(
+  router: ReturnType<typeof useRouter>,
+  data: Record<string, unknown>,
+) {
+  const role = getRoleFromJwt();
+  const u = data.user as { onboarding_completed?: boolean } | undefined;
+  if (role === "user" && u?.onboarding_completed !== true) {
+    router.replace("/onboarding");
+    return;
+  }
+  routeByRole(router, role);
+}
 
 async function postJson(path: string, body: object) {
   const headers: HeadersInit = {
@@ -66,51 +92,92 @@ function formatLoginError(
   if (raw === "No token in response") {
     return t("login.errNoToken");
   }
+  if (/invalid or expired token/i.test(raw)) {
+    return t("login.errNoToken");
+  }
+  if (/invalid phone number/i.test(raw)) {
+    return t("login.errInvalidPhone");
+  }
   return raw;
 }
 
-type GoogleOAuthTokenResponse = {
-  access_token?: string;
-  error?: string;
-  error_description?: string;
-};
+const GOOGLE_OAUTH_STATE_KEY = "veto_google_oauth_state";
 
-declare global {
-  interface Window {
-    google?: {
-      accounts?: {
-        oauth2?: {
-          initTokenClient: (config: {
-            client_id: string;
-            scope: string;
-            callback: (resp: GoogleOAuthTokenResponse) => void;
-          }) => { requestAccessToken: (opts?: { prompt?: string }) => void };
-        };
-      };
-    };
+function googleOAuthRedirectUri(): string {
+  const fromEnv = process.env.NEXT_PUBLIC_GOOGLE_OAUTH_REDIRECT_URI?.trim();
+  if (fromEnv) return fromEnv;
+  if (typeof window !== "undefined") {
+    return `${window.location.origin}/login`;
   }
+  return "/login";
+}
+
+function buildGoogleImplicitAuthUrl(
+  clientId: string,
+  redirectUri: string,
+  state: string,
+): string {
+  const params = new URLSearchParams({
+    client_id: clientId,
+    redirect_uri: redirectUri,
+    response_type: "token",
+    scope: "openid email profile",
+    include_granted_scopes: "true",
+    prompt: "select_account",
+    state,
+  });
+  return `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
 }
 
 export default function LoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center text-slate-600">
+          …
+        </div>
+      }
+    >
+      <LoginPageInner />
+    </Suspense>
+  );
+}
+
+function LoginPageInner() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { t, locale } = useTranslation();
   const [phone, setPhone] = useState("");
   const [otp, setOtp] = useState("");
-  const [devToken, setDevToken] = useState("");
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [devOtp, setDevOtp] = useState<string | null>(null);
   const [otpCopied, setOtpCopied] = useState(false);
-  const [gsiLoaded, setGsiLoaded] = useState(false);
+  const [devUsername, setDevUsername] = useState("");
+  const [devPassword, setDevPassword] = useState("");
+  const [devRole, setDevRole] = useState<LoginRole>("admin");
+  const [adminLoginOpen, setAdminLoginOpen] = useState(false);
 
   const googleClientId =
     process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID?.trim() ?? "";
   const legacyGoogleLoginUrl =
     process.env.NEXT_PUBLIC_GOOGLE_LOGIN_URL?.trim() ?? "";
 
-  const tokenClientRef = useRef<{
-    requestAccessToken: (opts?: { prompt?: string }) => void;
-  } | null>(null);
+  useEffect(() => {
+    queueMicrotask(() => {
+      const ph = searchParams.get("phone");
+      if (ph) {
+        try {
+          setPhone(decodeURIComponent(ph));
+        } catch {
+          setPhone(ph);
+        }
+      }
+      if (searchParams.get("registered") === "1") {
+        setMessage(t("register.success"));
+      }
+    });
+  }, [searchParams, t]);
 
   const completeGoogleLogin = useCallback(
     async (accessToken: string) => {
@@ -122,16 +189,9 @@ export default function LoginPage() {
         });
         const token = typeof data.token === "string" ? data.token : null;
         if (!token) throw new Error("No token in response");
-        setJwt(token);
+        await prepareLoginSession(token);
         setSocketAuthToken(token);
-        const role = getRoleFromJwt();
-        if (role === "admin") {
-          router.replace("/admin/dashboard");
-        } else if (role === "lawyer") {
-          router.replace("/dashboard");
-        } else {
-          router.replace("/hub");
-        }
+        routeAfterAuth(router, data);
       } catch (e) {
         setMessage(formatLoginError(e, t));
       } finally {
@@ -142,40 +202,66 @@ export default function LoginPage() {
   );
 
   useEffect(() => {
-    if (!gsiLoaded || !googleClientId) return;
-    const oauth2 = window.google?.accounts?.oauth2;
-    if (!oauth2) return;
-    tokenClientRef.current = oauth2.initTokenClient({
-      client_id: googleClientId,
-      scope: "openid email profile",
-      callback: (resp) => {
-        if (resp.error) {
-          const ephemeral =
-            /popup_closed|access_denied|user_cancel/i.test(
-              String(resp.error) + (resp.error_description ?? ""),
-            );
-          if (!ephemeral) {
-            const detail = resp.error_description?.trim()
-              ? `${resp.error}: ${resp.error_description}`
-              : resp.error;
-            setMessage(
-              String(detail).includes("403") ||
-                /blocked|disallowed_useragent/i.test(String(detail))
-                ? t("login.errGoogleBlocked")
-                : `${t("login.errGooglePrefix")} ${detail}`,
-            );
-          }
-          setBusy(false);
+    if (typeof window === "undefined") return;
+    const rawHash = window.location.hash.replace(/^#/, "");
+    if (!rawHash) return;
+
+    const params = new URLSearchParams(rawHash);
+    const oauthError = params.get("error");
+    const oauthDesc = params.get("error_description") ?? "";
+
+    const clearHash = () => {
+      window.history.replaceState(
+        null,
+        "",
+        `${window.location.pathname}${window.location.search}`,
+      );
+    };
+
+    if (oauthError) {
+      clearHash();
+      try {
+        sessionStorage.removeItem(GOOGLE_OAUTH_STATE_KEY);
+      } catch {
+        /* ignore */
+      }
+      queueMicrotask(() => {
+        if (/redirect_uri_mismatch/i.test(oauthError + oauthDesc)) {
+          setMessage(t("login.errGoogleRedirectMismatch"));
           return;
         }
-        if (!resp.access_token) {
-          setBusy(false);
-          return;
-        }
-        void completeGoogleLogin(resp.access_token);
-      },
+        setMessage(
+          `${t("login.errGooglePrefix")} ${oauthDesc.trim() || oauthError}`,
+        );
+      });
+      return;
+    }
+
+    const accessToken = params.get("access_token");
+    const returnedState = params.get("state");
+    if (!accessToken) return;
+
+    let expectedState: string | null = null;
+    try {
+      expectedState = sessionStorage.getItem(GOOGLE_OAUTH_STATE_KEY);
+      sessionStorage.removeItem(GOOGLE_OAUTH_STATE_KEY);
+    } catch {
+      expectedState = null;
+    }
+
+    clearHash();
+
+    if (!returnedState || !expectedState || returnedState !== expectedState) {
+      queueMicrotask(() => {
+        setMessage(t("login.errGoogleOAuthState"));
+      });
+      return;
+    }
+
+    queueMicrotask(() => {
+      void completeGoogleLogin(accessToken);
     });
-  }, [gsiLoaded, googleClientId, completeGoogleLogin, t]);
+  }, [completeGoogleLogin, t]);
 
   const handleGoogle = () => {
     setMessage(null);
@@ -187,21 +273,37 @@ export default function LoginPage() {
       setMessage(t("login.errMissingGoogleClientId"));
       return;
     }
-    if (!tokenClientRef.current) {
-      setMessage(t("login.loadingGoogle"));
+    const redirectUri = googleOAuthRedirectUri();
+    const state =
+      typeof crypto !== "undefined" && "randomUUID" in crypto
+        ? crypto.randomUUID()
+        : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    try {
+      sessionStorage.setItem(GOOGLE_OAUTH_STATE_KEY, state);
+    } catch {
+      setMessage(t("login.errGoogleOAuthStorage"));
       return;
     }
     setBusy(true);
-    tokenClientRef.current.requestAccessToken();
+    window.location.assign(
+      buildGoogleImplicitAuthUrl(googleClientId, redirectUri, state),
+    );
   };
 
   const handleOtpLogin = async () => {
+    const normalizedPhone = normalizePhoneForVeto(phone);
+    if (!normalizedPhone) {
+      setMessage(t("login.errInvalidPhone"));
+      return;
+    }
     setBusy(true);
     setMessage(null);
     setDevOtp(null);
     setOtpCopied(false);
     try {
-      const data = await postJson("/api/auth/request-otp", { phone });
+      const data = await postJson("/api/auth/request-otp", {
+        phone: normalizedPhone,
+      });
       const returned = pickOtpFromResponse(data);
       if (returned) {
         setDevOtp(returned);
@@ -229,22 +331,23 @@ export default function LoginPage() {
   };
 
   const handleVerify = async () => {
+    const normalizedPhone = normalizePhoneForVeto(phone);
+    if (!normalizedPhone) {
+      setMessage(t("login.errInvalidPhone"));
+      return;
+    }
     setBusy(true);
     setMessage(null);
     try {
-      const data = await postJson("/api/auth/verify-otp", { phone, otp });
+      const data = await postJson("/api/auth/verify-otp", {
+        phone: normalizedPhone,
+        otp,
+      });
       const token = typeof data.token === "string" ? data.token : null;
       if (!token) throw new Error("No token in response");
-      setJwt(token);
+      await prepareLoginSession(token);
       setSocketAuthToken(token);
-      const role = getRoleFromJwt();
-      if (role === "admin") {
-        router.replace("/admin/dashboard");
-      } else if (role === "lawyer") {
-        router.replace("/dashboard");
-      } else {
-        router.replace("/hub");
-      }
+      routeByRole(router, getRoleFromJwt());
     } catch (e) {
       setMessage(formatLoginError(e, t));
     } finally {
@@ -252,37 +355,51 @@ export default function LoginPage() {
     }
   };
 
-  const handleDevToken = () => {
-    const tok = devToken.trim();
-    if (!tok) {
-      setMessage(t("login.pasteJwtFirst"));
-      return;
-    }
-    setJwt(tok);
-    setSocketAuthToken(tok);
-    const role = getRoleFromJwt();
-    if (role === "admin") {
-      router.replace("/admin/dashboard");
-    } else if (role === "lawyer") {
-      router.replace("/dashboard");
-    } else {
-      router.replace("/hub");
-    }
+  const handleTestCredentialsLogin = () => {
+    void (async () => {
+      setBusy(true);
+      setMessage(null);
+      try {
+        const data = await postJson("/api/auth/dev-login", {
+          username: devUsername.trim(),
+          password: devPassword.trim(),
+          role: devRole,
+        });
+        const token = typeof data.token === "string" ? data.token : null;
+        if (!token) throw new Error("No token in response");
+        await prepareLoginSession(token);
+        setSocketAuthToken(token);
+        routeAfterAuth(router, data);
+      } catch (e) {
+        setMessage(formatLoginError(e, t));
+      } finally {
+        setBusy(false);
+      }
+    })();
+  };
+
+  const openAdminLogin = () => {
+    setAdminLoginOpen(true);
+    setMessage(null);
   };
 
   return (
     <>
-      <Script
-        src="https://accounts.google.com/gsi/client"
-        strategy="afterInteractive"
-        onLoad={() => setGsiLoaded(true)}
-      />
       <div className="flex min-h-screen w-full items-center justify-center px-4 py-12 md:px-6 md:py-16">
       <main
         className={`w-full max-w-md p-6 shadow-[0_24px_64px_rgba(15,23,42,0.15)] backdrop-blur-2xl md:p-8 ${glassPanelNested}`}
         dir={locale === "he" ? "rtl" : "ltr"}
       >
         <div className="text-center">
+          <div className="mb-4">
+            <button
+              type="button"
+              onClick={openAdminLogin}
+              className={`px-4 py-2 text-sm font-bold ${btnPrimaryDark}`}
+            >
+              כניסת מנהל
+            </button>
+          </div>
           {!isApiOriginConfigured() && (
             <div
               className="mb-4 rounded-xl border border-amber-600/80 bg-amber-100/95 px-3 py-2.5 text-xs font-semibold leading-snug text-amber-950 shadow-sm"
@@ -352,9 +469,18 @@ export default function LoginPage() {
                 setOtpCopied(false);
               }}
               className={glassInput}
-              placeholder="+972..."
+              placeholder={t("login.phonePlaceholder")}
               autoComplete="tel"
             />
+            <p className="text-center text-xs text-slate-600">
+              {t("login.needRegister")}{" "}
+              <Link
+                href="/register"
+                className="font-bold text-[#8a6d3d] underline underline-offset-2"
+              >
+                {t("login.registerLink")}
+              </Link>
+            </p>
           </div>
 
           <div className="flex flex-wrap gap-2">
@@ -416,26 +542,6 @@ export default function LoginPage() {
             </button>
           </div>
 
-          <div className="border-t border-white/40 pt-6">
-            <label className="text-xs font-medium text-slate-700">
-              {t("login.devJwtSection")}
-            </label>
-            <textarea
-              value={devToken}
-              onChange={(e) => setDevToken(e.target.value)}
-              rows={3}
-              className={`mt-2 resize-y ${glassInput} text-xs`}
-              placeholder={t("login.devJwtPlaceholder")}
-            />
-            <button
-              type="button"
-              onClick={handleDevToken}
-              className={`mt-2 w-full px-4 py-2.5 text-sm font-medium ${btnSecondaryGlass}`}
-            >
-              {t("login.useJwt")}
-            </button>
-          </div>
-
           {message && (
             <p className="text-center text-sm text-amber-900" role="status">
               {message}
@@ -443,6 +549,81 @@ export default function LoginPage() {
           )}
         </div>
       </main>
+
+      {adminLoginOpen && (
+        <div
+          className="fixed inset-0 z-[120] flex items-center justify-center bg-slate-900/45 p-4"
+          role="presentation"
+          onMouseDown={(e) => {
+            if (e.target === e.currentTarget) setAdminLoginOpen(false);
+          }}
+        >
+          <div
+            className={`w-full max-w-sm p-5 md:p-6 ${glassPanelNested}`}
+            dir={locale === "he" ? "rtl" : "ltr"}
+            role="dialog"
+            aria-modal="true"
+            aria-label="כניסת מנהל"
+            onMouseDown={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-lg font-bold text-slate-900">כניסת מנהל</h3>
+            <p className="mt-1 text-xs text-slate-600">
+              התחברות בדיקות עם שם משתמש וסיסמה ובחירת תפקיד.
+            </p>
+
+            <div className="mt-4 flex flex-col gap-2">
+              <label className="text-xs font-medium text-slate-700">שם משתמש</label>
+              <input
+                value={devUsername}
+                onChange={(e) => setDevUsername(e.target.value)}
+                className={glassInput}
+                autoComplete="username"
+              />
+            </div>
+
+            <div className="mt-3 flex flex-col gap-2">
+              <label className="text-xs font-medium text-slate-700">סיסמה</label>
+              <input
+                type="password"
+                value={devPassword}
+                onChange={(e) => setDevPassword(e.target.value)}
+                className={glassInput}
+                autoComplete="current-password"
+              />
+            </div>
+
+            <div className="mt-3 flex flex-col gap-2">
+              <label className="text-xs font-medium text-slate-700">כניסה כ</label>
+              <select
+                value={devRole}
+                onChange={(e) => setDevRole(e.target.value as LoginRole)}
+                className={glassInput}
+              >
+                <option value="admin">אדמין</option>
+                <option value="citizen">אזרח</option>
+                <option value="lawyer">עורך דין</option>
+              </select>
+            </div>
+
+            <div className="mt-4 flex gap-2">
+              <button
+                type="button"
+                onClick={() => setAdminLoginOpen(false)}
+                className={`flex-1 px-4 py-2.5 text-sm ${btnSecondaryGlass}`}
+              >
+                ביטול
+              </button>
+              <button
+                type="button"
+                onClick={handleTestCredentialsLogin}
+                className={`flex-1 px-4 py-2.5 text-sm font-bold ${btnPrimaryDark}`}
+              >
+                התחבר
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
     </>
   );
