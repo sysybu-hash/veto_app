@@ -27,19 +27,11 @@ function CallInner({ channel }: { channel: string }) {
 
   const [micOn, setMicOn] = useState(true);
   const [cameraOn, setCameraOn] = useState(true);
-  const [joinError, setJoinError] = useState<string | null>(null);
-
   const appId = getPublicAgoraAppId();
   const videoSession = session != null && session.callType !== "audio";
 
   const { localMicrophoneTrack } = useLocalMicrophoneTrack(true);
   const { localCameraTrack, error: camErr } = useLocalCameraTrack(videoSession);
-
-  useEffect(() => {
-    if (camErr && videoSession) {
-      setJoinError(camErr.message);
-    }
-  }, [camErr, videoSession]);
 
   const joinArgs = useMemo(() => {
     if (!session || !appId) return null;
@@ -63,11 +55,9 @@ function CallInner({ channel }: { channel: string }) {
     client,
   );
 
-  useEffect(() => {
-    if (joinHookError) {
-      setJoinError(joinHookError.message);
-    }
-  }, [joinHookError]);
+  const joinError =
+    joinHookError?.message ??
+    (camErr && videoSession ? camErr.message : null);
 
   usePublish(
     [localMicrophoneTrack, videoSession ? localCameraTrack : null],

@@ -23,6 +23,8 @@ export type SosAlertLocation = {
 export type SosUrgency = "SOS" | "INQUIRY";
 
 export type TriggerSosOptions = {
+  /** When set, must match Mongo `EmergencyEvent._id` from `emergency_created`. */
+  eventId?: string;
   location?: SosAlertLocation;
   stress_test?: boolean;
   urgency?: SosUrgency;
@@ -62,7 +64,10 @@ export async function triggerSosAlert(
       ? loc.accuracy
       : null;
 
-  const eventId = randomUUID();
+  const eventId =
+    options?.eventId?.trim() && options.eventId.trim().length > 0
+      ? options.eventId.trim()
+      : randomUUID();
 
   try {
     await prisma.sosEvent.create({

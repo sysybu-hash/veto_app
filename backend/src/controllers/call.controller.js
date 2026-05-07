@@ -348,6 +348,37 @@ exports.getCallDetails = async (req, res, next) => {
   }
 };
 
+/**
+ * GET /api/calls/my-sos-artifacts
+ * Citizen/admin: emergency events that have recording and/or transcript (for vault sync).
+ */
+exports.listMySosArtifacts = async (req, res, next) => {
+  try {
+    const { userId, role } = req.user;
+    if (role !== 'user' && role !== 'admin') {
+      return res.status(403).json({ error: 'Citizen accounts only.' });
+    }
+
+    const items = await EmergencyEvent.find({
+      user_id: userId,
+      $or: [
+        { recording_url: { $exists: true, $nin: [null, ''] } },
+        { call_transcript: { $exists: true, $nin: [null, ''] } },
+      ],
+    })
+      .select(
+        '_id status recording_url call_transcript transcript_language triggered_at completed_at',
+      )
+      .sort({ triggered_at: -1 })
+      .limit(50)
+      .lean();
+
+    res.json({ success: true, items });
+  } catch (err) {
+    next(err);
+  }
+};
+
 // ── Agora Cloud Recording (full mix in browser / all clients) ─
 exports.getCloudRecordingStatus = async (req, res, next) => {
   try {

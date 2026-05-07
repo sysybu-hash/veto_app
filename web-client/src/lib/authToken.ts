@@ -4,19 +4,42 @@
  */
 const STORAGE_KEY = "veto_jwt";
 
-/** Must match `jwtCookie.ts` — duplicated here to avoid importing server code in client bundles. */
-const COOKIE_NAME = "veto_jwt";
+/** Primary cookie — must match `middleware.ts` and `jwtCookie.ts`. */
+export const VETO_JWT_COOKIE_NAME = "veto_jwt";
+
+/** Fallback names read by `middleware.ts` for the same JWT value. */
+const LEGACY_SESSION_COOKIE_NAMES = ["veto_session", "jwt"] as const;
+
 const COOKIE_MAX_AGE_SEC = 60 * 60 * 24 * 7;
 
-function syncJwtCookie(token: string | null) {
-  if (typeof document === "undefined") return;
+function cookieBaseAttrs(): string {
+  if (typeof window === "undefined") return "Path=/; SameSite=Lax";
   const isSecure = window.location.protocol === "https:";
+  return `Path=/; SameSite=Lax${isSecure ? "; Secure" : ""}`;
+}
+
+/** Writes JWT to all cookies the Edge middleware may read (same encoded value). */
+export function syncAllJwtCookies(token: string | null): void {
+  if (typeof document === "undefined") return;
+  const attrs = cookieBaseAttrs();
   if (token) {
     const enc = encodeURIComponent(token);
-    document.cookie = `${COOKIE_NAME}=${enc}; Path=/; Max-Age=${COOKIE_MAX_AGE_SEC}; SameSite=Lax${isSecure ? "; Secure" : ""}`;
+    document.cookie = `${VETO_JWT_COOKIE_NAME}=${enc}; Max-Age=${COOKIE_MAX_AGE_SEC}; ${attrs}`;
+    for (const name of LEGACY_SESSION_COOKIE_NAMES) {
+      document.cookie = `${name}=${enc}; Max-Age=${COOKIE_MAX_AGE_SEC}; ${attrs}`;
+    }
   } else {
-    document.cookie = `${COOKIE_NAME}=; Path=/; Max-Age=0; SameSite=Lax${isSecure ? "; Secure" : ""}`;
+    document.cookie = `${VETO_JWT_COOKIE_NAME}=; Max-Age=0; ${attrs}`;
+    for (const name of LEGACY_SESSION_COOKIE_NAMES) {
+      document.cookie = `${name}=; Max-Age=0; ${attrs}`;
+    }
   }
+}
+
+function hasPrimaryJwtCookie(): boolean {
+  if (typeof document === "undefined") return false;
+  const prefix = `${VETO_JWT_COOKIE_NAME}=`;
+  return document.cookie.split(";").some((c) => c.trim().startsWith(prefix));
 }
 
 export function getJwt(): string | null {
@@ -28,11 +51,16 @@ export function getJwt(): string | null {
   }
 }
 
+/**
+ * Persist JWT: cookies first (so middleware sees them), then localStorage.
+ * For navigation immediately after login, prefer `prepareLoginSession` so the
+ * cookie round-trip completes before `router.push/replace`.
+ */
 export function setJwt(token: string): void {
   if (typeof window === "undefined") return;
+  syncAllJwtCookies(token);
   try {
     window.localStorage.setItem(STORAGE_KEY, token);
-    syncJwtCookie(token);
   } catch {
     /* ignore */
   }
@@ -40,22 +68,44 @@ export function setJwt(token: string): void {
 
 export function clearJwt(): void {
   if (typeof window === "undefined") return;
+  syncAllJwtCookies(null);
   try {
     window.localStorage.removeItem(STORAGE_KEY);
-    syncJwtCookie(null);
   } catch {
     /* ignore */
   }
 }
 
-/** Call on app load so server actions RSC see the same JWT as localStorage. */
+/** Call on app load so server actions / RSC see the same JWT as localStorage. */
 export function syncJwtCookieFromStorage(): void {
   if (typeof window === "undefined") return;
   try {
     const token = window.localStorage.getItem(STORAGE_KEY);
-    syncJwtCookie(token);
+    syncAllJwtCookies(token);
   } catch {
     /* ignore */
+  }
+}
+
+/**
+ * Sets cookies + storage, then waits until the browser has applied cookie updates
+ * before client navigation (avoids middleware redirect to /login race).
+ */
+export async function prepareLoginSession(token: string): Promise<void> {
+  setJwt(token);
+  await new Promise<void>((resolve) => {
+    requestAnimationFrame(() => {
+      queueMicrotask(resolve);
+    });
+  });
+  if (typeof document !== "undefined" && !hasPrimaryJwtCookie()) {
+    syncAllJwtCookies(token);
+    try {
+      window.localStorage.setItem(STORAGE_KEY, token);
+    } catch {
+      /* ignore */
+    }
+    await new Promise<void>((r) => queueMicrotask(r));
   }
 }
 
