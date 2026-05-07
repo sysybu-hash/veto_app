@@ -1,7 +1,8 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import Script from "next/script";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { getRoleFromJwt, setJwt } from "@/lib/authToken";
 import { setSocketAuthToken } from "@/lib/socketClient";
 import {
@@ -9,6 +10,7 @@ import {
   isApiOriginConfigured,
   tunnelBypassHeaders,
 } from "@/lib/env";
+import { useTranslation } from "@/lib/i18n/LocaleProvider";
 import {
   btnPrimaryDark,
   btnSecondaryGlass,
@@ -43,26 +45,55 @@ function pickOtpFromResponse(data: Record<string, unknown>): string | null {
   return /^\d{4,8}$/.test(s) ? s : null;
 }
 
-function formatLoginError(e: unknown): string {
+function formatLoginError(
+  e: unknown,
+  t: (key: string) => string,
+): string {
   const raw = e instanceof Error ? e.message : String(e);
+  if (/Google OAuth not configured/i.test(raw)) {
+    return t("login.errGoogleNotConfigured");
+  }
   if (raw.includes("NEXT_PUBLIC_API_ORIGIN")) {
-    return "חסרה הגדרת שרת: ב-Vercel → Environment Variables הגדירו NEXT_PUBLIC_API_ORIGIN לכתובת ה-API (HTTPS, בלי סיומת /api), ואז Redeploy.";
+    return t("login.errMissingApiOriginConfig");
   }
   if (
     /failed to fetch|networkerror|load failed|connection refused|err_connection_refused/i.test(
       raw,
     )
   ) {
-    return "לא ניתן להתחבר לשרת. ודאו ש-NEXT_PUBLIC_API_ORIGIN מצביע לשרת ה-API הפעיל (למשל Render), ש-CORS בשרת מאשר את דומיין האתר, והשרת רץ.";
+    return t("login.errNetwork");
   }
   if (raw === "No token in response") {
-    return "אין אסימון בתשובת השרת. נסו שוב או בדקו לוגים.";
+    return t("login.errNoToken");
   }
   return raw;
 }
 
+type GoogleOAuthTokenResponse = {
+  access_token?: string;
+  error?: string;
+  error_description?: string;
+};
+
+declare global {
+  interface Window {
+    google?: {
+      accounts?: {
+        oauth2?: {
+          initTokenClient: (config: {
+            client_id: string;
+            scope: string;
+            callback: (resp: GoogleOAuthTokenResponse) => void;
+          }) => { requestAccessToken: (opts?: { prompt?: string }) => void };
+        };
+      };
+    };
+  }
+}
+
 export default function LoginPage() {
   const router = useRouter();
+  const { t, locale } = useTranslation();
   const [phone, setPhone] = useState("");
   const [otp, setOtp] = useState("");
   const [devToken, setDevToken] = useState("");
@@ -70,18 +101,98 @@ export default function LoginPage() {
   const [message, setMessage] = useState<string | null>(null);
   const [devOtp, setDevOtp] = useState<string | null>(null);
   const [otpCopied, setOtpCopied] = useState(false);
+  const [gsiLoaded, setGsiLoaded] = useState(false);
 
-  const googleLoginUrl = process.env.NEXT_PUBLIC_GOOGLE_LOGIN_URL;
+  const googleClientId =
+    process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID?.trim() ?? "";
+  const legacyGoogleLoginUrl =
+    process.env.NEXT_PUBLIC_GOOGLE_LOGIN_URL?.trim() ?? "";
+
+  const tokenClientRef = useRef<{
+    requestAccessToken: (opts?: { prompt?: string }) => void;
+  } | null>(null);
+
+  const completeGoogleLogin = useCallback(
+    async (accessToken: string) => {
+      setBusy(true);
+      setMessage(null);
+      try {
+        const data = await postJson("/api/auth/google", {
+          access_token: accessToken,
+        });
+        const token = typeof data.token === "string" ? data.token : null;
+        if (!token) throw new Error("No token in response");
+        setJwt(token);
+        setSocketAuthToken(token);
+        const role = getRoleFromJwt();
+        if (role === "admin") {
+          router.replace("/admin/dashboard");
+        } else if (role === "lawyer") {
+          router.replace("/dashboard");
+        } else {
+          router.replace("/hub");
+        }
+      } catch (e) {
+        setMessage(formatLoginError(e, t));
+      } finally {
+        setBusy(false);
+      }
+    },
+    [router, t],
+  );
+
+  useEffect(() => {
+    if (!gsiLoaded || !googleClientId) return;
+    const oauth2 = window.google?.accounts?.oauth2;
+    if (!oauth2) return;
+    tokenClientRef.current = oauth2.initTokenClient({
+      client_id: googleClientId,
+      scope: "openid email profile",
+      callback: (resp) => {
+        if (resp.error) {
+          const ephemeral =
+            /popup_closed|access_denied|user_cancel/i.test(
+              String(resp.error) + (resp.error_description ?? ""),
+            );
+          if (!ephemeral) {
+            const detail = resp.error_description?.trim()
+              ? `${resp.error}: ${resp.error_description}`
+              : resp.error;
+            setMessage(
+              String(detail).includes("403") ||
+                /blocked|disallowed_useragent/i.test(String(detail))
+                ? t("login.errGoogleBlocked")
+                : `${t("login.errGooglePrefix")} ${detail}`,
+            );
+          }
+          setBusy(false);
+          return;
+        }
+        if (!resp.access_token) {
+          setBusy(false);
+          return;
+        }
+        void completeGoogleLogin(resp.access_token);
+      },
+    });
+  }, [gsiLoaded, googleClientId, completeGoogleLogin, t]);
 
   const handleGoogle = () => {
     setMessage(null);
-    if (googleLoginUrl) {
-      window.location.href = googleLoginUrl;
+    if (legacyGoogleLoginUrl) {
+      window.location.href = legacyGoogleLoginUrl;
       return;
     }
-    setMessage(
-      "כניסה עם Google תופעל לאחר חיבור OAuth. ניתן להמשיך בטלפון והקוד בינתיים.",
-    );
+    if (!googleClientId) {
+      setMessage(t("login.errMissingGoogleClientId"));
+      return;
+    }
+    if (!tokenClientRef.current) {
+      setMessage(t("login.loadingGoogle"));
+      return;
+    }
+    setBusy(true);
+    tokenClientRef.current.requestAccessToken();
   };
 
   const handleOtpLogin = async () => {
@@ -95,14 +206,12 @@ export default function LoginPage() {
       if (returned) {
         setDevOtp(returned);
         setOtp(returned);
-        setMessage(
-          "הקוד הוחזר מהשרת (פיתוח או SMS לא מוגדר). אפשר להעתיק או לאמת למטה.",
-        );
+        setMessage(t("login.otpReturnedDev"));
       } else {
-        setMessage("נשלח קוד. בדקו את הטלפון או לוג שרת בפיתוח.");
+        setMessage(t("login.otpSent"));
       }
     } catch (e) {
-      setMessage(formatLoginError(e));
+      setMessage(formatLoginError(e, t));
     } finally {
       setBusy(false);
     }
@@ -115,7 +224,7 @@ export default function LoginPage() {
       setOtpCopied(true);
       window.setTimeout(() => setOtpCopied(false), 2000);
     } catch {
-      setMessage("העתקה נכשלה — סמנו את הקוד ידנית.");
+      setMessage(t("login.copyFailed"));
     }
   };
 
@@ -137,20 +246,20 @@ export default function LoginPage() {
         router.replace("/hub");
       }
     } catch (e) {
-      setMessage(formatLoginError(e));
+      setMessage(formatLoginError(e, t));
     } finally {
       setBusy(false);
     }
   };
 
   const handleDevToken = () => {
-    const t = devToken.trim();
-    if (!t) {
-      setMessage("הדביקו JWT לפני השימוש.");
+    const tok = devToken.trim();
+    if (!tok) {
+      setMessage(t("login.pasteJwtFirst"));
       return;
     }
-    setJwt(t);
-    setSocketAuthToken(t);
+    setJwt(tok);
+    setSocketAuthToken(tok);
     const role = getRoleFromJwt();
     if (role === "admin") {
       router.replace("/admin/dashboard");
@@ -162,10 +271,16 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen w-full items-center justify-center px-4 py-12 md:px-6 md:py-16">
+    <>
+      <Script
+        src="https://accounts.google.com/gsi/client"
+        strategy="afterInteractive"
+        onLoad={() => setGsiLoaded(true)}
+      />
+      <div className="flex min-h-screen w-full items-center justify-center px-4 py-12 md:px-6 md:py-16">
       <main
         className={`w-full max-w-md p-6 shadow-[0_24px_64px_rgba(15,23,42,0.15)] backdrop-blur-2xl md:p-8 ${glassPanelNested}`}
-        dir="rtl"
+        dir={locale === "he" ? "rtl" : "ltr"}
       >
         <div className="text-center">
           {!isApiOriginConfigured() && (
@@ -173,21 +288,12 @@ export default function LoginPage() {
               className="mb-4 rounded-xl border border-amber-600/80 bg-amber-100/95 px-3 py-2.5 text-xs font-semibold leading-snug text-amber-950 shadow-sm"
               role="alert"
             >
-              חסר NEXT_PUBLIC_API_ORIGIN — ב-Vercel יש להגדיר את כתובת ה-API (למשל
-              https://…onrender.com) ולבצע Redeploy.
+              {t("login.alertMissingApiOrigin")}
             </div>
           )}
           <h1 className="font-display text-2xl font-semibold text-slate-900 md:text-3xl">
-            כניסה ל-VETO
+            {t("login.title")}
           </h1>
-          <p className="mt-2 text-sm leading-relaxed text-slate-700">
-            חשבון אזרח: אימות OTP מול שרת VETO. בפיתוח ניתן להדביק JWT
-            (
-            <code className="rounded border border-white/45 bg-white/45 px-1.5 py-0.5 text-xs backdrop-blur-sm">
-              veto_jwt
-            </code>
-            ).
-          </p>
         </div>
 
         <div className="mt-8 flex flex-col gap-4">
@@ -215,7 +321,7 @@ export default function LoginPage() {
                 d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
               />
             </svg>
-            המשך עם Google
+            {t("login.google")}
           </button>
 
           <div className="relative py-2">
@@ -227,7 +333,7 @@ export default function LoginPage() {
             </div>
             <div className="relative flex justify-center text-xs font-medium">
               <span className="rounded-full border border-white/40 bg-white/45 px-3 py-0.5 text-slate-600 backdrop-blur-sm">
-                או עם טלפון
+                {t("login.orPhone")}
               </span>
             </div>
           </div>
@@ -236,7 +342,7 @@ export default function LoginPage() {
         <div className="mt-2 flex flex-col gap-6">
           <div className="flex flex-col gap-2">
             <label className="text-xs font-medium text-slate-700">
-              טלפון
+              {t("login.phone")}
             </label>
             <input
               value={phone}
@@ -258,7 +364,7 @@ export default function LoginPage() {
               onClick={() => void handleOtpLogin()}
               className={`px-4 py-2.5 text-sm font-semibold shadow-md ${btnPrimaryDark} disabled:opacity-50`}
             >
-              שלח קוד OTP
+              {t("login.sendOtp")}
             </button>
           </div>
 
@@ -266,10 +372,10 @@ export default function LoginPage() {
             <div
               className="rounded-2xl border border-amber-500/60 bg-amber-50/95 px-4 py-4 shadow-sm"
               role="region"
-              aria-label="קוד OTP להדגמה"
+              aria-label={t("login.otpDevAria")}
             >
               <p className="text-center text-xs font-semibold text-amber-950">
-                קוד OTP (הוצג מהשרת)
+                {t("login.otpDevTitle")}
               </p>
               <div className="mt-3 flex flex-wrap items-center justify-center gap-3">
                 <code
@@ -283,19 +389,21 @@ export default function LoginPage() {
                   onClick={() => void copyDevOtp()}
                   className="rounded-xl bg-amber-600 px-4 py-2.5 text-sm font-bold text-white shadow transition hover:bg-amber-700"
                 >
-                  {otpCopied ? "הועתק" : "העתק"}
+                  {otpCopied ? t("common.copied") : t("common.copy")}
                 </button>
               </div>
             </div>
           )}
 
           <div className="flex flex-col gap-2">
-            <label className="text-xs font-medium text-slate-700">קוד OTP</label>
+            <label className="text-xs font-medium text-slate-700">
+              {t("login.otpLabel")}
+            </label>
             <input
               value={otp}
               onChange={(e) => setOtp(e.target.value)}
               className={glassInput}
-              placeholder="6 ספרות"
+              placeholder={t("login.otpPlaceholder")}
               autoComplete="one-time-code"
             />
             <button
@@ -304,27 +412,27 @@ export default function LoginPage() {
               onClick={() => void handleVerify()}
               className="mt-1 rounded-xl bg-emerald-700 px-4 py-2.5 text-sm font-semibold text-white shadow-md transition hover:bg-emerald-600 disabled:opacity-50"
             >
-              אמת והמשך
+              {t("login.verify")}
             </button>
           </div>
 
           <div className="border-t border-white/40 pt-6">
             <label className="text-xs font-medium text-slate-700">
-              פיתוח: הדבקת JWT
+              {t("login.devJwtSection")}
             </label>
             <textarea
               value={devToken}
               onChange={(e) => setDevToken(e.target.value)}
               rows={3}
               className={`mt-2 resize-y ${glassInput} text-xs`}
-              placeholder="eyJ..."
+              placeholder={t("login.devJwtPlaceholder")}
             />
             <button
               type="button"
               onClick={handleDevToken}
               className={`mt-2 w-full px-4 py-2.5 text-sm font-medium ${btnSecondaryGlass}`}
             >
-              השתמש ב-JWT שהודבק
+              {t("login.useJwt")}
             </button>
           </div>
 
@@ -336,5 +444,6 @@ export default function LoginPage() {
         </div>
       </main>
     </div>
+    </>
   );
 }

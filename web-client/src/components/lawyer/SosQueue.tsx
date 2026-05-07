@@ -16,6 +16,7 @@ import {
   createAblyRealtimeWithAuth,
 } from "@/lib/ably";
 import { getJwt, getRoleFromJwt } from "@/lib/authToken";
+import { useTranslation } from "@/lib/i18n/LocaleProvider";
 import { btnPrimaryGold, glassPanel, glassPanelNested } from "@/lib/vetoGlass";
 import { useToastStore } from "@/store/useToastStore";
 
@@ -100,6 +101,7 @@ function parseClaimedMessage(data: unknown): string | null {
  * Ably-driven glass queue: urgency + proximity sort, claim via server action.
  */
 export function SosQueue() {
+  const { t, locale } = useTranslation();
   const pushToast = useToastStore((s) => s.push);
   const [items, setItems] = useState<Record<string, QueueItem>>({});
   const [lawyerLatLng, setLawyerLatLng] = useState<{
@@ -252,7 +254,7 @@ export function SosQueue() {
       const res = await claimSosEvent(eventId);
       if (res.success) {
         remove(eventId);
-        pushToast("האירוע נתפס בהצלחה", "success");
+        pushToast(t("sosQueue.toastClaimOk"), "success");
       } else {
         pushToast(res.error, "error");
       }
@@ -262,15 +264,16 @@ export function SosQueue() {
   };
 
   return (
-    <section className={`mt-8 p-6 md:p-8 ${glassPanel}`} dir="rtl">
+    <section
+      className={`mt-8 p-6 md:p-8 ${glassPanel}`}
+      dir={locale === "he" ? "rtl" : "ltr"}
+    >
       <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="text-start">
           <h2 className="font-frank text-lg font-black text-slate-900 md:text-xl">
-            תור התראות SOS חי
+            {t("sosQueue.title")}
           </h2>
-          <p className="mt-1 text-sm text-slate-600">
-            ממוין לפי דחיפות (SOS לפני פנייה), ואז לפי קרבה כשמיקום העו״ד זמין.
-          </p>
+          <p className="mt-1 text-sm text-slate-600">{t("sosQueue.subtitle")}</p>
         </div>
         <label className="flex cursor-pointer items-center gap-2 text-sm text-slate-700">
           <input
@@ -279,7 +282,7 @@ export function SosQueue() {
             onChange={(e) => setShowStress(e.target.checked)}
             className="rounded border-white/50"
           />
-          הצג אירועי QA / stress
+          {t("sosQueue.showStress")}
         </label>
       </div>
 
@@ -287,7 +290,7 @@ export function SosQueue() {
         <div
           className={`rounded-2xl border border-dashed border-white/45 px-6 py-12 text-center text-slate-600 ${glassPanelNested}`}
         >
-          אין פריטים פתוחים בתור.
+          {t("sosQueue.empty")}
         </div>
       ) : (
         <ul className="flex flex-col gap-3">
@@ -311,24 +314,25 @@ export function SosQueue() {
                   </span>
                   {it.stressTest ? (
                     <span className="rounded-lg bg-slate-800/80 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-200">
-                      stress / QA
+                      {t("sosQueue.stressQa")}
                     </span>
                   ) : null}
                 </div>
                 <p className="mt-2 font-mono text-xs text-slate-700">
-                  אירוע · {it.eventId.slice(0, 13)}…
+                  {t("sosQueue.eventPrefix")} {it.eventId.slice(0, 13)}…
                 </p>
                 <p className="text-sm text-slate-800">
-                  מתקשר · {it.citizenId.slice(0, 12)}…
+                  {t("sosQueue.callerLabel")} · {it.citizenId.slice(0, 12)}…
                 </p>
                 <p className="text-xs text-slate-600">
                   {it.lat != null && it.lng != null
-                    ? `מיקום ${it.lat.toFixed(4)}, ${it.lng.toFixed(4)}`
-                    : "ללא מיקום מדויק"}
+                    ? `${t("sosQueue.locationPrefix")} ${it.lat.toFixed(4)}, ${it.lng.toFixed(4)}`
+                    : t("sosQueue.noPreciseLocation")}
                   {" · "}
-                  {new Date(it.timestamp).toLocaleString("he-IL", {
-                    hour12: false,
-                  })}
+                  {new Date(it.timestamp).toLocaleString(
+                    locale === "he" ? "he-IL" : locale === "ru" ? "ru-RU" : "en-US",
+                    { hour12: false },
+                  )}
                 </p>
               </div>
               <button
@@ -337,7 +341,7 @@ export function SosQueue() {
                 onClick={() => void onClaim(it.eventId)}
                 className={`shrink-0 px-5 py-3 text-sm ${btnPrimaryGold} disabled:cursor-not-allowed disabled:opacity-50`}
               >
-                {claimingId === it.eventId ? "מתפס…" : "Claim Event"}
+                {claimingId === it.eventId ? t("sosQueue.claiming") : t("sosQueue.claim")}
               </button>
             </li>
           ))}

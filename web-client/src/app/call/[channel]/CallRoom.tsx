@@ -14,11 +14,13 @@ import AgoraRTC, {
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { getPublicAgoraAppId } from "@/lib/env";
+import { useTranslation } from "@/lib/i18n/LocaleProvider";
 import { getSocket } from "@/lib/socketClient";
 import { useEmergencyStore } from "@/store/useEmergencyStore";
 
 function CallInner({ channel }: { channel: string }) {
   const router = useRouter();
+  const { t } = useTranslation();
   const client = useRTCClient();
   const session = useEmergencyStore((s) => s.sessionReady);
   const clearCallSession = useEmergencyStore((s) => s.clearCallSession);
@@ -150,13 +152,13 @@ function CallInner({ channel }: { channel: string }) {
   if (!session || session.channelId !== channel) {
     return (
       <div className="flex min-h-full flex-col items-center justify-center gap-4 px-6 text-center">
-        <p className="text-slate-200">No active call session for this channel.</p>
+        <p className="text-slate-200">{t("call.noSession")}</p>
         <button
           type="button"
           onClick={() => router.replace("/hub")}
           className="rounded-xl bg-white/10 px-4 py-2 text-sm font-medium text-white hover:bg-white/15"
         >
-          Back to hub
+          {t("call.backHub")}
         </button>
       </div>
     );
@@ -165,7 +167,7 @@ function CallInner({ channel }: { channel: string }) {
   if (!appId) {
     return (
       <div className="flex min-h-full flex-col items-center justify-center px-6 text-center text-amber-200">
-        Missing <code className="rounded bg-black/30 px-1">NEXT_PUBLIC_AGORA_APP_ID</code>.
+        {t("call.missingAgora")}
       </div>
     );
   }
@@ -184,7 +186,7 @@ function CallInner({ channel }: { channel: string }) {
           />
         ) : (
           <div className="flex h-full items-center justify-center text-slate-400">
-            {isConnected ? "Waiting for the lawyer to join…" : "Connecting…"}
+            {isConnected ? t("call.waitingLawyer") : t("call.connecting")}
           </div>
         )}
 
@@ -215,7 +217,7 @@ function CallInner({ channel }: { channel: string }) {
               micOn ? "bg-white/15 text-white" : "bg-amber-600 text-white"
             }`}
           >
-            {micOn ? "Mute" : "Unmute"}
+            {micOn ? t("call.mute") : t("call.unmute")}
           </button>
           {videoSession && (
             <button
@@ -226,7 +228,7 @@ function CallInner({ channel }: { channel: string }) {
                 cameraOn ? "bg-white/15 text-white" : "bg-amber-600 text-white"
               }`}
             >
-              {cameraOn ? "Camera off" : "Camera on"}
+              {cameraOn ? t("call.cameraOff") : t("call.cameraOn")}
             </button>
           )}
           <button
@@ -234,7 +236,7 @@ function CallInner({ channel }: { channel: string }) {
             onClick={() => void leave()}
             className="rounded-full bg-red-600 px-5 py-2 text-sm font-semibold text-white hover:bg-red-500"
           >
-            End
+            {t("call.end")}
           </button>
         </div>
       </div>

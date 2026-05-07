@@ -1,11 +1,12 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { triggerSosAlert } from "@/app/actions/sos";
 import { CitizenBottomNav } from "@/components/citizen/CitizenBottomNav";
-import { btnSecondaryGlass } from "@/lib/vetoGlass";
+import { btnPrimaryDark, btnSecondaryGlass, glassPanelNested } from "@/lib/vetoGlass";
 import { getJwt } from "@/lib/authToken";
+import { useTranslation } from "@/lib/i18n/LocaleProvider";
 import { connectSocket, getSocket } from "@/lib/socketClient";
 import {
   useEmergencyStore,
@@ -52,6 +53,8 @@ function readSessionPayload(data: unknown): SessionReadyState | null {
 
 export default function CitizenHubPage() {
   const router = useRouter();
+  const { t, locale } = useTranslation();
+  const [sosDialogOpen, setSosDialogOpen] = useState(false);
 
   const isSearching = useEmergencyStore((s) => s.isSearching);
   const lawyerFound = useEmergencyStore((s) => s.lawyerFound);
@@ -90,7 +93,7 @@ export default function CitizenHubPage() {
       const name =
         typeof payload?.lawyerName === "string" ? payload.lawyerName : undefined;
       if (!eventId || !roomId) {
-        useEmergencyStore.getState().setErrorMessage("Invalid lawyer_found payload.");
+        useEmergencyStore.getState().setErrorMessage(t("hub.errInvalidLawyerPayload"));
         return;
       }
       setLawyerFound({ eventId, roomId, lawyerName: name });
@@ -101,7 +104,7 @@ export default function CitizenHubPage() {
       if (cancelled) return;
       const parsed = readSessionPayload(raw);
       if (!parsed) {
-        setErrorMessage("Could not start call (missing session data).");
+        setErrorMessage(t("hub.errSessionData"));
         return;
       }
       setSessionReady(parsed);
@@ -110,7 +113,7 @@ export default function CitizenHubPage() {
 
     const onNoLawyers = () => {
       if (cancelled) return;
-      setErrorMessage("No lawyers are available right now. Try again shortly.");
+      setErrorMessage(t("hub.errNoLawyers"));
     };
 
     const onVetoError = (raw: unknown) => {
@@ -121,7 +124,7 @@ export default function CitizenHubPage() {
         "message" in raw &&
         typeof (raw as { message?: unknown }).message === "string"
           ? (raw as { message: string }).message
-          : "Something went wrong.";
+          : t("hub.errGeneric");
       setErrorMessage(msg);
     };
 
@@ -133,7 +136,7 @@ export default function CitizenHubPage() {
         "message" in raw &&
         typeof (raw as { message?: unknown }).message === "string"
           ? (raw as { message: string }).message
-          : "This case is no longer available.";
+          : t("hub.errCaseTaken");
       const { isSearching: searching, lawyerFound: found } =
         useEmergencyStore.getState();
       if (searching || found) {
@@ -157,7 +160,7 @@ export default function CitizenHubPage() {
       sock.off("veto_error", onVetoError);
       sock.off("case_taken", onCaseTaken);
     };
-  }, [router, setErrorMessage, setLawyerFound, setSessionReady]);
+  }, [router, setErrorMessage, setLawyerFound, setSessionReady, t]);
 
   const handleSos = useCallback(() => {
     if (!getJwt()) {
@@ -183,7 +186,7 @@ export default function CitizenHubPage() {
     const emitStart = (lat: number, lng: number, accuracy?: number) => {
       sock.emit("start_veto", {
         location: { lat, lng },
-        preferredLanguage: "he",
+        preferredLanguage: locale,
       });
       void triggerSosAlert({
         location:
@@ -217,61 +220,106 @@ export default function CitizenHubPage() {
       },
       { enableHighAccuracy: true, timeout: 12_000, maximumAge: 60_000 },
     );
-  }, [router, setErrorMessage, startSearch]);
+  }, [locale, router, setErrorMessage, startSearch]);
+
+  const confirmSos = useCallback(() => {
+    setSosDialogOpen(false);
+    handleSos();
+  }, [handleSos]);
 
   return (
     <>
-    <main className="mx-auto flex w-full max-w-lg flex-1 flex-col items-center justify-center gap-8 px-6 py-12 pb-28">
-      <div className="w-full rounded-2xl border border-white/50 bg-white/55 px-5 py-6 text-center shadow-sm backdrop-blur-xl">
-        <h1 className="font-frank text-2xl font-bold text-slate-900">
-          Emergency legal help
-        </h1>
-        <p className="mt-2 text-sm text-slate-600">
-          Tap SOS to request a lawyer. Stay on this screen until the call opens.
-        </p>
-      </div>
+      <main className="mx-auto flex w-full max-w-lg flex-1 flex-col items-center justify-center gap-8 px-6 py-12 pb-28">
+        <div className="w-full rounded-2xl border border-white/50 bg-white/55 px-5 py-6 text-center shadow-sm backdrop-blur-xl">
+          <h1 className="font-frank text-2xl font-bold text-slate-900">
+            {t("hub.title")}
+          </h1>
+          <p className="mt-2 text-sm text-slate-600">{t("hub.subtitle")}</p>
+        </div>
 
-      <button
-        type="button"
-        onClick={handleSos}
-        disabled={isSearching}
-        className="sos-btn relative flex h-44 w-44 items-center justify-center rounded-full border-4 border-red-950 bg-red-700 text-lg font-bold text-white shadow-2xl shadow-red-900/50 transition enabled:cursor-pointer enabled:hover:bg-red-600 enabled:active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-70"
-      >
-        <span className="relative z-10">SOS</span>
-      </button>
-
-      {isSearching && !lawyerFound && (
-        <p className="text-center text-sm font-medium text-amber-800">
-          Searching for an available lawyer…
-        </p>
-      )}
-
-      {lawyerFound && lawyerName && (
-        <p className="text-center text-sm font-medium text-emerald-800">
-          {lawyerName} accepted — starting your video session…
-        </p>
-      )}
-
-      {statusMessage && (
-        <div
-          role="alert"
-          className="w-full rounded-xl border border-red-300/80 bg-red-50/90 px-4 py-3 text-center text-sm text-red-900 backdrop-blur-md"
+        <button
+          type="button"
+          onClick={() => setSosDialogOpen(true)}
+          disabled={isSearching}
+          className="sos-btn relative flex h-44 w-44 items-center justify-center rounded-full border-4 border-red-950 bg-red-700 text-lg font-bold text-white shadow-2xl shadow-red-900/50 transition enabled:cursor-pointer enabled:hover:bg-red-600 enabled:active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-70"
         >
-          {statusMessage}
-          <div className="mt-3">
-            <button
-              type="button"
-              onClick={() => reset()}
-              className={`${btnSecondaryGlass} px-3 py-1.5 text-xs`}
+          <span className="relative z-10">{t("hub.sos")}</span>
+        </button>
+
+        {isSearching && !lawyerFound && (
+          <p className="text-center text-sm font-medium text-amber-800">
+            {t("hub.searching")}
+          </p>
+        )}
+
+        {lawyerFound && lawyerName && (
+          <p className="text-center text-sm font-medium text-emerald-800">
+            {t("hub.lawyerAccepted").replace("{name}", lawyerName)}
+          </p>
+        )}
+
+        {statusMessage && (
+          <div
+            role="alert"
+            className="w-full rounded-xl border border-red-300/80 bg-red-50/90 px-4 py-3 text-center text-sm text-red-900 backdrop-blur-md"
+          >
+            {statusMessage}
+            <div className="mt-3">
+              <button
+                type="button"
+                onClick={() => reset()}
+                className={`${btnSecondaryGlass} px-3 py-1.5 text-xs`}
+              >
+                {t("hub.dismiss")}
+              </button>
+            </div>
+          </div>
+        )}
+      </main>
+
+      <CitizenBottomNav active="hub" />
+
+      {sosDialogOpen && (
+        <div
+          className="fixed inset-0 z-[80] flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm"
+          role="presentation"
+          onClick={() => setSosDialogOpen(false)}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="sos-dialog-title"
+            className={`w-full max-w-md p-6 shadow-xl ${glassPanelNested}`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2
+              id="sos-dialog-title"
+              className="font-frank text-lg font-bold text-slate-900"
             >
-              Dismiss
-            </button>
+              {t("hub.dialogTitle")}
+            </h2>
+            <p className="mt-3 text-sm leading-relaxed text-slate-700">
+              {t("hub.dialogBody")}
+            </p>
+            <div className="mt-6 flex flex-wrap justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setSosDialogOpen(false)}
+                className={`px-4 py-2.5 text-sm font-semibold ${btnSecondaryGlass}`}
+              >
+                {t("hub.dialogCancel")}
+              </button>
+              <button
+                type="button"
+                onClick={() => void confirmSos()}
+                className={`px-4 py-2.5 text-sm font-bold text-white ${btnPrimaryDark}`}
+              >
+                {t("hub.dialogConfirm")}
+              </button>
+            </div>
           </div>
         </div>
       )}
-    </main>
-
-      <CitizenBottomNav active="hub" />
     </>
   );
 }

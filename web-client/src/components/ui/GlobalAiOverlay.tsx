@@ -25,6 +25,7 @@ import {
   glassInput,
   glassPanel,
 } from "@/lib/vetoGlass";
+import { useTranslation } from "@/lib/i18n/LocaleProvider";
 import { useToastStore } from "@/store/useToastStore";
 
 type AiChatApiResponse = {
@@ -106,6 +107,7 @@ function ModeToggleButton({
 }
 
 export function GlobalAiOverlay() {
+  const { t, locale } = useTranslation();
   const isOpen = useAiChatStore((s) => s.isOpen);
   const messages = useAiChatStore((s) => s.messages);
   const isLoading = useAiChatStore((s) => s.isLoading);
@@ -132,6 +134,21 @@ export function GlobalAiOverlay() {
 
   const isAssistantActive = isOpen || isLoading;
 
+  const setAssistantMode = useCallback((m: AiAssistantMode) => {
+    if (m !== "vision") {
+      setVisionError(null);
+    }
+    setMode(m);
+  }, []);
+
+  const handleToggleChat = useCallback(() => {
+    if (isOpen) {
+      setAssistantMode("text");
+      setLastVisionAnalysis(null);
+    }
+    toggleChat();
+  }, [isOpen, setAssistantMode, toggleChat]);
+
   const captureAndAnalyze = useCallback(async () => {
     const video = videoRef.current;
     if (!video || video.videoWidth === 0 || visionBusy) return;
@@ -148,7 +165,7 @@ export function GlobalAiOverlay() {
       canvas.height = h;
       const ctx = canvas.getContext("2d");
       if (!ctx) {
-        pushToast("לא ניתן ללכוד פריים", "error");
+        pushToast(t("ai.errCannotCaptureFrame"), "error");
         return;
       }
       ctx.drawImage(video, 0, 0, w, h);
@@ -162,19 +179,19 @@ export function GlobalAiOverlay() {
           role: "assistant",
           content: result.analysis,
         });
-        pushToast("ניתוח Vision הושלם", "success");
+        pushToast(t("ai.toastVisionAnalyzed"), "success");
       } else {
         pushToast(result.error, "error");
       }
     } catch (e) {
       pushToast(
-        e instanceof Error ? e.message : "שגיאה בניתוח תמונה",
+        e instanceof Error ? e.message : t("ai.errImageAnalyze"),
         "error",
       );
     } finally {
       setVisionBusy(false);
     }
-  }, [addMessage, pushToast, visionBusy]);
+  }, [addMessage, pushToast, t, visionBusy]);
 
   const saveVisionToVault = useCallback(async () => {
     if (!lastVisionAnalysis?.trim() || vaultSaveBusy) return;
@@ -182,20 +199,20 @@ export function GlobalAiOverlay() {
     try {
       const res = await saveAiAnalysisAsFile(lastVisionAnalysis);
       if (res.success) {
-        pushToast("ניתוח נשמר לכספת", "success");
+        pushToast(t("ai.toastAnalysisSaved"), "success");
         setLastVisionAnalysis(null);
       } else {
         pushToast(res.error, "error");
       }
     } catch (e) {
       pushToast(
-        e instanceof Error ? e.message : "שגיאה בשמירה לכספת",
+        e instanceof Error ? e.message : t("ai.errVaultSave"),
         "error",
       );
     } finally {
       setVaultSaveBusy(false);
     }
-  }, [lastVisionAnalysis, pushToast, vaultSaveBusy]);
+  }, [lastVisionAnalysis, pushToast, t, vaultSaveBusy]);
 
   const scrollToBottom = useCallback(() => {
     const el = scrollRef.current;
@@ -215,20 +232,6 @@ export function GlobalAiOverlay() {
   }, [isOpen, mode]);
 
   useEffect(() => {
-    if (!isOpen) {
-      setMode("text");
-      setVisionError(null);
-      setLastVisionAnalysis(null);
-    }
-  }, [isOpen]);
-
-  useEffect(() => {
-    if (mode !== "vision") {
-      setVisionError(null);
-    }
-  }, [mode]);
-
-  useEffect(() => {
     if (!isOpen || mode !== "vision") {
       if (streamRef.current) {
         streamRef.current.getTracks().forEach((t) => t.stop());
@@ -241,6 +244,7 @@ export function GlobalAiOverlay() {
     }
 
     let cancelled = false;
+    let attachedVideo: HTMLVideoElement | null = null;
 
     (async () => {
       try {
@@ -255,13 +259,14 @@ export function GlobalAiOverlay() {
         streamRef.current = stream;
         const el = videoRef.current;
         if (el) {
+          attachedVideo = el;
           el.srcObject = stream;
           await el.play().catch(() => {});
         }
       } catch (e) {
         if (!cancelled) {
           setVisionError(
-            e instanceof Error ? e.message : "לא ניתן להפעיל את המצלמה",
+            e instanceof Error ? e.message : t("ai.cameraStartFail"),
           );
         }
       }
@@ -273,11 +278,11 @@ export function GlobalAiOverlay() {
         streamRef.current.getTracks().forEach((t) => t.stop());
         streamRef.current = null;
       }
-      if (videoRef.current) {
-        videoRef.current.srcObject = null;
+      if (attachedVideo) {
+        attachedVideo.srcObject = null;
       }
     };
-  }, [isOpen, mode]);
+  }, [isOpen, mode, t]);
 
   const send = useCallback(async () => {
     const text = draft.trim();
@@ -285,7 +290,7 @@ export function GlobalAiOverlay() {
 
     const token = getJwt();
     if (!token) {
-      setErrorBanner("Sign in to use the legal assistant.");
+      setErrorBanner(t("ai.signInBanner"));
       return;
     }
 
@@ -314,7 +319,7 @@ export function GlobalAiOverlay() {
         body: JSON.stringify({
           message: text,
           history,
-          lang: "he",
+          lang: locale,
         }),
       });
 
@@ -336,16 +341,16 @@ export function GlobalAiOverlay() {
       addMessage(assistantMessage);
     } catch (e) {
       const msg =
-        e instanceof Error ? e.message : "Something went wrong. Try again.";
+        e instanceof Error ? e.message : t("ai.errChatFallback");
       addMessage({
         id: newId(),
         role: "assistant",
-        content: `Sorry — ${msg}`,
+        content: `${t("ai.replySorryPrefix")}${msg}`,
       });
     } finally {
       setLoading(false);
     }
-  }, [addMessage, draft, isLoading, setLoading]);
+  }, [addMessage, draft, isLoading, locale, setLoading, t]);
 
   const onKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -361,13 +366,13 @@ export function GlobalAiOverlay() {
 
   const modeHint =
     mode === "text"
-      ? "מידע משפטי כללי — לא ייעוץ פרטני"
+      ? t("ai.modeHintText")
       : mode === "live"
-        ? "Gemini Live — אודיו בזמן אמת (בקרוב)"
-        : "VETO Vision — ניתוח ויזואלי (בקרוב)";
+        ? t("ai.modeHintLive")
+        : t("ai.modeHintVision");
 
   return (
-    <>
+    <div className="pointer-events-none fixed inset-0 z-50">
       <AnimatePresence>
         {!isOpen && (
           <motion.button
@@ -377,9 +382,9 @@ export function GlobalAiOverlay() {
             animate={{ opacity: 1, scale: 1 }}
             whileHover={{ scale: 1.08 }}
             whileTap={{ scale: 0.92 }}
-            onClick={toggleChat}
-            className="fixed bottom-8 start-8 z-50 flex h-16 w-16 items-center justify-center rounded-full border-2 border-white/30 bg-[#C5A059] text-slate-900 shadow-[0_0_30px_rgba(197,160,89,0.45)] focus:outline-none focus-visible:ring-4 focus-visible:ring-[#C5A059]/45"
-            aria-label="Open VETO AI Assistant"
+            onClick={handleToggleChat}
+            className="pointer-events-auto fixed bottom-8 start-8 flex h-16 w-16 items-center justify-center rounded-full border-2 border-white/30 bg-[#C5A059] text-slate-900 shadow-[0_0_30px_rgba(197,160,89,0.45)] focus:outline-none focus-visible:ring-4 focus-visible:ring-[#C5A059]/45"
+            aria-label={t("ai.openAssistant")}
           >
             <motion.span
               aria-hidden
@@ -406,7 +411,7 @@ export function GlobalAiOverlay() {
             key="ai-panel"
             role="dialog"
             aria-modal="false"
-            aria-label="VETO AI SIGNATURE"
+            aria-label={t("ai.title")}
             initial={{ opacity: 0, y: 24, scale: 0.96 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.96 }}
@@ -417,7 +422,7 @@ export function GlobalAiOverlay() {
                   ? "min(600px, calc(100dvh - 7rem))"
                   : "min(520px, calc(100dvh - 7rem))",
             }}
-            className={`fixed bottom-28 z-50 flex max-h-[calc(100dvh-6rem)] w-[min(calc(100%-2rem),450px)] max-w-[450px] flex-col overflow-hidden max-sm:inset-x-4 sm:start-8 sm:end-auto ${glassPanel} shadow-2xl`}
+            className={`pointer-events-auto fixed bottom-28 flex max-h-[calc(100dvh-6rem)] w-[min(calc(100%-2rem),450px)] max-w-[450px] flex-col overflow-hidden max-sm:inset-x-4 sm:start-8 sm:end-auto ${glassPanel} shadow-2xl`}
           >
             <header className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-b border-white/40 bg-white/25 px-3 py-3 backdrop-blur-md sm:gap-3 sm:px-4">
               <div className="flex min-w-0 flex-1 items-center gap-2 sm:flex-initial sm:gap-3">
@@ -427,7 +432,7 @@ export function GlobalAiOverlay() {
                 />
                 <div className="min-w-0">
                   <h2 className="font-frank text-sm font-black tracking-tight text-slate-900 sm:text-base">
-                    VETO AI SIGNATURE
+                    {t("ai.title")}
                   </h2>
                   <p className="truncate text-xs text-slate-600">{modeHint}</p>
                 </div>
@@ -436,26 +441,26 @@ export function GlobalAiOverlay() {
               <div
                 className="flex items-center gap-1 rounded-xl border border-white/40 bg-white/20 p-1 backdrop-blur-md"
                 role="group"
-                aria-label="בחירת מצב"
+                aria-label={t("ai.modePickerAria")}
               >
                 <ModeToggleButton
                   active={mode === "text"}
-                  onClick={() => setMode("text")}
-                  label="מצב טקסט"
+                  onClick={() => setAssistantMode("text")}
+                  label={t("ai.modeText")}
                 >
                   <MessageSquare className="h-[18px] w-[18px]" aria-hidden />
                 </ModeToggleButton>
                 <ModeToggleButton
                   active={mode === "live"}
-                  onClick={() => setMode("live")}
-                  label="מצב Live — קול"
+                  onClick={() => setAssistantMode("live")}
+                  label={t("ai.modeLiveVoice")}
                 >
                   <Mic className="h-[18px] w-[18px]" aria-hidden />
                 </ModeToggleButton>
                 <ModeToggleButton
                   active={mode === "vision"}
-                  onClick={() => setMode("vision")}
-                  label="מצב Vision — מצלמה"
+                  onClick={() => setAssistantMode("vision")}
+                  label={t("ai.modeVisionCamera")}
                 >
                   <Camera className="h-[18px] w-[18px]" aria-hidden />
                 </ModeToggleButton>
@@ -468,14 +473,14 @@ export function GlobalAiOverlay() {
                     onClick={clearChat}
                     className={`rounded-lg px-2 py-1 text-xs font-medium ${btnSecondaryGlass}`}
                   >
-                    Clear
+                    {t("ai.clear")}
                   </button>
                 )}
                 <button
                   type="button"
-                  onClick={toggleChat}
+                  onClick={handleToggleChat}
                   className={`rounded-full p-2 text-slate-700 hover:bg-white/30 ${btnSecondaryGlass} border-transparent`}
-                  aria-label="סגור"
+                  aria-label={t("ai.close")}
                 >
                   <X className="h-5 w-5" aria-hidden />
                 </button>
@@ -535,7 +540,7 @@ export function GlobalAiOverlay() {
                             className={`flex items-center gap-1.5 px-4 py-3 ${glassBubbleAssistant}`}
                             aria-live="polite"
                           >
-                            <span className="sr-only">Assistant is typing</span>
+                            <span className="sr-only">{t("ai.srTyping")}</span>
                             <span className="h-2 w-2 animate-bounce rounded-full bg-slate-700 [animation-delay:-0.2s]" />
                             <span className="h-2 w-2 animate-bounce rounded-full bg-slate-700 [animation-delay:-0.1s]" />
                             <span className="h-2 w-2 animate-bounce rounded-full bg-slate-700" />
@@ -575,10 +580,10 @@ export function GlobalAiOverlay() {
                     </div>
                     <div className="max-w-xs">
                       <p className="font-frank text-3xl font-black text-slate-900">
-                        Gemini Live
+                        {t("ai.geminiLive")}
                       </p>
                       <p className="mt-2 text-sm font-medium italic text-slate-600">
-                        מנתח אודיו בזמן אמת…
+                        {t("ai.liveAnalyzing")}
                       </p>
                     </div>
                   </motion.div>
@@ -615,7 +620,7 @@ export function GlobalAiOverlay() {
                         <>
                           <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
                             <span className="text-[10px] font-bold tracking-widest text-white/25 sm:text-xs">
-                              CAMERA FEED
+                              {t("ai.cameraFeed")}
                             </span>
                           </div>
 
@@ -633,7 +638,7 @@ export function GlobalAiOverlay() {
                           <div className="absolute bottom-3 end-3 flex items-center gap-2">
                             <span className="h-2.5 w-2.5 shrink-0 animate-pulse rounded-full bg-red-500" />
                             <span className="text-[10px] font-black tracking-widest text-white">
-                              VISION ANALYZING
+                              {t("ai.visionAnalyzing")}
                             </span>
                           </div>
                         </>
@@ -641,7 +646,7 @@ export function GlobalAiOverlay() {
                     </div>
 
                     <p className="rounded-xl border border-white/40 bg-white/25 px-3 py-2 text-center text-xs font-bold text-slate-700 backdrop-blur-md">
-                      כוון את המצלמה למסמך או לאירוע לניתוח מיידי
+                      {t("ai.visionHint")}
                     </p>
                     <button
                       type="button"
@@ -652,7 +657,7 @@ export function GlobalAiOverlay() {
                       className={`flex w-full items-center justify-center gap-2 py-3 text-sm font-bold ${btnPrimaryGold} disabled:cursor-not-allowed disabled:opacity-50 ${visionBusy ? "animate-pulse" : ""}`}
                     >
                       <ScanLine className="h-5 w-5 shrink-0" aria-hidden />
-                      {visionBusy ? "מנתח פריים…" : "לכוד ונתח מסמך"}
+                      {visionBusy ? t("ai.analyzingFrame") : t("ai.captureAnalyze")}
                     </button>
                     {lastVisionAnalysis?.trim() ? (
                       <button
@@ -661,7 +666,7 @@ export function GlobalAiOverlay() {
                         onClick={() => void saveVisionToVault()}
                         className={`flex w-full items-center justify-center gap-2 py-3 text-sm font-bold ${btnSecondaryGlass} disabled:cursor-not-allowed disabled:opacity-50`}
                       >
-                        {vaultSaveBusy ? "שומר לכספת…" : "שמור לכספת"}
+                        {vaultSaveBusy ? t("ai.savingVault") : t("ai.saveVault")}
                       </button>
                     ) : null}
                   </motion.div>
@@ -685,7 +690,7 @@ export function GlobalAiOverlay() {
                       value={draft}
                       onChange={(e) => setDraft(e.target.value)}
                       onKeyDown={onKeyDown}
-                      placeholder="שאל אותי משהו…"
+                      placeholder={t("ai.placeholder")}
                       rows={1}
                       disabled={isLoading}
                       className={`max-h-32 min-h-[44px] flex-1 resize-none ${glassInput} disabled:opacity-60`}
@@ -695,7 +700,7 @@ export function GlobalAiOverlay() {
                       onClick={() => void send()}
                       disabled={isLoading || !draft.trim()}
                       className={`flex h-12 w-12 shrink-0 items-center justify-center ${btnPrimaryGold} disabled:cursor-not-allowed disabled:opacity-50`}
-                      aria-label="שלח"
+                      aria-label={t("ai.send")}
                     >
                       <Send className="h-[18px] w-[18px]" aria-hidden />
                     </button>
@@ -706,6 +711,6 @@ export function GlobalAiOverlay() {
           </motion.div>
         )}
       </AnimatePresence>
-    </>
+    </div>
   );
 }
