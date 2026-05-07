@@ -18,6 +18,7 @@ import {
 import { getJwt, getRoleFromJwt } from "@/lib/authToken";
 import { useTranslation } from "@/lib/i18n/LocaleProvider";
 import { btnPrimaryGold, glassPanel, glassPanelNested } from "@/lib/vetoGlass";
+import { connectSocket, getSocket } from "@/lib/socketClient";
 import { useToastStore } from "@/store/useToastStore";
 
 type AblyAuthProceed = (
@@ -91,10 +92,67 @@ function parseSosAlertMessage(data: unknown): QueueItem | null {
   };
 }
 
-function parseClaimedMessage(data: unknown): string | null {
-  if (!data || typeof data !== "object") return null;
-  const id = (data as Record<string, unknown>).eventId;
+function extractEventIdFromPayload(payload: unknown): string | null {
+  if (!payload || typeof payload !== "object") return null;
+  const id = (payload as Record<string, unknown>).eventId;
   return typeof id === "string" ? id : null;
+}
+
+type AcceptCaseOutcome = "ok" | "taken" | "err" | "timeout";
+
+/**
+ * Winning accept uses Mongo dispatch (`accept_case`). Prisma/Ably row is synced after success.
+ */
+function acceptCaseViaSocket(eventId: string, timeoutMs: number): Promise<AcceptCaseOutcome> {
+  return new Promise((resolve) => {
+    let sock;
+    try {
+      sock = getSocket();
+    } catch {
+      sock = connectSocket();
+    }
+    if (!sock.connected) {
+      sock.connect();
+    }
+
+    const timer =
+      typeof window !== "undefined"
+        ? window.setTimeout(() => {
+            cleanup();
+            resolve("timeout");
+          }, timeoutMs)
+        : undefined;
+
+    const cleanup = () => {
+      if (timer !== undefined) window.clearTimeout(timer);
+      sock.off("case_accepted_confirmed", onOk);
+      sock.off("case_already_taken", onTaken);
+      sock.off("veto_error", onErr);
+    };
+
+    const onOk = (payload: unknown) => {
+      if (extractEventIdFromPayload(payload) === eventId) {
+        cleanup();
+        resolve("ok");
+      }
+    };
+    const onTaken = (payload: unknown) => {
+      if (extractEventIdFromPayload(payload) === eventId) {
+        cleanup();
+        resolve("taken");
+      }
+    };
+    const onErr = () => {
+      cleanup();
+      resolve("err");
+    };
+
+    sock.on("case_accepted_confirmed", onOk);
+    sock.on("case_already_taken", onTaken);
+    sock.on("veto_error", onErr);
+
+    sock.emit("accept_case", { eventId });
+  });
 }
 
 /**
@@ -194,7 +252,7 @@ export function SosQueue() {
 
     const onClaimed = (message: { name?: string; data?: unknown }) => {
       if (message.name !== SOS_CLAIMED_EVENT_NAME) return;
-      const id = parseClaimedMessage(message.data);
+      const id = extractEventIdFromPayload(message.data);
       if (id) remove(id);
     };
 
@@ -251,6 +309,21 @@ export function SosQueue() {
     if (claimingId) return;
     setClaimingId(eventId);
     try {
+      const outcome = await acceptCaseViaSocket(eventId, 20_000);
+      if (outcome === "taken") {
+        remove(eventId);
+        pushToast(t("hub.errCaseTaken"), "error");
+        return;
+      }
+      if (outcome === "timeout") {
+        pushToast(t("sosQueue.toastAcceptTimeout"), "error");
+        return;
+      }
+      if (outcome === "err") {
+        pushToast(t("sosQueue.toastAcceptFail"), "error");
+        return;
+      }
+
       const res = await claimSosEvent(eventId);
       if (res.success) {
         remove(eventId);

@@ -16,6 +16,7 @@ import {
   type UserProfile,
 } from "@/api/userApi";
 import { getJwt } from "@/lib/authToken";
+import { useTranslation } from "@/lib/i18n/LocaleProvider";
 
 export type SettingsContextValue = {
   profile: UserProfile | null;
@@ -47,6 +48,7 @@ export function useSettings(): SettingsContextValue {
 
 export function SettingsProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
+  const { t } = useTranslation();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
@@ -81,7 +83,9 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       router.replace("/login");
       return;
     }
-    void refresh();
+    queueMicrotask(() => {
+      void refresh();
+    });
   }, [router, refresh]);
 
   const save = useCallback(async () => {
@@ -100,7 +104,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
         },
       });
       setProfile(updated);
-      setMessage("Changes saved.");
+      setMessage(t("settings.saved"));
     } catch (e) {
       setError(e instanceof Error ? e.message : "Save failed");
     } finally {
@@ -112,7 +116,8 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     phone,
     notifySms,
     notifyPush,
-    profile?.settings,
+    profile,
+    t,
   ]);
 
   const value = useMemo<SettingsContextValue>(

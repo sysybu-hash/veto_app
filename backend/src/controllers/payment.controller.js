@@ -10,8 +10,12 @@
 const { createOrder, captureOrder } = require('../services/paypal.service');
 const User = require('../models/User');
 
-const FRONTEND_URL =
-  process.env.FRONTEND_URL || 'https://frontend-nine-silk-72.vercel.app';
+/** Public web app origin (no trailing slash) — PayPal return/cancel URLs */
+const WEB_APP_URL = (
+  process.env.WEB_APP_URL ||
+  process.env.FRONTEND_URL ||
+  'http://localhost:3000'
+).replace(/\/$/, '');
 
 // ── POST /api/payments/subscription ─────────────────────────
 exports.createSubscriptionOrder = async (req, res) => {
@@ -20,8 +24,8 @@ exports.createSubscriptionOrder = async (req, res) => {
       '5.50',
       'USD',
       'VETO Legal — מנוי חודשי ₪19.90',
-      `${FRONTEND_URL}/?payment=success&type=subscription`,
-      `${FRONTEND_URL}/?payment=cancel`,
+      `${WEB_APP_URL}/payments/return?type=subscription`,
+      `${WEB_APP_URL}/payments/return?cancel=1&type=subscription`,
     );
     res.json({ orderId, approveUrl });
   } catch (err) {
@@ -48,10 +52,17 @@ exports.createConsultationOrder = async (req, res) => {
 };
 
 // ── POST /api/payments/capture ───────────────────────────────
-// Body: { orderId: string, type: "subscription"|"consultation", userId?: string }
+// Body: { orderId: string, type: "subscription"|"consultation" }
+// Requires JWT — userId is always taken from the token (never from body).
 exports.capturePayment = async (req, res) => {
-  const { orderId, type, userId } = req.body;
+  const { orderId, type } = req.body;
   if (!orderId) return res.status(400).json({ error: 'orderId is required' });
+
+  const role = req.user?.role;
+  if (role !== 'user' && role !== 'admin') {
+    return res.status(403).json({ error: 'Only citizen accounts can complete this payment.' });
+  }
+  const userId = req.user.userId;
 
   try {
     const result = await captureOrder(orderId);

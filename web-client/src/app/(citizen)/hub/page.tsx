@@ -4,9 +4,14 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { triggerSosAlert } from "@/app/actions/sos";
 import { CitizenBottomNav } from "@/components/citizen/CitizenBottomNav";
+import { SpecializationDialog } from "@/components/dialogs/SpecializationDialog";
 import { btnPrimaryDark, btnSecondaryGlass, glassPanelNested } from "@/lib/vetoGlass";
 import { getJwt } from "@/lib/authToken";
 import { useTranslation } from "@/lib/i18n/LocaleProvider";
+import {
+  type SpecializationId,
+  UI_TO_BACKEND_SPECIALIZATION,
+} from "@/lib/specializations";
 import { connectSocket, getSocket } from "@/lib/socketClient";
 import {
   useEmergencyStore,
@@ -55,10 +60,13 @@ export default function CitizenHubPage() {
   const router = useRouter();
   const { t, locale } = useTranslation();
   const [sosDialogOpen, setSosDialogOpen] = useState(false);
+  const [specializationDialogOpen, setSpecializationDialogOpen] = useState(false);
+  const [callTypeDialogOpen, setCallTypeDialogOpen] = useState(false);
 
   const isSearching = useEmergencyStore((s) => s.isSearching);
   const lawyerFound = useEmergencyStore((s) => s.lawyerFound);
   const lawyerName = useEmergencyStore((s) => s.lawyerName);
+  const currentEventId = useEmergencyStore((s) => s.currentEventId);
   const statusMessage = useEmergencyStore((s) => s.statusMessage);
 
   const reset = useEmergencyStore((s) => s.reset);
@@ -97,7 +105,7 @@ export default function CitizenHubPage() {
         return;
       }
       setLawyerFound({ eventId, roomId, lawyerName: name });
-      sock.emit("citizen_chose_session", { eventId, callType: "video" as const });
+      setCallTypeDialogOpen(true);
     };
 
     const onSessionReady = (raw: unknown) => {
@@ -162,7 +170,7 @@ export default function CitizenHubPage() {
     };
   }, [router, setErrorMessage, setLawyerFound, setSessionReady, t]);
 
-  const handleSos = useCallback(() => {
+  const handleSos = useCallback((specializationId: SpecializationId) => {
     if (!getJwt()) {
       router.push("/login");
       return;
@@ -184,21 +192,37 @@ export default function CitizenHubPage() {
     }
 
     const emitStart = (lat: number, lng: number, accuracy?: number) => {
+      const onCreated = (raw: unknown) => {
+        sock.off("emergency_created", onCreated);
+        const payload =
+          raw && typeof raw === "object" ? (raw as Record<string, unknown>) : null;
+        const eid =
+          typeof payload?.eventId === "string" ? payload.eventId.trim() : "";
+        const loc =
+          typeof accuracy === "number" && Number.isFinite(accuracy)
+            ? { lat, lng, accuracy }
+            : { lat, lng };
+        if (!eid) {
+          console.warn("[hub] emergency_created without eventId");
+          return;
+        }
+        void triggerSosAlert({
+          eventId: eid,
+          location: loc,
+          stress_test: false,
+          urgency: "SOS",
+        }).then((r) => {
+          if (!r.success) {
+            console.warn("[hub] Ably SOS:", r.error);
+          }
+        });
+      };
+
+      sock.once("emergency_created", onCreated);
       sock.emit("start_veto", {
         location: { lat, lng },
         preferredLanguage: locale,
-      });
-      void triggerSosAlert({
-        location:
-          typeof accuracy === "number" && Number.isFinite(accuracy)
-            ? { lat, lng, accuracy }
-            : { lat, lng },
-        stress_test: false,
-        urgency: "SOS",
-      }).then((r) => {
-        if (!r.success) {
-          console.warn("[hub] Ably SOS:", r.error);
-        }
+        specialization: UI_TO_BACKEND_SPECIALIZATION[specializationId],
       });
     };
 
@@ -224,8 +248,31 @@ export default function CitizenHubPage() {
 
   const confirmSos = useCallback(() => {
     setSosDialogOpen(false);
-    handleSos();
-  }, [handleSos]);
+    setSpecializationDialogOpen(true);
+  }, []);
+
+  const selectSpecialization = useCallback(
+    (specializationId: SpecializationId) => {
+      setSpecializationDialogOpen(false);
+      handleSos(specializationId);
+    },
+    [handleSos],
+  );
+
+  const chooseCallType = useCallback((callType: SessionCallType) => {
+    const eventId = useEmergencyStore.getState().currentEventId;
+    if (!eventId) return;
+    const sock = (() => {
+      try {
+        return getSocket();
+      } catch {
+        return connectSocket();
+      }
+    })();
+    if (!sock.connected) sock.connect();
+    sock.emit("citizen_chose_session", { eventId, callType });
+    setCallTypeDialogOpen(false);
+  }, []);
 
   return (
     <>
@@ -315,6 +362,60 @@ export default function CitizenHubPage() {
                 className={`px-4 py-2.5 text-sm font-bold text-white ${btnPrimaryDark}`}
               >
                 {t("hub.dialogConfirm")}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <SpecializationDialog
+        isOpen={specializationDialogOpen}
+        onClose={() => setSpecializationDialogOpen(false)}
+        onSelect={selectSpecialization}
+      />
+
+      {callTypeDialogOpen && lawyerFound && currentEventId && (
+        <div
+          className="fixed inset-0 z-[95] flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm"
+          role="presentation"
+          onClick={() => setCallTypeDialogOpen(false)}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="call-type-dialog-title"
+            className={`w-full max-w-md p-6 shadow-xl ${glassPanelNested}`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2
+              id="call-type-dialog-title"
+              className="font-frank text-lg font-bold text-slate-900"
+            >
+              {t("dialog.chooseCallType")}
+            </h2>
+            <p className="mt-2 text-sm text-slate-700">{t("hub.callTypeHint")}</p>
+
+            <div className="mt-5 grid gap-2">
+              <button
+                type="button"
+                onClick={() => chooseCallType("video")}
+                className={`px-4 py-2.5 text-sm font-semibold ${btnSecondaryGlass}`}
+              >
+                {t("hub.callTypeVideo")}
+              </button>
+              <button
+                type="button"
+                onClick={() => chooseCallType("audio")}
+                className={`px-4 py-2.5 text-sm font-semibold ${btnSecondaryGlass}`}
+              >
+                {t("hub.callTypeAudio")}
+              </button>
+              <button
+                type="button"
+                onClick={() => chooseCallType("chat")}
+                className={`px-4 py-2.5 text-sm font-semibold ${btnSecondaryGlass}`}
+              >
+                {t("hub.callTypeChat")}
               </button>
             </div>
           </div>

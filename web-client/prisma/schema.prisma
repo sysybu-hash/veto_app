@@ -33,10 +33,13 @@ model Evidence {
   /// SHA-512 seal over content + timestamp + VETO_PRIVATE_KEY (see crypto-vault).
   digitalSeal String?
   isVerified  Boolean  @default(false)
+  /// When set, row was synced from Mongo EmergencyEvent (dedupe per owner).
+  sourceEmergencyEventId String?
   ownerId     String
   owner       User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   createdAt   DateTime @default(now())
 
+  @@unique([ownerId, sourceEmergencyEventId])
   @@index([ownerId])
 }
 

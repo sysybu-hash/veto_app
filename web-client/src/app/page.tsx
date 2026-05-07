@@ -1,10 +1,21 @@
 "use client";
 
 import Link from "next/link";
+import { LanguageSwitcher } from "@/components/i18n/LanguageSwitcher";
 import { useTranslation } from "@/lib/i18n/LocaleProvider";
 
 export default function Home() {
   const { t } = useTranslation();
+  const heroSubtitle = t("home.heroSubtitle");
+  const heroSubtitleBreakAt = heroSubtitle.indexOf(". ");
+  const heroSubtitleLine1 =
+    heroSubtitleBreakAt > -1
+      ? `${heroSubtitle.slice(0, heroSubtitleBreakAt + 1)}`
+      : heroSubtitle;
+  const heroSubtitleLine2 =
+    heroSubtitleBreakAt > -1
+      ? heroSubtitle.slice(heroSubtitleBreakAt + 2)
+      : "";
 
   const bento = [
     {
@@ -25,11 +36,14 @@ export default function Home() {
   ] as const;
 
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="flex min-h-screen flex-col bg-[#f6efe1]">
       <nav className="container mx-auto flex items-center justify-between px-6 py-8">
-        <div className="font-frank text-3xl font-black text-white drop-shadow-md">
-          VETO<span className="text-[#C5A059]">.</span>
-        </div>
+        <img
+          src="/veto-logo.svg"
+          alt="VETO"
+          className="h-9 w-auto select-none"
+          draggable={false}
+        />
 
         <div className="hidden items-center gap-8 font-bold text-white/90 md:flex">
           <a href="#" className="transition-all hover:text-[#C5A059]">
@@ -43,9 +57,10 @@ export default function Home() {
           </a>
         </div>
         <div className="flex items-center gap-4">
+          <LanguageSwitcher className="shrink-0" />
           <Link
             href="/login"
-            className="rounded-lg px-4 py-2 font-bold text-white transition-all hover:bg-white/10"
+            className="rounded-lg px-4 py-2 font-bold text-red-600 transition-all hover:bg-white/10"
           >
             {t("home.loginLawyers")}
           </Link>
@@ -68,7 +83,13 @@ export default function Home() {
           {t("home.heroLine2")}
         </h1>
         <p className="mb-10 max-w-3xl text-xl font-medium leading-relaxed text-slate-700 md:text-2xl">
-          {t("home.heroSubtitle")}
+          {heroSubtitleLine1}
+          {heroSubtitleLine2 ? (
+            <>
+              <br />
+              {heroSubtitleLine2}
+            </>
+          ) : null}
         </p>
 
         <Link
@@ -77,12 +98,6 @@ export default function Home() {
         >
           {t("home.cta")}
         </Link>
-        <div
-          className="mt-12 rounded-full border border-slate-900/10 bg-slate-900/5 px-6 py-2 text-sm font-black text-slate-900 backdrop-blur-sm"
-          role="status"
-        >
-          {t("home.footerNote")}
-        </div>
       </main>
 
       <section className="container mx-auto grid grid-cols-1 gap-6 px-6 pb-20 md:grid-cols-3">

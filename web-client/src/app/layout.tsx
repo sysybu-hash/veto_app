@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { Frank_Ruhl_Libre, Heebo } from "next/font/google";
-import { LanguageSwitcher } from "@/components/i18n/LanguageSwitcher";
 import { JwtCookieSync } from "@/components/providers/JwtCookieSync";
 import { LocaleProvider } from "@/lib/i18n/LocaleProvider";
 import { AiOverlayErrorBoundary } from "@/components/ui/AiOverlayErrorBoundary";
@@ -42,7 +41,6 @@ export default function RootLayout({
     >
       <body className="relative min-h-screen bg-transparent font-heebo text-slate-900 antialiased">
         <LocaleProvider>
-          <LanguageSwitcher />
           <JwtCookieSync />
           <ToastHost />
         <div className="fixed inset-0 -z-50 overflow-hidden" aria-hidden>

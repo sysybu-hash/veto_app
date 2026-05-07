@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import {
   approveLawyer,
   fetchEmergencyEvents,
@@ -99,6 +99,25 @@ function formatTs(iso: string): string {
   }
 }
 
+function formatAdminError(
+  e: unknown,
+  t: (key: string) => string,
+  fallbackKey: "admin.loadFailed" | "admin.approveFailed" | "admin.rejectFailed",
+): string {
+  const raw = e instanceof Error ? e.message : String(e);
+  if (
+    /failed to fetch|networkerror|load failed|connection refused|err_connection_refused/i.test(
+      raw,
+    )
+  ) {
+    return t("login.errNetwork");
+  }
+  if (/Request failed \(\d+\)/i.test(raw)) {
+    return t(fallbackKey);
+  }
+  return raw || t(fallbackKey);
+}
+
 function AdminDashboardSkeleton({ label }: { label: string }) {
   return (
     <div className="animate-pulse space-y-8" aria-busy="true" aria-label={label}>
@@ -135,7 +154,11 @@ const defaultStats: AdminStats = {
 export default function AdminDashboardPage() {
   const router = useRouter();
   const { t } = useTranslation();
-  const [mounted, setMounted] = useState(false);
+  const isClient = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false,
+  );
   const [tab, setTab] = useState<"lawyers" | "logs">("lawyers");
   const [pendingLawyers, setPendingLawyers] = useState<PendingLawyer[]>([]);
   const [logs, setLogs] = useState<SystemLog[]>([]);
@@ -165,9 +188,7 @@ export default function AdminDashboardPage() {
       );
       setLogs(mappedLogs);
     } catch (e) {
-      setLoadError(
-        e instanceof Error ? e.message : t("admin.loadFailed"),
-      );
+      setLoadError(formatAdminError(e, t, "admin.loadFailed"));
       setPendingLawyers([]);
       setLogs([]);
       setStats(defaultStats);
@@ -177,7 +198,7 @@ export default function AdminDashboardPage() {
   }, [t]);
 
   useEffect(() => {
-    setMounted(true);
+    if (!isClient) return;
     if (!getJwt()) {
       router.replace("/login");
       return;
@@ -186,8 +207,10 @@ export default function AdminDashboardPage() {
       router.replace("/hub");
       return;
     }
-    void loadDashboard();
-  }, [router, loadDashboard]);
+    queueMicrotask(() => {
+      void loadDashboard();
+    });
+  }, [isClient, router, loadDashboard]);
 
   const displayStats = useMemo(
     () => ({
@@ -206,9 +229,7 @@ export default function AdminDashboardPage() {
       await approveLawyer(lawyer.id);
       await loadDashboard();
     } catch (e) {
-      setActionError(
-        e instanceof Error ? e.message : t("admin.approveFailed"),
-      );
+      setActionError(formatAdminError(e, t, "admin.approveFailed"));
     } finally {
       setRowBusyId(null);
     }
@@ -221,15 +242,13 @@ export default function AdminDashboardPage() {
       await rejectLawyer(lawyer.id);
       await loadDashboard();
     } catch (e) {
-      setActionError(
-        e instanceof Error ? e.message : t("admin.rejectFailed"),
-      );
+      setActionError(formatAdminError(e, t, "admin.rejectFailed"));
     } finally {
       setRowBusyId(null);
     }
   };
 
-  if (!mounted) {
+  if (!isClient) {
     return (
       <div className="flex flex-1 items-center justify-center p-8 text-sm text-slate-500">
         {t("admin.loading")}
