@@ -46,11 +46,7 @@ export default function RootLayout({
           <JwtCookieSync />
           <ToastHost />
         <div className="fixed inset-0 -z-50 overflow-hidden" aria-hidden>
-          <div
-            className="absolute inset-0 scale-105 bg-cover bg-center bg-no-repeat"
-            style={{ backgroundImage: "url('/courtroom.jpg')" }}
-          />
-          <div className="absolute inset-0 bg-linear-to-b from-black/70 via-white/40 to-white/95" />
+          <div className="absolute inset-0 bg-linear-to-b from-slate-100 via-white to-white" />
         </div>
 
         <div className="relative z-10 min-h-screen">
