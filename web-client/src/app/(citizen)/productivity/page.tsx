@@ -15,6 +15,7 @@ import {
   parsePriorityFromRelatedType,
 } from "@/api/productivityApi";
 import { getJwt } from "@/lib/authToken";
+import { useTranslation } from "@/lib/i18n/LocaleProvider";
 import { CitizenBottomNav } from "@/components/citizen/CitizenBottomNav";
 import { CreateTaskModal } from "@/components/productivity/CreateTaskModal";
 import {
@@ -48,12 +49,39 @@ type Task = {
   done: boolean;
 };
 
-const statusLabels: Record<ContractStatus, string> = {
-  pending_signature: "Pending signature",
-  active: "Active",
-  expired: "Expired",
-  at_risk: "At risk",
-};
+function contractStatusLabel(
+  status: ContractStatus,
+  tr: (key: string) => string,
+): string {
+  switch (status) {
+    case "pending_signature":
+      return tr("productivity.statusPendingSignature");
+    case "active":
+      return tr("productivity.statusActive");
+    case "expired":
+      return tr("productivity.statusExpired");
+    case "at_risk":
+      return tr("productivity.statusAtRisk");
+    default:
+      return tr("productivity.statusActive");
+  }
+}
+
+function taskPriorityLabel(
+  p: TaskPriority,
+  tr: (key: string) => string,
+): string {
+  switch (p) {
+    case "high":
+      return tr("productivity.priorityHigh");
+    case "medium":
+      return tr("productivity.priorityMedium");
+    case "low":
+      return tr("productivity.priorityLow");
+    default:
+      return p;
+  }
+}
 
 function apiStatusToUi(s: ApiCitizenContractStatus): ContractStatus {
   switch (s) {
@@ -163,6 +191,7 @@ function CreateContractModal({
   onClose: () => void;
   onSave: (c: ContractFormPayload) => Promise<void>;
 }) {
+  const { t } = useTranslation();
   const [title, setTitle] = useState("");
   const [partyName, setPartyName] = useState("");
   const [status, setStatus] = useState<ContractStatus>("pending_signature");
@@ -184,16 +213,22 @@ function CreateContractModal({
   if (!open) return null;
 
   const save = async () => {
-    const t = title.trim();
-    const p = partyName.trim();
-    if (!t || !p || saving) return;
+    const titleTrimmed = title.trim();
+    const partyTrimmed = partyName.trim();
+    if (!titleTrimmed || !partyTrimmed || saving) return;
     setSaveErr(null);
     setSaving(true);
     try {
-      await onSave({ title: t, partyName: p, status });
+      await onSave({
+        title: titleTrimmed,
+        partyName: partyTrimmed,
+        status,
+      });
       onClose();
     } catch (e) {
-      setSaveErr(e instanceof Error ? e.message : "Save failed");
+      setSaveErr(
+        e instanceof Error ? e.message : t("productivity.saveContractFailed"),
+      );
     } finally {
       setSaving(false);
     }
@@ -219,10 +254,10 @@ function CreateContractModal({
             id="contract-modal-title"
             className="font-frank text-lg font-bold text-slate-900"
           >
-            New contract
+            {t("productivity.modalContractTitle")}
           </h2>
           <p className="mt-0.5 text-sm text-slate-600">
-            Add a contract you are negotiating or signing.
+            {t("productivity.modalContractSubtitle")}
           </p>
         </div>
         <div className="space-y-4 px-5 py-4">
@@ -231,7 +266,7 @@ function CreateContractModal({
               htmlFor="c-title"
               className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-600"
             >
-              Contract title
+              {t("productivity.contractTitleField")}
             </label>
             <input
               ref={titleRef}
@@ -247,7 +282,7 @@ function CreateContractModal({
               htmlFor="c-party"
               className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-600"
             >
-              Party name
+              {t("productivity.partyNameField")}
             </label>
             <input
               id="c-party"
@@ -255,7 +290,7 @@ function CreateContractModal({
               disabled={saving}
               onChange={(e) => setPartyName(e.target.value)}
               className={glassInput}
-              placeholder="e.g. Organization or person"
+              placeholder={t("productivity.partyNamePlaceholder")}
             />
           </div>
           <div>
@@ -263,7 +298,7 @@ function CreateContractModal({
               htmlFor="c-status"
               className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-600"
             >
-              Status
+              {t("productivity.contractStatusField")}
             </label>
             <select
               id="c-status"
@@ -272,10 +307,12 @@ function CreateContractModal({
               onChange={(e) => setStatus(e.target.value as ContractStatus)}
               className={glassInput}
             >
-              <option value="pending_signature">Pending signature</option>
-              <option value="active">Active</option>
-              <option value="expired">Expired</option>
-              <option value="at_risk">At risk</option>
+              <option value="pending_signature">
+                {t("productivity.statusPendingSignature")}
+              </option>
+              <option value="active">{t("productivity.statusActive")}</option>
+              <option value="expired">{t("productivity.statusExpired")}</option>
+              <option value="at_risk">{t("productivity.statusAtRisk")}</option>
             </select>
           </div>
           {saveErr && (
@@ -294,7 +331,7 @@ function CreateContractModal({
             disabled={saving}
             className={`flex-1 py-3 text-sm ${btnSecondaryGlass} disabled:cursor-not-allowed disabled:opacity-50`}
           >
-            Cancel
+            {t("common.cancel")}
           </button>
           <button
             type="button"
@@ -302,7 +339,7 @@ function CreateContractModal({
             disabled={!title.trim() || !partyName.trim() || saving}
             className={`flex-1 py-3 text-sm ${btnPrimaryGold} disabled:cursor-not-allowed disabled:opacity-50`}
           >
-            {saving ? "Saving…" : "Save contract"}
+            {saving ? t("settings.saving") : t("productivity.saveContract")}
           </button>
         </div>
       </div>
@@ -317,6 +354,7 @@ function ContractViewModal({
   contract: Contract | null;
   onClose: () => void;
 }) {
+  const { t } = useTranslation();
   if (!contract) return null;
   return (
     <div
@@ -339,12 +377,15 @@ function ContractViewModal({
           {contract.title}
         </h2>
         <div className={`mt-4 rounded-xl border border-white/40 p-4 ${glassPanelNested}`}>
-          <p className="text-sm text-slate-700">Party: {contract.partyName}</p>
+          <p className="text-sm text-slate-700">
+            {t("productivity.labelParty")}: {contract.partyName}
+          </p>
           <p className="mt-2 text-sm text-slate-700">
-            Status: {statusLabels[contract.status]}
+            {t("productivity.labelStatus")}:{" "}
+            {contractStatusLabel(contract.status, t)}
           </p>
           <p className="mt-2 text-xs text-slate-600">
-            Last updated {contract.updatedAt}
+            {t("productivity.viewLastUpdated")} {contract.updatedAt}
           </p>
         </div>
         <button
@@ -352,7 +393,7 @@ function ContractViewModal({
           onClick={onClose}
           className={`mt-6 w-full py-3 text-sm ${btnPrimaryDark}`}
         >
-          Close
+          {t("common.close")}
         </button>
       </div>
     </div>
@@ -360,8 +401,13 @@ function ContractViewModal({
 }
 
 function ProductivityLoadingSkeleton() {
+  const { t } = useTranslation();
   return (
-    <div className="animate-pulse space-y-4 p-4 sm:p-6" aria-busy="true" aria-label="Loading">
+    <div
+      className="animate-pulse space-y-4 p-4 sm:p-6"
+      aria-busy="true"
+      aria-label={t("productivity.loadingAria")}
+    >
       <div className="grid gap-4 sm:grid-cols-2">
         {[1, 2, 3, 4].map((i) => (
           <div
@@ -375,6 +421,7 @@ function ProductivityLoadingSkeleton() {
 }
 
 export default function ProductivityPage() {
+  const { t } = useTranslation();
   const router = useRouter();
   const [tab, setTab] = useState<"contracts" | "tasks">("contracts");
   const [contracts, setContracts] = useState<Contract[]>([]);
@@ -406,14 +453,14 @@ export default function ProductivityPage() {
       setTasks(apiTasks.map(mapApiTask));
     } catch (e) {
       setLoadError(
-        e instanceof Error ? e.message : "Could not load contracts and tasks",
+        e instanceof Error ? e.message : t("productivity.loadFailed"),
       );
       setContracts([]);
       setTasks([]);
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     if (!getJwt()) {
@@ -477,28 +524,30 @@ export default function ProductivityPage() {
       await loadData();
       setMenuOpenId(null);
     } catch (e) {
-      setActionError(e instanceof Error ? e.message : "Could not sign contract");
+      setActionError(
+        e instanceof Error ? e.message : t("productivity.signFailed"),
+      );
     } finally {
       setSigningContractId(null);
     }
   };
 
   const toggleTaskDone = async (id: string) => {
-    const t = tasks.find((x) => x.id === id);
-    if (!t || updatingTaskId) return;
-    const nextDone = !t.done;
+    const row = tasks.find((x) => x.id === id);
+    if (!row || updatingTaskId) return;
+    const nextDone = !row.done;
     setActionError(null);
     setUpdatingTaskId(id);
     try {
       const updated = await updateTaskStatus(id, nextDone);
       setTasks((prev) =>
-        prev.map((row) =>
-          row.id === id ? mapApiTask(updated) : row,
+        prev.map((r) =>
+          r.id === id ? mapApiTask(updated) : r,
         ),
       );
     } catch (e) {
       setActionError(
-        e instanceof Error ? e.message : "Could not update task status",
+        e instanceof Error ? e.message : t("productivity.updateTaskFailed"),
       );
     } finally {
       setUpdatingTaskId(null);
@@ -511,13 +560,13 @@ export default function ProductivityPage() {
         <div className="border-b border-white/40 bg-white/35 px-4 py-4 backdrop-blur-md sm:flex sm:items-center sm:justify-between sm:px-6">
           <div className="mb-4 sm:mb-0">
             <p className="text-xs font-semibold uppercase tracking-wider text-[#8a6d3d]">
-              Citizen workspace
+              {t("productivity.heroEyebrow")}
             </p>
             <h1 className="font-frank mt-1 text-xl font-bold tracking-tight text-slate-900 sm:text-2xl">
-              Contracts &amp; tasks
+              {t("productivity.heroTitle")}
             </h1>
             <p className="mt-1 text-sm text-slate-600">
-              Track agreements and your legal to-do list in one place.
+              {t("productivity.heroSubtitle")}
             </p>
           </div>
           <button
@@ -526,7 +575,9 @@ export default function ProductivityPage() {
             disabled={isLoading || !!loadError}
             className={`w-full px-4 py-3 text-sm disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto ${btnPrimaryGold}`}
           >
-            {tab === "contracts" ? "New contract" : "New task"}
+            {tab === "contracts"
+              ? t("productivity.newContract")
+              : t("productivity.newTask")}
           </button>
         </div>
 
@@ -541,7 +592,7 @@ export default function ProductivityPage() {
                   : "border-transparent text-slate-600 hover:text-slate-900"
               }`}
             >
-              Contracts
+              {t("productivity.tabContracts")}
             </button>
             <button
               type="button"
@@ -552,7 +603,7 @@ export default function ProductivityPage() {
                   : "border-transparent text-slate-600 hover:text-slate-900"
               }`}
             >
-              Tasks
+              {t("productivity.tabTasks")}
             </button>
           </div>
         </div>
@@ -570,7 +621,7 @@ export default function ProductivityPage() {
               onClick={() => void loadData()}
               className="shrink-0 rounded-lg bg-red-800 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700"
             >
-              Retry
+              {t("common.retry")}
             </button>
           </div>
         )}
@@ -589,7 +640,7 @@ export default function ProductivityPage() {
               <div className="grid gap-4 sm:grid-cols-2">
                 {sortedContracts.length === 0 && (
                   <p className="col-span-full py-10 text-center text-sm text-slate-600">
-                    No contracts yet. Create one with &quot;New contract&quot;.
+                    {t("productivity.contractEmpty")}
                   </p>
                 )}
                 {sortedContracts.map((c) => (
@@ -605,10 +656,12 @@ export default function ProductivityPage() {
                       <span
                         className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset backdrop-blur-sm ${statusStyles(c.status)}`}
                       >
-                        {statusLabels[c.status]}
+                        {contractStatusLabel(c.status, t)}
                       </span>
                     </div>
-                    <p className="mt-3 text-xs text-slate-500">Updated {c.updatedAt}</p>
+                    <p className="mt-3 text-xs text-slate-500">
+                      {t("productivity.updatedPrefix")} {c.updatedAt}
+                    </p>
                     <div
                       className="relative mt-4"
                       ref={menuOpenId === c.id ? menuRef : undefined}
@@ -621,7 +674,7 @@ export default function ProductivityPage() {
                         }}
                         className={`flex w-full items-center justify-center gap-2 py-2 text-sm font-medium ${btnSecondaryGlass}`}
                       >
-                        Actions
+                        {t("productivity.actions")}
                         <svg
                           className="h-4 w-4"
                           fill="none"
@@ -642,7 +695,7 @@ export default function ProductivityPage() {
                               setMenuOpenId(null);
                             }}
                           >
-                            View
+                            {t("productivity.view")}
                           </button>
                           <button
                             type="button"
@@ -653,7 +706,9 @@ export default function ProductivityPage() {
                             }
                             onClick={() => void signContract(c.id)}
                           >
-                            {signingContractId === c.id ? "Signing…" : "Sign"}
+                            {signingContractId === c.id
+                              ? t("productivity.signing")
+                              : t("productivity.sign")}
                           </button>
                         </div>
                       )}
@@ -667,47 +722,48 @@ export default function ProductivityPage() {
               <ul className="divide-y divide-white/30 overflow-hidden rounded-2xl border border-white/40 bg-white/45 backdrop-blur-xl">
                 {sortedTasks.length === 0 && (
                   <li className="px-4 py-10 text-center text-sm text-slate-600">
-                    No tasks yet. Add one with &quot;New task&quot;.
+                    {t("productivity.tasksEmpty")}
                   </li>
                 )}
-                {sortedTasks.map((t) => (
+                {sortedTasks.map((task) => (
                   <li
-                    key={t.id}
+                    key={task.id}
                     className={`flex flex-col gap-3 p-4 transition sm:flex-row sm:items-center sm:gap-4 ${
-                      t.done ? "bg-white/35" : "bg-white/20"
+                      task.done ? "bg-white/35" : "bg-white/20"
                     }`}
                   >
                     <label className="flex flex-1 cursor-pointer items-start gap-3">
                       <input
                         type="checkbox"
-                        checked={t.done}
-                        disabled={updatingTaskId === t.id}
-                        onChange={() => void toggleTaskDone(t.id)}
+                        checked={task.done}
+                        disabled={updatingTaskId === task.id}
+                        onChange={() => void toggleTaskDone(task.id)}
                         className="mt-1 h-4 w-4 shrink-0 rounded border-slate-400 text-[#C5A059] focus:ring-[#C5A059]/40 disabled:cursor-wait disabled:opacity-50"
                       />
                       <span className="min-w-0">
                         <span
                           className={`block font-medium text-slate-900 ${
-                            t.done ? "text-slate-500 line-through" : ""
+                            task.done ? "text-slate-500 line-through" : ""
                           }`}
                         >
-                          {t.title}
+                          {task.title}
                         </span>
-                        {t.description && (
+                        {task.description && (
                           <span className="mt-0.5 block text-sm text-slate-600">
-                            {t.description}
+                            {task.description}
                           </span>
                         )}
                       </span>
                     </label>
                     <div className="flex shrink-0 flex-wrap items-center gap-2 sm:flex-col sm:items-end">
                       <span
-                        className={`rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset backdrop-blur-sm ${priorityStyles(t.priority)}`}
+                        className={`rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset backdrop-blur-sm ${priorityStyles(task.priority)}`}
                       >
-                        {t.priority.charAt(0).toUpperCase() + t.priority.slice(1)}
+                        {taskPriorityLabel(task.priority, t)}
                       </span>
                       <span className="text-xs font-medium text-slate-600">
-                        Due {t.dueDate || "—"}
+                        {t("productivity.duePrefix")}{" "}
+                        {task.dueDate || "—"}
                       </span>
                     </div>
                   </li>
@@ -719,9 +775,9 @@ export default function ProductivityPage() {
       </div>
 
       <p className="mt-4 text-center text-xs text-slate-600">
-        Need files?{" "}
+        {t("productivity.vaultHint")}{" "}
         <Link href="/vault" className="font-semibold text-[#8a6d3d] hover:text-slate-900">
-          Open your vault
+          {t("productivity.vaultLink")}
         </Link>
       </p>
 

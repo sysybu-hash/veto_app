@@ -1,24 +1,29 @@
-import Link from "next/link";
+"use client";
 
-const bento = [
-  {
-    title: "התערבות SOS",
-    desc: "חיבור וידאו מיידי לעורך דין תורן שמקבל גישה למקום האירוע.",
-    tag: "EMERGENCY",
-  },
-  {
-    title: "כספת ראיות",
-    desc: "אחסון מוצפן בסטנדרט צבאי לכל המסמכים והראיות שלך.",
-    tag: "SECURITY",
-  },
-  {
-    title: "סנכרון חכם",
-    desc: "חיבור מלא ליומן גוגל ומעקב אחר משימות משפטיות.",
-    tag: "INTELLIGENCE",
-  },
-] as const;
+import Link from "next/link";
+import { useTranslation } from "@/lib/i18n/LocaleProvider";
 
 export default function Home() {
+  const { t } = useTranslation();
+
+  const bento = [
+    {
+      title: t("home.bentoEmergencyTitle"),
+      desc: t("home.bentoEmergencyDesc"),
+      tag: t("home.bentoEmergencyTag"),
+    },
+    {
+      title: t("home.bentoVaultTitle"),
+      desc: t("home.bentoVaultDesc"),
+      tag: t("home.bentoVaultTag"),
+    },
+    {
+      title: t("home.bentoSyncTitle"),
+      desc: t("home.bentoSyncDesc"),
+      tag: t("home.bentoSyncTag"),
+    },
+  ] as const;
+
   return (
     <div className="flex min-h-screen flex-col">
       <nav className="container mx-auto flex items-center justify-between px-6 py-8">
@@ -28,13 +33,13 @@ export default function Home() {
 
         <div className="hidden items-center gap-8 font-bold text-white/90 md:flex">
           <a href="#" className="transition-all hover:text-[#C5A059]">
-            המערכת
+            {t("home.navSystem")}
           </a>
           <a href="#" className="transition-all hover:text-[#C5A059]">
-            אבטחה ופרטיות
+            {t("home.navSecurity")}
           </a>
           <a href="#" className="transition-all hover:text-[#C5A059]">
-            צוות משפטי
+            {t("home.navTeam")}
           </a>
         </div>
         <div className="flex items-center gap-4">
@@ -42,42 +47,41 @@ export default function Home() {
             href="/login"
             className="rounded-lg px-4 py-2 font-bold text-white transition-all hover:bg-white/10"
           >
-            כניסת עורכי דין
+            {t("home.loginLawyers")}
           </Link>
           <Link
             href="/login"
             className="rounded-full bg-[#C5A059] px-6 py-2 font-black text-black shadow-lg transition-all hover:scale-105"
           >
-            אזור אישי
+            {t("home.personalArea")}
           </Link>
         </div>
       </nav>
 
       <main className="container mx-auto flex grow flex-col items-center justify-center px-6 py-20 text-center">
         <div className="mb-6 rounded-full border border-white/20 bg-white/10 px-4 py-1 text-xs font-black tracking-wide text-white backdrop-blur-md">
-          VETO OS 2.0 ✦ עכשיו באוויר
+          {t("home.badge")}
         </div>
         <h1 className="mb-8 font-frank text-7xl font-black leading-[0.9] tracking-tighter text-slate-900 drop-shadow-sm md:text-[120px]">
-          עורך דין
+          {t("home.heroLine1")}
           <br />
-          בלחיצת כפתור
+          {t("home.heroLine2")}
         </h1>
         <p className="mb-10 max-w-3xl text-xl font-medium leading-relaxed text-slate-700 md:text-2xl">
-          מערכת ההפעלה המשפטית הראשונה בישראל. הגנה מיידית, ניהול ראיות חכם
-          וסנכרון מלא לחיים הדיגיטליים שלך.
+          {t("home.heroSubtitle")}
         </p>
 
         <Link
           href="/login"
           className="rounded-2xl bg-slate-900 px-12 py-5 text-xl font-black text-white shadow-2xl transition-all hover:-translate-y-1 hover:bg-[#C5A059]"
         >
-          התחל הגנה עכשיו
+          {t("home.cta")}
         </Link>
         <div
           className="mt-12 rounded-full border border-slate-900/10 bg-slate-900/5 px-6 py-2 text-sm font-black text-slate-900 backdrop-blur-sm"
           role="status"
         >
-          השירות ניתן מלבד שבתות וחגים
+          {t("home.footerNote")}
         </div>
       </main>
 

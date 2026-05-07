@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { SosQueue } from "@/components/lawyer/SosQueue";
 import { getJwt, getRoleFromJwt } from "@/lib/authToken";
+import { useTranslation } from "@/lib/i18n/LocaleProvider";
 import { subscribeToPush } from "@/lib/pushClient";
 import { connectSocket, getSocket } from "@/lib/socketClient";
 import {
@@ -35,7 +36,7 @@ function parseEmergencyAlert(raw: unknown): LawyerActiveAlert | null {
         ? String(d.userId)
         : null;
   const userName =
-    typeof d.userName === "string" ? d.userName : "Unknown caller";
+    typeof d.userName === "string" ? d.userName : "";
   const language = typeof d.language === "string" ? d.language : "he";
   const timestamp =
     typeof d.timestamp === "string"
@@ -89,6 +90,7 @@ function parseSessionReadyPayload(data: unknown): SessionReadyState | null {
 
 export default function LawyerDashboardPage() {
   const router = useRouter();
+  const { t } = useTranslation();
   const [notifPermission, setNotifPermission] = useState<
     NotificationPermission | "unsupported"
   >("unsupported");
@@ -163,14 +165,14 @@ export default function LawyerDashboardPage() {
           "message" in raw &&
           typeof (raw as { message?: unknown }).message === "string"
             ? (raw as { message: string }).message
-            : "This case is no longer available.";
+            : t("lawyer.errCaseUnavailable");
         setLastError(msg);
       }
     };
 
     const onCaseAlreadyTaken = () => {
       setAccepting(false);
-      setLastError("Another lawyer accepted this case first.");
+      setLastError(t("lawyer.errAnotherAccepted"));
       clearAlert();
     };
 
@@ -182,7 +184,7 @@ export default function LawyerDashboardPage() {
         "message" in raw &&
         typeof (raw as { message?: unknown }).message === "string"
           ? (raw as { message: string }).message
-          : "Request failed.";
+          : t("lawyer.errRequestFailed");
       setLastError(msg);
     };
 
@@ -190,7 +192,7 @@ export default function LawyerDashboardPage() {
       const session = parseSessionReadyPayload(raw);
       if (!session) {
         setAccepting(false);
-        setLastError("Invalid session data from server.");
+        setLastError(t("lawyer.errInvalidSession"));
         return;
       }
       const channel = session.channelId;
@@ -221,6 +223,7 @@ export default function LawyerDashboardPage() {
     setActiveAlert,
     setLastError,
     setSessionReady,
+    t,
   ]);
 
   const handleAvailabilityChange = useCallback(
@@ -298,17 +301,17 @@ export default function LawyerDashboardPage() {
         <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-4 py-4 md:px-8">
           <div>
             <p className="text-xs font-semibold uppercase tracking-wider text-blue-600">
-              VETO Legal
+              {t("lawyer.vetoLegal")}
             </p>
             <h1 className="text-lg font-semibold text-slate-900 md:text-xl">
-              Lawyer dashboard
+              {t("lawyer.dashboardTitle")}
             </h1>
           </div>
           <div className="flex items-center gap-3">
             <span
               className={`hidden text-sm font-medium sm:inline ${isAvailable ? "text-emerald-600" : "text-slate-500"}`}
             >
-              {isAvailable ? "You are available" : "You are offline"}
+              {isAvailable ? t("lawyer.availabilityOn") : t("lawyer.availabilityOff")}
             </span>
             <button
               type="button"
@@ -326,12 +329,12 @@ export default function LawyerDashboardPage() {
               />
             </button>
             <span className="text-sm font-medium text-slate-700">
-              {isAvailable ? "Online" : "Offline"}
+              {isAvailable ? t("lawyer.online") : t("lawyer.offline")}
             </span>
             {isAvailable && notifPermission === "granted" && (
               <span
                 className="inline-flex max-w-[min(100%,11rem)] items-center gap-1 truncate text-xs font-medium text-emerald-700 sm:max-w-none"
-                title="Browser notifications enabled for SOS alerts"
+                title={t("lawyer.notificationsBrowserTitle")}
               >
                   <svg
                     className="h-4 w-4"
@@ -347,7 +350,7 @@ export default function LawyerDashboardPage() {
                       strokeLinejoin="round"
                     />
                   </svg>
-                  Notifications active
+                  {t("lawyer.notificationsActive")}
                 </span>
               )}
           </div>
@@ -366,28 +369,26 @@ export default function LawyerDashboardPage() {
               onClick={() => setLastError(null)}
               className="ms-3 font-semibold text-amber-800 underline"
             >
-              Dismiss
+              {t("lawyer.dismiss")}
             </button>
           </div>
         )}
 
         <div className="rounded-2xl border border-white/40 bg-white/60 p-6 shadow-sm backdrop-blur-xl md:p-8">
           <h2 className="font-frank text-base font-semibold text-slate-800">
-            Incoming requests
+            {t("lawyer.incomingTitle")}
           </h2>
           <p className="mt-1 text-sm text-slate-600">
-            Turn <strong>Online</strong> to receive emergency alerts. When a
-            citizen triggers SOS, the case appears below — accept to join the
-            Agora call when the session is ready.
+            {t("lawyer.incomingHelp")}
           </p>
 
           {!activeAlert && (
             <div className="mt-10 flex flex-col items-center justify-center rounded-xl border border-dashed border-white/50 bg-white/35 py-16 text-center backdrop-blur-md">
-              <p className="text-slate-600">No active emergency.</p>
+              <p className="text-slate-600">{t("lawyer.noEmergency")}</p>
               <p className="mt-2 max-w-md text-sm text-slate-500">
                 {isAvailable
-                  ? "Waiting for incoming SOS alerts…"
-                  : "Go online to receive alerts."}
+                  ? t("lawyer.waitingSos")
+                  : t("lawyer.goOnline")}
               </p>
             </div>
           )}
@@ -406,13 +407,13 @@ export default function LawyerDashboardPage() {
           <div className="w-full max-w-lg overflow-hidden rounded-2xl border-2 border-red-200/90 bg-white/70 shadow-2xl shadow-red-900/20 ring-4 ring-red-100/80 backdrop-blur-xl sm:max-w-xl">
             <div className="bg-gradient-to-r from-red-600 to-red-500 px-6 py-4">
               <p className="text-xs font-bold uppercase tracking-widest text-red-100">
-                SOS
+                {t("lawyer.modalSubtitle")}
               </p>
               <h2
                 id="incoming-emergency-title"
                 className="mt-1 text-2xl font-bold text-white md:text-3xl"
               >
-                Incoming emergency
+                {t("lawyer.modalTitle")}
               </h2>
               <p className="mt-1 text-sm text-red-100">{formattedTime}</p>
             </div>
@@ -420,25 +421,25 @@ export default function LawyerDashboardPage() {
               <div className="rounded-xl border border-white/40 bg-white/50 p-4 backdrop-blur-sm">
                 <dl className="grid gap-3 text-sm">
                   <div className="flex justify-between gap-4">
-                    <dt className="font-medium text-slate-500">Caller</dt>
+                    <dt className="font-medium text-slate-500">{t("lawyer.caller")}</dt>
                     <dd className="text-right font-semibold text-slate-900">
-                      {activeAlert.userName}
+                      {activeAlert.userName.trim() || t("common.unknown")}
                     </dd>
                   </div>
                   <div className="flex justify-between gap-4">
-                    <dt className="font-medium text-slate-500">Event ID</dt>
+                    <dt className="font-medium text-slate-500">{t("lawyer.eventId")}</dt>
                     <dd className="font-mono text-right text-xs text-slate-800">
                       {activeAlert.eventId}
                     </dd>
                   </div>
                   <div className="flex justify-between gap-4">
-                    <dt className="font-medium text-slate-500">Language</dt>
+                    <dt className="font-medium text-slate-500">{t("lawyer.language")}</dt>
                     <dd className="text-right text-slate-900">
                       {activeAlert.language}
                     </dd>
                   </div>
                   <div className="flex justify-between gap-4">
-                    <dt className="font-medium text-slate-500">Location</dt>
+                    <dt className="font-medium text-slate-500">{t("lawyer.location")}</dt>
                     <dd className="text-right text-slate-900">
                       {activeAlert.location.lat.toFixed(5)},{" "}
                       {activeAlert.location.lng.toFixed(5)}
@@ -452,11 +453,10 @@ export default function LawyerDashboardPage() {
                 onClick={handleAcceptCase}
                 className="w-full rounded-xl bg-blue-600 py-4 text-center text-lg font-bold text-white shadow-lg transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-70"
               >
-                {isAccepting ? "Accepting…" : "Accept case"}
+                {isAccepting ? t("lawyer.accepting") : t("lawyer.acceptCase")}
               </button>
               <p className="text-center text-xs text-slate-500">
-                After the citizen chooses video or audio, you will join the call
-                automatically.
+                {t("lawyer.afterCitizenChooses")}
               </p>
             </div>
           </div>

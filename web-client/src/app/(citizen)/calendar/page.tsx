@@ -11,6 +11,8 @@ import {
 import { CitizenBottomNav } from "@/components/citizen/CitizenBottomNav";
 import { CreateEventModal } from "@/components/calendar/CreateEventModal";
 import { getJwt } from "@/lib/authToken";
+import type { Locale } from "@/lib/i18n/types";
+import { useTranslation } from "@/lib/i18n/LocaleProvider";
 import {
   btnPrimaryGold,
   btnSecondaryGlass,
@@ -26,38 +28,56 @@ function combineDateTimeToIsoRange(dateStr: string, timeStr: string): {
   return { start: start.toISOString(), end: end.toISOString() };
 }
 
-const MOCK_EVENTS: ApiCalendarEvent[] = [
-  {
-    _id: "mock-1",
-    title: "Consultation — contract review",
-    type: "meeting",
-    start: new Date(Date.now() + 86400000).toISOString(),
-    end: new Date(Date.now() + 86400000 + 3600000).toISOString(),
-    notes: "Bring signed draft and ID.",
-  },
-  {
-    _id: "mock-2",
-    title: "Small claims hearing (placeholder)",
-    type: "hearing",
-    start: new Date(Date.now() + 86400000 * 3).toISOString(),
-    end: new Date(Date.now() + 86400000 * 3 + 7200000).toISOString(),
-    notes: "Example entry when your calendar is empty.",
-  },
-];
+function localeBcp47(locale: Locale): string {
+  switch (locale) {
+    case "he":
+      return "he-IL";
+    case "ru":
+      return "ru-RU";
+    default:
+      return "en-US";
+  }
+}
 
-function formatEventWhen(ev: ApiCalendarEvent): { dateLine: string; timeLine: string } {
+function buildMockEvents(tr: (key: string) => string): ApiCalendarEvent[] {
+  return [
+    {
+      _id: "mock-1",
+      title: tr("calendar.mockEvent1Title"),
+      type: "meeting",
+      start: new Date(Date.now() + 86400000).toISOString(),
+      end: new Date(Date.now() + 86400000 + 3600000).toISOString(),
+      notes: tr("calendar.mockEvent1Notes"),
+    },
+    {
+      _id: "mock-2",
+      title: tr("calendar.mockEvent2Title"),
+      type: "hearing",
+      start: new Date(Date.now() + 86400000 * 3).toISOString(),
+      end: new Date(Date.now() + 86400000 * 3 + 7200000).toISOString(),
+      notes: tr("calendar.mockEvent2Notes"),
+    },
+  ];
+}
+
+function formatEventWhen(
+  ev: ApiCalendarEvent,
+  locale: Locale,
+): { dateLine: string; timeLine: string } {
+  const tag = localeBcp47(locale);
   const start = new Date(ev.start);
   const end = new Date(ev.end);
-  const dateLine = start.toLocaleDateString(undefined, {
+  const dateLine = start.toLocaleDateString(tag, {
     weekday: "short",
     month: "short",
     day: "numeric",
-    year: start.getFullYear() !== new Date().getFullYear() ? "numeric" : undefined,
+    year:
+      start.getFullYear() !== new Date().getFullYear() ? "numeric" : undefined,
   });
-  const timeLine = `${start.toLocaleTimeString(undefined, {
+  const timeLine = `${start.toLocaleTimeString(tag, {
     hour: "numeric",
     minute: "2-digit",
-  })} – ${end.toLocaleTimeString(undefined, {
+  })} – ${end.toLocaleTimeString(tag, {
     hour: "numeric",
     minute: "2-digit",
   })}`;
@@ -70,6 +90,7 @@ function daysInCalendarMonth(year: number, month: number): number {
 
 /** Transparent grid: `border-white/20`, selected / event days use gold glow. */
 function CalendarMonthGrid({ events }: { events: ApiCalendarEvent[] }) {
+  const { t, locale } = useTranslation();
   const [cursor, setCursor] = useState(() => new Date());
   const [selectedDay, setSelectedDay] = useState<number | null>(() => {
     const t = new Date();
@@ -104,7 +125,7 @@ function CalendarMonthGrid({ events }: { events: ApiCalendarEvent[] }) {
   for (let i = 0; i < firstDow; i++) cells.push(null);
   for (let d = 1; d <= dim; d++) cells.push(d);
 
-  const monthLabel = cursor.toLocaleDateString(undefined, {
+  const monthLabel = cursor.toLocaleDateString(localeBcp47(locale), {
     month: "long",
     year: "numeric",
   });
@@ -114,7 +135,15 @@ function CalendarMonthGrid({ events }: { events: ApiCalendarEvent[] }) {
     setSelectedDay(null);
   };
 
-  const weekdayLabels = ["א", "ב", "ג", "ד", "ה", "ו", "ש"];
+  const weekdayLabels = [
+    t("calendar.daySun"),
+    t("calendar.dayMon"),
+    t("calendar.dayTue"),
+    t("calendar.dayWed"),
+    t("calendar.dayThu"),
+    t("calendar.dayFri"),
+    t("calendar.daySat"),
+  ];
 
   return (
     <section className={`${glassPanel} p-4`}>
@@ -123,7 +152,7 @@ function CalendarMonthGrid({ events }: { events: ApiCalendarEvent[] }) {
           type="button"
           onClick={() => shiftMonth(-1)}
           className={`${btnSecondaryGlass} px-3 py-1.5 text-xs`}
-          aria-label="Previous month"
+          aria-label={t("calendar.prevMonthAria")}
         >
           ‹
         </button>
@@ -134,7 +163,7 @@ function CalendarMonthGrid({ events }: { events: ApiCalendarEvent[] }) {
           type="button"
           onClick={() => shiftMonth(1)}
           className={`${btnSecondaryGlass} px-3 py-1.5 text-xs`}
-          aria-label="Next month"
+          aria-label={t("calendar.nextMonthAria")}
         >
           ›
         </button>
@@ -179,6 +208,7 @@ function CalendarMonthGrid({ events }: { events: ApiCalendarEvent[] }) {
 }
 
 export default function CitizenCalendarPage() {
+  const { t, locale } = useTranslation();
   const router = useRouter();
   const [events, setEvents] = useState<ApiCalendarEvent[]>([]);
   const [loading, setLoading] = useState(true);
@@ -192,24 +222,25 @@ export default function CitizenCalendarPage() {
     if (!getJwt()) return;
     setLoading(true);
     setLoadError(null);
+    const mocks = buildMockEvents(t);
     try {
       const list = await fetchUpcomingEvents();
       if (list.length === 0) {
-        setEvents(MOCK_EVENTS);
+        setEvents(mocks);
         setUsingMock(true);
       } else {
         setEvents(list);
         setUsingMock(false);
       }
     } catch (e) {
-      const msg = e instanceof Error ? e.message : "Failed to load calendar";
+      const msg = e instanceof Error ? e.message : t("calendar.loadFailed");
       setLoadError(msg);
-      setEvents(MOCK_EVENTS);
+      setEvents(mocks);
       setUsingMock(true);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     if (!getJwt()) {
@@ -226,7 +257,9 @@ export default function CitizenCalendarPage() {
       const { url } = await getGoogleAuthUrl();
       window.location.href = url;
     } catch (e) {
-      setSyncError(e instanceof Error ? e.message : "Could not start Google sync");
+      setSyncError(
+        e instanceof Error ? e.message : t("calendar.syncFailed"),
+      );
       setSyncBusy(false);
     }
   };
@@ -238,10 +271,10 @@ export default function CitizenCalendarPage() {
       <main className="mx-auto flex w-full max-w-lg flex-1 flex-col gap-6 px-4 py-8 pb-28">
         <div>
           <h1 className="font-frank text-2xl font-bold tracking-tight text-slate-900">
-            My Legal Calendar
+            {t("calendar.heroTitle")}
           </h1>
           <p className="mt-1 text-sm text-slate-600">
-            Hearings, meetings, and deadlines in one place.
+            {t("calendar.heroSubtitle")}
           </p>
         </div>
 
@@ -262,14 +295,14 @@ export default function CitizenCalendarPage() {
                 d="M19.5 12h-15v-3h15v3zm0 4.5h-15v-3h15v3zm0-9h-15V4.5h15V7.5z"
               />
             </svg>
-            {syncBusy ? "Opening Google…" : "Sync with Google Calendar"}
+            {syncBusy ? t("calendar.openingGoogle") : t("calendar.syncGoogle")}
           </button>
           <button
             type="button"
             onClick={() => setModalOpen(true)}
             className={`inline-flex w-full items-center justify-center px-4 py-3.5 text-sm sm:w-auto sm:shrink-0 ${btnPrimaryGold}`}
           >
-            New Event
+            {t("calendar.newEvent")}
           </button>
         </div>
         {syncError && (
@@ -279,8 +312,12 @@ export default function CitizenCalendarPage() {
         )}
         {usingMock && (
           <p className="rounded-xl border border-amber-300/60 bg-white/50 px-3 py-2 text-xs text-amber-900 backdrop-blur-xl">
-            Showing sample events until your calendar has entries
-            {loadError ? ` (API: ${loadError})` : ""}.
+            {loadError
+              ? t("calendar.mockEventsBannerDetail").replace(
+                  "{detail}",
+                  loadError,
+                )
+              : t("calendar.mockEventsBanner")}
           </p>
         )}
 
@@ -288,7 +325,7 @@ export default function CitizenCalendarPage() {
 
         <section className={`${glassPanel} p-4`}>
           <h2 className="mb-3 font-frank text-xs font-bold uppercase tracking-wider text-slate-900">
-            Upcoming
+            {t("calendar.upcoming")}
           </h2>
           {loading ? (
             <ul className="space-y-3">
@@ -301,12 +338,12 @@ export default function CitizenCalendarPage() {
             </ul>
           ) : sortedDisplay.length === 0 ? (
             <p className="py-8 text-center text-sm text-slate-600">
-              No upcoming events.
+              {t("calendar.noUpcoming")}
             </p>
           ) : (
             <ul className="space-y-3">
               {sortedDisplay.map((ev) => {
-                const { dateLine, timeLine } = formatEventWhen(ev);
+                const { dateLine, timeLine } = formatEventWhen(ev, locale);
                 return (
                   <li
                     key={ev._id}
