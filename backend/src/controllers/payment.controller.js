@@ -30,6 +30,12 @@ exports.createSubscriptionOrder = async (req, res) => {
     res.json({ orderId, approveUrl });
   } catch (err) {
     console.error('[payment] subscription create:', err.message);
+    if (err.code === 'PAYPAL_CONFIG_MISSING') {
+      return res.status(503).json({
+        success: false,
+        message: err.message,
+      });
+    }
     res.status(500).json({ error: err.message });
   }
 };
@@ -41,12 +47,18 @@ exports.createConsultationOrder = async (req, res) => {
       '13.90',
       'USD',
       'VETO Legal — ייעוץ עורך דין 15 דקות ₪50',
-      `${FRONTEND_URL}/?payment=success&type=consultation`,
-      `${FRONTEND_URL}/?payment=cancel`,
+      `${WEB_APP_URL}/payments/return?type=consultation`,
+      `${WEB_APP_URL}/payments/return?cancel=1&type=consultation`,
     );
     res.json({ orderId, approveUrl });
   } catch (err) {
     console.error('[payment] consultation create:', err.message);
+    if (err.code === 'PAYPAL_CONFIG_MISSING') {
+      return res.status(503).json({
+        success: false,
+        message: err.message,
+      });
+    }
     res.status(500).json({ error: err.message });
   }
 };
@@ -84,6 +96,12 @@ exports.capturePayment = async (req, res) => {
     });
   } catch (err) {
     console.error('[payment] capture:', err.message);
+    if (err.code === 'PAYPAL_CONFIG_MISSING') {
+      return res.status(503).json({
+        success: false,
+        message: err.message,
+      });
+    }
     res.status(500).json({ error: err.message });
   }
 };

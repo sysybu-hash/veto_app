@@ -9,10 +9,11 @@
 
 const express    = require('express');
 const router     = express.Router();
-const { protect } = require('../middleware/auth.middleware');
+const { protect, requireValidMongoUserId } = require('../middleware/auth.middleware');
 const User       = require('../models/User');
 
 router.use(protect);
+router.use(requireValidMongoUserId);
 
 // GET /api/users/me
 router.get('/me', async (req, res, next) => {

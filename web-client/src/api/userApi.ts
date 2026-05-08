@@ -1,4 +1,4 @@
-import { apiUrl, authJsonHeaders } from "@/api/apiClient";
+import { apiUrl, authFetch } from "@/api/apiClient";
 
 /**
  * Profile API: Express exposes `GET` / `PUT` `/api/users/me` (not `/profile`).
@@ -44,9 +44,8 @@ export type UpdateProfilePayload = {
 };
 
 export async function fetchProfile(): Promise<UserProfile> {
-  const res = await fetch(apiUrl("/api/users/me"), {
+  const res = await authFetch(apiUrl("/api/users/me"), {
     method: "GET",
-    headers: authJsonHeaders(),
   });
   if (!res.ok) {
     throw new Error(await parseJsonError(res));
@@ -61,9 +60,8 @@ export async function fetchProfile(): Promise<UserProfile> {
 export async function updateProfile(
   payload: UpdateProfilePayload,
 ): Promise<UserProfile> {
-  const res = await fetch(apiUrl("/api/users/me"), {
+  const res = await authFetch(apiUrl("/api/users/me"), {
     method: "PUT",
-    headers: authJsonHeaders(),
     body: JSON.stringify(payload),
   });
   if (!res.ok) {

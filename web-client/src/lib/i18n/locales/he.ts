@@ -179,6 +179,8 @@ export const he: Dict = {
     language: "שפת ממשק מועדפת",
     done: "סיום והמשך",
     skipHint: "אפשר לעדכן בהגדרות בכל עת.",
+    errSession:
+      "ההפעלה פגה או לא תקינה. התחברו שוב כדי להמשיך.",
   },
   payments: {
     returnTitle: "תשלום",
@@ -386,6 +388,8 @@ export const he: Dict = {
     tabContracts: "חוזים",
     tabTasks: "משימות",
     loadFailed: "לא ניתן לטעון חוזים ומשימות",
+    errAuth: "התחברו מחדש כדי לטעון את הנתונים.",
+    errForbidden: "אזור זה מיועד לאזרחים בלבד.",
     saveContractFailed: "השמירה נכשלה",
     signFailed: "לא ניתן לחתום על החוזה",
     updateTaskFailed: "לא ניתן לעדכן את סטטוס המשימה",
@@ -513,6 +517,8 @@ export const he: Dict = {
     billingSubscribeCta: "רכישת מנוי (PayPal)",
     billingRefresh: "רענון מצב",
     billingConsultHint: "ייעוצים בתשלום נפרד — יוזמו מהמוצר בהמשך.",
+    errRateLimited:
+      "יותר מדי בקשות לשרת בפרק זמן קצר. המתינו כמה שניות ונסו שוב.",
   },
   ai: {
     title: "VETO AI SIGNATURE",

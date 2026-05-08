@@ -6,6 +6,7 @@ import { LocaleProvider } from "@/lib/i18n/LocaleProvider";
 import { AiOverlayErrorBoundary } from "@/components/ui/AiOverlayErrorBoundary";
 import { GlobalAiOverlay } from "@/components/ui/GlobalAiOverlay";
 import { ToastHost } from "@/components/ui/ToastHost";
+import { UniversalNav } from "@/components/navigation/UniversalNav";
 import "./globals.css";
 
 const heebo = Heebo({
@@ -47,8 +48,11 @@ export default function RootLayout({
           <div className="absolute inset-0 bg-linear-to-b from-slate-100 via-white to-white" />
         </div>
 
-        <div className="relative z-10 min-h-screen">
-          {children}
+        <div className="relative z-10 flex min-h-screen flex-col">
+          <UniversalNav />
+          <div className="flex min-h-0 flex-1 flex-col">
+            {children}
+          </div>
         </div>
         <AiOverlayErrorBoundary>
           <GlobalAiOverlay />

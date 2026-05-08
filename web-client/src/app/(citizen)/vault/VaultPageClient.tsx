@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { EvidenceDTO } from "@/app/actions/vault";
@@ -17,6 +18,7 @@ import {
   glassCard,
   glassList,
 } from "@/lib/vetoGlass";
+import { Wand2 } from "lucide-react";
 
 type VaultFolder = VaultFolderOption & {
   description: string;
@@ -151,8 +153,11 @@ function VaultLoadingSkeleton({ label }: { label: string }) {
 
 export function VaultPageClient({
   initialEvidence,
+  adminContext = false,
 }: {
   initialEvidence: EvidenceDTO[];
+  /** When true, opened from /admin/vault — no citizen bottom nav. */
+  adminContext?: boolean;
 }) {
   const router = useRouter();
   const { t } = useTranslation();
@@ -275,17 +280,31 @@ export function VaultPageClient({
 
   const defaultUploadFolderId = folders[0]?.id ?? "";
 
+  const bottomPad = adminContext ? "pb-10" : "pb-28";
+
   if (isHydrating) {
     return (
-      <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col px-4 pb-28 pt-8 md:px-8">
+      <div
+        className={`mx-auto flex w-full max-w-5xl flex-1 flex-col px-4 pt-8 md:px-8 ${bottomPad}`}
+      >
         <VaultLoadingSkeleton label={t("vault.loadingAria")} />
-        <CitizenBottomNav active="vault" />
+        {!adminContext ? <CitizenBottomNav active="vault" /> : null}
       </div>
     );
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col px-4 pb-28 pt-8 md:px-8">
+    <div
+      className={`mx-auto flex w-full max-w-5xl flex-1 flex-col px-4 pt-8 md:px-8 ${bottomPad}`}
+    >
+      {adminContext ? (
+        <Link
+          href="/admin/dashboard"
+          className="mb-4 inline-block text-sm font-semibold text-[#C5A059] hover:underline"
+        >
+          ← מרכז שליטה
+        </Link>
+      ) : null}
       <header className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="font-frank text-2xl font-bold tracking-tight text-slate-900 md:text-3xl">
@@ -298,7 +317,7 @@ export function VaultPageClient({
             </p>
           )}
         </div>
-        <div className="flex flex-col gap-2 sm:items-end">
+        <div className="flex w-full flex-col gap-3 sm:w-auto sm:items-end">
           <button
             type="button"
             disabled={syncBusy || !!loadError}
@@ -307,28 +326,37 @@ export function VaultPageClient({
           >
             {syncBusy ? t("vault.syncSosBusy") : t("vault.syncSos")}
           </button>
-          <button
-            type="button"
-            disabled={!!loadError}
-            onClick={() => setUploadOpen(true)}
-            className={`inline-flex items-center justify-center gap-2 px-5 py-3 text-sm ${btnPrimaryGold} disabled:cursor-not-allowed disabled:opacity-50`}
-          >
-          <svg
-            className="h-5 w-5"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth={2}
-            viewBox="0 0 24 24"
-            aria-hidden
-          >
-            <path
-              d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5-5 5 5M12 5v12"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-          Upload file
-        </button>
+          <div className="flex w-full flex-col gap-2 sm:flex-row sm:flex-wrap sm:justify-end">
+            <Link
+              href="/vault/generator"
+              className="inline-flex min-h-[3.25rem] flex-1 items-center justify-center gap-2.5 rounded-2xl bg-gradient-to-br from-slate-900 via-slate-800 to-[#3d3428] px-6 py-4 text-base font-semibold text-white shadow-[0_14px_44px_rgba(15,23,42,0.38)] ring-2 ring-[#C5A059]/40 transition hover:from-slate-800 hover:to-[#4a3f30] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#C5A059] sm:flex-initial sm:min-w-[260px]"
+            >
+              <Wand2 className="h-6 w-6 shrink-0" aria-hidden />
+              יצירת מסמך חכם (AI)
+            </Link>
+            <button
+              type="button"
+              disabled={!!loadError}
+              onClick={() => setUploadOpen(true)}
+              className={`inline-flex min-h-[3.25rem] flex-1 items-center justify-center gap-2 px-6 py-4 text-base font-semibold ${btnPrimaryGold} disabled:cursor-not-allowed disabled:opacity-50 sm:flex-initial`}
+            >
+              <svg
+                className="h-6 w-6 shrink-0"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={2}
+                viewBox="0 0 24 24"
+                aria-hidden
+              >
+                <path
+                  d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5-5 5 5M12 5v12"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+              Upload file
+            </button>
+          </div>
         </div>
       </header>
 
@@ -501,7 +529,7 @@ export function VaultPageClient({
         }}
       />
 
-      <CitizenBottomNav active="vault" />
+      {!adminContext ? <CitizenBottomNav active="vault" /> : null}
     </div>
   );
 }

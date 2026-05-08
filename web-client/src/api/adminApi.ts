@@ -1,4 +1,4 @@
-import { apiUrl, authJsonHeaders } from "@/api/apiClient";
+import { apiUrl, authFetch } from "@/api/apiClient";
 
 const BASE = "/api/admin";
 
@@ -55,9 +55,8 @@ async function readErrorMessage(res: Response): Promise<string> {
  * GET /api/admin/lawyers/pending — `{ lawyers: [...] }`
  */
 export async function fetchPendingLawyers(): Promise<ApiPendingLawyer[]> {
-  const res = await fetch(apiUrl(`${BASE}/lawyers/pending`), {
+  const res = await authFetch(apiUrl(`${BASE}/lawyers/pending`), {
     method: "GET",
-    headers: authJsonHeaders(),
   });
   if (!res.ok) {
     throw new Error(await readErrorMessage(res));
@@ -77,11 +76,10 @@ export async function fetchPendingLawyers(): Promise<ApiPendingLawyer[]> {
  * PUT /api/admin/lawyers/:id/approve — backend sets `is_approved: true`
  */
 export async function approveLawyer(lawyerId: string): Promise<void> {
-  const res = await fetch(
+  const res = await authFetch(
     apiUrl(`${BASE}/lawyers/${encodeURIComponent(lawyerId)}/approve`),
     {
       method: "PUT",
-      headers: authJsonHeaders(),
       body: JSON.stringify({}),
     },
   );
@@ -94,11 +92,10 @@ export async function approveLawyer(lawyerId: string): Promise<void> {
  * DELETE /api/admin/lawyers/:id/reject — removes pending lawyer record
  */
 export async function rejectLawyer(lawyerId: string): Promise<void> {
-  const res = await fetch(
+  const res = await authFetch(
     apiUrl(`${BASE}/lawyers/${encodeURIComponent(lawyerId)}/reject`),
     {
       method: "DELETE",
-      headers: authJsonHeaders(),
     },
   );
   if (!res.ok) {
@@ -110,9 +107,8 @@ export async function rejectLawyer(lawyerId: string): Promise<void> {
  * GET /api/admin/stats
  */
 export async function fetchSystemStats(): Promise<AdminStats> {
-  const res = await fetch(apiUrl(`${BASE}/stats`), {
+  const res = await authFetch(apiUrl(`${BASE}/stats`), {
     method: "GET",
-    headers: authJsonHeaders(),
   });
   if (!res.ok) {
     throw new Error(await readErrorMessage(res));
@@ -138,9 +134,8 @@ export async function fetchSystemStats(): Promise<AdminStats> {
  * GET /api/admin/emergency-logs — `{ events: [...] }` (SOS / emergency activity)
  */
 export async function fetchEmergencyEvents(): Promise<ApiEmergencyEvent[]> {
-  const res = await fetch(apiUrl(`${BASE}/emergency-logs`), {
+  const res = await authFetch(apiUrl(`${BASE}/emergency-logs`), {
     method: "GET",
-    headers: authJsonHeaders(),
   });
   if (!res.ok) {
     throw new Error(await readErrorMessage(res));

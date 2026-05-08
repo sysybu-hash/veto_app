@@ -103,13 +103,24 @@ function formatLoginError(
 
 const GOOGLE_OAUTH_STATE_KEY = "veto_google_oauth_state";
 
+/**
+ * Must match exactly an entry under Google Cloud → OAuth → Authorized redirect URIs.
+ * Always use the **current** browser origin + `/login` so Vercel previews / prod hosts match
+ * (a stale `NEXT_PUBLIC_GOOGLE_OAUTH_REDIRECT_URI` for another domain causes redirect_uri_mismatch).
+ */
 function googleOAuthRedirectUri(): string {
-  const fromEnv = process.env.NEXT_PUBLIC_GOOGLE_OAUTH_REDIRECT_URI?.trim();
-  if (fromEnv) return fromEnv;
   if (typeof window !== "undefined") {
-    return `${window.location.origin}/login`;
+    return new URL("/login", window.location.origin).href;
   }
-  return "/login";
+  const fromEnv = process.env.NEXT_PUBLIC_GOOGLE_OAUTH_REDIRECT_URI?.trim();
+  if (fromEnv) {
+    try {
+      return new URL("/login", new URL(fromEnv).origin).href;
+    } catch {
+      return fromEnv;
+    }
+  }
+  return "http://localhost:3000/login";
 }
 
 function buildGoogleImplicitAuthUrl(
@@ -347,7 +358,7 @@ function LoginPageInner() {
       if (!token) throw new Error("No token in response");
       await prepareLoginSession(token);
       setSocketAuthToken(token);
-      routeByRole(router, getRoleFromJwt());
+      routeAfterAuth(router, data);
     } catch (e) {
       setMessage(formatLoginError(e, t));
     } finally {
