@@ -1,8 +1,10 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { triggerSosAlert } from "@/app/actions/sos";
+import { fetchProfile, type UserProfile } from "@/api/userApi";
 import { CitizenBottomNav } from "@/components/citizen/CitizenBottomNav";
 import { SpecializationDialog } from "@/components/dialogs/SpecializationDialog";
 import { btnPrimaryDark, btnSecondaryGlass, glassPanelNested } from "@/lib/vetoGlass";
@@ -62,6 +64,7 @@ export default function CitizenHubPage() {
   const [sosDialogOpen, setSosDialogOpen] = useState(false);
   const [specializationDialogOpen, setSpecializationDialogOpen] = useState(false);
   const [callTypeDialogOpen, setCallTypeDialogOpen] = useState(false);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
 
   const isSearching = useEmergencyStore((s) => s.isSearching);
   const lawyerFound = useEmergencyStore((s) => s.lawyerFound);
@@ -80,6 +83,21 @@ export default function CitizenHubPage() {
       router.replace("/login");
     }
   }, [router]);
+
+  useEffect(() => {
+    if (!getJwt()) return;
+    let cancelled = false;
+    void fetchProfile()
+      .then((u) => {
+        if (!cancelled) setProfile(u);
+      })
+      .catch(() => {
+        if (!cancelled) setProfile(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     if (!getJwt()) return;
@@ -284,6 +302,28 @@ export default function CitizenHubPage() {
           <p className="mt-2 text-sm text-slate-600">{t("hub.subtitle")}</p>
         </div>
 
+        <div className="w-full rounded-2xl border border-[#C5A059]/35 bg-[#C5A059]/10 px-4 py-3 text-sm shadow-sm backdrop-blur-xl">
+          <div className="flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <p className="font-bold text-slate-900">המנוי המחובר</p>
+              <p className="mt-0.5 truncate text-xs text-slate-600">
+                {profile?.full_name || profile?.phone || "משתמש VETO"}
+              </p>
+            </div>
+            <span className={`shrink-0 rounded-full px-3 py-1 text-xs font-black ${
+              profile?.is_payment_exempt || profile?.is_subscribed
+                ? "bg-emerald-100 text-emerald-900"
+                : "bg-amber-100 text-amber-950"
+            }`}>
+              {profile?.is_payment_exempt
+                ? "פטור"
+                : profile?.is_subscribed
+                  ? "פעיל"
+                  : "לא פעיל"}
+            </span>
+          </div>
+        </div>
+
         <button
           type="button"
           onClick={() => setSosDialogOpen(true)}
@@ -322,6 +362,21 @@ export default function CitizenHubPage() {
             </div>
           </div>
         )}
+
+        <div className="grid w-full grid-cols-2 gap-3">
+          <Link
+            href="/vault/generator"
+            className={`${btnSecondaryGlass} px-4 py-3 text-center text-sm font-semibold`}
+          >
+            מחולל מסמכים
+          </Link>
+          <Link
+            href="/productivity"
+            className={`${btnSecondaryGlass} px-4 py-3 text-center text-sm font-semibold`}
+          >
+            {t("hub.quickProductivity")}
+          </Link>
+        </div>
       </main>
 
       <CitizenBottomNav active="hub" />

@@ -182,6 +182,8 @@ export const en: Dict = {
     language: "Preferred language",
     done: "Finish and continue",
     skipHint: "You can change this anytime in Settings.",
+    errSession:
+      "Your session is invalid or expired. Sign in again to continue.",
   },
   payments: {
     returnTitle: "Payment",
@@ -392,6 +394,8 @@ export const en: Dict = {
     tabContracts: "Contracts",
     tabTasks: "Tasks",
     loadFailed: "Could not load contracts and tasks",
+    errAuth: "Sign in again to load your workspace.",
+    errForbidden: "This area is only for citizen accounts.",
     saveContractFailed: "Save failed",
     signFailed: "Could not sign contract",
     updateTaskFailed: "Could not update task status",
@@ -521,6 +525,8 @@ export const en: Dict = {
     billingSubscribeCta: "Subscribe with PayPal",
     billingRefresh: "Refresh status",
     billingConsultHint: "Paid consultations are launched separately (coming soon).",
+    errRateLimited:
+      "Too many requests in a short time. Wait a few seconds and try again.",
   },
   ai: {
     title: "VETO AI SIGNATURE",

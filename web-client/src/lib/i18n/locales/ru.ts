@@ -182,6 +182,8 @@ export const ru: Dict = {
     language: "Предпочитаемый язык",
     done: "Готово",
     skipHint: "Можно изменить в настройках.",
+    errSession:
+      "Сессия недействительна или истекла. Войдите снова, чтобы продолжить.",
   },
   payments: {
     returnTitle: "Оплата",
@@ -393,6 +395,8 @@ export const ru: Dict = {
     tabContracts: "Договоры",
     tabTasks: "Задачи",
     loadFailed: "Не удалось загрузить договоры и задачи",
+    errAuth: "Войдите снова, чтобы загрузить данные.",
+    errForbidden: "Этот раздел только для пользователей (citizen).",
     saveContractFailed: "Не удалось сохранить",
     signFailed: "Не удалось подписать договор",
     updateTaskFailed: "Не удалось обновить статус задачи",
@@ -522,6 +526,8 @@ export const ru: Dict = {
     billingSubscribeCta: "Оформить подписку (PayPal)",
     billingRefresh: "Обновить статус",
     billingConsultHint: "Платные консультации — отдельно, позже.",
+    errRateLimited:
+      "Слишком много запросов. Подождите несколько секунд и повторите.",
   },
   ai: {
     title: "VETO AI SIGNATURE",

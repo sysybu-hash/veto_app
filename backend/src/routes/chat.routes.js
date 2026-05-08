@@ -142,6 +142,20 @@ router.delete('/messages/:id', async (req, res, next) => {
 // ──────────────────────────────────────────────────────────────
 // GET /api/chat/partners  (admin: list users you can message + all lawyers)
 // ──────────────────────────────────────────────────────────────
+router.delete('/conversations/:partnerId', async (req, res, next) => {
+  try {
+    const userId = req.user.userId;
+    const partnerId = req.params.partnerId;
+    const result = await Message.deleteMany({
+      $or: [
+        { sender_id: userId, receiver_id: partnerId },
+        { sender_id: partnerId, receiver_id: userId },
+      ],
+    });
+    res.json({ deleted: result.deletedCount || 0 });
+  } catch (err) { next(err); }
+});
+
 router.get('/partners', async (req, res, next) => {
   try {
     const role = req.user.role;

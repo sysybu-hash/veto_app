@@ -6,6 +6,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -60,23 +61,40 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  /** One in-flight profile fetch — avoids burst to API (React Strict Mode + billing tab + mount). */
+  const refreshInflight = useRef<Promise<void> | null>(null);
+
   const refresh = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const u = await fetchProfile();
-      setProfile(u);
-      setFullName(u.full_name ?? "");
-      setEmail(u.email ?? "");
-      setPhone(u.phone ?? "");
-      setNotifySms(!!u.settings?.notifySms);
-      setNotifyPush(u.settings?.notifyUpdates !== false);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Could not load profile");
-    } finally {
-      setLoading(false);
+    if (refreshInflight.current) {
+      return refreshInflight.current;
     }
-  }, []);
+    const run = (async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const u = await fetchProfile();
+        setProfile(u);
+        setFullName(u.full_name ?? "");
+        setEmail(u.email ?? "");
+        setPhone(u.phone ?? "");
+        setNotifySms(!!u.settings?.notifySms);
+        setNotifyPush(u.settings?.notifyUpdates !== false);
+      } catch (e) {
+        const raw = e instanceof Error ? e.message : "Could not load profile";
+        const friendly =
+          /too many requests/i.test(raw) || /\b429\b/.test(raw)
+            ? t("settings.errRateLimited")
+            : raw;
+        setError(friendly);
+      } finally {
+        setLoading(false);
+      }
+    })();
+    refreshInflight.current = run.finally(() => {
+      refreshInflight.current = null;
+    });
+    return refreshInflight.current;
+  }, [t]);
 
   useEffect(() => {
     if (!getJwt()) {
