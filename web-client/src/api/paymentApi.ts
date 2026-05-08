@@ -1,9 +1,16 @@
-import { apiUrl, authJsonHeaders, tunnelBypassHeaders } from "@/api/apiClient";
+import { apiUrl, authFetch, tunnelBypassHeaders } from "@/api/apiClient";
 import { getJwt } from "@/lib/authToken";
 
 async function parseJsonError(res: Response): Promise<string> {
   try {
-    const j = (await res.json()) as { error?: string; message?: string };
+    const j = (await res.json()) as {
+      error?: string;
+      message?: string;
+      success?: boolean;
+    };
+    if (j.success === false && typeof j.message === "string") {
+      return j.message;
+    }
     return j.error || j.message || res.statusText;
   } catch {
     return res.statusText;
@@ -45,9 +52,8 @@ export type CaptureResult = {
 export async function captureSubscriptionPayment(
   orderId: string,
 ): Promise<CaptureResult> {
-  const res = await fetch(apiUrl("/api/payments/capture"), {
+  const res = await authFetch(apiUrl("/api/payments/capture"), {
     method: "POST",
-    headers: authJsonHeaders(),
     body: JSON.stringify({ orderId, type: "subscription" }),
   });
   if (!res.ok) {

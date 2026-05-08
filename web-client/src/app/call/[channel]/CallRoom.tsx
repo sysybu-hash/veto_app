@@ -15,8 +15,14 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { getPublicAgoraAppId } from "@/lib/env";
 import { useTranslation } from "@/lib/i18n/LocaleProvider";
-import { getSocket } from "@/lib/socketClient";
+import { connectSocket, getSocket } from "@/lib/socketClient";
 import { useEmergencyStore } from "@/store/useEmergencyStore";
+
+type CallChatMessage = {
+  id: string;
+  text: string;
+  mine: boolean;
+};
 
 function CallInner({ channel }: { channel: string }) {
   const router = useRouter();
@@ -27,21 +33,25 @@ function CallInner({ channel }: { channel: string }) {
 
   const [micOn, setMicOn] = useState(true);
   const [cameraOn, setCameraOn] = useState(true);
+  const [chatDraft, setChatDraft] = useState("");
+  const [chatMessages, setChatMessages] = useState<CallChatMessage[]>([]);
+  const [roomStatus, setRoomStatus] = useState<string | null>(null);
   const appId = getPublicAgoraAppId();
-  const videoSession = session != null && session.callType !== "audio";
+  const chatOnly = session?.callType === "chat";
+  const videoSession = session != null && session.callType === "video";
 
-  const { localMicrophoneTrack } = useLocalMicrophoneTrack(true);
+  const { localMicrophoneTrack } = useLocalMicrophoneTrack(!chatOnly);
   const { localCameraTrack, error: camErr } = useLocalCameraTrack(videoSession);
 
   const joinArgs = useMemo(() => {
-    if (!session || !appId) return null;
+    if (!session || !appId || chatOnly) return null;
     return {
       appid: appId,
       channel: session.channelId,
       token: session.token,
       uid: session.uid,
     };
-  }, [appId, session]);
+  }, [appId, chatOnly, session]);
 
   const ready =
     !!joinArgs &&
@@ -74,6 +84,52 @@ function CallInner({ channel }: { channel: string }) {
   }, [localCameraTrack, cameraOn]);
 
   const remoteUsers = useRemoteUsers();
+
+  useEffect(() => {
+    if (!session || session.channelId !== channel) return;
+    const sock = connectSocket();
+    const roomId = session.eventId || channel;
+
+    const onReady = () => setRoomStatus(t("call.chatReady"));
+    const onTimeout = () => setRoomStatus(t("call.peerTimeout"));
+    const onEnded = () => setRoomStatus(t("call.peerEnded"));
+    const onError = (raw: unknown) => {
+      const msg =
+        raw &&
+        typeof raw === "object" &&
+        "message" in raw &&
+        typeof (raw as { message?: unknown }).message === "string"
+          ? (raw as { message: string }).message
+          : t("call.callError");
+      setRoomStatus(msg);
+    };
+    const onChat = (raw: unknown) => {
+      if (!raw || typeof raw !== "object") return;
+      const text = (raw as { text?: unknown }).text;
+      if (typeof text !== "string" || !text.trim()) return;
+      setChatMessages((prev) => [
+        ...prev,
+        { id: `${Date.now()}-${prev.length}`, text: text.trim(), mine: false },
+      ]);
+    };
+
+    sock.emit("join-call-room", { roomId, callType: session.callType });
+    sock.on("chat-ready", onReady);
+    sock.on("call-timeout", onTimeout);
+    sock.on("call-ended", onEnded);
+    sock.on("call-error", onError);
+    sock.on("call-chat-message", onChat);
+
+    return () => {
+      sock.emit("call-ended", { roomId });
+      sock.off("chat-ready", onReady);
+      sock.off("call-timeout", onTimeout);
+      sock.off("call-ended", onEnded);
+      sock.off("call-error", onError);
+      sock.off("call-chat-message", onChat);
+      sock.emit("leave-call-room", { roomId });
+    };
+  }, [channel, session, t]);
 
   useEffect(() => {
     if (!client || !channel) return;
@@ -129,15 +185,38 @@ function CallInner({ channel }: { channel: string }) {
     } catch {
       /* ignore */
     }
+    try {
+      getSocket().emit("call-ended", { roomId: session?.eventId || channel });
+    } catch {
+      /* ignore */
+    }
     clearCallSession();
     router.replace("/hub");
   }, [
+    channel,
     clearCallSession,
     client,
     localCameraTrack,
     localMicrophoneTrack,
     router,
+    session,
   ]);
+
+  const sendCallChat = useCallback(() => {
+    const text = chatDraft.trim();
+    if (!session || !text) return;
+    const roomId = session.eventId || channel;
+    try {
+      getSocket().emit("call-chat-message", { roomId, text });
+      setChatMessages((prev) => [
+        ...prev,
+        { id: `${Date.now()}-${prev.length}`, text, mine: true },
+      ]);
+      setChatDraft("");
+    } catch {
+      setRoomStatus(t("call.callError"));
+    }
+  }, [channel, chatDraft, session, t]);
 
   if (!session || session.channelId !== channel) {
     return (
@@ -154,7 +233,7 @@ function CallInner({ channel }: { channel: string }) {
     );
   }
 
-  if (!appId) {
+  if (!chatOnly && !appId) {
     return (
       <div className="flex min-h-full flex-col items-center justify-center px-6 text-center text-amber-200">
         {t("call.missingAgora")}
@@ -163,6 +242,73 @@ function CallInner({ channel }: { channel: string }) {
   }
 
   const remote = remoteUsers[0];
+
+  if (chatOnly) {
+    return (
+      <div className="flex min-h-full flex-col bg-slate-950 text-white">
+        <header className="border-b border-white/10 px-4 py-3">
+          <p className="font-frank text-lg font-bold">{t("call.chatTitle")}</p>
+          <p className="text-xs text-slate-400">
+            {roomStatus || t("call.waitingLawyer")}
+          </p>
+        </header>
+        <div className="flex-1 space-y-3 overflow-y-auto px-4 py-5">
+          {chatMessages.length === 0 ? (
+            <div className="flex h-full items-center justify-center text-center text-sm text-slate-400">
+              {t("call.chatEmpty")}
+            </div>
+          ) : (
+            chatMessages.map((message) => (
+              <div
+                key={message.id}
+                className={`flex ${message.mine ? "justify-end" : "justify-start"}`}
+              >
+                <p
+                  className={`max-w-[82%] whitespace-pre-wrap break-words rounded-2xl px-4 py-2 text-sm ${
+                    message.mine
+                      ? "bg-[#C5A059] text-black"
+                      : "bg-white/10 text-white"
+                  }`}
+                >
+                  {message.text}
+                </p>
+              </div>
+            ))
+          )}
+        </div>
+        <form
+          className="border-t border-white/10 p-3"
+          onSubmit={(e) => {
+            e.preventDefault();
+            sendCallChat();
+          }}
+        >
+          <div className="mx-auto flex max-w-3xl gap-2">
+            <input
+              value={chatDraft}
+              onChange={(e) => setChatDraft(e.target.value)}
+              placeholder={t("call.chatPlaceholder")}
+              className="min-w-0 flex-1 rounded-xl border border-white/10 bg-white/10 px-3 py-2 text-sm text-white outline-none placeholder:text-slate-500 focus:ring-2 focus:ring-[#C5A059]"
+            />
+            <button
+              type="submit"
+              disabled={!chatDraft.trim()}
+              className="rounded-xl bg-[#C5A059] px-4 py-2 text-sm font-bold text-black disabled:opacity-50"
+            >
+              {t("chat.send")}
+            </button>
+            <button
+              type="button"
+              onClick={() => void leave()}
+              className="rounded-xl bg-red-600 px-4 py-2 text-sm font-semibold text-white"
+            >
+              {t("call.end")}
+            </button>
+          </div>
+        </form>
+      </div>
+    );
+  }
 
   return (
     <div className="relative flex min-h-full flex-col bg-black">

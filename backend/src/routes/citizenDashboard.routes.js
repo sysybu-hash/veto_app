@@ -1,9 +1,14 @@
 const express = require('express');
 const router = express.Router();
-const { protect, authorize } = require('../middleware/auth.middleware');
+const {
+  protect,
+  authorize,
+  requireValidMongoUserId,
+} = require('../middleware/auth.middleware');
 const c = require('../controllers/citizenDashboard.controller');
 
 router.use(protect);
+router.use(requireValidMongoUserId);
 router.use(authorize('user'));
 
 router.get('/summary', c.getSummary);

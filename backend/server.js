@@ -67,20 +67,30 @@ const app = express();
 const server = http.createServer(app);
 
 /**
- * CORS: default `origin: true` reflects the browser Origin (credentials-safe).
- * Works for Next.js on Vercel (`*.vercel.app`), custom domains, Flutter web, localtunnel, etc.
- * Optional: set CORS_ALLOWED_ORIGINS=https://a.vercel.app,https://b.vercel.app (exact origins, no trailing slash)
- * to restrict — Socket.io uses the same rule.
+ * CORS with credentials — required for cross-origin browser calls from Vercel → Render.
+ * - Always allows common local dev + production Vercel app URL.
+ * - Merges CORS_ALLOWED_ORIGINS, FRONTEND_URL / WEB_APP_URL (no trailing slash).
+ * - Allows any *.vercel.app origin for preview deployments (add exact preview URL in GCP OAuth).
  */
 function buildCorsOrigin() {
-  const raw = process.env.CORS_ALLOWED_ORIGINS?.trim();
-  if (!raw) return true;
-  const allowed = new Set(
-    raw
-      .split(',')
-      .map((s) => s.trim().replace(/\/$/, ''))
-      .filter(Boolean),
+  const trimOrigin = (s) => s.trim().replace(/\/$/, '');
+  const defaults = [
+    'http://localhost:3000',
+    'http://127.0.0.1:3000',
+    'https://web-nine-gamma-76.vercel.app',
+  ];
+  const fromWeb = trimOrigin(
+    process.env.FRONTEND_URL || process.env.WEB_APP_URL || '',
   );
+  const fromEnv = (process.env.CORS_ALLOWED_ORIGINS || '')
+    .split(',')
+    .map((s) => trimOrigin(s))
+    .filter(Boolean);
+
+  const allowed = new Set(
+    [...defaults, ...fromEnv, fromWeb].filter(Boolean),
+  );
+
   return (origin, callback) => {
     if (!origin) {
       callback(null, true);
@@ -90,7 +100,16 @@ function buildCorsOrigin() {
       callback(null, true);
       return;
     }
-    callback(new Error(`CORS: origin not in CORS_ALLOWED_ORIGINS: ${origin}`));
+    try {
+      const u = new URL(origin);
+      if (u.hostname.endsWith('.vercel.app')) {
+        callback(null, true);
+        return;
+      }
+    } catch {
+      /* ignore */
+    }
+    callback(new Error(`CORS: origin not allowed: ${origin}`));
   };
 }
 
@@ -113,6 +132,7 @@ app.use(
       'Accept',
       'bypass-tunnel-reminder',
       'X-Requested-With',
+      'Cookie',
     ],
   }),
 );
@@ -135,9 +155,10 @@ const authLimiter = rateLimit({
 });
 
 // ── Global API Rate limiting ──────────────────────────────────
+// Dev / local: one IP hits the API from Next.js, HMR, and parallel tabs — keep headroom.
 const apiLimiter = rateLimit({
   windowMs: 1 * 60 * 1000, // 1 minute
-  max: 150,                // max 150 requests per IP per minute
+  max: process.env.NODE_ENV === 'production' ? 150 : 500,
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: 'Too many requests, please try again later.' },

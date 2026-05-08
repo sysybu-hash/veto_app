@@ -305,7 +305,7 @@ const verifyOTP = async (req, res, next) => {
 
     // ?? Issue JWT ??????????????????????????????????????
     const token = signToken({
-      userId:             doc._id,
+      userId:             doc._id.toString(),
       role,
       full_name:          doc.full_name,
       preferred_language: doc.preferred_language,
@@ -409,7 +409,7 @@ const googleAuth = async (req, res, next) => {
 
     const userRole = doc.role === 'admin' ? 'admin' : 'user';
     const token    = signToken({
-      userId:             doc._id,
+      userId:             doc._id.toString(),
       role:               userRole,
       full_name:          doc.full_name,
       preferred_language: doc.preferred_language,
@@ -447,6 +447,52 @@ const googleAuth = async (req, res, next) => {
 //  POST /auth/dev-login
 //  Body: { username, password, role }
 //  Development-only login for local QA role switching.
+/**
+ * Shadow accounts for dev-login — real Mongo ids so /api/users/me and PUT work.
+ * Override phones via env if +1000… conflicts with your data.
+ */
+async function getOrCreateDevAccount(appRole) {
+  const shadowPhoneUser =
+    process.env.DEV_LOGIN_USER_PHONE?.trim() || '+10000000001';
+  const shadowPhoneAdmin =
+    process.env.DEV_LOGIN_ADMIN_PHONE?.trim() || '+10000000002';
+  const shadowPhoneLawyer =
+    process.env.DEV_LOGIN_LAWYER_PHONE?.trim() || '+10000000003';
+
+  if (appRole === 'lawyer') {
+    let doc = await Lawyer.findOne({ phone: shadowPhoneLawyer });
+    if (!doc) {
+      doc = await Lawyer.create({
+        full_name: 'Dev Lawyer',
+        phone: shadowPhoneLawyer,
+        is_verified: true,
+        is_approved: true,
+        preferred_language: 'he',
+      });
+    } else if (!doc.is_approved) {
+      doc.is_approved = true;
+      await doc.save();
+    }
+    return { doc, jwtRole: 'lawyer' };
+  }
+
+  const phone =
+    appRole === 'admin' ? shadowPhoneAdmin : shadowPhoneUser;
+  let doc = await User.findOne({ phone });
+  if (!doc) {
+    doc = await User.create({
+      full_name: appRole === 'admin' ? 'Dev Admin' : 'Dev User',
+      phone,
+      role: appRole === 'admin' ? 'admin' : 'user',
+      preferred_language: 'he',
+      is_verified: true,
+      onboarding_completed: appRole === 'admin',
+    });
+  }
+  const jwtRole = appRole === 'admin' ? 'admin' : 'user';
+  return { doc, jwtRole };
+}
+
 // ============================================================
 const devLogin = async (req, res) => {
   const allowInProd =
@@ -484,18 +530,44 @@ const devLogin = async (req, res) => {
     : 'admin';
   const appRole = normalizedRole === 'citizen' ? 'user' : normalizedRole;
 
-  const token = signToken({
-    userId: 'dev-user',
-    role: appRole,
-    full_name: 'Dev User',
-    preferred_language: 'he',
-  });
+  try {
+    const { doc, jwtRole } = await getOrCreateDevAccount(appRole);
+    const fullName =
+      doc.full_name ||
+      (jwtRole === 'lawyer' ? 'Dev Lawyer' : jwtRole === 'admin' ? 'Dev Admin' : 'Dev User');
 
-  return res.status(200).json({
-    message: 'Dev login successful.',
-    token,
-    role: appRole,
-  });
+    const token = signToken({
+      userId: doc._id.toString(),
+      role: jwtRole,
+      full_name: fullName,
+      preferred_language: doc.preferred_language || 'he',
+    });
+
+    const onboarding_completed =
+      jwtRole === 'admin' || jwtRole === 'lawyer'
+        ? true
+        : (doc.onboarding_completed ?? false);
+
+    return res.status(200).json({
+      message: 'Dev login successful.',
+      token,
+      role: jwtRole,
+      user: {
+        id: doc._id,
+        full_name: fullName,
+        phone: doc.phone,
+        role: jwtRole,
+        preferred_language: doc.preferred_language || 'he',
+        is_verified: true,
+        onboarding_completed,
+      },
+    });
+  } catch (err) {
+    console.error('[AUTH] dev-login getOrCreateDevAccount:', err?.message || err);
+    return res.status(500).json({
+      error: 'Could not prepare dev session. Check MongoDB and shadow phone uniqueness.',
+    });
+  }
 };
 
 module.exports = { register, requestOTP, verifyOTP, googleAuth, devLogin };
