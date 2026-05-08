@@ -326,7 +326,7 @@ exports.getCallDetails = async (req, res, next) => {
     const { userId }  = req.user;
 
     const event = await EmergencyEvent.findById(eventId)
-      .select('user_id assigned_lawyer_id status call_type call_started_at call_duration_seconds recording_url recording_duration_seconds recording_size_bytes call_transcript transcript_language')
+      .select('user_id assigned_lawyer_id room_id status call_type call_started_at call_duration_seconds recording_url recording_duration_seconds recording_size_bytes call_transcript transcript_language')
       .lean();
 
     if (!event) return res.status(404).json({ error: 'Event not found' });
