@@ -535,7 +535,7 @@ export const ru: Dict = {
     modeHintText:
       "Общая юридическая информация — не персональная консультация",
     modeHintLive: "Gemini Live — аудио в реальном времени",
-    modeHintVision: "VETO Vision — визуальный анализ (скоро)",
+    modeHintVision: "VETO Vision — анализ документов и изображений",
     placeholder: "Задайте вопрос…",
     send: "Отправить",
     close: "Закрыть",
