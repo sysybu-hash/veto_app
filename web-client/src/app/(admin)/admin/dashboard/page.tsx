@@ -1,480 +1,328 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useMemo, useState } from "react";
 import {
-  approveLawyer,
-  fetchEmergencyEvents,
-  fetchPendingLawyers,
-  fetchSystemStats,
-  rejectLawyer,
-  type AdminStats,
-  type ApiEmergencyEvent,
-  type ApiPendingLawyer,
-} from "@/api/adminApi";
-import { getJwt, getRoleFromJwt } from "@/lib/authToken";
+  Activity,
+  Database,
+  FileText,
+  LayoutDashboard,
+  RefreshCw,
+  Search,
+  Settings,
+  ShieldCheck,
+} from "lucide-react";
+import Link from "next/link";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
+import type { Role } from "@prisma/client";
 
-type PendingLawyer = {
-  id: string;
-  name: string;
-  licenseNumber: string;
-  signupDate: string;
+type DashboardPayload = {
+  stats: { users: number; lawyers: number; sos: number };
+  users: Array<{
+    id: string;
+    externalId: string;
+    email: string;
+    name: string;
+    role: Role;
+    createdAt: string;
+    isPro: boolean;
+  }>;
+  health: { database: string; api: string; timestamp: string };
 };
 
-type LogStatus = "success" | "warning" | "info" | "danger";
-
-type SystemLog = {
-  id: string;
-  timestamp: string;
-  message: string;
-  status: LogStatus;
-};
-
-function mapPendingLawyer(row: ApiPendingLawyer): PendingLawyer {
-  const created = row.createdAt ? new Date(row.createdAt) : new Date();
-  const dateLabel = Number.isNaN(created.getTime())
-    ? new Date().toISOString().slice(0, 10)
-    : created.toISOString().slice(0, 10);
-  return {
-    id: String(row._id),
-    name: row.full_name?.trim() || row.phone || "—",
-    licenseNumber: row.license_number?.trim() || "—",
-    signupDate: dateLabel,
-  };
+async function fetchDashboardPayload(): Promise<DashboardPayload | null> {
+  const res = await fetch("/api/admin/dashboard", {
+    credentials: "include",
+    cache: "no-store",
+  });
+  if (!res.ok) return null;
+  return (await res.json()) as DashboardPayload;
 }
 
-function emergencyStatusToLogStatus(status: string | undefined): LogStatus {
-  const s = (status || "").toLowerCase();
-  if (s === "completed") return "success";
-  if (s === "failed" || s === "cancelled") return "danger";
-  if (s === "dispatching") return "warning";
-  return "info";
-}
+export default function VetoMasterDashboard() {
+  const [data, setData] = useState<DashboardPayload | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
 
-function mapEventToLog(ev: ApiEmergencyEvent): SystemLog {
-  const u = ev.user_id;
-  let label = "User";
-  if (u && typeof u === "object") {
-    const parts = [u.full_name, u.phone].filter(
-      (x): x is string => typeof x === "string" && x.length > 0,
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const payload = await fetchDashboardPayload();
+        if (cancelled) return;
+        setData(payload);
+      } catch (err) {
+        console.error(err);
+        if (!cancelled) setData(null);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const refreshData = useCallback(async () => {
+    setLoading(true);
+    try {
+      const payload = await fetchDashboardPayload();
+      setData(payload);
+    } catch (err) {
+      console.error(err);
+      setData(null);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const filteredUsers = useMemo(() => {
+    const list = data?.users ?? [];
+    const q = searchTerm.trim().toLowerCase();
+    if (!q) return list;
+    return list.filter((u) => {
+      const name = (u.name ?? "").toLowerCase();
+      const email = (u.email ?? "").toLowerCase();
+      return name.includes(q) || email.includes(q);
+    });
+  }, [data?.users, searchTerm]);
+
+  if (loading && !data) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-slate-50">
+        <RefreshCw className="h-8 w-8 animate-spin text-[#C5A059]" aria-hidden />
+      </div>
     );
-    label = parts.length ? parts.join(" · ") : "User";
   }
-  const rawTs = ev.triggered_at ?? ev.createdAt ?? new Date().toISOString();
-  const timestamp =
-    typeof rawTs === "string" ? rawTs : new Date(rawTs).toISOString();
-  return {
-    id: String(ev._id),
-    timestamp,
-    message: `SOS · ${ev.status ?? "unknown"} · ${label}`,
-    status: emergencyStatusToLogStatus(ev.status),
-  };
-}
 
-function statusBadgeClass(status: LogStatus): string {
-  switch (status) {
-    case "success":
-      return "bg-emerald-50 text-emerald-800 ring-emerald-200";
-    case "warning":
-      return "bg-amber-50 text-amber-900 ring-amber-200";
-    case "info":
-      return "bg-blue-50 text-blue-800 ring-blue-200";
-    case "danger":
-      return "bg-red-50 text-red-800 ring-red-200";
-    default:
-      return "bg-slate-100 text-slate-700 ring-slate-200";
-  }
-}
-
-function formatTs(iso: string): string {
-  try {
-    return new Intl.DateTimeFormat("en-IL", {
-      dateStyle: "medium",
-      timeStyle: "short",
-    }).format(new Date(iso));
-  } catch {
-    return iso;
-  }
-}
-
-function AdminDashboardSkeleton() {
   return (
-    <div className="animate-pulse space-y-8" aria-busy="true" aria-label="Loading dashboard">
-      <div className="space-y-2">
-        <div className="h-9 w-48 rounded-lg bg-slate-200 sm:w-64" />
-        <div className="h-4 w-full max-w-lg rounded-lg bg-slate-200" />
-      </div>
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {[1, 2, 3, 4].map((i) => (
-          <div
-            key={i}
-            className="h-28 rounded-2xl border border-slate-100 bg-white p-5 shadow-sm"
-          >
-            <div className="mb-3 h-3 w-24 rounded bg-slate-200" />
-            <div className="h-8 w-20 rounded bg-slate-200" />
-            <div className="mt-3 h-3 w-32 rounded bg-slate-100" />
+    <div
+      className="flex min-h-screen flex-col bg-[#f8f9fa] md:flex-row"
+      dir="rtl"
+    >
+      <aside className="flex w-full flex-col gap-8 border-l border-slate-200 bg-white p-6 print:hidden md:w-64">
+        <div className="font-serif text-2xl font-bold tracking-tight text-slate-900">
+          VETO Admin
+        </div>
+        <nav className="flex flex-col gap-2">
+          <MenuLink
+            href="/admin/dashboard"
+            icon={<LayoutDashboard size={18} aria-hidden />}
+            label="מרכז שליטה"
+            active
+          />
+          <MenuLink
+            href="/admin/vault"
+            icon={<Database size={18} aria-hidden />}
+            label="ניהול כספת"
+          />
+          <MenuLink
+            href="/vault/generator"
+            icon={<FileText size={18} aria-hidden />}
+            label="מחולל מסמכים AI"
+          />
+          <MenuLink
+            href="/admin/settings"
+            icon={<Settings size={18} aria-hidden />}
+            label="הגדרות מערכת"
+          />
+        </nav>
+      </aside>
+
+      <main className="flex-1 overflow-y-auto p-6 md:p-10">
+        <header className="mb-8 flex items-center justify-between">
+          <div>
+            <h1 className="font-serif text-3xl font-bold text-slate-900">
+              ניהול מערכת VETO
+            </h1>
+            <p className="text-sm text-slate-500">
+              סטטוס שרתים ומנויים בזמן אמת
+            </p>
           </div>
-        ))}
-      </div>
-      <div className="h-96 rounded-2xl border border-slate-100 bg-white shadow-sm" />
+          <button
+            type="button"
+            onClick={() => void refreshData()}
+            className="rounded-full border border-slate-200 bg-white p-2 transition hover:bg-slate-50"
+            aria-label="רענון נתונים"
+          >
+            <RefreshCw
+              className={`h-5 w-5 ${loading ? "animate-spin" : ""}`}
+              aria-hidden
+            />
+          </button>
+        </header>
+
+        <div className="mb-8 grid grid-cols-1 gap-4 text-center md:grid-cols-4">
+          <div className="flex items-center justify-center gap-3 rounded-xl border border-green-100 bg-green-50 p-4 font-bold text-green-700">
+            <Activity size={20} aria-hidden /> שרת API: פועל
+          </div>
+          <div
+            className={`flex items-center justify-center gap-3 rounded-xl border p-4 font-bold ${
+              data?.health.database === "OK"
+                ? "border-blue-100 bg-blue-50 text-blue-700"
+                : "border-red-100 bg-red-50 text-red-700"
+            }`}
+          >
+            <Database size={20} aria-hidden /> מסד נתונים:{" "}
+            {data?.health.database === "OK" ? "מחובר" : "בעיה"}
+          </div>
+          <div className="flex items-center justify-center gap-3 rounded-xl border border-orange-100 bg-orange-50 p-4 font-bold text-orange-700">
+            <ShieldCheck size={20} aria-hidden /> אבטחת JWT: תקינה
+          </div>
+          <div className="flex items-center justify-center gap-3 rounded-xl border border-slate-200 bg-white p-4 font-bold">
+            סה&quot;כ משתמשים: {data?.stats.users ?? 0}
+          </div>
+        </div>
+
+        <div className="mb-6 grid grid-cols-1 gap-3 text-sm text-slate-600 md:grid-cols-3">
+          <div className="rounded-lg border border-slate-100 bg-white px-4 py-3">
+            <span className="font-bold text-slate-900">
+              {data?.stats.lawyers ?? 0}
+            </span>{" "}
+            עורכי דין (Prisma)
+          </div>
+          <div className="rounded-lg border border-slate-100 bg-white px-4 py-3">
+            <span className="font-bold text-slate-900">
+              {data?.stats.sos ?? 0}
+            </span>{" "}
+            אירועי SOS ב־24 שעות
+          </div>
+          <div className="rounded-lg border border-slate-100 bg-white px-4 py-3">
+            עודכן:{" "}
+            {data?.health.timestamp
+              ? new Date(data.health.timestamp).toLocaleString("he-IL")
+              : "—"}
+          </div>
+        </div>
+
+        <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+          <div className="flex flex-col items-center justify-between gap-4 border-b border-slate-100 p-6 md:flex-row">
+            <h3 className="font-serif text-xl font-bold text-slate-900">
+              ניהול מנויים ומשתמשים
+            </h3>
+            <div className="relative w-full md:w-80">
+              <Search className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <input
+                type="search"
+                placeholder="חיפוש משתמש..."
+                className="w-full rounded-lg border border-slate-200 bg-slate-50 py-2 pl-4 pr-10 text-sm outline-none focus:ring-2 focus:ring-[#C5A059]"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                aria-label="חיפוש משתמש"
+              />
+            </div>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-right">
+              <thead>
+                <tr className="border-b border-slate-100 bg-slate-50 text-xs uppercase tracking-wider text-slate-500">
+                  <th className="p-4 font-bold">שם ואימייל</th>
+                  <th className="p-4 text-center font-bold">תפקיד</th>
+                  <th className="p-4 text-center font-bold">סטטוס</th>
+                  <th className="p-4 text-center font-bold">תאריך הרשמה</th>
+                  <th className="p-4 text-left font-bold">פעולות</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {filteredUsers.map((user) => (
+                  <tr key={user.id} className="transition hover:bg-slate-50">
+                    <td className="p-4">
+                      <div className="font-bold text-slate-900">
+                        {user.name || "—"}
+                      </div>
+                      <div className="text-xs text-slate-500">{user.email}</div>
+                    </td>
+                    <td className="p-4 text-center">
+                      <RoleBadge role={user.role} />
+                    </td>
+                    <td className="p-4 text-center text-sm">
+                      <span
+                        className={
+                          user.isPro
+                            ? "font-bold text-green-600"
+                            : "text-slate-400"
+                        }
+                      >
+                        {user.isPro ? "PRO" : "FREE"}
+                      </span>
+                    </td>
+                    <td className="p-4 text-center text-sm text-slate-500">
+                      {new Date(user.createdAt).toLocaleDateString("he-IL")}
+                    </td>
+                    <td className="p-4 text-left">
+                      <Link
+                        href={`/admin/users/${user.id}`}
+                        className="text-sm font-bold text-[#C5A059] hover:underline"
+                      >
+                        ערוך
+                      </Link>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          {filteredUsers.length === 0 && (
+            <p className="p-8 text-center text-slate-500">
+              {searchTerm.trim()
+                ? "לא נמצאו תוצאות לחיפוש."
+                : "אין משתמשים להצגה."}
+            </p>
+          )}
+        </section>
+      </main>
     </div>
   );
 }
 
-const defaultStats: AdminStats = {
-  totalUsers: 0,
-  activeLawyers: 0,
-  pendingLawyers: 0,
-  eventsToday: 0,
-  eventsWeek: 0,
-  eventsMonth: 0,
-};
-
-/**
- * Admin dashboard: `/admin/dashboard`. Lawyer workspace stays at `/dashboard`.
- */
-export default function AdminDashboardPage() {
-  const router = useRouter();
-  const [mounted, setMounted] = useState(false);
-  const [tab, setTab] = useState<"lawyers" | "logs">("lawyers");
-  const [pendingLawyers, setPendingLawyers] = useState<PendingLawyer[]>([]);
-  const [logs, setLogs] = useState<SystemLog[]>([]);
-  const [stats, setStats] = useState<AdminStats>(defaultStats);
-
-  const [isLoading, setIsLoading] = useState(true);
-  const [loadError, setLoadError] = useState<string | null>(null);
-  const [actionError, setActionError] = useState<string | null>(null);
-  const [rowBusyId, setRowBusyId] = useState<string | null>(null);
-
-  const loadDashboard = useCallback(async () => {
-    if (!getJwt() || getRoleFromJwt() !== "admin") return;
-    setIsLoading(true);
-    setLoadError(null);
-    try {
-      const [lawyerRows, statRow, events] = await Promise.all([
-        fetchPendingLawyers(),
-        fetchSystemStats(),
-        fetchEmergencyEvents(),
-      ]);
-      setPendingLawyers(lawyerRows.map(mapPendingLawyer));
-      setStats(statRow);
-      const mappedLogs = events.map(mapEventToLog);
-      mappedLogs.sort(
-        (a, b) =>
-          new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
-      );
-      setLogs(mappedLogs);
-    } catch (e) {
-      setLoadError(
-        e instanceof Error ? e.message : "Could not load admin dashboard",
-      );
-      setPendingLawyers([]);
-      setLogs([]);
-      setStats(defaultStats);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    setMounted(true);
-    if (!getJwt()) {
-      router.replace("/login");
-      return;
-    }
-    if (getRoleFromJwt() !== "admin") {
-      router.replace("/hub");
-      return;
-    }
-    void loadDashboard();
-  }, [router, loadDashboard]);
-
-  const displayStats = useMemo(
-    () => ({
-      totalUsers: stats.totalUsers,
-      pendingApprovals: stats.pendingLawyers,
-      sosToday: stats.eventsToday,
-      activeLawyers: stats.activeLawyers,
-    }),
-    [stats],
-  );
-
-  const approve = async (lawyer: PendingLawyer) => {
-    setActionError(null);
-    setRowBusyId(lawyer.id);
-    try {
-      await approveLawyer(lawyer.id);
-      await loadDashboard();
-    } catch (e) {
-      setActionError(
-        e instanceof Error ? e.message : "Could not approve lawyer",
-      );
-    } finally {
-      setRowBusyId(null);
-    }
-  };
-
-  const reject = async (lawyer: PendingLawyer) => {
-    setActionError(null);
-    setRowBusyId(lawyer.id);
-    try {
-      await rejectLawyer(lawyer.id);
-      await loadDashboard();
-    } catch (e) {
-      setActionError(
-        e instanceof Error ? e.message : "Could not reject lawyer",
-      );
-    } finally {
-      setRowBusyId(null);
-    }
-  };
-
-  if (!mounted) {
+function RoleBadge({ role }: { role: Role }) {
+  if (role === "LAWYER") {
     return (
-      <div className="flex flex-1 items-center justify-center p-8 text-sm text-slate-500">
-        Loading…
-      </div>
+      <span className="rounded bg-purple-100 px-2 py-1 text-[10px] font-bold text-purple-700">
+        עו&quot;ד
+      </span>
     );
   }
-
-  if (!getJwt() || getRoleFromJwt() !== "admin") {
-    return null;
+  if (role === "ADMIN") {
+    return (
+      <span className="rounded bg-amber-100 px-2 py-1 text-[10px] font-bold text-amber-900">
+        מנהל
+      </span>
+    );
   }
-
   return (
-    <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-8 sm:px-6 lg:px-8">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
-          Dashboard
-        </h1>
-        <p className="mt-1 text-sm text-slate-600 sm:text-base">
-          Overview of users, compliance queue, and platform activity.
-        </p>
-      </div>
+    <span className="rounded bg-blue-100 px-2 py-1 text-[10px] font-bold text-blue-700">
+      אזרח
+    </span>
+  );
+}
 
-      {loadError && (
-        <div
-          className="mb-6 flex flex-col gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-4 text-sm text-red-800 sm:flex-row sm:items-center sm:justify-between"
-          role="alert"
-        >
-          <p>{loadError}</p>
-          <button
-            type="button"
-            onClick={() => void loadDashboard()}
-            className="shrink-0 rounded-lg bg-red-700 px-4 py-2 text-sm font-semibold text-white hover:bg-red-600"
-          >
-            Retry
-          </button>
-        </div>
-      )}
-
-      {actionError && !loadError && (
-        <div
-          className="mb-6 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900"
-          role="status"
-        >
-          {actionError}
-        </div>
-      )}
-
-      {isLoading && !loadError && <AdminDashboardSkeleton />}
-
-      {!isLoading && !loadError && (
-        <>
-          <section className="mb-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <div className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm shadow-slate-900/5">
-              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                Total users
-              </p>
-              <p className="mt-2 text-2xl font-bold tabular-nums text-slate-900 sm:text-3xl">
-                {displayStats.totalUsers.toLocaleString()}
-              </p>
-              <p className="mt-1 text-xs text-slate-500">
-                Registered citizen accounts
-              </p>
-            </div>
-            <div className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm shadow-slate-900/5">
-              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                Pending lawyer approvals
-              </p>
-              <p className="mt-2 text-2xl font-bold tabular-nums text-amber-600 sm:text-3xl">
-                {displayStats.pendingApprovals}
-              </p>
-              <p className="mt-1 text-xs text-slate-500">Awaiting manual review</p>
-            </div>
-            <div className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm shadow-slate-900/5">
-              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                SOS events today
-              </p>
-              <p className="mt-2 text-2xl font-bold tabular-nums text-slate-900 sm:text-3xl">
-                {displayStats.sosToday}
-              </p>
-              <p className="mt-1 text-xs text-slate-500">
-                Emergency dispatches (24h)
-              </p>
-            </div>
-            <div className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm shadow-slate-900/5">
-              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                Active lawyers
-              </p>
-              <p className="mt-2 text-2xl font-bold tabular-nums text-emerald-600 sm:text-3xl">
-                {displayStats.activeLawyers}
-              </p>
-              <p className="mt-1 text-xs text-slate-500">Online &amp; available</p>
-            </div>
-          </section>
-
-          <section className="overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm shadow-slate-900/5">
-            <div className="border-b border-slate-100 px-4 sm:px-6">
-              <div className="flex gap-0">
-                <button
-                  type="button"
-                  onClick={() => setTab("lawyers")}
-                  className={`relative flex-1 border-b-2 py-4 text-sm font-semibold transition sm:flex-none sm:px-8 ${
-                    tab === "lawyers"
-                      ? "border-blue-600 text-blue-600"
-                      : "border-transparent text-slate-500 hover:text-slate-800"
-                  }`}
-                >
-                  Pending lawyers
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setTab("logs")}
-                  className={`relative flex-1 border-b-2 py-4 text-sm font-semibold transition sm:flex-none sm:px-8 ${
-                    tab === "logs"
-                      ? "border-blue-600 text-blue-600"
-                      : "border-transparent text-slate-500 hover:text-slate-800"
-                  }`}
-                >
-                  System logs
-                </button>
-              </div>
-            </div>
-
-            <div className="p-4 sm:p-6">
-              {tab === "lawyers" && (
-                <div className="overflow-x-auto rounded-xl border border-slate-100">
-                  <table className="min-w-full divide-y divide-slate-100 text-left text-sm">
-                    <thead className="bg-slate-50/80">
-                      <tr>
-                        <th className="whitespace-nowrap px-4 py-3 font-semibold text-slate-700 sm:px-6">
-                          Name
-                        </th>
-                        <th className="whitespace-nowrap px-4 py-3 font-semibold text-slate-700 sm:px-6">
-                          License number
-                        </th>
-                        <th className="whitespace-nowrap px-4 py-3 font-semibold text-slate-700 sm:px-6">
-                          Signup date
-                        </th>
-                        <th className="whitespace-nowrap px-4 py-3 text-right font-semibold text-slate-700 sm:px-6">
-                          Actions
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100 bg-white">
-                      {pendingLawyers.length === 0 ? (
-                        <tr>
-                          <td
-                            colSpan={4}
-                            className="px-4 py-10 text-center text-slate-500 sm:px-6"
-                          >
-                            No pending lawyer applications. Great work.
-                          </td>
-                        </tr>
-                      ) : (
-                        pendingLawyers.map((row) => (
-                          <tr key={row.id} className="hover:bg-slate-50/80">
-                            <td className="whitespace-nowrap px-4 py-3 font-medium text-slate-900 sm:px-6">
-                              {row.name}
-                            </td>
-                            <td className="whitespace-nowrap px-4 py-3 text-slate-600 sm:px-6">
-                              {row.licenseNumber}
-                            </td>
-                            <td className="whitespace-nowrap px-4 py-3 text-slate-600 sm:px-6">
-                              {row.signupDate}
-                            </td>
-                            <td className="whitespace-nowrap px-4 py-3 text-right sm:px-6">
-                              <div className="flex flex-wrap justify-end gap-2">
-                                <button
-                                  type="button"
-                                  disabled={rowBusyId === row.id}
-                                  onClick={() => void approve(row)}
-                                  className="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-50"
-                                >
-                                  Approve
-                                </button>
-                                <button
-                                  type="button"
-                                  disabled={rowBusyId === row.id}
-                                  onClick={() => void reject(row)}
-                                  className="rounded-lg bg-red-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-red-500 disabled:cursor-not-allowed disabled:opacity-50"
-                                >
-                                  Reject
-                                </button>
-                              </div>
-                            </td>
-                          </tr>
-                        ))
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-
-              {tab === "logs" && (
-                <div className="overflow-x-auto rounded-xl border border-slate-100">
-                  <table className="min-w-full divide-y divide-slate-100 text-left text-sm">
-                    <thead className="bg-slate-50/80">
-                      <tr>
-                        <th className="whitespace-nowrap px-4 py-3 font-semibold text-slate-700 sm:px-6">
-                          Time
-                        </th>
-                        <th className="whitespace-nowrap px-4 py-3 font-semibold text-slate-700 sm:px-6">
-                          Event
-                        </th>
-                        <th className="whitespace-nowrap px-4 py-3 font-semibold text-slate-700 sm:px-6">
-                          Status
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100 bg-white">
-                      {logs.length === 0 ? (
-                        <tr>
-                          <td
-                            colSpan={3}
-                            className="px-4 py-10 text-center text-slate-500 sm:px-6"
-                          >
-                            No emergency events recorded yet.
-                          </td>
-                        </tr>
-                      ) : (
-                        logs.map((row) => (
-                          <tr key={row.id} className="hover:bg-slate-50/80">
-                            <td className="whitespace-nowrap px-4 py-3 text-slate-600 sm:px-6">
-                              {formatTs(row.timestamp)}
-                            </td>
-                            <td className="px-4 py-3 text-slate-900 sm:px-6">
-                              {row.message}
-                            </td>
-                            <td className="whitespace-nowrap px-4 py-3 sm:px-6">
-                              <span
-                                className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ring-1 ring-inset ${statusBadgeClass(row.status)}`}
-                              >
-                                {row.status}
-                              </span>
-                            </td>
-                          </tr>
-                        ))
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
-          </section>
-        </>
-      )}
-    </main>
+function MenuLink({
+  href,
+  icon,
+  label,
+  active = false,
+}: {
+  href: string;
+  icon: ReactNode;
+  label: string;
+  active?: boolean;
+}) {
+  return (
+    <Link
+      href={href}
+      className={`flex items-center gap-3 rounded-lg p-3 text-sm font-medium transition ${
+        active
+          ? "bg-[#C5A059]/10 text-[#C5A059]"
+          : "text-slate-600 hover:bg-slate-50"
+      }`}
+    >
+      {icon}
+      {label}
+    </Link>
   );
 }

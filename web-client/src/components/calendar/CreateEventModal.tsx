@@ -1,6 +1,12 @@
 "use client";
 
 import { useCallback, useState } from "react";
+import {
+  btnPrimaryGold,
+  btnSecondaryGlass,
+  glassInput,
+} from "@/lib/vetoGlass";
+import { useTranslation } from "@/lib/i18n/LocaleProvider";
 
 export type CreateEventModalSubmit = {
   title: string;
@@ -16,6 +22,7 @@ type Props = {
 };
 
 export function CreateEventModal({ open, onClose, onSubmit }: Props) {
+  const { t } = useTranslation();
   const [title, setTitle] = useState("");
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
@@ -42,7 +49,7 @@ export function CreateEventModal({ open, onClose, onSubmit }: Props) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-slate-950/70 p-0 backdrop-blur-sm sm:items-center sm:p-4"
+      className="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/40 p-0 backdrop-blur-sm sm:items-center sm:p-4"
       role="dialog"
       aria-modal="true"
       aria-labelledby="create-event-title"
@@ -50,24 +57,26 @@ export function CreateEventModal({ open, onClose, onSubmit }: Props) {
       <button
         type="button"
         className="absolute inset-0 cursor-default"
-        aria-label="Close modal"
+        aria-label={t("calendar.modalBackdropClose")}
         onClick={handleClose}
       />
 
-      <div className="relative z-10 w-full max-w-md rounded-t-3xl border border-white/10 bg-slate-900 p-6 shadow-2xl shadow-black/50 sm:rounded-3xl">
+      <div
+        className="relative z-10 w-full max-w-md rounded-t-3xl border border-white/40 bg-white/60 p-6 shadow-2xl shadow-slate-900/20 backdrop-blur-xl sm:rounded-3xl"
+      >
         <div className="mb-4 flex items-start justify-between gap-3">
           <h2
             id="create-event-title"
-            className="text-lg font-semibold tracking-tight text-white"
+            className="font-frank text-lg font-bold tracking-tight text-slate-900"
           >
-            New legal event
+            {t("calendar.modalTitle")}
           </h2>
           <button
             type="button"
             onClick={handleClose}
             disabled={submitting}
-            className="rounded-lg p-1 text-slate-400 transition hover:bg-white/10 hover:text-white disabled:opacity-50"
-            aria-label="Close"
+            className="rounded-lg p-1 text-slate-600 transition hover:bg-white/40 hover:text-slate-900 disabled:opacity-50"
+            aria-label={t("common.close")}
           >
             <svg
               className="h-5 w-5"
@@ -87,7 +96,7 @@ export function CreateEventModal({ open, onClose, onSubmit }: Props) {
             e.preventDefault();
             setError(null);
             if (!title.trim() || !date || !time) {
-              setError("Title, date, and time are required.");
+              setError(t("calendar.requiredFields"));
               return;
             }
             setSubmitting(true);
@@ -101,63 +110,65 @@ export function CreateEventModal({ open, onClose, onSubmit }: Props) {
               reset();
               onClose();
             } catch (err) {
-              setError(err instanceof Error ? err.message : "Could not save.");
+              setError(
+                err instanceof Error ? err.message : t("calendar.saveFailed"),
+              );
             } finally {
               setSubmitting(false);
             }
           }}
         >
           <div>
-            <label className="mb-1 block text-xs font-medium text-slate-400">
-              Title
+            <label className="mb-1 block text-xs font-medium text-slate-600">
+              {t("calendar.fieldTitle")}
             </label>
             <input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="w-full rounded-xl border border-white/10 bg-slate-950/80 px-4 py-3 text-sm text-white placeholder:text-slate-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-              placeholder="Court hearing, meeting…"
+              className={glassInput}
+              placeholder={t("calendar.placeholderTitle")}
               autoComplete="off"
             />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="mb-1 block text-xs font-medium text-slate-400">
-                Date
+              <label className="mb-1 block text-xs font-medium text-slate-600">
+                {t("calendar.fieldDate")}
               </label>
               <input
                 type="date"
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
-                className="w-full rounded-xl border border-white/10 bg-slate-950/80 px-3 py-3 text-sm text-white focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className={glassInput}
               />
             </div>
             <div>
-              <label className="mb-1 block text-xs font-medium text-slate-400">
-                Time
+              <label className="mb-1 block text-xs font-medium text-slate-600">
+                {t("calendar.fieldTime")}
               </label>
               <input
                 type="time"
                 value={time}
                 onChange={(e) => setTime(e.target.value)}
-                className="w-full rounded-xl border border-white/10 bg-slate-950/80 px-3 py-3 text-sm text-white focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className={glassInput}
               />
             </div>
           </div>
           <div>
-            <label className="mb-1 block text-xs font-medium text-slate-400">
-              Notes
+            <label className="mb-1 block text-xs font-medium text-slate-600">
+              {t("calendar.fieldNotes")}
             </label>
             <textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               rows={3}
-              className="w-full resize-none rounded-xl border border-white/10 bg-slate-950/80 px-4 py-3 text-sm text-white placeholder:text-slate-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-              placeholder="Optional details, location, case reference…"
+              className={`${glassInput} resize-none`}
+              placeholder={t("calendar.placeholderNotes")}
             />
           </div>
 
           {error && (
-            <p className="text-sm text-red-300" role="alert">
+            <p className="text-sm text-red-700" role="alert">
               {error}
             </p>
           )}
@@ -167,16 +178,16 @@ export function CreateEventModal({ open, onClose, onSubmit }: Props) {
               type="button"
               onClick={handleClose}
               disabled={submitting}
-              className="flex-1 rounded-xl border border-white/15 py-3 text-sm font-medium text-slate-200 transition hover:bg-white/5 disabled:opacity-50"
+              className={`flex-1 py-3 text-sm ${btnSecondaryGlass} disabled:opacity-50`}
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={submitting}
-              className="flex-1 rounded-xl bg-blue-600 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-900/40 transition hover:bg-blue-500 disabled:opacity-60"
+              className={`flex-1 py-3 text-sm ${btnPrimaryGold} disabled:opacity-60`}
             >
-              {submitting ? "Saving…" : "Save event"}
+              {submitting ? t("settings.saving") : t("calendar.saveEvent")}
             </button>
           </div>
         </form>

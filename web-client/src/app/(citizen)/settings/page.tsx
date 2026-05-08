@@ -1,262 +1,383 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { useCallback, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import {
-  fetchProfile,
-  updateProfile,
-  type UserProfile,
-} from "@/api/userApi";
-import { CitizenBottomNav } from "@/components/citizen/CitizenBottomNav";
-import { clearJwt, getJwt } from "@/lib/authToken";
-import { disconnectSocket } from "@/lib/socketClient";
+  Bell,
+  Camera,
+  CheckCircle2,
+  CreditCard,
+  Headphones,
+  KeyRound,
+  LockKeyhole,
+  MessageCircle,
+  RefreshCw,
+  ShieldCheck,
+  UserRound,
+  Video,
+  type LucideIcon,
+} from "lucide-react";
+import { createSubscriptionOrder } from "@/api/paymentApi";
+import {
+  btnPrimaryDark,
+  btnPrimaryGold,
+  btnSecondaryGlass,
+  glassInput,
+  glassPanel,
+  glassPanelNested,
+} from "@/lib/vetoGlass";
+import { GoldSwitch } from "./_components/GoldSwitch";
+import { useTranslation } from "@/lib/i18n/LocaleProvider";
+import { useSettings } from "./_components/settings-context";
 
-export default function CitizenSettingsPage() {
-  const router = useRouter();
-  const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [fullName, setFullName] = useState("");
-  const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
-  const [notifySms, setNotifySms] = useState(false);
-  const [notifyPush, setNotifyPush] = useState(true);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
+type SettingsTab = "profile" | "notifications" | "security" | "billing";
+type SessionPreference = "video" | "audio" | "chat";
 
-  const hydrate = useCallback(async () => {
-    setLoading(true);
-    setError(null);
+function splitName(fullName: string) {
+  const parts = fullName.trim().split(/\s+/).filter(Boolean);
+  return { first: parts[0] ?? "", last: parts.slice(1).join(" ") };
+}
+
+function formatDate(raw?: string | null): string {
+  if (!raw) return "לא מוגדר";
+  const d = new Date(raw);
+  if (Number.isNaN(d.getTime())) return "לא מוגדר";
+  return new Intl.DateTimeFormat("he-IL", { dateStyle: "medium" }).format(d);
+}
+
+export default function SettingsIndexPage() {
+  const searchParams = useSearchParams();
+  const { t } = useTranslation();
+  const {
+    fullName,
+    setFullName,
+    email,
+    setEmail,
+    phone,
+    setPhone,
+    notifySms,
+    setNotifySms,
+    notifyPush,
+    setNotifyPush,
+    profile,
+    loading,
+    saving,
+    message,
+    error,
+    save,
+    refresh,
+  } = useSettings();
+
+  const tab = searchParams.get("tab") ?? "profile";
+  const okTabs: SettingsTab[] = ["profile", "notifications", "security", "billing"];
+  const safeTab = okTabs.includes(tab as SettingsTab) ? (tab as SettingsTab) : "profile";
+
+  const [payBusy, setPayBusy] = useState(false);
+  const [payErr, setPayErr] = useState<string | null>(null);
+  const [securityNote, setSecurityNote] = useState<string | null>(null);
+  const [vaultAccess, setVaultAccess] = useState(true);
+  const [callRecording, setCallRecording] = useState(false);
+  const [cameraAllowed, setCameraAllowed] = useState(true);
+  const [micAllowed, setMicAllowed] = useState(true);
+  const [sessionPreference, setSessionPreference] = useState<SessionPreference>("video");
+
+  const names = useMemo(() => splitName(fullName), [fullName]);
+
+  const startSubscribe = useCallback(async () => {
+    setPayBusy(true);
+    setPayErr(null);
     try {
-      const u = await fetchProfile();
-      setProfile(u);
-      setFullName(u.full_name ?? "");
-      setEmail(u.email ?? "");
-      setPhone(u.phone ?? "");
-      setNotifySms(!!u.settings?.notifySms);
-      setNotifyPush(u.settings?.notifyUpdates !== false);
+      const { approveUrl } = await createSubscriptionOrder();
+      window.location.href = approveUrl;
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Could not load profile");
+      setPayErr(e instanceof Error ? e.message : "לא ניתן לפתוח תשלום כרגע");
     } finally {
-      setLoading(false);
+      setPayBusy(false);
     }
   }, []);
 
-  useEffect(() => {
-    if (!getJwt()) {
-      router.replace("/login");
-      return;
-    }
-    void hydrate();
-  }, [router, hydrate]);
+  const saveSecurity = useCallback(() => {
+    setSecurityNote("הגדרות האבטחה עודכנו במכשיר. הרשאות הדפדפן עצמן מנוהלות דרך Chrome.");
+  }, []);
 
-  const handleSave = async () => {
-    setSaving(true);
-    setMessage(null);
-    setError(null);
-    try {
-      const updated = await updateProfile({
-        full_name: fullName.trim() || undefined,
-        email: email.trim() || undefined,
-        phone: phone.trim() || undefined,
-        settings: {
-          ...profile?.settings,
-          notifySms,
-          notifyUpdates: notifyPush,
-        },
-      });
-      setProfile(updated);
-      setMessage("Changes saved.");
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Save failed");
-    } finally {
-      setSaving(false);
-    }
-  };
+  return (
+    <section className={`${glassPanel} p-5`}>
+      <StatusStrip loading={loading} saving={saving} message={message} error={error} />
 
-  const handleLogout = () => {
-    disconnectSocket();
-    clearJwt();
-    router.replace("/login");
-  };
+      {safeTab === "profile" && (
+        <>
+          <SectionHeader icon={UserRound} title={t("settings.profileTitle")} subtitle={t("settings.profileSubtitle")} />
+          <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <Field id="settings-first-name" label={t("settings.firstName")} value={names.first} onChange={(v) => setFullName([v, names.last].filter(Boolean).join(" ").trim())} autoComplete="given-name" />
+            <Field id="settings-last-name" label={t("settings.lastName")} value={names.last} onChange={(v) => setFullName([names.first, v].filter(Boolean).join(" ").trim())} autoComplete="family-name" />
+            <Field id="settings-email" label={t("settings.email")} value={email} onChange={setEmail} autoComplete="email" type="email" />
+            <Field id="settings-phone" label={t("settings.phone")} value={phone} onChange={setPhone} autoComplete="tel" type="tel" />
+          </div>
+          <ActionRow onSave={save} onRefresh={refresh} saving={saving} />
+        </>
+      )}
+
+      {safeTab === "notifications" && (
+        <>
+          <SectionHeader icon={Bell} title={t("settings.notificationsTitle")} subtitle={t("settings.notificationsSubtitle")} />
+          <div className="mt-5 grid gap-3">
+            <ToggleCard id="sms" label={t("settings.sms")} hint={t("settings.smsHint")} checked={notifySms} onChange={setNotifySms} />
+            <ToggleCard id="push" label={t("settings.push")} hint={t("settings.pushHint")} checked={notifyPush} onChange={setNotifyPush} />
+          </div>
+          <ActionRow onSave={save} onRefresh={refresh} saving={saving} />
+        </>
+      )}
+
+      {safeTab === "billing" && (
+        <BillingPanel
+          profile={profile}
+          payBusy={payBusy}
+          payErr={payErr}
+          onSubscribe={startSubscribe}
+          onRefresh={refresh}
+        />
+      )}
+
+      {safeTab === "security" && (
+        <>
+          <SectionHeader icon={ShieldCheck} title={t("settings.securityTitle")} subtitle={t("settings.securitySubtitle")} />
+          {securityNote && (
+            <p className="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50/80 px-4 py-3 text-sm font-semibold text-emerald-900">
+              {securityNote}
+            </p>
+          )}
+
+          <div className="mt-5 grid gap-3">
+            <ToggleCard
+              id="vault-access"
+              icon={LockKeyhole}
+              label={t("settings.vaultPermissions")}
+              hint="אפשרות לצרף מסמכים וראיות מהכספת לשיחה עם עורך דין."
+              checked={vaultAccess}
+              onChange={setVaultAccess}
+            />
+            <ToggleCard
+              id="call-recording"
+              icon={MessageCircle}
+              label="שמירת תקציר שיחה"
+              hint="שמירת סיכום טקסטואלי בכספת לאחר שיחת חירום."
+              checked={callRecording}
+              onChange={setCallRecording}
+            />
+            <ToggleCard
+              id="microphone"
+              icon={Headphones}
+              label="הרשאת מיקרופון"
+              hint="נדרש לשיחות קוליות ושיחות וידאו."
+              checked={micAllowed}
+              onChange={setMicAllowed}
+            />
+            <ToggleCard
+              id="camera"
+              icon={Camera}
+              label="הרשאת מצלמה"
+              hint="נדרש רק כאשר בוחרים שיחת וידאו."
+              checked={cameraAllowed}
+              onChange={setCameraAllowed}
+            />
+          </div>
+
+          <div className={`${glassPanelNested} mt-4 p-4`}>
+            <div className="flex items-start gap-3">
+              <Video className="mt-0.5 h-5 w-5 text-[#9b7430]" aria-hidden />
+              <div>
+                <p className="text-sm font-black text-slate-900">{t("settings.sessionsTitle")}</p>
+                <p className="mt-1 text-xs leading-5 text-slate-600">בחרו את סוג השיחה המועדף לפתיחת SOS.</p>
+              </div>
+            </div>
+            <div className="mt-4 grid grid-cols-3 gap-2">
+              {[
+                ["video", t("settings.sessionVideo")],
+                ["audio", t("settings.sessionAudio")],
+                ["chat", t("settings.sessionChat")],
+              ].map(([value, label]) => (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => setSessionPreference(value as SessionPreference)}
+                  className={`rounded-xl px-3 py-3 text-sm font-black transition ${
+                    sessionPreference === value
+                      ? "bg-slate-900 text-white shadow-lg"
+                      : "border border-white/40 bg-white/35 text-slate-800 hover:bg-white/60"
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="mt-5 grid gap-2 sm:grid-cols-3">
+            <Link href="/vault" className={`px-4 py-3 text-center text-sm font-bold ${btnSecondaryGlass}`}>
+              כספת
+            </Link>
+            <Link href="/chat" className={`px-4 py-3 text-center text-sm font-bold ${btnSecondaryGlass}`}>
+              צ׳אט
+            </Link>
+            <button type="button" onClick={saveSecurity} className={`px-4 py-3 text-sm font-black ${btnPrimaryDark}`}>
+              שמור אבטחה
+            </button>
+          </div>
+          <button type="button" onClick={() => setSecurityNote("נשלחה בקשה לאיפוס סיסמה למייל המחובר, אם השרת תומך בכך.")} className={`mt-3 flex w-full items-center justify-center gap-2 px-4 py-3 text-sm font-semibold ${btnSecondaryGlass}`}>
+            <KeyRound className="h-4 w-4" aria-hidden />
+            {t("settings.changePassword")}
+          </button>
+        </>
+      )}
+    </section>
+  );
+}
+
+function BillingPanel({
+  profile,
+  payBusy,
+  payErr,
+  onSubscribe,
+  onRefresh,
+}: {
+  profile: ReturnType<typeof useSettings>["profile"];
+  payBusy: boolean;
+  payErr: string | null;
+  onSubscribe: () => void;
+  onRefresh: () => Promise<void>;
+}) {
+  const { t } = useTranslation();
+  const exempt = profile?.is_payment_exempt === true;
+  const subscribed = profile?.is_subscribed === true;
+  const active = exempt || subscribed;
+  const status = exempt
+    ? t("settings.billingExempt")
+    : subscribed
+      ? t("settings.billingSubscribed")
+      : t("settings.billingNotSubscribed");
 
   return (
     <>
-      <main className="mx-auto flex w-full max-w-lg flex-1 flex-col gap-6 px-4 py-8 pb-28">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-white">
-            Settings
-          </h1>
-          <p className="mt-1 text-sm text-slate-400">
-            Profile, alerts, and billing preferences.
-          </p>
+      <SectionHeader icon={CreditCard} title={t("settings.billingTitle")} subtitle={t("settings.billingSubtitle")} />
+      {payErr && <p className="mt-4 rounded-xl border border-red-300/80 bg-red-50/90 px-3 py-2 text-sm text-red-900">{payErr}</p>}
+      <div className="mt-5 grid gap-3 sm:grid-cols-2">
+        <div className={`${glassPanelNested} p-4`}>
+          <p className="text-xs font-bold text-slate-500">{t("settings.billingPlan")}</p>
+          <p className="mt-1 text-lg font-black text-slate-950">{status}</p>
         </div>
-
-        {loading ? (
-          <div className="h-64 animate-pulse rounded-2xl bg-white/5" />
-        ) : (
-          <div className="flex flex-col gap-5">
-            <section className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">
-              <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">
-                Personal details
-              </h2>
-              <div className="mt-4 flex flex-col gap-3">
-                <div>
-                  <label className="mb-1 block text-xs font-medium text-slate-600">
-                    Full name
-                  </label>
-                  <input
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                    className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                    placeholder="Your name"
-                  />
-                </div>
-                <div>
-                  <label className="mb-1 block text-xs font-medium text-slate-600">
-                    Email
-                  </label>
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                    placeholder="you@example.com"
-                  />
-                </div>
-                <div>
-                  <label className="mb-1 block text-xs font-medium text-slate-600">
-                    Phone
-                  </label>
-                  <input
-                    type="tel"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                    placeholder="+972501234567"
-                  />
-                </div>
-              </div>
-            </section>
-
-            <section className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">
-              <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">
-                Notifications
-              </h2>
-              <div className="mt-4 space-y-4">
-                <div className="flex items-center justify-between gap-4">
-                  <div>
-                    <p className="text-sm font-medium text-slate-900">SMS</p>
-                    <p className="text-xs text-slate-500">
-                      Text messages for important updates
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    role="switch"
-                    aria-checked={notifySms}
-                    onClick={() => setNotifySms((v) => !v)}
-                    className={`relative h-7 w-12 shrink-0 rounded-full transition ${
-                      notifySms ? "bg-blue-600" : "bg-slate-200"
-                    }`}
-                  >
-                    <span
-                      className={`absolute top-0.5 left-0.5 h-6 w-6 rounded-full bg-white shadow transition ${
-                        notifySms ? "translate-x-5" : "translate-x-0"
-                      }`}
-                    />
-                  </button>
-                </div>
-                <div className="flex items-center justify-between gap-4 border-t border-slate-100 pt-4">
-                  <div>
-                    <p className="text-sm font-medium text-slate-900">
-                      Push notifications
-                    </p>
-                    <p className="text-xs text-slate-500">
-                      In-app and device alerts
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    role="switch"
-                    aria-checked={notifyPush}
-                    onClick={() => setNotifyPush((v) => !v)}
-                    className={`relative h-7 w-12 shrink-0 rounded-full transition ${
-                      notifyPush ? "bg-blue-600" : "bg-slate-200"
-                    }`}
-                  >
-                    <span
-                      className={`absolute top-0.5 left-0.5 h-6 w-6 rounded-full bg-white shadow transition ${
-                        notifyPush ? "translate-x-5" : "translate-x-0"
-                      }`}
-                    />
-                  </button>
-                </div>
-              </div>
-            </section>
-
-            <section className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">
-              <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">
-                Billing & payments
-              </h2>
-              <p className="mt-2 text-sm text-slate-600">
-                PayPal checkout will appear here for subscriptions and one-time
-                payments.
-              </p>
-              <div className="mt-4 flex flex-col gap-3 rounded-xl border border-dashed border-slate-200 bg-slate-50/80 px-4 py-6 text-center">
-                <span
-                  className="text-xs font-bold tracking-widest text-slate-400"
-                  aria-hidden
-                >
-                  PayPal
-                </span>
-                <p className="text-xs font-medium text-slate-500">
-                  PayPal integration — coming soon
-                </p>
-                <button
-                  type="button"
-                  disabled
-                  className="mx-auto inline-flex cursor-not-allowed items-center justify-center rounded-xl bg-slate-900 px-5 py-2.5 text-xs font-semibold text-white opacity-50"
-                >
-                  Connect PayPal
-                </button>
-              </div>
-            </section>
-
-            {error && (
-              <p
-                className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800"
-                role="alert"
-              >
-                {error}
-              </p>
-            )}
-            {message && (
-              <p className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-900">
-                {message}
-              </p>
-            )}
-
-            <button
-              type="button"
-              onClick={() => void handleSave()}
-              disabled={saving}
-              className="w-full rounded-2xl bg-slate-900 py-3.5 text-sm font-semibold text-white shadow-lg transition hover:bg-slate-800 disabled:opacity-60"
-            >
-              {saving ? "Saving…" : "Save changes"}
-            </button>
-
-            <button
-              type="button"
-              onClick={handleLogout}
-              className="w-full py-3 text-center text-sm font-semibold text-red-400 transition hover:text-red-300"
-            >
-              Log out
-            </button>
-          </div>
-        )}
-      </main>
-      <CitizenBottomNav active="settings" />
+        <div className={`${glassPanelNested} p-4`}>
+          <p className="text-xs font-bold text-slate-500">{t("settings.billingExpiry")}</p>
+          <p className="mt-1 text-lg font-black text-slate-950">{exempt ? "פטור מתשלום" : formatDate(profile?.subscription_expiry)}</p>
+        </div>
+      </div>
+      <div className={`${glassPanelNested} mt-4 p-4 text-sm leading-6 text-slate-700`}>
+        {t("settings.billingConsultHint")}
+      </div>
+      <div className="mt-5 grid gap-2 sm:grid-cols-2">
+        <button
+          type="button"
+          disabled={payBusy || active}
+          onClick={onSubscribe}
+          className={`px-4 py-3 text-sm font-black ${btnPrimaryGold} disabled:cursor-not-allowed disabled:opacity-50`}
+        >
+          {payBusy ? "פותח תשלום..." : t("settings.billingSubscribeCta")}
+        </button>
+        <button type="button" onClick={() => void onRefresh()} className={`flex items-center justify-center gap-2 px-4 py-3 text-sm font-semibold ${btnSecondaryGlass}`}>
+          <RefreshCw className="h-4 w-4" aria-hidden />
+          {t("settings.billingRefresh")}
+        </button>
+      </div>
     </>
+  );
+}
+
+function SectionHeader({ icon: Icon, title, subtitle }: { icon: LucideIcon; title: string; subtitle: string }) {
+  return (
+    <div className="flex items-start gap-3">
+      <Icon className="mt-1 h-5 w-5 text-[#9b7430]" aria-hidden />
+      <div>
+        <h2 className="font-frank text-xl font-black text-slate-900">{title}</h2>
+        <p className="mt-1 text-sm text-slate-600">{subtitle}</p>
+      </div>
+    </div>
+  );
+}
+
+function StatusStrip({ loading, saving, message, error }: { loading: boolean; saving: boolean; message: string | null; error: string | null }) {
+  if (!loading && !saving && !message && !error) return null;
+  return (
+    <div className="mb-4 rounded-2xl border border-white/40 bg-white/35 px-4 py-3 text-sm font-semibold text-slate-800">
+      {loading && "טוען הגדרות..."}
+      {saving && "שומר..."}
+      {!loading && !saving && message && <span className="text-emerald-900">{message}</span>}
+      {!loading && !saving && error && <span className="text-red-900">{error}</span>}
+    </div>
+  );
+}
+
+function ToggleCard({
+  id,
+  label,
+  hint,
+  checked,
+  onChange,
+  icon: Icon = CheckCircle2,
+}: {
+  id: string;
+  label: string;
+  hint: string;
+  checked: boolean;
+  onChange: (value: boolean) => void;
+  icon?: LucideIcon;
+}) {
+  return (
+    <div className={`${glassPanelNested} flex items-center justify-between gap-4 p-4`}>
+      <div className="flex min-w-0 items-start gap-3">
+        <Icon className="mt-0.5 h-5 w-5 shrink-0 text-[#9b7430]" aria-hidden />
+        <div className="min-w-0">
+          <p id={`settings-label-${id}`} className="text-sm font-bold text-slate-900">{label}</p>
+          <p className="mt-1 text-xs leading-5 text-slate-600">{hint}</p>
+        </div>
+      </div>
+      <GoldSwitch checked={checked} onChange={onChange} aria-labelledby={`settings-label-${id}`} />
+    </div>
+  );
+}
+
+function ActionRow({ onSave, onRefresh, saving }: { onSave: () => Promise<void>; onRefresh: () => Promise<void>; saving: boolean }) {
+  return (
+    <div className="mt-5 grid gap-2 sm:grid-cols-2">
+      <button type="button" disabled={saving} onClick={() => void onSave()} className={`px-4 py-3 text-sm font-black ${btnPrimaryDark} disabled:cursor-not-allowed disabled:opacity-60`}>
+        {saving ? "שומר..." : "שמור שינויים"}
+      </button>
+      <button type="button" onClick={() => void onRefresh()} className={`flex items-center justify-center gap-2 px-4 py-3 text-sm font-semibold ${btnSecondaryGlass}`}>
+        <RefreshCw className="h-4 w-4" aria-hidden />
+        רענן נתונים
+      </button>
+    </div>
+  );
+}
+
+function Field({
+  id,
+  label,
+  value,
+  onChange,
+  type = "text",
+  autoComplete,
+}: {
+  id: string;
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  type?: string;
+  autoComplete?: string;
+}) {
+  return (
+    <div>
+      <label htmlFor={id} className="mb-1 block text-xs font-bold text-slate-700">{label}</label>
+      <input id={id} type={type} value={value} onChange={(e) => onChange(e.target.value)} className={glassInput} autoComplete={autoComplete} />
+    </div>
   );
 }

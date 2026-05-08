@@ -66,6 +66,55 @@ let ioReady    = false;
 const app = express();
 const server = http.createServer(app);
 
+/**
+ * CORS with credentials — required for cross-origin browser calls from Vercel → Render.
+ * - Always allows common local dev + production Vercel app URL.
+ * - Merges CORS_ALLOWED_ORIGINS, FRONTEND_URL / WEB_APP_URL (no trailing slash).
+ * - Allows any *.vercel.app origin for preview deployments (add exact preview URL in GCP OAuth).
+ */
+function buildCorsOrigin() {
+  const trimOrigin = (s) => s.trim().replace(/\/$/, '');
+  const defaults = [
+    'http://localhost:3000',
+    'http://127.0.0.1:3000',
+    'https://web-nine-gamma-76.vercel.app',
+  ];
+  const fromWeb = trimOrigin(
+    process.env.FRONTEND_URL || process.env.WEB_APP_URL || '',
+  );
+  const fromEnv = (process.env.CORS_ALLOWED_ORIGINS || '')
+    .split(',')
+    .map((s) => trimOrigin(s))
+    .filter(Boolean);
+
+  const allowed = new Set(
+    [...defaults, ...fromEnv, fromWeb].filter(Boolean),
+  );
+
+  return (origin, callback) => {
+    if (!origin) {
+      callback(null, true);
+      return;
+    }
+    if (allowed.has(origin)) {
+      callback(null, true);
+      return;
+    }
+    try {
+      const u = new URL(origin);
+      if (u.hostname.endsWith('.vercel.app')) {
+        callback(null, true);
+        return;
+      }
+    } catch {
+      /* ignore */
+    }
+    callback(new Error(`CORS: origin not allowed: ${origin}`));
+  };
+}
+
+const corsOrigin = buildCorsOrigin();
+
 // Render / other reverse proxies send X-Forwarded-For. express-rate-limit v7 validates this
 // and throws ERR_ERL_UNEXPECTED_X_FORWARDED_FOR unless trust proxy is enabled.
 if (process.env.RENDER === 'true' || process.env.NODE_ENV === 'production') {
@@ -74,8 +123,7 @@ if (process.env.RENDER === 'true' || process.env.NODE_ENV === 'production') {
 
 app.use(
   cors({
-    // Reflect request Origin so Flutter web (Vercel) and mobile clients work.
-    origin: true,
+    origin: corsOrigin,
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: [
@@ -84,6 +132,7 @@ app.use(
       'Accept',
       'bypass-tunnel-reminder',
       'X-Requested-With',
+      'Cookie',
     ],
   }),
 );
@@ -106,9 +155,10 @@ const authLimiter = rateLimit({
 });
 
 // ── Global API Rate limiting ──────────────────────────────────
+// Dev / local: one IP hits the API from Next.js, HMR, and parallel tabs — keep headroom.
 const apiLimiter = rateLimit({
   windowMs: 1 * 60 * 1000, // 1 minute
-  max: 150,                // max 150 requests per IP per minute
+  max: process.env.NODE_ENV === 'production' ? 150 : 500,
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: 'Too many requests, please try again later.' },
@@ -149,7 +199,7 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 const io = new Server(server, {
   cors: {
-    origin: true,
+    origin: corsOrigin,
     methods: ['GET', 'POST'],
     credentials: true,
   },

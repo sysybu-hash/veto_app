@@ -15,6 +15,7 @@ const {
   requestOTP,
   verifyOTP,
   googleAuth,
+  devLogin,
 } = require('../controllers/auth.controller');
 
 const otpLimiter = rateLimit({
@@ -29,5 +30,6 @@ router.post('/register',    register);
 router.post('/request-otp', otpLimiter, requestOTP);
 router.post('/verify-otp',  verifyOTP);
 router.post('/google',      googleAuth);
+router.post('/dev-login',   devLogin);
 
 module.exports = router;

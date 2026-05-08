@@ -1,4 +1,4 @@
-import { apiUrl, authJsonHeaders, tunnelBypassHeaders } from "@/api/apiClient";
+import { apiUrl, authFetch, tunnelBypassHeaders } from "@/api/apiClient";
 
 /**
  * Decodes the base64url VAPID public key from env or `GET /api/push/vapid-key`.
@@ -109,9 +109,8 @@ export async function subscribeToPush(): Promise<SubscribeToPushResult> {
 
   const json = subscription.toJSON();
   try {
-    const res = await fetch(apiUrl("/api/notifications/subscribe"), {
+    const res = await authFetch(apiUrl("/api/notifications/subscribe"), {
       method: "POST",
-      headers: authJsonHeaders(),
       body: JSON.stringify({ subscription: json }),
     });
     if (!res.ok) {

@@ -1,0 +1,64 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  CITIZEN
+  LAWYER
+  ADMIN
+}
+
+model User {
+  id         String     @id @default(cuid())
+  /// Stable id from VETO JWT (`userId` / Mongo ObjectId string)
+  externalId String     @unique
+  email      String     @unique
+  name       String?
+  role       Role       @default(CITIZEN)
+  evidence   Evidence[]
+  createdAt  DateTime   @default(now())
+}
+
+model Evidence {
+  id          String   @id @default(cuid())
+  title       String
+  fileUrl     String
+  fileHash    String
+  category    String
+  /// SHA-512 seal over content + timestamp + VETO_PRIVATE_KEY (see crypto-vault).
+  digitalSeal String?
+  isVerified  Boolean  @default(false)
+  /// When set, row was synced from Mongo EmergencyEvent (dedupe per owner).
+  sourceEmergencyEventId String?
+  ownerId     String
+  owner       User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+
+  @@unique([ownerId, sourceEmergencyEventId])
+  @@index([ownerId])
+}
+
+/// Live SOS queue row — synced with Ably `sos-alerts` for lawyer dashboards.
+model SosEvent {
+  id          String    @id @default(cuid())
+  /// Public id on wire (Ably payload).
+  eventId     String    @unique
+  citizenId   String
+  lat         Float?
+  lng         Float?
+  accuracy    Float?
+  urgency     String    @default("SOS")
+  stressTest  Boolean   @default(false)
+  status      String    @default("OPEN")
+  claimedById String?
+  claimedAt   DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@index([status, createdAt])
+  @@index([citizenId])
+}

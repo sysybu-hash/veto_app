@@ -1,16 +1,25 @@
+"use client";
+
+import type { ReactNode } from "react";
+import { useTranslation } from "@/lib/i18n/LocaleProvider";
+
 export default function CitizenLayout({
   children,
 }: Readonly<{
-  children: React.ReactNode;
+  children: ReactNode;
 }>) {
+  const { t } = useTranslation();
+
   return (
-    <div className="min-h-full flex flex-col bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 text-slate-50">
-      <header className="shrink-0 border-b border-white/10 px-4 py-3">
+    <div className="flex min-h-full flex-col text-slate-900">
+      <header className="shrink-0 border-b border-white/40 bg-white/55 px-4 py-3 backdrop-blur-xl">
         <div className="mx-auto flex max-w-lg items-center justify-between">
-          <span className="text-sm font-semibold tracking-tight text-white">
+          <span className="font-frank text-sm font-bold tracking-tight text-slate-900">
             VETO
           </span>
-          <span className="text-xs text-slate-400">Citizen</span>
+          <span className="text-xs font-medium text-slate-600">
+            {t("citizenLayout.subtitle")}
+          </span>
         </div>
       </header>
       <div className="flex flex-1 flex-col">{children}</div>

@@ -1,9 +1,19 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect } from "react";
+import Link from "next/link";
+import { useCallback, useEffect, useState } from "react";
+import { triggerSosAlert } from "@/app/actions/sos";
+import { fetchProfile, type UserProfile } from "@/api/userApi";
 import { CitizenBottomNav } from "@/components/citizen/CitizenBottomNav";
+import { SpecializationDialog } from "@/components/dialogs/SpecializationDialog";
+import { btnPrimaryDark, btnSecondaryGlass, glassPanelNested } from "@/lib/vetoGlass";
 import { getJwt } from "@/lib/authToken";
+import { useTranslation } from "@/lib/i18n/LocaleProvider";
+import {
+  type SpecializationId,
+  UI_TO_BACKEND_SPECIALIZATION,
+} from "@/lib/specializations";
 import { connectSocket, getSocket } from "@/lib/socketClient";
 import {
   useEmergencyStore,
@@ -50,10 +60,16 @@ function readSessionPayload(data: unknown): SessionReadyState | null {
 
 export default function CitizenHubPage() {
   const router = useRouter();
+  const { t, locale } = useTranslation();
+  const [sosDialogOpen, setSosDialogOpen] = useState(false);
+  const [specializationDialogOpen, setSpecializationDialogOpen] = useState(false);
+  const [callTypeDialogOpen, setCallTypeDialogOpen] = useState(false);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
 
   const isSearching = useEmergencyStore((s) => s.isSearching);
   const lawyerFound = useEmergencyStore((s) => s.lawyerFound);
   const lawyerName = useEmergencyStore((s) => s.lawyerName);
+  const currentEventId = useEmergencyStore((s) => s.currentEventId);
   const statusMessage = useEmergencyStore((s) => s.statusMessage);
 
   const reset = useEmergencyStore((s) => s.reset);
@@ -67,6 +83,21 @@ export default function CitizenHubPage() {
       router.replace("/login");
     }
   }, [router]);
+
+  useEffect(() => {
+    if (!getJwt()) return;
+    let cancelled = false;
+    void fetchProfile()
+      .then((u) => {
+        if (!cancelled) setProfile(u);
+      })
+      .catch(() => {
+        if (!cancelled) setProfile(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     if (!getJwt()) return;
@@ -88,18 +119,18 @@ export default function CitizenHubPage() {
       const name =
         typeof payload?.lawyerName === "string" ? payload.lawyerName : undefined;
       if (!eventId || !roomId) {
-        useEmergencyStore.getState().setErrorMessage("Invalid lawyer_found payload.");
+        useEmergencyStore.getState().setErrorMessage(t("hub.errInvalidLawyerPayload"));
         return;
       }
       setLawyerFound({ eventId, roomId, lawyerName: name });
-      sock.emit("citizen_chose_session", { eventId, callType: "video" as const });
+      setCallTypeDialogOpen(true);
     };
 
     const onSessionReady = (raw: unknown) => {
       if (cancelled) return;
       const parsed = readSessionPayload(raw);
       if (!parsed) {
-        setErrorMessage("Could not start call (missing session data).");
+        setErrorMessage(t("hub.errSessionData"));
         return;
       }
       setSessionReady(parsed);
@@ -108,7 +139,7 @@ export default function CitizenHubPage() {
 
     const onNoLawyers = () => {
       if (cancelled) return;
-      setErrorMessage("No lawyers are available right now. Try again shortly.");
+      setErrorMessage(t("hub.errNoLawyers"));
     };
 
     const onVetoError = (raw: unknown) => {
@@ -119,7 +150,7 @@ export default function CitizenHubPage() {
         "message" in raw &&
         typeof (raw as { message?: unknown }).message === "string"
           ? (raw as { message: string }).message
-          : "Something went wrong.";
+          : t("hub.errGeneric");
       setErrorMessage(msg);
     };
 
@@ -131,7 +162,7 @@ export default function CitizenHubPage() {
         "message" in raw &&
         typeof (raw as { message?: unknown }).message === "string"
           ? (raw as { message: string }).message
-          : "This case is no longer available.";
+          : t("hub.errCaseTaken");
       const { isSearching: searching, lawyerFound: found } =
         useEmergencyStore.getState();
       if (searching || found) {
@@ -155,9 +186,9 @@ export default function CitizenHubPage() {
       sock.off("veto_error", onVetoError);
       sock.off("case_taken", onCaseTaken);
     };
-  }, [router, setErrorMessage, setLawyerFound, setSessionReady]);
+  }, [router, setErrorMessage, setLawyerFound, setSessionReady, t]);
 
-  const handleSos = useCallback(() => {
+  const handleSos = useCallback((specializationId: SpecializationId) => {
     if (!getJwt()) {
       router.push("/login");
       return;
@@ -178,10 +209,38 @@ export default function CitizenHubPage() {
       sock.connect();
     }
 
-    const emitStart = (lat: number, lng: number) => {
+    const emitStart = (lat: number, lng: number, accuracy?: number) => {
+      const onCreated = (raw: unknown) => {
+        sock.off("emergency_created", onCreated);
+        const payload =
+          raw && typeof raw === "object" ? (raw as Record<string, unknown>) : null;
+        const eid =
+          typeof payload?.eventId === "string" ? payload.eventId.trim() : "";
+        const loc =
+          typeof accuracy === "number" && Number.isFinite(accuracy)
+            ? { lat, lng, accuracy }
+            : { lat, lng };
+        if (!eid) {
+          console.warn("[hub] emergency_created without eventId");
+          return;
+        }
+        void triggerSosAlert({
+          eventId: eid,
+          location: loc,
+          stress_test: false,
+          urgency: "SOS",
+        }).then((r) => {
+          if (!r.success) {
+            console.warn("[hub] Ably SOS:", r.error);
+          }
+        });
+      };
+
+      sock.once("emergency_created", onCreated);
       sock.emit("start_veto", {
         location: { lat, lng },
-        preferredLanguage: "he",
+        preferredLanguage: locale,
+        specialization: UI_TO_BACKEND_SPECIALIZATION[specializationId],
       });
     };
 
@@ -192,66 +251,231 @@ export default function CitizenHubPage() {
 
     navigator.geolocation.getCurrentPosition(
       (pos) => {
-        emitStart(pos.coords.latitude, pos.coords.longitude);
+        emitStart(
+          pos.coords.latitude,
+          pos.coords.longitude,
+          pos.coords.accuracy,
+        );
       },
       () => {
         emitStart(DEFAULT_LOCATION.lat, DEFAULT_LOCATION.lng);
       },
       { enableHighAccuracy: true, timeout: 12_000, maximumAge: 60_000 },
     );
-  }, [router, setErrorMessage, startSearch]);
+  }, [locale, router, setErrorMessage, startSearch]);
+
+  const confirmSos = useCallback(() => {
+    setSosDialogOpen(false);
+    setSpecializationDialogOpen(true);
+  }, []);
+
+  const selectSpecialization = useCallback(
+    (specializationId: SpecializationId) => {
+      setSpecializationDialogOpen(false);
+      handleSos(specializationId);
+    },
+    [handleSos],
+  );
+
+  const chooseCallType = useCallback((callType: SessionCallType) => {
+    const eventId = useEmergencyStore.getState().currentEventId;
+    if (!eventId) return;
+    const sock = (() => {
+      try {
+        return getSocket();
+      } catch {
+        return connectSocket();
+      }
+    })();
+    if (!sock.connected) sock.connect();
+    sock.emit("citizen_chose_session", { eventId, callType });
+    setCallTypeDialogOpen(false);
+  }, []);
 
   return (
     <>
-    <main className="mx-auto flex w-full max-w-lg flex-1 flex-col items-center justify-center gap-8 px-6 py-12 pb-28">
-      <div className="text-center">
-        <h1 className="text-2xl font-semibold text-white">Emergency legal help</h1>
-        <p className="mt-2 text-sm text-slate-400">
-          Tap SOS to request a lawyer. Stay on this screen until the call opens.
-        </p>
-      </div>
+      <main className="mx-auto flex w-full max-w-lg flex-1 flex-col items-center justify-center gap-8 px-6 py-12 pb-28">
+        <div className="w-full rounded-2xl border border-white/50 bg-white/55 px-5 py-6 text-center shadow-sm backdrop-blur-xl">
+          <h1 className="font-frank text-2xl font-bold text-slate-900">
+            {t("hub.title")}
+          </h1>
+          <p className="mt-2 text-sm text-slate-600">{t("hub.subtitle")}</p>
+        </div>
 
-      <button
-        type="button"
-        onClick={handleSos}
-        disabled={isSearching}
-        className="sos-btn relative flex h-44 w-44 items-center justify-center rounded-full border-4 border-red-950 bg-red-700 text-lg font-bold text-white shadow-2xl shadow-red-900/50 transition enabled:cursor-pointer enabled:hover:bg-red-600 enabled:active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-70"
-      >
-        <span className="relative z-10">SOS</span>
-      </button>
+        <div className="w-full rounded-2xl border border-[#C5A059]/35 bg-[#C5A059]/10 px-4 py-3 text-sm shadow-sm backdrop-blur-xl">
+          <div className="flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <p className="font-bold text-slate-900">המנוי המחובר</p>
+              <p className="mt-0.5 truncate text-xs text-slate-600">
+                {profile?.full_name || profile?.phone || "משתמש VETO"}
+              </p>
+            </div>
+            <span className={`shrink-0 rounded-full px-3 py-1 text-xs font-black ${
+              profile?.is_payment_exempt || profile?.is_subscribed
+                ? "bg-emerald-100 text-emerald-900"
+                : "bg-amber-100 text-amber-950"
+            }`}>
+              {profile?.is_payment_exempt
+                ? "פטור"
+                : profile?.is_subscribed
+                  ? "פעיל"
+                  : "לא פעיל"}
+            </span>
+          </div>
+        </div>
 
-      {isSearching && !lawyerFound && (
-        <p className="text-center text-sm text-amber-200/90">
-          Searching for an available lawyer…
-        </p>
-      )}
-
-      {lawyerFound && lawyerName && (
-        <p className="text-center text-sm text-emerald-300/90">
-          {lawyerName} accepted — starting your video session…
-        </p>
-      )}
-
-      {statusMessage && (
-        <div
-          role="alert"
-          className="w-full rounded-xl border border-red-500/40 bg-red-950/50 px-4 py-3 text-center text-sm text-red-100"
+        <button
+          type="button"
+          onClick={() => setSosDialogOpen(true)}
+          disabled={isSearching}
+          className="sos-btn relative flex h-44 w-44 items-center justify-center rounded-full border-4 border-red-950 bg-red-700 text-lg font-bold text-white shadow-2xl shadow-red-900/50 transition enabled:cursor-pointer enabled:hover:bg-red-600 enabled:active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-70"
         >
-          {statusMessage}
-          <div className="mt-3">
-            <button
-              type="button"
-              onClick={() => reset()}
-              className="rounded-lg bg-white/10 px-3 py-1.5 text-xs font-medium text-white hover:bg-white/15"
+          <span className="relative z-10">{t("hub.sos")}</span>
+        </button>
+
+        {isSearching && !lawyerFound && (
+          <p className="text-center text-sm font-medium text-amber-800">
+            {t("hub.searching")}
+          </p>
+        )}
+
+        {lawyerFound && lawyerName && (
+          <p className="text-center text-sm font-medium text-emerald-800">
+            {t("hub.lawyerAccepted").replace("{name}", lawyerName)}
+          </p>
+        )}
+
+        {statusMessage && (
+          <div
+            role="alert"
+            className="w-full rounded-xl border border-red-300/80 bg-red-50/90 px-4 py-3 text-center text-sm text-red-900 backdrop-blur-md"
+          >
+            {statusMessage}
+            <div className="mt-3">
+              <button
+                type="button"
+                onClick={() => reset()}
+                className={`${btnSecondaryGlass} px-3 py-1.5 text-xs`}
+              >
+                {t("hub.dismiss")}
+              </button>
+            </div>
+          </div>
+        )}
+
+        <div className="grid w-full grid-cols-2 gap-3">
+          <Link
+            href="/vault/generator"
+            className={`${btnSecondaryGlass} px-4 py-3 text-center text-sm font-semibold`}
+          >
+            מחולל מסמכים
+          </Link>
+          <Link
+            href="/productivity"
+            className={`${btnSecondaryGlass} px-4 py-3 text-center text-sm font-semibold`}
+          >
+            {t("hub.quickProductivity")}
+          </Link>
+        </div>
+      </main>
+
+      <CitizenBottomNav active="hub" />
+
+      {sosDialogOpen && (
+        <div
+          className="fixed inset-0 z-[80] flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm"
+          role="presentation"
+          onClick={() => setSosDialogOpen(false)}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="sos-dialog-title"
+            className={`w-full max-w-md p-6 shadow-xl ${glassPanelNested}`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2
+              id="sos-dialog-title"
+              className="font-frank text-lg font-bold text-slate-900"
             >
-              Dismiss
-            </button>
+              {t("hub.dialogTitle")}
+            </h2>
+            <p className="mt-3 text-sm leading-relaxed text-slate-700">
+              {t("hub.dialogBody")}
+            </p>
+            <div className="mt-6 flex flex-wrap justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setSosDialogOpen(false)}
+                className={`px-4 py-2.5 text-sm font-semibold ${btnSecondaryGlass}`}
+              >
+                {t("hub.dialogCancel")}
+              </button>
+              <button
+                type="button"
+                onClick={() => void confirmSos()}
+                className={`px-4 py-2.5 text-sm font-bold text-white ${btnPrimaryDark}`}
+              >
+                {t("hub.dialogConfirm")}
+              </button>
+            </div>
           </div>
         </div>
       )}
-    </main>
 
-      <CitizenBottomNav active="hub" />
+      <SpecializationDialog
+        isOpen={specializationDialogOpen}
+        onClose={() => setSpecializationDialogOpen(false)}
+        onSelect={selectSpecialization}
+      />
+
+      {callTypeDialogOpen && lawyerFound && currentEventId && (
+        <div
+          className="fixed inset-0 z-[95] flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm"
+          role="presentation"
+          onClick={() => setCallTypeDialogOpen(false)}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="call-type-dialog-title"
+            className={`w-full max-w-md p-6 shadow-xl ${glassPanelNested}`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2
+              id="call-type-dialog-title"
+              className="font-frank text-lg font-bold text-slate-900"
+            >
+              {t("dialog.chooseCallType")}
+            </h2>
+            <p className="mt-2 text-sm text-slate-700">{t("hub.callTypeHint")}</p>
+
+            <div className="mt-5 grid gap-2">
+              <button
+                type="button"
+                onClick={() => chooseCallType("video")}
+                className={`px-4 py-2.5 text-sm font-semibold ${btnSecondaryGlass}`}
+              >
+                {t("hub.callTypeVideo")}
+              </button>
+              <button
+                type="button"
+                onClick={() => chooseCallType("audio")}
+                className={`px-4 py-2.5 text-sm font-semibold ${btnSecondaryGlass}`}
+              >
+                {t("hub.callTypeAudio")}
+              </button>
+              <button
+                type="button"
+                onClick={() => chooseCallType("chat")}
+                className={`px-4 py-2.5 text-sm font-semibold ${btnSecondaryGlass}`}
+              >
+                {t("hub.callTypeChat")}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

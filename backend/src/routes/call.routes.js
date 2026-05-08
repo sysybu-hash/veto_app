@@ -25,6 +25,7 @@ const upload = multer({
 
 // GET  /api/calls/ice-config        — Extra ICE/TURN (secrets stay on server)
 router.get('/ice-config', protect, callCtrl.getIceConfig);
+router.get('/my-sos-artifacts', protect, callCtrl.listMySosArtifacts);
 
 // Agora Cloud Recording (browser-safe full mix) — must be before `GET /:eventId`
 router.get('/:eventId/cloud-recording/status', protect, callCtrl.getCloudRecordingStatus);

@@ -1,4 +1,4 @@
-import { apiUrl, authJsonHeaders } from "@/api/apiClient";
+import { apiUrl, authFetch } from "@/api/apiClient";
 
 const BASE = "/api/citizen-dashboard";
 
@@ -72,9 +72,8 @@ async function readErrorMessage(res: Response): Promise<string> {
  * GET /api/citizen-dashboard/tasks — returns a JSON array of tasks.
  */
 export async function fetchTasks(): Promise<ApiCitizenTask[]> {
-  const res = await fetch(apiUrl(`${BASE}/tasks`), {
+  const res = await authFetch(apiUrl(`${BASE}/tasks`), {
     method: "GET",
-    headers: authJsonHeaders(),
   });
   if (!res.ok) {
     throw new Error(await readErrorMessage(res));
@@ -92,9 +91,8 @@ export async function fetchTasks(): Promise<ApiCitizenTask[]> {
 export async function createTask(
   payload: CreateCitizenTaskPayload,
 ): Promise<ApiCitizenTask> {
-  const res = await fetch(apiUrl(`${BASE}/tasks`), {
+  const res = await authFetch(apiUrl(`${BASE}/tasks`), {
     method: "POST",
-    headers: authJsonHeaders(),
     body: JSON.stringify(payload),
   });
   if (!res.ok) {
@@ -110,11 +108,10 @@ export async function updateTaskStatus(
   taskId: string,
   isDone: boolean,
 ): Promise<ApiCitizenTask> {
-  const res = await fetch(
+  const res = await authFetch(
     apiUrl(`${BASE}/tasks/${encodeURIComponent(taskId)}`),
     {
       method: "PATCH",
-      headers: authJsonHeaders(),
       body: JSON.stringify({ status: isDone ? "done" : "open" }),
     },
   );
@@ -128,9 +125,8 @@ export async function updateTaskStatus(
  * GET /api/citizen-dashboard/contracts — returns a JSON array of contracts.
  */
 export async function fetchContracts(): Promise<ApiCitizenContract[]> {
-  const res = await fetch(apiUrl(`${BASE}/contracts`), {
+  const res = await authFetch(apiUrl(`${BASE}/contracts`), {
     method: "GET",
-    headers: authJsonHeaders(),
   });
   if (!res.ok) {
     throw new Error(await readErrorMessage(res));
@@ -148,9 +144,8 @@ export async function fetchContracts(): Promise<ApiCitizenContract[]> {
 export async function createContract(
   payload: CreateCitizenContractPayload,
 ): Promise<ApiCitizenContract> {
-  const res = await fetch(apiUrl(`${BASE}/contracts`), {
+  const res = await authFetch(apiUrl(`${BASE}/contracts`), {
     method: "POST",
-    headers: authJsonHeaders(),
     body: JSON.stringify(payload),
   });
   if (!res.ok) {
@@ -174,11 +169,10 @@ export async function patchContract(
     endDate: string;
   }>,
 ): Promise<ApiCitizenContract> {
-  const res = await fetch(
+  const res = await authFetch(
     apiUrl(`${BASE}/contracts/${encodeURIComponent(contractId)}`),
     {
       method: "PATCH",
-      headers: authJsonHeaders(),
       body: JSON.stringify(patch),
     },
   );

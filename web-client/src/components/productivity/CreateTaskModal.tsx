@@ -5,6 +5,13 @@ import {
   createTask,
   priorityRelatedType,
 } from "@/api/productivityApi";
+import {
+  btnPrimaryGold,
+  btnSecondaryGlass,
+  glassInput,
+  glassPanel,
+} from "@/lib/vetoGlass";
+import { useTranslation } from "@/lib/i18n/LocaleProvider";
 
 export type NewTaskPayload = {
   title: string;
@@ -31,18 +38,20 @@ export function CreateTaskModal({
   onClose,
   onTaskCreated,
 }: CreateTaskModalProps) {
+  const { t } = useTranslation();
   const [form, setForm] = useState<NewTaskPayload>(emptyForm);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const titleRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (open) {
+    if (!open) return;
+    queueMicrotask(() => {
       setForm(emptyForm);
       setSubmitError(null);
       setIsSubmitting(false);
       queueMicrotask(() => titleRef.current?.focus());
-    }
+    });
   }, [open]);
 
   const handleClose = useCallback(() => {
@@ -74,7 +83,9 @@ export function CreateTaskModal({
       onTaskCreated();
       onClose();
     } catch (e) {
-      setSubmitError(e instanceof Error ? e.message : "Could not create task");
+      setSubmitError(
+        e instanceof Error ? e.message : t("productivity.taskCreateFailed"),
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -91,30 +102,30 @@ export function CreateTaskModal({
       }}
     >
       <div
-        className="flex max-h-[min(90dvh,640px)] w-full max-w-lg flex-col overflow-hidden rounded-2xl bg-white shadow-2xl"
+        className={`flex max-h-[min(90dvh,640px)] w-full max-w-lg flex-col overflow-hidden shadow-2xl shadow-slate-900/20 ${glassPanel}`}
         role="dialog"
         aria-modal="true"
         aria-labelledby="task-modal-title"
         onMouseDown={(e) => e.stopPropagation()}
       >
-        <div className="flex items-start justify-between border-b border-slate-100 px-5 py-4">
+        <div className="flex items-start justify-between border-b border-white/40 px-5 py-4">
           <div>
             <h2
               id="task-modal-title"
-              className="text-lg font-semibold text-slate-900"
+              className="font-frank text-lg font-bold text-slate-900"
             >
-              New task
+              {t("productivity.taskModalTitle")}
             </h2>
-            <p className="mt-0.5 text-sm text-slate-500">
-              Track something you need to complete for your case.
+            <p className="mt-0.5 text-sm text-slate-600">
+              {t("productivity.taskModalSubtitle")}
             </p>
           </div>
           <button
             type="button"
             onClick={handleClose}
             disabled={isSubmitting}
-            className="rounded-lg p-2 text-slate-500 hover:bg-slate-100 hover:text-slate-800 disabled:cursor-not-allowed disabled:opacity-40"
-            aria-label="Close"
+            className="rounded-lg p-2 text-slate-600 hover:bg-white/40 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-40"
+            aria-label={t("common.close")}
           >
             <svg
               className="h-5 w-5"
@@ -132,9 +143,9 @@ export function CreateTaskModal({
           <div>
             <label
               htmlFor="task-title"
-              className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500"
+              className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-600"
             >
-              Task title
+              {t("productivity.taskFieldTitle")}
             </label>
             <input
               ref={titleRef}
@@ -142,16 +153,16 @@ export function CreateTaskModal({
               value={form.title}
               disabled={isSubmitting}
               onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
-              className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 disabled:bg-slate-50"
-              placeholder="e.g. Submit national ID copy"
+              className={glassInput}
+              placeholder={t("productivity.taskTitlePlaceholder")}
             />
           </div>
           <div>
             <label
               htmlFor="task-desc"
-              className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500"
+              className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-600"
             >
-              Description
+              {t("productivity.taskFieldDescription")}
             </label>
             <textarea
               id="task-desc"
@@ -161,17 +172,17 @@ export function CreateTaskModal({
                 setForm((f) => ({ ...f, description: e.target.value }))
               }
               rows={4}
-              className="w-full resize-y rounded-xl border border-slate-200 px-3 py-2.5 text-sm text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 disabled:bg-slate-50"
-              placeholder="Add context, links, or notes..."
+              className={`${glassInput} resize-y`}
+              placeholder={t("productivity.taskDescriptionPlaceholder")}
             />
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
               <label
                 htmlFor="task-due"
-                className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500"
+                className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-600"
               >
-                Due date
+                {t("productivity.taskFieldDue")}
               </label>
               <input
                 id="task-due"
@@ -181,15 +192,15 @@ export function CreateTaskModal({
                 onChange={(e) =>
                   setForm((f) => ({ ...f, dueDate: e.target.value }))
                 }
-                className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 disabled:bg-slate-50"
+                className={glassInput}
               />
             </div>
             <div>
               <label
                 htmlFor="task-priority"
-                className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500"
+                className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-600"
               >
-                Priority
+                {t("productivity.taskFieldPriority")}
               </label>
               <select
                 id="task-priority"
@@ -201,17 +212,17 @@ export function CreateTaskModal({
                     priority: e.target.value as NewTaskPayload["priority"],
                   }))
                 }
-                className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 disabled:bg-slate-50"
+                className={glassInput}
               >
-                <option value="high">High</option>
-                <option value="medium">Medium</option>
-                <option value="low">Low</option>
+                <option value="high">{t("productivity.priorityHigh")}</option>
+                <option value="medium">{t("productivity.priorityMedium")}</option>
+                <option value="low">{t("productivity.priorityLow")}</option>
               </select>
             </div>
           </div>
           {submitError && (
             <p
-              className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800"
+              className="rounded-xl border border-red-300/70 bg-red-100/45 px-3 py-2 text-sm text-red-900 backdrop-blur-sm"
               role="alert"
             >
               {submitError}
@@ -219,22 +230,22 @@ export function CreateTaskModal({
           )}
         </div>
 
-        <div className="flex gap-3 border-t border-slate-100 px-5 py-4">
+        <div className="flex gap-3 border-t border-white/40 px-5 py-4">
           <button
             type="button"
             onClick={handleClose}
             disabled={isSubmitting}
-            className="flex-1 rounded-xl border border-slate-200 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+            className={`flex-1 py-3 text-sm ${btnSecondaryGlass} disabled:cursor-not-allowed disabled:opacity-50`}
           >
-            Cancel
+            {t("common.cancel")}
           </button>
           <button
             type="button"
             onClick={() => void submit()}
             disabled={!form.title.trim() || isSubmitting}
-            className="flex-1 rounded-xl bg-blue-600 py-3 text-sm font-semibold text-white hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
+            className={`flex-1 py-3 text-sm ${btnPrimaryGold} disabled:cursor-not-allowed disabled:opacity-50`}
           >
-            {isSubmitting ? "Saving…" : "Save task"}
+            {isSubmitting ? t("settings.saving") : t("productivity.saveTask")}
           </button>
         </div>
       </div>

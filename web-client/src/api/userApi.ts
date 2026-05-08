@@ -1,4 +1,4 @@
-import { apiUrl, authJsonHeaders } from "@/api/apiClient";
+import { apiUrl, authFetch } from "@/api/apiClient";
 
 /**
  * Profile API: Express exposes `GET` / `PUT` `/api/users/me` (not `/profile`).
@@ -20,6 +20,9 @@ export type UserProfile = {
   is_subscribed?: boolean;
   subscription_expiry?: string | null;
   role?: string;
+  onboarding_completed?: boolean;
+  manually_added?: boolean;
+  is_payment_exempt?: boolean;
 };
 
 async function parseJsonError(res: Response): Promise<string> {
@@ -37,12 +40,12 @@ export type UpdateProfilePayload = {
   phone?: string;
   preferred_language?: string;
   settings?: UserSettings;
+  onboarding_completed?: boolean;
 };
 
 export async function fetchProfile(): Promise<UserProfile> {
-  const res = await fetch(apiUrl("/api/users/me"), {
+  const res = await authFetch(apiUrl("/api/users/me"), {
     method: "GET",
-    headers: authJsonHeaders(),
   });
   if (!res.ok) {
     throw new Error(await parseJsonError(res));
@@ -57,9 +60,8 @@ export async function fetchProfile(): Promise<UserProfile> {
 export async function updateProfile(
   payload: UpdateProfilePayload,
 ): Promise<UserProfile> {
-  const res = await fetch(apiUrl("/api/users/me"), {
+  const res = await authFetch(apiUrl("/api/users/me"), {
     method: "PUT",
-    headers: authJsonHeaders(),
     body: JSON.stringify(payload),
   });
   if (!res.ok) {

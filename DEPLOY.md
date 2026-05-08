@@ -8,8 +8,8 @@
 ```
 ┌─────────────────────────────────────┐     ┌──────────────────────────────────────┐
 │  VERCEL (Frontend)                  │     │  RENDER (Backend)                    │
-│  Flutter Web — Static Site          │────▶│  Node.js + Express + Socket.io       │
-│  https://veto-app.vercel.app        │     │  https://veto-app-new.onrender.com   │
+│  Next.js — תיקיית `web-client/`     │────▶│  Node.js + Express + Socket.io       │
+│  (דומיין לפי הפרויקט ב-Vercel)      │     │  https://veto-app-new.onrender.com   │
 └─────────────────────────────────────┘     └──────────────────────────────────────┘
                                                           │
                                             ┌─────────────┴──────────────┐
@@ -35,7 +35,7 @@ git push origin main
 
 > ⚠️ `backend/.env` כבר ב-`.gitignore` — לא יעלה ל-GitHub.  
 > **מפה לפירוט משתנים + לינקים (כולל מסלול בלי Firebase):** [backend/ENV_GUIDE.md](backend/ENV_GUIDE.md) ו־[backend/.env.example](backend/.env.example).  
-> ✅ `frontend/build/web/` **כן** עולה (הוחרג מה-gitignore) — Vercel יגיש אותו ישירות.
+> **ווב פרודקשן:** Vercel בונה את **`web-client`** (Next.js). ארטיפקט Flutter ב־`frontend/build/web/` הוא **legacy**; ראו [web-client/.env.example](web-client/.env.example) למשתני `NEXT_PUBLIC_*`.
 
 ---
 
@@ -104,17 +104,57 @@ Render Free נכנס לשינה אחרי ~15 דקות. הבקשה הראשונה
 
 ### שיחות וידאו (Agora) — סדר deploy מומלץ
 
-1. **Render (backend)** — לפרוס תחילה כשיש שינוי ב־`agoraToken.service.js` (ייצור UID ייחודי לטוקן) או בנתיבי טוקן. אם ה־API בפרוד עדיין ישן, הלקוח עלול לקבל `UID_CONFLICT` גם אחרי עדכון Flutter.
-2. **Commit + push** של `frontend/build/web/` אחרי `flutter build web` (או הסקריפט ב־`frontend` שמייצר את הארטיפקט), ואז **Vercel** — כדי שהדפדפן יקבל את לוגיקת ההתחברות וה־UI המעודכנים.
+1. **Render (backend)** — לפרוס תחילה כשיש שינוי ב־`agoraToken.service.js` (ייצור UID ייחודי לטוקן) או בנתיבי טוקן. אם ה־API בפרוד עדיין ישן, הלקוח עלול לקבל `UID_CONFLICT`.
+2. **Next.js (`web-client`)** — `git push` ל־`main` מפעיל CI שבונה ומעלה ל־**Vercel** (או פריסה אוטומטית דרך חיבור Git ל-Vercel). ודא ש־`NEXT_PUBLIC_AGORA_APP_ID` (ואופציונלי משתנים נוספים) מוגדרים ב-Vercel.
+3. **Flutter Web (אופציונלי)** — אם עדיין בונים `frontend/build/web/` — commit נפרד; לא מחליף את פריסת `web-client`.
 
 פרטי בדיקה ידנית בין דפדפנים: [docs/CALL_QA_MATRIX.md](docs/CALL_QA_MATRIX.md).
 
 ---
 
-## חלק ב׳ — Vercel (Flutter Web Frontend)
+## חלק ב׳ — Vercel (Frontend Web)
 
-Flutter Web בנוי מראש ל-`frontend/build/web/` (**כולל ב-git**).  
-Vercel מגיש את התיקייה הזו ישירות — **אין צורך ב-build step**.
+### Next.js — `web-client` (הפריסה הנוכחית)
+
+האפליקציה ב-Next.js נמצאת ב־**`web-client/`** (שורש ה-repo), **לא** בתוך `frontend/`.
+
+ב־[Vercel Project Settings → General](https://vercel.com/) עדכן:
+
+| שדה | ערך נכון |
+|-----|-----------|
+| **Root Directory** | `web-client` |
+
+**אל** תגדיר `frontend/web-client` — התיקייה הזו **לא קיימת** ב-repo. אם הוגדרה שם, תקבל:
+
+`The provided path "…/frontend/web-client" does not exist`
+
+Framework זוהה בדרך־כלל כ־**Next.js** אוטומטית. Build: `npm run build` (ברירת מחדל).
+
+**משתני סביבה לדוגמה** (ב־Vercel → Environment Variables):
+
+- `NEXT_PUBLIC_API_ORIGIN` — מקור ה־API (למשל `https://veto-app-new.onrender.com`, בלי `/api`).
+- `NEXT_PUBLIC_VAPID_PUBLIC_KEY` — אם משתמשים ב־Web Push (חלק מזהות הזוג של `VAPID` בשרת).
+- `NEXT_PUBLIC_AGORA_APP_ID` — אם יש שיחות Agora מהדפדפן.
+
+#### GitHub Actions → Vercel
+
+ב־`main`, אחרי `backend-ci`, job **`deploy-vercel`**:
+1. בונה מקומית ב־**`web-client/`** (`npm ci`, `npm run build`) — לוודא שהקוד עובר build.
+2. מריץ **`vercel deploy --prod` משורש ה-repo** (לא מתוך `web-client/`). ב־Vercel מוגדר **Root Directory = `web-client`** — אם מריצים את ה-CLI מתוך `web-client`, Vercel מחבר פעמיים את הנתיב ומקבלים שגיאת `web-client/web-client`.  
+נדרשים Secrets ב-repo: `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`.
+
+אם ב-Vercel מופעל גם **Deploy מחיבור Git** לאותו branch, ייתכן **שני** deploys לכל push — כדאי לבחור שיטה אחת או לכבות את הכפול.
+
+#### דוגמת משתנים מקומיים
+
+ראו [web-client/.env.example](web-client/.env.example).
+
+---
+
+### Flutter Web (legacy) — `frontend/build/web`
+
+Flutter Web בנוי מראש ל-`frontend/build/web/` (**כלול ב-git אם נשמר שם ארטיפקט**).  
+Vercel מגיש את התיקייה הזו ישירות — **אין צורך ב-build step** במודל הישן.
 
 ### אפשרות 1: Vercel CLI (מהיר)
 
@@ -229,7 +269,8 @@ RETURN_OTP_IN_JSON=1
 | `MONGO_URI is missing` | הוסף MONGO_URI ב-Render Environment |
 | `Cannot find module` | ודא Root Directory = `backend` |
 | `WebSocket connection failed` | בדוק שה-URL ב-app_config.dart מצביע ל-Render |
-| Vercel מציג 404 | ודא Output Directory = `build/web` |
+| Vercel מציג 404 | ודא Output Directory = `build/web` (Flutter) או Root = `web-client` (Next.js) |
+| `frontend/web-client` does not exist | ב־Vercel שנה **Root Directory** ל־`web-client` (לא תחת `frontend`) |
 | `flutter_webrtc` לא עובד | דרוש HTTPS — Render ו-Vercel מספקים TLS אוטומטי |
 | Render ישן (cold start) | הוסף `/health` ping כל 14 דקות או שדרג plan |
 

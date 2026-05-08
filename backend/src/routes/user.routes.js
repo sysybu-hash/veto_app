@@ -9,10 +9,11 @@
 
 const express    = require('express');
 const router     = express.Router();
-const { protect } = require('../middleware/auth.middleware');
+const { protect, requireValidMongoUserId } = require('../middleware/auth.middleware');
 const User       = require('../models/User');
 
 router.use(protect);
+router.use(requireValidMongoUserId);
 
 // GET /api/users/me
 router.get('/me', async (req, res, next) => {
@@ -27,7 +28,9 @@ router.get('/me', async (req, res, next) => {
     const user = await User.findById(req.user.userId)
       .populate('emergency_events', 'status triggered_at assigned_lawyer_id');
     if (!user) return res.status(404).json({ error: 'User not found.' });
-    res.json({ user });
+    const u = user.toObject ? user.toObject() : user;
+    const isPaymentExempt = user.role === 'admin' || user.manually_added === true;
+    res.json({ user: { ...u, is_payment_exempt: isPaymentExempt } });
   } catch (err) { next(err); }
 });
 
@@ -57,7 +60,7 @@ router.put('/me', async (req, res, next) => {
     // Regular user / admin
     const allowed = [
       'full_name', 'email', 'phone', 'preferred_language',
-      'profile_photo_url', 'settings',
+      'profile_photo_url', 'settings', 'onboarding_completed',
     ];
     const updates = {};
     allowed.forEach((f) => { if (req.body[f] !== undefined) updates[f] = req.body[f]; });

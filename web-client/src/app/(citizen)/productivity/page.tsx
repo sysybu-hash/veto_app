@@ -15,8 +15,17 @@ import {
   parsePriorityFromRelatedType,
 } from "@/api/productivityApi";
 import { getJwt } from "@/lib/authToken";
+import { useTranslation } from "@/lib/i18n/LocaleProvider";
 import { CitizenBottomNav } from "@/components/citizen/CitizenBottomNav";
 import { CreateTaskModal } from "@/components/productivity/CreateTaskModal";
+import {
+  btnPrimaryDark,
+  btnPrimaryGold,
+  btnSecondaryGlass,
+  glassInput,
+  glassPanel,
+  glassPanelNested,
+} from "@/lib/vetoGlass";
 
 /** UI contract status — maps to backend `CitizenContract.status`. */
 type ContractStatus = "pending_signature" | "active" | "expired" | "at_risk";
@@ -40,12 +49,39 @@ type Task = {
   done: boolean;
 };
 
-const statusLabels: Record<ContractStatus, string> = {
-  pending_signature: "Pending signature",
-  active: "Active",
-  expired: "Expired",
-  at_risk: "At risk",
-};
+function contractStatusLabel(
+  status: ContractStatus,
+  tr: (key: string) => string,
+): string {
+  switch (status) {
+    case "pending_signature":
+      return tr("productivity.statusPendingSignature");
+    case "active":
+      return tr("productivity.statusActive");
+    case "expired":
+      return tr("productivity.statusExpired");
+    case "at_risk":
+      return tr("productivity.statusAtRisk");
+    default:
+      return tr("productivity.statusActive");
+  }
+}
+
+function taskPriorityLabel(
+  p: TaskPriority,
+  tr: (key: string) => string,
+): string {
+  switch (p) {
+    case "high":
+      return tr("productivity.priorityHigh");
+    case "medium":
+      return tr("productivity.priorityMedium");
+    case "low":
+      return tr("productivity.priorityLow");
+    default:
+      return p;
+  }
+}
 
 function apiStatusToUi(s: ApiCitizenContractStatus): ContractStatus {
   switch (s) {
@@ -115,28 +151,28 @@ function mapApiTask(row: ApiCitizenTask): Task {
 function statusStyles(status: ContractStatus): string {
   switch (status) {
     case "pending_signature":
-      return "bg-amber-50 text-amber-800 ring-amber-200";
+      return "bg-amber-400/20 text-amber-900 ring-amber-400/50";
     case "active":
-      return "bg-emerald-50 text-emerald-800 ring-emerald-200";
+      return "bg-emerald-400/20 text-emerald-900 ring-emerald-400/50";
     case "expired":
-      return "bg-slate-100 text-slate-600 ring-slate-200";
+      return "bg-white/40 text-slate-700 ring-white/50";
     case "at_risk":
-      return "bg-orange-50 text-orange-900 ring-orange-200";
+      return "bg-orange-400/20 text-orange-950 ring-orange-400/50";
     default:
-      return "bg-slate-100 text-slate-700 ring-slate-200";
+      return "bg-white/35 text-slate-800 ring-white/45";
   }
 }
 
 function priorityStyles(p: TaskPriority): string {
   switch (p) {
     case "high":
-      return "bg-red-50 text-red-800 ring-red-200";
+      return "bg-red-400/20 text-red-900 ring-red-400/45";
     case "medium":
-      return "bg-amber-50 text-amber-800 ring-amber-200";
+      return "bg-amber-400/20 text-amber-900 ring-amber-400/45";
     case "low":
-      return "bg-slate-100 text-slate-700 ring-slate-200";
+      return "bg-white/40 text-slate-700 ring-white/50";
     default:
-      return "bg-slate-100 text-slate-700 ring-slate-200";
+      return "bg-white/35 text-slate-800 ring-white/45";
   }
 }
 
@@ -155,6 +191,7 @@ function CreateContractModal({
   onClose: () => void;
   onSave: (c: ContractFormPayload) => Promise<void>;
 }) {
+  const { t } = useTranslation();
   const [title, setTitle] = useState("");
   const [partyName, setPartyName] = useState("");
   const [status, setStatus] = useState<ContractStatus>("pending_signature");
@@ -163,29 +200,36 @@ function CreateContractModal({
   const titleRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (open) {
+    if (!open) return;
+    queueMicrotask(() => {
       setTitle("");
       setPartyName("");
       setStatus("pending_signature");
       setSaveErr(null);
       setSaving(false);
       queueMicrotask(() => titleRef.current?.focus());
-    }
+    });
   }, [open]);
 
   if (!open) return null;
 
   const save = async () => {
-    const t = title.trim();
-    const p = partyName.trim();
-    if (!t || !p || saving) return;
+    const titleTrimmed = title.trim();
+    const partyTrimmed = partyName.trim();
+    if (!titleTrimmed || !partyTrimmed || saving) return;
     setSaveErr(null);
     setSaving(true);
     try {
-      await onSave({ title: t, partyName: p, status });
+      await onSave({
+        title: titleTrimmed,
+        partyName: partyTrimmed,
+        status,
+      });
       onClose();
     } catch (e) {
-      setSaveErr(e instanceof Error ? e.message : "Save failed");
+      setSaveErr(
+        e instanceof Error ? e.message : t("productivity.saveContractFailed"),
+      );
     } finally {
       setSaving(false);
     }
@@ -200,30 +244,30 @@ function CreateContractModal({
       }}
     >
       <div
-        className="w-full max-w-lg overflow-hidden rounded-2xl bg-white shadow-2xl"
+        className={`w-full max-w-lg overflow-hidden shadow-2xl shadow-slate-900/20 ${glassPanel}`}
         role="dialog"
         aria-modal="true"
         aria-labelledby="contract-modal-title"
         onMouseDown={(e) => e.stopPropagation()}
       >
-        <div className="border-b border-slate-100 px-5 py-4">
+        <div className="border-b border-white/40 px-5 py-4 backdrop-blur-sm">
           <h2
             id="contract-modal-title"
-            className="text-lg font-semibold text-slate-900"
+            className="font-frank text-lg font-bold text-slate-900"
           >
-            New contract
+            {t("productivity.modalContractTitle")}
           </h2>
-          <p className="mt-0.5 text-sm text-slate-500">
-            Add a contract you are negotiating or signing.
+          <p className="mt-0.5 text-sm text-slate-600">
+            {t("productivity.modalContractSubtitle")}
           </p>
         </div>
         <div className="space-y-4 px-5 py-4">
           <div>
             <label
               htmlFor="c-title"
-              className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500"
+              className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-600"
             >
-              Contract title
+              {t("productivity.contractTitleField")}
             </label>
             <input
               ref={titleRef}
@@ -231,70 +275,72 @@ function CreateContractModal({
               value={title}
               disabled={saving}
               onChange={(e) => setTitle(e.target.value)}
-              className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 disabled:bg-slate-50"
+              className={glassInput}
             />
           </div>
           <div>
             <label
               htmlFor="c-party"
-              className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500"
+              className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-600"
             >
-              Party name
+              {t("productivity.partyNameField")}
             </label>
             <input
               id="c-party"
               value={partyName}
               disabled={saving}
               onChange={(e) => setPartyName(e.target.value)}
-              className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 disabled:bg-slate-50"
-              placeholder="e.g. Organization or person"
+              className={glassInput}
+              placeholder={t("productivity.partyNamePlaceholder")}
             />
           </div>
           <div>
             <label
               htmlFor="c-status"
-              className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500"
+              className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-600"
             >
-              Status
+              {t("productivity.contractStatusField")}
             </label>
             <select
               id="c-status"
               value={status}
               disabled={saving}
               onChange={(e) => setStatus(e.target.value as ContractStatus)}
-              className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 disabled:bg-slate-50"
+              className={glassInput}
             >
-              <option value="pending_signature">Pending signature</option>
-              <option value="active">Active</option>
-              <option value="expired">Expired</option>
-              <option value="at_risk">At risk</option>
+              <option value="pending_signature">
+                {t("productivity.statusPendingSignature")}
+              </option>
+              <option value="active">{t("productivity.statusActive")}</option>
+              <option value="expired">{t("productivity.statusExpired")}</option>
+              <option value="at_risk">{t("productivity.statusAtRisk")}</option>
             </select>
           </div>
           {saveErr && (
             <p
-              className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800"
+              className="rounded-xl border border-red-300/70 bg-red-100/50 px-3 py-2 text-sm text-red-900 backdrop-blur-sm"
               role="alert"
             >
               {saveErr}
             </p>
           )}
         </div>
-        <div className="flex gap-3 border-t border-slate-100 px-5 py-4">
+        <div className="flex gap-3 border-t border-white/40 px-5 py-4">
           <button
             type="button"
             onClick={() => !saving && onClose()}
             disabled={saving}
-            className="flex-1 rounded-xl border border-slate-200 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+            className={`flex-1 py-3 text-sm ${btnSecondaryGlass} disabled:cursor-not-allowed disabled:opacity-50`}
           >
-            Cancel
+            {t("common.cancel")}
           </button>
           <button
             type="button"
             onClick={() => void save()}
             disabled={!title.trim() || !partyName.trim() || saving}
-            className="flex-1 rounded-xl bg-blue-600 py-3 text-sm font-semibold text-white hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
+            className={`flex-1 py-3 text-sm ${btnPrimaryGold} disabled:cursor-not-allowed disabled:opacity-50`}
           >
-            {saving ? "Saving…" : "Save contract"}
+            {saving ? t("settings.saving") : t("productivity.saveContract")}
           </button>
         </div>
       </div>
@@ -309,6 +355,7 @@ function ContractViewModal({
   contract: Contract | null;
   onClose: () => void;
 }) {
+  const { t } = useTranslation();
   if (!contract) return null;
   return (
     <div
@@ -318,7 +365,7 @@ function ContractViewModal({
       }}
     >
       <div
-        className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl"
+        className={`w-full max-w-md p-6 shadow-2xl shadow-slate-900/20 ${glassPanel}`}
         onMouseDown={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
@@ -326,21 +373,28 @@ function ContractViewModal({
       >
         <h2
           id="view-contract-title"
-          className="text-lg font-semibold text-slate-900"
+          className="font-frank text-lg font-bold text-slate-900"
         >
           {contract.title}
         </h2>
-        <p className="mt-2 text-sm text-slate-600">Party: {contract.partyName}</p>
-        <p className="mt-2 text-sm text-slate-600">
-          Status: {statusLabels[contract.status]}
-        </p>
-        <p className="mt-1 text-xs text-slate-400">Last updated {contract.updatedAt}</p>
+        <div className={`mt-4 rounded-xl border border-white/40 p-4 ${glassPanelNested}`}>
+          <p className="text-sm text-slate-700">
+            {t("productivity.labelParty")}: {contract.partyName}
+          </p>
+          <p className="mt-2 text-sm text-slate-700">
+            {t("productivity.labelStatus")}:{" "}
+            {contractStatusLabel(contract.status, t)}
+          </p>
+          <p className="mt-2 text-xs text-slate-600">
+            {t("productivity.viewLastUpdated")} {contract.updatedAt}
+          </p>
+        </div>
         <button
           type="button"
           onClick={onClose}
-          className="mt-6 w-full rounded-xl bg-slate-900 py-3 text-sm font-semibold text-white hover:bg-slate-800"
+          className={`mt-6 w-full py-3 text-sm ${btnPrimaryDark}`}
         >
-          Close
+          {t("common.close")}
         </button>
       </div>
     </div>
@@ -348,11 +402,19 @@ function ContractViewModal({
 }
 
 function ProductivityLoadingSkeleton() {
+  const { t } = useTranslation();
   return (
-    <div className="animate-pulse space-y-4 p-4 sm:p-6" aria-busy="true" aria-label="Loading">
+    <div
+      className="animate-pulse space-y-4 p-4 sm:p-6"
+      aria-busy="true"
+      aria-label={t("productivity.loadingAria")}
+    >
       <div className="grid gap-4 sm:grid-cols-2">
         {[1, 2, 3, 4].map((i) => (
-          <div key={i} className="h-36 rounded-xl border border-slate-100 bg-slate-100" />
+          <div
+            key={i}
+            className="h-36 rounded-xl border border-white/30 bg-white/35 backdrop-blur-md"
+          />
         ))}
       </div>
     </div>
@@ -360,6 +422,7 @@ function ProductivityLoadingSkeleton() {
 }
 
 export default function ProductivityPage() {
+  const { t } = useTranslation();
   const router = useRouter();
   const [tab, setTab] = useState<"contracts" | "tasks">("contracts");
   const [contracts, setContracts] = useState<Contract[]>([]);
@@ -390,22 +453,30 @@ export default function ProductivityPage() {
       setContracts(apiContracts.map(mapApiContract));
       setTasks(apiTasks.map(mapApiTask));
     } catch (e) {
-      setLoadError(
-        e instanceof Error ? e.message : "Could not load contracts and tasks",
-      );
+      const raw =
+        e instanceof Error ? e.message : t("productivity.loadFailed");
+      let msg = raw;
+      if (/unauthorized/i.test(raw) || /invalid value for user_id/i.test(raw)) {
+        msg = t("productivity.errAuth");
+      } else if (/forbidden/i.test(raw)) {
+        msg = t("productivity.errForbidden");
+      }
+      setLoadError(msg);
       setContracts([]);
       setTasks([]);
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     if (!getJwt()) {
       router.replace("/login");
       return;
     }
-    void loadData();
+    queueMicrotask(() => {
+      void loadData();
+    });
   }, [router, loadData]);
 
   useEffect(() => {
@@ -462,28 +533,30 @@ export default function ProductivityPage() {
       await loadData();
       setMenuOpenId(null);
     } catch (e) {
-      setActionError(e instanceof Error ? e.message : "Could not sign contract");
+      setActionError(
+        e instanceof Error ? e.message : t("productivity.signFailed"),
+      );
     } finally {
       setSigningContractId(null);
     }
   };
 
   const toggleTaskDone = async (id: string) => {
-    const t = tasks.find((x) => x.id === id);
-    if (!t || updatingTaskId) return;
-    const nextDone = !t.done;
+    const row = tasks.find((x) => x.id === id);
+    if (!row || updatingTaskId) return;
+    const nextDone = !row.done;
     setActionError(null);
     setUpdatingTaskId(id);
     try {
       const updated = await updateTaskStatus(id, nextDone);
       setTasks((prev) =>
-        prev.map((row) =>
-          row.id === id ? mapApiTask(updated) : row,
+        prev.map((r) =>
+          r.id === id ? mapApiTask(updated) : r,
         ),
       );
     } catch (e) {
       setActionError(
-        e instanceof Error ? e.message : "Could not update task status",
+        e instanceof Error ? e.message : t("productivity.updateTaskFailed"),
       );
     } finally {
       setUpdatingTaskId(null);
@@ -492,52 +565,54 @@ export default function ProductivityPage() {
 
   return (
     <div className="mx-auto min-h-0 w-full max-w-4xl flex-1 px-4 pb-28 pt-6 md:px-6">
-      <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm">
-        <div className="border-b border-slate-100 bg-slate-50/80 px-4 py-4 sm:flex sm:items-center sm:justify-between sm:px-6">
+      <div className={`overflow-hidden ${glassPanel}`}>
+        <div className="border-b border-white/40 bg-white/35 px-4 py-4 backdrop-blur-md sm:flex sm:items-center sm:justify-between sm:px-6">
           <div className="mb-4 sm:mb-0">
-            <p className="text-xs font-semibold uppercase tracking-wider text-blue-600">
-              Citizen workspace
+            <p className="text-xs font-semibold uppercase tracking-wider text-[#8a6d3d]">
+              {t("productivity.heroEyebrow")}
             </p>
-            <h1 className="mt-1 text-xl font-bold tracking-tight text-slate-900 sm:text-2xl">
-              Contracts &amp; tasks
+            <h1 className="font-frank mt-1 text-xl font-bold tracking-tight text-slate-900 sm:text-2xl">
+              {t("productivity.heroTitle")}
             </h1>
             <p className="mt-1 text-sm text-slate-600">
-              Track agreements and your legal to-do list in one place.
+              {t("productivity.heroSubtitle")}
             </p>
           </div>
           <button
             type="button"
             onClick={handleNewClick}
             disabled={isLoading || !!loadError}
-            className="w-full rounded-xl bg-blue-600 px-4 py-3 text-sm font-semibold text-white shadow-md shadow-blue-600/25 transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+            className={`w-full px-4 py-3 text-sm disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto ${btnPrimaryGold}`}
           >
-            {tab === "contracts" ? "New contract" : "New task"}
+            {tab === "contracts"
+              ? t("productivity.newContract")
+              : t("productivity.newTask")}
           </button>
         </div>
 
-        <div className="border-b border-slate-100 px-4 sm:px-6">
+        <div className="border-b border-white/40 px-4 sm:px-6">
           <div className="flex gap-0">
             <button
               type="button"
               onClick={() => setTab("contracts")}
               className={`relative flex-1 border-b-2 py-3 text-sm font-semibold transition sm:flex-none sm:px-6 ${
                 tab === "contracts"
-                  ? "border-blue-600 text-blue-600"
-                  : "border-transparent text-slate-500 hover:text-slate-800"
+                  ? "border-[#C5A059] text-slate-900 shadow-[0_2px_12px_rgba(197,160,89,0.25)]"
+                  : "border-transparent text-slate-600 hover:text-slate-900"
               }`}
             >
-              Contracts
+              {t("productivity.tabContracts")}
             </button>
             <button
               type="button"
               onClick={() => setTab("tasks")}
               className={`relative flex-1 border-b-2 py-3 text-sm font-semibold transition sm:flex-none sm:px-6 ${
                 tab === "tasks"
-                  ? "border-blue-600 text-blue-600"
-                  : "border-transparent text-slate-500 hover:text-slate-800"
+                  ? "border-[#C5A059] text-slate-900 shadow-[0_2px_12px_rgba(197,160,89,0.25)]"
+                  : "border-transparent text-slate-600 hover:text-slate-900"
               }`}
             >
-              Tasks
+              {t("productivity.tabTasks")}
             </button>
           </div>
         </div>
@@ -546,16 +621,16 @@ export default function ProductivityPage() {
 
         {!isLoading && loadError && (
           <div
-            className="m-4 flex flex-col gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-4 text-sm text-red-800 sm:m-6 sm:flex-row sm:items-center sm:justify-between"
+            className="m-4 flex flex-col gap-3 rounded-xl border border-red-300/70 bg-white/45 px-4 py-4 text-sm text-red-900 backdrop-blur-xl sm:m-6 sm:flex-row sm:items-center sm:justify-between"
             role="alert"
           >
             <p>{loadError}</p>
             <button
               type="button"
               onClick={() => void loadData()}
-              className="shrink-0 rounded-lg bg-red-700 px-4 py-2 text-sm font-semibold text-white hover:bg-red-600"
+              className="shrink-0 rounded-lg bg-red-800 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700"
             >
-              Retry
+              {t("common.retry")}
             </button>
           </div>
         )}
@@ -564,7 +639,7 @@ export default function ProductivityPage() {
           <div className="p-4 sm:p-6">
             {actionError && (
               <div
-                className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900"
+                className="mb-4 rounded-xl border border-amber-300/70 bg-white/45 px-4 py-3 text-sm text-amber-950 backdrop-blur-xl"
                 role="status"
               >
                 {actionError}
@@ -573,27 +648,29 @@ export default function ProductivityPage() {
             {tab === "contracts" && (
               <div className="grid gap-4 sm:grid-cols-2">
                 {sortedContracts.length === 0 && (
-                  <p className="col-span-full py-10 text-center text-sm text-slate-500">
-                    No contracts yet. Create one with &quot;New contract&quot;.
+                  <p className="col-span-full py-10 text-center text-sm text-slate-600">
+                    {t("productivity.contractEmpty")}
                   </p>
                 )}
                 {sortedContracts.map((c) => (
                   <article
                     key={c.id}
-                    className="flex flex-col rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition hover:border-slate-300 hover:shadow-md"
+                    className={`flex flex-col rounded-xl border border-white/50 p-4 shadow-sm backdrop-blur-xl transition hover:border-white hover:shadow-md ${glassPanelNested}`}
                   >
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0">
-                        <h3 className="font-semibold text-slate-900">{c.title}</h3>
+                        <h3 className="font-frank font-bold text-slate-900">{c.title}</h3>
                         <p className="mt-1 text-sm text-slate-600">{c.partyName}</p>
                       </div>
                       <span
-                        className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset ${statusStyles(c.status)}`}
+                        className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset backdrop-blur-sm ${statusStyles(c.status)}`}
                       >
-                        {statusLabels[c.status]}
+                        {contractStatusLabel(c.status, t)}
                       </span>
                     </div>
-                    <p className="mt-3 text-xs text-slate-400">Updated {c.updatedAt}</p>
+                    <p className="mt-3 text-xs text-slate-500">
+                      {t("productivity.updatedPrefix")} {c.updatedAt}
+                    </p>
                     <div
                       className="relative mt-4"
                       ref={menuOpenId === c.id ? menuRef : undefined}
@@ -604,9 +681,9 @@ export default function ProductivityPage() {
                           e.stopPropagation();
                           setMenuOpenId((id) => (id === c.id ? null : c.id));
                         }}
-                        className="flex w-full items-center justify-center gap-2 rounded-lg border border-slate-200 bg-slate-50 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+                        className={`flex w-full items-center justify-center gap-2 py-2 text-sm font-medium ${btnSecondaryGlass}`}
                       >
-                        Actions
+                        {t("productivity.actions")}
                         <svg
                           className="h-4 w-4"
                           fill="none"
@@ -618,27 +695,29 @@ export default function ProductivityPage() {
                         </svg>
                       </button>
                       {menuOpenId === c.id && (
-                        <div className="absolute left-0 right-0 z-10 mt-1 overflow-hidden rounded-xl border border-slate-200 bg-white py-1 shadow-lg">
+                        <div className="absolute inset-x-0 z-10 mt-1 overflow-hidden rounded-xl border border-white/40 bg-white/55 py-1 shadow-lg backdrop-blur-xl">
                           <button
                             type="button"
-                            className="block w-full px-4 py-2.5 text-left text-sm text-slate-700 hover:bg-slate-50"
+                            className="block w-full px-4 py-2.5 text-start text-sm text-slate-800 hover:bg-white/50"
                             onClick={() => {
                               setViewContract(c);
                               setMenuOpenId(null);
                             }}
                           >
-                            View
+                            {t("productivity.view")}
                           </button>
                           <button
                             type="button"
-                            className="block w-full px-4 py-2.5 text-left text-sm text-blue-700 hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-40"
+                            className="block w-full px-4 py-2.5 text-start text-sm font-semibold text-[#8a6d3d] hover:bg-[#C5A059]/15 disabled:cursor-not-allowed disabled:opacity-40"
                             disabled={
                               c.status !== "pending_signature" ||
                               signingContractId === c.id
                             }
                             onClick={() => void signContract(c.id)}
                           >
-                            {signingContractId === c.id ? "Signing…" : "Sign"}
+                            {signingContractId === c.id
+                              ? t("productivity.signing")
+                              : t("productivity.sign")}
                           </button>
                         </div>
                       )}
@@ -649,50 +728,51 @@ export default function ProductivityPage() {
             )}
 
             {tab === "tasks" && (
-              <ul className="divide-y divide-slate-100 rounded-xl border border-slate-200 bg-slate-50/50">
+              <ul className="divide-y divide-white/30 overflow-hidden rounded-2xl border border-white/40 bg-white/45 backdrop-blur-xl">
                 {sortedTasks.length === 0 && (
-                  <li className="px-4 py-10 text-center text-sm text-slate-500">
-                    No tasks yet. Add one with &quot;New task&quot;.
+                  <li className="px-4 py-10 text-center text-sm text-slate-600">
+                    {t("productivity.tasksEmpty")}
                   </li>
                 )}
-                {sortedTasks.map((t) => (
+                {sortedTasks.map((task) => (
                   <li
-                    key={t.id}
+                    key={task.id}
                     className={`flex flex-col gap-3 p-4 transition sm:flex-row sm:items-center sm:gap-4 ${
-                      t.done ? "bg-slate-100/80" : "bg-white"
+                      task.done ? "bg-white/35" : "bg-white/20"
                     }`}
                   >
                     <label className="flex flex-1 cursor-pointer items-start gap-3">
                       <input
                         type="checkbox"
-                        checked={t.done}
-                        disabled={updatingTaskId === t.id}
-                        onChange={() => void toggleTaskDone(t.id)}
-                        className="mt-1 h-4 w-4 shrink-0 rounded border-slate-300 text-blue-600 focus:ring-blue-500 disabled:cursor-wait disabled:opacity-50"
+                        checked={task.done}
+                        disabled={updatingTaskId === task.id}
+                        onChange={() => void toggleTaskDone(task.id)}
+                        className="mt-1 h-4 w-4 shrink-0 rounded border-slate-400 text-[#C5A059] focus:ring-[#C5A059]/40 disabled:cursor-wait disabled:opacity-50"
                       />
                       <span className="min-w-0">
                         <span
                           className={`block font-medium text-slate-900 ${
-                            t.done ? "text-slate-500 line-through" : ""
+                            task.done ? "text-slate-500 line-through" : ""
                           }`}
                         >
-                          {t.title}
+                          {task.title}
                         </span>
-                        {t.description && (
+                        {task.description && (
                           <span className="mt-0.5 block text-sm text-slate-600">
-                            {t.description}
+                            {task.description}
                           </span>
                         )}
                       </span>
                     </label>
                     <div className="flex shrink-0 flex-wrap items-center gap-2 sm:flex-col sm:items-end">
                       <span
-                        className={`rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset ${priorityStyles(t.priority)}`}
+                        className={`rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset backdrop-blur-sm ${priorityStyles(task.priority)}`}
                       >
-                        {t.priority.charAt(0).toUpperCase() + t.priority.slice(1)}
+                        {taskPriorityLabel(task.priority, t)}
                       </span>
-                      <span className="text-xs font-medium text-slate-500">
-                        Due {t.dueDate || "—"}
+                      <span className="text-xs font-medium text-slate-600">
+                        {t("productivity.duePrefix")}{" "}
+                        {task.dueDate || "—"}
                       </span>
                     </div>
                   </li>
@@ -703,10 +783,10 @@ export default function ProductivityPage() {
         )}
       </div>
 
-      <p className="mt-4 text-center text-xs text-slate-500">
-        Need files?{" "}
-        <Link href="/vault" className="font-semibold text-blue-400 hover:text-blue-300">
-          Open your vault
+      <p className="mt-4 text-center text-xs text-slate-600">
+        {t("productivity.vaultHint")}{" "}
+        <Link href="/vault" className="font-semibold text-[#8a6d3d] hover:text-slate-900">
+          {t("productivity.vaultLink")}
         </Link>
       </p>
 

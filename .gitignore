@@ -15,6 +15,10 @@ backend/.env.*
 npm-debug.log*
 .DS_Store
 Thumbs.db
+# Local backend dev logs may contain phone numbers and OTPs — never commit.
+backend-dev.log
+backend-dev.err.log
+backend-dev*.log
 
 # Flutter
 frontend/.dart_tool/
@@ -32,6 +36,9 @@ frontend/.flutter-plugins-dependencies
 
 # Local Flutter SDK checkout (do not commit)
 flutter/
+
+# Nested / scratch app dirs (never commit)
+veto_app/
 
 .vercel
 .env*.local
