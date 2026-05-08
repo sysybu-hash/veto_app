@@ -186,7 +186,9 @@ export default function CallRoom({ channel }: { channel: string }) {
   });
   const [micOn, setMicOn] = useState(true);
   const [cameraOn, setCameraOn] = useState(true);
-  const [connecting, setConnecting] = useState(true);
+  const [connecting, setConnecting] = useState(
+    !(storeSession?.channelId === channel && storeSession.callType === "chat"),
+  );
   const [status, setStatus] = useState("מכינים את חדר השיחה...");
   const [error, setError] = useState<string | null>(null);
   const [remoteTiles, setRemoteTiles] = useState<RemoteTile[]>([]);
