@@ -453,9 +453,15 @@ export default function ProductivityPage() {
       setContracts(apiContracts.map(mapApiContract));
       setTasks(apiTasks.map(mapApiTask));
     } catch (e) {
-      setLoadError(
-        e instanceof Error ? e.message : t("productivity.loadFailed"),
-      );
+      const raw =
+        e instanceof Error ? e.message : t("productivity.loadFailed");
+      let msg = raw;
+      if (/unauthorized/i.test(raw) || /invalid value for user_id/i.test(raw)) {
+        msg = t("productivity.errAuth");
+      } else if (/forbidden/i.test(raw)) {
+        msg = t("productivity.errForbidden");
+      }
+      setLoadError(msg);
       setContracts([]);
       setTasks([]);
     } finally {

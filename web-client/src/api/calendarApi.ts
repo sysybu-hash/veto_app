@@ -1,4 +1,4 @@
-import { apiUrl, authJsonHeaders } from "@/api/apiClient";
+import { apiUrl, authFetch } from "@/api/apiClient";
 
 /**
  * Calendar endpoints map to Express:
@@ -45,9 +45,8 @@ export async function fetchEvents(
     year: String(year),
     month: String(month),
   });
-  const res = await fetch(apiUrl(`/api/calendar/events?${q}`), {
+  const res = await authFetch(apiUrl(`/api/calendar/events?${q}`), {
     method: "GET",
-    headers: authJsonHeaders(),
   });
   if (!res.ok) {
     throw new Error(await parseJsonError(res));
@@ -86,9 +85,8 @@ export async function fetchUpcomingEvents(from: Date = new Date()): Promise<
 export async function createEvent(
   payload: CreateCalendarEventPayload,
 ): Promise<ApiCalendarEvent> {
-  const res = await fetch(apiUrl("/api/calendar/events"), {
+  const res = await authFetch(apiUrl("/api/calendar/events"), {
     method: "POST",
-    headers: authJsonHeaders(),
     body: JSON.stringify({
       ...payload,
       timezone: payload.timezone ?? "Asia/Jerusalem",
@@ -105,9 +103,8 @@ export async function createEvent(
  * Backend: POST `/api/integrations/gcal/connect` → `{ authUrl }`.
  */
 export async function getGoogleAuthUrl(): Promise<{ url: string }> {
-  const res = await fetch(apiUrl("/api/integrations/gcal/connect"), {
+  const res = await authFetch(apiUrl("/api/integrations/gcal/connect"), {
     method: "POST",
-    headers: authJsonHeaders(),
   });
   if (!res.ok) {
     throw new Error(await parseJsonError(res));

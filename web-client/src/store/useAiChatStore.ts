@@ -14,6 +14,8 @@ export interface AiChatState {
   isLoading: boolean;
 
   toggleChat: () => void;
+  openChat: () => void;
+  closeChat: () => void;
   addMessage: (message: AiChatMessage) => void;
   setLoading: (loading: boolean) => void;
   clearChat: () => void;
@@ -25,6 +27,8 @@ export const useAiChatStore = create<AiChatState>((set) => ({
   isLoading: false,
 
   toggleChat: () => set((s) => ({ isOpen: !s.isOpen })),
+  openChat: () => set({ isOpen: true }),
+  closeChat: () => set({ isOpen: false }),
 
   addMessage: (message) =>
     set((s) => ({ messages: [...s.messages, message] })),

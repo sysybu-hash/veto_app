@@ -54,6 +54,39 @@ export function middleware(request: NextRequest) {
   const token = readSessionToken(request);
   const { pathname } = request.nextUrl;
 
+  /** Admins stay in the admin shell — avoid citizen hub/onboarding and duplicate settings/vault URLs. */
+  if (token) {
+    const role = jwtRoleFromToken(token);
+    if (role === "admin") {
+      if (pathname === "/hub" || pathname.startsWith("/hub/")) {
+        return NextResponse.redirect(new URL("/admin/dashboard", request.url));
+      }
+      if (pathname === "/onboarding" || pathname.startsWith("/onboarding/")) {
+        return NextResponse.redirect(new URL("/admin/dashboard", request.url));
+      }
+      if (pathname === "/settings" || pathname.startsWith("/settings/")) {
+        const url = request.nextUrl.clone();
+        const rest = pathname.replace(/^\/settings\/?/, "");
+        const tabFromPath =
+          rest === "" || rest === "/"
+            ? null
+            : rest.replace(/^\//, "").split("/")[0];
+        const allowed = ["profile", "notifications", "security", "billing"] as const;
+        url.pathname = "/admin/settings";
+        if (
+          tabFromPath &&
+          (allowed as readonly string[]).includes(tabFromPath)
+        ) {
+          url.searchParams.set("tab", tabFromPath);
+        }
+        return NextResponse.redirect(url);
+      }
+      if (pathname === "/vault") {
+        return NextResponse.redirect(new URL("/admin/vault", request.url));
+      }
+    }
+  }
+
   const isProtectedRoute = protectedRoutes.some((route) =>
     pathname.startsWith(route),
   );

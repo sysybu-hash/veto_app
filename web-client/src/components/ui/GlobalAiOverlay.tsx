@@ -1,7 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import { Camera, MessageSquare, Mic, ScanLine, Send, X, Zap } from "lucide-react";
+import { Camera, MessageSquare, Mic, ScanLine, Send, X } from "lucide-react";
 import {
   useCallback,
   useEffect,
@@ -510,12 +510,12 @@ export function GlobalAiOverlay() {
             whileHover={{ scale: 1.08 }}
             whileTap={{ scale: 0.92 }}
             onClick={handleToggleChat}
-            className="pointer-events-auto fixed bottom-8 start-8 flex h-16 w-16 items-center justify-center rounded-full border-2 border-white/30 bg-[#C5A059] text-slate-900 shadow-[0_0_30px_rgba(197,160,89,0.45)] focus:outline-none focus-visible:ring-4 focus-visible:ring-[#C5A059]/45"
+            className="pointer-events-auto fixed bottom-32 start-8 flex h-16 w-16 items-center justify-center rounded-full border-2 border-[#C5A059]/80 bg-slate-950 text-[#C5A059] shadow-[0_0_30px_rgba(197,160,89,0.35)] focus:outline-none focus-visible:ring-4 focus-visible:ring-[#C5A059]/45 sm:bottom-8"
             aria-label={t("ai.openAssistant")}
           >
             <motion.span
               aria-hidden
-              className="pointer-events-none absolute inset-0 rounded-full bg-[#C5A059] opacity-25"
+              className="pointer-events-none absolute inset-0 rounded-full bg-[#C5A059] opacity-20"
               animate={
                 isAssistantActive
                   ? { scale: [1, 1.22, 1], opacity: [0.2, 0.38, 0.2] }
@@ -527,7 +527,36 @@ export function GlobalAiOverlay() {
                   : { duration: 0.2 }
               }
             />
-            <Zap className="relative z-[1] h-8 w-8 fill-current stroke-[1.5]" />
+            <svg
+              aria-hidden
+              viewBox="0 0 64 64"
+              className="relative z-[1] h-11 w-11 overflow-visible"
+              fill="none"
+            >
+              <path
+                d="M31.5 9.5 36 24.4l14.5 5.1L36 34.6l-4.5 14.9L27 34.6l-14.5-5.1L27 24.4 31.5 9.5Z"
+                stroke="currentColor"
+                strokeWidth="4"
+                strokeLinejoin="round"
+                fill="rgba(197,160,89,0.16)"
+              />
+              <path
+                d="M48 8.5 50 15l6.5 2-6.5 2-2 6.5-2-6.5-6.5-2 6.5-2 2-6.5Z"
+                stroke="currentColor"
+                strokeWidth="2.6"
+                strokeLinejoin="round"
+                fill="rgba(197,160,89,0.2)"
+              />
+              <path
+                d="M14 41.5 15.7 47l5.3 1.8-5.3 1.7L14 56l-1.7-5.5L7 48.8l5.3-1.8L14 41.5Z"
+                stroke="currentColor"
+                strokeWidth="2.6"
+                strokeLinejoin="round"
+                fill="rgba(197,160,89,0.2)"
+              />
+              <circle cx="49" cy="47" r="2.4" fill="currentColor" opacity="0.8" />
+              <circle cx="14" cy="14" r="2" fill="currentColor" opacity="0.65" />
+            </svg>
           </motion.button>
         )}
       </AnimatePresence>

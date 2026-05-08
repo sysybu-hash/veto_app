@@ -74,9 +74,63 @@ const updateFixedOtpSetting = async (req, res, next) => {
 
 const getAllUsers = async (req, res, next) => {
   try {
-    const users = await User.find({}).select('full_name phone role is_verified is_subscribed subscription_expiry manually_added is_active preferred_language createdAt').sort({ createdAt: -1 });
-    res.json({ users });
-  } catch (err) { next(err); }
+    const [users, lawyers] = await Promise.all([
+      User.find({})
+        .select(
+          'full_name phone email role is_verified is_subscribed subscription_expiry manually_added is_active preferred_language createdAt',
+        )
+        .sort({ createdAt: -1 })
+        .lean(),
+      Lawyer.find({})
+        .select('full_name phone email createdAt')
+        .sort({ createdAt: -1 })
+        .lean(),
+    ]);
+
+    function subscriptionTierForUser(u) {
+      if (u.manually_added) return 'basic';
+      if (u.is_subscribed) {
+        const exp = u.subscription_expiry;
+        if (exp && new Date(exp) < new Date()) return 'expired';
+        return 'pro';
+      }
+      if (u.subscription_expiry && new Date(u.subscription_expiry) < new Date()) {
+        return 'expired';
+      }
+      return 'basic';
+    }
+
+    const rows = [
+      ...users.map((u) => ({
+        id: String(u._id),
+        name: u.full_name || '—',
+        email: (u.email && String(u.email).trim()) || u.phone || '',
+        phone: u.phone || '',
+        role: u.role === 'admin' ? 'admin' : 'user',
+        createdAt: u.createdAt,
+        subscriptionTier: subscriptionTierForUser(u),
+        accountType: 'user',
+      })),
+      ...lawyers.map((l) => ({
+        id: String(l._id),
+        name: l.full_name || '—',
+        email: (l.email && String(l.email).trim()) || l.phone || '',
+        phone: l.phone || '',
+        role: 'lawyer',
+        createdAt: l.createdAt,
+        subscriptionTier: 'basic',
+        accountType: 'lawyer',
+      })),
+    ];
+
+    rows.sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+    );
+    res.json({ users: rows });
+  } catch (err) {
+    next(err);
+  }
 };
 
 const createUser = async (req, res, next) => {

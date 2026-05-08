@@ -9,8 +9,19 @@ const PAYPAL_BASE =
     ? 'https://api-m.paypal.com'
     : 'https://api-m.sandbox.paypal.com';
 
+function assertPayPalConfigured() {
+  const id = process.env.PAYPAL_CLIENT_ID?.trim();
+  const secret = process.env.PAYPAL_CLIENT_SECRET?.trim();
+  if (!id || !secret) {
+    const err = new Error('PayPal keys missing in server configuration');
+    err.code = 'PAYPAL_CONFIG_MISSING';
+    throw err;
+  }
+}
+
 // ── Helper: get OAuth2 token ─────────────────────────────────
 async function _getToken() {
+  assertPayPalConfigured();
   const creds = Buffer.from(
     `${process.env.PAYPAL_CLIENT_ID}:${process.env.PAYPAL_CLIENT_SECRET}`,
   ).toString('base64');

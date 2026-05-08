@@ -1,8 +1,4 @@
-import {
-  authJsonHeaders,
-  authMultipartHeaders,
-  apiUrl,
-} from "@/api/apiClient";
+import { apiUrl, authFetch, authMultipartFetch } from "@/api/apiClient";
 
 /** Raw file document from GET /api/vault/files */
 export type ApiVaultFile = {
@@ -39,9 +35,8 @@ async function readErrorMessage(res: Response): Promise<string> {
  * GET /api/vault/files — all files for the current user.
  */
 export async function fetchFiles(): Promise<ApiVaultFile[]> {
-  const res = await fetch(apiUrl("/api/vault/files"), {
+  const res = await authFetch(apiUrl("/api/vault/files"), {
     method: "GET",
-    headers: authJsonHeaders(),
   });
   if (!res.ok) {
     throw new Error(await readErrorMessage(res));
@@ -57,9 +52,8 @@ export async function fetchFiles(): Promise<ApiVaultFile[]> {
  * GET /api/vault/folders — folders for the current user.
  */
 export async function fetchFolders(): Promise<ApiVaultFolder[]> {
-  const res = await fetch(apiUrl("/api/vault/folders"), {
+  const res = await authFetch(apiUrl("/api/vault/folders"), {
     method: "GET",
-    headers: authJsonHeaders(),
   });
   if (!res.ok) {
     throw new Error(await readErrorMessage(res));
@@ -87,9 +81,8 @@ export async function uploadFile(
     formData.append("folderId", folderId);
   }
 
-  const res = await fetch(apiUrl("/api/vault/files/upload"), {
+  const res = await authMultipartFetch(apiUrl("/api/vault/files/upload"), {
     method: "POST",
-    headers: authMultipartHeaders(),
     body: formData,
   });
 
@@ -107,9 +100,8 @@ export async function uploadFile(
  * DELETE /api/vault/files/:fileId
  */
 export async function deleteFile(fileId: string): Promise<void> {
-  const res = await fetch(apiUrl(`/api/vault/files/${encodeURIComponent(fileId)}`), {
+  const res = await authFetch(apiUrl(`/api/vault/files/${encodeURIComponent(fileId)}`), {
     method: "DELETE",
-    headers: authJsonHeaders(),
   });
   if (!res.ok) {
     throw new Error(await readErrorMessage(res));

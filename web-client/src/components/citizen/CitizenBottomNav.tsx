@@ -5,6 +5,7 @@ import { useTranslation } from "@/lib/i18n/LocaleProvider";
 
 export type CitizenNavActive =
   | "hub"
+  | "chat"
   | "vault"
   | "productivity"
   | "calendar"
@@ -51,6 +52,26 @@ export function CitizenBottomNav({ active }: { active: CitizenNavActive }) {
         </Link>
 
         <Link
+          href="/chat"
+          className={`${linkBase} text-[10px] font-medium sm:text-xs ${
+            active === "chat" ? activeStyle : idle
+          } ${active === "chat" ? "font-semibold" : ""}`}
+        >
+          <svg
+            className={`mx-auto h-5 w-5 stroke-[1.75] sm:h-6 sm:w-6 ${
+              active === "chat" ? "text-slate-900" : "text-slate-600"
+            }`}
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            aria-hidden
+          >
+            <path d="M21 15a4 4 0 01-4 4H8l-5 3V7a4 4 0 014-4h10a4 4 0 014 4v8z" />
+          </svg>
+          <span className="truncate">{t("navCitizen.chat")}</span>
+        </Link>
+
+        <Link
           href="/vault"
           className={`${linkBase} text-[10px] font-medium sm:text-xs ${
             active === "vault" ? activeStyle : idle
@@ -68,26 +89,6 @@ export function CitizenBottomNav({ active }: { active: CitizenNavActive }) {
             <path d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m0 0h-4M9 12h6M9 16h6" />
           </svg>
           <span className="truncate">{t("navCitizen.vault")}</span>
-        </Link>
-
-        <Link
-          href="/productivity"
-          className={`${linkBase} text-[10px] font-medium sm:text-xs ${
-            active === "productivity" ? activeStyle : idle
-          } ${active === "productivity" ? "font-semibold" : ""}`}
-        >
-          <svg
-            className={`mx-auto h-5 w-5 stroke-[1.75] sm:h-6 sm:w-6 ${
-              active === "productivity" ? "text-slate-900" : "text-slate-600"
-            }`}
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-            aria-hidden
-          >
-            <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 012-2h2a2 2 0 012 2v0M9 5a2 2 0 012 2h2a2 2 0 012-2m-6 9h6m-6 4h6" />
-          </svg>
-          <span className="truncate">{t("navCitizen.work")}</span>
         </Link>
 
         <Link
