@@ -28,7 +28,7 @@ function readSessionPayload(data: unknown): SessionReadyState | null {
   const d = data as Record<string, unknown>;
   const roomId = typeof d.roomId === "string" ? d.roomId : null;
   const eventId = typeof d.eventId === "string" ? d.eventId : null;
-  const agoraToken = typeof d.agoraToken === "string" ? d.agoraToken : null;
+  const agoraToken = typeof d.agoraToken === "string" ? d.agoraToken : "";
   const agoraUidRaw = d.agoraUid;
   const agoraUid =
     typeof agoraUidRaw === "number"
@@ -44,7 +44,7 @@ function readSessionPayload(data: unknown): SessionReadyState | null {
   const tokenExpiresAt =
     typeof d.tokenExpiresAt === "number" ? d.tokenExpiresAt : undefined;
 
-  if (!roomId || !eventId || !agoraToken || !Number.isFinite(agoraUid)) {
+  if (!roomId || !eventId || !Number.isFinite(agoraUid)) {
     return null;
   }
 
