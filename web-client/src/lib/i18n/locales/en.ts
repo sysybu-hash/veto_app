@@ -533,7 +533,7 @@ export const en: Dict = {
     openAssistant: "Open VETO AI Assistant",
     modeHintText: "General legal information — not tailored advice",
     modeHintLive: "Gemini Live — real-time audio",
-    modeHintVision: "VETO Vision — visual analysis (coming soon)",
+    modeHintVision: "VETO Vision — document and image analysis",
     placeholder: "Ask something…",
     send: "Send",
     close: "Close",

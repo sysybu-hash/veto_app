@@ -1,17 +1,25 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Bot,
-  Camera,
+  Check,
+  Copy,
+  Edit3,
+  FileText,
+  FolderLock,
   MessageCircle,
   Mic,
   RefreshCcw,
   Search,
   Send,
+  Settings,
   Sparkles,
   Trash2,
   UserRound,
+  X,
 } from "lucide-react";
 import {
   deleteChatConversation,
@@ -24,11 +32,19 @@ import {
   type ChatMessage,
   type ChatPartner,
 } from "@/api/chatApi";
+import { saveAiAnalysisAsFile } from "@/app/actions/ai-to-vault";
 import { CitizenBottomNav } from "@/components/citizen/CitizenBottomNav";
 import { getJwt } from "@/lib/authToken";
+import { apiUrl, tunnelBypassHeaders } from "@/lib/env";
 import { useTranslation } from "@/lib/i18n/LocaleProvider";
-import { btnPrimaryDark, btnSecondaryGlass, glassInput, glassPanel, glassPanelNested } from "@/lib/vetoGlass";
-import { useAiChatStore } from "@/store/useAiChatStore";
+import {
+  btnPrimaryDark,
+  btnSecondaryGlass,
+  glassInput,
+  glassPanel,
+  glassPanelNested,
+} from "@/lib/vetoGlass";
+import { useToastStore } from "@/store/useToastStore";
 
 type Thread = {
   id: string;
@@ -37,6 +53,49 @@ type Thread = {
   last?: string;
   lastAt?: string | null;
   unread?: number;
+};
+
+type EmbeddedAiMessage = {
+  id: string;
+  role: "user" | "assistant";
+  content: string;
+  createdAt: string;
+  saved?: boolean;
+};
+
+type AiChatApiResponse = {
+  classified?: boolean;
+  reply?: string;
+  specialization?: string;
+  lawyer?: { id?: string; name?: string; phone?: string } | null;
+  error?: string;
+};
+
+type SpeechRecognitionLike = {
+  lang: string;
+  continuous: boolean;
+  interimResults: boolean;
+  onresult:
+    | ((event: {
+        resultIndex: number;
+        results: ArrayLike<{
+          isFinal: boolean;
+          0: { transcript: string };
+        }>;
+      }) => void)
+    | null;
+  onerror: ((event: { error: string }) => void) | null;
+  onend: (() => void) | null;
+  start: () => void;
+  stop: () => void;
+};
+
+const AI_WELCOME: EmbeddedAiMessage = {
+  id: "embedded-ai-welcome",
+  role: "assistant",
+  content:
+    "אני כאן בתוך חלון הצ׳אט, בנפרד מהבועה. אפשר לבקש סיכום שיחה, ניסוח תשובה, פתיחת כספת או מחולל מסמכים, ולשמור תשובות לכספת.",
+  createdAt: "",
 };
 
 function getUserIdFromJwt(): string | null {
@@ -50,6 +109,13 @@ function getUserIdFromJwt(): string | null {
   } catch {
     return null;
   }
+}
+
+function newId(prefix = "m"): string {
+  if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
+    return crypto.randomUUID();
+  }
+  return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
 }
 
 function formatTime(iso?: string | null): string {
@@ -77,8 +143,42 @@ function threadFromPartner(p: ChatPartner): Thread {
   return { id: String(p.id), name: p.name || "Unknown", role: p.role || "user" };
 }
 
+function buildAiHistory(messages: EmbeddedAiMessage[]) {
+  return messages
+    .filter((m) => m.id !== AI_WELCOME.id && m.content.trim())
+    .slice(-10)
+    .map((m) => ({
+      role: m.role === "assistant" ? "model" : "user",
+      parts: [{ text: m.content }],
+    }));
+}
+
+function formatAssistantReply(data: AiChatApiResponse): string {
+  const base =
+    typeof data.reply === "string" && data.reply.trim().length > 0
+      ? data.reply.trim()
+      : "לא הצלחתי לייצר תשובה כרגע. נסו שוב בעוד רגע.";
+
+  if (data.classified && data.lawyer?.name) {
+    const phone = data.lawyer.phone ? ` · ${data.lawyer.phone}` : "";
+    return `${base}\n\nהתאמה זמינה: ${data.lawyer.name}${phone}`;
+  }
+  if (data.classified && data.specialization) {
+    return `${base}\n\nסיווג: ${data.specialization}. אין עורך דין זמין כרגע.`;
+  }
+  return base;
+}
+
+function localeToSpeechLang(locale: string): string {
+  if (locale === "ru") return "ru-RU";
+  if (locale === "en") return "en-US";
+  return "he-IL";
+}
+
 export default function ChatPage() {
-  const { t } = useTranslation();
+  const router = useRouter();
+  const { t, locale } = useTranslation();
+  const pushToast = useToastStore((s) => s.push);
   const [threads, setThreads] = useState<Thread[]>([]);
   const [active, setActive] = useState<Thread | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -88,10 +188,18 @@ export default function ChatPage() {
   const [loadingMessages, setLoadingMessages] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [aiOpen, setAiOpen] = useState(true);
+  const [aiDraft, setAiDraft] = useState("");
+  const [aiBusy, setAiBusy] = useState(false);
+  const [aiError, setAiError] = useState<string | null>(null);
+  const [aiMessages, setAiMessages] = useState<EmbeddedAiMessage[]>([AI_WELCOME]);
+  const [editingAiId, setEditingAiId] = useState<string | null>(null);
+  const [editingAiText, setEditingAiText] = useState("");
+  const [savingAiId, setSavingAiId] = useState<string | null>(null);
+  const [isRecording, setIsRecording] = useState(false);
   const myUserId = useMemo(() => getUserIdFromJwt(), []);
-  const openAiChat = useAiChatStore((s) => s.openChat);
-  const addAiMessage = useAiChatStore((s) => s.addMessage);
-  const aiMessages = useAiChatStore((s) => s.messages);
+  const aiScrollRef = useRef<HTMLDivElement>(null);
+  const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
 
   const loadThreads = useCallback(async () => {
     setLoadingThreads(true);
@@ -112,7 +220,7 @@ export default function ChatPage() {
         return bt - at;
       });
       setThreads(next);
-      setActive((cur) => cur && next.some((x) => x.id === cur.id) ? cur : next[0] ?? null);
+      setActive((cur) => (cur && next.some((x) => x.id === cur.id) ? cur : next[0] ?? null));
     } catch (e) {
       setError(e instanceof Error ? e.message : t("chat.loadFailed"));
     } finally {
@@ -120,18 +228,21 @@ export default function ChatPage() {
     }
   }, [t]);
 
-  const loadMessages = useCallback(async (thread: Thread) => {
-    setLoadingMessages(true);
-    setError(null);
-    try {
-      setMessages(await fetchChatMessages(thread.id));
-    } catch (e) {
-      setError(e instanceof Error ? e.message : t("chat.messagesFailed"));
-      setMessages([]);
-    } finally {
-      setLoadingMessages(false);
-    }
-  }, [t]);
+  const loadMessages = useCallback(
+    async (thread: Thread) => {
+      setLoadingMessages(true);
+      setError(null);
+      try {
+        setMessages(await fetchChatMessages(thread.id));
+      } catch (e) {
+        setError(e instanceof Error ? e.message : t("chat.messagesFailed"));
+        setMessages([]);
+      } finally {
+        setLoadingMessages(false);
+      }
+    },
+    [t],
+  );
 
   useEffect(() => {
     void Promise.resolve().then(loadThreads);
@@ -140,6 +251,18 @@ export default function ChatPage() {
   useEffect(() => {
     if (active) void Promise.resolve().then(() => loadMessages(active));
   }, [active, loadMessages]);
+
+  useEffect(() => {
+    const el = aiScrollRef.current;
+    if (el) el.scrollTop = el.scrollHeight;
+  }, [aiMessages, aiBusy, aiOpen]);
+
+  useEffect(() => {
+    return () => {
+      recognitionRef.current?.stop();
+      recognitionRef.current = null;
+    };
+  }, []);
 
   const filteredThreads = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -170,55 +293,262 @@ export default function ChatPage() {
     }
   }, [active, draft, loadThreads, t]);
 
-  const removeMessage = useCallback(async (messageId: string) => {
-    setError(null);
-    try {
-      await deleteChatMessage(messageId);
-      setMessages((prev) => prev.filter((m) => m._id !== messageId));
-      void loadThreads();
-    } catch (e) {
-      setError(e instanceof Error ? e.message : t("chat.deleteFailed"));
-    }
-  }, [loadThreads, t]);
-
-  const removeThread = useCallback(async (thread?: Thread) => {
-    const target = thread ?? active;
-    if (!target) return;
-    const ok = window.confirm(`למחוק את כל השיחה עם ${target.name}?`);
-    if (!ok) return;
-    setBusy(true);
-    setError(null);
-    try {
-      await deleteChatConversation(target.id);
-      setThreads((prev) => prev.filter((x) => x.id !== target.id));
-      if (active?.id === target.id) {
-        setMessages([]);
-        setActive(null);
+  const removeMessage = useCallback(
+    async (messageId: string) => {
+      setError(null);
+      try {
+        await deleteChatMessage(messageId);
+        setMessages((prev) => prev.filter((m) => m._id !== messageId));
+        void loadThreads();
+      } catch (e) {
+        setError(e instanceof Error ? e.message : t("chat.deleteFailed"));
       }
-      void loadThreads();
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "מחיקת השיחה נכשלה");
-    } finally {
-      setBusy(false);
-    }
-  }, [active, loadThreads]);
+    },
+    [loadThreads, t],
+  );
 
-  const openLegalAi = useCallback(() => {
-    const alreadyIntroduced = aiMessages.some((m) => m.id === "chat-ai-tools-intro");
-    if (!alreadyIntroduced) {
-      addAiMessage({
-        id: "chat-ai-tools-intro",
-        role: "assistant",
-        content:
-          "פתחתי עוזר AI משפטי מתוך הצ׳אט. אפשר לכתוב שאלה, לעבור למצב אודיו חי, או לפתוח מצלמה לפענוח מסמך ושמירה לכספת.",
-      });
+  const removeThread = useCallback(
+    async (thread?: Thread) => {
+      const target = thread ?? active;
+      if (!target) return;
+      const ok = window.confirm(`למחוק את כל השיחה עם ${target.name}?`);
+      if (!ok) return;
+      setBusy(true);
+      setError(null);
+      try {
+        await deleteChatConversation(target.id);
+        setThreads((prev) => prev.filter((x) => x.id !== target.id));
+        if (active?.id === target.id) {
+          setMessages([]);
+          setActive(null);
+        }
+        void loadThreads();
+      } catch (e) {
+        setError(e instanceof Error ? e.message : "מחיקת השיחה נכשלה");
+      } finally {
+        setBusy(false);
+      }
+    },
+    [active, loadThreads],
+  );
+
+  const appendAiAssistant = useCallback((content: string) => {
+    setAiMessages((prev) => [
+      ...prev,
+      { id: newId("a"), role: "assistant", content, createdAt: new Date().toISOString() },
+    ]);
+  }, []);
+
+  const runSiteAction = useCallback(
+    (text: string): boolean => {
+      const clean = text.trim().toLowerCase();
+      const actions: Array<{ match: string[]; path: string; reply: string }> = [
+        {
+          match: ["מחולל", "מסמך", "מסמכים", "generator"],
+          path: "/vault/generator",
+          reply: "פתחתי את מחולל המסמכים. אפשר לחזור לכאן ולהמשיך את שיחת ה-AI.",
+        },
+        {
+          match: ["כספת", "vault"],
+          path: "/vault",
+          reply: "פתחתי את הכספת.",
+        },
+        {
+          match: ["יומן", "תור", "calendar"],
+          path: "/calendar",
+          reply: "פתחתי את היומן.",
+        },
+        {
+          match: ["הגדרות", "settings"],
+          path: "/settings",
+          reply: "פתחתי את ההגדרות.",
+        },
+      ];
+      const action = actions.find((item) => item.match.some((word) => clean.includes(word)));
+      if (!action) return false;
+      appendAiAssistant(action.reply);
+      router.push(action.path);
+      return true;
+    },
+    [appendAiAssistant, router],
+  );
+
+  const buildConversationContext = useCallback(() => {
+    if (!active) return "";
+    const transcript = messages
+      .slice(-20)
+      .map((m) => {
+        const mine = myUserId != null && String(m.sender_id) === myUserId;
+        return `${mine ? "האזרח" : active.name}: ${m.text}`;
+      })
+      .join("\n");
+    return transcript ? `\n\nהקשר מהשיחה הנוכחית:\n${transcript}` : "";
+  }, [active, messages, myUserId]);
+
+  const sendEmbeddedAi = useCallback(
+    async (override?: string) => {
+      const rawText = override ?? aiDraft;
+      const text = rawText.trim();
+      if (!text || aiBusy) return;
+
+      const token = getJwt();
+      if (!token) {
+        setAiError("צריך להתחבר כדי להשתמש בצ׳אט AI.");
+        return;
+      }
+
+      setAiOpen(true);
+      setAiDraft("");
+      setAiError(null);
+
+      const userMessage: EmbeddedAiMessage = {
+        id: newId("u"),
+        role: "user",
+        content: text,
+        createdAt: new Date().toISOString(),
+      };
+      const nextMessages = [...aiMessages, userMessage];
+      setAiMessages(nextMessages);
+
+      if (runSiteAction(text)) return;
+
+      setAiBusy(true);
+      try {
+        const enrichedMessage = `${text}${buildConversationContext()}`;
+        const res = await fetch(apiUrl("/api/ai/chat"), {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+            ...tunnelBypassHeaders(),
+          },
+          body: JSON.stringify({
+            message: enrichedMessage,
+            history: buildAiHistory(nextMessages),
+            lang: locale,
+          }),
+        });
+
+        const data: AiChatApiResponse = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          throw new Error(typeof data.error === "string" ? data.error : `Request failed (${res.status})`);
+        }
+        appendAiAssistant(formatAssistantReply(data));
+      } catch (e) {
+        appendAiAssistant(`לא הצלחתי להשלים את הבקשה כרגע: ${e instanceof Error ? e.message : "שגיאה לא ידועה"}`);
+      } finally {
+        setAiBusy(false);
+      }
+    },
+    [
+      aiBusy,
+      aiDraft,
+      aiMessages,
+      appendAiAssistant,
+      buildConversationContext,
+      locale,
+      runSiteAction,
+    ],
+  );
+
+  const saveAiMessage = useCallback(
+    async (message: EmbeddedAiMessage) => {
+      if (!message.content.trim() || savingAiId) return;
+      setSavingAiId(message.id);
+      try {
+        const res = await saveAiAnalysisAsFile(message.content);
+        if (res.success) {
+          setAiMessages((prev) => prev.map((m) => (m.id === message.id ? { ...m, saved: true } : m)));
+          pushToast("התוכן נשמר לכספת", "success");
+        } else {
+          pushToast(res.error, "error");
+        }
+      } catch (e) {
+        pushToast(e instanceof Error ? e.message : "שמירה לכספת נכשלה", "error");
+      } finally {
+        setSavingAiId(null);
+      }
+    },
+    [pushToast, savingAiId],
+  );
+
+  const startEditingAi = (message: EmbeddedAiMessage) => {
+    setEditingAiId(message.id);
+    setEditingAiText(message.content);
+  };
+
+  const commitAiEdit = () => {
+    const text = editingAiText.trim();
+    if (!editingAiId || !text) return;
+    setAiMessages((prev) =>
+      prev.map((m) => (m.id === editingAiId ? { ...m, content: text, saved: false } : m)),
+    );
+    setEditingAiId(null);
+    setEditingAiText("");
+  };
+
+  const deleteAiMessage = (id: string) => {
+    setAiMessages((prev) => prev.filter((m) => m.id !== id));
+    if (editingAiId === id) {
+      setEditingAiId(null);
+      setEditingAiText("");
     }
-    openAiChat();
-  }, [addAiMessage, aiMessages, openAiChat]);
+  };
+
+  const summarizeConversation = () => {
+    const context = buildConversationContext();
+    if (!context) {
+      appendAiAssistant("אין עדיין הודעות בשיחה הנוכחית לסיכום.");
+      return;
+    }
+    void sendEmbeddedAi("סכם את השיחה הנוכחית בצורה משפטית קצרה, עם פעולות המשך מומלצות.");
+  };
+
+  const startDictation = useCallback(() => {
+    if (typeof window === "undefined") return;
+    const browserWindow = window as Window & {
+      SpeechRecognition?: new () => SpeechRecognitionLike;
+      webkitSpeechRecognition?: new () => SpeechRecognitionLike;
+    };
+    const SpeechCtor = browserWindow.SpeechRecognition ?? browserWindow.webkitSpeechRecognition;
+    if (!SpeechCtor) {
+      pushToast("הדפדפן לא תומך בהכתבה קולית", "error");
+      return;
+    }
+    recognitionRef.current?.stop();
+    const recognition = new SpeechCtor();
+    recognition.lang = localeToSpeechLang(locale);
+    recognition.continuous = false;
+    recognition.interimResults = true;
+    recognition.onresult = (event) => {
+      let text = "";
+      for (let i = event.resultIndex; i < event.results.length; i += 1) {
+        text += `${event.results[i]?.[0]?.transcript ?? ""} `;
+      }
+      setAiDraft((prev) => `${prev ? `${prev} ` : ""}${text.trim()}`.trim());
+    };
+    recognition.onerror = () => {
+      setIsRecording(false);
+      pushToast("לא הצלחתי להפעיל הכתבה קולית", "error");
+    };
+    recognition.onend = () => {
+      recognitionRef.current = null;
+      setIsRecording(false);
+    };
+    recognitionRef.current = recognition;
+    setIsRecording(true);
+    recognition.start();
+  }, [locale, pushToast]);
+
+  const stopDictation = () => {
+    recognitionRef.current?.stop();
+    recognitionRef.current = null;
+    setIsRecording(false);
+  };
 
   return (
     <>
-      <main className="mx-auto grid w-full max-w-6xl flex-1 gap-4 px-4 py-5 pb-28 lg:grid-cols-[340px_minmax(0,1fr)]">
+      <main className="mx-auto grid w-full max-w-7xl flex-1 gap-4 px-4 py-5 pb-28 lg:grid-cols-[310px_minmax(0,1fr)_360px]">
         <section className={`${glassPanel} flex min-h-[260px] flex-col p-4`}>
           <div className="mb-4 flex items-start justify-between gap-3">
             <div>
@@ -227,49 +557,27 @@ export default function ChatPage() {
               </h1>
               <p className="mt-1 text-sm text-slate-600">{t("chat.subtitle")}</p>
             </div>
-            <div className="flex shrink-0 gap-2">
-              <button
-                type="button"
-                onClick={openLegalAi}
-                className="grid h-10 w-10 place-items-center rounded-xl border border-[#C5A059]/50 bg-slate-950 text-[#C5A059] shadow-[0_0_18px_rgba(197,160,89,0.25)]"
-                aria-label="פתיחת צ׳אט AI משפטי"
-                title="צ׳אט AI משפטי"
-              >
-                <Sparkles className="h-4 w-4" aria-hidden />
-              </button>
-              <button
-                type="button"
-                onClick={() => void loadThreads()}
-                className={`grid h-10 w-10 place-items-center ${btnSecondaryGlass}`}
-                aria-label={t("common.retry")}
-              >
-                <RefreshCcw className="h-4 w-4" aria-hidden />
-              </button>
-            </div>
+            <button
+              type="button"
+              onClick={() => void loadThreads()}
+              className={`grid h-10 w-10 place-items-center ${btnSecondaryGlass}`}
+              aria-label={t("common.retry")}
+            >
+              <RefreshCcw className="h-4 w-4" aria-hidden />
+            </button>
           </div>
 
           <button
             type="button"
-            onClick={openLegalAi}
+            onClick={() => setAiOpen(true)}
             className="mb-3 rounded-2xl border border-[#C5A059]/45 bg-slate-950 px-4 py-3 text-start text-white shadow-[0_0_22px_rgba(15,23,42,0.18)] transition hover:bg-slate-900"
           >
             <span className="flex items-center gap-2 text-sm font-black">
-              <Bot className="h-5 w-5 text-[#C5A059]" aria-hidden />
-              פתח צ׳אט AI משפטי
+              <Sparkles className="h-5 w-5 text-[#C5A059]" aria-hidden />
+              AI עצמאי בתוך הצ׳אט
             </span>
-            <span className="mt-2 flex flex-wrap gap-2 text-[11px] font-bold text-slate-200">
-              <span className="inline-flex items-center gap-1 rounded-full bg-white/10 px-2 py-1">
-                <MessageCircle className="h-3.5 w-3.5" aria-hidden />
-                שיחה
-              </span>
-              <span className="inline-flex items-center gap-1 rounded-full bg-white/10 px-2 py-1">
-                <Mic className="h-3.5 w-3.5" aria-hidden />
-                אודיו
-              </span>
-              <span className="inline-flex items-center gap-1 rounded-full bg-white/10 px-2 py-1">
-                <Camera className="h-3.5 w-3.5" aria-hidden />
-                פענוח מסמכים
-              </span>
+            <span className="mt-2 block text-xs font-semibold text-slate-200">
+              שיחה, שמירה, עריכה, מחיקה ופעולות באתר.
             </span>
           </button>
 
@@ -303,11 +611,7 @@ export default function ChatPage() {
                   }`}
                 >
                   <div className="flex items-start gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setActive(thread)}
-                      className="min-w-0 flex-1 text-start"
-                    >
+                    <button type="button" onClick={() => setActive(thread)} className="min-w-0 flex-1 text-start">
                       <div className="flex items-center justify-between gap-3">
                         <span className="truncate text-sm font-black text-slate-900">
                           {thread.name}
@@ -359,24 +663,26 @@ export default function ChatPage() {
                     </p>
                   </div>
                 </div>
-                <button
-                  type="button"
-                  onClick={openLegalAi}
-                  className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-[#C5A059]/50 bg-slate-950 text-[#C5A059]"
-                  aria-label="פתיחת AI לשיחה"
-                  title="AI לשיחה, אודיו ופענוח מסמכים"
-                >
-                  <Sparkles className="h-4 w-4" aria-hidden />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => void removeThread()}
-                  disabled={busy}
-                  className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-red-200 bg-red-50/70 text-red-700 disabled:opacity-50"
-                  aria-label="מחיקת שיחה"
-                >
-                  <Trash2 className="h-4 w-4" aria-hidden />
-                </button>
+                <div className="flex shrink-0 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setAiOpen(true)}
+                    className="grid h-10 w-10 place-items-center rounded-xl border border-[#C5A059]/50 bg-slate-950 text-[#C5A059]"
+                    aria-label="פתיחת AI בתוך הצ׳אט"
+                    title="AI בתוך הצ׳אט"
+                  >
+                    <Sparkles className="h-4 w-4" aria-hidden />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => void removeThread()}
+                    disabled={busy}
+                    className="grid h-10 w-10 place-items-center rounded-xl border border-red-200 bg-red-50/70 text-red-700 disabled:opacity-50"
+                    aria-label="מחיקת שיחה"
+                  >
+                    <Trash2 className="h-4 w-4" aria-hidden />
+                  </button>
+                </div>
               </header>
 
               {error && (
@@ -437,6 +743,156 @@ export default function ChatPage() {
           ) : (
             <div className="flex flex-1 items-center justify-center p-6 text-center text-sm text-slate-600">
               {loadingThreads ? t("common.loading") : t("chat.pickThread")}
+            </div>
+          )}
+        </section>
+
+        <section className={`${glassPanel} flex min-h-[560px] flex-col overflow-hidden`}>
+          <header className="flex items-start justify-between gap-3 border-b border-white/35 px-4 py-4">
+            <div>
+              <p className="flex items-center gap-2 text-xs font-black uppercase tracking-wide text-[#9b7430]">
+                <Sparkles className="h-4 w-4" aria-hidden />
+                AI עצמאי
+              </p>
+              <h2 className="mt-1 font-frank text-xl font-black text-slate-900">
+                עוזר משפטי בצ׳אט
+              </h2>
+              <p className="mt-1 text-xs text-slate-600">
+                נפרד מהבועה, עם שמירה ופעולות באתר.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setAiOpen((v) => !v)}
+              className={`grid h-10 w-10 place-items-center ${btnSecondaryGlass}`}
+              aria-label={aiOpen ? "סגירת חלון AI" : "פתיחת חלון AI"}
+            >
+              {aiOpen ? <X className="h-4 w-4" aria-hidden /> : <Bot className="h-4 w-4" aria-hidden />}
+            </button>
+          </header>
+
+          {aiOpen ? (
+            <>
+              <div className="grid grid-cols-2 gap-2 border-b border-white/35 p-3 text-xs font-bold sm:grid-cols-4 lg:grid-cols-2">
+                <button type="button" onClick={summarizeConversation} className={btnSecondaryGlass}>
+                  סכם שיחה
+                </button>
+                <button type="button" onClick={() => void sendEmbeddedAi("נסח לי תשובה מקצועית וקצרה לשיחה הנוכחית.")} className={btnSecondaryGlass}>
+                  נסח תשובה
+                </button>
+                <button type="button" onClick={() => { appendAiAssistant("פתחתי את מחולל המסמכים."); router.push("/vault/generator"); }} className={btnSecondaryGlass}>
+                  <FileText className="h-4 w-4" aria-hidden />
+                  מחולל
+                </button>
+                <button type="button" onClick={() => { appendAiAssistant("פתחתי את הכספת."); router.push("/vault"); }} className={btnSecondaryGlass}>
+                  <FolderLock className="h-4 w-4" aria-hidden />
+                  כספת
+                </button>
+              </div>
+
+              {aiError && (
+                <div className="mx-3 mt-3 rounded-xl border border-red-300/80 bg-red-50/90 px-3 py-2 text-xs text-red-900">
+                  {aiError}
+                </div>
+              )}
+
+              <div ref={aiScrollRef} className="min-h-0 flex-1 space-y-3 overflow-y-auto px-3 py-4">
+                {aiMessages.map((message) => (
+                  <div key={message.id} className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}>
+                    <div className={`max-w-[92%] rounded-2xl border px-3 py-2 shadow-sm ${
+                      message.role === "user"
+                        ? "border-[#C5A059]/50 bg-[#C5A059]/20"
+                        : "border-white/45 bg-white/65"
+                    }`}>
+                      {editingAiId === message.id ? (
+                        <div className="space-y-2">
+                          <textarea
+                            value={editingAiText}
+                            onChange={(e) => setEditingAiText(e.target.value)}
+                            rows={5}
+                            className={`${glassInput} min-h-28 resize-none text-sm`}
+                          />
+                          <div className="flex gap-2">
+                            <button type="button" onClick={commitAiEdit} className="rounded-xl bg-slate-950 px-3 py-2 text-xs font-bold text-white">
+                              <Check className="h-4 w-4" aria-hidden />
+                            </button>
+                            <button type="button" onClick={() => setEditingAiId(null)} className={btnSecondaryGlass}>
+                              ביטול
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <>
+                          <p className="whitespace-pre-wrap break-words text-sm leading-relaxed text-slate-900">
+                            {message.content}
+                          </p>
+                          <div className="mt-2 flex flex-wrap gap-1.5 text-[11px] font-bold">
+                            <button type="button" onClick={() => startEditingAi(message)} className="rounded-lg border border-white/50 bg-white/45 px-2 py-1 text-slate-700">
+                              <Edit3 className="h-3.5 w-3.5" aria-hidden />
+                            </button>
+                            <button type="button" onClick={() => deleteAiMessage(message.id)} className="rounded-lg border border-red-200 bg-red-50 px-2 py-1 text-red-700">
+                              <Trash2 className="h-3.5 w-3.5" aria-hidden />
+                            </button>
+                            {message.role === "assistant" && (
+                              <>
+                                <button type="button" onClick={() => setDraft(message.content)} className="rounded-lg border border-white/50 bg-white/45 px-2 py-1 text-slate-700">
+                                  <Copy className="h-3.5 w-3.5" aria-hidden />
+                                  לשיחה
+                                </button>
+                                <button type="button" onClick={() => void saveAiMessage(message)} disabled={savingAiId === message.id} className="rounded-lg border border-[#C5A059]/40 bg-[#C5A059]/15 px-2 py-1 text-[#75551f] disabled:opacity-60">
+                                  {message.saved ? "נשמר" : savingAiId === message.id ? "שומר" : "שמור לכספת"}
+                                </button>
+                              </>
+                            )}
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                ))}
+                {aiBusy && (
+                  <div className="rounded-2xl border border-white/45 bg-white/65 px-3 py-2 text-sm text-slate-600">
+                    חושב ומנסח...
+                  </div>
+                )}
+              </div>
+
+              <div className="border-t border-white/35 p-3">
+                <div className="mb-2 flex flex-wrap gap-2 text-xs font-bold">
+                  <button type="button" onClick={() => { appendAiAssistant("פתחתי את ההגדרות."); router.push("/settings"); }} className={btnSecondaryGlass}>
+                    <Settings className="h-4 w-4" aria-hidden />
+                    הגדרות
+                  </button>
+                  <Link href="/vault/generator" className={btnSecondaryGlass}>
+                    <FileText className="h-4 w-4" aria-hidden />
+                    מסמך חדש
+                  </Link>
+                  <button type="button" onClick={isRecording ? stopDictation : startDictation} className={btnSecondaryGlass}>
+                    <Mic className="h-4 w-4" aria-hidden />
+                    {isRecording ? "עצור הכתבה" : "הכתבה"}
+                  </button>
+                </div>
+                <form onSubmit={(e) => { e.preventDefault(); void sendEmbeddedAi(); }} className="flex gap-2">
+                  <textarea
+                    value={aiDraft}
+                    onChange={(e) => setAiDraft(e.target.value)}
+                    placeholder="כתבו ל-AI, למשל: פתח כספת, סכם שיחה, נסח תשובה..."
+                    rows={2}
+                    className={`${glassInput} min-h-12 resize-none`}
+                  />
+                  <button type="submit" disabled={aiBusy || aiDraft.trim().length === 0} className={`grid h-12 w-12 shrink-0 place-items-center self-end ${btnPrimaryDark} disabled:opacity-50`} aria-label="שליחה ל-AI">
+                    <Send className="h-4 w-4" aria-hidden />
+                  </button>
+                </form>
+              </div>
+            </>
+          ) : (
+            <div className="flex flex-1 flex-col items-center justify-center gap-3 p-6 text-center">
+              <Bot className="h-10 w-10 text-[#9b7430]" aria-hidden />
+              <p className="text-sm font-bold text-slate-800">חלון ה-AI סגור.</p>
+              <button type="button" onClick={() => setAiOpen(true)} className={btnPrimaryDark}>
+                פתח AI בצ׳אט
+              </button>
             </div>
           )}
         </section>

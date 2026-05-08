@@ -18,41 +18,45 @@ export type VisionAnalyzeResult =
   | { success: true; analysis: string }
   | { success: false; error: string };
 
-/**
- * Analyze a camera frame (base64 data URL or raw base64) with Gemini.
- * Requires GEMINI_API_KEY on the server (Vercel / local .env).
- */
 export async function analyzeLegalDocument(
   base64Image: string,
 ): Promise<VisionAnalyzeResult> {
-  const apiKey = process.env.GEMINI_API_KEY;
+  const apiKey = process.env.GEMINI_API_KEY?.trim();
   if (!apiKey) {
-    console.error("GEMINI_API_KEY is not configured");
-    return { success: false, error: "שירות הראייה אינו מוגדר בשרת" };
+    return {
+      success: false,
+      error:
+        "שירות פענוח המסמכים לא מחובר עדיין בסביבה הזו. בפרודקשן יש להגדיר GEMINI_API_KEY.",
+    };
   }
 
   try {
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const model = genAI.getGenerativeModel({
+      model: process.env.GEMINI_VISION_MODEL || "gemini-1.5-flash",
+    });
     const imageData = stripDataUrl(base64Image);
     const mimeType = mimeFromPayload(base64Image);
 
-    const prompt = `
-      אתה סייען משפטי של מערכת VETO.
-      נתח את המסמך המצורף בעברית.
-      חלץ: סוג המסמך, תאריכים קריטיים, וסיכום משפטי בשלושה בולטים.
-      השב בפורמט קצר וסמכותי.
-    `.trim();
+    const prompt = [
+      "אתה מסייע משפטי של מערכת VETO.",
+      "נתח את המסמך המצולם בעברית, באנגלית או ברוסית.",
+      "חלץ סוג מסמך, שמות צדדים אם קיימים, תאריכים קריטיים, סכומים, חובות, סיכונים ופעולות המשך.",
+      "השב בקצרה, בעברית, עם כותרות ברורות. אל תמציא פרטים שלא מופיעים בתמונה.",
+    ].join("\n");
 
     const result = await model.generateContent([
       prompt,
       { inlineData: { data: imageData, mimeType } },
     ]);
 
-    const text = result.response.text();
-    return { success: true, analysis: text.trim() || "(אין תוצאת טקסט)" };
+    const text = result.response.text().trim();
+    return { success: true, analysis: text || "לא זוהה טקסט משפטי ברור בתמונה." };
   } catch (error) {
     console.error("Vision Error:", error);
-    return { success: false, error: "לא הצלחתי לנתח את המסמך" };
+    return {
+      success: false,
+      error: "לא הצלחתי לנתח את המסמך. בדקו שהתמונה חדה ונסו שוב.",
+    };
   }
 }
