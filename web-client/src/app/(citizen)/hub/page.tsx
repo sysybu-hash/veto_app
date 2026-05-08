@@ -156,18 +156,30 @@ export default function CitizenHubPage() {
 
     const onCaseTaken = (raw: unknown) => {
       if (cancelled) return;
-      const msg =
+      const incomingEventId =
         raw &&
         typeof raw === "object" &&
-        "message" in raw &&
-        typeof (raw as { message?: unknown }).message === "string"
-          ? (raw as { message: string }).message
-          : t("hub.errCaseTaken");
-      const { isSearching: searching, lawyerFound: found } =
-        useEmergencyStore.getState();
-      if (searching || found) {
-        setErrorMessage(msg);
+        "eventId" in raw &&
+        typeof (raw as { eventId?: unknown }).eventId === "string"
+          ? (raw as { eventId: string }).eventId
+          : null;
+      const {
+        isSearching: searching,
+        lawyerFound: found,
+        currentEventId,
+      } = useEmergencyStore.getState();
+      // If a lawyer already accepted OUR case, ignore the broadcast — it is
+      // the backend telling other lawyers the case is gone, not an error
+      // for us. Without this guard the citizen sees an English "case taken"
+      // popup right after the lawyer accepts.
+      if (found) return;
+      // Not actively searching → nothing to surface.
+      if (!searching) return;
+      // Ignore broadcasts about other citizens' events.
+      if (incomingEventId && currentEventId && incomingEventId !== currentEventId) {
+        return;
       }
+      setErrorMessage(t("hub.errCaseTaken"));
     };
 
     sock.on("connect", onConnect);
