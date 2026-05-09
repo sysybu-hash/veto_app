@@ -47,19 +47,36 @@ export const he: Dict = {
     heroLine1: "עורך דין",
     heroLine2: "בלחיצת כפתור",
     heroSubtitle:
-      "מערכת ההפעלה המשפטית הראשונה בישראל. הגנה מיידית, ניהול ראיות חכם וסנכרון מלא לחיים הדיגיטליים שלך.",
+      "מערכת הפעלה משפטית מלאה: SOS לעורך דין תורן, כספת ראיות חתומה, ניסוח מסמכים ב-AI וניהול חוזים, משימות ויומן — הכול במקום אחד.",
     cta: "התחל הגנה עכשיו",
+    ctaSecondary: "סיור במערכת",
     footerNote: "השירות ניתן מלבד שבתות וחגים",
-    bentoEmergencyTitle: "התערבות SOS",
+    sectionEyebrow: "מה יש בתוך VETO",
+    sectionTitle: "כל הכלים המשפטיים שלך — תחת קורת גג אחת",
+    bentoEmergencyTitle: "SOS — עורך דין תוך שניות",
     bentoEmergencyDesc:
-      "חיבור וידאו מיידי לעורך דין תורן שמקבל גישה למקום האירוע.",
-    bentoVaultTitle: "כספת ראיות",
-    bentoVaultDesc: "אחסון מוצפן בסטנדרט צבאי לכל המסמכים והראיות שלך.",
-    bentoSyncTitle: "סנכרון חכם",
-    bentoSyncDesc: "חיבור מלא ליומן גוגל ומעקב אחר משימות משפטיות.",
+      "כפתור חירום שמחבר אתכם בווידאו, אודיו או צ׳אט לעו״ד תורן זמין, עם שיתוף מיקום אוטומטי והקלטת השיחה לתיק.",
     bentoEmergencyTag: "חירום",
+    bentoVaultTitle: "כספת ראיות חתומה",
+    bentoVaultDesc:
+      "העלאת מסמכים, תמונות והקלטות לכספת מוצפנת. כל קובץ נחתם דיגיטלית (SHA-512) כדי להוכיח שלא שונה.",
     bentoVaultTag: "אבטחה",
-    bentoSyncTag: "חכם",
+    bentoDocGenTitle: "מחולל מסמכים ב-AI",
+    bentoDocGenDesc:
+      "מנסחים חוזים, תצהירים ומכתבי דרישה בעברית מתוך תיאור חופשי או הקלטה קולית — וייצוא ל-PDF / Word בלחיצה.",
+    bentoDocGenTag: "AI",
+    bentoContractsTitle: "חוזים ומשימות",
+    bentoContractsDesc:
+      "מעקב אחרי חוזים פעילים, חתימה דיגיטלית ורשימת מטלות משפטיות עם תאריכי יעד ועדיפויות.",
+    bentoContractsTag: "פרודוקטיביות",
+    bentoCalendarTitle: "יומן מסונכרן",
+    bentoCalendarDesc:
+      "סנכרון מלא ליומן Google — דיונים, פגישות ודדליינים מופיעים אוטומטית לצד התיקים שלכם.",
+    bentoCalendarTag: "סנכרון",
+    bentoNetworkTitle: "רשת עורכי דין",
+    bentoNetworkDesc:
+      "מאגר עו״ד מאומתים לפי תחום — משפחה, פלילי, עבודה ועוד — עם דירוג זמינות והתאמה אוטומטית למקרה שלכם.",
+    bentoNetworkTag: "רשת",
   },
   navCitizen: {
     home: "בית",

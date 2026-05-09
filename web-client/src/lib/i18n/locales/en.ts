@@ -46,21 +46,36 @@ export const en: Dict = {
     heroLine1: "A lawyer",
     heroLine2: "One tap away",
     heroSubtitle:
-      "Israel’s first legal operating system. Instant protection, smart evidence vault, and full sync for your digital life.",
+      "A complete legal OS: SOS to an on-duty lawyer, a sealed evidence vault, AI document drafting, and contracts, tasks and calendar — all in one place.",
     cta: "Start protection now",
+    ctaSecondary: "Tour the platform",
     footerNote: "Service available except Saturdays and holidays",
-    bentoEmergencyTitle: "SOS response",
+    sectionEyebrow: "INSIDE VETO",
+    sectionTitle: "Every legal tool you need — under one roof",
+    bentoEmergencyTitle: "SOS — a lawyer in seconds",
     bentoEmergencyDesc:
-      "Instant video to an on-duty lawyer with situational context.",
-    bentoVaultTitle: "Evidence vault",
-    bentoVaultDesc:
-      "Military-grade encryption for every document and exhibit.",
-    bentoSyncTitle: "Smart sync",
-    bentoSyncDesc:
-      "Full Google Calendar integration and legal task tracking.",
+      "An emergency button that connects you over video, audio or chat to an available on-duty lawyer, with auto location sharing and call recording for the case file.",
     bentoEmergencyTag: "EMERGENCY",
+    bentoVaultTitle: "Sealed evidence vault",
+    bentoVaultDesc:
+      "Upload documents, photos and recordings to an encrypted vault. Every file is digitally signed (SHA-512) to prove it hasn't been altered.",
     bentoVaultTag: "SECURITY",
-    bentoSyncTag: "INTELLIGENCE",
+    bentoDocGenTitle: "AI document generator",
+    bentoDocGenDesc:
+      "Draft contracts, affidavits and demand letters from a free-text description or a voice note — export to PDF / Word in one click.",
+    bentoDocGenTag: "AI",
+    bentoContractsTitle: "Contracts & tasks",
+    bentoContractsDesc:
+      "Track active contracts, sign digitally, and manage a legal to-do list with due dates and priorities.",
+    bentoContractsTag: "PRODUCTIVITY",
+    bentoCalendarTitle: "Synced calendar",
+    bentoCalendarDesc:
+      "Full Google Calendar sync — hearings, meetings and deadlines appear automatically alongside your cases.",
+    bentoCalendarTag: "SYNC",
+    bentoNetworkTitle: "Lawyer network",
+    bentoNetworkDesc:
+      "A pool of verified attorneys by domain — family, criminal, labor and more — with availability ranking and automatic case matching.",
+    bentoNetworkTag: "NETWORK",
   },
   navCitizen: {
     home: "Home",

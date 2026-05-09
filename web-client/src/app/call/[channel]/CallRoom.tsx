@@ -327,7 +327,7 @@ function CallInner({ channel }: { channel: string }) {
         )}
 
         {videoSession && localCameraTrack && (
-          <div className="absolute right-3 top-3 z-10 h-28 w-20 overflow-hidden rounded-lg border border-white/20 shadow-lg sm:h-36 sm:w-28">
+          <div className="absolute right-3 top-3 z-10 h-28 w-20 overflow-hidden rounded-lg border border-white/10 shadow-lg sm:h-36 sm:w-28">
             <LocalVideoTrack
               track={localCameraTrack}
               play={cameraOn}
@@ -370,7 +370,7 @@ function CallInner({ channel }: { channel: string }) {
           <button
             type="button"
             onClick={() => void leave()}
-            className="rounded-full bg-red-600 px-5 py-2 text-sm font-semibold text-white hover:bg-red-500"
+            className="rounded-full bg-red-600 px-5 py-2 text-sm font-semibold text-white hover:bg-red-500/100"
           >
             {t("call.end")}
           </button>

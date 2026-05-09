@@ -16,7 +16,6 @@ import {
 } from "lucide-react";
 import { clearJwt, getJwt, getRoleFromJwt } from "@/lib/authToken";
 import { disconnectSocket } from "@/lib/socketClient";
-import { btnSecondaryGlass } from "@/lib/vetoGlass";
 
 type NavItem = {
   href: string;
@@ -85,9 +84,9 @@ export function UniversalNav() {
   };
 
   return (
-    <nav className="sticky top-0 z-40 border-b border-white/40 bg-white/70 px-3 py-2 backdrop-blur-xl" aria-label="ניווט ראשי">
+    <nav className="sticky top-0 z-40 border-b border-white/[0.06] bg-slate-950/70 px-3 py-2 backdrop-blur-xl supports-[backdrop-filter]:bg-slate-950/60" aria-label="ניווט ראשי">
       <div className="mx-auto flex max-w-6xl items-center gap-2">
-        <Link href={hasToken ? (role === "lawyer" ? "/dashboard" : role === "admin" ? "/admin/dashboard" : "/hub") : "/"} className="me-1 shrink-0 font-frank text-base font-black text-slate-950">
+        <Link href={hasToken ? (role === "lawyer" ? "/dashboard" : role === "admin" ? "/admin/dashboard" : "/hub") : "/"} className="me-1 shrink-0 font-frank text-base font-black text-white">
           VETO
         </Link>
         <div className="flex min-w-0 flex-1 gap-1 overflow-x-auto pb-0.5">
@@ -100,8 +99,8 @@ export function UniversalNav() {
                 href={item.href}
                 className={`flex shrink-0 items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-black transition ${
                   active
-                    ? "bg-slate-900 text-white shadow-md"
-                    : `${btnSecondaryGlass} border-transparent text-slate-700`
+                    ? "border border-[#C5A059]/40 bg-[#C5A059] text-slate-950 shadow-[0_0_20px_-4px_rgba(197,160,89,0.5)]"
+                    : "border border-white/[0.08] bg-white/[0.03] text-slate-200 hover:bg-white/[0.07] hover:text-white"
                 }`}
               >
                 <Icon className="h-4 w-4" aria-hidden />
@@ -114,7 +113,7 @@ export function UniversalNav() {
           <button
             type="button"
             onClick={logout}
-            className="flex shrink-0 items-center gap-1.5 rounded-xl border border-red-200 bg-red-50/80 px-3 py-2 text-xs font-black text-red-800 transition hover:bg-red-100"
+            className="flex shrink-0 items-center gap-1.5 rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs font-black text-red-300 transition hover:bg-red-500/20 hover:text-red-200"
           >
             <LogOut className="h-4 w-4" aria-hidden />
             התנתקות

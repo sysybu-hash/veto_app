@@ -25,14 +25,14 @@ export default function AppError({
       <div
         className={`w-full max-w-md space-y-4 p-8 text-center shadow-lg shadow-slate-900/10 ${glassPanel}`}
       >
-        <h1 className="font-frank text-xl font-black text-slate-900">
+        <h1 className="font-frank text-xl font-black text-slate-100">
           {t("errorPage.title")}
         </h1>
-        <p className="text-sm leading-relaxed text-slate-700">
+        <p className="text-sm leading-relaxed text-slate-300">
           {t("errorPage.body")}
         </p>
         {process.env.NODE_ENV === "development" && error.message ? (
-          <pre className="max-h-32 overflow-auto rounded-lg border border-red-200/60 bg-red-50/80 p-3 text-start text-xs text-red-900">
+          <pre className="max-h-32 overflow-auto rounded-lg border border-red-500/40 bg-red-500/10 p-3 text-start text-xs text-red-200">
             {error.message}
           </pre>
         ) : null}
