@@ -120,8 +120,8 @@ function ModeToggleButton({
       title={label}
       className={`rounded-lg p-2 transition-all ${
         active
-          ? "bg-white/50 text-slate-900 shadow-sm ring-1 ring-[#C5A059]/40 backdrop-blur-sm"
-          : "text-slate-600 hover:bg-white/25 hover:text-slate-900"
+          ? "bg-white/[0.04] text-slate-100 shadow-sm ring-1 ring-[#C5A059]/40 backdrop-blur-sm"
+          : "text-slate-400 hover:bg-white/[0.03] hover:text-slate-100"
       }`}
     >
       {children}
@@ -488,7 +488,7 @@ export function GlobalAiOverlay() {
   const statusDot =
     mode === "text"
       ? "bg-[#C5A059] shadow-[0_0_8px_rgba(197,160,89,0.5)]"
-      : "animate-pulse bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.55)]";
+      : "animate-pulse bg-red-500/100 shadow-[0_0_10px_rgba(239,68,68,0.55)]";
 
   const modeHint =
     mode === "text"
@@ -580,22 +580,22 @@ export function GlobalAiOverlay() {
             }}
             className={`pointer-events-auto fixed bottom-28 flex max-h-[calc(100dvh-6rem)] w-[min(calc(100%-2rem),450px)] max-w-[450px] flex-col overflow-hidden max-sm:inset-x-4 sm:start-8 sm:end-auto ${glassPanel} shadow-2xl`}
           >
-            <header className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-b border-white/40 bg-white/25 px-3 py-3 backdrop-blur-md sm:gap-3 sm:px-4">
+            <header className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-b border-white/10 bg-white/[0.03] px-3 py-3 backdrop-blur-md sm:gap-3 sm:px-4">
               <div className="flex min-w-0 flex-1 items-center gap-2 sm:flex-initial sm:gap-3">
                 <span
                   className={`h-2.5 w-2.5 shrink-0 rounded-full ${statusDot}`}
                   aria-hidden
                 />
                 <div className="min-w-0">
-                  <h2 className="font-frank text-sm font-black tracking-tight text-slate-900 sm:text-base">
+                  <h2 className="font-frank text-sm font-black tracking-tight text-slate-100 sm:text-base">
                     {t("ai.title")}
                   </h2>
-                  <p className="truncate text-xs text-slate-600">{modeHint}</p>
+                  <p className="truncate text-xs text-slate-400">{modeHint}</p>
                 </div>
               </div>
 
               <div
-                className="flex items-center gap-1 rounded-xl border border-white/40 bg-white/20 p-1 backdrop-blur-md"
+                className="flex items-center gap-1 rounded-xl border border-white/10 bg-white/[0.02] p-1 backdrop-blur-md"
                 role="group"
                 aria-label={t("ai.modePickerAria")}
               >
@@ -635,7 +635,7 @@ export function GlobalAiOverlay() {
                 <button
                   type="button"
                   onClick={handleToggleChat}
-                  className={`rounded-full p-2 text-slate-700 hover:bg-white/30 ${btnSecondaryGlass} border-transparent`}
+                  className={`rounded-full p-2 text-slate-300 hover:bg-white/[0.03] ${btnSecondaryGlass} border-transparent`}
                   aria-label={t("ai.close")}
                 >
                   <X className="h-5 w-5" aria-hidden />
@@ -644,7 +644,7 @@ export function GlobalAiOverlay() {
             </header>
 
             {errorBanner && (
-              <div className="shrink-0 border-b border-amber-300/60 bg-amber-100/50 px-3 py-2 text-xs text-amber-950 backdrop-blur-sm">
+              <div className="shrink-0 border-b border-amber-500/40 bg-amber-500/15 px-3 py-2 text-xs text-amber-200 backdrop-blur-sm">
                 {errorBanner}
               </div>
             )}
@@ -662,7 +662,7 @@ export function GlobalAiOverlay() {
                   >
                     <div
                       ref={scrollRef}
-                      className="min-h-0 flex-1 space-y-3 overflow-y-auto scroll-smooth bg-white/15 px-3 py-3 backdrop-blur-sm"
+                      className="min-h-0 flex-1 space-y-3 overflow-y-auto scroll-smooth bg-white/[0.02] px-3 py-3 backdrop-blur-sm"
                     >
                       {messages.length === 0 && !isLoading && (
                         <p
@@ -696,9 +696,9 @@ export function GlobalAiOverlay() {
                             aria-live="polite"
                           >
                             <span className="sr-only">{t("ai.srTyping")}</span>
-                            <span className="h-2 w-2 animate-bounce rounded-full bg-slate-700 [animation-delay:-0.2s]" />
-                            <span className="h-2 w-2 animate-bounce rounded-full bg-slate-700 [animation-delay:-0.1s]" />
-                            <span className="h-2 w-2 animate-bounce rounded-full bg-slate-700" />
+                            <span className="h-2 w-2 animate-bounce rounded-full bg-slate-300 [animation-delay:-0.2s]" />
+                            <span className="h-2 w-2 animate-bounce rounded-full bg-slate-300 [animation-delay:-0.1s]" />
+                            <span className="h-2 w-2 animate-bounce rounded-full bg-slate-300" />
                           </div>
                         </div>
                       )}
@@ -713,7 +713,7 @@ export function GlobalAiOverlay() {
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -10 }}
                     transition={{ duration: 0.2 }}
-                    className="absolute inset-0 flex min-h-0 flex-col items-center justify-center gap-10 bg-white/15 px-4 text-center backdrop-blur-sm"
+                    className="absolute inset-0 flex min-h-0 flex-col items-center justify-center gap-10 bg-white/[0.02] px-4 text-center backdrop-blur-sm"
                   >
                     <div
                       className="flex h-28 items-end justify-center gap-1.5"
@@ -734,15 +734,15 @@ export function GlobalAiOverlay() {
                       ))}
                     </div>
                     <div className="max-w-xs">
-                      <p className="font-frank text-3xl font-black text-slate-900">
+                      <p className="font-frank text-3xl font-black text-slate-100">
                         {t("ai.geminiLive")}
                       </p>
-                      <p className="mt-2 text-sm font-medium italic text-slate-600">
+                      <p className="mt-2 text-sm font-medium italic text-slate-400">
                         {isLiveListening
                           ? t("ai.liveListening")
                           : t("ai.liveAnalyzing")}
                       </p>
-                      <p className="mt-2 truncate text-xs text-slate-600">
+                      <p className="mt-2 truncate text-xs text-slate-400">
                         {liveTranscript || t("ai.liveTranscriptPlaceholder")}
                       </p>
                     </div>
@@ -803,7 +803,7 @@ export function GlobalAiOverlay() {
                           />
 
                           <div className="absolute bottom-3 end-3 flex items-center gap-2">
-                            <span className="h-2.5 w-2.5 shrink-0 animate-pulse rounded-full bg-red-500" />
+                            <span className="h-2.5 w-2.5 shrink-0 animate-pulse rounded-full bg-red-500/100" />
                             <span className="text-[10px] font-black tracking-widest text-white">
                               {t("ai.visionAnalyzing")}
                             </span>
@@ -812,7 +812,7 @@ export function GlobalAiOverlay() {
                       )}
                     </div>
 
-                    <p className="rounded-xl border border-white/40 bg-white/25 px-3 py-2 text-center text-xs font-bold text-slate-700 backdrop-blur-md">
+                    <p className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-center text-xs font-bold text-slate-300 backdrop-blur-md">
                       {t("ai.visionHint")}
                     </p>
                     <button
@@ -849,7 +849,7 @@ export function GlobalAiOverlay() {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: 8 }}
                   transition={{ duration: 0.2 }}
-                  className="shrink-0 border-t border-white/40 bg-white/30 p-3 backdrop-blur-md"
+                  className="shrink-0 border-t border-white/10 bg-white/[0.03] p-3 backdrop-blur-md"
                 >
                   <div className="flex gap-2">
                     <textarea

@@ -84,20 +84,20 @@ export default function RegisterPage() {
       >
         {!isApiOriginConfigured() && (
           <div
-            className="mb-4 rounded-xl border border-amber-600/80 bg-amber-100/95 px-3 py-2.5 text-xs font-semibold text-amber-950"
+            className="mb-4 rounded-xl border border-amber-600/80 bg-amber-500/15 px-3 py-2.5 text-xs font-semibold text-amber-200"
             role="alert"
           >
             {t("login.alertMissingApiOrigin")}
           </div>
         )}
-        <h1 className="font-display text-2xl font-semibold text-slate-900">
+        <h1 className="font-display text-2xl font-semibold text-slate-100">
           {t("register.title")}
         </h1>
-        <p className="mt-2 text-sm text-slate-600">{t("register.subtitle")}</p>
+        <p className="mt-2 text-sm text-slate-400">{t("register.subtitle")}</p>
 
         <div className="mt-6 flex flex-col gap-4">
           <div>
-            <label className="text-xs font-medium text-slate-700">
+            <label className="text-xs font-medium text-slate-300">
               {t("register.fullName")}
             </label>
             <input
@@ -108,7 +108,7 @@ export default function RegisterPage() {
             />
           </div>
           <div>
-            <label className="text-xs font-medium text-slate-700">
+            <label className="text-xs font-medium text-slate-300">
               {t("register.phone")}
             </label>
             <input
@@ -130,7 +130,7 @@ export default function RegisterPage() {
         </div>
 
         {message && (
-          <p className="mt-4 text-center text-sm text-amber-900" role="status">
+          <p className="mt-4 text-center text-sm text-amber-200" role="status">
             {message}
           </p>
         )}

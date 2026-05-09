@@ -130,13 +130,13 @@ function VaultLoadingSkeleton({ label }: { label: string }) {
     <div className="animate-pulse space-y-8" aria-busy="true" aria-label={label}>
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="space-y-2">
-          <div className="h-8 w-56 rounded-lg bg-white/40 md:h-9 md:w-64" />
-          <div className="h-4 w-full max-w-md rounded-lg bg-white/30" />
+          <div className="h-8 w-56 rounded-lg bg-white/[0.06] md:h-9 md:w-64" />
+          <div className="h-4 w-full max-w-md rounded-lg bg-white/[0.03]" />
         </div>
-        <div className="h-12 w-40 rounded-xl bg-white/35" />
+        <div className="h-12 w-40 rounded-xl bg-white/[0.03]" />
       </div>
       <div>
-        <div className="mb-3 h-4 w-24 rounded bg-white/30" />
+        <div className="mb-3 h-4 w-24 rounded bg-white/[0.03]" />
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {[1, 2, 3].map((i) => (
             <div key={i} className={`h-32 ${glassCard} opacity-80`} />
@@ -144,7 +144,7 @@ function VaultLoadingSkeleton({ label }: { label: string }) {
         </div>
       </div>
       <div>
-        <div className="mb-3 h-4 w-32 rounded bg-white/30" />
+        <div className="mb-3 h-4 w-32 rounded bg-white/[0.03]" />
         <div className={`h-52 ${glassCard} opacity-80`} />
       </div>
     </div>
@@ -307,12 +307,12 @@ export function VaultPageClient({
       ) : null}
       <header className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="font-frank text-2xl font-bold tracking-tight text-slate-900 md:text-3xl">
+          <h1 className="font-frank text-2xl font-bold tracking-tight text-slate-100 md:text-3xl">
             {t("vault.title")}
           </h1>
-          <p className="mt-1 text-sm text-slate-600">{t("vault.subtitle")}</p>
+          <p className="mt-1 text-sm text-slate-400">{t("vault.subtitle")}</p>
           {syncMsg && (
-            <p className="mt-2 text-xs text-slate-600" role="status">
+            <p className="mt-2 text-xs text-slate-400" role="status">
               {syncMsg}
             </p>
           )}
@@ -362,14 +362,14 @@ export function VaultPageClient({
 
       {loadError && (
         <div
-          className="mb-6 flex flex-col gap-3 rounded-2xl border border-red-300/70 bg-white/50 px-4 py-4 text-sm text-red-900 backdrop-blur-xl sm:flex-row sm:items-center sm:justify-between"
+          className="mb-6 flex flex-col gap-3 rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-4 text-sm text-red-200 backdrop-blur-xl sm:flex-row sm:items-center sm:justify-between"
           role="alert"
         >
           <p>{loadError}</p>
           <button
             type="button"
             onClick={() => void refreshVault()}
-            className={`shrink-0 px-4 py-2 text-sm ${btnSecondaryGlass} border-red-200/60 text-red-800`}
+            className={`shrink-0 px-4 py-2 text-sm ${btnSecondaryGlass} border-red-500/30 text-red-200`}
           >
             {t("common.retry")}
           </button>
@@ -380,7 +380,7 @@ export function VaultPageClient({
         <>
           {actionError && (
             <div
-              className="mb-6 rounded-2xl border border-amber-300/70 bg-white/50 px-4 py-3 text-sm text-amber-900 backdrop-blur-xl"
+              className="mb-6 rounded-2xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-200 backdrop-blur-xl"
               role="status"
             >
               {actionError}
@@ -389,7 +389,7 @@ export function VaultPageClient({
 
           <section className="mb-10">
             <div className="mb-3 flex items-center justify-between">
-              <h2 className="font-frank text-sm font-bold uppercase tracking-wide text-slate-600">
+              <h2 className="font-frank text-sm font-bold uppercase tracking-wide text-slate-400">
                 {t("vault.categories")}
               </h2>
               {selectedFolderId && (
@@ -417,27 +417,27 @@ export function VaultPageClient({
                     className={`flex flex-col p-5 text-start transition ${glassCard} ${
                       active
                         ? "shadow-[0_0_28px_rgba(197,160,89,0.35)] ring-2 ring-[#C5A059]/50"
-                        : "hover:bg-white/65"
+                        : "hover:bg-white/[0.06]"
                     }`}
                   >
                     <div className="mb-3 flex items-center gap-3">
                       <div
-                        className={`flex h-12 w-12 items-center justify-center rounded-xl border border-white/60 ${
+                        className={`flex h-12 w-12 items-center justify-center rounded-xl border border-white/10 ${
                           active
-                            ? "bg-[#C5A059]/25 text-slate-900"
-                            : "bg-white/50 text-slate-800"
+                            ? "bg-[#C5A059]/25 text-[#C5A059]"
+                            : "bg-white/[0.04] text-slate-300"
                         }`}
                       >
                         <FolderIcon className="h-7 w-7 drop-shadow-sm" />
                       </div>
                       <div className="min-w-0 flex-1">
-                        <p className="font-semibold text-slate-900">{folder.name}</p>
-                        <p className="truncate text-xs text-slate-600">
+                        <p className="font-semibold text-slate-100">{folder.name}</p>
+                        <p className="truncate text-xs text-slate-400">
                           {folder.description}
                         </p>
                       </div>
                     </div>
-                    <p className="text-xs font-medium text-slate-600">
+                    <p className="text-xs font-medium text-slate-400">
                       {folder.fileCount}{" "}
                       {folder.fileCount === 1 ? t("vault.fileOne") : t("vault.files")}
                     </p>
@@ -453,7 +453,7 @@ export function VaultPageClient({
           </section>
 
           <section>
-            <h2 className="mb-3 font-frank text-sm font-bold uppercase tracking-wide text-slate-600">
+            <h2 className="mb-3 font-frank text-sm font-bold uppercase tracking-wide text-slate-400">
               {selectedFolderId
                 ? t("vault.filesInFolder").replace(
                     "{name}",
@@ -464,33 +464,33 @@ export function VaultPageClient({
             </h2>
             <ul className={glassList}>
               {recentFiles.length === 0 && (
-                <li className="px-4 py-12 text-center text-sm text-slate-600">
+                <li className="px-4 py-12 text-center text-sm text-slate-400">
                   {t("vault.emptyFilesList")}
                 </li>
               )}
               {recentFiles.map((file) => (
                 <li
                   key={file.id}
-                  className="flex items-center gap-4 px-4 py-4 transition hover:bg-white/35"
+                  className="flex items-center gap-4 px-4 py-4 transition hover:bg-white/[0.04]"
                 >
-                  <div className="rounded-xl border border-white/50 bg-white/45 p-2 backdrop-blur-md">
+                  <div className="rounded-xl border border-white/10 bg-white/[0.04] p-2 backdrop-blur-md">
                     <FileTypeIcon type={file.type} />
                   </div>
-                  <div className="min-w-0 flex-1 rounded-xl border border-white/35 bg-white/35 px-3 py-2 backdrop-blur-md">
+                  <div className="min-w-0 flex-1 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 backdrop-blur-md">
                     <div className="flex flex-wrap items-center gap-2">
-                      <p className="truncate font-medium text-slate-900">
+                      <p className="truncate font-medium text-slate-100">
                         {file.name}
                       </p>
                       {file.isVerified ? (
                         <span
-                          className="shrink-0 rounded-md border border-[#C5A059]/60 bg-[#C5A059]/20 px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-[#8a6d3d] shadow-[0_0_12px_rgba(197,160,89,0.35)]"
+                          className="shrink-0 rounded-md border border-[#C5A059]/40 bg-[#C5A059]/15 px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-[#e8c987] shadow-[0_0_12px_rgba(197,160,89,0.35)]"
                           title={t("vault.sealTitle")}
                         >
                           {t("vault.sealedBadge")}
                         </span>
                       ) : null}
                     </div>
-                    <p className="text-xs text-slate-600">
+                    <p className="text-xs text-slate-400">
                       {folders.find((f) => f.id === file.folderId)?.name ??
                         file.folderId}{" "}
                       · {file.sizeLabel} · {file.updatedAt}
@@ -500,7 +500,7 @@ export function VaultPageClient({
                     href={evidenceRows.find((e) => e.id === file.id)?.fileUrl}
                     target="_blank"
                     rel="noreferrer"
-                    className="shrink-0 rounded-lg px-2 py-1 text-xs font-semibold text-[#8a6d3d] hover:bg-white/40"
+                    className="shrink-0 rounded-lg px-2 py-1 text-xs font-semibold text-[#e8c987] hover:bg-white/[0.06]"
                   >
                     {t("vault.open")}
                   </a>
@@ -508,7 +508,7 @@ export function VaultPageClient({
                     type="button"
                     disabled={deletingId === file.id}
                     onClick={() => void removeFile(file.id)}
-                    className="shrink-0 rounded-lg px-2 py-1 text-xs font-semibold text-red-700 hover:bg-red-100/60 disabled:opacity-50"
+                    className="shrink-0 rounded-lg px-2 py-1 text-xs font-semibold text-red-300 hover:bg-red-500/15 disabled:opacity-50"
                   >
                     {deletingId === file.id ? t("vault.removing") : t("vault.remove")}
                   </button>
