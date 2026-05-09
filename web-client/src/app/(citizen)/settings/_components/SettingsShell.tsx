@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { CitizenBottomNav } from "@/components/citizen/CitizenBottomNav";
 import { clearJwt } from "@/lib/authToken";
 import { useTranslation } from "@/lib/i18n/LocaleProvider";
@@ -41,7 +41,6 @@ function SettingsChrome({
 }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const router = useRouter();
   const { t: tr } = useTranslation();
   const { loading, saving, message, error, save } = useSettings();
 
@@ -56,7 +55,9 @@ function SettingsChrome({
   const handleLogout = () => {
     disconnectSocket();
     clearJwt();
-    router.replace("/login");
+    if (typeof window !== "undefined") {
+      window.location.assign("/login");
+    }
   };
 
   return (
