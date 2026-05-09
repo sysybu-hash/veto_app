@@ -15,6 +15,8 @@ export type UserProfile = {
   full_name?: string;
   email?: string | null;
   phone?: string | null;
+  is_available?: boolean;
+  is_online?: boolean;
   preferred_language?: string;
   settings?: UserSettings;
   is_subscribed?: boolean;
@@ -31,6 +33,18 @@ async function parseJsonError(res: Response): Promise<string> {
     return j.error || j.message || res.statusText;
   } catch {
     return res.statusText;
+  }
+}
+
+export async function updateLawyerAvailability(
+  isAvailable: boolean,
+): Promise<void> {
+  const res = await authFetch(apiUrl("/api/lawyers/availability"), {
+    method: "PUT",
+    body: JSON.stringify({ is_available: isAvailable }),
+  });
+  if (!res.ok) {
+    throw new Error(await parseJsonError(res));
   }
 }
 

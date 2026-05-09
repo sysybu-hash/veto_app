@@ -21,7 +21,7 @@ import {
   Wifi,
   WifiOff,
 } from "lucide-react";
-import { fetchProfile, type UserProfile } from "@/api/userApi";
+import { fetchProfile, updateLawyerAvailability, type UserProfile } from "@/api/userApi";
 import { clearJwt, getJwt, getRoleFromJwt } from "@/lib/authToken";
 import { subscribeToPush } from "@/lib/pushClient";
 import { connectSocket, disconnectSocket, getSocket } from "@/lib/socketClient";
@@ -112,6 +112,18 @@ function getUserIdFromJwt(): string | null {
   }
 }
 
+function getPersistedAvailabilityChoice(): boolean {
+  if (typeof window === "undefined") return true;
+  try {
+    const raw = window.localStorage.getItem("veto-lawyer-availability");
+    if (!raw) return true;
+    const parsed = JSON.parse(raw) as { state?: { isAvailable?: unknown } };
+    return typeof parsed.state?.isAvailable === "boolean" ? parsed.state.isAvailable : true;
+  } catch {
+    return true;
+  }
+}
+
 export default function LawyerDashboardPage() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<DashboardTab>("overview");
@@ -120,6 +132,7 @@ export default function LawyerDashboardPage() {
   const [scheduleOpen, setScheduleOpen] = useState(true);
   const [autoAccept, setAutoAccept] = useState(false);
   const [currentLawyerId, setCurrentLawyerId] = useState<string | null>(null);
+  const [availabilityLoaded, setAvailabilityLoaded] = useState(false);
 
   const isAvailable = useLawyerStore((s) => s.isAvailable);
   const activeAlert = useLawyerStore((s) => s.activeAlert);
@@ -146,11 +159,21 @@ export default function LawyerDashboardPage() {
       setCurrentLawyerId(getUserIdFromJwt());
       setNotifPermission(typeof Notification === "undefined" ? "unsupported" : Notification.permission);
     });
-    void fetchProfile().then(setProfile).catch(() => setProfile(null));
-  }, []);
+    void fetchProfile()
+      .then((nextProfile) => {
+        setProfile(nextProfile);
+        const preferredAvailability = getPersistedAvailabilityChoice();
+        setAvailable(preferredAvailability);
+        void updateLawyerAvailability(preferredAvailability).catch((err) => {
+          console.warn("[lawyer] initial availability sync failed", err);
+        });
+      })
+      .catch(() => setProfile(null))
+      .finally(() => setAvailabilityLoaded(true));
+  }, [setAvailable]);
 
   useEffect(() => {
-    if (!getJwt() || getRoleFromJwt() !== "lawyer") return;
+    if (!availabilityLoaded || !getJwt() || getRoleFromJwt() !== "lawyer") return;
     const sock = connectSocket();
 
     const syncAvailability = () => {
@@ -226,10 +249,15 @@ export default function LawyerDashboardPage() {
       sock.off("veto_error", onVetoError);
       sock.off("session_ready", onSessionReady);
     };
-  }, [clearAlert, currentLawyerId, router, setAccepting, setActiveAlert, setLastError, setSessionReady]);
+  }, [availabilityLoaded, clearAlert, currentLawyerId, router, setAccepting, setActiveAlert, setLastError, setSessionReady]);
 
   const handleAvailabilityChange = useCallback((next: boolean) => {
     setAvailable(next);
+    setAvailabilityLoaded(true);
+    void updateLawyerAvailability(next).catch((err) => {
+      console.warn("[lawyer] availability update failed", err);
+      setLastError("עדכון הזמינות בשרת נכשל. ננסה שוב כשהחיבור יתחדש.");
+    });
     try {
       const sock = getSocket();
       if (!sock.connected) {
@@ -251,7 +279,7 @@ export default function LawyerDashboardPage() {
         }
       });
     }
-  }, [setAvailable]);
+  }, [setAvailable, setLastError]);
 
   const handleAcceptCase = useCallback(() => {
     if (!activeAlert || isAccepting) return;

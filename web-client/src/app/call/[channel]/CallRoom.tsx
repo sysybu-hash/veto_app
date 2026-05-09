@@ -13,19 +13,24 @@ import {
   Camera,
   CameraOff,
   DoorOpen,
+  Download,
   MessageCircle,
   Mic,
   MicOff,
+  MonitorUp,
   PhoneOff,
   RefreshCcw,
+  Save,
   Send,
   ShieldCheck,
+  Trash2,
   Video,
   Volume2,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { authFetch, apiUrl } from "@/api/apiClient";
+import { syncSosArtifactsToVault } from "@/app/actions/vault";
+import { authFetch, authMultipartFetch, apiUrl } from "@/api/apiClient";
 import { getRoleFromJwt } from "@/lib/authToken";
 import { getPublicAgoraAppId } from "@/lib/env";
 import { connectSocket, getSocket } from "@/lib/socketClient";
@@ -62,6 +67,8 @@ type TokenResponse = {
   agoraUid?: number;
   expiresAt?: number;
 };
+
+type RecordingState = "idle" | "starting" | "recording" | "stopping" | "pending" | "ready" | "failed" | "unconfigured";
 
 type RemoteTile = {
   uid: UID;
@@ -184,6 +191,12 @@ export default function CallRoom({ channel }: { channel: string }) {
   const cameraTrackRef = useRef<ILocalVideoTrack | null>(null);
   const joinedRef = useRef(false);
   const socketRoomRef = useRef<string | null>(null);
+  const cleaningRef = useRef(false);
+  const recordingStartedRef = useRef(false);
+  const screenRecorderRef = useRef<MediaRecorder | null>(null);
+  const screenStreamRef = useRef<MediaStream | null>(null);
+  const screenChunksRef = useRef<Blob[]>([]);
+  const finishCallRef = useRef<((options?: { notifyPeer?: boolean }) => Promise<void>) | null>(null);
 
   const [session, setSession] = useState<ResolvedSession | null>(() => {
     if (storeSession?.channelId === channel) {
@@ -209,6 +222,11 @@ export default function CallRoom({ channel }: { channel: string }) {
   const [localCameraTrack, setLocalCameraTrack] = useState<ILocalVideoTrack | null>(null);
   const [chatDraft, setChatDraft] = useState("");
   const [chatMessages, setChatMessages] = useState<CallChatMessage[]>([]);
+  const [recordingState, setRecordingState] = useState<RecordingState>("idle");
+  const [screenRecording, setScreenRecording] = useState(false);
+  const [endedForCitizen, setEndedForCitizen] = useState(false);
+  const [artifactBusy, setArtifactBusy] = useState(false);
+  const [artifactMessage, setArtifactMessage] = useState("");
 
   const [client] = useState<IAgoraRTCClient>(() => AgoraRTC.createClient({ mode: "rtc", codec: "vp8" }));
 
@@ -216,6 +234,99 @@ export default function CallRoom({ channel }: { channel: string }) {
   const activeRemote = remoteTiles.find((u) => u.hasVideo) ?? remoteTiles[0] ?? null;
   const chatOnly = callType === "chat";
   const wantsVideo = callType === "video";
+
+  const startCloudRecording = useCallback(async () => {
+    if (!session || session.source === "fallback" || chatOnly || recordingStartedRef.current) return;
+    recordingStartedRef.current = true;
+    setRecordingState("starting");
+    try {
+      const res = await authFetch(apiUrl(`/api/calls/${encodeURIComponent(session.eventId)}/cloud-recording/start`), {
+        method: "POST",
+        body: JSON.stringify({ wantVideo: wantsVideo }),
+      });
+      if (res.status === 503) {
+        setRecordingState("unconfigured");
+        setStatus("השיחה פעילה. הקלטת ענן אינה מוגדרת בסביבה הזו.");
+        return;
+      }
+      if (!res.ok) throw new Error("Cloud recording start failed");
+      setRecordingState("recording");
+    } catch (e) {
+      console.warn("[call] cloud recording start failed:", e);
+      setRecordingState("failed");
+    }
+  }, [chatOnly, session, wantsVideo]);
+
+  const stopCloudRecording = useCallback(async () => {
+    if (!session || session.source === "fallback" || !recordingStartedRef.current || recordingState === "unconfigured") return;
+    setRecordingState("stopping");
+    try {
+      const res = await authFetch(apiUrl(`/api/calls/${encodeURIComponent(session.eventId)}/cloud-recording/stop`), {
+        method: "POST",
+      });
+      if (res.status === 503) {
+        setRecordingState("unconfigured");
+        return;
+      }
+      if (!res.ok) throw new Error("Cloud recording stop failed");
+      setRecordingState("pending");
+    } catch (e) {
+      console.warn("[call] cloud recording stop failed:", e);
+      setRecordingState("failed");
+    }
+  }, [recordingState, session]);
+
+  const uploadScreenRecording = useCallback(async (blob: Blob) => {
+    if (!session || session.source === "fallback" || blob.size === 0) return;
+    const file = new File([blob], `veto-screen-${session.eventId}.webm`, { type: blob.type || "video/webm" });
+    const form = new FormData();
+    form.append("recording", file);
+    try {
+      await authMultipartFetch(apiUrl(`/api/calls/${encodeURIComponent(session.eventId)}/screen-recording`), {
+        method: "POST",
+        body: form,
+      });
+    } catch (e) {
+      console.warn("[call] screen recording upload failed:", e);
+    }
+  }, [session]);
+
+  const stopScreenRecording = useCallback(() => {
+    try {
+      if (screenRecorderRef.current?.state === "recording") {
+        screenRecorderRef.current.stop();
+      }
+    } catch {
+      /* ignore */
+    }
+    screenStreamRef.current?.getTracks().forEach((track) => track.stop());
+    screenStreamRef.current = null;
+    setScreenRecording(false);
+  }, []);
+
+  const startScreenRecording = useCallback(async () => {
+    if (!navigator.mediaDevices?.getDisplayMedia || screenRecording) return;
+    try {
+      const stream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true });
+      screenStreamRef.current = stream;
+      screenChunksRef.current = [];
+      const recorder = new MediaRecorder(stream, { mimeType: MediaRecorder.isTypeSupported("video/webm;codecs=vp9") ? "video/webm;codecs=vp9" : "video/webm" });
+      screenRecorderRef.current = recorder;
+      recorder.ondataavailable = (event) => {
+        if (event.data.size > 0) screenChunksRef.current.push(event.data);
+      };
+      recorder.onstop = () => {
+        const blob = new Blob(screenChunksRef.current, { type: "video/webm" });
+        screenChunksRef.current = [];
+        void uploadScreenRecording(blob);
+      };
+      stream.getVideoTracks()[0]?.addEventListener("ended", stopScreenRecording, { once: true });
+      recorder.start(1000);
+      setScreenRecording(true);
+    } catch {
+      setStatus("הקלטת מסך לא הופעלה. הדפדפן דורש הרשאת שיתוף מסך.");
+    }
+  }, [screenRecording, stopScreenRecording, uploadScreenRecording]);
 
   const resolveSessionFromApi = useCallback(async () => {
     if (session?.source !== "fallback" || !channel) return;
@@ -263,7 +374,10 @@ export default function CallRoom({ channel }: { channel: string }) {
 
     const onChatReady = () => setStatus("שני הצדדים בחדר. אפשר להתחיל.");
     const onTimeout = () => setStatus("הצד השני לא הצטרף בזמן.");
-    const onEnded = () => setStatus("השיחה הסתיימה בצד השני.");
+    const onEnded = () => {
+      setStatus("השיחה הסתיימה בצד השני.");
+      void finishCallRef.current?.({ notifyPeer: false });
+    };
     const onError = (raw: unknown) => {
       const msg =
         raw && typeof raw === "object" && "message" in raw && typeof (raw as { message?: unknown }).message === "string"
@@ -398,6 +512,7 @@ export default function CallRoom({ channel }: { channel: string }) {
         if (tracks.length > 0) await client.publish(tracks);
         setConnecting(false);
         setStatus("מחוברים. ממתינים לצד השני אם עדיין לא הצטרף.");
+        void startCloudRecording();
       } catch (e) {
         setConnecting(false);
         setError(e instanceof Error ? e.message : "החיבור ל-Agora נכשל.");
@@ -409,7 +524,7 @@ export default function CallRoom({ channel }: { channel: string }) {
     return () => {
       cancelled = true;
     };
-  }, [appId, callType, chatOnly, client, session]);
+  }, [appId, callType, chatOnly, client, session, startCloudRecording]);
 
   useEffect(() => {
     void micTrackRef.current?.setEnabled(micOn);
@@ -419,31 +534,86 @@ export default function CallRoom({ channel }: { channel: string }) {
     void cameraTrackRef.current?.setEnabled(cameraOn);
   }, [cameraOn]);
 
-  const leave = useCallback(async () => {
-    const roomId = socketRoomRef.current || session?.eventId || channel;
+  const cleanupMediaAndAgora = useCallback(async () => {
+    if (cleaningRef.current) return;
+    cleaningRef.current = true;
+    stopScreenRecording();
     try {
-      getSocket().emit("call-ended", { roomId });
-    } catch {
-      /* ignore */
-    }
-    try {
-      micTrackRef.current?.close();
-      cameraTrackRef.current?.close();
+      const localTracks = [micTrackRef.current, cameraTrackRef.current].filter(Boolean) as Array<ILocalAudioTrack | ILocalVideoTrack>;
+      if (joinedRef.current && localTracks.length > 0) {
+        await client.unpublish(localTracks).catch(() => undefined);
+      }
+      for (const track of localTracks) {
+        try {
+          track.stop();
+          track.close();
+        } catch {
+          /* ignore */
+        }
+      }
       micTrackRef.current = null;
       cameraTrackRef.current = null;
       setLocalCameraTrack(null);
-    } catch {
-      /* ignore */
-    }
-    try {
-      if (joinedRef.current) await client.leave();
+      setRemoteTiles([]);
+      if (joinedRef.current) {
+        await client.leave().catch(() => undefined);
+      }
       joinedRef.current = false;
-    } catch {
-      /* ignore */
+    } finally {
+      cleaningRef.current = false;
     }
+  }, [client, stopScreenRecording]);
+
+  const finishCall = useCallback(async ({ notifyPeer = true }: { notifyPeer?: boolean } = {}) => {
+    const roomId = socketRoomRef.current || session?.eventId || channel;
+    if (notifyPeer) {
+      try {
+        getSocket().emit("call-ended", { roomId });
+      } catch {
+        /* ignore */
+      }
+    }
+    await stopCloudRecording();
+    await cleanupMediaAndAgora();
     clearCallSession();
+    const role = getRoleFromJwt();
+    if (role === "user") {
+      setEndedForCitizen(true);
+      setStatus("השיחה הסתיימה. אפשר לשמור את ההקלטה והתמלול לכספת או למחוק מהשרת.");
+      return;
+    }
     router.replace(postCallPathForRole());
-  }, [channel, clearCallSession, client, router, session?.eventId]);
+  }, [channel, cleanupMediaAndAgora, clearCallSession, router, session?.eventId, stopCloudRecording]);
+
+  useEffect(() => {
+    finishCallRef.current = finishCall;
+    return () => {
+      finishCallRef.current = null;
+    };
+  }, [finishCall]);
+
+  const leave = useCallback(async () => {
+    await finishCall({ notifyPeer: true });
+  }, [finishCall]);
+
+  useEffect(() => {
+    const onPageHide = () => {
+      stopScreenRecording();
+      micTrackRef.current?.stop();
+      micTrackRef.current?.close();
+      cameraTrackRef.current?.stop();
+      cameraTrackRef.current?.close();
+      micTrackRef.current = null;
+      cameraTrackRef.current = null;
+    };
+    window.addEventListener("pagehide", onPageHide);
+    window.addEventListener("beforeunload", onPageHide);
+    return () => {
+      window.removeEventListener("pagehide", onPageHide);
+      window.removeEventListener("beforeunload", onPageHide);
+      void cleanupMediaAndAgora();
+    };
+  }, [cleanupMediaAndAgora, stopScreenRecording]);
 
   const sendCallChat = useCallback(() => {
     const text = chatDraft.trim();
@@ -459,26 +629,58 @@ export default function CallRoom({ channel }: { channel: string }) {
   }, [channel, chatDraft, session]);
 
   const retry = useCallback(async () => {
-    if (joinedRef.current) {
-      try {
-        await client.leave();
-      } catch {
-        /* ignore */
-      }
-      joinedRef.current = false;
-    }
-    micTrackRef.current?.close();
-    cameraTrackRef.current?.close();
-    micTrackRef.current = null;
-    cameraTrackRef.current = null;
-    setLocalCameraTrack(null);
+    await cleanupMediaAndAgora();
     setRemoteTiles([]);
     setSession(null);
     setError(null);
-  }, [client]);
+    recordingStartedRef.current = false;
+    setRecordingState("idle");
+  }, [cleanupMediaAndAgora]);
 
   const missingAgora = !chatOnly && !appId;
   const restoringSession = session?.source === "fallback";
+
+  const saveArtifacts = useCallback(async () => {
+    if (!session || session.source === "fallback") return;
+    setArtifactBusy(true);
+    setArtifactMessage("שומר את ההקלטה והתמלול לכספת...");
+    try {
+      const res = await authFetch(apiUrl(`/api/calls/${encodeURIComponent(session.eventId)}/artifacts/save`), {
+        method: "POST",
+      });
+      if (!res.ok) throw new Error("שמירת ההקלטה נכשלה.");
+      const sync = await syncSosArtifactsToVault();
+      if (!sync.success) {
+        setArtifactMessage("ההקלטה נשמרה בשרת. הסנכרון לכספת יושלם בהמשך.");
+      } else {
+        setArtifactMessage(sync.added > 0 ? "השיחה נשמרה בכספת." : "השיחה כבר קיימת בכספת או שהתמלול עדיין בעיבוד.");
+      }
+      setRecordingState("ready");
+      setTimeout(() => router.replace("/vault"), 900);
+    } catch (e) {
+      setArtifactMessage(e instanceof Error ? e.message : "שמירת השיחה נכשלה.");
+    } finally {
+      setArtifactBusy(false);
+    }
+  }, [router, session]);
+
+  const deleteArtifacts = useCallback(async () => {
+    if (!session || session.source === "fallback") return;
+    setArtifactBusy(true);
+    setArtifactMessage("מוחק את ההקלטה והתמלול מהשרת...");
+    try {
+      const res = await authFetch(apiUrl(`/api/calls/${encodeURIComponent(session.eventId)}/artifacts`), {
+        method: "DELETE",
+      });
+      if (!res.ok) throw new Error("מחיקת ההקלטה נכשלה.");
+      setArtifactMessage("ההקלטה והתמלול נמחקו.");
+      setTimeout(() => router.replace("/hub"), 700);
+    } catch (e) {
+      setArtifactMessage(e instanceof Error ? e.message : "מחיקת השיחה נכשלה.");
+    } finally {
+      setArtifactBusy(false);
+    }
+  }, [router, session]);
 
   return (
     <div className="min-h-[calc(100dvh-5rem)] bg-slate-950 px-3 py-4 text-white sm:px-5">
@@ -495,6 +697,24 @@ export default function CallRoom({ channel }: { channel: string }) {
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
+            {!chatOnly ? (
+              <span className={`inline-flex items-center gap-2 rounded-full px-3 py-2 text-xs font-black ${
+                recordingState === "recording" || recordingState === "pending" || recordingState === "stopping"
+                  ? "bg-red-500/15 text-red-100"
+                  : recordingState === "unconfigured"
+                    ? "bg-amber-500/15 text-amber-100"
+                    : "bg-white/10 text-slate-200"
+              }`}>
+                <span className={`h-2.5 w-2.5 rounded-full ${recordingState === "recording" ? "animate-pulse bg-red-500" : "bg-slate-400"}`} />
+                {recordingState === "recording"
+                  ? "מוקלט"
+                  : recordingState === "pending" || recordingState === "stopping"
+                    ? "תמלול בעיבוד"
+                    : recordingState === "unconfigured"
+                      ? "הקלטה לא מוגדרת"
+                      : "מכין הקלטה"}
+              </span>
+            ) : null}
             <span className={`rounded-full px-3 py-2 text-xs font-black ${error || missingAgora ? "bg-red-500/15 text-red-200" : "bg-emerald-500/15 text-emerald-200"}`}>
               {error || missingAgora ? "דורש טיפול" : restoringSession ? "משחזר" : connecting ? "מתחבר" : "פעיל"}
             </span>
@@ -521,6 +741,15 @@ export default function CallRoom({ channel }: { channel: string }) {
 
         <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_360px]">
           <section className="relative min-h-[520px] overflow-hidden rounded-[2rem] border border-white/10 bg-black shadow-2xl shadow-black/40">
+            {!chatOnly ? (
+              <div className="pointer-events-none absolute start-5 top-5 z-20 flex items-center gap-3 rounded-2xl border border-white/10 bg-black/45 px-3 py-2 text-white backdrop-blur">
+                <span className="font-frank text-lg font-black">VETO</span>
+                <span className="inline-flex items-center gap-1 rounded-full bg-red-600/90 px-2 py-1 text-[11px] font-black">
+                  <span className="h-2 w-2 animate-pulse rounded-full bg-white" />
+                  מוקלט
+                </span>
+              </div>
+            ) : null}
             {chatOnly ? (
               <div className="flex h-full min-h-[520px] flex-col items-center justify-center gap-4 text-center">
                 <MessageCircle className="h-16 w-16 text-[#C5A059]" aria-hidden />
@@ -585,6 +814,18 @@ export default function CallRoom({ channel }: { channel: string }) {
                 <ShieldCheck className="h-5 w-5" aria-hidden />
                 כספת
               </button>
+              {!chatOnly && (
+                <button
+                  type="button"
+                  onClick={() => screenRecording ? stopScreenRecording() : void startScreenRecording()}
+                  className={`flex min-h-16 flex-col items-center justify-center gap-1 rounded-2xl border text-sm font-black ${
+                    screenRecording ? "border-red-400/30 bg-red-500/20 text-red-100" : "border-white/10 bg-white/10"
+                  }`}
+                >
+                  {screenRecording ? <Download className="h-5 w-5" aria-hidden /> : <MonitorUp className="h-5 w-5" aria-hidden />}
+                  {screenRecording ? "עצור מסך" : "הקלט מסך"}
+                </button>
+              )}
               <button
                 type="button"
                 onClick={() => void leave()}
@@ -640,6 +881,41 @@ export default function CallRoom({ channel }: { channel: string }) {
           </aside>
         </div>
       </div>
+      {endedForCitizen ? (
+        <div className="fixed inset-0 z-[80] grid place-items-center bg-slate-950/75 px-4 backdrop-blur" dir="rtl">
+          <div className="w-full max-w-lg rounded-[2rem] border border-white/15 bg-slate-900 p-6 text-white shadow-2xl">
+            <p className="font-frank text-3xl font-black">השיחה הסתיימה</p>
+            <p className="mt-3 text-sm leading-6 text-slate-300">
+              ההקלטה והתמלול בעיבוד. אפשר לשמור את השיחה בכספת, או למחוק את ההקלטה והתמלול מהשרת.
+            </p>
+            {artifactMessage ? (
+              <div className="mt-4 rounded-2xl border border-white/10 bg-white/10 p-3 text-sm font-bold text-slate-100">
+                {artifactMessage}
+              </div>
+            ) : null}
+            <div className="mt-6 grid gap-3 sm:grid-cols-2">
+              <button
+                type="button"
+                disabled={artifactBusy}
+                onClick={() => void saveArtifacts()}
+                className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[#C5A059] px-4 py-3 text-sm font-black text-black disabled:opacity-60"
+              >
+                <Save className="h-5 w-5" aria-hidden />
+                שמור לכספת
+              </button>
+              <button
+                type="button"
+                disabled={artifactBusy}
+                onClick={() => void deleteArtifacts()}
+                className="inline-flex items-center justify-center gap-2 rounded-2xl border border-red-400/40 bg-red-600/20 px-4 py-3 text-sm font-black text-red-100 disabled:opacity-60"
+              >
+                <Trash2 className="h-5 w-5" aria-hidden />
+                מחק מהשרת
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

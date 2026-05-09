@@ -1,0 +1,107 @@
+
+> web-client@0.1.0 dev
+> next dev -p 3000
+
+▲ Next.js 16.2.6 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://192.168.1.101:3000
+- Environments: .env
+✓ Ready in 497ms
+- Experiments (use with caution):
+  ✓ optimizeCss
+
+ GET /login 200 in 500ms (next.js: 215ms, application-code: 285ms)
+ GET /login 200 in 57ms (next.js: 7ms, application-code: 50ms)
+ GET /hub 200 in 93ms (next.js: 56ms, application-code: 36ms)
+ GET /hub 200 in 19ms (next.js: 3ms, application-code: 16ms)
+ GET /hub 200 in 15ms (next.js: 2ms, application-code: 13ms)
+ GET /hub 200 in 17ms (next.js: 2ms, application-code: 14ms)
+ GET /hub 200 in 154ms (next.js: 99ms, application-code: 55ms)
+ GET /hub 200 in 127ms (next.js: 65ms, application-code: 62ms)
+ GET /hub 200 in 109ms (next.js: 64ms, application-code: 45ms)
+ GET /hub 200 in 105ms (next.js: 63ms, application-code: 42ms)
+ GET /hub 200 in 101ms (next.js: 61ms, application-code: 40ms)
+ GET /hub 200 in 109ms (next.js: 72ms, application-code: 37ms)
+ GET /hub 200 in 92ms (next.js: 58ms, application-code: 34ms)
+✓ Compiled in 528ms
+ GET /hub 200 in 136ms (next.js: 58ms, application-code: 78ms)
+ GET /hub 200 in 624ms (next.js: 110ms, application-code: 514ms)
+ GET /hub 200 in 315ms (next.js: 11ms, application-code: 304ms)
+ GET /hub 200 in 564ms (next.js: 10ms, application-code: 555ms)
+ GET /hub 200 in 63ms (next.js: 6ms, application-code: 57ms)
+ GET /hub 200 in 257ms (next.js: 5ms, application-code: 252ms)
+ GET /hub 200 in 378ms (next.js: 6ms, application-code: 372ms)
+ GET /hub 200 in 112ms (next.js: 36ms, application-code: 76ms)
+ GET /hub 200 in 338ms (next.js: 5ms, application-code: 334ms)
+ GET /hub 200 in 228ms (next.js: 5ms, application-code: 222ms)
+ GET /hub 200 in 126ms (next.js: 8ms, application-code: 118ms)
+ GET /hub 200 in 239ms (next.js: 3ms, application-code: 236ms)
+ GET /hub 200 in 354ms (next.js: 29ms, application-code: 325ms)
+ GET /hub 200 in 277ms (next.js: 3ms, application-code: 274ms)
+ GET /hub 200 in 142ms (next.js: 7ms, application-code: 134ms)
+ GET /hub 200 in 402ms (next.js: 4ms, application-code: 398ms)
+ GET /hub 200 in 425ms (next.js: 8ms, application-code: 417ms)
+ GET /hub 200 in 113ms (next.js: 8ms, application-code: 105ms)
+ GET /hub 200 in 353ms (next.js: 35ms, application-code: 317ms)
+ GET /hub 200 in 298ms (next.js: 8ms, application-code: 290ms)
+ GET /hub 200 in 461ms (next.js: 7ms, application-code: 453ms)
+ GET /hub 200 in 334ms (next.js: 7ms, application-code: 328ms)
+ GET /hub 200 in 154ms (next.js: 6ms, application-code: 148ms)
+ GET /hub 200 in 73ms (next.js: 3ms, application-code: 70ms)
+ GET /hub 200 in 101ms (next.js: 4ms, application-code: 97ms)
+ GET /hub 200 in 149ms (next.js: 3ms, application-code: 146ms)
+ GET /hub 200 in 68ms (next.js: 3ms, application-code: 65ms)
+ GET /hub 200 in 113ms (next.js: 66ms, application-code: 48ms)
+ GET /hub 200 in 92ms (next.js: 60ms, application-code: 32ms)
+ GET /hub 200 in 99ms (next.js: 68ms, application-code: 31ms)
+ GET /hub 200 in 100ms (next.js: 55ms, application-code: 45ms)
+ GET /hub 200 in 89ms (next.js: 53ms, application-code: 36ms)
+ GET /hub 200 in 97ms (next.js: 64ms, application-code: 32ms)
+ GET /hub 200 in 89ms (next.js: 61ms, application-code: 27ms)
+ GET /hub 200 in 104ms (next.js: 71ms, application-code: 33ms)
+ GET /hub 200 in 84ms (next.js: 55ms, application-code: 29ms)
+ GET /hub 200 in 100ms (next.js: 67ms, application-code: 33ms)
+ GET /hub 200 in 168ms (next.js: 91ms, application-code: 77ms)
+ GET /hub 200 in 31ms (next.js: 4ms, application-code: 26ms)
+ GET /hub 200 in 118ms (next.js: 66ms, application-code: 52ms)
+ GET /hub 200 in 227ms (next.js: 66ms, application-code: 161ms)
+ GET /hub 200 in 130ms (next.js: 3ms, application-code: 127ms)
+ GET /hub 200 in 98ms (next.js: 5ms, application-code: 93ms)
+ GET /hub 200 in 98ms (next.js: 34ms, application-code: 65ms)
+✓ Compiled in 88ms
+ GET /hub 200 in 124ms (next.js: 61ms, application-code: 63ms)
+ GET /hub 200 in 31ms (next.js: 2ms, application-code: 29ms)
+✓ Compiled in 84ms
+ GET /hub 200 in 111ms (next.js: 56ms, application-code: 56ms)
+✓ Compiled in 139ms
+ GET /hub 200 in 152ms (next.js: 57ms, application-code: 95ms)
+ GET /hub 200 in 68ms (next.js: 4ms, application-code: 63ms)
+ GET /hub 200 in 40ms (next.js: 4ms, application-code: 37ms)
+✓ Compiled in 130ms
+ GET /hub 200 in 159ms (next.js: 72ms, application-code: 87ms)
+ GET /hub 200 in 54ms (next.js: 2ms, application-code: 52ms)
+ GET /hub 200 in 40ms (next.js: 2ms, application-code: 38ms)
+✓ Compiled in 61ms
+ GET /hub 200 in 92ms (next.js: 62ms, application-code: 30ms)
+ GET /hub 200 in 178ms (next.js: 4ms, application-code: 174ms)
+ GET /vault/generator 200 in 120ms (next.js: 46ms, application-code: 74ms)
+ POST /api/generate-document 200 in 260ms (next.js: 242ms, application-code: 18ms)
+ GET /vault/generator 200 in 135ms (next.js: 83ms, application-code: 52ms)
+ GET /hub 200 in 32ms (next.js: 17ms, application-code: 15ms)
+ GET /settings 200 in 39ms (next.js: 22ms, application-code: 17ms)
+ GET /login 200 in 91ms (next.js: 72ms, application-code: 19ms)
+ GET /dashboard 200 in 47ms (next.js: 24ms, application-code: 23ms)
+✓ Compiled in 108ms
+ GET /dashboard 200 in 235ms (next.js: 85ms, application-code: 150ms)
+ GET /dashboard 200 in 116ms (next.js: 6ms, application-code: 110ms)
+ GET /dashboard 200 in 41ms (next.js: 3ms, application-code: 38ms)
+✓ Compiled in 66ms
+ GET /dashboard 200 in 182ms (next.js: 70ms, application-code: 112ms)
+ GET /dashboard 200 in 74ms (next.js: 4ms, application-code: 70ms)
+ GET /dashboard 200 in 40ms (next.js: 3ms, application-code: 36ms)
+✓ Compiled in 53ms
+ GET /dashboard 200 in 124ms (next.js: 72ms, application-code: 52ms)
+✓ Compiled in 43ms
+ GET /dashboard 200 in 124ms (next.js: 86ms, application-code: 39ms)
+✓ Compiled in 52ms
+ GET /dashboard 200 in 94ms (next.js: 61ms, application-code: 32ms)

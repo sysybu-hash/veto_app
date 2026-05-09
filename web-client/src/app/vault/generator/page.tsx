@@ -25,6 +25,8 @@ type LegalDocument = {
   preamble: string;
   clauses: string[];
   signatures: { role: string; name: string }[];
+  source?: "ai" | "fallback";
+  warning?: string;
 };
 
 type SpeechRecognitionLike = {
@@ -46,6 +48,11 @@ const DOCUMENT_TYPES = [
   { id: "loan_agreement", label: "הסכם הלוואה בין פרטיים" },
   { id: "cease_and_desist", label: "מכתב דרישה לחדול מהפרה" },
   { id: "custom", label: "מסמך משפטי מותאם אישית" },
+  { id: "family_estate", label: "משפחה, ירושה וצוואות" },
+  { id: "tort_insurance", label: "נזיקין וביטוח" },
+  { id: "consumer_privacy", label: "צרכנות, פרטיות והגנת מידע" },
+  { id: "commercial", label: "מסחרי, חברות ושותפויות" },
+  { id: "authority_request", label: "בקשה לרשות או לגוף ציבורי" },
 ] as const;
 
 const VAULT_CATEGORY_AI_PDF = "AI_GENERATOR_PDF";
@@ -108,7 +115,8 @@ export default function DocumentGeneratorPage() {
   };
 
   const generateDocument = async () => {
-    if (selectedType === "custom" && details.trim().length < 12) {
+    const requireMoreDetails = false;
+    if (requireMoreDetails && selectedType === "custom" && details.trim().length < 12) {
       setErrorMsg("למסמך מותאם אישית צריך לכתוב לפחות משפט אחד עם פרטי המקרה.");
       return;
     }
@@ -134,8 +142,10 @@ export default function DocumentGeneratorPage() {
         preamble: data.preamble || "",
         clauses: Array.isArray(data.clauses) ? data.clauses : [],
         signatures: Array.isArray(data.signatures) ? data.signatures : [],
+        source: data.source,
+        warning: data.warning,
       });
-      pushToast("המסמך נוצר. אפשר לערוך, להדפיס, להוריד או לשמור לכספת.", "success");
+      pushToast(data.warning || "המסמך נוצר. אפשר לערוך, להדפיס, להוריד או לשמור לכספת.", data.warning ? "info" : "success");
     } catch (e) {
       const msg = e instanceof Error ? e.message : "יצירת המסמך נכשלה";
       setErrorMsg(msg);
@@ -284,6 +294,11 @@ export default function DocumentGeneratorPage() {
 
           {document ? (
             <div className={`${glassPanelNested} mt-5 p-4`}>
+              {document.warning ? (
+                <div className="mb-3 rounded-2xl border border-amber-200 bg-amber-50/90 p-3 text-sm font-bold text-amber-900">
+                  {document.warning}
+                </div>
+              ) : null}
               <p className="text-sm font-black text-slate-900">פעולות למסמך</p>
               <div className="mt-3 grid gap-2">
                 <button type="button" disabled={isSaving} onClick={() => void handleSaveToVault()} className={`flex items-center justify-center gap-2 px-4 py-3 text-sm ${btnPrimaryDark} disabled:opacity-60`}>
