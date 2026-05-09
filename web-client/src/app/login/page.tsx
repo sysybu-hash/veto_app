@@ -394,9 +394,8 @@ function LoginPageInner() {
     setMessage(null);
   };
 
-  const normalizedPhone = normalizePhoneForVeto(phone);
-  const canRequestOtp = !!normalizedPhone && !busy;
-  const canVerifyOtp = !!normalizedPhone && !!otp.trim() && !busy;
+  const canRequestOtp = !busy;
+  const canVerifyOtp = !!otp.trim() && !busy;
 
   return (
     <>
