@@ -31,6 +31,9 @@ router.get('/my-sos-artifacts', protect, callCtrl.listMySosArtifacts);
 router.get('/:eventId/cloud-recording/status', protect, callCtrl.getCloudRecordingStatus);
 router.post('/:eventId/cloud-recording/start', protect, callCtrl.startCloudRecording);
 router.post('/:eventId/cloud-recording/stop', protect, callCtrl.stopCloudRecording);
+router.post('/:eventId/artifacts/save', protect, callCtrl.saveCallArtifacts);
+router.delete('/:eventId/artifacts', protect, callCtrl.deleteCallArtifacts);
+router.post('/:eventId/screen-recording', protect, upload.single('recording'), callCtrl.uploadScreenRecording);
 
 // GET  /api/calls/:eventId          — Get call details
 router.get('/:eventId', protect, callCtrl.getCallDetails);

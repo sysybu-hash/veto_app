@@ -306,9 +306,9 @@ module.exports = function initDispatch(io) {
 
         const event = updatedEvent;
 
-        // 2. Mark lawyer as busy + add event to their case history ─
+        // 2. Add event to lawyer history. Availability is an explicit lawyer
+        // choice and must not be flipped off automatically after accepting.
         await Lawyer.findByIdAndUpdate(userId, {
-          is_available: false,
           $addToSet: { emergency_events: eventId },
           $inc:       { total_cases_handled: 1 },
         });
