@@ -13,7 +13,6 @@ import {
   Camera,
   CameraOff,
   DoorOpen,
-  Loader2,
   MessageCircle,
   Mic,
   MicOff,
@@ -43,7 +42,7 @@ type CallChatMessage = {
 
 type ResolvedSession = SessionReadyState & {
   peerName?: string | null;
-  source: "socket" | "api";
+  source: "socket" | "api" | "fallback";
 };
 
 type CallDetailsResponse = {
@@ -182,7 +181,14 @@ export default function CallRoom({ channel }: { channel: string }) {
     if (storeSession?.channelId === channel) {
       return { ...storeSession, source: "socket" };
     }
-    return null;
+    return {
+      channelId: channel,
+      eventId: channel,
+      token: "",
+      uid: 0,
+      callType: "video",
+      source: "fallback",
+    };
   });
   const [micOn, setMicOn] = useState(true);
   const [cameraOn, setCameraOn] = useState(true);
@@ -204,9 +210,9 @@ export default function CallRoom({ channel }: { channel: string }) {
   const wantsVideo = callType === "video";
 
   const resolveSessionFromApi = useCallback(async () => {
-    if (session || !channel) return;
+    if (session?.source !== "fallback" || !channel) return;
     setConnecting(true);
-    setStatus("משחזרים נתוני שיחה מהשרת...");
+    setStatus("משחזרים נתוני שיחה מהשרת. המסך מוכן, מחכים לפרטי החיבור...");
     setError(null);
     try {
       const [detailsRes, tokenRes] = await Promise.all([
@@ -238,11 +244,11 @@ export default function CallRoom({ channel }: { channel: string }) {
   }, [channel, session]);
 
   useEffect(() => {
-    if (!session) void Promise.resolve().then(resolveSessionFromApi);
+    if (session?.source === "fallback") void Promise.resolve().then(resolveSessionFromApi);
   }, [resolveSessionFromApi, session]);
 
   useEffect(() => {
-    if (!session) return;
+    if (!session || session.source === "fallback") return;
     const sock = connectSocket();
     const roomId = session.eventId || channel;
     socketRoomRef.current = roomId;
@@ -297,7 +303,7 @@ export default function CallRoom({ channel }: { channel: string }) {
   }, [channel, client, session]);
 
   useEffect(() => {
-    if (!session || chatOnly || !appId || joinedRef.current) return;
+    if (!session || session.source === "fallback" || chatOnly || !appId || joinedRef.current) return;
 
     let cancelled = false;
 
@@ -463,19 +469,8 @@ export default function CallRoom({ channel }: { channel: string }) {
     setError(null);
   }, [client]);
 
-  if (!session && !error) {
-    return (
-      <div className="flex min-h-[calc(100dvh-5rem)] items-center justify-center bg-slate-950 px-6 text-white">
-        <div className="text-center">
-          <Loader2 className="mx-auto h-8 w-8 animate-spin text-[#C5A059]" aria-hidden />
-          <p className="mt-4 font-black">טוען חדר שיחה...</p>
-          <p className="mt-2 text-sm text-slate-400">משחזרים את פרטי Agora מהשרת.</p>
-        </div>
-      </div>
-    );
-  }
-
   const missingAgora = !chatOnly && !appId;
+  const restoringSession = session?.source === "fallback";
 
   return (
     <div className="min-h-[calc(100dvh-5rem)] bg-slate-950 px-3 py-4 text-white sm:px-5">
@@ -493,7 +488,7 @@ export default function CallRoom({ channel }: { channel: string }) {
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <span className={`rounded-full px-3 py-2 text-xs font-black ${error || missingAgora ? "bg-red-500/15 text-red-200" : "bg-emerald-500/15 text-emerald-200"}`}>
-              {error || missingAgora ? "דורש טיפול" : connecting ? "מתחבר" : "פעיל"}
+              {error || missingAgora ? "דורש טיפול" : restoringSession ? "משחזר" : connecting ? "מתחבר" : "פעיל"}
             </span>
             <button type="button" onClick={() => void retry()} className="inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-white/10 px-3 py-2 text-sm font-bold hover:bg-white/15">
               <RefreshCcw className="h-4 w-4" aria-hidden />
@@ -506,11 +501,13 @@ export default function CallRoom({ channel }: { channel: string }) {
           </div>
         </header>
 
-        {(error || missingAgora) && (
+        {(error || missingAgora || restoringSession) && (
           <div className="rounded-3xl border border-red-400/30 bg-red-950/45 px-4 py-3 text-sm text-red-100">
-            {missingAgora
-              ? "חסר NEXT_PUBLIC_AGORA_APP_ID בצד האתר. יש להגדיר אותו ב-Vercel בדיוק כמו AGORA_APP_ID של השרת ולבצע Redeploy."
-              : error}
+            {restoringSession
+              ? "טוען את פרטי השיחה מהשרת. הבקרות נשארות זמינות כדי שהמסך לא יישאר ריק."
+              : missingAgora
+                ? "חסר NEXT_PUBLIC_AGORA_APP_ID בצד האתר. יש להגדיר אותו ב-Vercel בדיוק כמו AGORA_APP_ID של השרת ולבצע Redeploy."
+                : error}
           </div>
         )}
 
@@ -533,7 +530,7 @@ export default function CallRoom({ channel }: { channel: string }) {
                   </div>
                 )}
                 <div className="absolute bottom-4 start-4 rounded-2xl border border-white/10 bg-black/55 px-3 py-2 text-xs font-bold text-white backdrop-blur">
-                  {connecting ? "מתחבר ל-Agora..." : status}
+                  {restoringSession ? "משחזר פרטי חדר..." : connecting ? "מתחבר ל-Agora..." : status}
                 </div>
               </>
             )}
