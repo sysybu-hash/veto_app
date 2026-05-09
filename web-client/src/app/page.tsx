@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { LanguageSwitcher } from "@/components/i18n/LanguageSwitcher";
 import { useTranslation } from "@/lib/i18n/LocaleProvider";
 
 export default function Home() {
@@ -37,42 +36,6 @@ export default function Home() {
 
   return (
     <div className="flex min-h-screen flex-col bg-[#f6efe1]">
-      <nav className="container mx-auto flex items-center justify-between px-6 py-8">
-        <img
-          src="/veto-logo.svg"
-          alt="VETO"
-          className="h-9 w-auto select-none"
-          draggable={false}
-        />
-
-        <div className="hidden items-center gap-8 font-bold text-white/90 md:flex">
-          <a href="#" className="transition-all hover:text-[#C5A059]">
-            {t("home.navSystem")}
-          </a>
-          <a href="#" className="transition-all hover:text-[#C5A059]">
-            {t("home.navSecurity")}
-          </a>
-          <a href="#" className="transition-all hover:text-[#C5A059]">
-            {t("home.navTeam")}
-          </a>
-        </div>
-        <div className="flex items-center gap-4">
-          <LanguageSwitcher className="shrink-0" />
-          <Link
-            href="/login"
-            className="rounded-lg px-4 py-2 font-bold text-red-600 transition-all hover:bg-white/10"
-          >
-            {t("home.loginLawyers")}
-          </Link>
-          <Link
-            href="/login"
-            className="rounded-full bg-[#C5A059] px-6 py-2 font-black text-black shadow-lg transition-all hover:scale-105"
-          >
-            {t("home.personalArea")}
-          </Link>
-        </div>
-      </nav>
-
       <main className="container mx-auto flex grow flex-col items-center justify-center px-6 py-20 text-center">
         <div className="mb-6 rounded-full border border-white/20 bg-white/10 px-4 py-1 text-xs font-black tracking-wide text-white backdrop-blur-md">
           {t("home.badge")}
