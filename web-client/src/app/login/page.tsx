@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useState, Suspense } from "react";
+import { useCallback, useEffect, useRef, useState, Suspense } from "react";
 import { getRoleFromJwt, prepareLoginSession } from "@/lib/authToken";
 import { setSocketAuthToken } from "@/lib/socketClient";
 import {
@@ -169,6 +169,7 @@ function LoginPageInner() {
   const [devRole, setDevRole] = useState<LoginRole>("admin");
   const [adminLoginOpen, setAdminLoginOpen] = useState(false);
   const [autoOtpPhone, setAutoOtpPhone] = useState<string | null>(null);
+  const autoOtpConsumedRef = useRef<string | null>(null);
 
   const googleClientId =
     process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID?.trim() ?? "";
@@ -376,13 +377,11 @@ function LoginPageInner() {
 
   useEffect(() => {
     if (!autoOtpPhone) return;
+    if (autoOtpConsumedRef.current === autoOtpPhone) return;
+    autoOtpConsumedRef.current = autoOtpPhone;
     const normalizedPhone = normalizePhoneForVeto(autoOtpPhone);
-    if (!normalizedPhone) {
-      setAutoOtpPhone(null);
-      return;
-    }
+    if (!normalizedPhone) return;
     let cancelled = false;
-    setAutoOtpPhone(null);
     void (async () => {
       setBusy(true);
       try {

@@ -85,11 +85,6 @@ export function UniversalNav() {
     });
   }, [pathname]);
 
-  // Close drawer on route change
-  useEffect(() => {
-    setOpen(false);
-  }, [pathname]);
-
   // Lock body scroll while drawer is open
   useEffect(() => {
     if (typeof document === "undefined") return;
