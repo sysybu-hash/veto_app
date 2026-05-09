@@ -26,6 +26,7 @@ import {
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { authFetch, apiUrl } from "@/api/apiClient";
+import { getRoleFromJwt } from "@/lib/authToken";
 import { getPublicAgoraAppId } from "@/lib/env";
 import { connectSocket, getSocket } from "@/lib/socketClient";
 import {
@@ -96,6 +97,13 @@ function localLabel(callType: SessionCallType): string {
   if (callType === "chat") return "צ׳אט בלבד";
   if (callType === "audio") return "שיחת אודיו";
   return "שיחת וידאו";
+}
+
+function postCallPathForRole(): string {
+  const role = getRoleFromJwt();
+  if (role === "lawyer") return "/dashboard";
+  if (role === "admin") return "/admin/dashboard";
+  return "/hub";
 }
 
 function LocalVideoPreview({
@@ -434,7 +442,7 @@ export default function CallRoom({ channel }: { channel: string }) {
       /* ignore */
     }
     clearCallSession();
-    router.replace("/hub");
+    router.replace(postCallPathForRole());
   }, [channel, clearCallSession, client, router, session?.eventId]);
 
   const sendCallChat = useCallback(() => {
