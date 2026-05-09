@@ -1,6 +1,5 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { clearJwt } from "@/lib/authToken";
 import { disconnectSocket, setSocketAuthToken } from "@/lib/socketClient";
 
@@ -9,13 +8,13 @@ export default function AdminLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const router = useRouter();
-
   const handleLogout = () => {
     clearJwt();
     setSocketAuthToken(null);
     disconnectSocket();
-    router.replace("/login");
+    if (typeof window !== "undefined") {
+      window.location.assign("/login");
+    }
   };
 
   return (

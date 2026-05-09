@@ -154,28 +154,11 @@ export default function CitizenHubPage() {
       setErrorMessage(msg);
     };
 
-    const onCaseTaken = (raw: unknown) => {
-      if (cancelled) return;
-      const msg =
-        raw &&
-        typeof raw === "object" &&
-        "message" in raw &&
-        typeof (raw as { message?: unknown }).message === "string"
-          ? (raw as { message: string }).message
-          : t("hub.errCaseTaken");
-      const { isSearching: searching, lawyerFound: found } =
-        useEmergencyStore.getState();
-      if (searching || found) {
-        setErrorMessage(msg);
-      }
-    };
-
     sock.on("connect", onConnect);
     sock.on("lawyer_found", onLawyerFound);
     sock.on("session_ready", onSessionReady);
     sock.on("no_lawyers_available", onNoLawyers);
     sock.on("veto_error", onVetoError);
-    sock.on("case_taken", onCaseTaken);
 
     return () => {
       cancelled = true;
@@ -184,7 +167,6 @@ export default function CitizenHubPage() {
       sock.off("session_ready", onSessionReady);
       sock.off("no_lawyers_available", onNoLawyers);
       sock.off("veto_error", onVetoError);
-      sock.off("case_taken", onCaseTaken);
     };
   }, [router, setErrorMessage, setLawyerFound, setSessionReady, t]);
 
