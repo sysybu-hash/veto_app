@@ -93,7 +93,7 @@ export default function VetoMasterDashboard() {
 
   if (loading && !data) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50">
+      <div className="flex min-h-screen items-center justify-center bg-slate-950">
         <RefreshCw className="h-8 w-8 animate-spin text-[#C5A059]" aria-hidden />
       </div>
     );
@@ -101,11 +101,11 @@ export default function VetoMasterDashboard() {
 
   return (
     <div
-      className="flex min-h-screen flex-col bg-[#f8f9fa] md:flex-row"
+      className="flex min-h-screen flex-col md:flex-row"
       dir="rtl"
     >
-      <aside className="flex w-full flex-col gap-8 border-l border-slate-200 bg-white p-6 print:hidden md:w-64">
-        <div className="font-serif text-2xl font-bold tracking-tight text-slate-900">
+      <aside className="flex w-full flex-col gap-8 border-l border-white/10 bg-slate-950/70 backdrop-blur-xl p-6 print:hidden md:w-64">
+        <div className="font-serif text-2xl font-bold tracking-tight text-slate-100">
           VETO Admin
         </div>
         <nav className="flex flex-col gap-2">
@@ -136,7 +136,7 @@ export default function VetoMasterDashboard() {
       <main className="flex-1 overflow-y-auto p-6 md:p-10">
         <header className="mb-8 flex items-center justify-between">
           <div>
-            <h1 className="font-serif text-3xl font-bold text-slate-900">
+            <h1 className="font-serif text-3xl font-bold text-slate-100">
               ניהול מערכת VETO
             </h1>
             <p className="text-sm text-slate-500">
@@ -146,7 +146,7 @@ export default function VetoMasterDashboard() {
           <button
             type="button"
             onClick={() => void refreshData()}
-            className="rounded-full border border-slate-200 bg-white p-2 transition hover:bg-slate-50"
+            className="rounded-full border border-white/10 bg-white/[0.04] p-2 text-slate-200 transition hover:bg-white/[0.08]"
             aria-label="רענון נתונים"
           >
             <RefreshCw
@@ -157,41 +157,41 @@ export default function VetoMasterDashboard() {
         </header>
 
         <div className="mb-8 grid grid-cols-1 gap-4 text-center md:grid-cols-4">
-          <div className="flex items-center justify-center gap-3 rounded-xl border border-green-100 bg-green-50 p-4 font-bold text-green-700">
+          <div className="flex items-center justify-center gap-3 rounded-xl border border-green-500/30 bg-green-500/10 p-4 font-bold text-green-300">
             <Activity size={20} aria-hidden /> שרת API: פועל
           </div>
           <div
             className={`flex items-center justify-center gap-3 rounded-xl border p-4 font-bold ${
               data?.health.database === "OK"
-                ? "border-blue-100 bg-blue-50 text-blue-700"
-                : "border-red-100 bg-red-50 text-red-700"
+                ? "border-blue-500/30 bg-blue-500/10 text-blue-300"
+                : "border-red-500/30 bg-red-500/10 text-red-300"
             }`}
           >
             <Database size={20} aria-hidden /> מסד נתונים:{" "}
             {data?.health.database === "OK" ? "מחובר" : "בעיה"}
           </div>
-          <div className="flex items-center justify-center gap-3 rounded-xl border border-orange-100 bg-orange-50 p-4 font-bold text-orange-700">
+          <div className="flex items-center justify-center gap-3 rounded-xl border border-orange-500/30 bg-orange-500/10 p-4 font-bold text-orange-300">
             <ShieldCheck size={20} aria-hidden /> אבטחת JWT: תקינה
           </div>
-          <div className="flex items-center justify-center gap-3 rounded-xl border border-slate-200 bg-white p-4 font-bold">
+          <div className="flex items-center justify-center gap-3 rounded-xl border border-white/10 bg-white/[0.04] p-4 font-bold backdrop-blur-xl">
             סה&quot;כ משתמשים: {data?.stats.users ?? 0}
           </div>
         </div>
 
-        <div className="mb-6 grid grid-cols-1 gap-3 text-sm text-slate-600 md:grid-cols-3">
-          <div className="rounded-lg border border-slate-100 bg-white px-4 py-3">
-            <span className="font-bold text-slate-900">
+        <div className="mb-6 grid grid-cols-1 gap-3 text-sm text-slate-400 md:grid-cols-3">
+          <div className="rounded-lg border border-white/10 bg-white/[0.04] px-4 py-3 backdrop-blur-xl">
+            <span className="font-bold text-slate-100">
               {data?.stats.lawyers ?? 0}
             </span>{" "}
             עורכי דין (Prisma)
           </div>
-          <div className="rounded-lg border border-slate-100 bg-white px-4 py-3">
-            <span className="font-bold text-slate-900">
+          <div className="rounded-lg border border-white/10 bg-white/[0.04] px-4 py-3 backdrop-blur-xl">
+            <span className="font-bold text-slate-100">
               {data?.stats.sos ?? 0}
             </span>{" "}
             אירועי SOS ב־24 שעות
           </div>
-          <div className="rounded-lg border border-slate-100 bg-white px-4 py-3">
+          <div className="rounded-lg border border-white/10 bg-white/[0.04] px-4 py-3 backdrop-blur-xl">
             עודכן:{" "}
             {data?.health.timestamp
               ? new Date(data.health.timestamp).toLocaleString("he-IL")
@@ -199,9 +199,9 @@ export default function VetoMasterDashboard() {
           </div>
         </div>
 
-        <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-          <div className="flex flex-col items-center justify-between gap-4 border-b border-slate-100 p-6 md:flex-row">
-            <h3 className="font-serif text-xl font-bold text-slate-900">
+        <section className="overflow-hidden rounded-2xl border border-white/10 bg-white/[0.04] backdrop-blur-xl">
+          <div className="flex flex-col items-center justify-between gap-4 border-b border-white/10 p-6 md:flex-row">
+            <h3 className="font-serif text-xl font-bold text-slate-100">
               ניהול מנויים ומשתמשים
             </h3>
             <div className="relative w-full md:w-80">
@@ -209,7 +209,7 @@ export default function VetoMasterDashboard() {
               <input
                 type="search"
                 placeholder="חיפוש משתמש..."
-                className="w-full rounded-lg border border-slate-200 bg-slate-50 py-2 pl-4 pr-10 text-sm outline-none focus:ring-2 focus:ring-[#C5A059]"
+                className="w-full rounded-lg border border-white/10 bg-slate-950 py-2 pl-4 pr-10 text-sm outline-none focus:ring-2 focus:ring-[#C5A059]"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 aria-label="חיפוש משתמש"
@@ -219,7 +219,7 @@ export default function VetoMasterDashboard() {
           <div className="overflow-x-auto">
             <table className="w-full text-right">
               <thead>
-                <tr className="border-b border-slate-100 bg-slate-50 text-xs uppercase tracking-wider text-slate-500">
+                <tr className="border-b border-white/10 bg-slate-950 text-xs uppercase tracking-wider text-slate-500">
                   <th className="p-4 font-bold">שם ואימייל</th>
                   <th className="p-4 text-center font-bold">תפקיד</th>
                   <th className="p-4 text-center font-bold">סטטוס</th>
@@ -229,9 +229,9 @@ export default function VetoMasterDashboard() {
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {filteredUsers.map((user) => (
-                  <tr key={user.id} className="transition hover:bg-slate-50">
+                  <tr key={user.id} className="transition hover:bg-white/[0.04]">
                     <td className="p-4">
-                      <div className="font-bold text-slate-900">
+                      <div className="font-bold text-slate-100">
                         {user.name || "—"}
                       </div>
                       <div className="text-xs text-slate-500">{user.email}</div>
@@ -289,13 +289,13 @@ function RoleBadge({ role }: { role: Role }) {
   }
   if (role === "ADMIN") {
     return (
-      <span className="rounded bg-amber-100 px-2 py-1 text-[10px] font-bold text-amber-900">
+      <span className="rounded bg-amber-500/15 px-2 py-1 text-[10px] font-bold text-amber-200">
         מנהל
       </span>
     );
   }
   return (
-    <span className="rounded bg-blue-100 px-2 py-1 text-[10px] font-bold text-blue-700">
+    <span className="rounded bg-blue-500/15 px-2 py-1 text-[10px] font-bold text-blue-300">
       אזרח
     </span>
   );
@@ -318,7 +318,7 @@ function MenuLink({
       className={`flex items-center gap-3 rounded-lg p-3 text-sm font-medium transition ${
         active
           ? "bg-[#C5A059]/10 text-[#C5A059]"
-          : "text-slate-600 hover:bg-slate-50"
+          : "text-slate-400 hover:bg-white/[0.04]"
       }`}
     >
       {icon}

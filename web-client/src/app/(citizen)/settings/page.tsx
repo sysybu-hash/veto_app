@@ -143,7 +143,7 @@ export default function SettingsIndexPage() {
         <>
           <SectionHeader icon={ShieldCheck} title={t("settings.securityTitle")} subtitle={t("settings.securitySubtitle")} />
           {securityNote && (
-            <p className="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50/80 px-4 py-3 text-sm font-semibold text-emerald-900">
+            <p className="mt-4 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm font-semibold text-emerald-200">
               {securityNote}
             </p>
           )}
@@ -187,8 +187,8 @@ export default function SettingsIndexPage() {
             <div className="flex items-start gap-3">
               <Video className="mt-0.5 h-5 w-5 text-[#9b7430]" aria-hidden />
               <div>
-                <p className="text-sm font-black text-slate-900">{t("settings.sessionsTitle")}</p>
-                <p className="mt-1 text-xs leading-5 text-slate-600">בחרו את סוג השיחה המועדף לפתיחת SOS.</p>
+                <p className="text-sm font-black text-slate-100">{t("settings.sessionsTitle")}</p>
+                <p className="mt-1 text-xs leading-5 text-slate-400">בחרו את סוג השיחה המועדף לפתיחת SOS.</p>
               </div>
             </div>
             <div className="mt-4 grid grid-cols-3 gap-2">
@@ -204,7 +204,7 @@ export default function SettingsIndexPage() {
                   className={`rounded-xl px-3 py-3 text-sm font-black transition ${
                     sessionPreference === value
                       ? "bg-slate-900 text-white shadow-lg"
-                      : "border border-white/40 bg-white/35 text-slate-800 hover:bg-white/60"
+                      : "border border-white/10 bg-white/[0.03] text-slate-200 hover:bg-white/[0.05]"
                   }`}
                 >
                   {label}
@@ -260,7 +260,7 @@ function BillingPanel({
   return (
     <>
       <SectionHeader icon={CreditCard} title={t("settings.billingTitle")} subtitle={t("settings.billingSubtitle")} />
-      {payErr && <p className="mt-4 rounded-xl border border-red-300/80 bg-red-50/90 px-3 py-2 text-sm text-red-900">{payErr}</p>}
+      {payErr && <p className="mt-4 rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-200">{payErr}</p>}
       <div className="mt-5 grid gap-3 sm:grid-cols-2">
         <div className={`${glassPanelNested} p-4`}>
           <p className="text-xs font-bold text-slate-500">{t("settings.billingPlan")}</p>
@@ -271,7 +271,7 @@ function BillingPanel({
           <p className="mt-1 text-lg font-black text-slate-950">{exempt ? "פטור מתשלום" : formatDate(profile?.subscription_expiry)}</p>
         </div>
       </div>
-      <div className={`${glassPanelNested} mt-4 p-4 text-sm leading-6 text-slate-700`}>
+      <div className={`${glassPanelNested} mt-4 p-4 text-sm leading-6 text-slate-300`}>
         {t("settings.billingConsultHint")}
       </div>
       <div className="mt-5 grid gap-2 sm:grid-cols-2">
@@ -297,8 +297,8 @@ function SectionHeader({ icon: Icon, title, subtitle }: { icon: LucideIcon; titl
     <div className="flex items-start gap-3">
       <Icon className="mt-1 h-5 w-5 text-[#9b7430]" aria-hidden />
       <div>
-        <h2 className="font-frank text-xl font-black text-slate-900">{title}</h2>
-        <p className="mt-1 text-sm text-slate-600">{subtitle}</p>
+        <h2 className="font-frank text-xl font-black text-slate-100">{title}</h2>
+        <p className="mt-1 text-sm text-slate-400">{subtitle}</p>
       </div>
     </div>
   );
@@ -307,11 +307,11 @@ function SectionHeader({ icon: Icon, title, subtitle }: { icon: LucideIcon; titl
 function StatusStrip({ loading, saving, message, error }: { loading: boolean; saving: boolean; message: string | null; error: string | null }) {
   if (!loading && !saving && !message && !error) return null;
   return (
-    <div className="mb-4 rounded-2xl border border-white/40 bg-white/35 px-4 py-3 text-sm font-semibold text-slate-800">
+    <div className="mb-4 rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 text-sm font-semibold text-slate-200">
       {loading && "טוען הגדרות..."}
       {saving && "שומר..."}
-      {!loading && !saving && message && <span className="text-emerald-900">{message}</span>}
-      {!loading && !saving && error && <span className="text-red-900">{error}</span>}
+      {!loading && !saving && message && <span className="text-emerald-200">{message}</span>}
+      {!loading && !saving && error && <span className="text-red-200">{error}</span>}
     </div>
   );
 }
@@ -336,8 +336,8 @@ function ToggleCard({
       <div className="flex min-w-0 items-start gap-3">
         <Icon className="mt-0.5 h-5 w-5 shrink-0 text-[#9b7430]" aria-hidden />
         <div className="min-w-0">
-          <p id={`settings-label-${id}`} className="text-sm font-bold text-slate-900">{label}</p>
-          <p className="mt-1 text-xs leading-5 text-slate-600">{hint}</p>
+          <p id={`settings-label-${id}`} className="text-sm font-bold text-slate-100">{label}</p>
+          <p className="mt-1 text-xs leading-5 text-slate-400">{hint}</p>
         </div>
       </div>
       <GoldSwitch checked={checked} onChange={onChange} aria-labelledby={`settings-label-${id}`} />
@@ -376,7 +376,7 @@ function Field({
 }) {
   return (
     <div>
-      <label htmlFor={id} className="mb-1 block text-xs font-bold text-slate-700">{label}</label>
+      <label htmlFor={id} className="mb-1 block text-xs font-bold text-slate-300">{label}</label>
       <input id={id} type={type} value={value} onChange={(e) => onChange(e.target.value)} className={glassInput} autoComplete={autoComplete} />
     </div>
   );

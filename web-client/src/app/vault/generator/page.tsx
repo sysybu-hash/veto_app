@@ -247,28 +247,28 @@ export default function DocumentGeneratorPage() {
 
   return (
     <div
-      className="flex min-h-screen flex-col bg-[#f6efe1] pb-24"
+      className="flex min-h-screen flex-col pb-24"
       dir={rtl ? "rtl" : "ltr"}
     >
       <div className="flex min-h-0 flex-1 flex-col md:flex-row">
-      <aside className="z-10 flex h-auto w-full flex-col overflow-y-auto border-slate-200 bg-white p-6 shadow-sm md:sticky md:top-0 md:h-screen md:w-80 md:border-l print:hidden">
+      <aside className="z-10 flex h-auto w-full flex-col overflow-y-auto border-white/10 bg-slate-950/70 backdrop-blur-xl p-6 md:sticky md:top-0 md:h-screen md:w-80 md:border-l print:hidden">
         <Link
           href="/vault"
-          className="mb-8 flex items-center text-slate-500 transition hover:text-slate-800"
+          className="mb-8 flex items-center text-slate-500 transition hover:text-slate-200"
         >
           <ChevronRight className="ml-1 h-4 w-4" /> {t("docGenSpec.back")}
         </Link>
-        <h2 className="mb-6 font-serif text-xl font-bold text-slate-900">
+        <h2 className="mb-6 font-serif text-xl font-bold text-slate-100">
           {t("docGenSpec.sidebarTitle")}
         </h2>
         <div className="mb-6 space-y-3">
-          <label className="text-sm font-medium text-slate-700">
+          <label className="text-sm font-medium text-slate-300">
             {t("docGenSpec.docTypeLabel")}
           </label>
           <select
             value={selectedType}
             onChange={(e) => setSelectedType(e.target.value)}
-            className="w-full rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm text-slate-800 outline-none focus:ring-2 focus:ring-[#C5A059]"
+            className="w-full rounded-lg border border-white/10 bg-slate-950 p-3 text-sm text-slate-200 outline-none focus:ring-2 focus:ring-[#C5A059]"
           >
             {DOCUMENT_TYPES.map((type) => (
               <option key={type.id} value={type.id}>
@@ -279,13 +279,13 @@ export default function DocumentGeneratorPage() {
         </div>
         <div className="mb-8 space-y-3">
           <div className="flex items-center justify-between">
-            <label className="text-sm font-medium text-slate-700">
+            <label className="text-sm font-medium text-slate-300">
               {t("docGenSpec.detailsLabel")}
             </label>
             <button
               type="button"
               onClick={handleVoiceRecord}
-              className={`rounded-full p-2 transition ${isRecording ? "animate-pulse bg-red-100 text-red-600" : "bg-slate-100 text-slate-500 hover:bg-slate-200"}`}
+              className={`rounded-full p-2 transition ${isRecording ? "animate-pulse bg-red-500/15 text-red-600" : "bg-white/[0.04] text-slate-500 hover:bg-white/[0.08]"}`}
               title={t("docGenSpec.voiceTitle")}
             >
               <Mic className="h-4 w-4" />
@@ -295,11 +295,11 @@ export default function DocumentGeneratorPage() {
             value={customPrompt}
             onChange={(e) => setCustomPrompt(e.target.value)}
             placeholder={t("docGenSpec.textareaPlaceholder")}
-            className="h-32 w-full resize-none rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm text-slate-800 outline-none focus:ring-2 focus:ring-[#C5A059]"
+            className="h-32 w-full resize-none rounded-lg border border-white/10 bg-slate-950 p-3 text-sm text-slate-200 outline-none focus:ring-2 focus:ring-[#C5A059]"
           />
         </div>
         {errorMsg ? (
-          <div className="mb-4 flex items-start gap-2 rounded-lg bg-red-50 p-3 text-sm text-red-600">
+          <div className="mb-4 flex items-start gap-2 rounded-lg bg-red-500/10 p-3 text-sm text-red-600">
             <AlertCircle className="mt-0.5 h-4 w-4" />
             <span>{errorMsg}</span>
           </div>
@@ -318,7 +318,7 @@ export default function DocumentGeneratorPage() {
           {isGenerating ? t("docGenSpec.generating") : t("docGenSpec.generateBtn")}
         </button>
         {document ? (
-          <div className="space-y-3 border-t border-slate-100 pt-6">
+          <div className="space-y-3 border-t border-white/10 pt-6">
             <label className="mb-2 block text-sm font-medium text-slate-500">
               {t("docGenSpec.exportSection")}
             </label>
@@ -340,7 +340,7 @@ export default function DocumentGeneratorPage() {
                 type="button"
                 onClick={() => void handleExportPDF()}
                 disabled={isSaving}
-                className="flex items-center justify-center gap-2 rounded-lg bg-slate-100 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-200 disabled:opacity-50"
+                className="flex items-center justify-center gap-2 rounded-lg bg-white/[0.04] py-2.5 text-sm font-medium text-slate-300 transition hover:bg-white/[0.08] disabled:opacity-50"
               >
                 <FileText className="h-4 w-4" /> {t("docGenSpec.pdf")}
               </button>
@@ -348,7 +348,7 @@ export default function DocumentGeneratorPage() {
                 type="button"
                 onClick={() => void handleExportDOCX()}
                 disabled={isSaving}
-                className="flex items-center justify-center gap-2 rounded-lg bg-slate-100 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-200 disabled:opacity-50"
+                className="flex items-center justify-center gap-2 rounded-lg bg-white/[0.04] py-2.5 text-sm font-medium text-slate-300 transition hover:bg-white/[0.08] disabled:opacity-50"
               >
                 <Download className="h-4 w-4" /> {t("docGenSpec.word")}
               </button>
@@ -357,7 +357,7 @@ export default function DocumentGeneratorPage() {
               type="button"
               onClick={handlePrint}
               disabled={isSaving}
-              className="flex w-full items-center justify-center gap-2 rounded-lg bg-slate-100 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-200 disabled:opacity-50"
+              className="flex w-full items-center justify-center gap-2 rounded-lg bg-white/[0.04] py-2.5 text-sm font-medium text-slate-300 transition hover:bg-white/[0.08] disabled:opacity-50"
             >
               <Printer className="h-4 w-4" /> {t("docGenSpec.print")}
             </button>
@@ -373,9 +373,9 @@ export default function DocumentGeneratorPage() {
         ) : (
           <div
             ref={documentRef}
-            className="mx-auto min-h-[297mm] w-full max-w-[210mm] border border-slate-200 bg-white p-10 shadow-xl md:p-16 print:m-0 print:border-none print:p-0 print:shadow-none"
+            className="mx-auto min-h-[297mm] w-full max-w-[210mm] border border-white/10 bg-white p-10 shadow-xl md:p-16 print:m-0 print:border-none print:p-0 print:shadow-none"
           >
-            <div className="outline-none" contentEditable suppressContentEditableWarning>
+            <div className="text-slate-900 outline-none" contentEditable suppressContentEditableWarning>
               <div className="mb-8 flex items-end justify-between border-b-2 border-slate-900 pb-4">
                 <div>
                   <h1 className="font-serif text-2xl font-bold tracking-tight text-slate-900">

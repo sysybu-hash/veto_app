@@ -222,10 +222,10 @@ export default function ChatPage() {
         <section className={`${glassPanel} flex min-h-[260px] flex-col p-4`}>
           <div className="mb-4 flex items-start justify-between gap-3">
             <div>
-              <h1 className="font-frank text-2xl font-black text-slate-900">
+              <h1 className="font-frank text-2xl font-black text-slate-100">
                 {t("chat.title")}
               </h1>
-              <p className="mt-1 text-sm text-slate-600">{t("chat.subtitle")}</p>
+              <p className="mt-1 text-sm text-slate-400">{t("chat.subtitle")}</p>
             </div>
             <div className="flex shrink-0 gap-2">
               <button
@@ -286,10 +286,10 @@ export default function ChatPage() {
           <div className="min-h-0 flex-1 space-y-2 overflow-y-auto">
             {loadingThreads ? (
               [1, 2, 3].map((i) => (
-                <div key={i} className="h-20 animate-pulse rounded-2xl bg-white/35" />
+                <div key={i} className="h-20 animate-pulse rounded-2xl bg-white/[0.03]" />
               ))
             ) : filteredThreads.length === 0 ? (
-              <div className={`${glassPanelNested} p-4 text-sm text-slate-700`}>
+              <div className={`${glassPanelNested} p-4 text-sm text-slate-300`}>
                 {t("chat.emptyThreads")}
               </div>
             ) : (
@@ -299,7 +299,7 @@ export default function ChatPage() {
                   className={`w-full rounded-2xl border px-3 py-3 text-start transition ${
                     active?.id === thread.id
                       ? "border-[#C5A059] bg-[#C5A059]/20"
-                      : "border-white/35 bg-white/35 hover:bg-white/50"
+                      : "border-white/10 bg-white/[0.03] hover:bg-white/[0.04]"
                   }`}
                 >
                   <div className="flex items-start gap-2">
@@ -309,7 +309,7 @@ export default function ChatPage() {
                       className="min-w-0 flex-1 text-start"
                     >
                       <div className="flex items-center justify-between gap-3">
-                        <span className="truncate text-sm font-black text-slate-900">
+                        <span className="truncate text-sm font-black text-slate-100">
                           {thread.name}
                         </span>
                         {!!thread.unread && (
@@ -318,7 +318,7 @@ export default function ChatPage() {
                           </span>
                         )}
                       </div>
-                      <p className="mt-1 truncate text-xs text-slate-600">
+                      <p className="mt-1 truncate text-xs text-slate-400">
                         {thread.last || t("chat.noMessages")}
                       </p>
                       <p className="mt-1 text-[10px] font-semibold text-slate-500">
@@ -329,7 +329,7 @@ export default function ChatPage() {
                       type="button"
                       onClick={() => void removeThread(thread)}
                       disabled={busy}
-                      className="grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-red-200 bg-red-50/80 text-red-700 transition hover:bg-red-100 disabled:opacity-50"
+                      className="grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-red-500/30 bg-red-500/10 text-red-300 transition hover:bg-red-500/15 disabled:opacity-50"
                       aria-label={`מחיקת שיחה עם ${thread.name}`}
                       title="מחיקת שיחה"
                     >
@@ -345,16 +345,16 @@ export default function ChatPage() {
         <section className={`${glassPanel} flex min-h-[560px] flex-col overflow-hidden`}>
           {active ? (
             <>
-              <header className="flex items-center justify-between gap-3 border-b border-white/35 px-5 py-4">
+              <header className="flex items-center justify-between gap-3 border-b border-white/10 px-5 py-4">
                 <div className="flex min-w-0 items-center gap-3">
                   <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-slate-950 text-white">
                     <UserRound className="h-5 w-5" aria-hidden />
                   </div>
                   <div className="min-w-0">
-                    <h2 className="truncate font-frank text-xl font-black text-slate-900">
+                    <h2 className="truncate font-frank text-xl font-black text-slate-100">
                       {active.name}
                     </h2>
-                    <p className="text-xs font-semibold text-slate-600">
+                    <p className="text-xs font-semibold text-slate-400">
                       {active.role === "lawyer" ? t("chat.lawyer") : t("chat.member")} · {messages.length} הודעות
                     </p>
                   </div>
@@ -372,7 +372,7 @@ export default function ChatPage() {
                   type="button"
                   onClick={() => void removeThread()}
                   disabled={busy}
-                  className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-red-200 bg-red-50/70 text-red-700 disabled:opacity-50"
+                  className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-red-500/30 bg-red-500/10 text-red-300 disabled:opacity-50"
                   aria-label="מחיקת שיחה"
                 >
                   <Trash2 className="h-4 w-4" aria-hidden />
@@ -380,16 +380,16 @@ export default function ChatPage() {
               </header>
 
               {error && (
-                <div className="mx-5 mt-4 rounded-xl border border-red-300/80 bg-red-50/90 px-3 py-2 text-sm text-red-900">
+                <div className="mx-5 mt-4 rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-200">
                   {error}
                 </div>
               )}
 
               <div className="flex-1 space-y-3 overflow-y-auto px-4 py-5">
                 {loadingMessages ? (
-                  <p className="text-center text-sm text-slate-600">{t("common.loading")}</p>
+                  <p className="text-center text-sm text-slate-400">{t("common.loading")}</p>
                 ) : messages.length === 0 ? (
-                  <div className={`${glassPanelNested} mx-auto grid max-w-md place-items-center gap-3 p-7 text-center text-sm text-slate-700`}>
+                  <div className={`${glassPanelNested} mx-auto grid max-w-md place-items-center gap-3 p-7 text-center text-sm text-slate-300`}>
                     <MessageCircle className="h-8 w-8 text-[#9b7430]" aria-hidden />
                     {t("chat.emptyMessages")}
                   </div>
@@ -401,13 +401,13 @@ export default function ChatPage() {
                         <div className={`max-w-[82%] rounded-2xl border px-4 py-2.5 shadow-sm ${
                           mine
                             ? "border-[#C5A059]/40 bg-[#C5A059]/20 text-slate-950"
-                            : "border-white/45 bg-white/60 text-slate-900"
+                            : "border-white/10 bg-white/[0.05] text-slate-100"
                         }`}>
                           <p className="whitespace-pre-wrap break-words text-sm leading-relaxed">{message.text}</p>
                           <div className="mt-1 flex items-center justify-between gap-3 text-[10px] text-slate-500">
                             <span>{formatTime(message.createdAt)}</span>
                             {mine && (
-                              <button type="button" onClick={() => void removeMessage(message._id)} className="font-semibold text-red-700">
+                              <button type="button" onClick={() => void removeMessage(message._id)} className="font-semibold text-red-300">
                                 {t("common.delete")}
                               </button>
                             )}
@@ -419,7 +419,7 @@ export default function ChatPage() {
                 )}
               </div>
 
-              <form className="border-t border-white/35 p-4" onSubmit={(e) => { e.preventDefault(); void submit(); }}>
+              <form className="border-t border-white/10 p-4" onSubmit={(e) => { e.preventDefault(); void submit(); }}>
                 <div className="flex gap-2">
                   <textarea
                     value={draft}
@@ -435,7 +435,7 @@ export default function ChatPage() {
               </form>
             </>
           ) : (
-            <div className="flex flex-1 items-center justify-center p-6 text-center text-sm text-slate-600">
+            <div className="flex flex-1 items-center justify-center p-6 text-center text-sm text-slate-400">
               {loadingThreads ? t("common.loading") : t("chat.pickThread")}
             </div>
           )}

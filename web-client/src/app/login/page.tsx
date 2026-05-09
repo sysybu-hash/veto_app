@@ -144,7 +144,7 @@ export default function LoginPage() {
   return (
     <Suspense
       fallback={
-        <div className="flex min-h-screen items-center justify-center text-slate-600">
+        <div className="flex min-h-screen items-center justify-center text-slate-400">
           …
         </div>
       }
@@ -413,13 +413,13 @@ function LoginPageInner() {
           </div>
           {!isApiOriginConfigured() && (
             <div
-              className="mb-4 rounded-xl border border-amber-600/80 bg-amber-100/95 px-3 py-2.5 text-xs font-semibold leading-snug text-amber-950 shadow-sm"
+              className="mb-4 rounded-xl border border-amber-600/80 bg-amber-500/15 px-3 py-2.5 text-xs font-semibold leading-snug text-amber-200 shadow-sm"
               role="alert"
             >
               {t("login.alertMissingApiOrigin")}
             </div>
           )}
-          <h1 className="font-display text-2xl font-semibold text-slate-900 md:text-3xl">
+          <h1 className="font-display text-2xl font-semibold text-slate-100 md:text-3xl">
             {t("login.title")}
           </h1>
         </div>
@@ -457,10 +457,10 @@ function LoginPageInner() {
               className="absolute inset-0 flex items-center"
               aria-hidden
             >
-              <div className="w-full border-t border-white/50" />
+              <div className="w-full border-t border-white/10" />
             </div>
             <div className="relative flex justify-center text-xs font-medium">
-              <span className="rounded-full border border-white/40 bg-white/45 px-3 py-0.5 text-slate-600 backdrop-blur-sm">
+              <span className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-0.5 text-slate-400 backdrop-blur-sm">
                 {t("login.orPhone")}
               </span>
             </div>
@@ -469,7 +469,7 @@ function LoginPageInner() {
 
         <div className="mt-2 flex flex-col gap-6">
           <div className="flex flex-col gap-2">
-            <label className="text-xs font-medium text-slate-700">
+            <label className="text-xs font-medium text-slate-300">
               {t("login.phone")}
             </label>
             <input
@@ -483,7 +483,7 @@ function LoginPageInner() {
               placeholder={t("login.phonePlaceholder")}
               autoComplete="tel"
             />
-            <p className="text-center text-xs text-slate-600">
+            <p className="text-center text-xs text-slate-400">
               {t("login.needRegister")}{" "}
               <Link
                 href="/register"
@@ -507,16 +507,16 @@ function LoginPageInner() {
 
           {devOtp && (
             <div
-              className="rounded-2xl border border-amber-500/60 bg-amber-50/95 px-4 py-4 shadow-sm"
+              className="rounded-2xl border border-amber-500/30 bg-amber-500/10 px-4 py-4 shadow-sm"
               role="region"
               aria-label={t("login.otpDevAria")}
             >
-              <p className="text-center text-xs font-semibold text-amber-950">
+              <p className="text-center text-xs font-semibold text-amber-200">
                 {t("login.otpDevTitle")}
               </p>
               <div className="mt-3 flex flex-wrap items-center justify-center gap-3">
                 <code
-                  className={`min-w-[8.5rem] px-4 py-2 text-center text-2xl font-bold tracking-[0.35em] text-slate-900 shadow-inner ${glassPanelNested}`}
+                  className={`min-w-[8.5rem] px-4 py-2 text-center text-2xl font-bold tracking-[0.35em] text-slate-100 shadow-inner ${glassPanelNested}`}
                   dir="ltr"
                 >
                   {devOtp}
@@ -533,7 +533,7 @@ function LoginPageInner() {
           )}
 
           <div className="flex flex-col gap-2">
-            <label className="text-xs font-medium text-slate-700">
+            <label className="text-xs font-medium text-slate-300">
               {t("login.otpLabel")}
             </label>
             <input
@@ -554,7 +554,7 @@ function LoginPageInner() {
           </div>
 
           {message && (
-            <p className="text-center text-sm text-amber-900" role="status">
+            <p className="text-center text-sm text-amber-200" role="status">
               {message}
             </p>
           )}
@@ -577,13 +577,13 @@ function LoginPageInner() {
             aria-label="כניסת מנהל"
             onMouseDown={(e) => e.stopPropagation()}
           >
-            <h3 className="text-lg font-bold text-slate-900">כניסת מנהל</h3>
-            <p className="mt-1 text-xs text-slate-600">
+            <h3 className="text-lg font-bold text-slate-100">כניסת מנהל</h3>
+            <p className="mt-1 text-xs text-slate-400">
               התחברות בדיקות עם שם משתמש וסיסמה ובחירת תפקיד.
             </p>
 
             <div className="mt-4 flex flex-col gap-2">
-              <label className="text-xs font-medium text-slate-700">שם משתמש</label>
+              <label className="text-xs font-medium text-slate-300">שם משתמש</label>
               <input
                 value={devUsername}
                 onChange={(e) => setDevUsername(e.target.value)}
@@ -593,7 +593,7 @@ function LoginPageInner() {
             </div>
 
             <div className="mt-3 flex flex-col gap-2">
-              <label className="text-xs font-medium text-slate-700">סיסמה</label>
+              <label className="text-xs font-medium text-slate-300">סיסמה</label>
               <input
                 type="password"
                 value={devPassword}
@@ -604,7 +604,7 @@ function LoginPageInner() {
             </div>
 
             <div className="mt-3 flex flex-col gap-2">
-              <label className="text-xs font-medium text-slate-700">כניסה כ</label>
+              <label className="text-xs font-medium text-slate-300">כניסה כ</label>
               <select
                 value={devRole}
                 onChange={(e) => setDevRole(e.target.value as LoginRole)}

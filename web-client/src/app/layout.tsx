@@ -40,12 +40,14 @@ export default function RootLayout({
       suppressHydrationWarning
       className={`${heebo.variable} ${frank.variable} h-full`}
     >
-      <body className="relative min-h-screen bg-transparent font-heebo text-slate-900 antialiased">
+      <body className="relative min-h-screen bg-slate-950 font-heebo text-slate-100 antialiased">
         <LocaleProvider>
           <JwtCookieSync />
           <ToastHost />
         <div className="fixed inset-0 -z-50 overflow-hidden" aria-hidden>
-          <div className="absolute inset-0 bg-linear-to-b from-slate-100 via-white to-white" />
+          <div className="absolute inset-0 bg-slate-950" />
+          <div className="veto-bg-glow absolute inset-0" />
+          <div className="veto-bg-grid absolute inset-0" />
         </div>
 
         <div className="relative z-10 flex min-h-screen flex-col">
