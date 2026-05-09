@@ -168,6 +168,7 @@ function LoginPageInner() {
   const [devPassword, setDevPassword] = useState("");
   const [devRole, setDevRole] = useState<LoginRole>("admin");
   const [adminLoginOpen, setAdminLoginOpen] = useState(false);
+  const [autoOtpPhone, setAutoOtpPhone] = useState<string | null>(null);
 
   const googleClientId =
     process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID?.trim() ?? "";
@@ -186,6 +187,13 @@ function LoginPageInner() {
       }
       if (searchParams.get("registered") === "1") {
         setMessage(t("register.success"));
+        if (ph) {
+          try {
+            setAutoOtpPhone(decodeURIComponent(ph));
+          } catch {
+            setAutoOtpPhone(ph);
+          }
+        }
       }
     });
   }, [searchParams, t]);
@@ -365,6 +373,52 @@ function LoginPageInner() {
       setBusy(false);
     }
   };
+
+  useEffect(() => {
+    if (!autoOtpPhone) return;
+    const normalizedPhone = normalizePhoneForVeto(autoOtpPhone);
+    if (!normalizedPhone) {
+      setAutoOtpPhone(null);
+      return;
+    }
+    let cancelled = false;
+    setAutoOtpPhone(null);
+    void (async () => {
+      setBusy(true);
+      try {
+        const otpData = await postJson("/api/auth/request-otp", {
+          phone: normalizedPhone,
+        });
+        if (cancelled) return;
+        const returned = pickOtpFromResponse(otpData);
+        if (!returned) {
+          setOtp("");
+          setMessage(t("login.otpSent"));
+          return;
+        }
+        setDevOtp(returned);
+        setOtp(returned);
+        const verifyData = await postJson("/api/auth/verify-otp", {
+          phone: normalizedPhone,
+          otp: returned,
+        });
+        if (cancelled) return;
+        const token =
+          typeof verifyData.token === "string" ? verifyData.token : null;
+        if (!token) throw new Error("No token in response");
+        await prepareLoginSession(token);
+        setSocketAuthToken(token);
+        routeAfterAuth(router, verifyData);
+      } catch (e) {
+        if (!cancelled) setMessage(formatLoginError(e, t));
+      } finally {
+        if (!cancelled) setBusy(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [autoOtpPhone, router, t]);
 
   const handleTestCredentialsLogin = () => {
     void (async () => {

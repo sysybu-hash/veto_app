@@ -261,8 +261,10 @@ export default function LawyerDashboardPage() {
   const handleLogout = useCallback(() => {
     disconnectSocket();
     clearJwt();
-    router.replace("/login");
-  }, [router]);
+    if (typeof window !== "undefined") {
+      window.location.assign("/login");
+    }
+  }, []);
 
   const formattedAlertTime = useMemo(() => formatDateTime(activeAlert?.timestamp), [activeAlert]);
   const displayName = profile?.full_name?.trim() || "עורך דין";
