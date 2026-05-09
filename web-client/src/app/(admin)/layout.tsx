@@ -19,15 +19,15 @@ export default function AdminLayout({
   };
 
   return (
-    <div className="flex min-h-full flex-col text-slate-900 antialiased">
-      <header className="sticky top-0 z-30 border-b border-white/40 bg-white/60 shadow-sm shadow-slate-900/5 backdrop-blur-xl">
+    <div className="flex min-h-full flex-col text-slate-100 antialiased">
+      <header className="sticky top-0 z-30 border-b border-white/10 bg-white/[0.05] shadow-sm shadow-slate-900/5 backdrop-blur-xl">
         <div className="mx-auto flex h-14 max-w-7xl items-center justify-between gap-4 px-4 sm:h-16 sm:px-6 lg:px-8">
           <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-slate-900 text-sm font-bold text-white sm:h-10 sm:w-10">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#C5A059] text-sm font-bold text-slate-950 shadow-[0_0_16px_-4px_rgba(197,160,89,0.5)] sm:h-10 sm:w-10">
               V
             </div>
             <div>
-              <p className="text-sm font-semibold leading-tight text-slate-900 sm:text-base">
+              <p className="text-sm font-semibold leading-tight text-slate-100 sm:text-base">
                 VETO Admin
               </p>
               <p className="hidden text-xs text-slate-500 sm:block">
@@ -38,7 +38,7 @@ export default function AdminLayout({
           <button
             type="button"
             onClick={handleLogout}
-            className="rounded-xl border border-white/50 bg-white/50 px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm backdrop-blur-md transition hover:border-white/60 hover:bg-white/70 active:scale-[0.98]"
+            className="rounded-xl border border-white/10 bg-white/[0.04] px-4 py-2 text-sm font-semibold text-slate-300 shadow-sm backdrop-blur-md transition hover:border-white/10 hover:bg-white/[0.06] active:scale-[0.98]"
           >
             Log out
           </button>

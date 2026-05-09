@@ -15,16 +15,16 @@ const linkBase =
   "relative flex min-w-0 flex-1 flex-col items-center gap-0.5 rounded-xl px-0.5 py-2 text-center sm:px-2";
 
 const idle =
-  "border-2 border-transparent text-slate-700 transition hover:bg-white/35 hover:text-slate-900 sm:border-transparent";
+  "border-2 border-transparent text-slate-300 transition hover:bg-white/[0.06] hover:text-white sm:border-transparent";
 
 const activeStyle =
-  "relative border-2 border-[#C5A059] bg-[#C5A059]/25 text-[11px] font-bold text-slate-900 shadow-[0_0_22px_rgba(197,160,89,0.45)] sm:text-xs";
+  "relative border-2 border-[#C5A059] bg-[#C5A059]/20 text-[11px] font-bold text-[#C5A059] shadow-[0_0_22px_rgba(197,160,89,0.35)] sm:text-xs";
 
 export function CitizenBottomNav({ active }: { active: CitizenNavActive }) {
   const { t } = useTranslation();
 
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-white/40 bg-white/55 px-1 py-2 backdrop-blur-xl sm:px-3 sm:py-3">
+    <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-white/[0.06] bg-slate-950/70 px-1 py-2 backdrop-blur-xl supports-[backdrop-filter]:bg-slate-950/60 sm:px-3 sm:py-3">
       <div className="mx-auto flex max-w-lg justify-between gap-0.5 sm:gap-2">
         <Link
           href="/hub"
@@ -33,8 +33,8 @@ export function CitizenBottomNav({ active }: { active: CitizenNavActive }) {
           <svg
             className={`mx-auto h-5 w-5 stroke-[1.75] sm:h-6 sm:w-6 ${
               active === "hub"
-                ? "text-slate-900"
-                : "text-slate-600"
+                ? "text-[#C5A059]"
+                : "text-slate-400"
             }`}
             fill="none"
             stroke="currentColor"
@@ -45,7 +45,7 @@ export function CitizenBottomNav({ active }: { active: CitizenNavActive }) {
           </svg>
           <span className="truncate">{t("navCitizen.home")}</span>
           {active === "hub" && (
-            <span className="absolute -top-0.5 end-0 rounded-full bg-[#C5A059] px-1 text-[8px] font-bold text-slate-900 sm:end-0.5 sm:text-[9px]">
+            <span className="absolute -top-0.5 end-0 rounded-full bg-[#C5A059] px-1 text-[8px] font-bold text-slate-950 sm:end-0.5 sm:text-[9px]">
               {t("navCitizen.sosBadge")}
             </span>
           )}
@@ -59,7 +59,7 @@ export function CitizenBottomNav({ active }: { active: CitizenNavActive }) {
         >
           <svg
             className={`mx-auto h-5 w-5 stroke-[1.75] sm:h-6 sm:w-6 ${
-              active === "chat" ? "text-slate-900" : "text-slate-600"
+              active === "chat" ? "text-[#C5A059]" : "text-slate-400"
             }`}
             fill="none"
             stroke="currentColor"
@@ -79,7 +79,7 @@ export function CitizenBottomNav({ active }: { active: CitizenNavActive }) {
         >
           <svg
             className={`mx-auto h-5 w-5 stroke-[1.75] sm:h-6 sm:w-6 ${
-              active === "vault" ? "text-slate-900" : "text-slate-600"
+              active === "vault" ? "text-[#C5A059]" : "text-slate-400"
             }`}
             fill="none"
             stroke="currentColor"
@@ -99,7 +99,7 @@ export function CitizenBottomNav({ active }: { active: CitizenNavActive }) {
         >
           <svg
             className={`mx-auto h-5 w-5 stroke-[1.75] sm:h-6 sm:w-6 ${
-              active === "calendar" ? "text-slate-900" : "text-slate-600"
+              active === "calendar" ? "text-[#C5A059]" : "text-slate-400"
             }`}
             fill="none"
             stroke="currentColor"
@@ -119,7 +119,7 @@ export function CitizenBottomNav({ active }: { active: CitizenNavActive }) {
         >
           <svg
             className={`mx-auto h-5 w-5 stroke-[1.75] sm:h-6 sm:w-6 ${
-              active === "settings" ? "text-slate-900" : "text-slate-600"
+              active === "settings" ? "text-[#C5A059]" : "text-slate-400"
             }`}
             fill="none"
             stroke="currentColor"

@@ -151,28 +151,28 @@ function mapApiTask(row: ApiCitizenTask): Task {
 function statusStyles(status: ContractStatus): string {
   switch (status) {
     case "pending_signature":
-      return "bg-amber-400/20 text-amber-900 ring-amber-400/50";
+      return "bg-amber-500/15 text-amber-200 ring-amber-500/30";
     case "active":
-      return "bg-emerald-400/20 text-emerald-900 ring-emerald-400/50";
+      return "bg-emerald-500/15 text-emerald-200 ring-emerald-500/30";
     case "expired":
-      return "bg-white/40 text-slate-700 ring-white/50";
+      return "bg-white/[0.04] text-slate-300 ring-white/50";
     case "at_risk":
-      return "bg-orange-400/20 text-orange-950 ring-orange-400/50";
+      return "bg-orange-500/15 text-orange-200 ring-orange-500/30";
     default:
-      return "bg-white/35 text-slate-800 ring-white/45";
+      return "bg-white/[0.03] text-slate-200 ring-white/45";
   }
 }
 
 function priorityStyles(p: TaskPriority): string {
   switch (p) {
     case "high":
-      return "bg-red-400/20 text-red-900 ring-red-400/45";
+      return "bg-red-500/15 text-red-200 ring-red-500/30";
     case "medium":
-      return "bg-amber-400/20 text-amber-900 ring-amber-400/45";
+      return "bg-amber-500/15 text-amber-200 ring-amber-500/30";
     case "low":
-      return "bg-white/40 text-slate-700 ring-white/50";
+      return "bg-white/[0.04] text-slate-300 ring-white/50";
     default:
-      return "bg-white/35 text-slate-800 ring-white/45";
+      return "bg-white/[0.03] text-slate-200 ring-white/45";
   }
 }
 
@@ -250,14 +250,14 @@ function CreateContractModal({
         aria-labelledby="contract-modal-title"
         onMouseDown={(e) => e.stopPropagation()}
       >
-        <div className="border-b border-white/40 px-5 py-4 backdrop-blur-sm">
+        <div className="border-b border-white/10 px-5 py-4 backdrop-blur-sm">
           <h2
             id="contract-modal-title"
-            className="font-frank text-lg font-bold text-slate-900"
+            className="font-frank text-lg font-bold text-slate-100"
           >
             {t("productivity.modalContractTitle")}
           </h2>
-          <p className="mt-0.5 text-sm text-slate-600">
+          <p className="mt-0.5 text-sm text-slate-400">
             {t("productivity.modalContractSubtitle")}
           </p>
         </div>
@@ -265,7 +265,7 @@ function CreateContractModal({
           <div>
             <label
               htmlFor="c-title"
-              className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-600"
+              className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-400"
             >
               {t("productivity.contractTitleField")}
             </label>
@@ -281,7 +281,7 @@ function CreateContractModal({
           <div>
             <label
               htmlFor="c-party"
-              className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-600"
+              className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-400"
             >
               {t("productivity.partyNameField")}
             </label>
@@ -297,7 +297,7 @@ function CreateContractModal({
           <div>
             <label
               htmlFor="c-status"
-              className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-600"
+              className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-400"
             >
               {t("productivity.contractStatusField")}
             </label>
@@ -318,14 +318,14 @@ function CreateContractModal({
           </div>
           {saveErr && (
             <p
-              className="rounded-xl border border-red-300/70 bg-red-100/50 px-3 py-2 text-sm text-red-900 backdrop-blur-sm"
+              className="rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-200 backdrop-blur-sm"
               role="alert"
             >
               {saveErr}
             </p>
           )}
         </div>
-        <div className="flex gap-3 border-t border-white/40 px-5 py-4">
+        <div className="flex gap-3 border-t border-white/10 px-5 py-4">
           <button
             type="button"
             onClick={() => !saving && onClose()}
@@ -373,19 +373,19 @@ function ContractViewModal({
       >
         <h2
           id="view-contract-title"
-          className="font-frank text-lg font-bold text-slate-900"
+          className="font-frank text-lg font-bold text-slate-100"
         >
           {contract.title}
         </h2>
-        <div className={`mt-4 rounded-xl border border-white/40 p-4 ${glassPanelNested}`}>
-          <p className="text-sm text-slate-700">
+        <div className={`mt-4 rounded-xl border border-white/10 p-4 ${glassPanelNested}`}>
+          <p className="text-sm text-slate-300">
             {t("productivity.labelParty")}: {contract.partyName}
           </p>
-          <p className="mt-2 text-sm text-slate-700">
+          <p className="mt-2 text-sm text-slate-300">
             {t("productivity.labelStatus")}:{" "}
             {contractStatusLabel(contract.status, t)}
           </p>
-          <p className="mt-2 text-xs text-slate-600">
+          <p className="mt-2 text-xs text-slate-400">
             {t("productivity.viewLastUpdated")} {contract.updatedAt}
           </p>
         </div>
@@ -413,7 +413,7 @@ function ProductivityLoadingSkeleton() {
         {[1, 2, 3, 4].map((i) => (
           <div
             key={i}
-            className="h-36 rounded-xl border border-white/30 bg-white/35 backdrop-blur-md"
+            className="h-36 rounded-xl border border-white/10 bg-white/[0.03] backdrop-blur-md"
           />
         ))}
       </div>
@@ -566,15 +566,15 @@ export default function ProductivityPage() {
   return (
     <div className="mx-auto min-h-0 w-full max-w-4xl flex-1 px-4 pb-28 pt-6 md:px-6">
       <div className={`overflow-hidden ${glassPanel}`}>
-        <div className="border-b border-white/40 bg-white/35 px-4 py-4 backdrop-blur-md sm:flex sm:items-center sm:justify-between sm:px-6">
+        <div className="border-b border-white/10 bg-white/[0.03] px-4 py-4 backdrop-blur-md sm:flex sm:items-center sm:justify-between sm:px-6">
           <div className="mb-4 sm:mb-0">
-            <p className="text-xs font-semibold uppercase tracking-wider text-[#8a6d3d]">
+            <p className="text-xs font-semibold uppercase tracking-wider text-[#e8c987]">
               {t("productivity.heroEyebrow")}
             </p>
-            <h1 className="font-frank mt-1 text-xl font-bold tracking-tight text-slate-900 sm:text-2xl">
+            <h1 className="font-frank mt-1 text-xl font-bold tracking-tight text-slate-100 sm:text-2xl">
               {t("productivity.heroTitle")}
             </h1>
-            <p className="mt-1 text-sm text-slate-600">
+            <p className="mt-1 text-sm text-slate-400">
               {t("productivity.heroSubtitle")}
             </p>
           </div>
@@ -590,15 +590,15 @@ export default function ProductivityPage() {
           </button>
         </div>
 
-        <div className="border-b border-white/40 px-4 sm:px-6">
+        <div className="border-b border-white/10 px-4 sm:px-6">
           <div className="flex gap-0">
             <button
               type="button"
               onClick={() => setTab("contracts")}
               className={`relative flex-1 border-b-2 py-3 text-sm font-semibold transition sm:flex-none sm:px-6 ${
                 tab === "contracts"
-                  ? "border-[#C5A059] text-slate-900 shadow-[0_2px_12px_rgba(197,160,89,0.25)]"
-                  : "border-transparent text-slate-600 hover:text-slate-900"
+                  ? "border-[#C5A059] text-slate-100 shadow-[0_2px_12px_rgba(197,160,89,0.25)]"
+                  : "border-transparent text-slate-400 hover:text-slate-100"
               }`}
             >
               {t("productivity.tabContracts")}
@@ -608,8 +608,8 @@ export default function ProductivityPage() {
               onClick={() => setTab("tasks")}
               className={`relative flex-1 border-b-2 py-3 text-sm font-semibold transition sm:flex-none sm:px-6 ${
                 tab === "tasks"
-                  ? "border-[#C5A059] text-slate-900 shadow-[0_2px_12px_rgba(197,160,89,0.25)]"
-                  : "border-transparent text-slate-600 hover:text-slate-900"
+                  ? "border-[#C5A059] text-slate-100 shadow-[0_2px_12px_rgba(197,160,89,0.25)]"
+                  : "border-transparent text-slate-400 hover:text-slate-100"
               }`}
             >
               {t("productivity.tabTasks")}
@@ -621,7 +621,7 @@ export default function ProductivityPage() {
 
         {!isLoading && loadError && (
           <div
-            className="m-4 flex flex-col gap-3 rounded-xl border border-red-300/70 bg-white/45 px-4 py-4 text-sm text-red-900 backdrop-blur-xl sm:m-6 sm:flex-row sm:items-center sm:justify-between"
+            className="m-4 flex flex-col gap-3 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-4 text-sm text-red-200 backdrop-blur-xl sm:m-6 sm:flex-row sm:items-center sm:justify-between"
             role="alert"
           >
             <p>{loadError}</p>
@@ -639,7 +639,7 @@ export default function ProductivityPage() {
           <div className="p-4 sm:p-6">
             {actionError && (
               <div
-                className="mb-4 rounded-xl border border-amber-300/70 bg-white/45 px-4 py-3 text-sm text-amber-950 backdrop-blur-xl"
+                className="mb-4 rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-200 backdrop-blur-xl"
                 role="status"
               >
                 {actionError}
@@ -648,19 +648,19 @@ export default function ProductivityPage() {
             {tab === "contracts" && (
               <div className="grid gap-4 sm:grid-cols-2">
                 {sortedContracts.length === 0 && (
-                  <p className="col-span-full py-10 text-center text-sm text-slate-600">
+                  <p className="col-span-full py-10 text-center text-sm text-slate-400">
                     {t("productivity.contractEmpty")}
                   </p>
                 )}
                 {sortedContracts.map((c) => (
                   <article
                     key={c.id}
-                    className={`flex flex-col rounded-xl border border-white/50 p-4 shadow-sm backdrop-blur-xl transition hover:border-white hover:shadow-md ${glassPanelNested}`}
+                    className={`flex flex-col rounded-xl border border-white/10 p-4 shadow-sm backdrop-blur-xl transition hover:border-white hover:shadow-md ${glassPanelNested}`}
                   >
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0">
-                        <h3 className="font-frank font-bold text-slate-900">{c.title}</h3>
-                        <p className="mt-1 text-sm text-slate-600">{c.partyName}</p>
+                        <h3 className="font-frank font-bold text-slate-100">{c.title}</h3>
+                        <p className="mt-1 text-sm text-slate-400">{c.partyName}</p>
                       </div>
                       <span
                         className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset backdrop-blur-sm ${statusStyles(c.status)}`}
@@ -695,10 +695,10 @@ export default function ProductivityPage() {
                         </svg>
                       </button>
                       {menuOpenId === c.id && (
-                        <div className="absolute inset-x-0 z-10 mt-1 overflow-hidden rounded-xl border border-white/40 bg-white/55 py-1 shadow-lg backdrop-blur-xl">
+                        <div className="absolute inset-x-0 z-10 mt-1 overflow-hidden rounded-xl border border-white/10 bg-slate-900/80 py-1 shadow-lg backdrop-blur-xl">
                           <button
                             type="button"
-                            className="block w-full px-4 py-2.5 text-start text-sm text-slate-800 hover:bg-white/50"
+                            className="block w-full px-4 py-2.5 text-start text-sm text-slate-200 hover:bg-white/[0.06]"
                             onClick={() => {
                               setViewContract(c);
                               setMenuOpenId(null);
@@ -708,7 +708,7 @@ export default function ProductivityPage() {
                           </button>
                           <button
                             type="button"
-                            className="block w-full px-4 py-2.5 text-start text-sm font-semibold text-[#8a6d3d] hover:bg-[#C5A059]/15 disabled:cursor-not-allowed disabled:opacity-40"
+                            className="block w-full px-4 py-2.5 text-start text-sm font-semibold text-[#e8c987] hover:bg-[#C5A059]/15 disabled:cursor-not-allowed disabled:opacity-40"
                             disabled={
                               c.status !== "pending_signature" ||
                               signingContractId === c.id
@@ -728,9 +728,9 @@ export default function ProductivityPage() {
             )}
 
             {tab === "tasks" && (
-              <ul className="divide-y divide-white/30 overflow-hidden rounded-2xl border border-white/40 bg-white/45 backdrop-blur-xl">
+              <ul className="divide-y divide-white/[0.06] overflow-hidden rounded-2xl border border-white/10 bg-white/[0.04] backdrop-blur-xl">
                 {sortedTasks.length === 0 && (
-                  <li className="px-4 py-10 text-center text-sm text-slate-600">
+                  <li className="px-4 py-10 text-center text-sm text-slate-400">
                     {t("productivity.tasksEmpty")}
                   </li>
                 )}
@@ -738,7 +738,7 @@ export default function ProductivityPage() {
                   <li
                     key={task.id}
                     className={`flex flex-col gap-3 p-4 transition sm:flex-row sm:items-center sm:gap-4 ${
-                      task.done ? "bg-white/35" : "bg-white/20"
+                      task.done ? "bg-white/[0.03]" : "bg-white/[0.02]"
                     }`}
                   >
                     <label className="flex flex-1 cursor-pointer items-start gap-3">
@@ -751,14 +751,14 @@ export default function ProductivityPage() {
                       />
                       <span className="min-w-0">
                         <span
-                          className={`block font-medium text-slate-900 ${
+                          className={`block font-medium text-slate-100 ${
                             task.done ? "text-slate-500 line-through" : ""
                           }`}
                         >
                           {task.title}
                         </span>
                         {task.description && (
-                          <span className="mt-0.5 block text-sm text-slate-600">
+                          <span className="mt-0.5 block text-sm text-slate-400">
                             {task.description}
                           </span>
                         )}
@@ -770,7 +770,7 @@ export default function ProductivityPage() {
                       >
                         {taskPriorityLabel(task.priority, t)}
                       </span>
-                      <span className="text-xs font-medium text-slate-600">
+                      <span className="text-xs font-medium text-slate-400">
                         {t("productivity.duePrefix")}{" "}
                         {task.dueDate || "—"}
                       </span>
@@ -783,9 +783,9 @@ export default function ProductivityPage() {
         )}
       </div>
 
-      <p className="mt-4 text-center text-xs text-slate-600">
+      <p className="mt-4 text-center text-xs text-slate-400">
         {t("productivity.vaultHint")}{" "}
-        <Link href="/vault" className="font-semibold text-[#8a6d3d] hover:text-slate-900">
+        <Link href="/vault" className="font-semibold text-[#e8c987] hover:text-slate-100">
           {t("productivity.vaultLink")}
         </Link>
       </p>

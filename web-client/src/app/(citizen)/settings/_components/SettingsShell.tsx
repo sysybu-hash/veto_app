@@ -74,16 +74,16 @@ function SettingsChrome({
         )}
 
         <div>
-          <h1 className="font-frank text-2xl font-bold tracking-tight text-slate-900">
+          <h1 className="font-frank text-2xl font-bold tracking-tight text-slate-100">
             {tr("settings.title")}
           </h1>
-          <p className="font-heebo mt-1 text-sm text-slate-600">
+          <p className="font-heebo mt-1 text-sm text-slate-400">
             {tr("settings.shellSubtitle")}
           </p>
         </div>
 
         <nav
-          className="flex flex-wrap gap-2 rounded-2xl border border-white/40 bg-white/35 p-2 backdrop-blur-md"
+          className="flex flex-wrap gap-2 rounded-2xl border border-white/10 bg-white/[0.03] p-2 backdrop-blur-md"
           aria-label="Settings sections"
         >
           {TABS.map((tab) => {
@@ -94,8 +94,8 @@ function SettingsChrome({
                 href={`${settingsBase}?tab=${tab.tab}`}
                 className={`rounded-xl px-3 py-2 text-center text-xs font-semibold sm:flex-1 sm:px-4 sm:text-sm ${
                   active
-                    ? "border border-[#C5A059]/50 bg-[#C5A059]/25 text-slate-900 shadow-[0_0_14px_rgba(197,160,89,0.3)]"
-                    : `${btnSecondaryGlass} border-transparent bg-white/30`
+                    ? "border border-[#C5A059]/50 bg-[#C5A059]/25 text-slate-100 shadow-[0_0_14px_rgba(197,160,89,0.3)]"
+                    : `${btnSecondaryGlass} border-transparent bg-white/[0.03]`
                 }`}
               >
                 {tr(tab.labelKey)}
@@ -105,16 +105,16 @@ function SettingsChrome({
         </nav>
 
         {loading ? (
-          <div className="h-64 animate-pulse rounded-2xl border border-white/35 bg-white/30 backdrop-blur-md" />
+          <div className="h-64 animate-pulse rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-md" />
         ) : (
           children
         )}
 
         {!loading && (
-          <div className="mt-2 flex flex-col gap-3 border-t border-white/35 pt-6">
+          <div className="mt-2 flex flex-col gap-3 border-t border-white/10 pt-6">
             {error && (
               <p
-                className="font-heebo rounded-xl border border-red-300/80 bg-red-100/45 px-3 py-2 text-sm text-red-900 backdrop-blur-md"
+                className="font-heebo rounded-xl border border-red-500/30 bg-red-500/15 px-3 py-2 text-sm text-red-200 backdrop-blur-md"
                 role="alert"
               >
                 {error}
@@ -122,7 +122,7 @@ function SettingsChrome({
             )}
 
             {message && (
-              <p className="font-heebo rounded-xl border border-emerald-300/80 bg-emerald-100/45 px-3 py-2 text-sm text-emerald-950 backdrop-blur-md">
+              <p className="font-heebo rounded-xl border border-emerald-500/30 bg-emerald-500/15 px-3 py-2 text-sm text-emerald-200 backdrop-blur-md">
                 {message}
               </p>
             )}
@@ -141,7 +141,7 @@ function SettingsChrome({
             <button
               type="button"
               onClick={handleLogout}
-              className="font-heebo w-full py-3 text-center text-sm font-semibold text-red-800 transition hover:text-red-950"
+              className="font-heebo w-full py-3 text-center text-sm font-semibold text-red-300 transition hover:text-red-200"
             >
               {tr("settings.logout")}
             </button>

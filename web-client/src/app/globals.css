@@ -31,9 +31,25 @@
   }
 }
 
-body {
-  background: transparent;
-  color: inherit;
+
+/* === VETO Dark — רקעי מערכת (Wave 1) === */
+.veto-bg-glow {
+  pointer-events: none;
+  opacity: 0.35;
+  background:
+    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(197, 160, 89, 0.25), transparent 60%),
+    radial-gradient(ellipse 60% 40% at 80% 90%, rgba(197, 160, 89, 0.1), transparent 60%);
+}
+
+.veto-bg-grid {
+  pointer-events: none;
+  opacity: 0.04;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.6) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.6) 1px, transparent 1px);
+  background-size: 64px 64px;
+  -webkit-mask-image: radial-gradient(ellipse at center, black 40%, transparent 80%);
+          mask-image: radial-gradient(ellipse at center, black 40%, transparent 80%);
 }
 
 @keyframes sos-pulse {

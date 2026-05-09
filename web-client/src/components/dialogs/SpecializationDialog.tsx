@@ -35,16 +35,16 @@ export function SpecializationDialog({
 
   return (
     <div className="fixed inset-0 z-[90] flex items-center justify-center bg-slate-900/40 p-4 backdrop-blur-sm">
-      <div className="w-full max-w-md overflow-hidden rounded-xl bg-white shadow-xl animate-in fade-in zoom-in-95 duration-200">
-        <div className="flex items-center justify-between border-b border-slate-100 p-6">
-          <h2 className="text-xl font-bold text-slate-800">
+      <div className="w-full max-w-md overflow-hidden rounded-xl border border-white/10 bg-slate-900/95 shadow-2xl backdrop-blur-xl animate-in fade-in zoom-in-95 duration-200">
+        <div className="flex items-center justify-between border-b border-white/10 p-6">
+          <h2 className="text-xl font-bold text-slate-100">
             {t("dialog.chooseSpecialization")}
           </h2>
           <button
             type="button"
             onClick={onClose}
             aria-label={t("common.close")}
-            className="text-slate-400 transition hover:text-slate-600"
+            className="text-slate-400 transition hover:text-white"
           >
             ✕
           </button>
@@ -58,8 +58,8 @@ export function SpecializationDialog({
               onClick={() => setSelected(spec.id)}
               className={`flex flex-col items-center gap-2 rounded-lg border p-4 text-sm font-medium transition ${
                 selected === spec.id
-                  ? "border-[#C5A059] bg-[#f6efe1]/50 text-slate-900 shadow-sm"
-                  : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50"
+                  ? "border-[#C5A059] bg-[#C5A059]/15 text-[#e8c987] shadow-[0_0_16px_rgba(197,160,89,0.25)]"
+                  : "border-white/10 bg-white/[0.04] text-slate-200 hover:border-white/20 hover:bg-white/[0.08]"
               }`}
             >
               <span className="text-2xl">{spec.icon}</span>
@@ -68,11 +68,11 @@ export function SpecializationDialog({
           ))}
         </div>
 
-        <div className="flex justify-end gap-3 border-t border-slate-100 bg-slate-50 p-6">
+        <div className="flex justify-end gap-3 border-t border-white/10 bg-slate-950/60 p-6">
           <button
             type="button"
             onClick={onClose}
-            className="rounded-md px-4 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-200"
+            className="rounded-md px-4 py-2 text-sm font-medium text-slate-300 transition hover:bg-white/[0.08] hover:text-white"
           >
             {t("common.cancel")}
           </button>
@@ -80,10 +80,10 @@ export function SpecializationDialog({
             type="button"
             disabled={!selected}
             onClick={() => selected && onSelect(selected)}
-            className={`rounded-md px-6 py-2 text-sm font-medium transition ${
+            className={`rounded-md px-6 py-2 text-sm font-bold transition ${
               selected
-                ? "bg-[#C5A059] text-white shadow-sm hover:bg-[#b08d4a]"
-                : "cursor-not-allowed bg-slate-200 text-slate-400"
+                ? "bg-[#C5A059] text-slate-950 shadow-[0_8px_24px_-8px_rgba(197,160,89,0.5)] hover:bg-[#d4b06a]"
+                : "cursor-not-allowed bg-white/[0.06] text-slate-500"
             }`}
           >
             {t("common.continue")}

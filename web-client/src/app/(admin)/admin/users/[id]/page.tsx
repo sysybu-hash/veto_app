@@ -5,14 +5,14 @@ type Props = { params: Promise<{ id: string }> };
 export default async function AdminUserDetailPage({ params }: Props) {
   const { id } = await params;
   return (
-    <div className="min-h-screen bg-slate-50 p-8" dir="rtl">
-      <div className="mx-auto max-w-lg rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
-        <h1 className="font-serif text-2xl font-bold text-slate-900">
+    <div className="min-h-screen bg-slate-950 p-8" dir="rtl">
+      <div className="mx-auto max-w-lg rounded-2xl border border-white/10 bg-white/[0.04] p-8 backdrop-blur-xl">
+        <h1 className="font-serif text-2xl font-bold text-slate-100">
           ניהול משתמש
         </h1>
-        <p className="mt-2 text-sm text-slate-600">
+        <p className="mt-2 text-sm text-slate-400">
           מזהה פנימי (Prisma):{" "}
-          <code className="rounded bg-slate-100 px-1 text-xs">{id}</code>
+          <code className="rounded bg-white/[0.04] px-1 text-xs">{id}</code>
         </p>
         <p className="mt-4 text-sm text-slate-500">
           דף פעולות מנהל יורחב בהמשך (מנוי, הרשאות, היסטוריה).
