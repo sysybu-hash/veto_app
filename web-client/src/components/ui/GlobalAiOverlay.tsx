@@ -2,6 +2,7 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import { Camera, MessageSquare, Mic, ScanLine, Send, X } from "lucide-react";
+import { usePathname } from "next/navigation";
 import {
   useCallback,
   useEffect,
@@ -132,6 +133,7 @@ function ModeToggleButton({
 
 export function GlobalAiOverlay() {
   const { t, locale } = useTranslation();
+  const pathname = usePathname();
   const isOpen = useAiChatStore((s) => s.isOpen);
   const requestedMode = useAiChatStore((s) => s.requestedMode);
   const messages = useAiChatStore((s) => s.messages);
@@ -528,6 +530,10 @@ export function GlobalAiOverlay() {
       : mode === "live"
         ? t("ai.modeHintLive")
         : t("ai.modeHintVision");
+
+  if (pathname.startsWith("/call/")) {
+    return null;
+  }
 
   return (
     <div className="pointer-events-none fixed inset-0 z-50">
