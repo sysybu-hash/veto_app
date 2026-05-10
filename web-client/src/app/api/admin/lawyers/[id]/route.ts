@@ -3,37 +3,38 @@ import { apiUrl, tunnelBypassHeaders } from "@/lib/env";
 
 export const dynamic = "force-dynamic";
 
-function unauthorized() {
-  return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
-}
-
-async function proxy(req: NextRequest, method: "GET" | "POST") {
+async function proxy(
+  req: NextRequest,
+  ctx: { params: Promise<{ id: string }> },
+  method: "PUT" | "DELETE",
+) {
   const auth = req.headers.get("authorization");
-  if (!auth?.startsWith("Bearer ")) return unauthorized();
-
+  if (!auth?.startsWith("Bearer ")) {
+    return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+  }
+  const { id } = await ctx.params;
+  if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
   let backendUrl: string;
   try {
-    backendUrl = apiUrl("/api/admin/users");
+    backendUrl = apiUrl(`/api/admin/lawyers/${encodeURIComponent(id)}`);
   } catch {
     return NextResponse.json(
       { error: "NEXT_PUBLIC_API_ORIGIN is not configured." },
       { status: 503 },
     );
   }
-
   try {
     const init: RequestInit = {
       method,
       headers: {
         Authorization: auth,
-        ...(method === "POST" ? { "Content-Type": "application/json" } : {}),
+        ...(method === "PUT" ? { "Content-Type": "application/json" } : {}),
         ...tunnelBypassHeaders(),
       },
       cache: "no-store",
       signal: AbortSignal.timeout(30_000),
     };
-    if (method === "POST") init.body = await req.text();
-
+    if (method === "PUT") init.body = await req.text();
     const upstream = await fetch(backendUrl, init);
     const text = await upstream.text();
     const ct = upstream.headers.get("content-type") ?? "application/json";
@@ -43,11 +44,15 @@ async function proxy(req: NextRequest, method: "GET" | "POST") {
     });
   } catch {
     return NextResponse.json(
-      { error: "Upstream users API unavailable." },
+      { error: "Upstream lawyer API unavailable." },
       { status: 502 },
     );
   }
 }
 
-export const GET = (req: NextRequest) => proxy(req, "GET");
-export const POST = (req: NextRequest) => proxy(req, "POST");
+export const PUT = (req: NextRequest, ctx: { params: Promise<{ id: string }> }) =>
+  proxy(req, ctx, "PUT");
+export const DELETE = (
+  req: NextRequest,
+  ctx: { params: Promise<{ id: string }> },
+) => proxy(req, ctx, "DELETE");

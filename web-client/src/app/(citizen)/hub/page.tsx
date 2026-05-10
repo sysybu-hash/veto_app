@@ -5,6 +5,12 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { triggerSosAlert } from "@/app/actions/sos";
 import { fetchProfile, type UserProfile } from "@/api/userApi";
+import {
+  createConsultationOrder,
+  fetchMyPlan,
+  PRICING,
+  type MyPlan,
+} from "@/api/paymentApi";
 import { CitizenBottomNav } from "@/components/citizen/CitizenBottomNav";
 import { SpecializationDialog } from "@/components/dialogs/SpecializationDialog";
 import { btnPrimaryDark, btnSecondaryGlass, glassPanelNested } from "@/lib/vetoGlass";
@@ -64,7 +70,9 @@ export default function CitizenHubPage() {
   const [sosDialogOpen, setSosDialogOpen] = useState(false);
   const [specializationDialogOpen, setSpecializationDialogOpen] = useState(false);
   const [callTypeDialogOpen, setCallTypeDialogOpen] = useState(false);
+  const [chosenCallType, setChosenCallType] = useState<SessionCallType | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [myPlan, setMyPlan] = useState<MyPlan | null>(null);
 
   const isSearching = useEmergencyStore((s) => s.isSearching);
   const lawyerFound = useEmergencyStore((s) => s.lawyerFound);
@@ -98,6 +106,24 @@ export default function CitizenHubPage() {
       cancelled = true;
     };
   }, []);
+
+  useEffect(() => {
+    if (!getJwt()) return;
+    let cancelled = false;
+    void fetchMyPlan()
+      .then((p) => { if (!cancelled) setMyPlan(p); })
+      .catch(() => { if (!cancelled) setMyPlan(null); });
+    return () => { cancelled = true; };
+  }, []);
+
+  const startConsultationCheckout = useCallback(async () => {
+    try {
+      const r = await createConsultationOrder();
+      window.location.assign(r.approveUrl);
+    } catch (e) {
+      setErrorMessage(e instanceof Error ? e.message : t("hub.errGeneric"));
+    }
+  }, [setErrorMessage, t]);
 
   useEffect(() => {
     if (!getJwt()) return;
@@ -144,13 +170,23 @@ export default function CitizenHubPage() {
 
     const onVetoError = (raw: unknown) => {
       if (cancelled) return;
+      const obj = raw && typeof raw === "object" ? (raw as Record<string, unknown>) : null;
+      const code = typeof obj?.code === "string" ? obj.code : null;
       const msg =
-        raw &&
-        typeof raw === "object" &&
-        "message" in raw &&
-        typeof (raw as { message?: unknown }).message === "string"
-          ? (raw as { message: string }).message
-          : t("hub.errGeneric");
+        typeof obj?.message === "string" ? (obj.message as string) : t("hub.errGeneric");
+
+      if (code === "NO_PLAN" || code === "DEMO_BLOCKED") {
+        setErrorMessage(
+          code === "DEMO_BLOCKED" ? t("hub.errDemoBlocked") : t("hub.errNoPlan"),
+        );
+        router.push("/plans");
+        return;
+      }
+      if (code === "PAYMENT_REQUIRED") {
+        setErrorMessage(t("hub.errPaymentRequired"));
+        void startConsultationCheckout();
+        return;
+      }
       setErrorMessage(msg);
     };
 
@@ -198,7 +234,7 @@ export default function CitizenHubPage() {
       sock.off("veto_error", onVetoError);
       sock.off("case_taken", onCaseTaken);
     };
-  }, [router, setErrorMessage, setLawyerFound, setSessionReady, t]);
+  }, [router, setErrorMessage, setLawyerFound, setSessionReady, startConsultationCheckout, t]);
 
   const handleSos = useCallback((specializationId: SpecializationId) => {
     if (!getJwt()) {
@@ -276,6 +312,19 @@ export default function CitizenHubPage() {
     );
   }, [locale, router, setErrorMessage, startSearch]);
 
+  const planBlocksSos =
+    myPlan !== null &&
+    !myPlan.paymentExempt &&
+    (myPlan.planId === null || myPlan.planId === "demo");
+
+  const onSosPress = useCallback(() => {
+    if (planBlocksSos) {
+      router.push("/plans");
+      return;
+    }
+    setSosDialogOpen(true);
+  }, [planBlocksSos, router]);
+
   const confirmSos = useCallback(() => {
     setSosDialogOpen(false);
     setSpecializationDialogOpen(true);
@@ -301,8 +350,37 @@ export default function CitizenHubPage() {
     })();
     if (!sock.connected) sock.connect();
     sock.emit("citizen_chose_session", { eventId, callType });
+    setChosenCallType(callType);
     setCallTypeDialogOpen(false);
   }, []);
+
+  // Derived: only meaningful while there's an active SOS session.
+  const effectiveChosenCallType =
+    isSearching || lawyerFound ? chosenCallType : null;
+
+  useEffect(() => {
+    if (!isSearching || lawyerFound) return;
+    const id = window.setTimeout(() => {
+      if (
+        useEmergencyStore.getState().isSearching &&
+        !useEmergencyStore.getState().lawyerFound
+      ) {
+        setErrorMessage(t("hub.errSearchTimeout"));
+      }
+    }, 90_000);
+    return () => window.clearTimeout(id);
+  }, [isSearching, lawyerFound, setErrorMessage, t]);
+
+  useEffect(() => {
+    if (!chosenCallType) return;
+    const id = window.setTimeout(() => {
+      if (!useEmergencyStore.getState().sessionReady) {
+        setChosenCallType(null);
+        setErrorMessage(t("hub.errConnectTimeout"));
+      }
+    }, 30_000);
+    return () => window.clearTimeout(id);
+  }, [chosenCallType, setErrorMessage, t]);
 
   return (
     <>
@@ -314,31 +392,65 @@ export default function CitizenHubPage() {
           <p className="mt-2 text-sm text-slate-600">{t("hub.subtitle")}</p>
         </div>
 
-        <div className="w-full rounded-2xl border border-[#C5A059]/35 bg-[#C5A059]/10 px-4 py-3 text-sm shadow-sm backdrop-blur-xl">
+        <Link
+          href="/plans"
+          className="block w-full rounded-2xl border border-[#C5A059]/35 bg-[#C5A059]/10 px-4 py-3 text-sm shadow-sm backdrop-blur-xl transition hover:border-[#C5A059]/60"
+        >
           <div className="flex items-center justify-between gap-3">
-            <div className="min-w-0">
-              <p className="font-bold text-slate-900">המנוי המחובר</p>
-              <p className="mt-0.5 truncate text-xs text-slate-600">
+            <div className="min-w-0 text-right">
+              <p className="font-bold text-slate-100">
+                {myPlan?.paymentExempt
+                  ? "חשבון פטור"
+                  : myPlan?.planId === "family"
+                    ? "מנוי משפחתי"
+                    : myPlan?.planId === "standard"
+                      ? "מנוי רגיל"
+                      : myPlan?.planId === "demo"
+                        ? "מנוי דמו · 30 יום"
+                        : "אין מנוי פעיל"}
+              </p>
+              <p className="mt-0.5 truncate text-xs text-slate-400">
                 {profile?.full_name || profile?.phone || "משתמש VETO"}
+                {myPlan && myPlan.consultationsIncluded > 0 && (
+                  <span className="ms-2 text-amber-300">
+                    · {myPlan.consultationsRemaining}/{myPlan.consultationsIncluded} שיחות
+                  </span>
+                )}
               </p>
             </div>
-            <span className={`shrink-0 rounded-full px-3 py-1 text-xs font-black ${
-              profile?.is_payment_exempt || profile?.is_subscribed
-                ? "bg-emerald-100 text-emerald-900"
-                : "bg-amber-100 text-amber-950"
-            }`}>
-              {profile?.is_payment_exempt
+            <span
+              className={`shrink-0 rounded-full px-3 py-1 text-xs font-black ${
+                myPlan?.paymentExempt || (myPlan?.planId && myPlan.planId !== "demo")
+                  ? "border border-emerald-500/30 bg-emerald-500/15 text-emerald-300"
+                  : myPlan?.planId === "demo"
+                    ? "border border-sky-500/30 bg-sky-500/15 text-sky-300"
+                    : "border border-amber-500/30 bg-amber-500/15 text-amber-300"
+              }`}
+            >
+              {myPlan?.paymentExempt
                 ? "פטור"
-                : profile?.is_subscribed
-                  ? "פעיל"
-                  : "לא פעיל"}
+                : myPlan?.planId === "demo"
+                  ? "דמו"
+                  : myPlan?.planId
+                    ? "פעיל"
+                    : "שדרוג"}
             </span>
           </div>
-        </div>
+          {planBlocksSos && (
+            <p className="mt-2 text-xs text-amber-200">
+              לחיצה על SOS תוביל לדף הצטרפות. שדרגו למנוי כדי להפעיל שיחה עם עורך דין.
+            </p>
+          )}
+          {myPlan?.planId === "standard" && (
+            <p className="mt-2 text-xs text-slate-400">
+              כל שיחה מחויבת ב-₪{PRICING.consultationIls.toFixed(2)}; {PRICING.freeCallMinutes} דקות ראשונות כלולות.
+            </p>
+          )}
+        </Link>
 
         <button
           type="button"
-          onClick={() => setSosDialogOpen(true)}
+          onClick={onSosPress}
           disabled={isSearching}
           className="sos-btn relative flex h-44 w-44 items-center justify-center rounded-full border-4 border-red-950 bg-red-700 text-lg font-bold text-white shadow-2xl shadow-red-900/50 transition enabled:cursor-pointer enabled:hover:bg-red-600 enabled:active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-70"
         >
@@ -346,15 +458,75 @@ export default function CitizenHubPage() {
         </button>
 
         {isSearching && !lawyerFound && (
-          <p className="text-center text-sm font-medium text-amber-800">
-            {t("hub.searching")}
+          <div
+            role="status"
+            aria-live="polite"
+            className="w-full rounded-2xl border border-[#C5A059]/35 bg-[#C5A059]/10 p-5 text-right shadow-lg backdrop-blur-xl"
+          >
+            <div className="flex items-center gap-3">
+              <span
+                aria-hidden="true"
+                className="inline-block h-5 w-5 animate-spin rounded-full border-2 border-[#C5A059] border-t-transparent"
+              />
+              <p className="font-frank text-base font-bold text-amber-200">
+                {t("hub.searchingTitle")}
+              </p>
+            </div>
+            <p className="mt-2 text-sm text-slate-200">
+              {t("hub.searchingSubtitle")}
+            </p>
+            <ol className="mt-4 space-y-2 text-sm text-slate-300">
+              <li className="flex items-start gap-2">
+                <span aria-hidden="true" className="mt-1 inline-block h-2 w-2 shrink-0 rounded-full bg-emerald-400" />
+                <span>{t("hub.searchingStep1")}</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span aria-hidden="true" className="mt-1 inline-block h-2 w-2 shrink-0 animate-pulse rounded-full bg-amber-300" />
+                <span className="text-amber-100">{t("hub.searchingStep2")}</span>
+              </li>
+              <li className="flex items-start gap-2 opacity-60">
+                <span aria-hidden="true" className="mt-1 inline-block h-2 w-2 shrink-0 rounded-full bg-slate-500" />
+                <span>{t("hub.searchingStep3")}</span>
+              </li>
+            </ol>
+            <p className="mt-3 text-xs text-slate-400">{t("hub.searchingHint")}</p>
+            <div className="mt-4 flex justify-start">
+              <button
+                type="button"
+                onClick={() => reset()}
+                className={`${btnSecondaryGlass} px-3 py-1.5 text-xs`}
+              >
+                {t("hub.cancelSearch")}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {lawyerFound && lawyerName && !effectiveChosenCallType && (
+          <p className="text-center text-sm font-medium text-emerald-300">
+            {t("hub.lawyerAccepted").replace("{name}", lawyerName)}
           </p>
         )}
 
-        {lawyerFound && lawyerName && (
-          <p className="text-center text-sm font-medium text-emerald-800">
-            {t("hub.lawyerAccepted").replace("{name}", lawyerName)}
-          </p>
+        {lawyerFound && effectiveChosenCallType && (
+          <div
+            role="status"
+            aria-live="polite"
+            className="w-full rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-5 text-right shadow-lg backdrop-blur-xl"
+          >
+            <div className="flex items-center gap-3">
+              <span
+                aria-hidden="true"
+                className="inline-block h-5 w-5 animate-spin rounded-full border-2 border-emerald-300 border-t-transparent"
+              />
+              <p className="font-frank text-base font-bold text-emerald-200">
+                {t("hub.connectingTitle")}
+              </p>
+            </div>
+            <p className="mt-2 text-sm text-slate-200">
+              {t("hub.connectingSubtitle")}
+            </p>
+          </div>
         )}
 
         {statusMessage && (
@@ -445,7 +617,6 @@ export default function CitizenHubPage() {
         <div
           className="fixed inset-0 z-[95] flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm"
           role="presentation"
-          onClick={() => setCallTypeDialogOpen(false)}
         >
           <div
             role="dialog"

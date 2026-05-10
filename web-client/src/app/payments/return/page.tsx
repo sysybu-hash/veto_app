@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useState } from "react";
 import {
   captureSubscriptionPayment,
@@ -16,6 +16,7 @@ import { useTranslation } from "@/lib/i18n/LocaleProvider";
 
 function PaymentReturnInner() {
   const { t, locale } = useTranslation();
+  const router = useRouter();
   const searchParams = useSearchParams();
   const [status, setStatus] = useState<"working" | "ok" | "cancel" | "err">(
     "working",
@@ -30,9 +31,26 @@ function PaymentReturnInner() {
         return;
       }
       try {
-        const res = await captureSubscriptionPayment(orderId);
+        const type = (searchParams.get("type") ?? "subscription") as
+          | "plan"
+          | "subscription"
+          | "consultation"
+          | "overtime";
+        const planParam = searchParams.get("planId");
+        const planId =
+          planParam === "standard" || planParam === "family"
+            ? planParam
+            : undefined;
+        const res = await captureSubscriptionPayment(orderId, type, planId);
         if (res.success) {
           setStatus("ok");
+          if (type === "consultation") {
+            window.setTimeout(() => router.replace("/hub"), 1500);
+          } else if (type === "plan" || type === "subscription") {
+            window.setTimeout(() => router.replace("/plans"), 1500);
+          } else if (type === "overtime") {
+            window.setTimeout(() => router.replace("/hub"), 1500);
+          }
         } else {
           setStatus("err");
           setDetail(t("payments.returnCaptureFailed"));
@@ -42,7 +60,7 @@ function PaymentReturnInner() {
         setDetail(e instanceof Error ? e.message : t("payments.returnError"));
       }
     },
-    [t],
+    [router, searchParams, t],
   );
 
   useEffect(() => {
@@ -57,7 +75,12 @@ function PaymentReturnInner() {
         return;
       }
 
-      if (type !== "subscription") {
+      if (
+        type !== "subscription" &&
+        type !== "plan" &&
+        type !== "consultation" &&
+        type !== "overtime"
+      ) {
         setStatus("ok");
         setDetail(t("payments.returnNonSubscription"));
         return;

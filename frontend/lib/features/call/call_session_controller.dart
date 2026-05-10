@@ -265,7 +265,7 @@ class CallSessionController extends ChangeNotifier {
       }
     } catch (_) {}
 
-    if (kIsWeb && !args.chatOnly) {
+    if (kIsWeb && !args.chatOnly && _webCloudRecordingStarted) {
       try {
         final m = await _callApi.stopCloudRecording(args.eventId);
         if (m != null && m['pending'] == true) {
