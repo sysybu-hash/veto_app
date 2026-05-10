@@ -123,6 +123,8 @@ const register = async (req, res, next) => {
       preferred_language = 'en',
       email,
       license_number,
+      specializations,
+      years_of_experience,
     } = req.body;
 
     if (!full_name || !phone) {
@@ -146,6 +148,14 @@ const register = async (req, res, next) => {
     const payload = { full_name, phone: normalizedPhone, preferred_language };
     if (email)          payload.email          = email;
     if (license_number) payload.license_number = license_number;
+    if (role === 'lawyer') {
+      if (Array.isArray(specializations) && specializations.length > 0) {
+        payload.specializations = specializations.filter((s) => typeof s === 'string').slice(0, 10);
+      }
+      const yrs = Number(years_of_experience);
+      if (Number.isFinite(yrs) && yrs >= 0) payload.years_of_experience = Math.min(70, Math.floor(yrs));
+      payload.is_approved = false; // requires admin approval
+    }
 
     const newDoc = await Model.create(payload);
 

@@ -14,6 +14,7 @@ import AgoraRTC, {
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { getPublicAgoraAppId } from "@/lib/env";
+import { PRICING, createOvertimeOrder } from "@/api/paymentApi";
 import { useTranslation } from "@/lib/i18n/LocaleProvider";
 import { connectSocket, getSocket } from "@/lib/socketClient";
 import { useEmergencyStore } from "@/store/useEmergencyStore";
@@ -36,6 +37,29 @@ function CallInner({ channel }: { channel: string }) {
   const [chatDraft, setChatDraft] = useState("");
   const [chatMessages, setChatMessages] = useState<CallChatMessage[]>([]);
   const [roomStatus, setRoomStatus] = useState<string | null>(null);
+  const [callStartedAt] = useState<number>(() => Date.now());
+  const [elapsedSec, setElapsedSec] = useState(0);
+  const [extendDecision, setExtendDecision] = useState<null | "asked" | "extended" | "ended">(null);
+  const [summary, setSummary] = useState<null | {
+    minutes: number;
+    base: number;
+    overtime: number;
+    total: number;
+  }>(null);
+
+  useEffect(() => {
+    const id = window.setInterval(() => {
+      setElapsedSec(Math.floor((Date.now() - callStartedAt) / 1000));
+    }, 1000);
+    return () => window.clearInterval(id);
+  }, [callStartedAt]);
+
+  const freeSec = PRICING.freeCallMinutes * 60;
+  useEffect(() => {
+    if (extendDecision === null && elapsedSec >= freeSec) {
+      setExtendDecision("asked");
+    }
+  }, [elapsedSec, freeSec, extendDecision]);
   const appId = getPublicAgoraAppId();
   const chatOnly = session?.callType === "chat";
   const videoSession = session != null && session.callType === "video";
@@ -173,34 +197,43 @@ function CallInner({ channel }: { channel: string }) {
     };
   }, [channel, client]);
 
-  const leave = useCallback(async () => {
+  const computeSummary = useCallback(() => {
+    const minutes = Math.max(1, Math.ceil((Date.now() - callStartedAt) / 60_000));
+    const overtimeMin = Math.max(0, minutes - PRICING.freeCallMinutes);
+    const base = PRICING.consultationIls;
+    const overtime = overtimeMin * PRICING.overtimeIlsPerMin;
+    return { minutes, base, overtime, total: base + overtime };
+  }, [callStartedAt]);
+
+  const finalize = useCallback(async () => {
     try {
       localCameraTrack?.close();
       localMicrophoneTrack?.close();
-    } catch {
-      /* ignore */
-    }
+    } catch {}
     try {
       await client?.leave();
-    } catch {
-      /* ignore */
-    }
+    } catch {}
     try {
       getSocket().emit("call-ended", { roomId: session?.eventId || channel });
-    } catch {
-      /* ignore */
+    } catch {}
+  }, [channel, client, localCameraTrack, localMicrophoneTrack, session]);
+
+  const leave = useCallback(async () => {
+    if (chatOnly) {
+      await finalize();
+      clearCallSession();
+      router.replace("/hub");
+      return;
     }
+    setSummary(computeSummary());
+    setExtendDecision("ended");
+    await finalize();
+  }, [chatOnly, clearCallSession, computeSummary, finalize, router]);
+
+  const closeSummary = useCallback(() => {
     clearCallSession();
     router.replace("/hub");
-  }, [
-    channel,
-    clearCallSession,
-    client,
-    localCameraTrack,
-    localMicrophoneTrack,
-    router,
-    session,
-  ]);
+  }, [clearCallSession, router]);
 
   const sendCallChat = useCallback(() => {
     const text = chatDraft.trim();
@@ -310,8 +343,22 @@ function CallInner({ channel }: { channel: string }) {
     );
   }
 
+  const mm = String(Math.floor(elapsedSec / 60)).padStart(2, "0");
+  const ss = String(elapsedSec % 60).padStart(2, "0");
+  const overSec = Math.max(0, elapsedSec - freeSec);
+  const overtimePreviewIls =
+    Math.ceil(overSec / 60) * PRICING.overtimeIlsPerMin;
+
   return (
     <div className="relative flex min-h-full flex-col bg-black">
+      <div className="absolute left-3 top-3 z-30 rounded-full border border-white/10 bg-black/60 px-3 py-1 text-xs font-mono text-slate-200 backdrop-blur">
+        {mm}:{ss}
+        {overSec > 0 && (
+          <span className="ms-2 text-amber-300">
+            +₪{overtimePreviewIls.toFixed(2)}
+          </span>
+        )}
+      </div>
       <div className="relative flex-1 overflow-hidden">
         {remote ? (
           <RemoteUser
@@ -376,6 +423,91 @@ function CallInner({ channel }: { channel: string }) {
           </button>
         </div>
       </div>
+
+      {extendDecision === "asked" && !summary && (
+        <div className="absolute inset-0 z-40 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-sm rounded-2xl border border-amber-500/40 bg-slate-900 p-5 text-right shadow-2xl">
+            <h3 className="font-frank text-lg font-bold text-amber-200">
+              חלפו {PRICING.freeCallMinutes} דקות
+            </h3>
+            <p className="mt-2 text-sm text-slate-200">
+              להמשיך את השיחה? כל דקה נוספת תחויב ב-₪{PRICING.overtimeIlsPerMin.toFixed(2)}.
+            </p>
+            <div className="mt-5 grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => void leave()}
+                className="rounded-xl bg-red-600 px-4 py-2 text-sm font-semibold text-white"
+              >
+                סיום שיחה
+              </button>
+              <button
+                type="button"
+                onClick={() => setExtendDecision("extended")}
+                className="rounded-xl bg-[#C5A059] px-4 py-2 text-sm font-bold text-black"
+              >
+                להמשיך
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {summary && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-2xl border border-white/10 bg-slate-900 p-6 text-right text-slate-100 shadow-2xl">
+            <h3 className="font-frank text-xl font-bold">סיכום השיחה</h3>
+            <dl className="mt-4 space-y-2 text-sm">
+              <div className="flex justify-between">
+                <dt className="text-slate-400">משך שיחה</dt>
+                <dd>{summary.minutes} דקות</dd>
+              </div>
+              <div className="flex justify-between">
+                <dt className="text-slate-400">תעריף בסיס</dt>
+                <dd>₪{summary.base.toFixed(2)}</dd>
+              </div>
+              <div className="flex justify-between">
+                <dt className="text-slate-400">חיוב על דקות נוספות</dt>
+                <dd>₪{summary.overtime.toFixed(2)}</dd>
+              </div>
+              <div className="mt-3 flex justify-between border-t border-white/10 pt-3 text-base font-bold text-amber-300">
+                <dt>סה״כ לחיוב</dt>
+                <dd>₪{summary.total.toFixed(2)}</dd>
+              </div>
+            </dl>
+            <p className="mt-4 text-xs text-slate-400">
+              {summary.overtime > 0
+                ? "השיחה חרגה מהזמן הכלול. אישור החיוב יעביר אותך לדף תשלום."
+                : "השיחה הסתיימה במסגרת הזמן הכלול."}
+            </p>
+            <div className="mt-5 flex justify-between gap-2">
+              <button
+                type="button"
+                onClick={closeSummary}
+                className="rounded-xl border border-white/10 bg-white/[0.04] px-4 py-2 text-sm font-semibold text-slate-200"
+              >
+                סגירה
+              </button>
+              {summary.overtime > 0 && (
+                <button
+                  type="button"
+                  onClick={async () => {
+                    try {
+                      const r = await createOvertimeOrder(summary.minutes);
+                      window.location.href = r.approveUrl;
+                    } catch {
+                      closeSummary();
+                    }
+                  }}
+                  className="rounded-xl bg-[#C5A059] px-5 py-2 text-sm font-bold text-black"
+                >
+                  אישור ותשלום ₪{summary.overtime.toFixed(2)}
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

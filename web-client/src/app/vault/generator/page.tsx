@@ -39,6 +39,8 @@ interface LegalDocument {
   preamble: string;
   clauses: string[];
   signatures: { role: string; name: string }[];
+  fallback?: boolean;
+  fallbackReason?: string;
 }
 
 /** קטגוריה ב-Prisma: מקור AI_GENERATOR + סוג PDF (שדה יחיד ב-schema) */
@@ -67,6 +69,7 @@ export default function DocumentGeneratorPage() {
   const [selectedType, setSelectedType] = useState<string>(DOCUMENT_TYPES[0]!.id);
   const [customPrompt, setCustomPrompt] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
+  const [noticeMsg, setNoticeMsg] = useState("");
   const [document, setDocument] = useState<LegalDocument | null>(null);
   const documentRef = useRef<HTMLDivElement>(null);
 
@@ -98,6 +101,7 @@ export default function DocumentGeneratorPage() {
 
     setIsGenerating(true);
     setErrorMsg("");
+    setNoticeMsg("");
 
     try {
       const docTypeLabel = DOCUMENT_TYPES.find((x) => x.id === selectedType)?.label;
@@ -110,10 +114,22 @@ export default function DocumentGeneratorPage() {
           docTypeLabel,
         }),
       });
-      if (!res.ok) throw new Error(t("docGenSpec.errorFetch"));
 
-      const data: LegalDocument = await res.json();
+      const data = (await res.json().catch(() => null)) as
+        | (LegalDocument & { error?: string })
+        | null;
+
+      if (!res.ok || !data || !Array.isArray(data.clauses)) {
+        throw new Error(data?.error || t("docGenSpec.errorFetch"));
+      }
+
       setDocument(data);
+      if (data.fallback) {
+        setNoticeMsg(
+          data.fallbackReason ||
+            "נוצרה טיוטה בסיסית משום ששירות ה-AI לא הצליח להשלים את הבקשה כרגע.",
+        );
+      }
     } catch (err) {
       console.error(err);
       setErrorMsg(t("docGenSpec.errorCatch"));
@@ -302,6 +318,12 @@ export default function DocumentGeneratorPage() {
           <div className="mb-4 flex items-start gap-2 rounded-lg bg-red-500/10 p-3 text-sm text-red-600">
             <AlertCircle className="mt-0.5 h-4 w-4" />
             <span>{errorMsg}</span>
+          </div>
+        ) : null}
+        {noticeMsg ? (
+          <div className="mb-4 flex items-start gap-2 rounded-lg border border-amber-400/30 bg-amber-500/10 p-3 text-sm text-amber-200">
+            <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+            <span>{noticeMsg}</span>
           </div>
         ) : null}
         <button
