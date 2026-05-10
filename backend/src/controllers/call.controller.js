@@ -10,6 +10,7 @@
 
 const axios = require('axios');
 const EmergencyEvent = require('../models/EmergencyEvent');
+const User = require('../models/User');
 const { cloudinary } = require('../config/cloudinary');
 const { getGeminiModelId } = require('../config/gemini.config');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
@@ -70,6 +71,13 @@ function computeChargeFromSeconds(seconds) {
     overtimeIls,
     totalIls: +(CONSULTATION_ILS + overtimeIls).toFixed(2),
   };
+}
+
+async function isPaymentExemptUser(user) {
+  if (!user?.userId) return false;
+  if (user.role === 'admin') return true;
+  const account = await User.findById(user.userId).select('manually_added role').lean();
+  return account?.role === 'admin' || account?.manually_added === true;
 }
 
 /**
@@ -413,6 +421,7 @@ exports.finishCallBilling = async (req, res, next) => {
       derivedSeconds,
     );
     const charge = computeChargeFromSeconds(durationSeconds);
+    const paymentExempt = await isPaymentExemptUser(req.user);
 
     event.call_duration_seconds = charge.durationSeconds;
     event.completed_at = event.completed_at || new Date();
@@ -420,10 +429,12 @@ exports.finishCallBilling = async (req, res, next) => {
       event.status = 'completed';
     }
     event.charge_minutes = charge.minutes;
-    event.charge_overtime_minutes = charge.overtimeMinutes;
-    event.charge_amount_ils = charge.overtimeIls;
+    event.charge_overtime_minutes = paymentExempt ? 0 : charge.overtimeMinutes;
+    event.charge_amount_ils = paymentExempt ? 0 : charge.overtimeIls;
     event.charge_calculated_at = new Date();
-    if (charge.overtimeIls <= 0) {
+    if (paymentExempt) {
+      event.charge_status = 'waived';
+    } else if (charge.overtimeIls <= 0) {
       event.charge_status = 'none';
     } else if (event.charge_status !== 'paid' && event.charge_status !== 'waived') {
       event.charge_status = 'pending';
@@ -434,11 +445,12 @@ exports.finishCallBilling = async (req, res, next) => {
       success: true,
       charge: {
         minutes: charge.minutes,
-        baseIls: charge.baseIls,
-        overtimeMinutes: charge.overtimeMinutes,
-        overtimeIls: charge.overtimeIls,
-        totalIls: charge.totalIls,
+        baseIls: paymentExempt ? 0 : charge.baseIls,
+        overtimeMinutes: paymentExempt ? 0 : charge.overtimeMinutes,
+        overtimeIls: paymentExempt ? 0 : charge.overtimeIls,
+        totalIls: paymentExempt ? 0 : charge.totalIls,
         status: event.charge_status,
+        paymentExempt,
       },
     });
   } catch (err) {

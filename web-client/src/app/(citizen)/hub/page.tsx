@@ -345,7 +345,7 @@ export default function CitizenHubPage() {
                 : "bg-amber-100 text-amber-950"
             }`}>
               {profile?.is_payment_exempt
-                ? "פטור"
+                ? "פטור כולל ייעוץ"
                 : profile?.is_subscribed
                   ? "פעיל"
                   : "לא פעיל"}

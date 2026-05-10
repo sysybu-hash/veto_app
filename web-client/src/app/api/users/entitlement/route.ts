@@ -12,6 +12,7 @@ const fallbackEntitlement = {
   subscriptionExpiry: null,
   pendingOvertime: 0,
   paymentExempt: false,
+  consultationExempt: false,
 };
 
 export async function GET(req: NextRequest) {

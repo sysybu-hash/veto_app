@@ -36,6 +36,7 @@ export type Entitlement = {
   subscriptionExpiry?: string | null;
   pendingOvertime?: number;
   paymentExempt?: boolean;
+  consultationExempt?: boolean;
 };
 
 export async function fetchEntitlement(): Promise<Entitlement> {

@@ -42,15 +42,16 @@ router.get('/entitlement', async (req, res, next) => {
     });
 
     const expired = user.subscription_expiry && user.subscription_expiry < new Date();
+    const paymentExempt = user.role === 'admin' || !!user.manually_added;
     let status = 'payment_required';
     let allowed = false;
     let reason = 'No active plan or paid consultation is available.';
     let nextAction = 'pricing';
 
-    if (user.role === 'admin' || user.manually_added) {
+    if (paymentExempt) {
       status = 'exempt';
       allowed = true;
-      reason = 'Account is payment-exempt.';
+      reason = 'Account is payment-exempt, including legal consultations.';
       nextAction = 'sos';
     } else if (pendingOvertime > 0) {
       status = 'overtime_pending';
@@ -78,8 +79,9 @@ router.get('/entitlement', async (req, res, next) => {
       subscriptionExpiry: user.subscription_expiry,
       consultationsIncluded: user.consultations_included || 0,
       consultationsUsed: user.consultations_used || 0,
-      pendingOvertime,
-      paymentExempt: user.role === 'admin' || !!user.manually_added,
+      pendingOvertime: paymentExempt ? 0 : pendingOvertime,
+      paymentExempt,
+      consultationExempt: paymentExempt,
     });
   } catch (err) { next(err); }
 });
