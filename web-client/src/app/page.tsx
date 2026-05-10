@@ -76,6 +76,12 @@ export default function Home() {
           <div className="flex items-center gap-3">
             <LanguageSwitcher className="shrink-0" />
             <Link
+              href="/register?role=lawyer"
+              className="hidden rounded-md border border-white/10 bg-white/[0.03] px-3 py-2 text-sm font-semibold text-slate-200 transition-colors hover:bg-white/[0.07] sm:inline-block"
+            >
+              הצטרפות עורכי דין
+            </Link>
+            <Link
               href="/login"
               className="hidden rounded-md px-3 py-2 text-sm font-semibold text-slate-300 transition-colors hover:text-white sm:inline-block"
             >
@@ -127,6 +133,12 @@ export default function Home() {
           >
             {t("home.ctaSecondary")}
           </a>
+          <Link
+            href="/register?role=lawyer"
+            className="rounded-lg border border-[#C5A059]/30 bg-[#C5A059]/10 px-8 py-4 text-base font-semibold text-[#C5A059] backdrop-blur-sm transition-colors hover:bg-[#C5A059]/15"
+          >
+            הצטרפות עורכי דין
+          </Link>
         </div>
       </main>
 

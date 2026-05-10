@@ -8,6 +8,7 @@ const Lawyer         = require('../models/Lawyer');
 const User           = require('../models/User');
 const EmergencyEvent = require('../models/EmergencyEvent');
 const push           = require('../services/push.service');
+const { PLANS }      = require('../config/pricing');
 const { buildRtcTokenForUid } = require('../services/agoraToken.service');
 
 // ── Build WebRTC room link (replaces WhatsApp/Telegram) ───────
@@ -115,6 +116,78 @@ module.exports = function initDispatch(io) {
       }
 
       try {
+        // 0. Plan / billing gate ─────────────────────────────
+        // Admins and manually-added users bypass; everyone else must hold an
+        // active paid plan AND either have an included consultation credit
+        // remaining OR a paid pending_consultation_token.
+        let billingChargeIls = 0;
+        let consumeToken = false;
+        let consumeCredit = false;
+        if (role !== 'admin') {
+          const u = await User.findById(userId).select(
+            '+pending_consultation_token subscription_plan subscription_expiry consultations_included consultations_used manually_added',
+          );
+          if (!u) {
+            socket.emit('veto_error', { message: 'User not found.' });
+            return;
+          }
+          if (!u.manually_added) {
+            const planId = u.subscription_plan;
+            const plan = planId ? PLANS[planId] : null;
+            const expired = u.subscription_expiry && u.subscription_expiry < new Date();
+            if (!plan || expired) {
+              socket.emit('veto_error', {
+                code: 'NO_PLAN',
+                message: 'Active subscription required to request a lawyer.',
+              });
+              return;
+            }
+            if (!plan.sosAllowed) {
+              socket.emit('veto_error', {
+                code: 'DEMO_BLOCKED',
+                message: 'Demo plan does not include lawyer calls. Please upgrade.',
+              });
+              return;
+            }
+            const remaining = Math.max(
+              0,
+              (u.consultations_included || 0) - (u.consultations_used || 0),
+            );
+            if (remaining > 0) {
+              consumeCredit = true;
+            } else if (u.pending_consultation_token) {
+              consumeToken = true;
+            } else {
+              socket.emit('veto_error', {
+                code: 'PAYMENT_REQUIRED',
+                message: 'Per-consultation payment required before connecting a lawyer.',
+              });
+              return;
+            }
+            billingChargeIls = consumeCredit ? 0 : 79.9;
+            // Atomically consume the credit / token so concurrent requests can't double-spend.
+            const update = consumeCredit
+              ? { $inc: { consultations_used: 1 } }
+              : { $set: { pending_consultation_token: null } };
+            const filter = consumeCredit
+              ? {
+                  _id: u._id,
+                  $expr: {
+                    $lt: ['$consultations_used', '$consultations_included'],
+                  },
+                }
+              : { _id: u._id, pending_consultation_token: u.pending_consultation_token };
+            const claimed = await User.updateOne(filter, update);
+            if (claimed.matchedCount === 0) {
+              socket.emit('veto_error', {
+                code: 'PAYMENT_REQUIRED',
+                message: 'Could not reserve consultation slot — please retry.',
+              });
+              return;
+            }
+          }
+        }
+
         // 1. Create the EmergencyEvent in MongoDB ────────────
         const event = await EmergencyEvent.create({
           user_id:        userId,
@@ -132,7 +205,10 @@ module.exports = function initDispatch(io) {
         const eventId = event._id.toString();
 
         // 1.5. Notify the user immediately that the event was created
-        socket.emit('emergency_created', { eventId });
+        socket.emit('emergency_created', {
+          eventId,
+          billing: { chargeIls: billingChargeIls, source: consumeCredit ? 'credit' : (consumeToken ? 'paid' : 'exempt') },
+        });
 
         // 2. Find available lawyers (online via socket OR have push subscription) ─
         const lawyerQuery = {
