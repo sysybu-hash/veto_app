@@ -18,93 +18,18 @@ const { buildRtcTokenForUid } = require('../services/agoraToken.service');
 const agoraCr = require('../services/agoraCloudRecording.service');
 const { CONSULTATION_ILS, OVERTIME_ILS_PER_MIN, FREE_CALL_MINUTES } = require('../config/pricing');
 
+const { canAccessEvent } = require('../services/call/access.service');
+const { sanitizeTranscript } = require('../services/call/transcript.service');
+const {
+  computeChargeFromSeconds,
+  isPaymentExemptUser,
+} = require('../services/call/billing.service');
+const { iceServersFromEnv } = require('../services/call/iceServers.service');
+
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 /** One finalize pipeline per event (avoid duplicate work if both peers call stop). */
 const cloudRecordingFinalizeLocks = new Set();
-
-function canAccessEvent(event, user) {
-  const uid = String(user.userId);
-  const isUser = (user.role === 'user' || user.role === 'admin') && event.user_id?.toString() === uid;
-  const isLawyer = user.role === 'lawyer' && event.assigned_lawyer_id?.toString() === uid;
-  return isUser || isLawyer || user.role === 'admin';
-}
-
-function sanitizeTranscript(raw) {
-  if (!raw || typeof raw !== 'string') return '';
-  let t = raw.trim();
-
-  // Remove markdown/code fences sometimes added by models.
-  t = t.replace(/```[\s\S]*?```/g, (m) => m.replace(/```/g, '')).trim();
-
-  // Remove unicode emoji characters.
-  try {
-    // Extended pictographic covers most emoji glyphs.
-    t = t.replace(/\p{Extended_Pictographic}/gu, '');
-  } catch {
-    // Fallback: strip common surrogate-pair emoji ranges.
-    t = t.replace(/[\uD83C-\uDBFF][\uDC00-\uDFFF]/g, '');
-  }
-
-  // Remove common "emoji descriptions" / stage directions.
-  t = t
-    .replace(/\b(emoji|emojis|smiley|smileys|emoticon|emoticons)\b/gi, '')
-    .replace(/\b(סמיילי|אימוג'?י|אימוג'ים)\b/gi, '')
-    .replace(/\[(?:inaudible|applause|music|laughter|laughs|crying|sighs|coughs|background noise|noise)[^\]]*\]/gi, '')
-    .replace(/\((?:inaudible|applause|music|laughter|laughs|crying|sighs|coughs|background noise|noise)[^)]*\)/gi, '');
-
-  // Collapse whitespace.
-  t = t.replace(/[ \t]+\n/g, '\n').replace(/\n{3,}/g, '\n\n').replace(/[ \t]{2,}/g, ' ').trim();
-  return t;
-}
-
-function computeChargeFromSeconds(seconds) {
-  const durationSeconds = Math.max(0, Math.ceil(Number(seconds) || 0));
-  const minutes = Math.max(1, Math.ceil(durationSeconds / 60));
-  const overtimeMinutes = Math.max(0, minutes - FREE_CALL_MINUTES);
-  const overtimeIls = +(overtimeMinutes * OVERTIME_ILS_PER_MIN).toFixed(2);
-  return {
-    durationSeconds,
-    minutes,
-    baseIls: CONSULTATION_ILS,
-    overtimeMinutes,
-    overtimeIls,
-    totalIls: +(CONSULTATION_ILS + overtimeIls).toFixed(2),
-  };
-}
-
-async function isPaymentExemptUser(user) {
-  if (!user?.userId) return false;
-  if (user.role === 'admin') return true;
-  const account = await User.findById(user.userId).select('manually_added role').lean();
-  return account?.role === 'admin' || account?.manually_added === true;
-}
-
-/**
- * Build extra ICE servers from env (TURN credentials never ship in the Flutter bundle).
- * Priority:
- *   1) WEBRTC_ICE_SERVERS_JSON — JSON array, WebRTC shape, e.g.
- *      [{"urls":"turn:turn.example.com:3478","username":"u","credential":"p"}]
- *   2) TURN_URL + TURN_USERNAME + TURN_CREDENTIAL — single TURN entry
- */
-function iceServersFromEnv() {
-  const raw = process.env.WEBRTC_ICE_SERVERS_JSON;
-  if (raw && String(raw).trim()) {
-    try {
-      const parsed = JSON.parse(String(raw).trim());
-      if (Array.isArray(parsed)) return parsed;
-    } catch (_) {
-      /* fall through */
-    }
-  }
-  const url = process.env.TURN_URL;
-  const user = process.env.TURN_USERNAME;
-  const pass = process.env.TURN_CREDENTIAL;
-  if (url && user && pass) {
-    return [{ urls: url, username: user, credential: pass }];
-  }
-  return [];
-}
 
 // ── WebRTC ICE (authenticated; no event id) ───────────────────
 exports.getIceConfig = (_req, res) => {
@@ -522,7 +447,17 @@ exports.getCallDetails = async (req, res, next) => {
   try {
     const { eventId } = req.params;
     const event = await EmergencyEvent.findById(eventId)
-      .select('user_id assigned_lawyer_id room_id status call_type call_started_at call_duration_seconds recording_url recording_public_id recording_duration_seconds recording_size_bytes call_transcript transcript_language recording_saved_decision recording_transcription_status screen_recording_url screen_recording_public_id')
+      .select(
+        // Original fields…
+        'user_id assigned_lawyer_id room_id status call_type call_started_at call_duration_seconds ' +
+        'recording_url recording_public_id recording_duration_seconds recording_size_bytes ' +
+        'call_transcript transcript_language recording_saved_decision recording_transcription_status ' +
+        'screen_recording_url screen_recording_public_id ' +
+        // Phase 3 v2 fields:
+        'recording_consent agora_cloud_recording_resource_id agora_rtt_task_id ' +
+        'shared_files ' +
+        '+e2ee_secret',
+      )
       .lean();
 
     if (!event) return res.status(404).json({ error: 'Event not found' });
@@ -532,9 +467,17 @@ exports.getCallDetails = async (req, res, next) => {
       return res.status(403).json({ error: 'Not authorized' });
     }
 
+    const { e2ee_secret: e2eeSecretRaw, ...callRest } = event;
+    const call = {
+      ...callRest,
+      ...(e2eeSecretRaw != null && e2eeSecretRaw !== ''
+        ? { e2eeSecret: e2eeSecretRaw }
+        : {}),
+    };
+
     res.json({
       success: true,
-      call: event,
+      call,
       cloudRecordingConfigured: agoraCr.isCloudRecordingConfigured(),
     });
   } catch (err) {
@@ -900,6 +843,264 @@ exports.uploadScreenRecording = async (req, res, next) => {
       recording_saved_decision: 'pending',
     });
     res.json({ success: true, screenRecordingUrl: uploadResult.secure_url });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// ============================================================
+//  Phase 3 — Call v2 endpoints
+// ============================================================
+
+const agoraRtt = require('../services/agoraRtt.service');
+
+/**
+ * Cache the RTT builderToken per task so we can stop the task without
+ * re-acquiring. RTT tokens are one-shot; without this we can't issue
+ * a stop after a process restart, but the task auto-times-out anyway.
+ */
+const rttBuilderTokens = new Map();
+
+/**
+ * POST /api/calls/:eventId/consent
+ * Body: { granted: boolean }
+ * Records GDPR consent for cloud recording. Both citizen and lawyer
+ * must call this with `granted=true` before /cloud-recording/start
+ * will succeed.
+ */
+exports.recordConsent = async (req, res, next) => {
+  try {
+    const { eventId } = req.params;
+    const granted = req.body?.granted === true;
+    const event = await EmergencyEvent.findById(eventId);
+    if (!event) return res.status(404).json({ error: 'Event not found' });
+    if (!canAccessEvent(event, req.user)) {
+      return res.status(403).json({ error: 'Not authorized' });
+    }
+
+    const update = {};
+    if (req.user.role === 'lawyer') {
+      update['recording_consent.lawyer_at'] = granted ? new Date() : null;
+    } else {
+      update['recording_consent.citizen_at'] = granted ? new Date() : null;
+    }
+    await EmergencyEvent.findByIdAndUpdate(eventId, { $set: update });
+
+    const fresh = await EmergencyEvent.findById(eventId)
+      .select('recording_consent')
+      .lean();
+    res.json({
+      success: true,
+      consent: {
+        citizen: !!fresh?.recording_consent?.citizen_at,
+        lawyer: !!fresh?.recording_consent?.lawyer_at,
+        bothGranted:
+          !!fresh?.recording_consent?.citizen_at &&
+          !!fresh?.recording_consent?.lawyer_at,
+      },
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+/**
+ * POST /api/calls/:eventId/transcript-realtime/start
+ * Spawns the Agora RTT bot for this channel. Idempotent — if a task
+ * already exists for the event, returns its taskId.
+ */
+exports.startRealtimeTranscription = async (req, res, next) => {
+  try {
+    const { eventId } = req.params;
+    const event = await EmergencyEvent.findById(eventId);
+    if (!event) return res.status(404).json({ error: 'Event not found' });
+    if (!canAccessEvent(event, req.user)) {
+      return res.status(403).json({ error: 'Not authorized' });
+    }
+
+    if (event.agora_rtt_task_id) {
+      return res.json({
+        success: true,
+        taskId: event.agora_rtt_task_id,
+        alreadyRunning: true,
+      });
+    }
+
+    if (!agoraRtt.isRttConfigured()) {
+      return res.status(503).json({ error: 'Real-time transcription is not configured.' });
+    }
+
+    const channelName = event.room_id || String(event._id);
+    const { taskId, builderToken } = await agoraRtt.startTranscription({
+      channelName,
+      eventIdHex: String(event._id),
+    });
+    rttBuilderTokens.set(taskId, builderToken);
+    await EmergencyEvent.findByIdAndUpdate(eventId, { agora_rtt_task_id: taskId });
+
+    res.json({ success: true, taskId, alreadyRunning: false });
+  } catch (err) {
+    next(err);
+  }
+};
+
+/** POST /api/calls/:eventId/transcript-realtime/stop */
+exports.stopRealtimeTranscription = async (req, res, next) => {
+  try {
+    const { eventId } = req.params;
+    const event = await EmergencyEvent.findById(eventId);
+    if (!event) return res.status(404).json({ error: 'Event not found' });
+    if (!canAccessEvent(event, req.user)) {
+      return res.status(403).json({ error: 'Not authorized' });
+    }
+    const taskId = event.agora_rtt_task_id;
+    if (!taskId) {
+      return res.json({ success: true, stopped: false, reason: 'no_task' });
+    }
+    const builderToken = rttBuilderTokens.get(taskId) || null;
+    try {
+      await agoraRtt.stopTranscription({ taskId, builderToken });
+    } catch (err) {
+      console.warn('[call] rtt stop best-effort:', err.message);
+    }
+    rttBuilderTokens.delete(taskId);
+    await EmergencyEvent.findByIdAndUpdate(eventId, { agora_rtt_task_id: null });
+    res.json({ success: true, stopped: true });
+  } catch (err) {
+    next(err);
+  }
+};
+
+/**
+ * GET /api/calls/:eventId/chat-history
+ *  → { messages: [{ author_role, author_id, text, ts }, ...] }
+ */
+exports.getChatHistory = async (req, res, next) => {
+  try {
+    const { eventId } = req.params;
+    const event = await EmergencyEvent.findById(eventId)
+      .select('user_id assigned_lawyer_id call_chat_messages')
+      .lean();
+    if (!event) return res.status(404).json({ error: 'Event not found' });
+    if (!canAccessEvent(event, req.user)) {
+      return res.status(403).json({ error: 'Not authorized' });
+    }
+    res.json({ success: true, messages: event.call_chat_messages || [] });
+  } catch (err) {
+    next(err);
+  }
+};
+
+/**
+ * POST /api/calls/:eventId/chat-message
+ * Body: { text: string }
+ * Persists the message and pushes it to the other side via Socket.io
+ * (replaces socket-only `call-chat-message`).
+ */
+exports.postChatMessage = async (req, res, next) => {
+  try {
+    const { eventId } = req.params;
+    const text = typeof req.body?.text === 'string' ? req.body.text.trim() : '';
+    if (!text) return res.status(400).json({ error: 'text is required' });
+    if (text.length > 4000) return res.status(400).json({ error: 'text too long' });
+
+    const event = await EmergencyEvent.findById(eventId);
+    if (!event) return res.status(404).json({ error: 'Event not found' });
+    if (!canAccessEvent(event, req.user)) {
+      return res.status(403).json({ error: 'Not authorized' });
+    }
+
+    const authorRole = req.user.role === 'lawyer' ? 'lawyer' : 'user';
+    const message = {
+      author_role: authorRole,
+      author_id: req.user.userId,
+      text,
+      ts: new Date(),
+    };
+    await EmergencyEvent.findByIdAndUpdate(eventId, {
+      $push: { call_chat_messages: message },
+    });
+
+    // Push to the other side via the call room.
+    try {
+      const io = req.app?.get('io');
+      if (io) {
+        io.to(`call:${eventId}`).emit('call-chat-message', {
+          text,
+          fromRole: authorRole,
+          userId: req.user.userId,
+          ts: message.ts.toISOString(),
+        });
+      }
+    } catch (err) {
+      console.warn('[call] chat-message push failed:', err.message);
+    }
+
+    res.json({ success: true, message });
+  } catch (err) {
+    next(err);
+  }
+};
+
+/**
+ * POST /api/calls/:eventId/file-share (multipart `file`)
+ * Uploads a file dropped during the call to Cloudinary as `auto`
+ * resource_type so PDFs, images, video, and audio all work.
+ */
+exports.shareFileInCall = async (req, res, next) => {
+  try {
+    const { eventId } = req.params;
+    const event = await EmergencyEvent.findById(eventId);
+    if (!event) return res.status(404).json({ error: 'Event not found' });
+    if (!canAccessEvent(event, req.user)) {
+      return res.status(403).json({ error: 'Not authorized' });
+    }
+    if (!req.file) {
+      return res.status(400).json({ error: 'No file provided' });
+    }
+
+    const uploadResult = await new Promise((resolve, reject) => {
+      const stream = cloudinary.uploader.upload_stream(
+        {
+          resource_type: 'auto',
+          folder: `veto/call_files/${eventId}`,
+          public_id: `share_${Date.now()}_${(req.file.originalname || 'file').replace(/[^a-zA-Z0-9._-]/g, '')}`,
+        },
+        (err, result) => {
+          if (err) reject(err);
+          else resolve(result);
+        },
+      );
+      stream.end(req.file.buffer);
+    });
+
+    const byRole = req.user.role === 'lawyer' ? 'lawyer' : 'user';
+    const entry = {
+      cloud_url: uploadResult.secure_url,
+      mime: req.file.mimetype || null,
+      size: req.file.size || 0,
+      by_role: byRole,
+      by_id: req.user.userId,
+      original_name: req.file.originalname || null,
+      ts: new Date(),
+    };
+    await EmergencyEvent.findByIdAndUpdate(eventId, {
+      $push: { shared_files: entry },
+    });
+
+    try {
+      const io = req.app?.get('io');
+      if (io) {
+        io.to(`call:${eventId}`).emit('call-file-shared', {
+          ...entry,
+          ts: entry.ts.toISOString(),
+        });
+      }
+    } catch (err) {
+      console.warn('[call] file-share push failed:', err.message);
+    }
+
+    res.json({ success: true, file: entry });
   } catch (err) {
     next(err);
   }

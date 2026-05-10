@@ -3,6 +3,7 @@
 //  VETO Legal Emergency App
 // ============================================================
 
+const crypto = require('crypto');
 const EmergencyEvent = require('../models/EmergencyEvent');
 const User = require('../models/User');
 
@@ -121,6 +122,7 @@ const createDocumentationSession = async (req, res, next) => {
         coordinates: coords,
       },
       call_type: 'audio',
+      e2ee_secret: crypto.randomBytes(32).toString('hex'),
     });
 
     await User.findByIdAndUpdate(userId, {

@@ -83,14 +83,28 @@ const updateEuComplianceMode = async (req, res, next) => {
   }
 };
 
-const getAdminStats = async (req, res, next) => {
+/** Active SOS pipeline statuses (see EmergencyEvent schema). */
+const ACTIVE_EMERGENCY_STATUSES = ['dispatching', 'accepted', 'in_progress'];
+
+/**
+ * Unified admin stats: live emergency rows + KPIs, plus legacy top-level fields
+ * for Next.js `/api/admin/dashboard` and `fetchSystemStats()`.
+ */
+const getDashboardStats = async (req, res, next) => {
   try {
     const now = new Date();
     const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const startOfWeek  = new Date(now); startOfWeek.setDate(now.getDate() - 6);
+    const startOfWeek = new Date(now);
+    startOfWeek.setDate(now.getDate() - 6);
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
     const [
+      activeEvents,
+      activeEventsCount,
+      dailyEventsCount,
+      revenueAgg,
+      totalLawyers,
+      lawyersOnline,
       totalUsers,
       activeLawyers,
       pendingLawyers,
@@ -98,6 +112,23 @@ const getAdminStats = async (req, res, next) => {
       eventsWeek,
       eventsMonth,
     ] = await Promise.all([
+      Event.find({ status: { $in: ACTIVE_EMERGENCY_STATUSES } })
+        .sort({ createdAt: -1 })
+        .limit(10)
+        .lean(),
+      Event.countDocuments({ status: { $in: ACTIVE_EMERGENCY_STATUSES } }),
+      Event.countDocuments({ createdAt: { $gte: startOfToday } }),
+      Event.aggregate([
+        {
+          $match: {
+            createdAt: { $gte: startOfToday },
+            status: 'completed',
+          },
+        },
+        { $group: { _id: null, total: { $sum: '$charge_amount_ils' } } },
+      ]),
+      Lawyer.countDocuments({}),
+      Lawyer.countDocuments({ is_available: true, is_active: true, is_approved: true }),
       User.countDocuments({}),
       Lawyer.countDocuments({ is_active: true }),
       Lawyer.countDocuments({ is_approved: false, is_active: true }),
@@ -106,8 +137,30 @@ const getAdminStats = async (req, res, next) => {
       Event.countDocuments({ triggered_at: { $gte: startOfMonth } }),
     ]);
 
-    res.json({ totalUsers, activeLawyers, pendingLawyers, eventsToday, eventsWeek, eventsMonth });
-  } catch (err) { next(err); }
+    const dailyRevenue = revenueAgg.length > 0 ? Number(revenueAgg[0].total) || 0 : 0;
+
+    res.status(200).json({
+      status: 'success',
+      data: {
+        activeEvents,
+        stats: {
+          dailyEventsCount,
+          dailyRevenue,
+          totalLawyers,
+          activeEventsCount,
+          lawyersOnline,
+        },
+      },
+      totalUsers,
+      activeLawyers,
+      pendingLawyers,
+      eventsToday,
+      eventsWeek,
+      eventsMonth,
+    });
+  } catch (err) {
+    next(err);
+  }
 };
 
 const updateFixedOtpSetting = async (req, res, next) => {
@@ -568,7 +621,7 @@ const getSystemHealth = async (req, res, next) => {
 };
 
 module.exports = {
-  getAdminSettings, getSystemHealth, updateFixedOtpSetting, updateEuComplianceMode, getAdminStats,
+  getAdminSettings, getSystemHealth, updateFixedOtpSetting, updateEuComplianceMode, getDashboardStats,
   getAllUsers, createUser, updateUser, deleteUser,
   getAllLawyers, createLawyer, updateLawyer, deleteLawyer,
   getPendingLawyers, approveLawyer, rejectLawyer,

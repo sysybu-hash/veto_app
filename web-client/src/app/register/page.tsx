@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
+import { Database, Lock, ShieldCheck } from "lucide-react";
 import {
   apiUrl,
   isApiOriginConfigured,
@@ -11,10 +12,10 @@ import {
 import { normalizePhoneForVeto } from "@/lib/phone";
 import { useTranslation } from "@/lib/i18n/LocaleProvider";
 import {
+  authBtnSecondary,
+  authGlassInput,
+  authGlassPanel,
   btnPrimaryDark,
-  btnSecondaryGlass,
-  glassInput,
-  glassPanelNested,
 } from "@/lib/vetoGlass";
 
 type Mode = "user" | "lawyer";
@@ -65,6 +66,7 @@ function RegisterInner() {
 
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
 
   const toggleSpec = (id: string) =>
     setSpecs((prev) => (prev.includes(id) ? prev.filter((s) => s !== id) : [...prev, id]));
@@ -81,6 +83,10 @@ function RegisterInner() {
     }
     if (mode === "lawyer" && !licenseNumber.trim()) {
       setMessage("נדרש מספר רישיון לשכת עוה״ד.");
+      return;
+    }
+    if (!acceptedTerms) {
+      setMessage("יש לאשר את תנאי השימוש ומדיניות הפרטיות כדי להמשיך.");
       return;
     }
     void (async () => {
@@ -120,9 +126,9 @@ function RegisterInner() {
   };
 
   return (
-    <div className="flex min-h-screen w-full items-center justify-center px-4 py-12">
+    <div className="flex min-h-screen w-full items-center justify-center bg-veto-ink px-4 py-12">
       <main
-        className={`w-full max-w-lg p-6 shadow-[0_24px_64px_rgba(15,23,42,0.15)] backdrop-blur-2xl md:p-8 ${glassPanelNested}`}
+        className={`w-full max-w-lg p-6 md:p-8 ${authGlassPanel}`}
         dir={locale === "he" ? "rtl" : "ltr"}
       >
         {!isApiOriginConfigured() && (
@@ -176,7 +182,7 @@ function RegisterInner() {
             <input
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
-              className={`mt-1 ${glassInput}`}
+              className={`mt-1 ${authGlassInput}`}
               autoComplete="name"
             />
           </div>
@@ -187,7 +193,7 @@ function RegisterInner() {
             <input
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
-              className={`mt-1 ${glassInput}`}
+              className={`mt-1 ${authGlassInput}`}
               placeholder={t("login.phonePlaceholder")}
               autoComplete="tel"
             />
@@ -203,7 +209,7 @@ function RegisterInner() {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className={`mt-1 ${glassInput}`}
+                  className={`mt-1 ${authGlassInput}`}
                   autoComplete="email"
                 />
               </div>
@@ -215,7 +221,7 @@ function RegisterInner() {
                   <input
                     value={licenseNumber}
                     onChange={(e) => setLicenseNumber(e.target.value)}
-                    className={`mt-1 ${glassInput}`}
+                    className={`mt-1 ${authGlassInput}`}
                   />
                 </div>
                 <div>
@@ -230,7 +236,7 @@ function RegisterInner() {
                     onChange={(e) =>
                       setYears(Math.max(0, Number(e.target.value) || 0))
                     }
-                    className={`mt-1 ${glassInput}`}
+                    className={`mt-1 ${authGlassInput}`}
                   />
                 </div>
               </div>
@@ -261,9 +267,41 @@ function RegisterInner() {
             </>
           )}
 
+          <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-white/10 bg-white/[0.04] p-4 text-sm text-slate-200">
+            <input
+              type="checkbox"
+              checked={acceptedTerms}
+              onChange={(e) => setAcceptedTerms(e.target.checked)}
+              className="mt-0.5 h-4 w-4 shrink-0 accent-veto-gold"
+              required
+            />
+            <span>
+              אני מסכים ל
+              <Link
+                href="/terms"
+                className="mx-1 font-bold text-veto-gold underline-offset-2 hover:underline"
+              >
+                תנאי השימוש
+              </Link>
+              ול
+              <Link
+                href="/privacy"
+                className="mx-1 font-bold text-veto-gold underline-offset-2 hover:underline"
+              >
+                מדיניות הפרטיות
+              </Link>
+              של VETO.
+            </span>
+          </label>
+
+          <p className="rounded-xl border border-veto-gold/20 bg-veto-gold/5 p-3 text-xs leading-relaxed text-slate-300">
+            חיסיון עו״ד–לקוח חל על שיחות הווידאו המבוצעות במערכת, בכפוף לדין החל
+            ולנסיבות העניין.
+          </p>
+
           <button
             type="button"
-            disabled={busy}
+            disabled={busy || !acceptedTerms}
             onClick={() => onSubmit()}
             className={`w-full px-4 py-3 text-sm font-semibold ${btnPrimaryDark} disabled:opacity-50`}
           >
@@ -273,6 +311,24 @@ function RegisterInner() {
                 ? "שליחת בקשה לאישור"
                 : t("register.submit")}
           </button>
+
+          <div
+            className="flex flex-wrap items-center justify-center gap-3 border-t border-white/10 pt-4 text-xs text-slate-400"
+            aria-label="אבטחה ותאימות"
+          >
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5">
+              <ShieldCheck className="h-3.5 w-3.5 text-emerald-400" aria-hidden />
+              GDPR Compliant
+            </span>
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5">
+              <Lock className="h-3.5 w-3.5 text-veto-gold" aria-hidden />
+              AES-256 Encrypted
+            </span>
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5">
+              <Database className="h-3.5 w-3.5 text-sky-400" aria-hidden />
+              Secure Vault
+            </span>
+          </div>
         </div>
 
         {message && (
@@ -282,7 +338,7 @@ function RegisterInner() {
         )}
 
         <p className="mt-6 text-center text-sm">
-          <Link href="/login" className={`${btnSecondaryGlass} inline-block px-4 py-2`}>
+          <Link href="/login" className={`${authBtnSecondary} inline-block px-4 py-2`}>
             {t("register.backLogin")}
           </Link>
         </p>
@@ -293,7 +349,7 @@ function RegisterInner() {
 
 export default function RegisterPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen" />}>
+    <Suspense fallback={<div className="min-h-screen bg-veto-ink" />}>
       <RegisterInner />
     </Suspense>
   );

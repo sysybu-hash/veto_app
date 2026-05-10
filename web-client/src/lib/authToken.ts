@@ -111,14 +111,28 @@ export async function prepareLoginSession(token: string): Promise<void> {
 
 /** Best-effort decode of JWT payload `role` (no signature verification). */
 export function getRoleFromJwt(): string | null {
+  return decodeJwtField<string>("role");
+}
+
+/** Best-effort decode of the user id (`userId` or `id` or `sub`). */
+export function getUserIdFromJwt(): string | null {
+  const direct =
+    decodeJwtField<string>("userId") ??
+    decodeJwtField<string>("id") ??
+    decodeJwtField<string>("sub");
+  return direct ? String(direct) : null;
+}
+
+function decodeJwtField<T>(field: string): T | null {
   const token = getJwt();
   if (!token) return null;
   try {
     const parts = token.split(".");
     if (parts.length < 2) return null;
     const json = atob(parts[1].replace(/-/g, "+").replace(/_/g, "/"));
-    const payload = JSON.parse(json) as { role?: string };
-    return typeof payload.role === "string" ? payload.role : null;
+    const payload = JSON.parse(json) as Record<string, unknown>;
+    const value = payload[field];
+    return value === undefined ? null : (value as T);
   } catch {
     return null;
   }

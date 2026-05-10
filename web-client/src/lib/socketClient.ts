@@ -1,6 +1,7 @@
 import { io, type Socket } from "socket.io-client";
 import { getJwt } from "./authToken";
 import { getPublicApiOrigin, isLocaLtOrigin, tunnelBypassHeaders } from "./env";
+import { useEmergencyStore } from "@/store/useEmergencyStore";
 
 let socket: Socket | null = null;
 
@@ -74,7 +75,23 @@ export function getSocket(explicitToken?: string | null): Socket {
       console.warn("[socket] connect_error:", err.message);
     });
     socket.on("disconnect", (reason) => {
-      console.info("[socket] disconnect:", reason);
+      console.warn(
+        `[Socket] Disconnected: ${reason}. Will attempt to auto-reconnect.`,
+      );
+    });
+    const client = socket;
+    client.on("connect", () => {
+      console.log("[Socket] Connected/Reconnected successfully.");
+      const state = useEmergencyStore.getState();
+      const session = state.sessionReady;
+      if (!session?.eventId) return;
+      const roomId = session.channelId || session.eventId;
+      const callType = session.callType;
+      console.log("[Socket] Recovering active session room join…", {
+        roomId,
+        callType,
+      });
+      client.emit("join-call-room", { roomId, callType });
     });
   } else {
     (socket.auth as { token?: string }) = { token };

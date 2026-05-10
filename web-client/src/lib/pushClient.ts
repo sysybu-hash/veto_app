@@ -47,7 +47,8 @@ export type SubscribeToPushResult =
     };
 
 /**
- * Registers `custom-sw.js`, requests permission, subscribes with VAPID,
+ * Uses the active service worker from `@ducanh2912/next-pwa` (`/sw.js`, includes
+ * `worker/index.ts` push handlers). Requests permission, subscribes with VAPID,
  * and POSTs the subscription to `POST /api/notifications/subscribe`.
  */
 export async function subscribeToPush(): Promise<SubscribeToPushResult> {
@@ -55,19 +56,38 @@ export async function subscribeToPush(): Promise<SubscribeToPushResult> {
     return { ok: false, reason: "unsupported", message: "Push not supported" };
   }
 
-  let registration: ServiceWorkerRegistration;
+  let registration = await navigator.serviceWorker.getRegistration("/");
+  if (!registration) {
+    try {
+      await navigator.serviceWorker.register("/sw.js", {
+        scope: "/",
+        updateViaCache: "none",
+      });
+    } catch (e) {
+      return {
+        ok: false,
+        reason: "unsupported",
+        message:
+          e instanceof Error
+            ? e.message
+            : "Service worker unavailable (use a production build with PWA enabled)",
+      };
+    }
+  }
   try {
-    await navigator.serviceWorker.register("/custom-sw.js", {
-      scope: "/",
-      updateViaCache: "none",
-    });
     registration = await navigator.serviceWorker.ready;
   } catch (e) {
     return {
       ok: false,
       reason: "unsupported",
-      message: e instanceof Error ? e.message : "Service worker registration failed",
+      message:
+        e instanceof Error ? e.message : "Service worker did not become ready",
     };
+  }
+  try {
+    await registration.update();
+  } catch {
+    /* ignore */
   }
 
   let permission = Notification.permission;

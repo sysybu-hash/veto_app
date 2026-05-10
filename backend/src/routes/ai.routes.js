@@ -12,6 +12,7 @@ const {
   publicAiChat,
   createTransparencyLog,
   listTransparencyLogs,
+  translateCaptionSegments,
 } = require('../controllers/ai.controller');
 const { createLiveToken } = require('../controllers/geminiLive.controller');
 const { protect } = require('../middleware/auth.middleware');
@@ -46,6 +47,7 @@ router.get('/chat', (_req, res) => {
 
 router.post('/chat', aiChatLimiter, protect, aiChat);
 router.post('/public-chat', aiChatLimiter, publicAiChat);
+router.post('/translate-segments', aiChatLimiter, protect, translateCaptionSegments);
 router.get('/transparency-log', protect, listTransparencyLogs);
 router.post('/transparency-log', protect, createTransparencyLog);
 

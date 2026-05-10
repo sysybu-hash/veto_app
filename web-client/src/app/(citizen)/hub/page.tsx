@@ -11,10 +11,7 @@ import { SpecializationDialog } from "@/components/dialogs/SpecializationDialog"
 import { btnPrimaryDark, btnSecondaryGlass, glassPanelNested } from "@/lib/vetoGlass";
 import { getJwt } from "@/lib/authToken";
 import { useTranslation } from "@/lib/i18n/LocaleProvider";
-import {
-  type SpecializationId,
-  UI_TO_BACKEND_SPECIALIZATION,
-} from "@/lib/specializations";
+import { type SpecializationId } from "@/lib/specializations";
 import { connectSocket, getSocket } from "@/lib/socketClient";
 import {
   useEmergencyStore,
@@ -44,6 +41,10 @@ function readSessionPayload(data: unknown): SessionReadyState | null {
       : "video";
   const tokenExpiresAt =
     typeof d.tokenExpiresAt === "number" ? d.tokenExpiresAt : undefined;
+  const e2eeSecret =
+    typeof d.e2eeSecret === "string" && d.e2eeSecret.trim()
+      ? d.e2eeSecret.trim()
+      : undefined;
 
   if (!roomId || !eventId || !Number.isFinite(agoraUid)) {
     return null;
@@ -56,6 +57,7 @@ function readSessionPayload(data: unknown): SessionReadyState | null {
     uid: agoraUid,
     callType,
     tokenExpiresAt,
+    ...(e2eeSecret ? { e2eeSecret } : {}),
   };
 }
 
@@ -266,10 +268,12 @@ export default function CitizenHubPage() {
       };
 
       sock.once("emergency_created", onCreated);
+      // Send the canonical English id; the backend resolves it to match terms.
+      // For "general" we send undefined so the backend skips the spec filter.
       sock.emit("start_veto", {
         location: { lat, lng },
         preferredLanguage: locale,
-        specialization: UI_TO_BACKEND_SPECIALIZATION[specializationId],
+        specialization: specializationId === "general" ? undefined : specializationId,
       });
     };
 
@@ -334,9 +338,9 @@ export default function CitizenHubPage() {
         <div className="w-full rounded-2xl border border-[#C5A059]/35 bg-[#C5A059]/10 px-4 py-3 text-sm shadow-sm backdrop-blur-xl">
           <div className="flex items-center justify-between gap-3">
             <div className="min-w-0">
-              <p className="font-bold text-slate-900">המנוי המחובר</p>
+              <p className="font-bold text-slate-900">{t("hub.subscriptionLabel")}</p>
               <p className="mt-0.5 truncate text-xs text-slate-600">
-                {profile?.full_name || profile?.phone || "משתמש VETO"}
+                {profile?.full_name || profile?.phone || t("hub.defaultUserName")}
               </p>
             </div>
             <span className={`shrink-0 rounded-full px-3 py-1 text-xs font-black ${
@@ -345,10 +349,10 @@ export default function CitizenHubPage() {
                 : "bg-amber-100 text-amber-950"
             }`}>
               {profile?.is_payment_exempt
-                ? "פטור כולל ייעוץ"
+                ? t("hub.statusExempt")
                 : profile?.is_subscribed
-                  ? "פעיל"
-                  : "לא פעיל"}
+                  ? t("hub.statusActive")
+                  : t("hub.statusInactive")}
             </span>
           </div>
           {entitlement && (
