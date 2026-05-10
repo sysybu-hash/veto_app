@@ -249,8 +249,8 @@ export default function DocumentGeneratorPage() {
   };
 
   return (
-    <div className="flex min-h-full flex-col pb-28" dir="rtl">
-      <main className="mx-auto grid w-full max-w-7xl flex-1 gap-5 px-4 py-5 lg:grid-cols-[360px_minmax(0,1fr)]">
+    <div className="flex min-h-full flex-col pb-[calc(10rem+env(safe-area-inset-bottom))]" dir="rtl">
+      <main className="mx-auto grid w-full max-w-7xl flex-1 gap-5 px-4 pb-[calc(10rem+env(safe-area-inset-bottom))] pt-5 lg:grid-cols-[360px_minmax(0,1fr)]">
         <aside className={`${glassPanel} h-fit p-5 lg:sticky lg:top-20`}>
           <Link href="/vault" className="mb-4 inline-flex items-center gap-2 text-sm font-bold text-slate-700 hover:text-slate-950">
             <ArrowRight className="h-4 w-4" aria-hidden />
