@@ -92,6 +92,41 @@ async function createOrder(amount, currency, description, returnUrl, cancelUrl) 
   return { orderId: data.id, approveUrl };
 }
 
+/**
+ * Minimal one-time order for PayPal JS SDK (Smart Buttons) — no redirect URLs.
+ * @param {string} amount  e.g. "99.00"
+ * @param {string} currency  default ILS
+ */
+async function createJsSdkOrder(amount, currency = 'ILS') {
+  const token = await _getToken();
+  const value = typeof amount === 'string' ? amount : Number(amount).toFixed(2);
+
+  const res = await fetch(`${PAYPAL_BASE}/v2/checkout/orders`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      intent: 'CAPTURE',
+      purchase_units: [
+        {
+          amount: { currency_code: currency, value },
+          description: 'VETO Legal',
+        },
+      ],
+    }),
+  });
+
+  const data = await res.json();
+  if (!res.ok) {
+    throw new Error(
+      `PayPal createJsSdkOrder error: ${JSON.stringify(data.details ?? data.message ?? data)}`,
+    );
+  }
+  return data;
+}
+
 // ── Capture an approved order ────────────────────────────────
 /**
  * @param {string} orderId
@@ -205,6 +240,7 @@ async function verifyWebhookSignature({ transmissionId, transmissionTime, certUr
 
 module.exports = {
   createOrder,
+  createJsSdkOrder,
   captureOrder,
   createBillingSubscription,
   getBillingSubscription,
