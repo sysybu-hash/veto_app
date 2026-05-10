@@ -13,6 +13,8 @@ const protectedRoutes = [
   "/admin",
   "/call",
   "/calendar",
+  "/family",
+  "/plans",
   "/productivity",
   "/sos",
 ];

@@ -8,32 +8,28 @@ async function proxy(req: NextRequest, method: "GET" | "POST") {
   if (!auth?.startsWith("Bearer ")) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
-
   let backendUrl: string;
   try {
-    backendUrl = apiUrl("/api/admin/users");
+    backendUrl = apiUrl("/api/admin/lawyers");
   } catch {
     return NextResponse.json(
       { error: "NEXT_PUBLIC_API_ORIGIN is not configured." },
       { status: 503 },
     );
   }
-
   try {
-    const headers: HeadersInit = {
-      Authorization: auth,
-      ...tunnelBypassHeaders(),
-    };
-    if (method === "POST") headers["Content-Type"] = "application/json";
-
-    const upstream = await fetch(backendUrl, {
+    const init: RequestInit = {
       method,
-      headers,
-      body: method === "POST" ? await req.text() : undefined,
+      headers: {
+        Authorization: auth,
+        ...(method === "POST" ? { "Content-Type": "application/json" } : {}),
+        ...tunnelBypassHeaders(),
+      },
       cache: "no-store",
       signal: AbortSignal.timeout(30_000),
-    });
-
+    };
+    if (method === "POST") init.body = await req.text();
+    const upstream = await fetch(backendUrl, init);
     const text = await upstream.text();
     const ct = upstream.headers.get("content-type") ?? "application/json";
     return new NextResponse(text, {
@@ -42,7 +38,7 @@ async function proxy(req: NextRequest, method: "GET" | "POST") {
     });
   } catch {
     return NextResponse.json(
-      { error: "Upstream users API unavailable." },
+      { error: "Upstream lawyers API unavailable." },
       { status: 502 },
     );
   }

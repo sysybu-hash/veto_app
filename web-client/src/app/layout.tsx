@@ -23,12 +23,33 @@ const frank = Frank_Ruhl_Libre({
   display: "swap",
 });
 
+const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || "https://veto.legal").replace(/\/$/, "");
+
 export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl),
   applicationName: "VETO Legal",
   manifest: "/manifest.webmanifest",
-  title: "VETO Signature 2027",
+  title: {
+    default: "VETO Legal OS",
+    template: "%s | VETO",
+  },
   description:
-    "מערכת ההפעלה המשפטית הראשונה בישראל — הגנה מיידית, ניהול ראיות וחיבור למומחים.",
+    "מערכת הפעלה משפטית: SOS לעורך דין, כספת ראיות, מחולל מסמכים ומנויים למשפחות ואזרחים.",
+  alternates: {
+    canonical: siteUrl,
+  },
+  verification: {
+    google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION,
+  },
+  openGraph: {
+    type: "website",
+    url: siteUrl,
+    siteName: "VETO Legal",
+    title: "VETO Legal OS",
+    description: "SOS לעורך דין, כספת ראיות, מחולל מסמכים ומנויים במקום אחד.",
+    images: [{ url: "/courtroom.jpg", width: 1200, height: 630, alt: "VETO Legal OS" }],
+    locale: "he_IL",
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
@@ -60,6 +81,15 @@ export default function RootLayout({
 }: Readonly<{
   children: ReactNode;
 }>) {
+  const orgJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "LegalService",
+    name: "VETO Legal",
+    url: siteUrl,
+    areaServed: "IL",
+    serviceType: "Legal technology and lawyer dispatch",
+  };
+
   return (
     <html
       lang="he"
@@ -72,21 +102,24 @@ export default function RootLayout({
           <PwaRegistrar />
           <JwtCookieSync />
           <ToastHost />
-        <div className="fixed inset-0 -z-50 overflow-hidden" aria-hidden>
-          <div className="absolute inset-0 bg-slate-950" />
-          <div className="veto-bg-glow absolute inset-0" />
-          <div className="veto-bg-grid absolute inset-0" />
-        </div>
-
-        <div className="relative z-10 flex min-h-screen flex-col">
-          <UniversalNav />
-          <div className="flex min-h-0 flex-1 flex-col">
-            {children}
+          <script
+            type="application/ld+json"
+            suppressHydrationWarning
+            dangerouslySetInnerHTML={{ __html: JSON.stringify(orgJsonLd) }}
+          />
+          <div className="fixed inset-0 -z-50 overflow-hidden" aria-hidden>
+            <div className="absolute inset-0 bg-slate-950" />
+            <div className="veto-bg-glow absolute inset-0" />
+            <div className="veto-bg-grid absolute inset-0" />
           </div>
-        </div>
-        <AiOverlayErrorBoundary>
-          <GlobalAiOverlay />
-        </AiOverlayErrorBoundary>
+
+          <div className="relative z-10 flex min-h-screen flex-col">
+            <UniversalNav />
+            <div className="flex min-h-0 flex-1 flex-col">{children}</div>
+          </div>
+          <AiOverlayErrorBoundary>
+            <GlobalAiOverlay />
+          </AiOverlayErrorBoundary>
         </LocaleProvider>
       </body>
     </html>

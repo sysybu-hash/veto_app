@@ -12,8 +12,91 @@ const router     = express.Router();
 const { protect, requireValidMongoUserId } = require('../middleware/auth.middleware');
 const User       = require('../models/User');
 
+const { PLANS } = require('../config/pricing');
+
 router.use(protect);
 router.use(requireValidMongoUserId);
+
+// ── Family group: owner adds a member by phone (must already be a registered user).
+router.post('/family/invite', async (req, res, next) => {
+  try {
+    const owner = await User.findById(req.user.userId);
+    if (!owner) return res.status(404).json({ error: 'Owner not found.' });
+    if (owner.subscription_plan !== 'family') {
+      return res.status(403).json({ error: 'Only the family plan owner can add members.' });
+    }
+    const expired = owner.subscription_expiry && owner.subscription_expiry < new Date();
+    if (expired) return res.status(403).json({ error: 'Family plan expired.' });
+    if (String(owner.family_owner_id) !== String(owner._id)) {
+      return res.status(403).json({ error: 'You are not the family plan owner.' });
+    }
+
+    const phone = (req.body?.phone || '').toString().trim();
+    if (!phone) return res.status(400).json({ error: 'phone is required.' });
+
+    const target = await User.findOne({ phone });
+    if (!target) return res.status(404).json({ error: 'User with that phone is not registered.' });
+    if (String(target._id) === String(owner._id)) {
+      return res.status(400).json({ error: 'Owner is already part of the plan.' });
+    }
+    if (target.family_owner_id && String(target.family_owner_id) !== String(owner._id)) {
+      return res.status(409).json({ error: 'User is already linked to another family plan.' });
+    }
+
+    const seats = PLANS.family.familySeats;
+    const memberCount = await User.countDocuments({ family_owner_id: owner._id });
+    if (memberCount >= seats) {
+      return res.status(409).json({ error: `Family plan limited to ${seats} members.` });
+    }
+
+    target.family_owner_id = owner._id;
+    target.subscription_plan = 'family';
+    target.is_subscribed = true;
+    target.subscription_expiry = owner.subscription_expiry;
+    await target.save();
+
+    res.json({ success: true, memberId: target._id });
+  } catch (err) { next(err); }
+});
+
+router.get('/family', async (req, res, next) => {
+  try {
+    const me = await User.findById(req.user.userId).select('subscription_plan family_owner_id subscription_expiry');
+    if (!me) return res.status(404).json({ error: 'Not found' });
+    const ownerId = me.family_owner_id || (me.subscription_plan === 'family' ? me._id : null);
+    if (!ownerId) return res.json({ owner: null, members: [] });
+    const owner = await User.findById(ownerId).select('full_name phone subscription_expiry');
+    const members = await User.find({ family_owner_id: ownerId, _id: { $ne: ownerId } })
+      .select('full_name phone _id');
+    res.json({
+      isOwner: String(ownerId) === String(me._id),
+      owner: owner ? { id: owner._id, name: owner.full_name, phone: owner.phone, expiry: owner.subscription_expiry } : null,
+      members: members.map((m) => ({ id: m._id, name: m.full_name, phone: m.phone })),
+      seats: PLANS.family.familySeats,
+    });
+  } catch (err) { next(err); }
+});
+
+router.delete('/family/:memberId', async (req, res, next) => {
+  try {
+    const owner = await User.findById(req.user.userId);
+    if (!owner || owner.subscription_plan !== 'family' ||
+        String(owner.family_owner_id) !== String(owner._id)) {
+      return res.status(403).json({ error: 'Only the family plan owner can remove members.' });
+    }
+    const target = await User.findById(req.params.memberId);
+    if (!target) return res.status(404).json({ error: 'Member not found' });
+    if (String(target.family_owner_id) !== String(owner._id)) {
+      return res.status(409).json({ error: 'User is not in your family plan.' });
+    }
+    target.family_owner_id = null;
+    target.subscription_plan = null;
+    target.is_subscribed = false;
+    target.subscription_expiry = null;
+    await target.save();
+    res.json({ success: true });
+  } catch (err) { next(err); }
+});
 
 // GET /api/users/me
 router.get('/me', async (req, res, next) => {

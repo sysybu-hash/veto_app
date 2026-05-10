@@ -3,37 +3,31 @@ import { apiUrl, tunnelBypassHeaders } from "@/lib/env";
 
 export const dynamic = "force-dynamic";
 
-async function proxy(req: NextRequest, method: "GET" | "POST") {
+export async function PUT(
+  req: NextRequest,
+  ctx: { params: Promise<{ id: string }> },
+) {
   const auth = req.headers.get("authorization");
   if (!auth?.startsWith("Bearer ")) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
-
+  const { id } = await ctx.params;
   let backendUrl: string;
   try {
-    backendUrl = apiUrl("/api/admin/users");
+    backendUrl = apiUrl(`/api/admin/lawyers/${encodeURIComponent(id)}/approve`);
   } catch {
     return NextResponse.json(
       { error: "NEXT_PUBLIC_API_ORIGIN is not configured." },
       { status: 503 },
     );
   }
-
   try {
-    const headers: HeadersInit = {
-      Authorization: auth,
-      ...tunnelBypassHeaders(),
-    };
-    if (method === "POST") headers["Content-Type"] = "application/json";
-
     const upstream = await fetch(backendUrl, {
-      method,
-      headers,
-      body: method === "POST" ? await req.text() : undefined,
+      method: "PUT",
+      headers: { Authorization: auth, ...tunnelBypassHeaders() },
       cache: "no-store",
-      signal: AbortSignal.timeout(30_000),
+      signal: AbortSignal.timeout(20_000),
     });
-
     const text = await upstream.text();
     const ct = upstream.headers.get("content-type") ?? "application/json";
     return new NextResponse(text, {
@@ -41,12 +35,6 @@ async function proxy(req: NextRequest, method: "GET" | "POST") {
       headers: { "content-type": ct },
     });
   } catch {
-    return NextResponse.json(
-      { error: "Upstream users API unavailable." },
-      { status: 502 },
-    );
+    return NextResponse.json({ error: "Upstream unavailable." }, { status: 502 });
   }
 }
-
-export const GET = (req: NextRequest) => proxy(req, "GET");
-export const POST = (req: NextRequest) => proxy(req, "POST");

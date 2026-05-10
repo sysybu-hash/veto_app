@@ -1,15 +1,13 @@
-import { Role } from "@prisma/client";
 import { type NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
+import { apiUrl, tunnelBypassHeaders } from "@/lib/env";
 import { decodeJwtPayload } from "@/lib/jwtCookie";
-import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
 async function getBearerOrCookieToken(req: NextRequest): Promise<string | null> {
   const auth = req.headers.get("authorization");
   if (auth?.startsWith("Bearer ")) return auth.slice(7).trim();
-
   const jar = await cookies();
   const raw =
     jar.get("veto_jwt")?.value ??
@@ -23,70 +21,109 @@ async function getBearerOrCookieToken(req: NextRequest): Promise<string | null> 
   }
 }
 
-/**
- * Aggregated admin dashboard: Prisma stats + recent users.
- * Subscription flags are not stored on User yet; `isPro` is reserved for future billing sync.
- */
+type BackendUser = {
+  _id: string;
+  full_name?: string;
+  phone?: string;
+  email?: string;
+  role?: string;
+  status?: string;
+  computed_status?: string;
+  is_subscribed?: boolean;
+  subscription_expiry?: string | null;
+  manually_added?: boolean;
+  is_active?: boolean;
+  is_verified?: boolean;
+  preferred_language?: string;
+  createdAt?: string;
+};
+
+type BackendStats = {
+  totalUsers?: number;
+  activeLawyers?: number;
+  pendingLawyers?: number;
+  eventsToday?: number;
+  users?: number;
+  lawyers?: number;
+  sos24h?: number;
+  sos?: number;
+};
+
+async function callBackend(path: string, token: string) {
+  const url = apiUrl(path);
+  const r = await fetch(url, {
+    headers: { Authorization: `Bearer ${token}`, ...tunnelBypassHeaders() },
+    cache: "no-store",
+    signal: AbortSignal.timeout(20_000),
+  });
+  return r;
+}
+
 export async function GET(req: NextRequest) {
   try {
     const token = await getBearerOrCookieToken(req);
     const payload = token ? decodeJwtPayload(token) : null;
-    if (payload?.role !== "admin") {
+    if (!token || payload?.role !== "admin") {
       return NextResponse.json({ error: "Forbidden." }, { status: 403 });
     }
 
-    const dayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
-
-    const [userCount, lawyerCount, sosCount, recentUsers, pgOk] =
-      await Promise.all([
-        prisma.user.count(),
-        prisma.user.count({ where: { role: Role.LAWYER } }),
-        prisma.sosEvent.count({
-          where: { createdAt: { gte: dayAgo } },
-        }),
-        prisma.user.findMany({
-          orderBy: { createdAt: "desc" },
-          take: 50,
-          select: {
-            id: true,
-            externalId: true,
-            email: true,
-            name: true,
-            role: true,
-            createdAt: true,
-          },
-        }),
-        prisma.$queryRaw`SELECT 1`.then(() => true).catch(() => false),
+    let usersPayload: { users?: BackendUser[] } = {};
+    let statsPayload: BackendStats = {};
+    let dbOk = false;
+    try {
+      const [u, s] = await Promise.all([
+        callBackend("/api/admin/users-with-status", token),
+        callBackend("/api/admin/stats", token),
       ]);
+      if (u.ok) {
+        usersPayload = (await u.json()) as { users?: BackendUser[] };
+        dbOk = true;
+      }
+      if (s.ok) {
+        statsPayload = (await s.json()) as BackendStats;
+      }
+    } catch (e) {
+      console.error("[admin] backend fetch failed:", e);
+    }
 
-    const users = recentUsers.map((u) => ({
-      id: u.id,
-      externalId: u.externalId,
-      email: u.email,
-      name: u.name ?? "",
-      role: u.role,
-      createdAt: u.createdAt.toISOString(),
-      /** Billing not on Postgres User yet; default false until synced from Mongo/payments. */
-      isPro: false,
+    const rawUsers: BackendUser[] = Array.isArray(usersPayload.users) ? usersPayload.users : [];
+    const users = rawUsers.map((u) => ({
+      id: u._id,
+      externalId: u._id,
+      email: u.email ?? "",
+      phone: u.phone ?? "",
+      name: u.full_name ?? "",
+      role: (u.role ?? "user").toUpperCase(),
+      createdAt: u.createdAt ?? new Date(0).toISOString(),
+      isPro: !!u.is_subscribed,
+      paymentExempt: !!u.manually_added,
+      isActive: u.is_active !== false,
+      isVerified: !!u.is_verified,
+      subscriptionExpiry: u.subscription_expiry ?? null,
+      status:
+        u.computed_status ??
+        u.status ??
+        (u.manually_added ? "free" : u.is_subscribed ? "active" : "no_subscription"),
     }));
-
-    const health = {
-      database: pgOk ? "OK" : "DOWN",
-      api: "OK",
-      timestamp: new Date().toISOString(),
-    };
 
     return NextResponse.json({
       stats: {
-        users: userCount,
-        lawyers: lawyerCount,
-        sos: sosCount,
+        users: statsPayload.totalUsers ?? statsPayload.users ?? users.length,
+        lawyers:
+          statsPayload.activeLawyers ??
+          statsPayload.lawyers ??
+          users.filter((u) => u.role === "LAWYER").length,
+        sos: statsPayload.eventsToday ?? statsPayload.sos24h ?? statsPayload.sos ?? 0,
       },
       users,
-      health,
+      health: {
+        database: dbOk ? "OK" : "DOWN",
+        api: "OK",
+        timestamp: new Date().toISOString(),
+      },
     });
   } catch (error) {
-    console.error("Admin API Error:", error);
+    console.error("Admin Dashboard Error:", error);
     return NextResponse.json(
       { error: "Failed to fetch admin data" },
       { status: 500 },
