@@ -248,10 +248,11 @@ export default function CallRoom({ channel }: { channel: string }) {
 
   const freeSec = PRICING.freeCallMinutes * 60;
   useEffect(() => {
-    if (extendDecision === null && elapsedSec >= freeSec) {
-      setExtendDecision("asked");
-    }
-  }, [elapsedSec, freeSec, extendDecision]);
+    const elapsed = Date.now() - callStartedAt;
+    const ms = Math.max(0, PRICING.freeCallMinutes * 60_000 - elapsed);
+    const id = window.setTimeout(() => setExtendDecision("asked"), ms);
+    return () => window.clearTimeout(id);
+  }, [callStartedAt]);
 
   const [client] = useState<IAgoraRTCClient>(() => AgoraRTC.createClient({ mode: "rtc", codec: "vp8" }));
 
@@ -1042,7 +1043,7 @@ export default function CallRoom({ channel }: { channel: string }) {
                   onClick={async () => {
                     try {
                       const r = await createOvertimeOrder(summary.minutes);
-                      window.location.href = r.approveUrl;
+                      window.location.assign(r.approveUrl);
                     } catch {
                       closeSummary();
                     }

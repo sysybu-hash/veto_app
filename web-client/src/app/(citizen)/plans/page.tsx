@@ -81,7 +81,7 @@ export default function PlansPage() {
     try {
       const r = await createPlanOrder(planId);
       if (r.kind === "redirect") {
-        window.location.href = r.approveUrl;
+        window.location.assign(r.approveUrl);
         return;
       }
       setNotice("המנוי הופעל. תוקף עד " + new Date(r.expiry).toLocaleDateString("he-IL"));

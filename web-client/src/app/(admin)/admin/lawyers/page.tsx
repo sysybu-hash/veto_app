@@ -133,8 +133,24 @@ export default function AdminLawyersPage() {
   }, []);
 
   useEffect(() => {
-    void refresh();
-  }, [refresh]);
+    let cancelled = false;
+    (async () => {
+      try {
+        const data = await listLawyers();
+        if (!cancelled) setList(data);
+      } catch (e) {
+        if (!cancelled) {
+          setList([]);
+          setErrMsg(e instanceof Error ? e.message : "טעינה נכשלה");
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const filtered = useMemo(() => {
     if (!list) return [];
