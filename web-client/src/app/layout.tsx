@@ -8,6 +8,7 @@ import { AiOverlayErrorBoundary } from "@/components/ui/AiOverlayErrorBoundary";
 import { GlobalAiOverlay } from "@/components/ui/GlobalAiOverlay";
 import { ToastHost } from "@/components/ui/ToastHost";
 import { UniversalNav } from "@/components/navigation/UniversalNav";
+import { CookieConsent } from "@/components/privacy/CookieConsent";
 import "./globals.css";
 
 const heebo = Heebo({
@@ -120,6 +121,7 @@ export default function RootLayout({
           <AiOverlayErrorBoundary>
             <GlobalAiOverlay />
           </AiOverlayErrorBoundary>
+          <CookieConsent />
         </LocaleProvider>
       </body>
     </html>

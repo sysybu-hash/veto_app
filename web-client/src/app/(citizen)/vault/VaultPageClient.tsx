@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { EvidenceDTO } from "@/app/actions/vault";
 import { deleteEvidence, syncSosArtifactsToVault } from "@/app/actions/vault";
+import { fetchVaultTimeline, type TimelineItem } from "@/api/advancedApi";
 import { getJwt } from "@/lib/authToken";
 import { useTranslation } from "@/lib/i18n/LocaleProvider";
 import {
@@ -170,6 +171,7 @@ export function VaultPageClient({
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [syncBusy, setSyncBusy] = useState(false);
   const [syncMsg, setSyncMsg] = useState<string | null>(null);
+  const [timeline, setTimeline] = useState<TimelineItem[]>([]);
   const syncOnce = useRef(false);
 
   useEffect(() => {
@@ -185,6 +187,21 @@ export function VaultPageClient({
     }
     queueMicrotask(() => setIsHydrating(false));
   }, [router]);
+
+  useEffect(() => {
+    if (!getJwt()) return;
+    let cancelled = false;
+    void fetchVaultTimeline()
+      .then((items) => {
+        if (!cancelled) setTimeline(items.slice(0, 6));
+      })
+      .catch(() => {
+        if (!cancelled) setTimeline([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [evidenceRows.length]);
 
   const folderList: FolderBase[] = useMemo(() => {
     const cats = [...new Set(evidenceRows.map((e) => e.category))];
@@ -385,6 +402,47 @@ export function VaultPageClient({
             >
               {actionError}
             </div>
+          )}
+
+          {timeline.length > 0 && (
+            <section className="mb-10 rounded-3xl border border-white/10 bg-white/[0.04] p-4 backdrop-blur-xl">
+              <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+                <div>
+                  <h2 className="font-frank text-xl font-black text-slate-100">ציר זמן ראיות</h2>
+                  <p className="text-sm text-slate-400">SOS, מסמכים, תמלולים ושיתוף עם עורך דין במקום אחד.</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => window.print()}
+                  className={`px-4 py-2 text-sm font-bold ${btnSecondaryGlass}`}
+                >
+                  ייצוא תיק
+                </button>
+              </div>
+              <div className="grid gap-3 md:grid-cols-2">
+                {timeline.map((item) => (
+                  <article key={`${item.type}-${item.id}`} className="rounded-2xl border border-white/10 bg-slate-950/40 p-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="text-sm font-black text-slate-100">{item.title}</p>
+                        <p className="mt-1 text-xs text-slate-400">
+                          {item.at ? new Intl.DateTimeFormat("he-IL", { dateStyle: "short", timeStyle: "short" }).format(new Date(item.at)) : ""}
+                        </p>
+                      </div>
+                      <span className="rounded-full bg-[#C5A059]/15 px-2 py-1 text-xs font-bold text-[#D8B867]">
+                        {item.type === "sos" ? "SOS" : "מסמך"}
+                      </span>
+                    </div>
+                    <div className="mt-3 flex flex-wrap gap-2 text-xs text-slate-300">
+                      {item.status && <span className="rounded-full bg-white/10 px-2 py-1">{item.status}</span>}
+                      {item.hasRecording && <span className="rounded-full bg-white/10 px-2 py-1">הקלטה</span>}
+                      {item.hasTranscript && <span className="rounded-full bg-white/10 px-2 py-1">תמלול</span>}
+                      {item.sharedWithLawyer && <span className="rounded-full bg-white/10 px-2 py-1">שותף</span>}
+                    </div>
+                  </article>
+                ))}
+              </div>
+            </section>
           )}
 
           <section className="mb-10">

@@ -41,7 +41,8 @@ function PaymentReturnInner() {
           planParam === "standard" || planParam === "family"
             ? planParam
             : undefined;
-        const res = await captureSubscriptionPayment(orderId, type, planId);
+        const eventId = searchParams.get("eventId") ?? undefined;
+        const res = await captureSubscriptionPayment(orderId, type, planId, eventId);
         if (res.success) {
           setStatus("ok");
           if (type === "consultation") {

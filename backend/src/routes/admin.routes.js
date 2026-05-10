@@ -2,11 +2,12 @@ const express = require('express');
 const { protect, authorize } = require('../middleware/auth.middleware');
 const {
   getAdminSettings, updateFixedOtpSetting, getAdminStats,
+  updateEuComplianceMode,
   getAllUsers, createUser, updateUser, deleteUser,
   getAllLawyers, createLawyer, updateLawyer, deleteLawyer,
   getPendingLawyers, approveLawyer, rejectLawyer,
   getEmergencyLogs, updateEmergencyLog, deleteEmergencyLog,
-  getLoginLogs, getAllUsersWithStatus,
+  getLoginLogs, getAuditLogs, getSystemHealth, getAllUsersWithStatus,
 } = require('../controllers/admin.controller');
 
 const router = express.Router();
@@ -14,6 +15,8 @@ router.use(protect, authorize('admin'));
 
 router.route('/settings').get(getAdminSettings);
 router.route('/settings/fixed-otp').put(updateFixedOtpSetting);
+router.route('/settings/eu-compliance').put(updateEuComplianceMode);
+router.get('/system-health', getSystemHealth);
 
 router.route('/users').get(getAllUsers).post(createUser);
 router.route('/users/:id').put(updateUser).delete(deleteUser);
@@ -29,6 +32,7 @@ router.route('/emergency-logs/:id').put(updateEmergencyLog).delete(deleteEmergen
 
 // ── New endpoints ──────────────────────────────────────────────
 router.get('/login-logs', getLoginLogs);
+router.get('/audit-logs', getAuditLogs);
 router.get('/users-with-status', getAllUsersWithStatus);
 
 // Subscriptions endpoint — returns all users with sub status (for SubscriptionAdminScreen)

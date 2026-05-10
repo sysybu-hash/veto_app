@@ -19,6 +19,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { createSubscriptionOrder } from "@/api/paymentApi";
+import { registerPasskey, passkeysSupported } from "@/api/passkeyApi";
 import {
   btnPrimaryDark,
   btnPrimaryGold,
@@ -76,6 +77,7 @@ export default function SettingsIndexPage() {
   const [payBusy, setPayBusy] = useState(false);
   const [payErr, setPayErr] = useState<string | null>(null);
   const [securityNote, setSecurityNote] = useState<string | null>(null);
+  const [passkeyBusy, setPasskeyBusy] = useState(false);
   const [vaultAccess, setVaultAccess] = useState(true);
   const [callRecording, setCallRecording] = useState(false);
   const [cameraAllowed, setCameraAllowed] = useState(true);
@@ -99,6 +101,18 @@ export default function SettingsIndexPage() {
 
   const saveSecurity = useCallback(() => {
     setSecurityNote("הגדרות האבטחה עודכנו במכשיר. הרשאות הדפדפן עצמן מנוהלות דרך Chrome.");
+  }, []);
+
+  const enablePasskey = useCallback(async () => {
+    setPasskeyBusy(true);
+    try {
+      await registerPasskey("VETO Passkey");
+      setSecurityNote("Passkey הופעל בהצלחה. בפעם הבאה ניתן להיכנס עם ביומטריה או PIN מכשיר.");
+    } catch (e) {
+      setSecurityNote(e instanceof Error ? e.message : "לא ניתן להפעיל Passkey כרגע.");
+    } finally {
+      setPasskeyBusy(false);
+    }
   }, []);
 
   return (
@@ -149,6 +163,27 @@ export default function SettingsIndexPage() {
           )}
 
           <div className="mt-5 grid gap-3">
+            <div className={`${glassPanelNested} p-4`}>
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex items-start gap-3">
+                  <KeyRound className="mt-0.5 h-5 w-5 text-[#9b7430]" aria-hidden />
+                  <div>
+                    <p className="text-sm font-black text-slate-100">כניסה עם Passkey</p>
+                    <p className="mt-1 text-xs leading-5 text-slate-400">
+                      הוספת כניסה ביומטרית או PIN מכשיר לצד OTP, בלי לבטל את דרך הכניסה הקיימת.
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => void enablePasskey()}
+                  disabled={passkeyBusy || !passkeysSupported()}
+                  className={`px-4 py-3 text-sm font-black ${btnPrimaryDark} disabled:opacity-50`}
+                >
+                  {passkeyBusy ? "מפעיל..." : "הפעל Passkey"}
+                </button>
+              </div>
+            </div>
             <ToggleCard
               id="vault-access"
               icon={LockKeyhole}

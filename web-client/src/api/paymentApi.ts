@@ -61,10 +61,11 @@ export async function createPlanOrder(planId: PlanId): Promise<PlanOrderResult> 
 /** Pay for overtime minutes after a call. */
 export async function createOvertimeOrder(
   minutes: number,
+  eventId?: string,
 ): Promise<CreateOrderResult & { amountIls: number; overtimeMinutes: number }> {
   const res = await authFetch(apiUrl("/api/payments/overtime"), {
     method: "POST",
-    body: JSON.stringify({ minutes }),
+    body: JSON.stringify({ minutes, eventId }),
   });
   if (!res.ok) throw new Error(await parseJsonError(res));
   const data = (await res.json()) as {
@@ -113,13 +114,14 @@ export async function captureSubscriptionPayment(
   orderId: string,
   type: "plan" | "subscription" | "consultation" | "overtime" = "subscription",
   planId?: PlanId,
+  eventId?: string,
 ): Promise<CaptureResult> {
   const res = await authFetch(apiUrl("/api/payments/capture"), {
     method: "POST",
     body: JSON.stringify(
       type === "plan" || type === "subscription"
         ? { subscriptionId: orderId, type, planId }
-        : { orderId, type, planId },
+        : { orderId, type, planId, eventId },
     ),
   });
   if (!res.ok) throw new Error(await parseJsonError(res));

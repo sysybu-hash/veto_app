@@ -7,7 +7,12 @@
 
 const router = require('express').Router();
 const rateLimit = require('express-rate-limit');
-const { aiChat } = require('../controllers/ai.controller');
+const {
+  aiChat,
+  publicAiChat,
+  createTransparencyLog,
+  listTransparencyLogs,
+} = require('../controllers/ai.controller');
 const { createLiveToken } = require('../controllers/geminiLive.controller');
 const { protect } = require('../middleware/auth.middleware');
 
@@ -40,6 +45,9 @@ router.get('/chat', (_req, res) => {
 });
 
 router.post('/chat', aiChatLimiter, protect, aiChat);
+router.post('/public-chat', aiChatLimiter, publicAiChat);
+router.get('/transparency-log', protect, listTransparencyLogs);
+router.post('/transparency-log', protect, createTransparencyLog);
 
 router.get('/live-token', (_req, res) => {
   res.status(200).json({

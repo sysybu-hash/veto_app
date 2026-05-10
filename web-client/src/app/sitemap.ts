@@ -4,7 +4,18 @@ const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || "https://veto.legal").repla
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const now = new Date();
-  return ["", "/pricing", "/register", "/register/lawyer", "/login"].map((path) => ({
+  return [
+    "",
+    "/pricing",
+    "/register",
+    "/register/lawyer",
+    "/login",
+    "/privacy",
+    "/terms",
+    "/cookies",
+    "/transparency",
+    "/privacy-rights",
+  ].map((path) => ({
     url: `${siteUrl}${path}`,
     lastModified: now,
     changeFrequency: path === "" ? "weekly" : "monthly",

@@ -27,6 +27,7 @@
     "@google/genai": "^1.48.0",
     "@google/generative-ai": "^0.24.1",
     "@sentry/node": "^10.47.0",
+    "@simplewebauthn/server": "^13.3.0",
     "agora-token": "^2.0.5",
     "axios": "^1.14.0",
     "cloudinary": "^2.9.0",

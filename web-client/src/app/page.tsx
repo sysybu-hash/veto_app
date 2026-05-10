@@ -50,8 +50,26 @@ const faqs = [
 ];
 
 export default function Home() {
+  const faqJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: faqs.map(([question, answer]) => ({
+      "@type": "Question",
+      name: question,
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: answer,
+      },
+    })),
+  };
+
   return (
     <main className="min-h-screen bg-[#eef1f5] text-slate-900" dir="rtl">
+      <script
+        type="application/ld+json"
+        suppressHydrationWarning
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+      />
       <section className="relative isolate overflow-hidden bg-[radial-gradient(circle_at_75%_12%,rgba(197,160,89,0.18),transparent_32%),linear-gradient(135deg,#f8fafc_0%,#eef1f5_45%,#d9dee7_100%)]">
         <div className="absolute inset-x-0 bottom-0 h-px bg-slate-300/80" aria-hidden />
 

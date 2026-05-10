@@ -12,6 +12,7 @@ const {
   verifyWebhookSignature,
 } = require('../services/paypal.service');
 const User = require('../models/User');
+const EmergencyEvent = require('../models/EmergencyEvent');
 const {
   PLANS,
   CONSULTATION_ILS,
@@ -44,6 +45,27 @@ function planExpiry(days) {
 function paypalPlanIdFor(planId) {
   const envName = PAYPAL_PLAN_ENV[planId];
   return envName ? process.env[envName]?.trim() : '';
+}
+
+function computeOvertimeCharge(minutes) {
+  const totalMinutes = Math.max(0, Math.ceil(Number(minutes) || 0));
+  const overtimeMinutes = Math.max(0, totalMinutes - FREE_CALL_MINUTES);
+  return {
+    minutes: totalMinutes,
+    overtimeMinutes,
+    amountIls: +(overtimeMinutes * OVERTIME_ILS_PER_MIN).toFixed(2),
+  };
+}
+
+function minutesFromEvent(event, fallbackMinutes) {
+  if (event?.call_duration_seconds) {
+    return Math.max(1, Math.ceil(event.call_duration_seconds / 60));
+  }
+  if (event?.call_started_at) {
+    const end = event.completed_at || new Date();
+    return Math.max(1, Math.ceil((new Date(end).getTime() - new Date(event.call_started_at).getTime()) / 60000));
+  }
+  return Math.max(0, Math.ceil(Number(fallbackMinutes) || 0));
 }
 
 async function activateUserPlan(user, planId, paypal = {}) {
@@ -146,21 +168,46 @@ exports.createConsultationOrder = async (req, res) => {
 
 exports.createOvertimeOrder = async (req, res) => {
   if (!req.user?.userId) return res.status(401).json({ error: 'Authentication required.' });
-  const minutes = Math.max(0, Math.ceil(Number(req.body?.minutes) || 0));
-  const overMin = Math.max(0, minutes - FREE_CALL_MINUTES);
-  if (overMin <= 0) return res.status(400).json({ error: 'No overtime to charge.' });
+  const eventId = req.body?.eventId ? String(req.body.eventId) : null;
+  let event = null;
+  if (eventId) {
+    event = await EmergencyEvent.findById(eventId);
+    if (!event) return res.status(404).json({ error: 'Call event not found.' });
+    const isOwner = String(event.user_id) === String(req.user.userId);
+    if (!isOwner && req.user.role !== 'admin') {
+      return res.status(403).json({ error: 'Not allowed to pay for this event.' });
+    }
+  }
 
-  const ils = +(overMin * OVERTIME_ILS_PER_MIN).toFixed(2);
+  const charge = computeOvertimeCharge(minutesFromEvent(event, req.body?.minutes));
+  if (charge.overtimeMinutes <= 0) return res.status(400).json({ error: 'No overtime to charge.' });
+
   try {
-    const usd = ilsToUsd(ils);
+    const usd = ilsToUsd(charge.amountIls);
+    const eventQuery = eventId ? `&eventId=${encodeURIComponent(eventId)}` : '';
     const { orderId, approveUrl } = await createOrder(
       usd,
       'USD',
-      `VETO Legal - overtime ${overMin} minutes (${ils.toFixed(2)} ILS)`,
-      `${WEB_APP_URL}/payments/return?type=overtime`,
-      `${WEB_APP_URL}/payments/return?cancel=1&type=overtime`,
+      `VETO Legal - overtime ${charge.overtimeMinutes} minutes (${charge.amountIls.toFixed(2)} ILS)`,
+      `${WEB_APP_URL}/payments/return?type=overtime${eventQuery}`,
+      `${WEB_APP_URL}/payments/return?cancel=1&type=overtime${eventQuery}`,
     );
-    res.json({ orderId, approveUrl, amountIls: ils, overtimeMinutes: overMin });
+    if (event) {
+      event.charge_status = 'pending';
+      event.charge_minutes = charge.minutes;
+      event.charge_overtime_minutes = charge.overtimeMinutes;
+      event.charge_amount_ils = charge.amountIls;
+      event.charge_order_id = orderId;
+      event.charge_calculated_at = new Date();
+      await event.save();
+    }
+    res.json({
+      orderId,
+      approveUrl,
+      amountIls: charge.amountIls,
+      overtimeMinutes: charge.overtimeMinutes,
+      eventId,
+    });
   } catch (err) {
     console.error('[payment] overtime create:', err.message);
     if (err.code === 'PAYPAL_CONFIG_MISSING') {
@@ -171,7 +218,7 @@ exports.createOvertimeOrder = async (req, res) => {
 };
 
 exports.capturePayment = async (req, res) => {
-  const { orderId, subscriptionId, type, planId } = req.body || {};
+  const { orderId, subscriptionId, type, planId, eventId } = req.body || {};
   const paymentId = subscriptionId || orderId;
   if (!paymentId) return res.status(400).json({ error: 'orderId or subscriptionId is required' });
 
@@ -218,6 +265,30 @@ exports.capturePayment = async (req, res) => {
         captureId: result.captureId,
         status: result.status,
         consultationToken: token,
+      });
+    }
+
+    if (type === 'overtime') {
+      const query = eventId
+        ? { _id: eventId }
+        : { charge_order_id: orderId };
+      const event = await EmergencyEvent.findOne(query);
+      if (event) {
+        const isOwner = String(event.user_id) === String(req.user.userId);
+        if (!isOwner && req.user.role !== 'admin') {
+          return res.status(403).json({ error: 'Not allowed to capture this event payment.' });
+        }
+        event.charge_status = 'paid';
+        event.charge_order_id = orderId || event.charge_order_id;
+        event.charge_capture_id = result.captureId || null;
+        event.charge_paid_at = new Date();
+        await event.save();
+      }
+      return res.json({
+        success: true,
+        captureId: result.captureId,
+        status: result.status,
+        eventId: event?._id || eventId || null,
       });
     }
 

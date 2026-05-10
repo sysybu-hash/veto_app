@@ -14,6 +14,8 @@ import AgoraRTC, {
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { getPublicAgoraAppId } from "@/lib/env";
+import { apiUrl, authFetch } from "@/api/apiClient";
+import { createActionPlan, type ActionPlan } from "@/api/advancedApi";
 import { PRICING, createOvertimeOrder } from "@/api/paymentApi";
 import { useTranslation } from "@/lib/i18n/LocaleProvider";
 import { connectSocket, getSocket } from "@/lib/socketClient";
@@ -45,7 +47,9 @@ function CallInner({ channel }: { channel: string }) {
     base: number;
     overtime: number;
     total: number;
+    status?: string;
   }>(null);
+  const [actionPlan, setActionPlan] = useState<ActionPlan | null>(null);
 
   useEffect(() => {
     const id = window.setInterval(() => {
@@ -205,6 +209,39 @@ function CallInner({ channel }: { channel: string }) {
     return { minutes, base, overtime, total: base + overtime };
   }, [callStartedAt]);
 
+  const finishBilling = useCallback(async () => {
+    const fallback = computeSummary();
+    if (!session?.eventId) return fallback;
+    try {
+      const res = await authFetch(apiUrl(`/api/calls/${session.eventId}/finish-billing`), {
+        method: "POST",
+        body: JSON.stringify({
+          durationSeconds: Math.max(1, Math.floor((Date.now() - callStartedAt) / 1000)),
+        }),
+      });
+      if (!res.ok) return fallback;
+      const data = (await res.json()) as {
+        charge?: {
+          minutes?: number;
+          baseIls?: number;
+          overtimeIls?: number;
+          totalIls?: number;
+          status?: string;
+        };
+      };
+      if (!data.charge) return fallback;
+      return {
+        minutes: data.charge.minutes ?? fallback.minutes,
+        base: data.charge.baseIls ?? fallback.base,
+        overtime: data.charge.overtimeIls ?? fallback.overtime,
+        total: data.charge.totalIls ?? fallback.total,
+        status: data.charge.status,
+      };
+    } catch {
+      return fallback;
+    }
+  }, [callStartedAt, computeSummary, session]);
+
   const finalize = useCallback(async () => {
     try {
       localCameraTrack?.close();
@@ -225,10 +262,16 @@ function CallInner({ channel }: { channel: string }) {
       router.replace("/hub");
       return;
     }
-    setSummary(computeSummary());
+    const nextSummary = await finishBilling();
+    setSummary(nextSummary);
+    if (session?.eventId) {
+      void createActionPlan(session.eventId)
+        .then(setActionPlan)
+        .catch(() => setActionPlan(null));
+    }
     setExtendDecision("ended");
     await finalize();
-  }, [chatOnly, clearCallSession, computeSummary, finalize, router]);
+  }, [chatOnly, clearCallSession, finalize, finishBilling, router, session]);
 
   const closeSummary = useCallback(() => {
     clearCallSession();
@@ -480,6 +523,25 @@ function CallInner({ channel }: { channel: string }) {
                 ? "השיחה חרגה מהזמן הכלול. אישור החיוב יעביר אותך לדף תשלום."
                 : "השיחה הסתיימה במסגרת הזמן הכלול."}
             </p>
+            {actionPlan && (
+              <div className="mt-4 rounded-2xl border border-white/10 bg-white/[0.04] p-4">
+                <p className="text-sm font-bold text-amber-200">תוכנית פעולה משפטית</p>
+                <p className="mt-1 text-xs leading-5 text-slate-400">{actionPlan.ai.disclosure}</p>
+                <ul className="mt-3 space-y-2 text-sm">
+                  {actionPlan.steps.map((step) => (
+                    <li key={step.key} className="flex items-center justify-between gap-3 rounded-xl bg-white/[0.04] px-3 py-2">
+                      <span>{step.title}</span>
+                      <span className="text-xs text-slate-400">{step.action}</span>
+                    </li>
+                  ))}
+                </ul>
+                <div className="mt-3 flex flex-wrap gap-2 text-xs text-slate-300">
+                  {actionPlan.suggestedDocuments.map((doc) => (
+                    <span key={doc} className="rounded-full bg-white/10 px-2 py-1">{doc}</span>
+                  ))}
+                </div>
+              </div>
+            )}
             <div className="mt-5 flex justify-between gap-2">
               <button
                 type="button"
@@ -493,8 +555,8 @@ function CallInner({ channel }: { channel: string }) {
                   type="button"
                   onClick={async () => {
                     try {
-                      const r = await createOvertimeOrder(summary.minutes);
-                      window.location.href = r.approveUrl;
+                      const r = await createOvertimeOrder(summary.minutes, session?.eventId);
+                      window.location.assign(r.approveUrl);
                     } catch {
                       closeSummary();
                     }

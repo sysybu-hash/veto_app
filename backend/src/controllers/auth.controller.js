@@ -8,7 +8,14 @@ const crypto = require('crypto');
 const User      = require('../models/User');
 const Lawyer    = require('../models/Lawyer');
 const LoginLog  = require('../models/LoginLog');
+const PasskeyChallenge = require('../models/PasskeyChallenge');
 const { signToken } = require('../middleware/auth.middleware');
+const {
+  generateRegistrationOptions,
+  verifyRegistrationResponse,
+  generateAuthenticationOptions,
+  verifyAuthenticationResponse,
+} = require('@simplewebauthn/server');
 
 // ── Helper: persist login attempt log ─────────────────────────
 async function logEvent(data) {
@@ -107,6 +114,35 @@ function normalizePhoneForVeto(raw) {
 function isAdminPhone(phone) {
   const clean = cleanPhone(phone);
   return clean === '972525640021' || clean === '972506400030';
+}
+
+function webauthnConfig(req) {
+  const appUrl = process.env.WEB_APP_URL || process.env.FRONTEND_URL || `${req.protocol}://${req.get('host')}`;
+  const origin = new URL(appUrl).origin;
+  return {
+    rpName: process.env.WEBAUTHN_RP_NAME || 'VETO Legal',
+    rpID: process.env.WEBAUTHN_RP_ID || new URL(origin).hostname,
+    origin,
+  };
+}
+
+async function findAccountById(id, role, includePasskeys = false) {
+  const Model = role === 'lawyer' ? Lawyer : User;
+  const query = Model.findById(id);
+  if (includePasskeys) query.select('+passkeys');
+  const doc = await query;
+  if (!doc) return null;
+  return { doc, role: role === 'admin' ? 'admin' : role };
+}
+
+function publicAccount(doc, role) {
+  return {
+    id: doc._id,
+    role,
+    full_name: doc.full_name,
+    phone: doc.phone,
+    email: doc.email || null,
+  };
 }
 
 // ============================================================
@@ -350,6 +386,157 @@ const verifyOTP = async (req, res, next) => {
   }
 };
 
+const passkeyRegisterOptions = async (req, res, next) => {
+  try {
+    const account = await findAccountById(req.user.userId, req.user.role, true);
+    if (!account) return res.status(404).json({ error: 'Account not found.' });
+    const { rpName, rpID } = webauthnConfig(req);
+    const passkeys = account.doc.passkeys || [];
+    const options = await generateRegistrationOptions({
+      rpName,
+      rpID,
+      userID: Buffer.from(String(account.doc._id)),
+      userName: account.doc.email || account.doc.phone || String(account.doc._id),
+      userDisplayName: account.doc.full_name || 'VETO user',
+      attestationType: 'none',
+      excludeCredentials: passkeys.map((p) => ({
+        id: p.credential_id,
+        transports: p.transports || [],
+      })),
+      authenticatorSelection: {
+        residentKey: 'preferred',
+        userVerification: 'preferred',
+      },
+    });
+    await PasskeyChallenge.findOneAndUpdate(
+      { account_id: account.doc._id, role: account.role, purpose: 'register' },
+      {
+        challenge: options.challenge,
+        expires_at: new Date(Date.now() + 5 * 60 * 1000),
+      },
+      { upsert: true, new: true },
+    );
+    res.json({ options });
+  } catch (err) { next(err); }
+};
+
+const passkeyRegisterVerify = async (req, res, next) => {
+  try {
+    const account = await findAccountById(req.user.userId, req.user.role, true);
+    if (!account) return res.status(404).json({ error: 'Account not found.' });
+    const challengeDoc = await PasskeyChallenge.findOne({
+      account_id: account.doc._id,
+      role: account.role,
+      purpose: 'register',
+      expires_at: { $gt: new Date() },
+    });
+    if (!challengeDoc) return res.status(400).json({ error: 'Passkey challenge expired.' });
+
+    const { rpID, origin } = webauthnConfig(req);
+    const verification = await verifyRegistrationResponse({
+      response: req.body?.response,
+      expectedChallenge: challengeDoc.challenge,
+      expectedOrigin: origin,
+      expectedRPID: rpID,
+    });
+    if (!verification.verified || !verification.registrationInfo?.credential) {
+      return res.status(400).json({ error: 'Passkey registration failed.' });
+    }
+    const credential = verification.registrationInfo.credential;
+    const existing = (account.doc.passkeys || []).some((p) => p.credential_id === credential.id);
+    if (!existing) {
+      account.doc.passkeys.push({
+        credential_id: credential.id,
+        public_key: Buffer.from(credential.publicKey),
+        counter: credential.counter || 0,
+        transports: req.body?.response?.response?.transports || [],
+        device_name: req.body?.deviceName || 'Passkey',
+      });
+      await account.doc.save();
+    }
+    await PasskeyChallenge.deleteOne({ _id: challengeDoc._id });
+    res.json({ success: true, passkeyCount: account.doc.passkeys.length });
+  } catch (err) { next(err); }
+};
+
+const passkeyLoginOptions = async (req, res, next) => {
+  try {
+    const normalizedPhone = normalizePhoneForVeto(req.body?.phone);
+    if (!normalizedPhone) return res.status(400).json({ error: 'Valid phone is required.' });
+    const found = await findByPhone(normalizedPhone);
+    if (!found) return res.status(404).json({ error: 'Account not found.' });
+    const account = await findAccountById(found.doc._id, found.role, true);
+    const passkeys = account?.doc.passkeys || [];
+    if (passkeys.length === 0) return res.status(404).json({ error: 'No passkey is registered for this account.' });
+    const { rpID } = webauthnConfig(req);
+    const options = await generateAuthenticationOptions({
+      rpID,
+      userVerification: 'preferred',
+      allowCredentials: passkeys.map((p) => ({
+        id: p.credential_id,
+        transports: p.transports || [],
+      })),
+    });
+    await PasskeyChallenge.findOneAndUpdate(
+      { account_id: account.doc._id, role: account.role, purpose: 'login' },
+      {
+        challenge: options.challenge,
+        expires_at: new Date(Date.now() + 5 * 60 * 1000),
+      },
+      { upsert: true, new: true },
+    );
+    res.json({ options, account: publicAccount(account.doc, account.role) });
+  } catch (err) { next(err); }
+};
+
+const passkeyLoginVerify = async (req, res, next) => {
+  try {
+    const normalizedPhone = normalizePhoneForVeto(req.body?.phone);
+    if (!normalizedPhone) return res.status(400).json({ error: 'Valid phone is required.' });
+    const found = await findByPhone(normalizedPhone);
+    if (!found) return res.status(404).json({ error: 'Account not found.' });
+    const account = await findAccountById(found.doc._id, found.role, true);
+    const challengeDoc = await PasskeyChallenge.findOne({
+      account_id: account.doc._id,
+      role: account.role,
+      purpose: 'login',
+      expires_at: { $gt: new Date() },
+    });
+    if (!challengeDoc) return res.status(400).json({ error: 'Passkey challenge expired.' });
+
+    const credentialId = req.body?.response?.id;
+    const passkey = (account.doc.passkeys || []).find((p) => p.credential_id === credentialId);
+    if (!passkey) return res.status(404).json({ error: 'Passkey not found for this account.' });
+
+    const { rpID, origin } = webauthnConfig(req);
+    const verification = await verifyAuthenticationResponse({
+      response: req.body?.response,
+      expectedChallenge: challengeDoc.challenge,
+      expectedOrigin: origin,
+      expectedRPID: rpID,
+      credential: {
+        id: passkey.credential_id,
+        publicKey: passkey.public_key,
+        counter: passkey.counter || 0,
+        transports: passkey.transports || [],
+      },
+    });
+    if (!verification.verified) return res.status(400).json({ error: 'Passkey login failed.' });
+
+    passkey.counter = verification.authenticationInfo?.newCounter || passkey.counter || 0;
+    passkey.last_used_at = new Date();
+    if (account.role === 'lawyer' && !account.doc.is_approved) {
+      return res.status(403).json({ error: 'Lawyer account is pending admin approval.' });
+    }
+    await account.doc.save();
+    await PasskeyChallenge.deleteOne({ _id: challengeDoc._id });
+    logEvent({ phone: normalizedPhone, role: account.role, event: 'passkey_login', success: true, user_id: account.doc._id, ip: req.ip, user_agent: req.headers['user-agent'] });
+
+    const token = signToken({ userId: account.doc._id, role: account.role });
+    res.json({ token, role: account.role, user: publicAccount(account.doc, account.role) });
+  } catch (err) { next(err); }
+};
+
 // ============================================================
 //  POST /auth/google
 //  Body: { id_token, preferred_language? }
@@ -580,4 +767,14 @@ const devLogin = async (req, res) => {
   }
 };
 
-module.exports = { register, requestOTP, verifyOTP, googleAuth, devLogin };
+module.exports = {
+  register,
+  requestOTP,
+  verifyOTP,
+  googleAuth,
+  devLogin,
+  passkeyRegisterOptions,
+  passkeyRegisterVerify,
+  passkeyLoginOptions,
+  passkeyLoginVerify,
+};

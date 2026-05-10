@@ -34,6 +34,8 @@ router.post('/:eventId/cloud-recording/stop', protect, callCtrl.stopCloudRecordi
 router.post('/:eventId/artifacts/save', protect, callCtrl.saveCallArtifacts);
 router.delete('/:eventId/artifacts', protect, callCtrl.deleteCallArtifacts);
 router.post('/:eventId/screen-recording', protect, upload.single('recording'), callCtrl.uploadScreenRecording);
+router.post('/:eventId/finish-billing', protect, callCtrl.finishCallBilling);
+router.post('/:eventId/action-plan', protect, callCtrl.createActionPlan);
 
 // GET  /api/calls/:eventId          — Get call details
 router.get('/:eventId', protect, callCtrl.getCallDetails);

@@ -30,6 +30,7 @@ import { useToastStore } from "@/store/useToastStore";
 
 type AiChatApiResponse = {
   classified?: boolean;
+  guest?: boolean;
   reply?: string;
   specialization?: string;
   lawyer?: { id?: string; name?: string; phone?: string } | null;
@@ -161,6 +162,8 @@ export function GlobalAiOverlay() {
   const pushToast = useToastStore((s) => s.push);
 
   const isAssistantActive = isOpen || isLoading;
+  const isGuestMode = typeof window !== "undefined" ? !getJwt() : true;
+
   const speakText = useCallback((text: string) => {
     if (typeof window === "undefined" || !("speechSynthesis" in window)) {
       return;
@@ -176,6 +179,12 @@ export function GlobalAiOverlay() {
   }, [locale]);
 
   const setAssistantMode = useCallback((m: AiAssistantMode) => {
+    const token = getJwt();
+    if (!token && m !== "text") {
+      setErrorBanner("מצב אורח פתוח לצ'אט טקסט בלבד. התחברות תפתח קול, מצלמה, כספת וחיבור מלא למערכת.");
+      setMode("text");
+      return;
+    }
     if (m !== "vision") {
       setVisionError(null);
     }
@@ -199,6 +208,10 @@ export function GlobalAiOverlay() {
   }, [clearRequestedMode, isOpen, requestedMode, setAssistantMode]);
 
   const captureAndAnalyze = useCallback(async () => {
+    if (!getJwt()) {
+      setErrorBanner(t("ai.signInBanner"));
+      return;
+    }
     const video = videoRef.current;
     if (!video || video.videoWidth === 0 || visionBusy) return;
 
@@ -244,6 +257,10 @@ export function GlobalAiOverlay() {
 
   const saveVisionToVault = useCallback(async () => {
     if (!lastVisionAnalysis?.trim() || vaultSaveBusy) return;
+    if (!getJwt()) {
+      setErrorBanner(t("ai.signInBanner"));
+      return;
+    }
     setVaultSaveBusy(true);
     try {
       const res = await saveAiAnalysisAsFile(lastVisionAnalysis);
@@ -341,10 +358,6 @@ export function GlobalAiOverlay() {
     if (!text || isLoading) return;
 
     const token = getJwt();
-    if (!token) {
-      setErrorBanner(t("ai.signInBanner"));
-      return;
-    }
 
     setErrorBanner(null);
     const userMessage: AiChatMessage = {
@@ -360,11 +373,11 @@ export function GlobalAiOverlay() {
     );
 
     try {
-      const res = await fetch(apiUrl("/api/ai/chat"), {
+      const res = await fetch(apiUrl(token ? "/api/ai/chat" : "/api/ai/public-chat"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
           ...tunnelBypassHeaders(),
         },
         body: JSON.stringify({
@@ -394,6 +407,15 @@ export function GlobalAiOverlay() {
         speakText(assistantMessage.content);
       }
     } catch (e) {
+      if (!token) {
+        addMessage({
+          id: newId(),
+          role: "assistant",
+          content:
+            "אפשר להשתמש בצ'אט גם כאורח למידע כללי על VETO, מסמכים ותחומי משפט. כדי לפתוח SOS, לשמור בכספת, להשתמש בקול/מצלמה או לקבל התאמה מלאה לעורך דין צריך להתחבר או להירשם.",
+        });
+        return;
+      }
       const msg =
         e instanceof Error ? e.message : t("ai.errChatFallback");
       addMessage({
@@ -656,6 +678,12 @@ export function GlobalAiOverlay() {
             {errorBanner && (
               <div className="shrink-0 border-b border-amber-500/40 bg-amber-500/15 px-3 py-2 text-xs text-amber-200 backdrop-blur-sm">
                 {errorBanner}
+              </div>
+            )}
+
+            {isGuestMode && mode === "text" && (
+              <div className="shrink-0 border-b border-white/10 bg-slate-900/70 px-3 py-2 text-xs leading-5 text-slate-300">
+                מצב אורח: אפשר לקבל מידע כללי על VETO, תחומי משפט ומסמכים. התחברות פותחת SOS, כספת, קול, מצלמה ושמירת מסמכים.
               </div>
             )}
 

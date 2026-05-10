@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { triggerSosAlert } from "@/app/actions/sos";
 import { fetchProfile, type UserProfile } from "@/api/userApi";
+import { fetchEntitlement, type Entitlement } from "@/api/advancedApi";
 import { CitizenBottomNav } from "@/components/citizen/CitizenBottomNav";
 import { SpecializationDialog } from "@/components/dialogs/SpecializationDialog";
 import { btnPrimaryDark, btnSecondaryGlass, glassPanelNested } from "@/lib/vetoGlass";
@@ -65,6 +66,7 @@ export default function CitizenHubPage() {
   const [specializationDialogOpen, setSpecializationDialogOpen] = useState(false);
   const [callTypeDialogOpen, setCallTypeDialogOpen] = useState(false);
   const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [entitlement, setEntitlement] = useState<Entitlement | null>(null);
 
   const isSearching = useEmergencyStore((s) => s.isSearching);
   const lawyerFound = useEmergencyStore((s) => s.lawyerFound);
@@ -93,6 +95,13 @@ export default function CitizenHubPage() {
       })
       .catch(() => {
         if (!cancelled) setProfile(null);
+      });
+    void fetchEntitlement()
+      .then((next) => {
+        if (!cancelled) setEntitlement(next);
+      })
+      .catch(() => {
+        if (!cancelled) setEntitlement(null);
       });
     return () => {
       cancelled = true;
@@ -205,6 +214,14 @@ export default function CitizenHubPage() {
       router.push("/login");
       return;
     }
+    if (entitlement && !entitlement.allowed) {
+      if (entitlement.nextAction === "pricing" || entitlement.status === "payment_required") {
+        router.push("/pricing");
+      } else {
+        setErrorMessage(entitlement.reason);
+      }
+      return;
+    }
 
     startSearch();
     setErrorMessage(null);
@@ -274,7 +291,7 @@ export default function CitizenHubPage() {
       },
       { enableHighAccuracy: true, timeout: 12_000, maximumAge: 60_000 },
     );
-  }, [locale, router, setErrorMessage, startSearch]);
+  }, [entitlement, locale, router, setErrorMessage, startSearch]);
 
   const confirmSos = useCallback(() => {
     setSosDialogOpen(false);
@@ -334,6 +351,11 @@ export default function CitizenHubPage() {
                   : "לא פעיל"}
             </span>
           </div>
+          {entitlement && (
+            <p className="mt-2 text-xs font-semibold text-slate-600">
+              {entitlement.reason}
+            </p>
+          )}
         </div>
 
         <button

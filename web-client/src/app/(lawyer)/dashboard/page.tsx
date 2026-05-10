@@ -22,6 +22,7 @@ import {
   WifiOff,
 } from "lucide-react";
 import { fetchProfile, updateLawyerAvailability, type UserProfile } from "@/api/userApi";
+import { fetchLawyerCockpit, type LawyerCockpit } from "@/api/advancedApi";
 import { clearJwt, getJwt, getRoleFromJwt } from "@/lib/authToken";
 import { subscribeToPush } from "@/lib/pushClient";
 import { connectSocket, disconnectSocket, getSocket } from "@/lib/socketClient";
@@ -133,6 +134,7 @@ export default function LawyerDashboardPage() {
   const [autoAccept, setAutoAccept] = useState(false);
   const [currentLawyerId, setCurrentLawyerId] = useState<string | null>(null);
   const [availabilityLoaded, setAvailabilityLoaded] = useState(false);
+  const [cockpit, setCockpit] = useState<LawyerCockpit | null>(null);
 
   const isAvailable = useLawyerStore((s) => s.isAvailable);
   const activeAlert = useLawyerStore((s) => s.activeAlert);
@@ -171,6 +173,21 @@ export default function LawyerDashboardPage() {
       .catch(() => setProfile(null))
       .finally(() => setAvailabilityLoaded(true));
   }, [setAvailable]);
+
+  useEffect(() => {
+    if (!getJwt() || getRoleFromJwt() !== "lawyer") return;
+    let cancelled = false;
+    void fetchLawyerCockpit()
+      .then((data) => {
+        if (!cancelled) setCockpit(data);
+      })
+      .catch(() => {
+        if (!cancelled) setCockpit(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [activeAlert?.eventId, isAvailable]);
 
   useEffect(() => {
     if (!availabilityLoaded || !getJwt() || getRoleFromJwt() !== "lawyer") return;
@@ -388,6 +405,14 @@ export default function LawyerDashboardPage() {
         </nav>
 
         <div className="mt-5">
+          {cockpit && (
+            <section className={`${glassPanelNested} mb-5 grid gap-3 p-4 md:grid-cols-4`}>
+              <MiniRow icon={ShieldCheck} title="Trust" value={cockpit.lawyer.trust?.license_verified ? "רישיון מאומת" : "ממתין לאימות"} />
+              <MiniRow icon={BriefcaseBusiness} title="תיקים שטופלו" value={String(cockpit.status.handledCount || 0)} />
+              <MiniRow icon={Clock3} title="תגובה ממוצעת" value={cockpit.status.avgResponseSeconds ? `${cockpit.status.avgResponseSeconds}s` : "אין נתון"} />
+              <MiniRow icon={Wifi} title="מצב עבודה" value={cockpit.status.busy ? "עסוק בשיחה" : "פנוי"} />
+            </section>
+          )}
           {activeTab === "overview" && (
             <OverviewPanel
               isAvailable={isAvailable}
