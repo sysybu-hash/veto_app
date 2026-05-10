@@ -84,8 +84,10 @@ services:
       #   sync: false
 
       # ── Web Push (VAPID) ──────────────────────────────────────
+      # Both keys set in Dashboard so we can rotate the keypair
+      # without committing the public key to the repo.
       - key: VAPID_PUBLIC_KEY
-        value: BA6oUwfq1kWgWOBSuLmaXiN0TnmZ0xa0aLXGgfg-trezDAwqW_OiVZEWZ0KkaDmNswOeLipP8zcpib_dFE8Q0io
+        sync: false
       - key: VAPID_PRIVATE_KEY
         sync: false
       - key: VAPID_SUBJECT
@@ -100,3 +102,23 @@ services:
       # הסר או שנה ל-0 כשמחברים ספק SMS אמיתי
       # - key: RETURN_OTP_IN_JSON
       #   value: "1"
+
+  # ────────────────────────────────────────────────────────────
+  # Health Ping — Render Free dynos sleep after 15 min of inactivity.
+  # This cron hits /health every 14 min so Socket.io / SOS dispatch
+  # never lose state to a cold start. Free plan, ~1 s per run.
+  # Uses the same Node image as the backend — no Docker image to maintain.
+  # ────────────────────────────────────────────────────────────
+  - type: cron
+    name: veto-health-ping
+    runtime: node
+    region: frankfurt
+    plan: free
+    branch: main
+    schedule: "*/14 * * * *"
+    rootDir: backend
+    buildCommand: echo "no build needed"
+    startCommand: node scripts/health-ping.js
+    envVars:
+      - key: HEALTH_URL
+        value: https://veto-app-new.onrender.com/health

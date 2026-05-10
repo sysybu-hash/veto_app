@@ -8,6 +8,7 @@
 //  - SDP/ICE (legacy WebRTC) removed — use Agora for A/V
 // ============================================================
 
+const Sentry = require('../../instrument');
 const EmergencyEvent = require('../models/EmergencyEvent');
 const Lawyer         = require('../models/Lawyer');
 const { buildRtcTokenForUid } = require('../services/agoraToken.service');
@@ -38,7 +39,14 @@ module.exports = function initCallSignaling(io) {
 
   io.on('connection', (socket) => {
     const decoded = socket.handshake.auth?.decoded;
-    if (!decoded) return;
+    if (!decoded) {
+      // socketAuth in dispatch.socket.js should have rejected this already.
+      // If we somehow got here without it, fail loud so the client retries
+      // instead of silently swallowing every event we register below.
+      socket.emit('call-error', { message: 'Unauthenticated socket — please reconnect.' });
+      try { socket.disconnect(true); } catch (_) { /* ignore */ }
+      return;
+    }
     const { userId, role } = decoded;
 
     // ════════════════════════════════════════════════════════════
@@ -273,7 +281,19 @@ module.exports = function initCallSignaling(io) {
       }
     });
 
-    socket.on('disconnect', () => {
+    socket.on('disconnect', (reason) => {
+      const uid = userId?.toString?.() ?? String(userId);
+      console.log(`[Socket/Call] User ${uid} disconnected. Reason: ${reason}`);
+      if (
+        Sentry.__vetoInstrumented &&
+        (reason === 'transport error' || reason === 'ping timeout')
+      ) {
+        Sentry.addBreadcrumb({
+          category: 'socket',
+          message: `Unexpected call signaling disconnect for user ${uid}: ${reason}`,
+          level: 'warning',
+        });
+      }
       for (const [roomId, room] of callRooms.entries()) {
         if (room.participants.has(socket.id)) {
           room.participants.delete(socket.id);

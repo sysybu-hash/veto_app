@@ -4,12 +4,18 @@
 //  "Uber for Lawyers" — real-time race-to-accept logic
 // ============================================================
 
+const crypto = require('crypto');
+const Sentry = require('../../instrument');
 const Lawyer         = require('../models/Lawyer');
 const User           = require('../models/User');
 const EmergencyEvent = require('../models/EmergencyEvent');
 const push           = require('../services/push.service');
 const { PLANS }      = require('../config/pricing');
 const { buildRtcTokenForUid } = require('../services/agoraToken.service');
+const {
+  findSpecialization,
+  getMatchTerms,
+} = require('../config/specializations');
 
 // ── Build WebRTC room link (replaces WhatsApp/Telegram) ───────
 // The room ID is the eventId. Both parties join /call?roomId=eventId
@@ -84,22 +90,6 @@ module.exports = function initDispatch(io) {
 
       const { location, preferredLanguage, specialization } = payload || {};
 
-      // Specialization → English DB terms map (mirrors ai.controller.js)
-      const SPEC_MAP = {
-        'פלילי':  ['criminal', 'Criminal', 'פלילי'],
-        criminal: ['criminal', 'Criminal', 'פלילי'],
-        'משפחה':  ['family', 'Family', 'משפחה'],
-        family:  ['family', 'Family', 'משפחה'],
-        'נדל"ן':  ['real estate', 'Real Estate', 'realestate', 'RealEstate', 'נדל"ן', 'נדלן'],
-        realestate: ['real estate', 'Real Estate', 'realestate', 'RealEstate', 'נדל"ן', 'נדלן'],
-        'עבודה':  ['labor', 'Labor', 'employment', 'Employment', 'עבודה'],
-        labor:   ['labor', 'Labor', 'employment', 'Employment', 'עבודה'],
-        'מסחרי':  ['commercial', 'Commercial', 'civil', 'Civil', 'מסחרי'],
-        civil:   ['commercial', 'Commercial', 'civil', 'Civil', 'מסחרי'],
-        'תעבורה': ['traffic', 'Traffic', 'transportation', 'Transportation', 'תעבורה'],
-        traffic: ['traffic', 'Traffic', 'transportation', 'Transportation', 'תעבורה'],
-      };
-
       if (
         !location ||
         typeof location !== 'object' ||
@@ -110,10 +100,14 @@ module.exports = function initDispatch(io) {
         return;
       }
 
-      if (specialization && !SPEC_MAP[specialization]) {
+      // `general` and falsy → no specialization filter, all available lawyers.
+      // Anything truthy + unrecognised → reject so we don't silently fall back.
+      const specEntry = specialization ? findSpecialization(specialization) : null;
+      if (specialization && !specEntry) {
         socket.emit('veto_error', { message: 'Unsupported specialization.' });
         return;
       }
+      const specMatchTerms = specEntry ? getMatchTerms(specEntry.id) : null;
 
       try {
         // 0. Plan / billing gate ─────────────────────────────
@@ -200,6 +194,7 @@ module.exports = function initDispatch(io) {
             coordinates: [location.lng, location.lat],
           },
           triggered_at: new Date(),
+          e2ee_secret:    crypto.randomBytes(32).toString('hex'),
         });
 
         const eventId = event._id.toString();
@@ -220,10 +215,11 @@ module.exports = function initDispatch(io) {
           ],
         };
 
-        // Filter by specialization if AI provided one
-        if (specialization && SPEC_MAP[specialization]) {
-          const terms = SPEC_MAP[specialization];
-          lawyerQuery.specializations = { $in: terms.map((t) => new RegExp(`^${t}$`, 'i')) };
+        // Filter by specialization if AI / picker provided one (skip for `general`).
+        if (specMatchTerms) {
+          lawyerQuery.specializations = {
+            $in: specMatchTerms.map((t) => new RegExp(`^${t}$`, 'i')),
+          };
         }
 
         let availableLawyers = await Lawyer.find(lawyerQuery).select(
@@ -231,7 +227,7 @@ module.exports = function initDispatch(io) {
         );
 
         // Fallback: if specialization filter yielded no lawyers, try all available
-        if (specialization && availableLawyers.length === 0) {
+        if (specMatchTerms && availableLawyers.length === 0) {
           delete lawyerQuery.specializations;
           availableLawyers = await Lawyer.find(lawyerQuery).select(
             'full_name phone whatsapp_number telegram_username preferred_language socket_id push_subscription'
@@ -476,7 +472,7 @@ module.exports = function initDispatch(io) {
       }
 
       try {
-        const ev = await EmergencyEvent.findById(eventId);
+        const ev = await EmergencyEvent.findById(eventId).select('+e2ee_secret');
         if (!ev) {
           socket.emit('veto_error', { message: 'Event not found.' });
           return;
@@ -488,6 +484,12 @@ module.exports = function initDispatch(io) {
         if (ev.status !== 'accepted') {
           socket.emit('veto_error', { message: 'Case is not ready for session.' });
           return;
+        }
+
+        let e2eeSecret = ev.e2ee_secret;
+        if (!e2eeSecret) {
+          e2eeSecret = crypto.randomBytes(32).toString('hex');
+          await EmergencyEvent.findByIdAndUpdate(eventId, { e2ee_secret: e2eeSecret });
         }
 
         await EmergencyEvent.findByIdAndUpdate(eventId, { call_type: callType });
@@ -527,6 +529,7 @@ module.exports = function initDispatch(io) {
           agoraToken: userAgora.token,
           agoraUid:   userAgora.agoraUid,
           tokenExpiresAt: userAgora.expiresAt || 0,
+          e2eeSecret,
         });
 
         if (ev.assigned_lawyer_id) {
@@ -537,6 +540,7 @@ module.exports = function initDispatch(io) {
             agoraToken: lawyerAgora.token,
             agoraUid:   lawyerAgora.agoraUid,
             tokenExpiresAt: lawyerAgora.expiresAt || 0,
+            e2eeSecret,
           });
         }
 
@@ -598,8 +602,20 @@ module.exports = function initDispatch(io) {
     // ════════════════════════════════════════════════════════
     //  EVENT: disconnect
     // ════════════════════════════════════════════════════════
-    socket.on('disconnect', async () => {
-      console.log(`🔌 Disconnected [${role}] id=${userId}`);
+    socket.on('disconnect', async (reason) => {
+      const uid = userId?.toString?.() ?? String(userId);
+      console.log(`🔌 Disconnected [${role}] id=${uid} reason=${reason}`);
+
+      if (
+        Sentry.__vetoInstrumented &&
+        (reason === 'transport error' || reason === 'ping timeout')
+      ) {
+        Sentry.addBreadcrumb({
+          category: 'socket',
+          message: `Unexpected dispatch disconnect for user ${uid} (${role}): ${reason}`,
+          level: 'warning',
+        });
+      }
 
       if (role === 'lawyer') {
         await Lawyer.findByIdAndUpdate(userId, {

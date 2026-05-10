@@ -1,0 +1,145 @@
+"use client";
+
+import { useCallback, useEffect, useRef, useState } from "react";
+import { apiUrl, authFetch } from "@/api/apiClient";
+
+type RecordingStatus =
+  | "idle"
+  | "starting"
+  | "recording"
+  | "stopping"
+  | "stopped"
+  | "error";
+
+export type ConsentSnapshot = {
+  citizen: boolean;
+  lawyer: boolean;
+  bothGranted: boolean;
+};
+
+/**
+ * Drives Agora Cloud Recording lifecycle from the v2 call UI.
+ *
+ *  - You can only start once both peers have logged consent.
+ *  - We poll every ~10s while recording so the indicator stays accurate
+ *    even if the lawyer started/stopped recording from their end.
+ */
+export function useCloudRecording(eventId: string | null) {
+  const [status, setStatus] = useState<RecordingStatus>("idle");
+  const [consent, setConsent] = useState<ConsentSnapshot>({
+    citizen: false,
+    lawyer: false,
+    bothGranted: false,
+  });
+  const [error, setError] = useState<string | null>(null);
+  const pollTimer = useRef<number | null>(null);
+
+  const refreshConsent = useCallback(async () => {
+    if (!eventId) return;
+    try {
+      const res = await authFetch(apiUrl(`/api/calls/${eventId}`));
+      if (!res.ok) return;
+      const data = (await res.json()) as {
+        call?: {
+          recording_consent?: {
+            citizen_at?: string | null;
+            lawyer_at?: string | null;
+          };
+          agora_cloud_recording_resource_id?: string | null;
+          recording_url?: string | null;
+        };
+      };
+      const callDoc = data.call ?? {};
+      const citizen = !!callDoc.recording_consent?.citizen_at;
+      const lawyer = !!callDoc.recording_consent?.lawyer_at;
+      setConsent({ citizen, lawyer, bothGranted: citizen && lawyer });
+      // Derive status from server state — if a resource id exists we're
+      // mid-recording; if a recording_url is present we've stopped.
+      if (callDoc.agora_cloud_recording_resource_id) {
+        setStatus((s) => (s === "starting" || s === "stopping" ? s : "recording"));
+      } else if (callDoc.recording_url) {
+        setStatus((s) => (s === "starting" || s === "recording" ? "stopped" : s));
+      }
+    } catch {
+      /* network blip — leave state alone */
+    }
+  }, [eventId]);
+
+  const recordOwnConsent = useCallback(
+    async (granted: boolean) => {
+      if (!eventId) return;
+      try {
+        const res = await authFetch(apiUrl(`/api/calls/${eventId}/consent`), {
+          method: "POST",
+          body: JSON.stringify({ granted }),
+        });
+        if (!res.ok) {
+          setError(`Consent failed (${res.status})`);
+          return;
+        }
+        const data = (await res.json()) as { consent?: ConsentSnapshot };
+        if (data.consent) setConsent(data.consent);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : String(err));
+      }
+    },
+    [eventId],
+  );
+
+  const start = useCallback(async () => {
+    if (!eventId) return;
+    if (!consent.bothGranted) {
+      setError("Both parties must consent before recording starts.");
+      return;
+    }
+    setStatus("starting");
+    setError(null);
+    try {
+      const res = await authFetch(
+        apiUrl(`/api/calls/${eventId}/cloud-recording/start`),
+        { method: "POST" },
+      );
+      if (!res.ok) {
+        setStatus("error");
+        setError(`Recording start failed (${res.status})`);
+        return;
+      }
+      setStatus("recording");
+    } catch (err) {
+      setStatus("error");
+      setError(err instanceof Error ? err.message : String(err));
+    }
+  }, [eventId, consent.bothGranted]);
+
+  const stop = useCallback(async () => {
+    if (!eventId) return;
+    setStatus("stopping");
+    try {
+      const res = await authFetch(
+        apiUrl(`/api/calls/${eventId}/cloud-recording/stop`),
+        { method: "POST" },
+      );
+      setStatus(res.ok ? "stopped" : "error");
+    } catch (err) {
+      setStatus("error");
+      setError(err instanceof Error ? err.message : String(err));
+    }
+  }, [eventId]);
+
+  useEffect(() => {
+    if (!eventId) return;
+    queueMicrotask(() => {
+      void refreshConsent();
+    });
+    if (status === "recording") {
+      pollTimer.current = window.setInterval(() => void refreshConsent(), 10_000);
+      return () => {
+        if (pollTimer.current) window.clearInterval(pollTimer.current);
+        pollTimer.current = null;
+      };
+    }
+    return undefined;
+  }, [eventId, status, refreshConsent]);
+
+  return { status, consent, error, start, stop, recordOwnConsent, refreshConsent };
+}

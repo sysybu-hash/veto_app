@@ -2,7 +2,10 @@
 
 import {
   Activity,
+  AlertTriangle,
+  Clock,
   Database,
+  DollarSign,
   FileText,
   LayoutDashboard,
   Plus,
@@ -12,7 +15,9 @@ import {
   Settings,
   ShieldCheck,
   Trash2,
+  Users,
 } from "lucide-react";
+import { motion } from "framer-motion";
 import Link from "next/link";
 import {
   useCallback,
@@ -21,6 +26,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { authFetch } from "@/api/apiClient";
 import { getJwt } from "@/lib/authToken";
 
 type AdminRole = "USER" | "ADMIN";
@@ -46,6 +52,52 @@ type DashboardPayload = {
   users: AdminUser[];
   health: { database: string; api: string; timestamp: string };
 };
+
+type CommandCenterEvent = {
+  _id: string;
+  language?: string;
+  status?: string;
+  createdAt?: string;
+  triggered_at?: string;
+};
+
+type CommandCenterData = {
+  activeEvents: CommandCenterEvent[];
+  stats: {
+    dailyEventsCount: number;
+    dailyRevenue: number;
+    totalLawyers: number;
+    activeEventsCount: number;
+    lawyersOnline: number;
+  };
+};
+
+function langLabel(code: string | undefined): string {
+  switch (code) {
+    case "he":
+      return "עברית";
+    case "ar":
+      return "ערבית";
+    case "ru":
+      return "רוסית";
+    case "en":
+      return "אנגלית";
+    default:
+      return code ?? "—";
+  }
+}
+
+async function fetchCommandCenter(): Promise<CommandCenterData | null> {
+  try {
+    const res = await authFetch("/api/admin/stats");
+    if (!res.ok) return null;
+    const body = (await res.json()) as { data?: CommandCenterData };
+    return body.data ?? null;
+  } catch (e) {
+    console.error("Failed to fetch admin command center stats", e);
+    return null;
+  }
+}
 
 function authHeaders(): Record<string, string> {
   const t = getJwt();
@@ -112,6 +164,8 @@ async function createUser(body: {
 
 export default function VetoMasterDashboard() {
   const [data, setData] = useState<DashboardPayload | null>(null);
+  const [commandCenter, setCommandCenter] = useState<CommandCenterData | null>(null);
+  const [commandCenterLoading, setCommandCenterLoading] = useState(true);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [actionMsg, setActionMsg] = useState<string | null>(null);
@@ -132,9 +186,25 @@ export default function VetoMasterDashboard() {
     }
   }, []);
 
+  const refreshCommandCenter = useCallback(async () => {
+    setCommandCenterLoading(true);
+    try {
+      const cc = await fetchCommandCenter();
+      setCommandCenter(cc);
+    } finally {
+      setCommandCenterLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     queueMicrotask(() => void refresh());
   }, [refresh]);
+
+  useEffect(() => {
+    queueMicrotask(() => void refreshCommandCenter());
+    const interval = setInterval(() => void refreshCommandCenter(), 15_000);
+    return () => clearInterval(interval);
+  }, [refreshCommandCenter]);
 
   const filteredUsers = useMemo(() => {
     const list = data?.users ?? [];
@@ -212,6 +282,139 @@ export default function VetoMasterDashboard() {
       </aside>
 
       <main className="flex-1 overflow-y-auto p-6 md:p-10">
+        <section
+          className="mb-10 rounded-2xl border border-white/10 bg-veto-ink p-6 text-white shadow-xl md:p-8"
+          dir="rtl"
+          aria-label="חדר בקרה"
+        >
+          <header className="mb-8 flex flex-col gap-4 border-b border-white/10 pb-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h2 className="text-2xl font-bold md:text-3xl">
+                חדר בקרה <span className="text-veto-gold">VETO</span>
+              </h2>
+              <p className="mt-1 text-sm text-gray-400">מבט על בזמן אמת · רענון כל 15 שניות</p>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={() => void refreshCommandCenter()}
+                className="rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs text-slate-200 transition hover:bg-white/10"
+              >
+                רענון מיידי
+              </button>
+              <div className="flex items-center gap-2 rounded-full border border-green-500/20 bg-green-500/10 px-4 py-2 text-sm text-green-400">
+                <span className="relative flex h-2 w-2">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75" />
+                  <span className="relative inline-flex h-2 w-2 rounded-full bg-green-500" />
+                </span>
+                מערכת מקוונת
+              </div>
+            </div>
+          </header>
+
+          {commandCenterLoading && !commandCenter ? (
+            <div className="flex min-h-[120px] items-center justify-center text-veto-gold animate-pulse">
+              טוען נתוני מערכת...
+            </div>
+          ) : (
+            <>
+              <div className="mb-10 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+                {(
+                  [
+                    {
+                      title: "אירועים פעילים",
+                      value: commandCenter?.stats.activeEventsCount ?? 0,
+                      icon: AlertTriangle,
+                      color: "text-red-400",
+                    },
+                    {
+                      title: "אירועים היום",
+                      value: commandCenter?.stats.dailyEventsCount ?? 0,
+                      icon: Activity,
+                      color: "text-blue-400",
+                    },
+                    {
+                      title: "הכנסות היום",
+                      value: `₪${commandCenter?.stats.dailyRevenue ?? 0}`,
+                      icon: DollarSign,
+                      color: "text-green-400",
+                    },
+                    {
+                      title: "עורכי דין רשומים",
+                      value: commandCenter?.stats.totalLawyers ?? 0,
+                      icon: Users,
+                      color: "text-veto-gold",
+                      sub: `מקוונים: ${commandCenter?.stats.lawyersOnline ?? 0}`,
+                    },
+                  ] as const
+                ).map((stat, idx) => (
+                  <motion.div
+                    key={stat.title}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: idx * 0.08 }}
+                    className="rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-md"
+                  >
+                    <div className="mb-4 flex items-start justify-between">
+                      <h3 className="font-medium text-gray-400">{stat.title}</h3>
+                      <stat.icon className={stat.color} size={24} aria-hidden />
+                    </div>
+                    <p className="text-4xl font-bold">{stat.value}</p>
+                    {"sub" in stat && stat.sub ? (
+                      <p className="mt-1 text-sm text-gray-500">{stat.sub}</p>
+                    ) : null}
+                  </motion.div>
+                ))}
+              </div>
+
+              <h3 className="mb-4 flex items-center gap-2 text-xl font-bold">
+                <Clock className="text-veto-gold" aria-hidden />
+                אירועים חיים
+              </h3>
+              <div className="overflow-hidden rounded-2xl border border-white/10 bg-white/5 backdrop-blur-md">
+                <table className="w-full text-right text-sm">
+                  <thead className="bg-white/5 text-gray-400">
+                    <tr>
+                      <th className="p-4 font-medium">מזהה אירוע</th>
+                      <th className="p-4 font-medium">שפה</th>
+                      <th className="p-4 font-medium">סטטוס</th>
+                      <th className="p-4 font-medium">זמן יצירה</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-white/10">
+                    {!commandCenter?.activeEvents?.length ? (
+                      <tr>
+                        <td colSpan={4} className="p-8 text-center text-gray-500">
+                          אין אירועי חירום פעילים כרגע.
+                        </td>
+                      </tr>
+                    ) : (
+                      commandCenter.activeEvents.map((ev) => {
+                        const id = String(ev._id);
+                        const t = ev.createdAt ?? ev.triggered_at;
+                        return (
+                          <tr key={id} className="transition-colors hover:bg-white/5">
+                            <td className="p-4 font-mono text-xs text-gray-300">{id.slice(-6)}</td>
+                            <td className="p-4">{langLabel(ev.language)}</td>
+                            <td className="p-4">
+                              <span className="rounded-full border border-veto-gold/30 bg-veto-gold/20 px-3 py-1 text-xs font-medium text-veto-gold">
+                                {ev.status ?? "—"}
+                              </span>
+                            </td>
+                            <td className="p-4 text-gray-400">
+                              {t ? new Date(t).toLocaleTimeString("he-IL") : "—"}
+                            </td>
+                          </tr>
+                        );
+                      })
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </>
+          )}
+        </section>
+
         <header className="mb-8 flex items-center justify-between">
           <div>
             <h1 className="font-serif text-3xl font-bold text-slate-100">ניהול מערכת VETO</h1>

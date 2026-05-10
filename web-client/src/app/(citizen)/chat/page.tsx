@@ -90,13 +90,16 @@ type SpeechRecognitionLike = {
   stop: () => void;
 };
 
-const AI_WELCOME: EmbeddedAiMessage = {
-  id: "embedded-ai-welcome",
-  role: "assistant",
-  content:
-    "אני כאן בתוך חלון הצ׳אט, בנפרד מהבועה. אפשר לבקש סיכום שיחה, ניסוח תשובה, פתיחת כספת או מחולל מסמכים, ולשמור תשובות לכספת.",
-  createdAt: "",
-};
+const EMBEDDED_AI_WELCOME_ID = "embedded-ai-welcome" as const;
+
+function buildAiWelcome(content: string): EmbeddedAiMessage {
+  return {
+    id: EMBEDDED_AI_WELCOME_ID,
+    role: "assistant",
+    content,
+    createdAt: "",
+  };
+}
 
 function getUserIdFromJwt(): string | null {
   const token = getJwt();
@@ -145,7 +148,7 @@ function threadFromPartner(p: ChatPartner): Thread {
 
 function buildAiHistory(messages: EmbeddedAiMessage[]) {
   return messages
-    .filter((m) => m.id !== AI_WELCOME.id && m.content.trim())
+    .filter((m) => m.id !== EMBEDDED_AI_WELCOME_ID && m.content.trim())
     .slice(-10)
     .map((m) => ({
       role: m.role === "assistant" ? "model" : "user",
@@ -192,7 +195,9 @@ export default function ChatPage() {
   const [aiDraft, setAiDraft] = useState("");
   const [aiBusy, setAiBusy] = useState(false);
   const [aiError, setAiError] = useState<string | null>(null);
-  const [aiMessages, setAiMessages] = useState<EmbeddedAiMessage[]>([AI_WELCOME]);
+  const [aiMessages, setAiMessages] = useState<EmbeddedAiMessage[]>(() => [
+    buildAiWelcome(t("chatPage.aboutAi")),
+  ]);
   const [editingAiId, setEditingAiId] = useState<string | null>(null);
   const [editingAiText, setEditingAiText] = useState("");
   const [savingAiId, setSavingAiId] = useState<string | null>(null);
@@ -324,12 +329,12 @@ export default function ChatPage() {
         }
         void loadThreads();
       } catch (e) {
-        setError(e instanceof Error ? e.message : "מחיקת השיחה נכשלה");
+        setError(e instanceof Error ? e.message : t("chatPage.deleteFailed"));
       } finally {
         setBusy(false);
       }
     },
-    [active, loadThreads],
+    [active, loadThreads, t],
   );
 
   const appendAiAssistant = useCallback((content: string) => {
@@ -379,11 +384,11 @@ export default function ChatPage() {
       .slice(-20)
       .map((m) => {
         const mine = myUserId != null && String(m.sender_id) === myUserId;
-        return `${mine ? "האזרח" : active.name}: ${m.text}`;
+        return `${mine ? t("chatPage.citizenLabel") : active.name}: ${m.text}`;
       })
       .join("\n");
     return transcript ? `\n\nהקשר מהשיחה הנוכחית:\n${transcript}` : "";
-  }, [active, messages, myUserId]);
+  }, [active, messages, myUserId, t]);
 
   const sendEmbeddedAi = useCallback(
     async (override?: string) => {
@@ -393,7 +398,7 @@ export default function ChatPage() {
 
       const token = getJwt();
       if (!token) {
-        setAiError("צריך להתחבר כדי להשתמש בצ׳אט AI.");
+        setAiError(t("chatPage.needSignInForAi"));
         return;
       }
 
@@ -435,7 +440,7 @@ export default function ChatPage() {
         }
         appendAiAssistant(formatAssistantReply(data));
       } catch (e) {
-        appendAiAssistant(`לא הצלחתי להשלים את הבקשה כרגע: ${e instanceof Error ? e.message : "שגיאה לא ידועה"}`);
+        appendAiAssistant(`${t("chatPage.aiCannotCompletePrefix")}${e instanceof Error ? e.message : t("chatPage.aiUnknownError")}`);
       } finally {
         setAiBusy(false);
       }
@@ -448,6 +453,7 @@ export default function ChatPage() {
       buildConversationContext,
       locale,
       runSiteAction,
+      t,
     ],
   );
 
@@ -459,17 +465,17 @@ export default function ChatPage() {
         const res = await saveAiAnalysisAsFile(message.content);
         if (res.success) {
           setAiMessages((prev) => prev.map((m) => (m.id === message.id ? { ...m, saved: true } : m)));
-          pushToast("התוכן נשמר לכספת", "success");
+          pushToast(t("chatPage.toastSavedToVault"), "success");
         } else {
           pushToast(res.error, "error");
         }
       } catch (e) {
-        pushToast(e instanceof Error ? e.message : "שמירה לכספת נכשלה", "error");
+        pushToast(e instanceof Error ? e.message : t("chatPage.toastSaveFailed"), "error");
       } finally {
         setSavingAiId(null);
       }
     },
-    [pushToast, savingAiId],
+    [pushToast, savingAiId, t],
   );
 
   const startEditingAi = (message: EmbeddedAiMessage) => {
@@ -498,10 +504,10 @@ export default function ChatPage() {
   const summarizeConversation = () => {
     const context = buildConversationContext();
     if (!context) {
-      appendAiAssistant("אין עדיין הודעות בשיחה הנוכחית לסיכום.");
+      appendAiAssistant(t("chatPage.emptyForSummary"));
       return;
     }
-    void sendEmbeddedAi("סכם את השיחה הנוכחית בצורה משפטית קצרה, עם פעולות המשך מומלצות.");
+    void sendEmbeddedAi(t("chatPage.aiSummaryPrompt"));
   };
 
   const startDictation = useCallback(() => {
@@ -512,7 +518,7 @@ export default function ChatPage() {
     };
     const SpeechCtor = browserWindow.SpeechRecognition ?? browserWindow.webkitSpeechRecognition;
     if (!SpeechCtor) {
-      pushToast("הדפדפן לא תומך בהכתבה קולית", "error");
+      pushToast(t("chatPage.speechNotSupported"), "error");
       return;
     }
     recognitionRef.current?.stop();
@@ -529,7 +535,7 @@ export default function ChatPage() {
     };
     recognition.onerror = () => {
       setIsRecording(false);
-      pushToast("לא הצלחתי להפעיל הכתבה קולית", "error");
+      pushToast(t("chatPage.speechFailed"), "error");
     };
     recognition.onend = () => {
       recognitionRef.current = null;
@@ -538,7 +544,7 @@ export default function ChatPage() {
     recognitionRef.current = recognition;
     setIsRecording(true);
     recognition.start();
-  }, [locale, pushToast]);
+  }, [locale, pushToast, t]);
 
   const stopDictation = () => {
     recognitionRef.current?.stop();
@@ -586,7 +592,7 @@ export default function ChatPage() {
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="חיפוש שיחה"
+              placeholder={t("chatPage.searchPlaceholder")}
               className={`${glassInput} pe-3 ps-10`}
             />
           </label>
@@ -634,8 +640,8 @@ export default function ChatPage() {
                       onClick={() => void removeThread(thread)}
                       disabled={busy}
                       className="grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-red-200 bg-red-50/80 text-red-700 transition hover:bg-red-100 disabled:opacity-50"
-                      aria-label={`מחיקת שיחה עם ${thread.name}`}
-                      title="מחיקת שיחה"
+                      aria-label={`${t("chatPage.deleteConversation")} · ${thread.name}`}
+                      title={t("chatPage.deleteConversation")}
                     >
                       <Trash2 className="h-4 w-4" aria-hidden />
                     </button>
@@ -668,8 +674,8 @@ export default function ChatPage() {
                     type="button"
                     onClick={() => setAiOpen(true)}
                     className="grid h-10 w-10 place-items-center rounded-xl border border-[#C5A059]/50 bg-slate-950 text-[#C5A059]"
-                    aria-label="פתיחת AI בתוך הצ׳אט"
-                    title="AI בתוך הצ׳אט"
+                    aria-label={t("chatPage.openAiPane")}
+                    title={t("chatPage.openAiPane")}
                   >
                     <Sparkles className="h-4 w-4" aria-hidden />
                   </button>
@@ -678,7 +684,7 @@ export default function ChatPage() {
                     onClick={() => void removeThread()}
                     disabled={busy}
                     className="grid h-10 w-10 place-items-center rounded-xl border border-red-200 bg-red-50/70 text-red-700 disabled:opacity-50"
-                    aria-label="מחיקת שיחה"
+                    aria-label={t("chatPage.deleteConversation")}
                   >
                     <Trash2 className="h-4 w-4" aria-hidden />
                   </button>
@@ -765,7 +771,7 @@ export default function ChatPage() {
               type="button"
               onClick={() => setAiOpen((v) => !v)}
               className={`grid h-10 w-10 place-items-center ${btnSecondaryGlass}`}
-              aria-label={aiOpen ? "סגירת חלון AI" : "פתיחת חלון AI"}
+              aria-label={aiOpen ? t("chatPage.closeAiPane") : t("chatPage.openAiPaneAlt")}
             >
               {aiOpen ? <X className="h-4 w-4" aria-hidden /> : <Bot className="h-4 w-4" aria-hidden />}
             </button>
@@ -777,14 +783,14 @@ export default function ChatPage() {
                 <button type="button" onClick={summarizeConversation} className={btnSecondaryGlass}>
                   סכם שיחה
                 </button>
-                <button type="button" onClick={() => void sendEmbeddedAi("נסח לי תשובה מקצועית וקצרה לשיחה הנוכחית.")} className={btnSecondaryGlass}>
+                <button type="button" onClick={() => void sendEmbeddedAi(t("chatPage.aiDraftPrompt"))} className={btnSecondaryGlass}>
                   נסח תשובה
                 </button>
-                <button type="button" onClick={() => { appendAiAssistant("פתחתי את מחולל המסמכים."); router.push("/vault/generator"); }} className={btnSecondaryGlass}>
+                <button type="button" onClick={() => { appendAiAssistant(t("chatPage.aiOpenedDocs")); router.push("/vault/generator"); }} className={btnSecondaryGlass}>
                   <FileText className="h-4 w-4" aria-hidden />
                   מחולל
                 </button>
-                <button type="button" onClick={() => { appendAiAssistant("פתחתי את הכספת."); router.push("/vault"); }} className={btnSecondaryGlass}>
+                <button type="button" onClick={() => { appendAiAssistant(t("chatPage.aiOpenedVault")); router.push("/vault"); }} className={btnSecondaryGlass}>
                   <FolderLock className="h-4 w-4" aria-hidden />
                   כספת
                 </button>
@@ -840,7 +846,7 @@ export default function ChatPage() {
                                   לשיחה
                                 </button>
                                 <button type="button" onClick={() => void saveAiMessage(message)} disabled={savingAiId === message.id} className="rounded-lg border border-[#C5A059]/40 bg-[#C5A059]/15 px-2 py-1 text-[#75551f] disabled:opacity-60">
-                                  {message.saved ? "נשמר" : savingAiId === message.id ? "שומר" : "שמור לכספת"}
+                                  {message.saved ? t("chatPage.aiSaved") : savingAiId === message.id ? t("chatPage.aiSaving") : t("chatPage.aiSaveToVault")}
                                 </button>
                               </>
                             )}
@@ -859,7 +865,7 @@ export default function ChatPage() {
 
               <div className="border-t border-white/35 p-3">
                 <div className="mb-2 flex flex-wrap gap-2 text-xs font-bold">
-                  <button type="button" onClick={() => { appendAiAssistant("פתחתי את ההגדרות."); router.push("/settings"); }} className={btnSecondaryGlass}>
+                  <button type="button" onClick={() => { appendAiAssistant(t("chatPage.aiOpenedSettings")); router.push("/settings"); }} className={btnSecondaryGlass}>
                     <Settings className="h-4 w-4" aria-hidden />
                     הגדרות
                   </button>
@@ -869,18 +875,18 @@ export default function ChatPage() {
                   </Link>
                   <button type="button" onClick={isRecording ? stopDictation : startDictation} className={btnSecondaryGlass}>
                     <Mic className="h-4 w-4" aria-hidden />
-                    {isRecording ? "עצור הכתבה" : "הכתבה"}
+                    {isRecording ? t("chatPage.recordStop") : t("chatPage.recordStart")}
                   </button>
                 </div>
                 <form onSubmit={(e) => { e.preventDefault(); void sendEmbeddedAi(); }} className="flex gap-2">
                   <textarea
                     value={aiDraft}
                     onChange={(e) => setAiDraft(e.target.value)}
-                    placeholder="כתבו ל-AI, למשל: פתח כספת, סכם שיחה, נסח תשובה..."
+                    placeholder={t("chatPage.aiPlaceholder")}
                     rows={2}
                     className={`${glassInput} min-h-12 resize-none`}
                   />
-                  <button type="submit" disabled={aiBusy || aiDraft.trim().length === 0} className={`grid h-12 w-12 shrink-0 place-items-center self-end ${btnPrimaryDark} disabled:opacity-50`} aria-label="שליחה ל-AI">
+                  <button type="submit" disabled={aiBusy || aiDraft.trim().length === 0} className={`grid h-12 w-12 shrink-0 place-items-center self-end ${btnPrimaryDark} disabled:opacity-50`} aria-label={t("chatPage.aiSend")}>
                     <Send className="h-4 w-4" aria-hidden />
                   </button>
                 </form>

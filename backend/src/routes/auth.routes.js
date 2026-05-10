@@ -41,4 +41,10 @@ router.post('/passkeys/register/verify', protect, passkeyRegisterVerify);
 router.post('/passkeys/login/options', passkeyLoginOptions);
 router.post('/passkeys/login/verify', passkeyLoginVerify);
 
+// Mission 9 — canonical WebAuthn paths (same handlers as /passkeys/*)
+router.post('/webauthn/register-options', protect, passkeyRegisterOptions);
+router.post('/webauthn/verify-registration', protect, passkeyRegisterVerify);
+router.post('/webauthn/authentication-options', passkeyLoginOptions);
+router.post('/webauthn/verify-authentication', passkeyLoginVerify);
+
 module.exports = router;

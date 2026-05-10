@@ -4,27 +4,14 @@
 
 const {
   geminiChat,
+  geminiTranslateSegments,
   hasGeminiApiKey,
   isTransientGeminiFailure,
   isApiErrorPayloadText,
 } = require('../services/gemini.service');
 const Lawyer = require('../models/Lawyer');
 const AITransparencyLog = require('../models/AITransparencyLog');
-
-const SPEC_MAP = {
-  פלילי: ['criminal', 'Criminal', 'פלילי'],
-  משפחה: ['family', 'Family', 'משפחה'],
-  'נדל״ן': ['real estate', 'Real Estate', 'realestate', 'RealEstate', 'נדל״ן', 'נדלן'],
-  עבודה: ['labor', 'Labor', 'employment', 'Employment', 'עבודה'],
-  מסחרי: ['commercial', 'Commercial', 'civil', 'Civil', 'מסחרי'],
-  תעבורה: ['traffic', 'Traffic', 'transportation', 'Transportation', 'תעבורה'],
-  criminal: ['criminal', 'Criminal', 'פלילי'],
-  family: ['family', 'Family', 'משפחה'],
-  'real estate': ['real estate', 'Real Estate', 'realestate', 'RealEstate', 'נדל״ן', 'נדלן'],
-  labor: ['labor', 'Labor', 'employment', 'Employment', 'עבודה'],
-  commercial: ['commercial', 'Commercial', 'civil', 'Civil', 'מסחרי'],
-  traffic: ['traffic', 'Traffic', 'transportation', 'Transportation', 'תעבורה'],
-};
+const { getMatchTerms } = require('../config/specializations');
 
 const AI_FALLBACK_REPLIES = {
   he:
@@ -148,7 +135,7 @@ exports.aiChat = async (req, res) => {
     }
 
     const specialization = String(parsed.specialization || '').trim();
-    const terms = SPEC_MAP[specialization] || [specialization];
+    const terms = getMatchTerms(specialization) || [specialization].filter(Boolean);
     const regexTerms = terms.filter(Boolean).map((t) => new RegExp(`^${t}$`, 'i'));
 
     const lawyer = await Lawyer.findOne({
@@ -287,6 +274,56 @@ exports.createTransparencyLog = async (req, res, next) => {
     res.status(201).json({ log });
   } catch (err) {
     next(err);
+  }
+};
+
+/**
+ * POST /api/ai/translate-segments
+ * Live captions translation for the v2 call surface.
+ * Body: { segments: string[], targetLang: 'he'|'en'|'ru'|'ar' }
+ * Returns: { translations: (string|null)[], configured: boolean }
+ */
+exports.translateCaptionSegments = async (req, res) => {
+  const targetLang = safeLang(req.body?.targetLang);
+  const raw = req.body?.segments;
+  const segments = Array.isArray(raw)
+    ? raw
+        .filter((s) => typeof s === 'string' && s.trim().length > 0)
+        .slice(0, 50)
+        .map((s) => String(s).slice(0, 800))
+    : [];
+
+  if (segments.length === 0) {
+    return res.json({ translations: [], configured: hasGeminiApiKey() });
+  }
+  if (!hasGeminiApiKey()) {
+    return res.json({
+      translations: segments.map(() => null),
+      configured: false,
+    });
+  }
+
+  try {
+    const translations = await geminiTranslateSegments(segments, targetLang);
+    await recordAiLog(req, {
+      action: 'AI captions translation',
+      source: 'call',
+      model: process.env.GEMINI_MODEL || null,
+      produced_output: true,
+      used_fallback: false,
+      metadata: { count: segments.length, lang: targetLang },
+    });
+    return res.json({ translations, configured: true });
+  } catch (err) {
+    console.error('AI translate-segments error:', err.message);
+    if (isTransientGeminiFailure(err)) {
+      return res.json({
+        translations: segments.map(() => null),
+        configured: true,
+        transient: true,
+      });
+    }
+    return res.status(500).json({ error: 'Translation service unavailable' });
   }
 };
 

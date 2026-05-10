@@ -23,6 +23,12 @@ const upload = multer({
   },
 });
 
+// Looser upload limits for in-call file sharing (PDFs / docs / images).
+const fileShareUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 50 * 1024 * 1024 }, // 50 MB max per file
+});
+
 // GET  /api/calls/ice-config        — Extra ICE/TURN (secrets stay on server)
 router.get('/ice-config', protect, callCtrl.getIceConfig);
 router.get('/my-sos-artifacts', protect, callCtrl.listMySosArtifacts);
@@ -36,6 +42,14 @@ router.delete('/:eventId/artifacts', protect, callCtrl.deleteCallArtifacts);
 router.post('/:eventId/screen-recording', protect, upload.single('recording'), callCtrl.uploadScreenRecording);
 router.post('/:eventId/finish-billing', protect, callCtrl.finishCallBilling);
 router.post('/:eventId/action-plan', protect, callCtrl.createActionPlan);
+
+// ── Phase 3 — Call v2 endpoints ──────────────────────────────
+router.post('/:eventId/consent', protect, callCtrl.recordConsent);
+router.post('/:eventId/transcript-realtime/start', protect, callCtrl.startRealtimeTranscription);
+router.post('/:eventId/transcript-realtime/stop', protect, callCtrl.stopRealtimeTranscription);
+router.get('/:eventId/chat-history', protect, callCtrl.getChatHistory);
+router.post('/:eventId/chat-message', protect, callCtrl.postChatMessage);
+router.post('/:eventId/file-share', protect, fileShareUpload.single('file'), callCtrl.shareFileInCall);
 
 // GET  /api/calls/:eventId          — Get call details
 router.get('/:eventId', protect, callCtrl.getCallDetails);

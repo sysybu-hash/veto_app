@@ -23,8 +23,9 @@ import {
 } from "lucide-react";
 import { fetchProfile, updateLawyerAvailability, type UserProfile } from "@/api/userApi";
 import { fetchLawyerCockpit, type LawyerCockpit } from "@/api/advancedApi";
+import { useTranslation } from "@/lib/i18n/LocaleProvider";
 import { clearJwt, getJwt, getRoleFromJwt } from "@/lib/authToken";
-import { subscribeToPush } from "@/lib/pushClient";
+import { useWebPush } from "@/hooks/useWebPush";
 import { connectSocket, disconnectSocket, getSocket } from "@/lib/socketClient";
 import {
   btnPrimaryDark,
@@ -88,9 +89,21 @@ function parseSessionReadyPayload(data: unknown): SessionReadyState | null {
       ? callTypeRaw
       : "video";
   const tokenExpiresAt = typeof d.tokenExpiresAt === "number" ? d.tokenExpiresAt : undefined;
+  const e2eeSecret =
+    typeof d.e2eeSecret === "string" && d.e2eeSecret.trim()
+      ? d.e2eeSecret.trim()
+      : undefined;
 
   if (!roomId || !eventId) return null;
-  return { channelId: roomId, eventId, token: agoraToken, uid: agoraUid, callType, tokenExpiresAt };
+  return {
+    channelId: roomId,
+    eventId,
+    token: agoraToken,
+    uid: agoraUid,
+    callType,
+    tokenExpiresAt,
+    ...(e2eeSecret ? { e2eeSecret } : {}),
+  };
 }
 
 function formatDateTime(raw?: string) {
@@ -127,6 +140,8 @@ function getPersistedAvailabilityChoice(): boolean {
 
 export default function LawyerDashboardPage() {
   const router = useRouter();
+  const { t } = useTranslation();
+  const { subscribe: subscribeWebPush } = useWebPush();
   const [activeTab, setActiveTab] = useState<DashboardTab>("overview");
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [notifPermission, setNotifPermission] = useState<NotificationPermission | "unsupported">("unsupported");
@@ -289,14 +304,14 @@ export default function LawyerDashboardPage() {
       if (!sock.connected) sock.connect();
     }
     if (next) {
-      void subscribeToPush().then((result) => {
+      void subscribeWebPush().then((result) => {
         if (typeof Notification !== "undefined") setNotifPermission(Notification.permission);
         if (!result.ok && result.reason !== "denied" && result.reason !== "unsupported") {
           console.warn("[push]", result.reason, result.message ?? "");
         }
       });
     }
-  }, [setAvailable, setLastError]);
+  }, [setAvailable, setLastError, subscribeWebPush]);
 
   const handleAcceptCase = useCallback(() => {
     if (!activeAlert || isAccepting) return;
@@ -379,12 +394,12 @@ export default function LawyerDashboardPage() {
           <div className="mb-4 rounded-2xl border border-amber-200 bg-amber-50/90 px-4 py-3 text-sm font-semibold text-amber-950" role="alert">
             {lastError}
             <button type="button" onClick={() => setLastError(null)} className="ms-3 underline">
-              סגור
+              {t("lawyerDashboard.closeError")}
             </button>
           </div>
         )}
 
-        <nav className={`${glassPanelNested} grid grid-cols-2 gap-2 p-2 md:grid-cols-6`} aria-label="ניווט עורך דין">
+        <nav className={`${glassPanelNested} grid grid-cols-2 gap-2 p-2 md:grid-cols-6`} aria-label={t("lawyerDashboard.navAria")}>
           {tabs.map((tabItem) => {
             const Icon = tabItem.icon;
             const active = activeTab === tabItem.id;
@@ -407,10 +422,10 @@ export default function LawyerDashboardPage() {
         <div className="mt-5">
           {cockpit && (
             <section className={`${glassPanelNested} mb-5 grid gap-3 p-4 md:grid-cols-4`}>
-              <MiniRow icon={ShieldCheck} title="Trust" value={cockpit.lawyer.trust?.license_verified ? "רישיון מאומת" : "ממתין לאימות"} />
-              <MiniRow icon={BriefcaseBusiness} title="תיקים שטופלו" value={String(cockpit.status.handledCount || 0)} />
-              <MiniRow icon={Clock3} title="תגובה ממוצעת" value={cockpit.status.avgResponseSeconds ? `${cockpit.status.avgResponseSeconds}s` : "אין נתון"} />
-              <MiniRow icon={Wifi} title="מצב עבודה" value={cockpit.status.busy ? "עסוק בשיחה" : "פנוי"} />
+              <MiniRow icon={ShieldCheck} title="Trust" value={cockpit.lawyer.trust?.license_verified ? t("lawyerDashboard.miniTrustVerified") : t("lawyerDashboard.miniTrustPending")} />
+              <MiniRow icon={BriefcaseBusiness} title={t("lawyerDashboard.miniHandledCount")} value={String(cockpit.status.handledCount || 0)} />
+              <MiniRow icon={Clock3} title={t("lawyerDashboard.miniAvgResponse")} value={cockpit.status.avgResponseSeconds ? `${cockpit.status.avgResponseSeconds}s` : t("lawyerDashboard.miniNoData")} />
+              <MiniRow icon={Wifi} title={t("lawyerDashboard.miniWorkMode")} value={cockpit.status.busy ? t("lawyerDashboard.miniBusy") : t("lawyerDashboard.miniFree")} />
             </section>
           )}
           {activeTab === "overview" && (
@@ -419,6 +434,7 @@ export default function LawyerDashboardPage() {
               activeAlert={activeAlert}
               displayName={displayName}
               onOpenSchedule={() => setActiveTab("schedule")}
+              t={t}
             />
           )}
           {activeTab === "calls" && (
@@ -446,6 +462,16 @@ export default function LawyerDashboardPage() {
               isAvailable={isAvailable}
               onAvailabilityChange={handleAvailabilityChange}
               notifPermission={notifPermission}
+              onEnablePushNotifications={() => {
+                void subscribeWebPush().then((result) => {
+                  if (typeof Notification !== "undefined") {
+                    setNotifPermission(Notification.permission);
+                  }
+                  if (!result.ok && result.reason !== "denied" && result.reason !== "unsupported") {
+                    console.warn("[push]", result.reason, result.message ?? "");
+                  }
+                });
+              }}
             />
           )}
         </div>
@@ -468,42 +494,46 @@ function OverviewPanel({
   activeAlert,
   displayName,
   onOpenSchedule,
+  t,
 }: {
   isAvailable: boolean;
   activeAlert: LawyerActiveAlert | null;
   displayName: string;
   onOpenSchedule: () => void;
+  t: (key: string) => string;
 }) {
   return (
     <section className={`${glassPanel} p-5 md:p-7`}>
       <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
         <div>
-          <h2 className="font-frank text-2xl font-black text-slate-950">שלום, {displayName}</h2>
+          <h2 className="font-frank text-2xl font-black text-slate-950">
+            {t("lawyerDashboard.helloName").replace("{name}", displayName)}
+          </h2>
           <p className="mt-1 text-sm leading-6 text-slate-600">
-            המערכת מאזינה לקריאות SOS בזמן אמת ומכינה שיחה מאובטחת ברגע שאתם מקבלים תיק.
+            {t("lawyerDashboard.overviewIntro")}
           </p>
         </div>
         <span className={`w-fit rounded-full px-3 py-1 text-xs font-black ${isAvailable ? "bg-emerald-100 text-emerald-900" : "bg-slate-200 text-slate-700"}`}>
-          {isAvailable ? "זמין לקריאות" : "לא זמין"}
+          {isAvailable ? t("lawyerDashboard.statusAvailable") : t("lawyerDashboard.statusUnavailable")}
         </span>
       </div>
       <div className="mt-6 grid gap-3 md:grid-cols-4">
-        <StatCard title="קריאה פעילה" value={activeAlert ? "1" : "0"} icon={PhoneCall} />
-        <StatCard title="מצב זמינות" value={isAvailable ? "מחובר" : "מנותק"} icon={Wifi} />
-        <StatCard title="כספת" value="מוכן" icon={FolderLock} />
-        <StatCard title="תור היום" value="פתוח" icon={CalendarClock} />
+        <StatCard title={t("lawyerDashboard.statActiveCase")} value={activeAlert ? "1" : "0"} icon={PhoneCall} />
+        <StatCard title={t("lawyerDashboard.statAvailability")} value={isAvailable ? t("lawyerDashboard.statValueConnected") : t("lawyerDashboard.statValueDisconnected")} icon={Wifi} />
+        <StatCard title={t("lawyerDashboard.statVault")} value={t("lawyerDashboard.statValueReady")} icon={FolderLock} />
+        <StatCard title={t("lawyerDashboard.statQueueToday")} value={t("lawyerDashboard.statValueOpen")} icon={CalendarClock} />
       </div>
       <div className={`${glassPanelNested} mt-5 p-5`}>
-        <h3 className="text-lg font-black text-slate-950">משימות מהירות</h3>
+        <h3 className="text-lg font-black text-slate-950">{t("lawyerDashboard.quickTasks")}</h3>
         <div className="mt-4 grid gap-2 md:grid-cols-3">
           <Link href="/chat" className={`px-4 py-3 text-center text-sm font-bold ${btnSecondaryGlass}`}>
-            פתח צ׳אט
+            {t("lawyerDashboard.quickOpenChat")}
           </Link>
           <Link href="/vault" className={`px-4 py-3 text-center text-sm font-bold ${btnSecondaryGlass}`}>
-            צפה בכספת תיק
+            {t("lawyerDashboard.quickOpenVault")}
           </Link>
           <button type="button" onClick={onOpenSchedule} className={`px-4 py-3 text-sm font-bold ${btnSecondaryGlass}`}>
-            עדכן שעות זמינות
+            {t("lawyerDashboard.quickEditSchedule")}
           </button>
         </div>
       </div>
@@ -636,11 +666,13 @@ function ProfilePanel({
   isAvailable,
   onAvailabilityChange,
   notifPermission,
+  onEnablePushNotifications,
 }: {
   profile: UserProfile | null;
   isAvailable: boolean;
   onAvailabilityChange: (value: boolean) => void;
   notifPermission: NotificationPermission | "unsupported";
+  onEnablePushNotifications: () => void;
 }) {
   return (
     <section className={`${glassPanel} p-5 md:p-7`}>
@@ -659,6 +691,15 @@ function ProfilePanel({
             <MiniRow icon={Bell} title="התראות" value={notifPermission === "granted" ? "פעילות" : "לא פעילות"} />
             <MiniRow icon={ShieldCheck} title="הרשאה" value="עורך דין" />
           </div>
+          {notifPermission !== "unsupported" && notifPermission !== "granted" ? (
+            <button
+              type="button"
+              onClick={onEnablePushNotifications}
+              className={`mt-4 w-full px-4 py-3 text-sm font-black ${btnPrimaryGold}`}
+            >
+              הפעלת התראות דחיפה (SOS)
+            </button>
+          ) : null}
         </div>
       </div>
     </section>
