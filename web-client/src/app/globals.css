@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #eef1f5;
+  --foreground: #0f172a;
 }
 
 @theme inline {
@@ -24,32 +24,58 @@
   font-family: var(--font-frank), "Frank Ruhl Libre", ui-serif, Georgia, serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
-
-/* === VETO Dark — רקעי מערכת (Wave 1) === */
 .veto-bg-glow {
   pointer-events: none;
-  opacity: 0.35;
+  opacity: 0.9;
   background:
-    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(197, 160, 89, 0.25), transparent 60%),
-    radial-gradient(ellipse 60% 40% at 80% 90%, rgba(197, 160, 89, 0.1), transparent 60%);
+    radial-gradient(ellipse 70% 38% at 50% -10%, rgba(255, 255, 255, 0.95), transparent 65%),
+    radial-gradient(ellipse 52% 34% at 88% 92%, rgba(197, 160, 89, 0.12), transparent 62%);
 }
 
 .veto-bg-grid {
   pointer-events: none;
-  opacity: 0.04;
+  opacity: 0.32;
   background-image:
-    linear-gradient(rgba(255, 255, 255, 0.6) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.6) 1px, transparent 1px);
+    linear-gradient(rgba(100, 116, 139, 0.2) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(100, 116, 139, 0.2) 1px, transparent 1px);
   background-size: 64px 64px;
   -webkit-mask-image: radial-gradient(ellipse at center, black 40%, transparent 80%);
           mask-image: radial-gradient(ellipse at center, black 40%, transparent 80%);
+}
+
+.veto-light [class*="text-slate-100"],
+.veto-light [class*="text-slate-200"] {
+  color: #0f172a;
+}
+
+.veto-light [class*="text-slate-300"],
+.veto-light [class*="text-slate-400"],
+.veto-light [class*="text-slate-500"] {
+  color: #475569;
+}
+
+.veto-light [class*="border-white/"] {
+  border-color: rgba(203, 213, 225, 0.9);
+}
+
+.veto-light [class*="bg-slate-950"]:not(.veto-call-keep-dark),
+.veto-light [class*="bg-slate-900"]:not(.veto-call-keep-dark) {
+  background-color: rgba(255, 255, 255, 0.88);
+}
+
+.veto-light [class*="bg-white/"] {
+  background-color: rgba(255, 255, 255, 0.82);
+}
+
+.veto-light input,
+.veto-light textarea,
+.veto-light select {
+  color: #0f172a;
+}
+
+.veto-light ::placeholder {
+  color: #64748b;
+  opacity: 1;
 }
 
 @keyframes sos-pulse {

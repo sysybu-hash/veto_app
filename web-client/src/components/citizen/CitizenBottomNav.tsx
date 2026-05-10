@@ -15,16 +15,16 @@ const linkBase =
   "relative flex min-w-0 flex-1 flex-col items-center gap-0.5 rounded-xl px-0.5 py-2 text-center sm:px-2";
 
 const idle =
-  "border-2 border-transparent text-slate-300 transition hover:bg-white/[0.06] hover:text-white sm:border-transparent";
+  "border-2 border-transparent text-slate-600 transition hover:bg-slate-100 hover:text-slate-950 sm:border-transparent";
 
 const activeStyle =
-  "relative border-2 border-[#C5A059] bg-[#C5A059]/20 text-[11px] font-bold text-[#C5A059] shadow-[0_0_22px_rgba(197,160,89,0.35)] sm:text-xs";
+  "relative border-2 border-[#C5A059] bg-[#C5A059]/16 text-[11px] font-black text-[#8a6d35] shadow-[0_0_18px_rgba(197,160,89,0.22)] sm:text-xs";
 
 export function CitizenBottomNav({ active }: { active: CitizenNavActive }) {
   const { t } = useTranslation();
 
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-white/[0.06] bg-slate-950/70 px-1 py-2 backdrop-blur-xl supports-[backdrop-filter]:bg-slate-950/60 sm:px-3 sm:py-3">
+    <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white/86 px-1 py-2 shadow-[0_-16px_40px_-30px_rgba(15,23,42,0.45)] backdrop-blur-xl supports-[backdrop-filter]:bg-white/80 sm:px-3 sm:py-3">
       <div className="mx-auto flex max-w-lg justify-between gap-0.5 sm:gap-2">
         <Link
           href="/hub"
@@ -33,8 +33,8 @@ export function CitizenBottomNav({ active }: { active: CitizenNavActive }) {
           <svg
             className={`mx-auto h-5 w-5 stroke-[1.75] sm:h-6 sm:w-6 ${
               active === "hub"
-                ? "text-[#C5A059]"
-                : "text-slate-400"
+                ? "text-[#8a6d35]"
+                : "text-slate-600"
             }`}
             fill="none"
             stroke="currentColor"
@@ -59,7 +59,7 @@ export function CitizenBottomNav({ active }: { active: CitizenNavActive }) {
         >
           <svg
             className={`mx-auto h-5 w-5 stroke-[1.75] sm:h-6 sm:w-6 ${
-              active === "chat" ? "text-[#C5A059]" : "text-slate-400"
+              active === "chat" ? "text-[#8a6d35]" : "text-slate-600"
             }`}
             fill="none"
             stroke="currentColor"
@@ -79,7 +79,7 @@ export function CitizenBottomNav({ active }: { active: CitizenNavActive }) {
         >
           <svg
             className={`mx-auto h-5 w-5 stroke-[1.75] sm:h-6 sm:w-6 ${
-              active === "vault" ? "text-[#C5A059]" : "text-slate-400"
+              active === "vault" ? "text-[#8a6d35]" : "text-slate-600"
             }`}
             fill="none"
             stroke="currentColor"
@@ -99,7 +99,7 @@ export function CitizenBottomNav({ active }: { active: CitizenNavActive }) {
         >
           <svg
             className={`mx-auto h-5 w-5 stroke-[1.75] sm:h-6 sm:w-6 ${
-              active === "calendar" ? "text-[#C5A059]" : "text-slate-400"
+              active === "calendar" ? "text-[#8a6d35]" : "text-slate-600"
             }`}
             fill="none"
             stroke="currentColor"
@@ -119,7 +119,7 @@ export function CitizenBottomNav({ active }: { active: CitizenNavActive }) {
         >
           <svg
             className={`mx-auto h-5 w-5 stroke-[1.75] sm:h-6 sm:w-6 ${
-              active === "settings" ? "text-[#C5A059]" : "text-slate-400"
+              active === "settings" ? "text-[#8a6d35]" : "text-slate-600"
             }`}
             fill="none"
             stroke="currentColor"

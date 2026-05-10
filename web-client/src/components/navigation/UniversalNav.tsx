@@ -118,21 +118,21 @@ export function UniversalNav() {
 
   return (
     <>
-      <nav className="sticky top-0 z-40 border-b border-white/[0.06] bg-slate-950/78 px-3 py-2.5 backdrop-blur-xl supports-[backdrop-filter]:bg-slate-950/68" aria-label="ניווט ראשי">
+      <nav className="sticky top-0 z-40 border-b border-slate-200/80 bg-white/82 px-3 py-2.5 shadow-sm shadow-slate-900/5 backdrop-blur-xl supports-[backdrop-filter]:bg-white/78" aria-label="ניווט ראשי">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-1">
           <Link href={homeHref(role, hasToken)} className="flex shrink-0 items-center" aria-label="VETO">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/veto-logo.svg" alt="VETO Legal" className="h-11 w-auto select-none" draggable={false} />
           </Link>
 
-          <div className="hidden min-w-0 flex-1 items-center justify-center gap-8 text-sm font-semibold text-slate-300 md:flex">
+          <div className="hidden min-w-0 flex-1 items-center justify-center gap-8 text-sm font-bold text-slate-800 md:flex">
             {items.slice(0, hasToken ? items.length : 3).map((item) => {
               const active = item.match?.(pathname) ?? pathname === item.href;
               return (
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`transition-colors ${active ? "text-[#D8B867]" : "hover:text-[#D8B867]"}`}
+                  className={`transition-colors ${active ? "text-[#9b7430]" : "hover:text-[#9b7430]"}`}
                 >
                   {item.label}
                 </Link>
@@ -146,7 +146,7 @@ export function UniversalNav() {
                 <LanguageSwitcher className="hidden sm:block" />
                 <Link
                   href="/register/lawyer"
-                  className="hidden rounded-xl px-3 py-2 text-sm font-semibold text-slate-300 transition-colors hover:text-white sm:inline-flex"
+                  className="hidden rounded-xl px-3 py-2 text-sm font-bold text-slate-800 transition-colors hover:text-[#9b7430] sm:inline-flex"
                 >
                   הצטרפות עורכי דין
                 </Link>
@@ -164,7 +164,7 @@ export function UniversalNav() {
               aria-label="פתיחת תפריט"
               aria-expanded={open}
               aria-controls="universal-nav-drawer"
-              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-white/[0.08] bg-white/[0.03] text-slate-200 transition hover:bg-white/[0.08] hover:text-white"
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-slate-300 bg-white/90 text-slate-900 shadow-sm transition hover:bg-white hover:text-[#9b7430]"
             >
               <Menu className="h-5 w-5" aria-hidden />
             </button>
@@ -174,15 +174,15 @@ export function UniversalNav() {
 
       {open ? (
         <>
-          <div className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-sm" onClick={() => setOpen(false)} aria-hidden />
+          <div className="fixed inset-0 z-50 bg-slate-900/35 backdrop-blur-sm" onClick={() => setOpen(false)} aria-hidden />
           <aside
             id="universal-nav-drawer"
             role="dialog"
             aria-modal="true"
             aria-label="תפריט ראשי"
-            className="fixed inset-y-0 start-0 z-50 flex w-80 max-w-[88vw] flex-col border-e border-white/10 bg-slate-950/96 shadow-2xl backdrop-blur-xl"
+            className="fixed inset-y-0 start-0 z-50 flex w-80 max-w-[88vw] flex-col border-e border-slate-200 bg-white/95 text-slate-950 shadow-2xl backdrop-blur-xl"
           >
-            <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
+            <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3">
               <Link href={homeHref(role, hasToken)} className="flex items-center" onClick={() => setOpen(false)} aria-label="VETO">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src="/veto-logo.svg" alt="VETO Legal" className="h-11 w-auto select-none" draggable={false} />
@@ -191,13 +191,13 @@ export function UniversalNav() {
                 type="button"
                 onClick={() => setOpen(false)}
                 aria-label="סגירת תפריט"
-                className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/[0.08] bg-white/[0.03] text-slate-200 transition hover:bg-white/[0.08] hover:text-white"
+                className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-300 bg-white text-slate-900 transition hover:bg-slate-100"
               >
                 <X className="h-5 w-5" aria-hidden />
               </button>
             </div>
 
-            <div className="border-b border-white/10 px-4 py-3 text-xs font-bold text-slate-400">
+            <div className="border-b border-slate-200 px-4 py-3 text-xs font-bold text-slate-600">
               {roleLabel(role, hasToken)}
             </div>
 
@@ -211,7 +211,7 @@ export function UniversalNav() {
                       href={item.href}
                       onClick={() => setOpen(false)}
                       className={`flex items-center gap-3 rounded-2xl px-3 py-3 text-sm font-bold transition ${
-                        active ? "bg-[#C5A059]/15 text-[#D8B867]" : "text-slate-200 hover:bg-white/[0.06]"
+                        active ? "bg-[#C5A059]/15 text-[#8a6d35]" : "text-slate-800 hover:bg-slate-100"
                       }`}
                     >
                       <Icon className="h-5 w-5" aria-hidden />
@@ -222,12 +222,12 @@ export function UniversalNav() {
               })}
             </ul>
 
-            <div className="border-t border-white/10 p-3">
+            <div className="border-t border-slate-200 p-3">
               {hasToken ? (
                 <button
                   type="button"
                   onClick={logout}
-                  className="flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-sm font-bold text-red-200 transition hover:bg-red-500/10"
+                  className="flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-sm font-bold text-red-700 transition hover:bg-red-50"
                 >
                   <LogOut className="h-5 w-5" aria-hidden />
                   יציאה
@@ -236,7 +236,7 @@ export function UniversalNav() {
                 <Link
                   href="/register"
                   onClick={() => setOpen(false)}
-                  className="flex items-center gap-3 rounded-2xl px-3 py-3 text-sm font-bold text-slate-200 transition hover:bg-white/[0.06]"
+                  className="flex items-center gap-3 rounded-2xl px-3 py-3 text-sm font-bold text-slate-800 transition hover:bg-slate-100"
                 >
                   <UserPlus className="h-5 w-5" aria-hidden />
                   הרשמת אזרח

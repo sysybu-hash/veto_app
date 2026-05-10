@@ -1,4 +1,4 @@
-import CallRoom from "./CallRoom";
+import { CallRoomNoSsr } from "./CallRoomNoSsr";
 
 export default async function CallPage({
   params,
@@ -7,5 +7,5 @@ export default async function CallPage({
 }) {
   const { channel: raw } = await params;
   const channel = decodeURIComponent(raw);
-  return <CallRoom channel={channel} />;
+  return <CallRoomNoSsr channel={channel} />;
 }

@@ -74,7 +74,7 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
-  themeColor: "#0f172a",
+  themeColor: "#eef1f5",
 };
 
 export default function RootLayout({
@@ -98,7 +98,7 @@ export default function RootLayout({
       suppressHydrationWarning
       className={`${heebo.variable} ${frank.variable} h-full`}
     >
-      <body className="relative min-h-screen bg-slate-950 font-heebo text-slate-100 antialiased">
+      <body className="veto-light relative min-h-screen bg-[#eef1f5] font-heebo text-slate-950 antialiased">
         <LocaleProvider>
           <PwaRegistrar />
           <JwtCookieSync />
@@ -109,7 +109,7 @@ export default function RootLayout({
             dangerouslySetInnerHTML={{ __html: JSON.stringify(orgJsonLd) }}
           />
           <div className="fixed inset-0 -z-50 overflow-hidden" aria-hidden>
-            <div className="absolute inset-0 bg-slate-950" />
+            <div className="absolute inset-0 bg-[#eef1f5]" />
             <div className="veto-bg-glow absolute inset-0" />
             <div className="veto-bg-grid absolute inset-0" />
           </div>
