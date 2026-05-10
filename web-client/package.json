@@ -20,6 +20,7 @@
     "ably": "^2.21.0",
     "agora-extension-ai-denoiser": "^1.1.0",
     "agora-extension-virtual-background": "^2.1.0",
+    "agora-rtc-react": "^2.5.1",
     "agora-rtc-sdk-ng": "^4.24.3",
     "docx": "^9.6.1",
     "file-saver": "^2.0.5",
