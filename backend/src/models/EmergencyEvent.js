@@ -187,6 +187,34 @@ const EmergencyEventSchema = new mongoose.Schema(
       default: null, // Cloudinary URL of the call recording
     },
 
+    recording_public_id: {
+      type: String,
+      default: null,
+    },
+
+    recording_saved_decision: {
+      type: String,
+      enum: ['pending', 'saved', 'deleted'],
+      default: 'pending',
+      index: true,
+    },
+
+    recording_transcription_status: {
+      type: String,
+      enum: ['idle', 'pending', 'ready', 'failed'],
+      default: 'idle',
+    },
+
+    screen_recording_url: {
+      type: String,
+      default: null,
+    },
+
+    screen_recording_public_id: {
+      type: String,
+      default: null,
+    },
+
     /** Agora Cloud Recording (REST) — active session metadata; cleared after upload */
     agora_cloud_recording_resource_id: {
       type: String,

@@ -57,6 +57,36 @@ export function middleware(request: NextRequest) {
   /** Admins stay in the admin shell — avoid citizen hub/onboarding and duplicate settings/vault URLs. */
   if (token) {
     const role = jwtRoleFromToken(token);
+    const isCitizenOnlyRoute =
+      pathname === "/hub" ||
+      pathname.startsWith("/hub/") ||
+      pathname === "/onboarding" ||
+      pathname.startsWith("/onboarding/") ||
+      pathname === "/calendar" ||
+      pathname.startsWith("/calendar/") ||
+      pathname === "/productivity" ||
+      pathname.startsWith("/productivity/");
+    const isLawyerOnlyRoute =
+      pathname === "/dashboard" || pathname.startsWith("/dashboard/");
+    const isAdminOnlyRoute =
+      pathname === "/admin" || pathname.startsWith("/admin/");
+
+    if (role !== "admin" && isAdminOnlyRoute) {
+      return NextResponse.redirect(new URL(homePathForRole(role), request.url));
+    }
+
+    if (role !== "lawyer" && isLawyerOnlyRoute) {
+      return NextResponse.redirect(new URL(homePathForRole(role), request.url));
+    }
+
+    if (role === "lawyer" && isCitizenOnlyRoute) {
+      return NextResponse.redirect(new URL("/dashboard", request.url));
+    }
+
+    if (role === "lawyer" && (pathname === "/settings" || pathname.startsWith("/settings/"))) {
+      return NextResponse.redirect(new URL("/dashboard", request.url));
+    }
+
     if (role === "admin") {
       if (pathname === "/hub" || pathname.startsWith("/hub/")) {
         return NextResponse.redirect(new URL("/admin/dashboard", request.url));

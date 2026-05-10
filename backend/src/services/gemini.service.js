@@ -1,71 +1,70 @@
 // ============================================================
-//  gemini.service.js — Google Gemini AI Integration
-//  VETO Legal Emergency App
+//  gemini.service.js - Google Gemini AI Integration
 // ============================================================
 
 const { GoogleGenAI } = require('@google/genai');
 const { getGeminiModelId } = require('../config/gemini.config');
 
 const SYSTEM_INSTRUCTIONS = {
-  ar: `أنت مساعد قانوني ذكي لتطبيق VETO. مهمتك مساعدة المستخدمين في كل المسائل القانونية — معلومات عامة عن القانون، تفسير، حقوق، وغيرها.
-اطرح أسئلة قصيرة بالعربية لفهم الحاجة. بعد سؤال أو سؤالين، حدد المجال وهل يحتاج المستخدم مساعدة طارئة من محامٍ.
+  he: `אתה עוזר משפטי חכם של VETO. עזור למשתמשים במידע משפטי כללי, זכויות, פרשנות והכוונה ראשונית. אינך מחליף עורך דין ואינך נותן ייעוץ משפטי מחייב.
 
-عندما يكون محامٍ عاجل مطلوباً الآن – أجب JSON فقط:
-{"classified":true,"specialization":"[مجال]","reply":"[رسالة قصيرة بالعربية]"}
+שאל שאלות קצרות בעברית כדי להבין את הצורך. אם מדובר במצב חירום שמצריך עורך דין עכשיו, סווג לתחום מתאים.
 
-عندما يكون سؤالاً قانونياً عاماً – أجب بصيغة JSON:
-{"classified":false,"reply":"[إجابة مهنية بالعربية مع معلومات قانونية ذات صلة]"}
-
-عندما يكون غير واضح – أجب JSON فقط:
-{"classified":false,"reply":"[سؤال توضيحي قصير بالعربية]"}
-
-مجالات الإرسال: جنائي | عائلة | عقارات | عمل | تجاري | مرور
-أجب دائماً JSON فقط، دون أي نص قبل أو بعد.`,
-
-  he: `אתה עוזר משפטי חכם של VETO. תפקידך הוא לסייע למשתמשים בכל נושא משפטי — מידע כללי על החוק, פרשנות, זכויות, ועוד.
-שאל שאלות קצרות בעברית כדי להבין את הצרך. לאחר שאלה-שתיים, קבע את התחום ואם המשתמש בחירום — הפעל שיגור.
-
-כשאתה בטוח שמדובר בחירום שדורש עורך דין עכשיו – ענה JSON בלבד:
+כאשר נדרש עורך דין דחוף עכשיו, השב JSON בלבד:
 {"classified":true,"specialization":"[תחום]","reply":"[הודעה קצרה בעברית]"}
 
-כשמדובר בשאלה משפטית כללית – ענה בפורמט JSON:
-{"classified":false,"reply":"[תשובה מקצועית וענינית בעברית, כולל מידע על חוקים רלוונטיים]"}
+כאשר מדובר בשאלה משפטית כללית, השב JSON בלבד:
+{"classified":false,"reply":"[תשובה מקצועית, עניינית וקצרה בעברית]"}
 
-כשלא ברור – ענה JSON בלבד:
-{"classified":false,"reply":"[שאלה קצרה בעברית]"}
+כאשר לא ברור, השב JSON בלבד:
+{"classified":false,"reply":"[שאלת הבהרה קצרה בעברית]"}
 
-תחומים לשיגור: פלילי | משפחה | נדל"ן | עבודה | מסחרי | תעבורה
-ענה תמיד JSON בלבד, ללא שום טקסט לפני או אחרי.`,
+תחומים לשיגור: פלילי | משפחה | נדל״ן | עבודה | מסחרי | תעבורה`,
 
-  ru: `Ты умный юридический помощник VETO. Твоя задача помогать по всем юридическим вопросам — информация о законах, интерпретация, права и многое другое.
-Задавай короткие вопросы на русском, чтобы понять потребность. После одного-двух вопросов определи область и нужна ли срочная помощь адвоката.
+  en: `You are VETO's legal assistant. Provide general legal information, first orientation, rights, interpretation, and practical next steps. You do not replace a lawyer and do not provide binding legal advice.
 
-Когда точно нужен адвокат срочно – отвечай только JSON:
-{"classified":true,"specialization":"[область]","reply":"[короткое сообщение на русском]"}
+Ask short questions to understand the need. If the user needs an urgent lawyer now, classify the request.
 
-Когда это общий юридический вопрос – отвечай в формате JSON:
-{"classified":false,"reply":"[профессиональный ответ на русском с релевантной правовой информацией]"}
-
-Если неясно – отвечай только JSON:
-{"classified":false,"reply":"[короткий уточняющий вопрос на русском]"}
-
-Области для отправки: уголовное | семейное | недвижимость | трудовое | коммерческое | ПДД
-Всегда отвечай только JSON, без текста до или после.`,
-
-  en: `You are a smart legal assistant for VETO. Your role is to help users with all legal matters — general legal information, interpretation, rights, and more.
-Ask short questions in English to understand the need. After one or two questions, determine the domain and whether the user needs emergency dispatch.
-
-When urgent lawyer is needed now – reply with JSON only:
+For urgent dispatch, reply with JSON only:
 {"classified":true,"specialization":"[domain]","reply":"[short English message]"}
 
-When it's a general legal question – reply in JSON format:
-{"classified":false,"reply":"[professional answer in English including relevant legal information]"}
+For a general legal question, reply with JSON only:
+{"classified":false,"reply":"[professional, concise English answer]"}
 
-When unclear – reply with JSON only:
+If unclear, reply with JSON only:
 {"classified":false,"reply":"[short clarifying question in English]"}
 
-Dispatch domains: criminal | family | real estate | labor | commercial | traffic
-Always reply with JSON only, no text before or after.`,
+Dispatch domains: criminal | family | real estate | labor | commercial | traffic`,
+
+  ru: `Вы юридический помощник VETO. Давайте общую юридическую информацию, первичную ориентацию, права и практические следующие шаги. Вы не заменяете адвоката и не даете обязательную юридическую консультацию.
+
+Задавайте короткие вопросы, чтобы понять ситуацию. Если срочно нужен адвокат сейчас, классифицируйте запрос.
+
+Для срочного вызова отвечайте только JSON:
+{"classified":true,"specialization":"[область]","reply":"[короткое сообщение по-русски]"}
+
+Для общего юридического вопроса отвечайте только JSON:
+{"classified":false,"reply":"[профессиональный краткий ответ по-русски]"}
+
+Если неясно, отвечайте только JSON:
+{"classified":false,"reply":"[короткий уточняющий вопрос по-русски]"}
+
+Области: criminal | family | real estate | labor | commercial | traffic`,
+
+  ar: `أنت مساعد قانوني ذكي في VETO. قدم معلومات قانونية عامة وتوجيها أوليا وخطوات عملية. أنت لا تستبدل المحامي ولا تقدم استشارة قانونية ملزمة.
+
+اسأل أسئلة قصيرة لفهم الحاجة. إذا كان المستخدم يحتاج إلى محام بشكل عاجل الآن، صنف الطلب.
+
+عند الحاجة إلى محام عاجل، أجب بصيغة JSON فقط:
+{"classified":true,"specialization":"[المجال]","reply":"[رسالة عربية قصيرة]"}
+
+في السؤال القانوني العام، أجب بصيغة JSON فقط:
+{"classified":false,"reply":"[إجابة عربية مهنية ومختصرة]"}
+
+إذا كان الأمر غير واضح، أجب بصيغة JSON فقط:
+{"classified":false,"reply":"[سؤال توضيحي قصير بالعربية]"}
+
+المجالات: criminal | family | real estate | labor | commercial | traffic`,
 };
 
 let _genAI;
@@ -76,74 +75,65 @@ function getGenAI() {
   return _genAI;
 }
 
-/** True when Google may succeed on retry (rate limit, capacity, model overload). */
+function hasGeminiApiKey() {
+  return Boolean((process.env.GEMINI_API_KEY || '').trim());
+}
+
+/** True when Google may succeed on retry: rate limit, capacity, model overload. */
 function isTransientGeminiFailure(err) {
   const m = String(err?.message ?? err ?? '');
   if (/\b429\b/.test(m)) return true;
   if (/\b503\b/.test(m)) return true;
-  if (/UNAVAILABLE/i.test(m)) return true;
-  if (/RESOURCE_EXHAUSTED/i.test(m)) return true;
-  if (/high demand/i.test(m)) return true;
-  if (/overloaded/i.test(m)) return true;
+  if (/UNAVAILABLE|RESOURCE_EXHAUSTED|high demand|overloaded/i.test(m)) return true;
   try {
     const j = JSON.parse(m);
     const inner = j?.error;
-    if (inner && typeof inner === 'object') {
-      if (inner.code === 503 || inner.status === 'UNAVAILABLE') return true;
-      const msg = String(inner.message || '');
-      if (/high demand/i.test(msg) || /503/.test(String(inner.code))) return true;
-    }
-  } catch (_) {}
-  return false;
+    if (!inner || typeof inner !== 'object') return false;
+    if (inner.code === 503 || inner.code === 429) return true;
+    if (inner.status === 'UNAVAILABLE' || inner.status === 'RESOURCE_EXHAUSTED') return true;
+    return /high demand|overloaded/i.test(String(inner.message || ''));
+  } catch (_) {
+    return false;
+  }
 }
 
-/**
- * The @google/genai client sometimes returns API error JSON as response.text instead of throwing.
- * Detect that so we retry / map to a user-safe message.
- */
 function isApiErrorPayloadText(text) {
   if (typeof text !== 'string' || !text.trim().startsWith('{')) return false;
   try {
     const j = JSON.parse(text);
     const e = j?.error;
     if (!e || typeof e !== 'object') return false;
-    if (e.code === 503 || e.code === 429 || e.status === 'UNAVAILABLE') return true;
-    const msg = String(e.message || '');
-    if (/high demand/i.test(msg) || /overloaded/i.test(msg)) return true;
-    return false;
+    if (e.code === 503 || e.code === 429) return true;
+    if (e.status === 'UNAVAILABLE' || e.status === 'RESOURCE_EXHAUSTED') return true;
+    return /high demand|overloaded/i.test(String(e.message || ''));
   } catch (_) {
     return false;
   }
 }
 
-const MAX_GEMINI_ATTEMPTS = 5;
+const MAX_GEMINI_ATTEMPTS = 4;
 
-/**
- * Send a message to Gemini with conversation history.
- * @param {Array}  history     - [{role, parts:[{text}]}]
- * @param {string} userMessage
- * @param {string} lang        - 'he' | 'ru' | 'en' | 'ar'
- */
 async function geminiChat(history, userMessage, lang = 'he') {
-  const ai = getGenAI();
+  if (!hasGeminiApiKey()) {
+    throw new Error('GEMINI_API_KEY is not configured');
+  }
 
-  // Build contents array from history + new message
+  const ai = getGenAI();
   const contents = [
-    ...(history || []).map(h => ({
-      role: h.role,
-      parts: h.parts,
+    ...(Array.isArray(history) ? history : []).map((h) => ({
+      role: h.role === 'model' ? 'model' : 'user',
+      parts: Array.isArray(h.parts) ? h.parts : [],
     })),
     { role: 'user', parts: [{ text: userMessage }] },
   ];
 
-  for (let attempt = 0; attempt < MAX_GEMINI_ATTEMPTS; attempt++) {
+  for (let attempt = 0; attempt < MAX_GEMINI_ATTEMPTS; attempt += 1) {
     try {
       const response = await ai.models.generateContent({
         model: getGeminiModelId(),
         contents,
         config: {
-          systemInstruction:
-            SYSTEM_INSTRUCTIONS[lang] || SYSTEM_INSTRUCTIONS.he,
+          systemInstruction: SYSTEM_INSTRUCTIONS[lang] || SYSTEM_INSTRUCTIONS.he,
         },
       });
       const text =
@@ -152,25 +142,25 @@ async function geminiChat(history, userMessage, lang = 'he') {
           : response.text != null
             ? String(response.text)
             : '';
-      if (isApiErrorPayloadText(text)) {
-        throw new Error(text);
-      }
+      if (isApiErrorPayloadText(text)) throw new Error(text);
       return text;
     } catch (err) {
       if (isTransientGeminiFailure(err) && attempt < MAX_GEMINI_ATTEMPTS - 1) {
-        const delayMs = Math.min(2000 * (attempt + 1), 8000);
-        await new Promise((r) => setTimeout(r, delayMs));
+        const delayMs = Math.min(1200 * (attempt + 1), 4000);
+        await new Promise((resolve) => setTimeout(resolve, delayMs));
         continue;
       }
       throw err;
     }
   }
+
+  throw new Error('Gemini request failed');
 }
 
 module.exports = {
   geminiChat,
+  hasGeminiApiKey,
   isTransientGeminiFailure,
   isApiErrorPayloadText,
-  /** Legal intake prompts — shared with Multimodal Live (ephemeral token) when enabled. */
   SYSTEM_INSTRUCTIONS,
 };

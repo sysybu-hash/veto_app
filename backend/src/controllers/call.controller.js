@@ -10,7 +10,7 @@
 
 const axios = require('axios');
 const EmergencyEvent = require('../models/EmergencyEvent');
-const cloudinary     = require('../config/cloudinary');
+const { cloudinary } = require('../config/cloudinary');
 const { getGeminiModelId } = require('../config/gemini.config');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const { buildRtcTokenForUid } = require('../services/agoraToken.service');
@@ -20,6 +20,13 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 /** One finalize pipeline per event (avoid duplicate work if both peers call stop). */
 const cloudRecordingFinalizeLocks = new Set();
+
+function canAccessEvent(event, user) {
+  const uid = String(user.userId);
+  const isUser = (user.role === 'user' || user.role === 'admin') && event.user_id?.toString() === uid;
+  const isLawyer = user.role === 'lawyer' && event.assigned_lawyer_id?.toString() === uid;
+  return isUser || isLawyer || user.role === 'admin';
+}
 
 function sanitizeTranscript(raw) {
   if (!raw || typeof raw !== 'string') return '';
@@ -172,8 +179,11 @@ exports.uploadRecording = async (req, res, next) => {
     // Save recording URL to event
     await EmergencyEvent.findByIdAndUpdate(eventId, {
       recording_url:               uploadResult.secure_url,
+      recording_public_id:         uploadResult.public_id || null,
       recording_duration_seconds:  uploadResult.duration != null ? Number(uploadResult.duration) : null,
       recording_size_bytes:        uploadResult.bytes != null ? Number(uploadResult.bytes) : null,
+      recording_saved_decision:    'pending',
+      recording_transcription_status: 'idle',
     });
 
     res.json({
@@ -300,6 +310,7 @@ Rules:
     await EmergencyEvent.findByIdAndUpdate(eventId, {
       call_transcript: transcript,
       transcript_language: language || event.language,
+      recording_transcription_status: 'ready',
     });
 
     res.json({
@@ -319,22 +330,65 @@ Rules:
   }
 };
 
+async function transcribeEventRecording({ eventId, language }) {
+  if (!process.env.GEMINI_API_KEY) {
+    await EmergencyEvent.findByIdAndUpdate(eventId, { recording_transcription_status: 'failed' });
+    return;
+  }
+  const event = await EmergencyEvent.findById(eventId);
+  if (!event?.recording_url) {
+    await EmergencyEvent.findByIdAndUpdate(eventId, { recording_transcription_status: 'failed' });
+    return;
+  }
+  await EmergencyEvent.findByIdAndUpdate(eventId, { recording_transcription_status: 'pending' });
+  try {
+    const audioResp = await axios.get(event.recording_url, {
+      responseType: 'arraybuffer',
+      maxContentLength: 40 * 1024 * 1024,
+      timeout: 120000,
+    });
+    const buf = Buffer.from(audioResp.data);
+    const ct = (audioResp.headers['content-type'] || '').split(';')[0].trim();
+    const mimeType = ct && (ct.startsWith('audio/') || ct.startsWith('video/')) ? ct : 'video/mp4';
+    const langMap = { he: 'עברית', ar: 'Arabic', ru: 'Russian', en: 'English' };
+    const lang = langMap[language || event.language] || 'the call language';
+    const model = genAI.getGenerativeModel({ model: getGeminiModelId() });
+    const prompt = `
+You are a verbatim speech-to-text transcription engine.
+Transcribe the call recording in ${lang} as plain text only.
+
+Rules:
+- Output ONLY the transcript text. No JSON, no markdown, no headings.
+- Do NOT add emojis, sound descriptions, speaker labels, or timestamps.
+- If something is unclear, leave it out rather than inventing speech.
+    `.trim();
+    const result = await model.generateContent([
+      { text: prompt },
+      { inlineData: { mimeType, data: buf.toString('base64') } },
+    ]);
+    await EmergencyEvent.findByIdAndUpdate(eventId, {
+      call_transcript: sanitizeTranscript(result.response.text()),
+      transcript_language: language || event.language,
+      recording_transcription_status: 'ready',
+    });
+  } catch (err) {
+    console.error('[call] transcription finalize failed', eventId, err);
+    await EmergencyEvent.findByIdAndUpdate(eventId, { recording_transcription_status: 'failed' });
+  }
+}
+
 // ── Get call details ──────────────────────────────────────────
 exports.getCallDetails = async (req, res, next) => {
   try {
     const { eventId } = req.params;
-    const { userId }  = req.user;
-
     const event = await EmergencyEvent.findById(eventId)
-      .select('user_id assigned_lawyer_id status call_type call_started_at call_duration_seconds recording_url recording_duration_seconds recording_size_bytes call_transcript transcript_language')
+      .select('user_id assigned_lawyer_id room_id status call_type call_started_at call_duration_seconds recording_url recording_public_id recording_duration_seconds recording_size_bytes call_transcript transcript_language recording_saved_decision recording_transcription_status screen_recording_url screen_recording_public_id')
       .lean();
 
     if (!event) return res.status(404).json({ error: 'Event not found' });
 
     // Access check
-    const isUser   = event.user_id?.toString()            === userId;
-    const isLawyer = event.assigned_lawyer_id?.toString() === userId;
-    if (!isUser && !isLawyer && req.user.role !== 'admin') {
+    if (!canAccessEvent(event, req.user)) {
       return res.status(403).json({ error: 'Not authorized' });
     }
 
@@ -361,13 +415,14 @@ exports.listMySosArtifacts = async (req, res, next) => {
 
     const items = await EmergencyEvent.find({
       user_id: userId,
+      recording_saved_decision: 'saved',
       $or: [
         { recording_url: { $exists: true, $nin: [null, ''] } },
         { call_transcript: { $exists: true, $nin: [null, ''] } },
       ],
     })
       .select(
-        '_id status recording_url call_transcript transcript_language triggered_at completed_at',
+        '_id status recording_url call_transcript transcript_language triggered_at completed_at recording_saved_decision recording_transcription_status screen_recording_url',
       )
       .sort({ triggered_at: -1 })
       .limit(50)
@@ -383,15 +438,11 @@ exports.listMySosArtifacts = async (req, res, next) => {
 exports.getCloudRecordingStatus = async (req, res, next) => {
   try {
     const { eventId } = req.params;
-    const { userId, role } = req.user;
     const event = await EmergencyEvent.findById(eventId)
       .select('user_id assigned_lawyer_id')
       .lean();
     if (!event) return res.status(404).json({ error: 'Event not found' });
-    const uid = String(userId);
-    const isUser = (role === 'user' || role === 'admin') && event.user_id?.toString() === uid;
-    const isLawyer = role === 'lawyer' && event.assigned_lawyer_id?.toString() === uid;
-    if (!isUser && !isLawyer && req.user.role !== 'admin') {
+    if (!canAccessEvent(event, req.user)) {
       return res.status(403).json({ error: 'Not authorized' });
     }
     res.json({
@@ -413,7 +464,6 @@ exports.startCloudRecording = async (req, res, next) => {
       });
     }
     const { eventId } = req.params;
-    const { userId, role } = req.user;
     const wantVideo = !!req.body?.wantVideo;
 
     const event = await EmergencyEvent.findById(eventId)
@@ -421,10 +471,7 @@ exports.startCloudRecording = async (req, res, next) => {
       .lean();
     if (!event) return res.status(404).json({ error: 'Event not found' });
 
-    const uid = String(userId);
-    const isUser = (role === 'user' || role === 'admin') && event.user_id?.toString() === uid;
-    const isLawyer = role === 'lawyer' && event.assigned_lawyer_id?.toString() === uid;
-    if (!isUser && !isLawyer && req.user.role !== 'admin') {
+    if (!canAccessEvent(event, req.user)) {
       return res.status(403).json({ error: 'Not authorized' });
     }
 
@@ -449,6 +496,8 @@ exports.startCloudRecording = async (req, res, next) => {
       agora_cloud_recording_resource_id: resourceId,
       agora_cloud_recording_sid: sid,
       agora_cloud_recording_uid: Number(uidStr),
+      recording_saved_decision: 'pending',
+      recording_transcription_status: 'idle',
     });
 
     res.json({
@@ -496,11 +545,19 @@ async function finalizeCloudRecordingToCloudinary({
   });
   await EmergencyEvent.findByIdAndUpdate(eventId, {
     recording_url:               uploadResult.secure_url,
+    recording_public_id:         uploadResult.public_id || null,
     recording_duration_seconds:  uploadResult.duration != null ? Number(uploadResult.duration) : null,
     recording_size_bytes:        uploadResult.bytes != null ? Number(uploadResult.bytes) : null,
+    recording_saved_decision:    'pending',
+    recording_transcription_status: 'pending',
     agora_cloud_recording_resource_id: null,
     agora_cloud_recording_sid:         null,
     agora_cloud_recording_uid:         null,
+  });
+  setImmediate(() => {
+    transcribeEventRecording({ eventId, language: null }).catch((err) => {
+      console.error('[call] transcribe after cloud recording failed', eventId, err);
+    });
   });
 }
 
@@ -514,15 +571,11 @@ exports.stopCloudRecording = async (req, res, next) => {
       });
     }
     const { eventId } = req.params;
-    const { userId, role } = req.user;
 
     const event = await EmergencyEvent.findById(eventId);
     if (!event) return res.status(404).json({ error: 'Event not found' });
 
-    const uid = String(userId);
-    const isUser = (role === 'user' || role === 'admin') && event.user_id?.toString() === uid;
-    const isLawyer = role === 'lawyer' && event.assigned_lawyer_id?.toString() === uid;
-    if (!isUser && !isLawyer && req.user.role !== 'admin') {
+    if (!canAccessEvent(event, req.user)) {
       return res.status(403).json({ error: 'Not authorized' });
     }
 
@@ -598,6 +651,115 @@ exports.stopCloudRecording = async (req, res, next) => {
       if (shouldFinalize) cloudRecordingFinalizeLocks.delete(eid);
       next(err);
     }
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.saveCallArtifacts = async (req, res, next) => {
+  try {
+    const { eventId } = req.params;
+    const event = await EmergencyEvent.findById(eventId);
+    if (!event) return res.status(404).json({ error: 'Event not found' });
+    if (!canAccessEvent(event, req.user)) {
+      return res.status(403).json({ error: 'Not authorized' });
+    }
+    if (req.user.role !== 'user' && req.user.role !== 'admin') {
+      return res.status(403).json({ error: 'Citizen accounts only' });
+    }
+    event.recording_saved_decision = 'saved';
+    if (event.recording_url && event.recording_transcription_status === 'idle') {
+      event.recording_transcription_status = 'pending';
+    }
+    await event.save();
+    if (event.recording_url && event.recording_transcription_status !== 'ready') {
+      setImmediate(() => {
+        transcribeEventRecording({ eventId, language: event.language }).catch((err) => {
+          console.error('[call] transcribe after save failed', eventId, err);
+        });
+      });
+    }
+    res.json({
+      success: true,
+      recordingUrl: event.recording_url || null,
+      transcriptReady: event.recording_transcription_status === 'ready',
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.deleteCallArtifacts = async (req, res, next) => {
+  try {
+    const { eventId } = req.params;
+    const event = await EmergencyEvent.findById(eventId);
+    if (!event) return res.status(404).json({ error: 'Event not found' });
+    if (!canAccessEvent(event, req.user)) {
+      return res.status(403).json({ error: 'Not authorized' });
+    }
+    if (req.user.role !== 'user' && req.user.role !== 'admin') {
+      return res.status(403).json({ error: 'Citizen accounts only' });
+    }
+
+    const deletions = [];
+    if (event.recording_public_id) {
+      deletions.push(cloudinary.uploader.destroy(event.recording_public_id, { resource_type: 'video' }));
+    }
+    if (event.screen_recording_public_id) {
+      deletions.push(cloudinary.uploader.destroy(event.screen_recording_public_id, { resource_type: 'video' }));
+    }
+    await Promise.allSettled(deletions);
+
+    await EmergencyEvent.findByIdAndUpdate(eventId, {
+      recording_url: null,
+      recording_public_id: null,
+      recording_duration_seconds: null,
+      recording_size_bytes: null,
+      call_transcript: null,
+      transcript_language: null,
+      recording_saved_decision: 'deleted',
+      recording_transcription_status: 'idle',
+      screen_recording_url: null,
+      screen_recording_public_id: null,
+    });
+
+    res.json({ success: true });
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.uploadScreenRecording = async (req, res, next) => {
+  try {
+    const { eventId } = req.params;
+    const event = await EmergencyEvent.findById(eventId);
+    if (!event) return res.status(404).json({ error: 'Event not found' });
+    if (!canAccessEvent(event, req.user)) {
+      return res.status(403).json({ error: 'Not authorized' });
+    }
+    if (!req.file) {
+      return res.status(400).json({ error: 'No screen recording file provided' });
+    }
+    const uploadResult = await new Promise((resolve, reject) => {
+      const uploadStream = cloudinary.uploader.upload_stream(
+        {
+          resource_type: 'video',
+          folder: `veto/recordings/${eventId}`,
+          public_id: `call_screen_${Date.now()}`,
+        },
+        (err, result) => {
+          if (err) reject(err);
+          else resolve(result);
+        },
+      );
+      uploadStream.end(req.file.buffer);
+    });
+    await EmergencyEvent.findByIdAndUpdate(eventId, {
+      screen_recording_url: uploadResult.secure_url,
+      screen_recording_public_id: uploadResult.public_id || null,
+      recording_saved_decision: 'pending',
+    });
+    res.json({ success: true, screenRecordingUrl: uploadResult.secure_url });
   } catch (err) {
     next(err);
   }

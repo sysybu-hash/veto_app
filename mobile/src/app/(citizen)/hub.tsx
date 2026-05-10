@@ -26,6 +26,7 @@ export default function CitizenHubScreen() {
   const [searching, setSearching] = useState(false);
   const [statusMsg, setStatusMsg] = useState<string | null>(null);
   const searchingRef = useRef(false);
+  const lawyerFoundRef = useRef(false);
 
   useEffect(() => {
     searchingRef.current = searching;
@@ -51,6 +52,7 @@ export default function CitizenHubScreen() {
     const onLawyerFound = (payload: unknown) => {
       const p = payload as { eventId?: string };
       if (p.eventId) {
+        lawyerFoundRef.current = true;
         emitCitizenChoseSession(p.eventId, "video");
         setStatusMsg("מתחבר לעורך הדין…");
       }
@@ -69,12 +71,16 @@ export default function CitizenHubScreen() {
       Alert.alert("שגיאה", p.message ?? "בקשת החירום נכשלה");
     };
 
-    const onCaseTaken = (payload: unknown) => {
-      const p = payload as { message?: string };
+    const onCaseTaken = (_payload: unknown) => {
+      // Backend broadcasts `case_taken` to every socket except the lawyer
+      // who accepted, which includes us. After our lawyer_found has fired
+      // the broadcast is just informational for OTHER lawyers — never
+      // surface it to the citizen whose case was successfully accepted.
+      if (lawyerFoundRef.current) return;
       if (!searchingRef.current) return;
       setSearching(false);
       setStatusMsg(null);
-      Alert.alert("עודכן", p.message ?? "המקרה נסגר או נלקח.");
+      Alert.alert("עודכן", "המקרה כבר לא זמין.");
     };
 
     socket.on("lawyer_found", onLawyerFound);
@@ -117,6 +123,7 @@ export default function CitizenHubScreen() {
   }
 
   async function onSos() {
+    lawyerFoundRef.current = false;
     setSearching(true);
     setStatusMsg("מחפש עורך דין זמין…");
     try {
