@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { LanguageSwitcher } from "@/components/i18n/LanguageSwitcher";
 import { useTranslation } from "@/lib/i18n/LocaleProvider";
 
 export default function Home() {
@@ -52,51 +51,6 @@ export default function Home() {
 
   return (
     <div className="relative flex min-h-screen flex-col text-slate-100">
-      <nav className="relative z-10 border-b border-white/5">
-        <div className="container mx-auto flex items-center justify-between px-6 py-5">
-          <img
-            src="/veto-logo.svg"
-            alt="VETO"
-            className="h-8 w-auto select-none"
-            draggable={false}
-          />
-
-          <div className="hidden items-center gap-10 text-sm font-semibold text-slate-300 md:flex">
-            <a href="#" className="transition-colors hover:text-[#C5A059]">
-              {t("home.navSystem")}
-            </a>
-            <a href="#" className="transition-colors hover:text-[#C5A059]">
-              {t("home.navSecurity")}
-            </a>
-            <a href="#" className="transition-colors hover:text-[#C5A059]">
-              {t("home.navTeam")}
-            </a>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <LanguageSwitcher className="shrink-0" />
-            <Link
-              href="/register?role=lawyer"
-              className="hidden rounded-md border border-white/10 bg-white/[0.03] px-3 py-2 text-sm font-semibold text-slate-200 transition-colors hover:bg-white/[0.07] sm:inline-block"
-            >
-              הצטרפות עורכי דין
-            </Link>
-            <Link
-              href="/login"
-              className="hidden rounded-md px-3 py-2 text-sm font-semibold text-slate-300 transition-colors hover:text-white sm:inline-block"
-            >
-              {t("home.loginLawyers")}
-            </Link>
-            <Link
-              href="/login"
-              className="rounded-md border border-[#C5A059]/40 bg-[#C5A059] px-4 py-2 text-sm font-bold text-slate-950 shadow-[0_0_24px_-6px_rgba(197,160,89,0.6)] transition-all hover:bg-[#d4b06a]"
-            >
-              {t("home.personalArea")}
-            </Link>
-          </div>
-        </div>
-      </nav>
-
       <main className="relative z-10 container mx-auto flex grow flex-col items-center justify-center px-6 py-24 text-center">
         <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-[#C5A059]/30 bg-[#C5A059]/[0.08] px-4 py-1.5 text-[11px] font-bold tracking-[0.2em] text-[#C5A059] uppercase">
           <span className="h-1.5 w-1.5 rounded-full bg-[#C5A059] shadow-[0_0_8px_rgba(197,160,89,0.8)]" />

@@ -1,7 +1,8 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
 import { Frank_Ruhl_Libre, Heebo } from "next/font/google";
 import { JwtCookieSync } from "@/components/providers/JwtCookieSync";
+import { PwaRegistrar } from "@/components/providers/PwaRegistrar";
 import { LocaleProvider } from "@/lib/i18n/LocaleProvider";
 import { AiOverlayErrorBoundary } from "@/components/ui/AiOverlayErrorBoundary";
 import { GlobalAiOverlay } from "@/components/ui/GlobalAiOverlay";
@@ -23,9 +24,35 @@ const frank = Frank_Ruhl_Libre({
 });
 
 export const metadata: Metadata = {
+  applicationName: "VETO Legal",
+  manifest: "/manifest.webmanifest",
   title: "VETO Signature 2027",
   description:
     "מערכת ההפעלה המשפטית הראשונה בישראל — הגנה מיידית, ניהול ראיות וחיבור למומחים.",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "VETO",
+  },
+  formatDetection: {
+    telephone: true,
+    email: false,
+    address: false,
+  },
+  icons: {
+    icon: [
+      { url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icons/icon-512.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: [{ url: "/icons/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
+  },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: "#0f172a",
 };
 
 export default function RootLayout({
@@ -42,6 +69,7 @@ export default function RootLayout({
     >
       <body className="relative min-h-screen bg-slate-950 font-heebo text-slate-100 antialiased">
         <LocaleProvider>
+          <PwaRegistrar />
           <JwtCookieSync />
           <ToastHost />
         <div className="fixed inset-0 -z-50 overflow-hidden" aria-hidden>
