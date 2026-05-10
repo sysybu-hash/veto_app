@@ -447,6 +447,9 @@ function LoginPageInner() {
     setMessage(null);
   };
 
+  const canRequestOtp = !busy;
+  const canVerifyOtp = !!otp.trim() && !busy;
+
   return (
     <>
       <div className="flex min-h-screen w-full items-center justify-center px-4 py-12 md:px-6 md:py-16">
@@ -550,7 +553,7 @@ function LoginPageInner() {
           <div className="flex flex-wrap gap-2">
             <button
               type="button"
-              disabled={busy || !phone.trim()}
+              disabled={!canRequestOtp}
               onClick={() => void handleOtpLogin()}
               className={`px-4 py-2.5 text-sm font-semibold shadow-md ${btnPrimaryDark} disabled:opacity-50`}
             >
@@ -598,7 +601,7 @@ function LoginPageInner() {
             />
             <button
               type="button"
-              disabled={busy || !phone.trim() || !otp.trim()}
+              disabled={!canVerifyOtp}
               onClick={() => void handleVerify()}
               className="mt-1 rounded-xl bg-emerald-700 px-4 py-2.5 text-sm font-semibold text-white shadow-md transition hover:bg-emerald-600 disabled:opacity-50"
             >

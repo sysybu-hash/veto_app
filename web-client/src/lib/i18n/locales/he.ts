@@ -543,7 +543,7 @@ export const he: Dict = {
     modeHintText:
       "מידע משפטי כללי — לא ייעוץ פרטני",
     modeHintLive: "Gemini Live — אודיו בזמן אמת",
-    modeHintVision: "VETO Vision — ניתוח ויזואלי (בקרוב)",
+    modeHintVision: "VETO Vision — פענוח מסמכים ותמונות",
     placeholder: "שאל אותי משהו…",
     send: "שלח",
     close: "סגור",

@@ -306,9 +306,9 @@ module.exports = function initDispatch(io) {
 
         const event = updatedEvent;
 
-        // 2. Mark lawyer as busy + add event to their case history ─
+        // 2. Add event to lawyer history. Availability is an explicit lawyer
+        // choice and must not be flipped off automatically after accepting.
         await Lawyer.findByIdAndUpdate(userId, {
-          is_available: false,
           $addToSet: { emergency_events: eventId },
           $inc:       { total_cases_handled: 1 },
         });
@@ -346,10 +346,18 @@ module.exports = function initDispatch(io) {
         //    We broadcast to all sockets in the lawyers room
         //    then tell the winning lawyer to ignore it (they
         //    already received case_accepted_confirmed).
-        socket.broadcast.emit('case_taken', {
+        const takenPayload = {
           eventId,
+          assignedLawyerId: userId.toString(),
           message: 'This case has been taken by another lawyer.',
-        });
+        };
+        for (const attempt of event.dispatch_attempts || []) {
+          const notifiedLawyerId = attempt.lawyer_id?.toString();
+          if (!notifiedLawyerId || notifiedLawyerId === userId.toString()) {
+            continue;
+          }
+          io.to(`lawyer:${notifiedLawyerId}`).emit('case_taken', takenPayload);
+        }
 
         // 6. Mark remaining dispatch attempts as no_response ───
         await EmergencyEvent.updateOne(

@@ -1,6 +1,7 @@
 import { create } from "zustand";
 
 export type AiChatRole = "user" | "assistant";
+export type AiChatMode = "text" | "live" | "vision";
 
 export interface AiChatMessage {
   id: string;
@@ -10,12 +11,14 @@ export interface AiChatMessage {
 
 export interface AiChatState {
   isOpen: boolean;
+  requestedMode: AiChatMode | null;
   messages: AiChatMessage[];
   isLoading: boolean;
 
   toggleChat: () => void;
-  openChat: () => void;
+  openChat: (mode?: AiChatMode) => void;
   closeChat: () => void;
+  clearRequestedMode: () => void;
   addMessage: (message: AiChatMessage) => void;
   setLoading: (loading: boolean) => void;
   clearChat: () => void;
@@ -23,12 +26,14 @@ export interface AiChatState {
 
 export const useAiChatStore = create<AiChatState>((set) => ({
   isOpen: false,
+  requestedMode: null,
   messages: [],
   isLoading: false,
 
   toggleChat: () => set((s) => ({ isOpen: !s.isOpen })),
-  openChat: () => set({ isOpen: true }),
+  openChat: (mode = "text") => set({ isOpen: true, requestedMode: mode }),
   closeChat: () => set({ isOpen: false }),
+  clearRequestedMode: () => set({ requestedMode: null }),
 
   addMessage: (message) =>
     set((s) => ({ messages: [...s.messages, message] })),
