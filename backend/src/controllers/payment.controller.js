@@ -148,6 +148,20 @@ exports.createPlanOrder = async (req, res) => {
 exports.createConsultationOrder = async (req, res) => {
   if (!req.user?.userId) return res.status(401).json({ error: 'Authentication required.' });
   try {
+    const user = await User.findById(req.user.userId).select('role manually_added');
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    if (req.user.role === 'admin' || user.role === 'admin' || user.manually_added === true) {
+      const token = crypto.randomBytes(16).toString('hex');
+      user.pending_consultation_token = token;
+      await user.save();
+      return res.json({
+        success: true,
+        exempt: true,
+        consultationToken: token,
+        amountIls: 0,
+      });
+    }
+
     const usd = ilsToUsd(CONSULTATION_ILS);
     const { orderId, approveUrl } = await createOrder(
       usd,
@@ -168,6 +182,9 @@ exports.createConsultationOrder = async (req, res) => {
 
 exports.createOvertimeOrder = async (req, res) => {
   if (!req.user?.userId) return res.status(401).json({ error: 'Authentication required.' });
+  const user = await User.findById(req.user.userId).select('role manually_added');
+  if (!user) return res.status(404).json({ error: 'User not found' });
+  const paymentExempt = req.user.role === 'admin' || user.role === 'admin' || user.manually_added === true;
   const eventId = req.body?.eventId ? String(req.body.eventId) : null;
   let event = null;
   if (eventId) {
@@ -181,6 +198,23 @@ exports.createOvertimeOrder = async (req, res) => {
 
   const charge = computeOvertimeCharge(minutesFromEvent(event, req.body?.minutes));
   if (charge.overtimeMinutes <= 0) return res.status(400).json({ error: 'No overtime to charge.' });
+  if (paymentExempt) {
+    if (event) {
+      event.charge_status = 'waived';
+      event.charge_overtime_minutes = 0;
+      event.charge_amount_ils = 0;
+      event.charge_calculated_at = new Date();
+      await event.save();
+    }
+    return res.json({
+      success: true,
+      exempt: true,
+      approveUrl: `${WEB_APP_URL}/hub`,
+      amountIls: 0,
+      overtimeMinutes: 0,
+      eventId,
+    });
+  }
 
   try {
     const usd = ilsToUsd(charge.amountIls);
@@ -319,7 +353,8 @@ exports.getMyPlan = async (req, res) => {
     consultationsRemaining: Math.max(0, (user.consultations_included || 0) - (user.consultations_used || 0)),
     demoStartedAt: user.demo_started_at,
     isFamilyOwner: user.subscription_plan === 'family' && String(user.family_owner_id) === String(user._id),
-    paymentExempt: !!user.manually_added,
+    paymentExempt: req.user.role === 'admin' || user.role === 'admin' || !!user.manually_added,
+    consultationExempt: req.user.role === 'admin' || user.role === 'admin' || !!user.manually_added,
   });
 };
 

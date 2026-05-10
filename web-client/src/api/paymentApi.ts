@@ -18,8 +18,10 @@ async function parseJsonError(res: Response): Promise<string> {
 }
 
 export type CreateOrderResult = {
-  orderId: string;
+  orderId?: string;
   approveUrl: string;
+  exempt?: boolean;
+  consultationToken?: string;
 };
 
 export type PlanId = "demo" | "standard" | "family";
@@ -73,11 +75,13 @@ export async function createOvertimeOrder(
     approveUrl?: string;
     amountIls?: number;
     overtimeMinutes?: number;
+    exempt?: boolean;
   };
-  if (!data.orderId || !data.approveUrl) throw new Error("Invalid payment response");
+  if (!data.approveUrl) throw new Error("Invalid payment response");
   return {
     orderId: data.orderId,
     approveUrl: data.approveUrl,
+    exempt: data.exempt,
     amountIls: data.amountIls ?? 0,
     overtimeMinutes: data.overtimeMinutes ?? 0,
   };
@@ -90,7 +94,15 @@ export async function createConsultationOrder(): Promise<CreateOrderResult> {
     body: JSON.stringify({}),
   });
   if (!res.ok) throw new Error(await parseJsonError(res));
-  const data = (await res.json()) as { orderId?: string; approveUrl?: string };
+  const data = (await res.json()) as {
+    orderId?: string;
+    approveUrl?: string;
+    exempt?: boolean;
+    consultationToken?: string;
+  };
+  if (data.exempt) {
+    return { exempt: true, consultationToken: data.consultationToken, approveUrl: "/hub" };
+  }
   if (!data.orderId || !data.approveUrl) throw new Error("Invalid payment response");
   return { orderId: data.orderId, approveUrl: data.approveUrl };
 }
