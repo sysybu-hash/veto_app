@@ -6,11 +6,11 @@ import { useToastStore } from "@/store/useToastStore";
 
 const variantStyles: Record<string, string> = {
   success:
-    "border-[#C5A059]/45 bg-[#C5A059]/15 text-slate-100 ring-1 ring-[#C5A059]/30",
-  error: "border-red-500/40 bg-red-500/15 text-red-200 ring-1 ring-red-500/30",
-  info: "border-white/10 bg-white/[0.03] text-slate-100 ring-1 ring-white/30",
+    "border-[#C5A059]/45 bg-[#C5A059]/15 text-slate-950 ring-1 ring-[#C5A059]/30",
+  error: "border-red-300 bg-red-50 text-red-800 ring-1 ring-red-200",
+  info: "border-slate-200 bg-white text-slate-900 ring-1 ring-slate-200",
   alert:
-    "border-red-500/40 bg-gradient-to-br from-red-500/20 to-[#C5A059]/15 text-slate-100 ring-2 ring-red-500/40 shadow-[0_0_28px_rgba(239,68,68,0.28)]",
+    "border-red-300 bg-gradient-to-br from-red-50 to-[#C5A059]/15 text-slate-950 ring-2 ring-red-300 shadow-[0_0_28px_rgba(239,68,68,0.18)]",
 };
 
 export function ToastHost() {

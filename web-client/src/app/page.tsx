@@ -79,7 +79,7 @@ export default function Home() {
               <ShieldCheck className="h-4 w-4" aria-hidden />
               LEGAL OPERATING SYSTEM
             </p>
-            <h1 className="mt-7 font-frank text-5xl font-black leading-[0.98] text-slate-950 md:text-7xl">
+            <h1 className="mt-7 max-w-3xl font-frank text-4xl font-black leading-tight text-slate-950 sm:text-5xl lg:text-6xl">
               VETO הופכת רגע משפטי מלחיץ למערכת פעולה מסודרת
             </h1>
             <p className="mt-7 max-w-2xl text-lg leading-8 text-slate-600">

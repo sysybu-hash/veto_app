@@ -33,6 +33,7 @@ function CallInner({ channel }: { channel: string }) {
   const client = useRTCClient();
   const session = useEmergencyStore((s) => s.sessionReady);
   const clearCallSession = useEmergencyStore((s) => s.clearCallSession);
+  const hasActiveSession = session?.channelId === channel;
 
   const [micOn, setMicOn] = useState(true);
   const [cameraOn, setCameraOn] = useState(true);
@@ -65,21 +66,21 @@ function CallInner({ channel }: { channel: string }) {
     }
   }, [elapsedSec, freeSec, extendDecision]);
   const appId = getPublicAgoraAppId();
-  const chatOnly = session?.callType === "chat";
-  const videoSession = session != null && session.callType === "video";
+  const chatOnly = hasActiveSession && session?.callType === "chat";
+  const videoSession = hasActiveSession && session?.callType === "video";
 
-  const { localMicrophoneTrack } = useLocalMicrophoneTrack(!chatOnly);
+  const { localMicrophoneTrack } = useLocalMicrophoneTrack(hasActiveSession && !chatOnly);
   const { localCameraTrack, error: camErr } = useLocalCameraTrack(videoSession);
 
   const joinArgs = useMemo(() => {
-    if (!session || !appId || chatOnly) return null;
+    if (!hasActiveSession || !session || !appId || chatOnly) return null;
     return {
       appid: appId,
       channel: session.channelId,
       token: session.token,
       uid: session.uid,
     };
-  }, [appId, chatOnly, session]);
+  }, [appId, chatOnly, hasActiveSession, session]);
 
   const ready =
     !!joinArgs &&
@@ -294,14 +295,14 @@ function CallInner({ channel }: { channel: string }) {
     }
   }, [channel, chatDraft, session, t]);
 
-  if (!session || session.channelId !== channel) {
+  if (!hasActiveSession) {
     return (
       <div className="flex min-h-full flex-col items-center justify-center gap-4 px-6 text-center">
-        <p className="text-slate-200">{t("call.noSession")}</p>
+        <p className="font-bold text-slate-800">{t("call.noSession")}</p>
         <button
           type="button"
           onClick={() => router.replace("/hub")}
-          className="rounded-xl bg-white/10 px-4 py-2 text-sm font-medium text-white hover:bg-white/15"
+          className="rounded-xl bg-[#C5A059] px-4 py-2 text-sm font-black text-slate-950 shadow-sm hover:bg-[#D8B867]"
         >
           {t("call.backHub")}
         </button>
@@ -393,7 +394,7 @@ function CallInner({ channel }: { channel: string }) {
     Math.ceil(overSec / 60) * PRICING.overtimeIlsPerMin;
 
   return (
-    <div className="relative flex min-h-full flex-col bg-black">
+    <div className="veto-call-keep-dark relative flex min-h-full flex-col bg-black">
       <div className="absolute left-3 top-3 z-30 rounded-full border border-white/10 bg-black/60 px-3 py-1 text-xs font-mono text-slate-200 backdrop-blur">
         {mm}:{ss}
         {overSec > 0 && (
