@@ -312,7 +312,7 @@ function CallInner({ channel }: { channel: string }) {
 
   if (!chatOnly && !appId) {
     return (
-      <div className="flex min-h-full flex-col items-center justify-center px-6 text-center text-amber-200">
+      <div className="veto-call-keep-dark fixed inset-0 z-[70] flex h-[100dvh] w-screen flex-col items-center justify-center bg-black px-6 text-center text-amber-200">
         {t("call.missingAgora")}
       </div>
     );
@@ -322,7 +322,7 @@ function CallInner({ channel }: { channel: string }) {
 
   if (chatOnly) {
     return (
-      <div className="flex min-h-full flex-col bg-slate-950 text-white">
+      <div className="veto-call-keep-dark fixed inset-0 z-[70] flex h-[100dvh] w-screen flex-col overflow-hidden bg-slate-950 text-white">
         <header className="border-b border-white/10 px-4 py-3">
           <p className="font-frank text-lg font-bold">{t("call.chatTitle")}</p>
           <p className="text-xs text-slate-400">
@@ -394,7 +394,7 @@ function CallInner({ channel }: { channel: string }) {
     Math.ceil(overSec / 60) * PRICING.overtimeIlsPerMin;
 
   return (
-    <div className="veto-call-keep-dark relative flex min-h-full flex-col bg-black">
+    <div className="veto-call-keep-dark fixed inset-0 z-[70] flex h-[100dvh] w-screen flex-col overflow-hidden bg-black text-white">
       <div className="absolute left-3 top-3 z-30 rounded-full border border-white/10 bg-black/60 px-3 py-1 text-xs font-mono text-slate-200 backdrop-blur">
         {mm}:{ss}
         {overSec > 0 && (
