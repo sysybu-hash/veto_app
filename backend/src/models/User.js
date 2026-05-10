@@ -111,6 +111,71 @@ const UserSchema = new mongoose.Schema(
       default: null,
     },
 
+    /** Plan: 'demo' | 'standard' | 'family' | null (none) */
+    subscription_plan: {
+      type: String,
+      enum: ['demo', 'standard', 'family', null],
+      default: null,
+    },
+
+    /** PayPal Billing Subscription id (I-...). */
+    paypal_subscription_id: {
+      type: String,
+      default: null,
+      index: true,
+      sparse: true,
+    },
+
+    /** PayPal subscription lifecycle status, e.g. APPROVAL_PENDING, ACTIVE, CANCELLED. */
+    subscription_status: {
+      type: String,
+      default: null,
+    },
+
+    /** PayPal plan id used for the active billing subscription. */
+    subscription_plan_id: {
+      type: String,
+      default: null,
+    },
+
+    /** Current paid period end as reported by PayPal/webhook or inferred locally. */
+    subscription_current_period_end: {
+      type: Date,
+      default: null,
+    },
+
+    /** When the citizen first activated the demo plan (one-time per user). */
+    demo_started_at: {
+      type: Date,
+      default: null,
+    },
+
+    /** Consultations bundled with the active plan (refreshed each period). */
+    consultations_included: {
+      type: Number,
+      default: 0,
+    },
+
+    /** Consultations consumed since the current period started. */
+    consultations_used: {
+      type: Number,
+      default: 0,
+    },
+
+    /** Token of a paid (but not yet consumed) consultation - required to start SOS. */
+    pending_consultation_token: {
+      type: String,
+      default: null,
+      select: false,
+    },
+
+    /** Family plan: id of the user who owns the family seat (self for owner). */
+    family_owner_id: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      default: null,
+    },
+
     // ── Manually added by admin (exempt from payment) ─────────
     manually_added: {
       type: Boolean,

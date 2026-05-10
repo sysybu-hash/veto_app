@@ -224,7 +224,8 @@ const rejectLawyer = async (req, res, next) => {
 const createLawyer = async (req, res, next) => {
   try {
     const Lawyer = require('../models/Lawyer');
-    const { full_name, phone, email, license_number, specializations, years_of_experience } = req.body;
+    const { full_name, email, license_number, specializations, years_of_experience } = req.body;
+    const phone = normalizePhone(req.body.phone);
     if (!full_name || !phone) {
       return res.status(400).json({ error: 'full_name and phone are required.' });
     }
@@ -243,9 +244,10 @@ const createLawyer = async (req, res, next) => {
 const updateLawyer = async (req, res, next) => {
   try {
     const Lawyer = require('../models/Lawyer');
-    const allowed = ['full_name', 'phone', 'email', 'is_available', 'is_verified', 'specializations', 'license_number', 'years_of_experience', 'bio'];
+    const allowed = ['full_name', 'phone', 'email', 'is_available', 'is_verified', 'is_approved', 'is_active', 'specializations', 'license_number', 'years_of_experience', 'bio'];
     const updates = {};
     allowed.forEach(f => { if (req.body[f] !== undefined) updates[f] = req.body[f]; });
+    if (updates.phone) updates.phone = normalizePhone(updates.phone);
     const lawyer = await Lawyer.findByIdAndUpdate(req.params.id, updates, { new: true, runValidators: true });
     if (!lawyer) return res.status(404).json({ error: 'Lawyer not found.' });
     res.json({ lawyer });

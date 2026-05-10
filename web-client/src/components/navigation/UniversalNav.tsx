@@ -12,13 +12,13 @@ import {
   LogOut,
   Menu,
   MessageCircle,
+  Scale,
   Settings,
   UserPlus,
   X,
 } from "lucide-react";
 import { LanguageSwitcher } from "@/components/i18n/LanguageSwitcher";
 import { clearJwt, getJwt, getRoleFromJwt } from "@/lib/authToken";
-import { useTranslation } from "@/lib/i18n/LocaleProvider";
 import { disconnectSocket } from "@/lib/socketClient";
 
 type NavItem = {
@@ -32,6 +32,7 @@ const citizenItems: NavItem[] = [
   { href: "/hub", label: "בית", icon: Home, match: (p) => p === "/hub" },
   { href: "/chat", label: "צ'אט", icon: MessageCircle, match: (p) => p === "/chat" },
   { href: "/vault", label: "כספת", icon: FolderLock, match: (p) => p.startsWith("/vault") },
+  { href: "/plans", label: "מנוי", icon: Scale, match: (p) => p.startsWith("/plans") || p.startsWith("/family") },
   { href: "/calendar", label: "יומן", icon: CalendarDays, match: (p) => p === "/calendar" },
   { href: "/settings", label: "הגדרות", icon: Settings, match: (p) => p.startsWith("/settings") },
 ];
@@ -44,14 +45,16 @@ const lawyerItems: NavItem[] = [
 
 const adminItems: NavItem[] = [
   { href: "/admin/dashboard", label: "דשבורד", icon: LayoutDashboard, match: (p) => p.startsWith("/admin/dashboard") },
+  { href: "/admin/lawyers", label: "עורכי דין", icon: Scale, match: (p) => p.startsWith("/admin/lawyers") },
   { href: "/admin/vault", label: "כספת", icon: FolderLock, match: (p) => p.startsWith("/admin/vault") },
   { href: "/admin/settings", label: "הגדרות", icon: Settings, match: (p) => p.startsWith("/admin/settings") },
 ];
 
 const guestItems: NavItem[] = [
   { href: "/", label: "בית", icon: Home, match: (p) => p === "/" },
+  { href: "/pricing", label: "מחירים", icon: Scale, match: (p) => p === "/pricing" },
+  { href: "/register/lawyer", label: "לעורכי דין", icon: UserPlus, match: (p) => p === "/register/lawyer" },
   { href: "/login", label: "כניסה", icon: LogIn, match: (p) => p === "/login" },
-  { href: "/register", label: "הרשמה", icon: UserPlus, match: (p) => p === "/register" },
 ];
 
 function resolveItems(role: string | null, hasToken: boolean): NavItem[] {
@@ -77,7 +80,6 @@ function roleLabel(role: string | null, hasToken: boolean): string {
 
 export function UniversalNav() {
   const pathname = usePathname();
-  const { t } = useTranslation();
   const [session, setSession] = useState<{ hasToken: boolean; role: string | null }>({
     hasToken: false,
     role: null,
@@ -85,21 +87,10 @@ export function UniversalNav() {
   const [open, setOpen] = useState(false);
   const { hasToken, role } = session;
   const items = useMemo(() => resolveItems(role, hasToken), [hasToken, role]);
-  const guestDesktopLinks = useMemo(
-    () => [
-      { href: "/#features", label: t("home.navSystem") },
-      { href: "/#features", label: t("home.navSecurity") },
-      { href: "/#features", label: t("home.navTeam") },
-    ],
-    [t],
-  );
 
   useEffect(() => {
     queueMicrotask(() => {
-      setSession({
-        hasToken: !!getJwt(),
-        role: getRoleFromJwt(),
-      });
+      setSession({ hasToken: !!getJwt(), role: getRoleFromJwt() });
       setOpen(false);
     });
   }, [pathname]);
@@ -113,15 +104,6 @@ export function UniversalNav() {
     };
   }, [open]);
 
-  useEffect(() => {
-    if (!open) return;
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setOpen(false);
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [open]);
-
   const logout = () => {
     disconnectSocket();
     clearJwt();
@@ -132,10 +114,7 @@ export function UniversalNav() {
 
   return (
     <>
-      <nav
-        className="sticky top-0 z-40 border-b border-white/[0.06] bg-slate-950/78 px-3 py-2.5 backdrop-blur-xl supports-[backdrop-filter]:bg-slate-950/68"
-        aria-label="ניווט ראשי"
-      >
+      <nav className="sticky top-0 z-40 border-b border-white/[0.06] bg-slate-950/78 px-3 py-2.5 backdrop-blur-xl supports-[backdrop-filter]:bg-slate-950/68" aria-label="ניווט ראשי">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-1">
           <Link href={homeHref(role, hasToken)} className="flex shrink-0 items-center" aria-label="VETO">
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -143,24 +122,18 @@ export function UniversalNav() {
           </Link>
 
           <div className="hidden min-w-0 flex-1 items-center justify-center gap-8 text-sm font-semibold text-slate-300 md:flex">
-            {hasToken
-              ? items.map((item) => {
-                  const active = item.match?.(pathname) ?? pathname === item.href;
-                  return (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      className={`transition-colors ${active ? "text-[#D8B867]" : "hover:text-[#D8B867]"}`}
-                    >
-                      {item.label}
-                    </Link>
-                  );
-                })
-              : guestDesktopLinks.map((item) => (
-                  <Link key={item.label} href={item.href} className="transition-colors hover:text-[#D8B867]">
-                    {item.label}
-                  </Link>
-                ))}
+            {items.slice(0, hasToken ? items.length : 3).map((item) => {
+              const active = item.match?.(pathname) ?? pathname === item.href;
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`transition-colors ${active ? "text-[#D8B867]" : "hover:text-[#D8B867]"}`}
+                >
+                  {item.label}
+                </Link>
+              );
+            })}
           </div>
 
           <div className="flex shrink-0 items-center gap-2">
@@ -168,10 +141,10 @@ export function UniversalNav() {
               <>
                 <LanguageSwitcher className="hidden sm:block" />
                 <Link
-                  href="/login"
+                  href="/register/lawyer"
                   className="hidden rounded-xl px-3 py-2 text-sm font-semibold text-slate-300 transition-colors hover:text-white sm:inline-flex"
                 >
-                  כניסת עורכי דין
+                  הצטרפות עורכי דין
                 </Link>
                 <Link
                   href="/login"
@@ -198,7 +171,6 @@ export function UniversalNav() {
       {open ? (
         <>
           <div className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-sm" onClick={() => setOpen(false)} aria-hidden />
-
           <aside
             id="universal-nav-drawer"
             role="dialog"
@@ -234,32 +206,39 @@ export function UniversalNav() {
                     <Link
                       href={item.href}
                       onClick={() => setOpen(false)}
-                      className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-bold transition ${
-                        active
-                          ? "border border-[#C5A059]/40 bg-[#C5A059] text-slate-950 shadow-[0_0_20px_-4px_rgba(197,160,89,0.5)]"
-                          : "border border-white/[0.06] bg-white/[0.02] text-slate-200 hover:bg-white/[0.06] hover:text-white"
+                      className={`flex items-center gap-3 rounded-2xl px-3 py-3 text-sm font-bold transition ${
+                        active ? "bg-[#C5A059]/15 text-[#D8B867]" : "text-slate-200 hover:bg-white/[0.06]"
                       }`}
                     >
-                      <Icon className="h-5 w-5 shrink-0" aria-hidden />
-                      <span className="truncate">{item.label}</span>
+                      <Icon className="h-5 w-5" aria-hidden />
+                      {item.label}
                     </Link>
                   </li>
                 );
               })}
             </ul>
 
-            {hasToken ? (
-              <div className="border-t border-white/10 px-3 py-3">
+            <div className="border-t border-white/10 p-3">
+              {hasToken ? (
                 <button
                   type="button"
                   onClick={logout}
-                  className="flex w-full items-center justify-center gap-2 rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-2.5 text-sm font-black text-red-300 transition hover:bg-red-500/20 hover:text-red-200"
+                  className="flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-sm font-bold text-red-200 transition hover:bg-red-500/10"
                 >
                   <LogOut className="h-5 w-5" aria-hidden />
-                  התנתקות
+                  יציאה
                 </button>
-              </div>
-            ) : null}
+              ) : (
+                <Link
+                  href="/register"
+                  onClick={() => setOpen(false)}
+                  className="flex items-center gap-3 rounded-2xl px-3 py-3 text-sm font-bold text-slate-200 transition hover:bg-white/[0.06]"
+                >
+                  <UserPlus className="h-5 w-5" aria-hidden />
+                  הרשמת אזרח
+                </Link>
+              )}
+            </div>
           </aside>
         </>
       ) : null}

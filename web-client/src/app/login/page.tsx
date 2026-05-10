@@ -186,7 +186,16 @@ function LoginPageInner() {
           setPhone(ph);
         }
       }
-      if (searchParams.get("registered") === "1") {
+      if (searchParams.get("registeredLawyer") === "1") {
+        setMessage("הבקשה נשלחה. לאחר אימות טלפון ואישור מנהל ניתן יהיה להיכנס כעורך דין.");
+        if (ph) {
+          try {
+            setAutoOtpPhone(decodeURIComponent(ph));
+          } catch {
+            setAutoOtpPhone(ph);
+          }
+        }
+      } else if (searchParams.get("registered") === "1") {
         setMessage(t("register.success"));
         if (ph) {
           try {
