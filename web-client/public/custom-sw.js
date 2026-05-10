@@ -90,14 +90,24 @@ self.addEventListener("push", (event) => {
   const absoluteIcon = new URL("/icon.png", self.location.origin).href;
 
   event.waitUntil(
-    self.registration.showNotification(title, {
-      body,
-      icon: absoluteIcon,
-      badge: absoluteIcon,
-      data: { url },
-      tag: "veto-emergency",
-      renotify: true,
-      requireInteraction: true,
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clientList) => {
+      const hasActiveCall = clientList.some((client) => {
+        try {
+          return new URL(client.url).pathname.startsWith("/call/");
+        } catch {
+          return false;
+        }
+      });
+      if (hasActiveCall) return undefined;
+      return self.registration.showNotification(title, {
+        body,
+        icon: absoluteIcon,
+        badge: absoluteIcon,
+        data: { url },
+        tag: "veto-emergency",
+        renotify: true,
+        requireInteraction: true,
+      });
     }),
   );
 });

@@ -39,7 +39,7 @@ export type Entitlement = {
 };
 
 export async function fetchEntitlement(): Promise<Entitlement> {
-  const res = await authFetch(apiUrl("/api/users/entitlement"), { method: "GET" });
+  const res = await authFetch("/api/users/entitlement", { method: "GET" });
   if (!res.ok) throw new Error(await parseJsonError(res));
   return (await res.json()) as Entitlement;
 }

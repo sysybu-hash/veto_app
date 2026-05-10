@@ -104,6 +104,10 @@ export function UniversalNav() {
     };
   }, [open]);
 
+  if (pathname.startsWith("/call/")) {
+    return null;
+  }
+
   const logout = () => {
     disconnectSocket();
     clearJwt();
