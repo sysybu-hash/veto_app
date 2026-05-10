@@ -226,6 +226,7 @@ app.use('/api/events', require('./src/routes/event.routes'));
 app.use('/api/admin', require('./src/routes/admin.routes'));
 app.use('/api/ai', require('./src/routes/ai.routes'));
 app.use('/api/payments', require('./src/routes/payment.routes'));
+app.use('/api/billing', require('./src/routes/billing.routes'));
 app.use('/api/chat', require('./src/routes/chat.routes'));
 app.use('/api/vault', require('./src/routes/vault.routes'));
 app.use('/api/citizen-dashboard', require('./src/routes/citizenDashboard.routes'));
