@@ -206,6 +206,11 @@ function LoginPageInner() {
           }
         }
       }
+      if (searchParams.get("registeredLawyer") === "1") {
+        setMessage(
+          "הבקשה נשלחה. החשבון יופעל לאחר אישור המנהל — תקבלו עדכון בטלפון.",
+        );
+      }
     });
   }, [searchParams, t]);
 

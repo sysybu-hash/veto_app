@@ -277,9 +277,14 @@ export async function deleteEvidence(
       fileUrl.startsWith("http://") || fileUrl.startsWith("https://");
 
     if (legacyBase && isRemoteBinary) {
+      const legacyToken = process.env.LEGACY_API_TOKEN ?? "";
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+      };
+      if (legacyToken) headers.Authorization = `Bearer ${legacyToken}`;
       const res = await fetch(`${legacyBase}/delete-file`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify({ fileUrl }),
       });
       if (!res.ok) {
