@@ -28,7 +28,7 @@ function readSessionPayload(data: unknown): SessionReadyState | null {
   const d = data as Record<string, unknown>;
   const roomId = typeof d.roomId === "string" ? d.roomId : null;
   const eventId = typeof d.eventId === "string" ? d.eventId : null;
-  const agoraToken = typeof d.agoraToken === "string" ? d.agoraToken : null;
+  const agoraToken = typeof d.agoraToken === "string" ? d.agoraToken : "";
   const agoraUidRaw = d.agoraUid;
   const agoraUid =
     typeof agoraUidRaw === "number"
@@ -44,7 +44,7 @@ function readSessionPayload(data: unknown): SessionReadyState | null {
   const tokenExpiresAt =
     typeof d.tokenExpiresAt === "number" ? d.tokenExpiresAt : undefined;
 
-  if (!roomId || !eventId || !agoraToken || !Number.isFinite(agoraUid)) {
+  if (!roomId || !eventId || !Number.isFinite(agoraUid)) {
     return null;
   }
 
@@ -154,11 +154,40 @@ export default function CitizenHubPage() {
       setErrorMessage(msg);
     };
 
+    const onCaseTaken = (raw: unknown) => {
+      if (cancelled) return;
+      const incomingEventId =
+        raw &&
+        typeof raw === "object" &&
+        "eventId" in raw &&
+        typeof (raw as { eventId?: unknown }).eventId === "string"
+          ? (raw as { eventId: string }).eventId
+          : null;
+      const {
+        isSearching: searching,
+        lawyerFound: found,
+        currentEventId,
+      } = useEmergencyStore.getState();
+      // If a lawyer already accepted OUR case, ignore the broadcast — it is
+      // the backend telling other lawyers the case is gone, not an error
+      // for us. Without this guard the citizen sees an English "case taken"
+      // popup right after the lawyer accepts.
+      if (found) return;
+      // Not actively searching → nothing to surface.
+      if (!searching) return;
+      // Ignore broadcasts about other citizens' events.
+      if (incomingEventId && currentEventId && incomingEventId !== currentEventId) {
+        return;
+      }
+      setErrorMessage(t("hub.errCaseTaken"));
+    };
+
     sock.on("connect", onConnect);
     sock.on("lawyer_found", onLawyerFound);
     sock.on("session_ready", onSessionReady);
     sock.on("no_lawyers_available", onNoLawyers);
     sock.on("veto_error", onVetoError);
+    sock.on("case_taken", onCaseTaken);
 
     return () => {
       cancelled = true;
@@ -167,6 +196,7 @@ export default function CitizenHubPage() {
       sock.off("session_ready", onSessionReady);
       sock.off("no_lawyers_available", onNoLawyers);
       sock.off("veto_error", onVetoError);
+      sock.off("case_taken", onCaseTaken);
     };
   }, [router, setErrorMessage, setLawyerFound, setSessionReady, t]);
 
@@ -277,25 +307,25 @@ export default function CitizenHubPage() {
   return (
     <>
       <main className="mx-auto flex w-full max-w-lg flex-1 flex-col items-center justify-center gap-8 px-6 py-12 pb-28">
-        <div className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-5 py-6 text-center backdrop-blur-xl">
-          <h1 className="font-frank text-2xl font-bold text-slate-100">
+        <div className="w-full rounded-2xl border border-white/50 bg-white/55 px-5 py-6 text-center shadow-sm backdrop-blur-xl">
+          <h1 className="font-frank text-2xl font-bold text-slate-900">
             {t("hub.title")}
           </h1>
-          <p className="mt-2 text-sm text-slate-400">{t("hub.subtitle")}</p>
+          <p className="mt-2 text-sm text-slate-600">{t("hub.subtitle")}</p>
         </div>
 
         <div className="w-full rounded-2xl border border-[#C5A059]/35 bg-[#C5A059]/10 px-4 py-3 text-sm shadow-sm backdrop-blur-xl">
           <div className="flex items-center justify-between gap-3">
             <div className="min-w-0">
-              <p className="font-bold text-slate-100">המנוי המחובר</p>
-              <p className="mt-0.5 truncate text-xs text-slate-400">
+              <p className="font-bold text-slate-900">המנוי המחובר</p>
+              <p className="mt-0.5 truncate text-xs text-slate-600">
                 {profile?.full_name || profile?.phone || "משתמש VETO"}
               </p>
             </div>
             <span className={`shrink-0 rounded-full px-3 py-1 text-xs font-black ${
               profile?.is_payment_exempt || profile?.is_subscribed
-                ? "bg-emerald-500/15 text-emerald-300 border border-emerald-500/30"
-                : "bg-amber-500/15 text-amber-300 border border-amber-500/30"
+                ? "bg-emerald-100 text-emerald-900"
+                : "bg-amber-100 text-amber-950"
             }`}>
               {profile?.is_payment_exempt
                 ? "פטור"
@@ -316,13 +346,13 @@ export default function CitizenHubPage() {
         </button>
 
         {isSearching && !lawyerFound && (
-          <p className="text-center text-sm font-medium text-amber-300">
+          <p className="text-center text-sm font-medium text-amber-800">
             {t("hub.searching")}
           </p>
         )}
 
         {lawyerFound && lawyerName && (
-          <p className="text-center text-sm font-medium text-emerald-300">
+          <p className="text-center text-sm font-medium text-emerald-800">
             {t("hub.lawyerAccepted").replace("{name}", lawyerName)}
           </p>
         )}
@@ -330,7 +360,7 @@ export default function CitizenHubPage() {
         {statusMessage && (
           <div
             role="alert"
-            className="w-full rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-center text-sm text-red-200 backdrop-blur-md"
+            className="w-full rounded-xl border border-red-300/80 bg-red-50/90 px-4 py-3 text-center text-sm text-red-900 backdrop-blur-md"
           >
             {statusMessage}
             <div className="mt-3">
@@ -378,11 +408,11 @@ export default function CitizenHubPage() {
           >
             <h2
               id="sos-dialog-title"
-              className="font-frank text-lg font-bold text-slate-100"
+              className="font-frank text-lg font-bold text-slate-900"
             >
               {t("hub.dialogTitle")}
             </h2>
-            <p className="mt-3 text-sm leading-relaxed text-slate-300">
+            <p className="mt-3 text-sm leading-relaxed text-slate-700">
               {t("hub.dialogBody")}
             </p>
             <div className="mt-6 flex flex-wrap justify-end gap-2">
@@ -426,11 +456,11 @@ export default function CitizenHubPage() {
           >
             <h2
               id="call-type-dialog-title"
-              className="font-frank text-lg font-bold text-slate-100"
+              className="font-frank text-lg font-bold text-slate-900"
             >
               {t("dialog.chooseCallType")}
             </h2>
-            <p className="mt-2 text-sm text-slate-300">{t("hub.callTypeHint")}</p>
+            <p className="mt-2 text-sm text-slate-700">{t("hub.callTypeHint")}</p>
 
             <div className="mt-5 grid gap-2">
               <button

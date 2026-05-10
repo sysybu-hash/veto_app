@@ -132,12 +132,14 @@ function ModeToggleButton({
 export function GlobalAiOverlay() {
   const { t, locale } = useTranslation();
   const isOpen = useAiChatStore((s) => s.isOpen);
+  const requestedMode = useAiChatStore((s) => s.requestedMode);
   const messages = useAiChatStore((s) => s.messages);
   const isLoading = useAiChatStore((s) => s.isLoading);
   const toggleChat = useAiChatStore((s) => s.toggleChat);
   const addMessage = useAiChatStore((s) => s.addMessage);
   const setLoading = useAiChatStore((s) => s.setLoading);
   const clearChat = useAiChatStore((s) => s.clearChat);
+  const clearRequestedMode = useAiChatStore((s) => s.clearRequestedMode);
 
   const [mode, setMode] = useState<AiAssistantMode>("text");
   const [draft, setDraft] = useState("");
@@ -187,6 +189,14 @@ export function GlobalAiOverlay() {
     }
     toggleChat();
   }, [isOpen, setAssistantMode, toggleChat]);
+
+  useEffect(() => {
+    if (!isOpen || !requestedMode) return;
+    queueMicrotask(() => {
+      setAssistantMode(requestedMode);
+      clearRequestedMode();
+    });
+  }, [clearRequestedMode, isOpen, requestedMode, setAssistantMode]);
 
   const captureAndAnalyze = useCallback(async () => {
     const video = videoRef.current;
