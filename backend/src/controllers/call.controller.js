@@ -15,6 +15,7 @@ const { getGeminiModelId } = require('../config/gemini.config');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const { buildRtcTokenForUid } = require('../services/agoraToken.service');
 const agoraCr = require('../services/agoraCloudRecording.service');
+const { CONSULTATION_ILS, OVERTIME_ILS_PER_MIN, FREE_CALL_MINUTES } = require('../config/pricing');
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
@@ -54,6 +55,21 @@ function sanitizeTranscript(raw) {
   // Collapse whitespace.
   t = t.replace(/[ \t]+\n/g, '\n').replace(/\n{3,}/g, '\n\n').replace(/[ \t]{2,}/g, ' ').trim();
   return t;
+}
+
+function computeChargeFromSeconds(seconds) {
+  const durationSeconds = Math.max(0, Math.ceil(Number(seconds) || 0));
+  const minutes = Math.max(1, Math.ceil(durationSeconds / 60));
+  const overtimeMinutes = Math.max(0, minutes - FREE_CALL_MINUTES);
+  const overtimeIls = +(overtimeMinutes * OVERTIME_ILS_PER_MIN).toFixed(2);
+  return {
+    durationSeconds,
+    minutes,
+    baseIls: CONSULTATION_ILS,
+    overtimeMinutes,
+    overtimeIls,
+    totalIls: +(CONSULTATION_ILS + overtimeIls).toFixed(2),
+  };
 }
 
 /**
@@ -378,6 +394,118 @@ Rules:
 }
 
 // ── Get call details ──────────────────────────────────────────
+exports.finishCallBilling = async (req, res, next) => {
+  try {
+    const { eventId } = req.params;
+    const event = await EmergencyEvent.findById(eventId);
+    if (!event) return res.status(404).json({ error: 'Event not found' });
+    if (!canAccessEvent(event, req.user)) {
+      return res.status(403).json({ error: 'Not authorized' });
+    }
+
+    const reportedSeconds = Math.max(0, Math.ceil(Number(req.body?.durationSeconds) || 0));
+    const derivedSeconds = event.call_started_at
+      ? Math.max(0, Math.ceil((Date.now() - new Date(event.call_started_at).getTime()) / 1000))
+      : 0;
+    const durationSeconds = Math.max(
+      Number(event.call_duration_seconds) || 0,
+      reportedSeconds,
+      derivedSeconds,
+    );
+    const charge = computeChargeFromSeconds(durationSeconds);
+
+    event.call_duration_seconds = charge.durationSeconds;
+    event.completed_at = event.completed_at || new Date();
+    if (['accepted', 'in_progress', 'dispatching'].includes(event.status)) {
+      event.status = 'completed';
+    }
+    event.charge_minutes = charge.minutes;
+    event.charge_overtime_minutes = charge.overtimeMinutes;
+    event.charge_amount_ils = charge.overtimeIls;
+    event.charge_calculated_at = new Date();
+    if (charge.overtimeIls <= 0) {
+      event.charge_status = 'none';
+    } else if (event.charge_status !== 'paid' && event.charge_status !== 'waived') {
+      event.charge_status = 'pending';
+    }
+    await event.save();
+
+    res.json({
+      success: true,
+      charge: {
+        minutes: charge.minutes,
+        baseIls: charge.baseIls,
+        overtimeMinutes: charge.overtimeMinutes,
+        overtimeIls: charge.overtimeIls,
+        totalIls: charge.totalIls,
+        status: event.charge_status,
+      },
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.createActionPlan = async (req, res, next) => {
+  try {
+    const { eventId } = req.params;
+    const event = await EmergencyEvent.findById(eventId)
+      .select('user_id assigned_lawyer_id status call_type call_duration_seconds recording_url screen_recording_url call_transcript charge_status charge_amount_ils charge_overtime_minutes recording_saved_decision')
+      .lean();
+    if (!event) return res.status(404).json({ error: 'Event not found' });
+    if (!canAccessEvent(event, req.user)) {
+      return res.status(403).json({ error: 'Not authorized' });
+    }
+
+    const seconds = Number(event.call_duration_seconds) || 0;
+    const minutes = seconds ? Math.max(1, Math.ceil(seconds / 60)) : null;
+    const hasRecording = !!event.recording_url || !!event.screen_recording_url;
+    const hasTranscript = !!event.call_transcript;
+    const overtimeDue = event.charge_status === 'pending' && Number(event.charge_amount_ils || 0) > 0;
+    const aiConfigured = !!process.env.GEMINI_API_KEY;
+
+    const steps = [
+      overtimeDue
+        ? { key: 'pay_overtime', title: 'אישור תשלום דקות נוספות', action: 'payment' }
+        : null,
+      hasRecording || hasTranscript
+        ? { key: 'save_evidence', title: 'שמירת ההקלטה והתמלול בכספת', action: 'vault' }
+        : { key: 'add_notes', title: 'הוספת הערות ותיעוד ידני לכספת', action: 'vault' },
+      { key: 'create_document', title: 'יצירת מסמך המשך מתאים', action: 'document_generator' },
+      { key: 'follow_up', title: 'קביעת תזכורת או המשך טיפול', action: 'calendar' },
+    ].filter(Boolean);
+
+    res.json({
+      plan: {
+        eventId,
+        minutes,
+        callType: event.call_type,
+        status: event.status,
+        charge: {
+          status: event.charge_status,
+          amountIls: event.charge_amount_ils || 0,
+          overtimeMinutes: event.charge_overtime_minutes || 0,
+        },
+        evidence: {
+          hasRecording,
+          hasTranscript,
+          savedDecision: event.recording_saved_decision,
+        },
+        ai: {
+          configured: aiConfigured,
+          disclosure: aiConfigured
+            ? 'AI can draft a non-binding summary. A lawyer should review it before use.'
+            : 'AI is not configured. Showing a structured manual plan.',
+        },
+        steps,
+        suggestedDocuments: ['סיכום ייעוץ', 'מכתב התראה', 'בקשה לשמירת ראיות'],
+      },
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
 exports.getCallDetails = async (req, res, next) => {
   try {
     const { eventId } = req.params;

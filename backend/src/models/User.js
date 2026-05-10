@@ -169,6 +169,22 @@ const UserSchema = new mongoose.Schema(
       select: false,
     },
 
+    passkeys: {
+      type: [
+        {
+          credential_id: { type: String, required: true },
+          public_key: { type: Buffer, required: true },
+          counter: { type: Number, default: 0 },
+          transports: { type: [String], default: [] },
+          device_name: { type: String, default: 'Passkey' },
+          created_at: { type: Date, default: Date.now },
+          last_used_at: { type: Date, default: null },
+        },
+      ],
+      default: [],
+      select: false,
+    },
+
     /** Family plan: id of the user who owns the family seat (self for owner). */
     family_owner_id: {
       type: mongoose.Schema.Types.ObjectId,

@@ -23,7 +23,12 @@ import { useToastStore } from "@/store/useToastStore";
 type LegalDocument = {
   title: string;
   preamble: string;
+  parties?: string[];
+  definitions?: string[];
   clauses: string[];
+  attachments?: string[];
+  completionChecklist?: string[];
+  legalNotes?: string[];
   signatures: { role: string; name: string }[];
   source?: "ai" | "fallback";
   warning?: string;
@@ -140,7 +145,12 @@ export default function DocumentGeneratorPage() {
       setDocument({
         title: data.title || selectedLabel,
         preamble: data.preamble || "",
+        parties: Array.isArray(data.parties) ? data.parties : [],
+        definitions: Array.isArray(data.definitions) ? data.definitions : [],
         clauses: Array.isArray(data.clauses) ? data.clauses : [],
+        attachments: Array.isArray(data.attachments) ? data.attachments : [],
+        completionChecklist: Array.isArray(data.completionChecklist) ? data.completionChecklist : [],
+        legalNotes: Array.isArray(data.legalNotes) ? data.legalNotes : [],
         signatures: Array.isArray(data.signatures) ? data.signatures : [],
         source: data.source,
         warning: data.warning,
@@ -179,6 +189,13 @@ export default function DocumentGeneratorPage() {
     if (!document) return;
     const { AlignmentType, Document, Packer, Paragraph } = await import("docx");
     const { saveAs } = await import("file-saver");
+    const section = (title: string, items?: string[]) =>
+      items?.length
+        ? [
+            new Paragraph({ text: title, spacing: { before: 320, after: 160 } }),
+            ...items.map((item, i) => new Paragraph({ text: `${i + 1}. ${item}`, spacing: { after: 120 } })),
+          ]
+        : [];
     const doc = new Document({
       sections: [
         {
@@ -186,7 +203,12 @@ export default function DocumentGeneratorPage() {
           children: [
             new Paragraph({ text: document.title, heading: "Heading1", alignment: AlignmentType.CENTER }),
             new Paragraph({ text: document.preamble, spacing: { before: 300, after: 300 } }),
+            ...section("הצדדים", document.parties),
+            ...section("הגדרות", document.definitions),
             ...document.clauses.map((clause, i) => new Paragraph({ text: `${i + 1}. ${clause}`, spacing: { after: 180 } })),
+            ...section("נספחים מומלצים", document.attachments),
+            ...section("צ'קליסט השלמה", document.completionChecklist),
+            ...section("הערות משפטיות", document.legalNotes),
             new Paragraph({ text: "חתימות:", spacing: { before: 500, after: 250 } }),
             ...document.signatures.map((sig) => new Paragraph({ text: `${sig.role}: _______________________ ${sig.name || ""}`, spacing: { after: 180 } })),
           ],
@@ -346,6 +368,32 @@ export default function DocumentGeneratorPage() {
               </header>
               <h2 className="mb-8 text-center font-frank text-3xl font-black underline underline-offset-4">{document.title}</h2>
               <p className="mb-8 whitespace-pre-wrap text-base leading-8">{document.preamble}</p>
+              {document.parties?.length ? (
+                <section className="mb-8 rounded-sm border border-slate-200 bg-slate-50 p-4">
+                  <h3 className="mb-3 font-frank text-lg font-black">הצדדים</h3>
+                  <ol className="space-y-2">
+                    {document.parties.map((item, index) => (
+                      <li key={`party-${index}`} className="flex gap-3 text-sm leading-7">
+                        <span className="font-black">{index + 1}.</span>
+                        <span>{item}</span>
+                      </li>
+                    ))}
+                  </ol>
+                </section>
+              ) : null}
+              {document.definitions?.length ? (
+                <section className="mb-8 rounded-sm border border-slate-200 bg-white p-4">
+                  <h3 className="mb-3 font-frank text-lg font-black">הגדרות</h3>
+                  <ol className="space-y-2">
+                    {document.definitions.map((item, index) => (
+                      <li key={`definition-${index}`} className="flex gap-3 text-sm leading-7">
+                        <span className="font-black">{index + 1}.</span>
+                        <span>{item}</span>
+                      </li>
+                    ))}
+                  </ol>
+                </section>
+              ) : null}
               <h3 className="mb-4 font-frank text-xl font-black">סעיפים</h3>
               <ol className="space-y-4">
                 {document.clauses.map((clause, index) => (
@@ -355,6 +403,39 @@ export default function DocumentGeneratorPage() {
                   </li>
                 ))}
               </ol>
+              {document.attachments?.length ? (
+                <section className="mt-12 border-t border-slate-200 pt-6">
+                  <h3 className="mb-4 font-frank text-xl font-black">נספחים מומלצים</h3>
+                  <ul className="list-inside list-disc space-y-2 text-base leading-7">
+                    {document.attachments.map((item, index) => (
+                      <li key={`attachment-${index}`}>{item}</li>
+                    ))}
+                  </ul>
+                </section>
+              ) : null}
+              {document.completionChecklist?.length ? (
+                <section className="mt-10 rounded-sm border border-amber-200 bg-amber-50 p-5">
+                  <h3 className="mb-4 font-frank text-xl font-black">צ&apos;קליסט לפני שימוש</h3>
+                  <ol className="space-y-2">
+                    {document.completionChecklist.map((item, index) => (
+                      <li key={`check-${index}`} className="flex gap-3 text-base leading-7">
+                        <span className="font-black">{index + 1}.</span>
+                        <span>{item}</span>
+                      </li>
+                    ))}
+                  </ol>
+                </section>
+              ) : null}
+              {document.legalNotes?.length ? (
+                <section className="mt-10 border-t border-slate-200 pt-6">
+                  <h3 className="mb-4 font-frank text-xl font-black">הערות משפטיות</h3>
+                  <ul className="list-inside list-disc space-y-2 text-sm leading-7 text-slate-700">
+                    {document.legalNotes.map((item, index) => (
+                      <li key={`note-${index}`}>{item}</li>
+                    ))}
+                  </ul>
+                </section>
+              ) : null}
               <section className="mt-16 border-t border-slate-200 pt-8">
                 <h3 className="mb-10 font-frank text-xl font-black">חתימות</h3>
                 <div className="grid gap-8 sm:grid-cols-2">

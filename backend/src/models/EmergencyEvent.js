@@ -182,6 +182,49 @@ const EmergencyEventSchema = new mongoose.Schema(
       default: null,
     },
 
+    charge_status: {
+      type: String,
+      enum: ['none', 'pending', 'paid', 'waived'],
+      default: 'none',
+      index: true,
+    },
+
+    charge_minutes: {
+      type: Number,
+      default: 0,
+    },
+
+    charge_overtime_minutes: {
+      type: Number,
+      default: 0,
+    },
+
+    charge_amount_ils: {
+      type: Number,
+      default: 0,
+    },
+
+    charge_order_id: {
+      type: String,
+      default: null,
+      index: true,
+    },
+
+    charge_capture_id: {
+      type: String,
+      default: null,
+    },
+
+    charge_calculated_at: {
+      type: Date,
+      default: null,
+    },
+
+    charge_paid_at: {
+      type: Date,
+      default: null,
+    },
+
     recording_url: {
       type: String,
       default: null, // Cloudinary URL of the call recording

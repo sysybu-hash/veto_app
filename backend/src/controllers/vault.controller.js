@@ -2,6 +2,8 @@ const mongoose = require('mongoose');
 const VaultFile = require('../models/VaultFile');
 const VaultCase = require('../models/VaultCase');
 const VaultFolder = require('../models/VaultFolder');
+const EmergencyEvent = require('../models/EmergencyEvent');
+const AITransparencyLog = require('../models/AITransparencyLog');
 const { analyzeVaultFile } = require('../services/geminiLegal.service');
 
 // ── Vault Controller ──────────────────────────────────────────
@@ -13,6 +15,72 @@ exports.getSharedFiles = async (req, res, next) => {
     // We only return files where lawyerAccess is true
     const files = await VaultFile.find({ user_id: userId, lawyerAccess: true }).sort({ uploadedAt: -1 });
     res.json({ files });
+  } catch (err) { next(err); }
+};
+
+exports.getTimeline = async (req, res, next) => {
+  try {
+    const userId = req.user.role === 'lawyer' && req.query.userId
+      ? req.query.userId
+      : req.user.userId;
+    if (req.user.role === 'lawyer') {
+      const linked = await EmergencyEvent.exists({
+        user_id: userId,
+        assigned_lawyer_id: req.user.userId,
+      });
+      if (!linked) return res.status(403).json({ error: 'No shared case for this user.' });
+    }
+
+    const [files, events] = await Promise.all([
+      VaultFile.find(
+        req.user.role === 'lawyer'
+          ? { user_id: userId, lawyerAccess: true }
+          : { user_id: userId },
+      ).sort({ uploadedAt: -1 }).lean(),
+      EmergencyEvent.find({
+        user_id: userId,
+        ...(req.user.role === 'lawyer' ? { assigned_lawyer_id: req.user.userId } : {}),
+      })
+        .select('status call_type triggered_at completed_at assigned_lawyer_id recording_url screen_recording_url call_transcript recording_saved_decision charge_status charge_amount_ils')
+        .sort({ triggered_at: -1 })
+        .limit(100)
+        .lean(),
+    ]);
+
+    const items = [
+      ...events.map((event) => ({
+        id: String(event._id),
+        type: 'sos',
+        title: 'SOS / שיחה משפטית',
+        at: event.triggered_at || event.createdAt,
+        status: event.status,
+        caseId: String(event._id),
+        hasRecording: !!event.recording_url || !!event.screen_recording_url,
+        hasTranscript: !!event.call_transcript,
+        sharedWithLawyer: !!event.assigned_lawyer_id,
+        metadata: {
+          callType: event.call_type,
+          chargeStatus: event.charge_status,
+          chargeAmountIls: event.charge_amount_ils || 0,
+        },
+      })),
+      ...files.map((file) => ({
+        id: String(file._id),
+        type: 'document',
+        title: file.name,
+        at: file.uploadedAt || file.createdAt,
+        status: file.status || 'uploaded',
+        caseId: file.caseId ? String(file.caseId) : null,
+        mimeType: file.mimeType,
+        sharedWithLawyer: !!file.lawyerAccess,
+        metadata: {
+          sizeBytes: file.sizeBytes || null,
+          hasAiSummary: !!file.aiSummary,
+        },
+      })),
+    ].sort((a, b) => new Date(b.at || 0).getTime() - new Date(a.at || 0).getTime());
+
+    res.json({ items });
   } catch (err) { next(err); }
 };
 
@@ -203,6 +271,17 @@ exports.analyzeFile = async (req, res, next) => {
     file.legalAnalysis = legalAnalysis;
     file.status = 'analyzed';
     await file.save();
+    await AITransparencyLog.create({
+      user_id: req.user.userId,
+      role: req.user.role || 'user',
+      action: 'AI vault document analysis',
+      source: 'vault',
+      input_ref: String(file._id),
+      output_ref: String(file._id),
+      produced_output: true,
+      used_fallback: false,
+      requires_lawyer_review: true,
+    }).catch(() => {});
     res.json(file);
   } catch (err) { next(err); }
 };

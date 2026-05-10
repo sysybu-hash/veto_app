@@ -5,13 +5,14 @@ const { protect, authorize } = require('../middleware/auth.middleware');
 const {
   getFiles, deleteFile, updateFileAccess, analyzeFile,
   getCases, createCase, updateCase, deleteCase, updateFile, getSharedFiles,
-  getFolders, createFolder, updateFolder, deleteFolder,
+  getFolders, createFolder, updateFolder, deleteFolder, getTimeline,
 } = require('../controllers/vault.controller');
 
 // Secure all routes with protect middleware
 router.use(protect);
 
 router.get('/files', getFiles);
+router.get('/timeline', getTimeline);
 router.get('/folders', getFolders);
 router.post('/folders', createFolder);
 router.patch('/folders/:folderId', updateFolder);

@@ -12,6 +12,7 @@ const express    = require('express');
 const router     = express.Router();
 const { protect } = require('../middleware/auth.middleware');
 const Lawyer     = require('../models/Lawyer');
+const EmergencyEvent = require('../models/EmergencyEvent');
 
 router.use(protect);
 
@@ -30,6 +31,59 @@ router.get('/me', async (req, res, next) => {
       .populate('emergency_events', 'status triggered_at user_id');
     if (!lawyer) return res.status(404).json({ error: 'Lawyer not found.' });
     res.json({ lawyer });
+  } catch (err) { next(err); }
+});
+
+router.get('/cockpit', async (req, res, next) => {
+  try {
+    const lawyer = await Lawyer.findById(req.user.userId)
+      .select('full_name is_available is_online is_approved specializations languages_spoken total_cases_handled rating trust response_minutes')
+      .lean();
+    if (!lawyer) return res.status(404).json({ error: 'Lawyer not found.' });
+
+    const events = await EmergencyEvent.find({ assigned_lawyer_id: req.user.userId })
+      .select('user_id status call_type triggered_at accepted_at completed_at call_transcript recording_url screen_recording_url charge_status')
+      .populate('user_id', 'full_name phone preferred_language')
+      .sort({ triggered_at: -1 })
+      .limit(20)
+      .lean();
+
+    const active = events.find((event) => ['accepted', 'in_progress'].includes(event.status));
+    const handledCount = events.filter((event) => event.status === 'completed').length;
+    const acceptedWithTimes = events.filter((event) => event.accepted_at && event.triggered_at);
+    const avgResponseSeconds = acceptedWithTimes.length
+      ? Math.round(
+          acceptedWithTimes.reduce((sum, event) => {
+            return sum + Math.max(0, new Date(event.accepted_at).getTime() - new Date(event.triggered_at).getTime()) / 1000;
+          }, 0) / acceptedWithTimes.length,
+        )
+      : null;
+
+    res.json({
+      lawyer,
+      status: {
+        busy: !!active,
+        activeEventId: active?._id || null,
+        handledCount: lawyer.total_cases_handled || handledCount,
+        avgResponseSeconds,
+      },
+      recentEvents: events.map((event) => ({
+        id: event._id,
+        status: event.status,
+        callType: event.call_type,
+        triggeredAt: event.triggered_at,
+        completedAt: event.completed_at,
+        citizen: event.user_id ? {
+          id: event.user_id._id,
+          name: event.user_id.full_name,
+          phone: event.user_id.phone,
+          language: event.user_id.preferred_language,
+        } : null,
+        hasTranscript: !!event.call_transcript,
+        hasRecording: !!event.recording_url || !!event.screen_recording_url,
+        chargeStatus: event.charge_status,
+      })),
+    });
   } catch (err) { next(err); }
 });
 

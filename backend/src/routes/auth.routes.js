@@ -10,12 +10,17 @@
 const express = require('express');
 const rateLimit = require('express-rate-limit');
 const router  = express.Router();
+const { protect } = require('../middleware/auth.middleware');
 const {
   register,
   requestOTP,
   verifyOTP,
   googleAuth,
   devLogin,
+  passkeyRegisterOptions,
+  passkeyRegisterVerify,
+  passkeyLoginOptions,
+  passkeyLoginVerify,
 } = require('../controllers/auth.controller');
 
 const otpLimiter = rateLimit({
@@ -31,5 +36,9 @@ router.post('/request-otp', otpLimiter, requestOTP);
 router.post('/verify-otp',  verifyOTP);
 router.post('/google',      googleAuth);
 router.post('/dev-login',   devLogin);
+router.post('/passkeys/register/options', protect, passkeyRegisterOptions);
+router.post('/passkeys/register/verify', protect, passkeyRegisterVerify);
+router.post('/passkeys/login/options', passkeyLoginOptions);
+router.post('/passkeys/login/verify', passkeyLoginVerify);
 
 module.exports = router;

@@ -13,9 +13,101 @@ const { protect, requireValidMongoUserId } = require('../middleware/auth.middlew
 const User       = require('../models/User');
 
 const { PLANS } = require('../config/pricing');
+const EmergencyEvent = require('../models/EmergencyEvent');
+const PrivacyRequest = require('../models/PrivacyRequest');
 
 router.use(protect);
 router.use(requireValidMongoUserId);
+
+router.get('/entitlement', async (req, res, next) => {
+  try {
+    if (req.user.role === 'lawyer') {
+      return res.json({
+        allowed: true,
+        status: 'lawyer',
+        reason: 'Lawyer accounts do not require citizen subscriptions.',
+        nextAction: 'dashboard',
+      });
+    }
+
+    const user = await User.findById(req.user.userId).select(
+      'role manually_added is_subscribed subscription_plan subscription_status subscription_expiry family_owner_id pending_consultation_token consultations_included consultations_used',
+    );
+    if (!user) return res.status(404).json({ error: 'User not found.' });
+
+    const pendingOvertime = await EmergencyEvent.countDocuments({
+      user_id: req.user.userId,
+      charge_status: 'pending',
+      charge_amount_ils: { $gt: 0 },
+    });
+
+    const expired = user.subscription_expiry && user.subscription_expiry < new Date();
+    let status = 'payment_required';
+    let allowed = false;
+    let reason = 'No active plan or paid consultation is available.';
+    let nextAction = 'pricing';
+
+    if (user.role === 'admin' || user.manually_added) {
+      status = 'exempt';
+      allowed = true;
+      reason = 'Account is payment-exempt.';
+      nextAction = 'sos';
+    } else if (pendingOvertime > 0) {
+      status = 'overtime_pending';
+      allowed = false;
+      reason = 'A previous call has overtime minutes pending payment.';
+      nextAction = 'pay_overtime';
+    } else if (user.is_subscribed && user.subscription_plan && !expired) {
+      status = user.subscription_plan === 'family' ? 'family_active' : 'subscription_active';
+      allowed = true;
+      reason = 'Active subscription found.';
+      nextAction = 'sos';
+    } else if (user.pending_consultation_token) {
+      status = 'consultation_paid';
+      allowed = true;
+      reason = 'A one-time consultation is paid and ready.';
+      nextAction = 'sos';
+    }
+
+    res.json({
+      allowed,
+      status,
+      reason,
+      nextAction,
+      planId: expired ? null : user.subscription_plan,
+      subscriptionExpiry: user.subscription_expiry,
+      consultationsIncluded: user.consultations_included || 0,
+      consultationsUsed: user.consultations_used || 0,
+      pendingOvertime,
+      paymentExempt: user.role === 'admin' || !!user.manually_added,
+    });
+  } catch (err) { next(err); }
+});
+
+router.get('/privacy-requests', async (req, res, next) => {
+  try {
+    const requests = await PrivacyRequest.find({ user_id: req.user.userId })
+      .sort({ createdAt: -1 })
+      .limit(50)
+      .lean();
+    res.json({ requests });
+  } catch (err) { next(err); }
+});
+
+router.post('/privacy-requests', async (req, res, next) => {
+  try {
+    const type = String(req.body?.type || '');
+    if (!['export', 'delete', 'correct'].includes(type)) {
+      return res.status(400).json({ error: 'Invalid privacy request type.' });
+    }
+    const request = await PrivacyRequest.create({
+      user_id: req.user.userId,
+      type,
+      note: req.body?.note ? String(req.body.note).slice(0, 1000) : '',
+    });
+    res.status(201).json({ request });
+  } catch (err) { next(err); }
+});
 
 // ── Family group: owner adds a member by phone (must already be a registered user).
 router.post('/family/invite', async (req, res, next) => {

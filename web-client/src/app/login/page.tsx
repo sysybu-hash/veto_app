@@ -12,6 +12,7 @@ import {
 } from "@/lib/env";
 import { useTranslation } from "@/lib/i18n/LocaleProvider";
 import { normalizePhoneForVeto } from "@/lib/phone";
+import { loginWithPasskey, passkeysSupported } from "@/api/passkeyApi";
 import {
   btnPrimaryDark,
   btnSecondaryGlass,
@@ -319,6 +320,26 @@ function LoginPageInner() {
     );
   };
 
+  const handlePasskeyLogin = useCallback(async () => {
+    const normalizedPhone = normalizePhoneForVeto(phone);
+    if (!normalizedPhone) {
+      setMessage(t("login.errInvalidPhone"));
+      return;
+    }
+    setBusy(true);
+    setMessage(null);
+    try {
+      const data = await loginWithPasskey(normalizedPhone);
+      await prepareLoginSession(data.token);
+      setSocketAuthToken(data.token);
+      routeByRole(router, data.role);
+    } catch (e) {
+      setMessage(e instanceof Error ? e.message : "לא ניתן להיכנס עם Passkey כרגע.");
+    } finally {
+      setBusy(false);
+    }
+  }, [phone, router, t]);
+
   const handleOtpLogin = async () => {
     const normalizedPhone = normalizePhoneForVeto(phone);
     if (!normalizedPhone) {
@@ -567,6 +588,14 @@ function LoginPageInner() {
               className={`px-4 py-2.5 text-sm font-semibold shadow-md ${btnPrimaryDark} disabled:opacity-50`}
             >
               {t("login.sendOtp")}
+            </button>
+            <button
+              type="button"
+              disabled={busy || !phone.trim() || !passkeysSupported()}
+              onClick={() => void handlePasskeyLogin()}
+              className={`px-4 py-2.5 text-sm font-semibold shadow-md ${btnSecondaryGlass} disabled:opacity-50`}
+            >
+              כניסה עם Passkey
             </button>
           </div>
 

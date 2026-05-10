@@ -1,5 +1,17 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { ArrowLeft, CheckCircle2, Users } from "lucide-react";
+
+export const metadata: Metadata = {
+  title: "Pricing",
+  description: "מסלולי VETO Legal לאזרחים ומשפחות, כולל מנוי PayPal וייעוץ משפטי.",
+  alternates: { canonical: "/pricing" },
+  openGraph: {
+    title: "VETO Pricing",
+    description: "מסלולי VETO Legal לאזרחים ומשפחות.",
+    url: "/pricing",
+  },
+};
 
 const plans = [
   {
@@ -27,8 +39,27 @@ const plans = [
 ];
 
 export default function PricingPage() {
+  const offersJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "OfferCatalog",
+    name: "VETO Legal Plans",
+    itemListElement: plans.map((plan) => ({
+      "@type": "Offer",
+      name: plan.name,
+      priceCurrency: "ILS",
+      price: plan.id === "demo" ? "0" : plan.id === "standard" ? "19.90" : "199.99",
+      availability: "https://schema.org/InStock",
+      url: "/plans",
+    })),
+  };
+
   return (
     <main className="min-h-screen bg-slate-950 px-5 py-16 text-slate-100" dir="rtl">
+      <script
+        type="application/ld+json"
+        suppressHydrationWarning
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(offersJsonLd) }}
+      />
       <section className="mx-auto max-w-7xl">
         <p className="text-xs font-black tracking-[0.24em] text-[#D8B867]">VETO PRICING</p>
         <h1 className="mt-4 max-w-3xl font-frank text-5xl font-black leading-tight text-white">
