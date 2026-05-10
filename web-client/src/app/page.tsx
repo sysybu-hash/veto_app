@@ -87,6 +87,12 @@ export default function Home() {
           >
             {t("home.ctaSecondary")}
           </a>
+          <Link
+            href="/register?role=lawyer"
+            className="rounded-lg border border-[#C5A059]/30 bg-[#C5A059]/10 px-8 py-4 text-base font-semibold text-[#C5A059] backdrop-blur-sm transition-colors hover:bg-[#C5A059]/15"
+          >
+            הצטרפות עורכי דין
+          </Link>
         </div>
       </main>
 

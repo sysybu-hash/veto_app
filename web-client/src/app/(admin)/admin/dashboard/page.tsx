@@ -5,10 +5,13 @@ import {
   Database,
   FileText,
   LayoutDashboard,
+  Plus,
   RefreshCw,
+  Scale,
   Search,
   Settings,
   ShieldCheck,
+  Trash2,
 } from "lucide-react";
 import Link from "next/link";
 import {
@@ -18,56 +21,105 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import type { Role } from "@prisma/client";
+import { getJwt } from "@/lib/authToken";
+
+type AdminRole = "USER" | "LAWYER" | "ADMIN";
+
+type AdminUser = {
+  id: string;
+  externalId: string;
+  email: string;
+  phone: string;
+  name: string;
+  role: AdminRole;
+  createdAt: string;
+  isPro: boolean;
+  paymentExempt: boolean;
+  isActive: boolean;
+  isVerified: boolean;
+  subscriptionExpiry: string | null;
+  status: string;
+};
 
 type DashboardPayload = {
   stats: { users: number; lawyers: number; sos: number };
-  users: Array<{
-    id: string;
-    externalId: string;
-    email: string;
-    name: string;
-    role: Role;
-    createdAt: string;
-    isPro: boolean;
-  }>;
+  users: AdminUser[];
   health: { database: string; api: string; timestamp: string };
 };
+
+function authHeaders(): Record<string, string> {
+  const t = getJwt();
+  return t ? { Authorization: `Bearer ${t}` } : {};
+}
 
 async function fetchDashboardPayload(): Promise<DashboardPayload | null> {
   const res = await fetch("/api/admin/dashboard", {
     credentials: "include",
     cache: "no-store",
+    headers: authHeaders(),
   });
   if (!res.ok) return null;
   return (await res.json()) as DashboardPayload;
+}
+
+async function patchUser(id: string, body: Record<string, unknown>) {
+  const res = await fetch(`/api/admin/users/${encodeURIComponent(id)}`, {
+    method: "PUT",
+    credentials: "include",
+    cache: "no-store",
+    headers: { "Content-Type": "application/json", ...authHeaders() },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) {
+    const err = await res.text().catch(() => "");
+    throw new Error(err || `update failed (${res.status})`);
+  }
+}
+
+async function deleteUser(id: string) {
+  const res = await fetch(`/api/admin/users/${encodeURIComponent(id)}`, {
+    method: "DELETE",
+    credentials: "include",
+    cache: "no-store",
+    headers: authHeaders(),
+  });
+  if (!res.ok) {
+    const err = await res.text().catch(() => "");
+    throw new Error(err || `delete failed (${res.status})`);
+  }
+}
+
+async function createUser(body: {
+  full_name: string;
+  phone: string;
+  email?: string;
+  role: "user" | "lawyer" | "admin";
+  manually_added?: boolean;
+}) {
+  const res = await fetch("/api/admin/users", {
+    method: "POST",
+    credentials: "include",
+    cache: "no-store",
+    headers: { "Content-Type": "application/json", ...authHeaders() },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) {
+    const err = await res.text().catch(() => "");
+    throw new Error(err || `create failed (${res.status})`);
+  }
+  return (await res.json()) as { user: { _id: string } };
 }
 
 export default function VetoMasterDashboard() {
   const [data, setData] = useState<DashboardPayload | null>(null);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [actionMsg, setActionMsg] = useState<string | null>(null);
+  const [actionErr, setActionErr] = useState<string | null>(null);
+  const [busyId, setBusyId] = useState<string | null>(null);
+  const [showCreate, setShowCreate] = useState(false);
 
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const payload = await fetchDashboardPayload();
-        if (cancelled) return;
-        setData(payload);
-      } catch (err) {
-        console.error(err);
-        if (!cancelled) setData(null);
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  const refreshData = useCallback(async () => {
+  const refresh = useCallback(async () => {
     setLoading(true);
     try {
       const payload = await fetchDashboardPayload();
@@ -80,6 +132,24 @@ export default function VetoMasterDashboard() {
     }
   }, []);
 
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const payload = await fetchDashboardPayload();
+        if (!cancelled) setData(payload);
+      } catch (err) {
+        console.error(err);
+        if (!cancelled) setData(null);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const filteredUsers = useMemo(() => {
     const list = data?.users ?? [];
     const q = searchTerm.trim().toLowerCase();
@@ -87,9 +157,50 @@ export default function VetoMasterDashboard() {
     return list.filter((u) => {
       const name = (u.name ?? "").toLowerCase();
       const email = (u.email ?? "").toLowerCase();
-      return name.includes(q) || email.includes(q);
+      const phone = (u.phone ?? "").toLowerCase();
+      return name.includes(q) || email.includes(q) || phone.includes(q);
     });
   }, [data?.users, searchTerm]);
+
+  const runUserAction = useCallback(
+    async (id: string, action: () => Promise<void>, okMsg: string) => {
+      setActionErr(null);
+      setActionMsg(null);
+      setBusyId(id);
+      try {
+        await action();
+        setActionMsg(okMsg);
+        await refresh();
+      } catch (e) {
+        setActionErr(e instanceof Error ? e.message : "פעולה נכשלה");
+      } finally {
+        setBusyId(null);
+      }
+    },
+    [refresh],
+  );
+
+  const toggleExempt = (u: AdminUser) =>
+    runUserAction(
+      u.id,
+      () => patchUser(u.id, { manually_added: !u.paymentExempt }),
+      u.paymentExempt ? "הוסר סטטוס פטור" : "הוגדר כחשבון פטור",
+    );
+
+  const changeRole = (u: AdminUser, role: "user" | "lawyer" | "admin") =>
+    runUserAction(u.id, () => patchUser(u.id, { role }), "התפקיד עודכן");
+
+  const toggleActive = (u: AdminUser) =>
+    runUserAction(
+      u.id,
+      () => patchUser(u.id, { is_active: !u.isActive }),
+      u.isActive ? "החשבון הושעה" : "החשבון הופעל",
+    );
+
+  const removeUser = (u: AdminUser) => {
+    if (!confirm(`למחוק את ${u.name || u.phone || u.email}?`)) return;
+    void runUserAction(u.id, () => deleteUser(u.id), "המשתמש נמחק");
+  };
 
   if (loading && !data) {
     return (
@@ -100,59 +211,33 @@ export default function VetoMasterDashboard() {
   }
 
   return (
-    <div
-      className="flex min-h-screen flex-col md:flex-row"
-      dir="rtl"
-    >
-      <aside className="flex w-full flex-col gap-8 border-l border-white/10 bg-slate-950/70 backdrop-blur-xl p-6 print:hidden md:w-64">
+    <div className="flex min-h-screen flex-col md:flex-row" dir="rtl">
+      <aside className="flex w-full flex-col gap-8 border-l border-white/10 bg-slate-950/70 p-6 backdrop-blur-xl print:hidden md:w-64">
         <div className="font-serif text-2xl font-bold tracking-tight text-slate-100">
           VETO Admin
         </div>
         <nav className="flex flex-col gap-2">
-          <MenuLink
-            href="/admin/dashboard"
-            icon={<LayoutDashboard size={18} aria-hidden />}
-            label="מרכז שליטה"
-            active
-          />
-          <MenuLink
-            href="/admin/vault"
-            icon={<Database size={18} aria-hidden />}
-            label="ניהול כספת"
-          />
-          <MenuLink
-            href="/vault/generator"
-            icon={<FileText size={18} aria-hidden />}
-            label="מחולל מסמכים AI"
-          />
-          <MenuLink
-            href="/admin/settings"
-            icon={<Settings size={18} aria-hidden />}
-            label="הגדרות מערכת"
-          />
+          <MenuLink href="/admin/dashboard" icon={<LayoutDashboard size={18} aria-hidden />} label="מרכז שליטה" active />
+          <MenuLink href="/admin/lawyers" icon={<Scale size={18} aria-hidden />} label="ניהול עורכי דין" />
+          <MenuLink href="/admin/vault" icon={<Database size={18} aria-hidden />} label="ניהול כספת" />
+          <MenuLink href="/vault/generator" icon={<FileText size={18} aria-hidden />} label="מחולל מסמכים AI" />
+          <MenuLink href="/admin/settings" icon={<Settings size={18} aria-hidden />} label="הגדרות מערכת" />
         </nav>
       </aside>
 
       <main className="flex-1 overflow-y-auto p-6 md:p-10">
         <header className="mb-8 flex items-center justify-between">
           <div>
-            <h1 className="font-serif text-3xl font-bold text-slate-100">
-              ניהול מערכת VETO
-            </h1>
-            <p className="text-sm text-slate-500">
-              סטטוס שרתים ומנויים בזמן אמת
-            </p>
+            <h1 className="font-serif text-3xl font-bold text-slate-100">ניהול מערכת VETO</h1>
+            <p className="text-sm text-slate-500">סטטוס שרתים ומנויים בזמן אמת</p>
           </div>
           <button
             type="button"
-            onClick={() => void refreshData()}
+            onClick={() => void refresh()}
             className="rounded-full border border-white/10 bg-white/[0.04] p-2 text-slate-200 transition hover:bg-white/[0.08]"
             aria-label="רענון נתונים"
           >
-            <RefreshCw
-              className={`h-5 w-5 ${loading ? "animate-spin" : ""}`}
-              aria-hidden
-            />
+            <RefreshCw className={`h-5 w-5 ${loading ? "animate-spin" : ""}`} aria-hidden />
           </button>
         </header>
 
@@ -180,97 +265,163 @@ export default function VetoMasterDashboard() {
 
         <div className="mb-6 grid grid-cols-1 gap-3 text-sm text-slate-400 md:grid-cols-3">
           <div className="rounded-lg border border-white/10 bg-white/[0.04] px-4 py-3 backdrop-blur-xl">
-            <span className="font-bold text-slate-100">
-              {data?.stats.lawyers ?? 0}
-            </span>{" "}
-            עורכי דין (Prisma)
+            <span className="font-bold text-slate-100">{data?.stats.lawyers ?? 0}</span> עורכי דין
           </div>
           <div className="rounded-lg border border-white/10 bg-white/[0.04] px-4 py-3 backdrop-blur-xl">
-            <span className="font-bold text-slate-100">
-              {data?.stats.sos ?? 0}
-            </span>{" "}
-            אירועי SOS ב־24 שעות
+            <span className="font-bold text-slate-100">{data?.stats.sos ?? 0}</span> אירועי SOS ב־24 שעות
           </div>
           <div className="rounded-lg border border-white/10 bg-white/[0.04] px-4 py-3 backdrop-blur-xl">
             עודכן:{" "}
-            {data?.health.timestamp
-              ? new Date(data.health.timestamp).toLocaleString("he-IL")
-              : "—"}
+            {data?.health.timestamp ? new Date(data.health.timestamp).toLocaleString("he-IL") : "—"}
           </div>
         </div>
 
+        {actionMsg && (
+          <div role="status" className="mb-4 rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-3 text-sm text-emerald-200">
+            {actionMsg}
+          </div>
+        )}
+        {actionErr && (
+          <div role="alert" className="mb-4 rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-200">
+            {actionErr}
+          </div>
+        )}
+
         <section className="overflow-hidden rounded-2xl border border-white/10 bg-white/[0.04] backdrop-blur-xl">
-          <div className="flex flex-col items-center justify-between gap-4 border-b border-white/10 p-6 md:flex-row">
-            <h3 className="font-serif text-xl font-bold text-slate-100">
-              ניהול מנויים ומשתמשים
-            </h3>
-            <div className="relative w-full md:w-80">
-              <Search className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-              <input
-                type="search"
-                placeholder="חיפוש משתמש..."
-                className="w-full rounded-lg border border-white/10 bg-slate-950 py-2 pl-4 pr-10 text-sm outline-none focus:ring-2 focus:ring-[#C5A059]"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                aria-label="חיפוש משתמש"
-              />
+          <div className="flex flex-col items-stretch justify-between gap-4 border-b border-white/10 p-6 md:flex-row md:items-center">
+            <h3 className="font-serif text-xl font-bold text-slate-100">ניהול מנויים ומשתמשים</h3>
+            <div className="flex flex-1 items-center justify-end gap-3">
+              <div className="relative w-full md:w-80">
+                <Search className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                <input
+                  type="search"
+                  placeholder="חיפוש לפי שם, אימייל או טלפון..."
+                  className="w-full rounded-lg border border-white/10 bg-slate-950 py-2 pl-4 pr-10 text-sm outline-none focus:ring-2 focus:ring-[#C5A059]"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  aria-label="חיפוש משתמש"
+                />
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowCreate((v) => !v)}
+                className="inline-flex items-center gap-2 rounded-lg bg-[#C5A059] px-4 py-2 text-sm font-bold text-black transition hover:bg-[#b08d4a]"
+              >
+                <Plus size={16} aria-hidden /> הוספת משתמש
+              </button>
             </div>
           </div>
+
+          {showCreate && (
+            <CreateUserForm
+              onClose={() => setShowCreate(false)}
+              onCreated={async () => {
+                setShowCreate(false);
+                setActionMsg("המשתמש נוצר");
+                await refresh();
+              }}
+              onError={(m) => setActionErr(m)}
+            />
+          )}
+
           <div className="overflow-x-auto">
             <table className="w-full text-right">
               <thead>
                 <tr className="border-b border-white/10 bg-slate-950 text-xs uppercase tracking-wider text-slate-500">
-                  <th className="p-4 font-bold">שם ואימייל</th>
+                  <th className="p-4 font-bold">שם / טלפון / אימייל</th>
                   <th className="p-4 text-center font-bold">תפקיד</th>
                   <th className="p-4 text-center font-bold">סטטוס</th>
-                  <th className="p-4 text-center font-bold">תאריך הרשמה</th>
-                  <th className="p-4 text-left font-bold">פעולות</th>
+                  <th className="p-4 text-center font-bold">פטור</th>
+                  <th className="p-4 text-center font-bold">תוקף</th>
+                  <th className="p-4 text-center font-bold">פעולות</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
-                {filteredUsers.map((user) => (
-                  <tr key={user.id} className="transition hover:bg-white/[0.04]">
-                    <td className="p-4">
-                      <div className="font-bold text-slate-100">
-                        {user.name || "—"}
-                      </div>
-                      <div className="text-xs text-slate-500">{user.email}</div>
-                    </td>
-                    <td className="p-4 text-center">
-                      <RoleBadge role={user.role} />
-                    </td>
-                    <td className="p-4 text-center text-sm">
-                      <span
-                        className={
-                          user.isPro
-                            ? "font-bold text-green-600"
-                            : "text-slate-400"
-                        }
-                      >
-                        {user.isPro ? "PRO" : "FREE"}
-                      </span>
-                    </td>
-                    <td className="p-4 text-center text-sm text-slate-500">
-                      {new Date(user.createdAt).toLocaleDateString("he-IL")}
-                    </td>
-                    <td className="p-4 text-left">
-                      <Link
-                        href={`/admin/users/${user.id}`}
-                        className="text-sm font-bold text-[#C5A059] hover:underline"
-                      >
-                        ערוך
-                      </Link>
-                    </td>
-                  </tr>
-                ))}
+              <tbody className="divide-y divide-white/5">
+                {filteredUsers.map((user) => {
+                  const expiry = user.subscriptionExpiry
+                    ? new Date(user.subscriptionExpiry).toLocaleDateString("he-IL")
+                    : "—";
+                  const isBusy = busyId === user.id;
+                  return (
+                    <tr key={user.id} className="transition hover:bg-white/[0.04]">
+                      <td className="p-4">
+                        <div className="font-bold text-slate-100">{user.name || "—"}</div>
+                        <div className="text-xs text-slate-500">
+                          {user.phone || user.email || "—"}
+                        </div>
+                      </td>
+                      <td className="p-4 text-center">
+                        <select
+                          disabled={isBusy}
+                          value={user.role.toLowerCase()}
+                          onChange={(e) =>
+                            void changeRole(
+                              user,
+                              e.target.value as "user" | "lawyer" | "admin",
+                            )
+                          }
+                          className="rounded-lg border border-white/10 bg-slate-950 px-2 py-1 text-xs text-slate-200"
+                        >
+                          <option value="user">אזרח</option>
+                          <option value="lawyer">עו״ד</option>
+                          <option value="admin">מנהל</option>
+                        </select>
+                      </td>
+                      <td className="p-4 text-center text-xs">
+                        <button
+                          type="button"
+                          disabled={isBusy}
+                          onClick={() => void toggleActive(user)}
+                          className={`rounded px-2 py-1 font-bold ${
+                            user.isActive
+                              ? "bg-emerald-500/15 text-emerald-300"
+                              : "bg-amber-500/15 text-amber-300"
+                          }`}
+                        >
+                          {user.isActive ? "פעיל" : "מושעה"}
+                        </button>
+                      </td>
+                      <td className="p-4 text-center">
+                        <label className="inline-flex cursor-pointer items-center gap-2 text-xs text-slate-300">
+                          <input
+                            type="checkbox"
+                            disabled={isBusy}
+                            checked={user.paymentExempt}
+                            onChange={() => void toggleExempt(user)}
+                            className="h-4 w-4 cursor-pointer accent-[#C5A059]"
+                          />
+                          פטור
+                        </label>
+                      </td>
+                      <td className="p-4 text-center text-xs text-slate-400">{expiry}</td>
+                      <td className="p-4 text-center">
+                        <div className="inline-flex items-center gap-2">
+                          <Link
+                            href={`/admin/users/${user.id}`}
+                            className="text-xs font-bold text-[#C5A059] hover:underline"
+                          >
+                            ערוך
+                          </Link>
+                          <button
+                            type="button"
+                            disabled={isBusy}
+                            onClick={() => removeUser(user)}
+                            className="rounded p-1 text-red-400 hover:bg-red-500/10"
+                            aria-label="מחק משתמש"
+                          >
+                            <Trash2 size={16} aria-hidden />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
           {filteredUsers.length === 0 && (
             <p className="p-8 text-center text-slate-500">
-              {searchTerm.trim()
-                ? "לא נמצאו תוצאות לחיפוש."
-                : "אין משתמשים להצגה."}
+              {searchTerm.trim() ? "לא נמצאו תוצאות לחיפוש." : "אין משתמשים להצגה."}
             </p>
           )}
         </section>
@@ -279,25 +430,104 @@ export default function VetoMasterDashboard() {
   );
 }
 
-function RoleBadge({ role }: { role: Role }) {
-  if (role === "LAWYER") {
-    return (
-      <span className="rounded bg-purple-100 px-2 py-1 text-[10px] font-bold text-purple-700">
-        עו&quot;ד
-      </span>
-    );
-  }
-  if (role === "ADMIN") {
-    return (
-      <span className="rounded bg-amber-500/15 px-2 py-1 text-[10px] font-bold text-amber-200">
-        מנהל
-      </span>
-    );
-  }
+function CreateUserForm({
+  onClose,
+  onCreated,
+  onError,
+}: {
+  onClose: () => void;
+  onCreated: () => Promise<void>;
+  onError: (msg: string) => void;
+}) {
+  const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
+  const [role, setRole] = useState<"user" | "lawyer" | "admin">("user");
+  const [exempt, setExempt] = useState(true);
+  const [busy, setBusy] = useState(false);
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setBusy(true);
+    try {
+      await createUser({
+        full_name: name.trim(),
+        phone: phone.trim(),
+        email: email.trim() || undefined,
+        role,
+        manually_added: exempt,
+      });
+      await onCreated();
+    } catch (err) {
+      onError(err instanceof Error ? err.message : "יצירה נכשלה");
+    } finally {
+      setBusy(false);
+    }
+  };
+
   return (
-    <span className="rounded bg-blue-500/15 px-2 py-1 text-[10px] font-bold text-blue-300">
-      אזרח
-    </span>
+    <form
+      onSubmit={(e) => void submit(e)}
+      className="grid grid-cols-1 gap-3 border-b border-white/10 bg-slate-950/40 p-6 md:grid-cols-5"
+    >
+      <input
+        required
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+        placeholder="שם מלא"
+        className="rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:ring-2 focus:ring-[#C5A059]"
+      />
+      <input
+        required
+        value={phone}
+        onChange={(e) => setPhone(e.target.value)}
+        placeholder="טלפון (+972...)"
+        className="rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:ring-2 focus:ring-[#C5A059]"
+      />
+      <input
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        placeholder="אימייל (אופציונלי)"
+        type="email"
+        className="rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:ring-2 focus:ring-[#C5A059]"
+      />
+      <select
+        value={role}
+        onChange={(e) => setRole(e.target.value as typeof role)}
+        className="rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:ring-2 focus:ring-[#C5A059]"
+      >
+        <option value="user">אזרח</option>
+        <option value="lawyer">עו״ד</option>
+        <option value="admin">מנהל</option>
+      </select>
+      <div className="flex items-center justify-between gap-2">
+        <label className="inline-flex cursor-pointer items-center gap-2 text-xs text-slate-300">
+          <input
+            type="checkbox"
+            checked={exempt}
+            onChange={(e) => setExempt(e.target.checked)}
+            className="h-4 w-4 cursor-pointer accent-[#C5A059]"
+          />
+          פטור מתשלום
+        </label>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-xs text-slate-300"
+          >
+            ביטול
+          </button>
+          <button
+            type="submit"
+            disabled={busy}
+            className="rounded-lg bg-[#C5A059] px-3 py-2 text-xs font-bold text-black disabled:opacity-60"
+          >
+            {busy ? "יוצר…" : "צור"}
+          </button>
+        </div>
+      </div>
+    </form>
   );
 }
 

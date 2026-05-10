@@ -33,6 +33,7 @@ import { syncSosArtifactsToVault } from "@/app/actions/vault";
 import { authFetch, authMultipartFetch, apiUrl } from "@/api/apiClient";
 import { getRoleFromJwt } from "@/lib/authToken";
 import { getPublicAgoraAppId } from "@/lib/env";
+import { PRICING, createOvertimeOrder } from "@/api/paymentApi";
 import { connectSocket, getSocket } from "@/lib/socketClient";
 import {
   useEmergencyStore,
@@ -227,6 +228,31 @@ export default function CallRoom({ channel }: { channel: string }) {
   const [endedForCitizen, setEndedForCitizen] = useState(false);
   const [artifactBusy, setArtifactBusy] = useState(false);
   const [artifactMessage, setArtifactMessage] = useState("");
+
+  const [callStartedAt] = useState<number>(() => Date.now());
+  const [elapsedSec, setElapsedSec] = useState(0);
+  const [extendDecision, setExtendDecision] = useState<null | "asked" | "extended" | "ended">(null);
+  const [summary, setSummary] = useState<null | {
+    minutes: number;
+    base: number;
+    overtime: number;
+    total: number;
+  }>(null);
+
+  useEffect(() => {
+    const id = window.setInterval(() => {
+      setElapsedSec(Math.floor((Date.now() - callStartedAt) / 1000));
+    }, 1000);
+    return () => window.clearInterval(id);
+  }, [callStartedAt]);
+
+  const freeSec = PRICING.freeCallMinutes * 60;
+  useEffect(() => {
+    const elapsed = Date.now() - callStartedAt;
+    const ms = Math.max(0, PRICING.freeCallMinutes * 60_000 - elapsed);
+    const id = window.setTimeout(() => setExtendDecision("asked"), ms);
+    return () => window.clearTimeout(id);
+  }, [callStartedAt]);
 
   const [client] = useState<IAgoraRTCClient>(() => AgoraRTC.createClient({ mode: "rtc", codec: "vp8" }));
 
@@ -592,9 +618,25 @@ export default function CallRoom({ channel }: { channel: string }) {
     };
   }, [finishCall]);
 
+  const computeSummary = useCallback(() => {
+    const minutes = Math.max(1, Math.ceil((Date.now() - callStartedAt) / 60_000));
+    const overtimeMin = Math.max(0, minutes - PRICING.freeCallMinutes);
+    const base = PRICING.consultationIls;
+    const overtime = overtimeMin * PRICING.overtimeIlsPerMin;
+    return { minutes, base, overtime, total: base + overtime };
+  }, [callStartedAt]);
+
   const leave = useCallback(async () => {
+    if (!chatOnly) {
+      setSummary(computeSummary());
+      setExtendDecision("ended");
+    }
     await finishCall({ notifyPeer: true });
-  }, [finishCall]);
+  }, [chatOnly, computeSummary, finishCall]);
+
+  const closeSummary = useCallback(() => {
+    setSummary(null);
+  }, []);
 
   useEffect(() => {
     const onPageHide = () => {
@@ -682,6 +724,12 @@ export default function CallRoom({ channel }: { channel: string }) {
     }
   }, [router, session]);
 
+  const mm = String(Math.floor(elapsedSec / 60)).padStart(2, "0");
+  const ss = String(elapsedSec % 60).padStart(2, "0");
+  const overSec = Math.max(0, elapsedSec - freeSec);
+  const overtimePreviewIls =
+    Math.ceil(overSec / 60) * PRICING.overtimeIlsPerMin;
+
   return (
     <div className="min-h-[calc(100dvh-5rem)] bg-slate-950 px-3 py-4 text-white sm:px-5">
       <div className="mx-auto flex max-w-7xl flex-col gap-4">
@@ -694,6 +742,14 @@ export default function CallRoom({ channel }: { channel: string }) {
             <h1 className="mt-1 font-frank text-2xl font-black">שיחה בין אזרח לעורך דין</h1>
             <p className="mt-1 text-sm text-slate-300">
               {localLabel(callType)} · חדר {session?.channelId || channel}
+              <span className="ms-3 inline-block rounded-full border border-white/10 bg-black/40 px-2 py-0.5 font-mono text-xs text-slate-200">
+                {mm}:{ss}
+                {overSec > 0 && (
+                  <span className="ms-1 text-amber-300">
+                    +₪{overtimePreviewIls.toFixed(2)}
+                  </span>
+                )}
+              </span>
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
@@ -916,6 +972,91 @@ export default function CallRoom({ channel }: { channel: string }) {
           </div>
         </div>
       ) : null}
+
+      {extendDecision === "asked" && !summary && (
+        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-sm rounded-2xl border border-amber-500/40 bg-slate-900 p-5 text-right shadow-2xl">
+            <h3 className="font-frank text-lg font-bold text-amber-200">
+              חלפו {PRICING.freeCallMinutes} דקות
+            </h3>
+            <p className="mt-2 text-sm text-slate-200">
+              להמשיך את השיחה? כל דקה נוספת תחויב ב-₪{PRICING.overtimeIlsPerMin.toFixed(2)}.
+            </p>
+            <div className="mt-5 grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => void leave()}
+                className="rounded-xl bg-red-600 px-4 py-2 text-sm font-semibold text-white"
+              >
+                סיום שיחה
+              </button>
+              <button
+                type="button"
+                onClick={() => setExtendDecision("extended")}
+                className="rounded-xl bg-[#C5A059] px-4 py-2 text-sm font-bold text-black"
+              >
+                להמשיך
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {summary && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-2xl border border-white/10 bg-slate-900 p-6 text-right text-slate-100 shadow-2xl">
+            <h3 className="font-frank text-xl font-bold">סיכום השיחה</h3>
+            <dl className="mt-4 space-y-2 text-sm">
+              <div className="flex justify-between">
+                <dt className="text-slate-400">משך שיחה</dt>
+                <dd>{summary.minutes} דקות</dd>
+              </div>
+              <div className="flex justify-between">
+                <dt className="text-slate-400">תעריף בסיס</dt>
+                <dd>₪{summary.base.toFixed(2)}</dd>
+              </div>
+              <div className="flex justify-between">
+                <dt className="text-slate-400">חיוב על דקות נוספות</dt>
+                <dd>₪{summary.overtime.toFixed(2)}</dd>
+              </div>
+              <div className="mt-3 flex justify-between border-t border-white/10 pt-3 text-base font-bold text-amber-300">
+                <dt>סה״כ לחיוב</dt>
+                <dd>₪{summary.total.toFixed(2)}</dd>
+              </div>
+            </dl>
+            <p className="mt-4 text-xs text-slate-400">
+              {summary.overtime > 0
+                ? "השיחה חרגה מהזמן הכלול. אישור החיוב יעביר אותך לדף תשלום."
+                : "השיחה הסתיימה במסגרת הזמן הכלול."}
+            </p>
+            <div className="mt-5 flex justify-between gap-2">
+              <button
+                type="button"
+                onClick={closeSummary}
+                className="rounded-xl border border-white/10 bg-white/[0.04] px-4 py-2 text-sm font-semibold text-slate-200"
+              >
+                סגירה
+              </button>
+              {summary.overtime > 0 && (
+                <button
+                  type="button"
+                  onClick={async () => {
+                    try {
+                      const r = await createOvertimeOrder(summary.minutes);
+                      window.location.assign(r.approveUrl);
+                    } catch {
+                      closeSummary();
+                    }
+                  }}
+                  className="rounded-xl bg-[#C5A059] px-5 py-2 text-sm font-bold text-black"
+                >
+                  אישור ותשלום ₪{summary.overtime.toFixed(2)}
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
