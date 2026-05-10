@@ -43,8 +43,19 @@ export default function FamilyPage() {
       router.replace("/login");
       return;
     }
-    void refresh();
-  }, [refresh, router]);
+    let cancelled = false;
+    (async () => {
+      try {
+        const r = await fetchFamily();
+        if (!cancelled) setState(r);
+      } catch {
+        if (!cancelled) setState(null);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [router]);
 
   const invite = async (e: React.FormEvent) => {
     e.preventDefault();

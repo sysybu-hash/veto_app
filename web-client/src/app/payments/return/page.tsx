@@ -60,7 +60,7 @@ function PaymentReturnInner() {
         setDetail(e instanceof Error ? e.message : t("payments.returnError"));
       }
     },
-    [router, t],
+    [router, searchParams, t],
   );
 
   useEffect(() => {

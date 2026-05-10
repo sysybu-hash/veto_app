@@ -119,7 +119,7 @@ export default function CitizenHubPage() {
   const startConsultationCheckout = useCallback(async () => {
     try {
       const r = await createConsultationOrder();
-      window.location.href = r.approveUrl;
+      window.location.assign(r.approveUrl);
     } catch (e) {
       setErrorMessage(e instanceof Error ? e.message : t("hub.errGeneric"));
     }
@@ -354,9 +354,9 @@ export default function CitizenHubPage() {
     setCallTypeDialogOpen(false);
   }, []);
 
-  useEffect(() => {
-    if (!isSearching && !lawyerFound) setChosenCallType(null);
-  }, [isSearching, lawyerFound]);
+  // Derived: only meaningful while there's an active SOS session.
+  const effectiveChosenCallType =
+    isSearching || lawyerFound ? chosenCallType : null;
 
   useEffect(() => {
     if (!isSearching || lawyerFound) return;
@@ -502,13 +502,13 @@ export default function CitizenHubPage() {
           </div>
         )}
 
-        {lawyerFound && lawyerName && !chosenCallType && (
+        {lawyerFound && lawyerName && !effectiveChosenCallType && (
           <p className="text-center text-sm font-medium text-emerald-300">
             {t("hub.lawyerAccepted").replace("{name}", lawyerName)}
           </p>
         )}
 
-        {lawyerFound && chosenCallType && (
+        {lawyerFound && effectiveChosenCallType && (
           <div
             role="status"
             aria-live="polite"

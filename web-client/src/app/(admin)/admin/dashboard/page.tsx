@@ -133,8 +133,22 @@ export default function VetoMasterDashboard() {
   }, []);
 
   useEffect(() => {
-    void refresh();
-  }, [refresh]);
+    let cancelled = false;
+    (async () => {
+      try {
+        const payload = await fetchDashboardPayload();
+        if (!cancelled) setData(payload);
+      } catch (err) {
+        console.error(err);
+        if (!cancelled) setData(null);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const filteredUsers = useMemo(() => {
     const list = data?.users ?? [];
