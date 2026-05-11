@@ -16,6 +16,7 @@ import { CitizenBottomNav } from "@/components/citizen/CitizenBottomNav";
 import {
   btnPrimaryGold,
   btnSecondaryGlass,
+  citizenBottomSafe,
   glassCard,
   glassList,
 } from "@/lib/vetoGlass";
@@ -297,7 +298,7 @@ export function VaultPageClient({
 
   const defaultUploadFolderId = folders[0]?.id ?? "";
 
-  const bottomPad = adminContext ? "pb-10" : "pb-28";
+  const bottomPad = adminContext ? "pb-10" : citizenBottomSafe;
 
   if (isHydrating) {
     return (

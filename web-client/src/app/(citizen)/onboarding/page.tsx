@@ -11,6 +11,7 @@ import { LOCALES } from "@/lib/i18n/types";
 import {
   btnPrimaryDark,
   btnSecondaryGlass,
+  citizenBottomSafe,
   glassPanel,
   glassPanelNested,
 } from "@/lib/vetoGlass";
@@ -90,7 +91,9 @@ export default function OnboardingPage() {
 
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
-      <main className="mx-auto grid w-full max-w-6xl flex-1 items-center gap-8 px-5 py-8 pb-28 md:grid-cols-[minmax(0,0.9fr)_minmax(420px,1fr)] md:px-8 lg:gap-12">
+      <main
+        className={`mx-auto grid w-full max-w-6xl flex-1 items-center gap-8 px-5 py-8 md:grid-cols-[minmax(0,0.9fr)_minmax(420px,1fr)] md:px-8 lg:gap-12 ${citizenBottomSafe}`}
+      >
         <section className="min-w-0 space-y-6">
           <div className="inline-flex items-center gap-2 rounded-full border border-[#C5A059]/40 bg-[#C5A059]/15 px-3 py-1.5 text-xs font-bold text-slate-100">
             <Sparkles className="h-4 w-4" aria-hidden />

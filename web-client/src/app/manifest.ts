@@ -14,9 +14,9 @@ export default function manifest(): MetadataRoute.Manifest {
     lang: "he",
     icons: [
       {
-        src: "/veto-logo.svg?v=20260210",
-        sizes: "any",
-        type: "image/svg+xml",
+        src: "/veto-brand.png?v=20260511",
+        sizes: "985x1024",
+        type: "image/png",
         purpose: "any",
       },
       {

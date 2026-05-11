@@ -34,7 +34,7 @@ export function Skeleton({
   return (
     <div
       aria-hidden
-      className={`animate-pulse bg-slate-200/70 ${r} ${className}`}
+      className={`animate-pulse bg-slate-200/70 dark:bg-white/[0.08] ${r} ${className}`}
       style={{
         width,
         height,
@@ -59,7 +59,7 @@ export function SkeletonText({
       {Array.from({ length: lines }).map((_, i) => (
         <div
           key={i}
-          className="h-3 animate-pulse rounded-md bg-slate-200/70"
+          className="h-3 animate-pulse rounded-md bg-slate-200/70 dark:bg-white/[0.08]"
           style={{ width: `${100 - i * 10}%` }}
         />
       ))}
@@ -76,11 +76,11 @@ export function SkeletonCard({ className = "" }: { className?: string }) {
       className={`rounded-2xl border border-slate-200/80 bg-white/85 p-4 backdrop-blur-xl ${className}`}
       aria-hidden
     >
-      <div className="mb-3 h-4 w-1/2 animate-pulse rounded-md bg-slate-200/70" />
+      <div className="mb-3 h-4 w-1/2 animate-pulse rounded-md bg-slate-200/70 dark:bg-white/[0.08]" />
       <SkeletonText lines={3} />
       <div className="mt-3 flex gap-2">
-        <div className="h-6 w-16 animate-pulse rounded-full bg-slate-200/70" />
-        <div className="h-6 w-20 animate-pulse rounded-full bg-slate-200/70" />
+        <div className="h-6 w-16 animate-pulse rounded-full bg-slate-200/70 dark:bg-white/[0.08]" />
+        <div className="h-6 w-20 animate-pulse rounded-full bg-slate-200/70 dark:bg-white/[0.08]" />
       </div>
     </div>
   );

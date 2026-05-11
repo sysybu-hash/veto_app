@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* Tailwind `dark:` follows site theme (not only system prefers-color-scheme). */
+@custom-variant dark (&:where(html.veto-dark, html.veto-dark *));
+
 /*
  * VETO design tokens (Phase 5)
  * ---------------------------------------------------------------
@@ -236,4 +239,13 @@
   border-radius: 9999px;
   animation: sos-pulse 1.8s ease-out infinite;
   pointer-events: none;
+}
+
+/* QA polish: visible focus for unstyled links (buttons use vetoGlass focus rings) */
+@layer base {
+  a:focus-visible {
+    outline: 2px solid var(--veto-gold);
+    outline-offset: 3px;
+    border-radius: 0.25rem;
+  }
 }

@@ -4,7 +4,13 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Bot, FileText, MessageCircle, ShieldCheck } from "lucide-react";
 import { fetchTransparencyLogs, type TransparencyLog } from "@/api/advancedApi";
-import { btnSecondaryGlass, glassPanel, glassPanelNested } from "@/lib/vetoGlass";
+import { CitizenBottomNav } from "@/components/citizen/CitizenBottomNav";
+import {
+  btnSecondaryGlass,
+  citizenBottomSafe,
+  glassPanel,
+  glassPanelNested,
+} from "@/lib/vetoGlass";
 
 export default function TransparencyPage() {
   const [logs, setLogs] = useState<TransparencyLog[]>([]);
@@ -25,7 +31,11 @@ export default function TransparencyPage() {
   }, []);
 
   return (
-    <main className="mx-auto w-full max-w-5xl px-4 py-10 text-right" dir="rtl">
+    <>
+    <main
+      className={`mx-auto w-full max-w-5xl px-4 py-10 text-right ${citizenBottomSafe}`}
+      dir="rtl"
+    >
       <section className={`${glassPanel} p-6`}>
         <p className="text-sm font-black text-[#C5A059]">AI Transparency Center</p>
         <h1 className="mt-2 font-frank text-3xl font-black text-slate-950">מרכז שקיפות AI</h1>
@@ -41,21 +51,26 @@ export default function TransparencyPage() {
 
         <div className={`${glassPanelNested} mt-6 p-4`}>
           <div className="flex items-center justify-between gap-3">
-            <h2 className="text-lg font-black text-slate-100">פעולות אחרונות</h2>
+            <h2 className="text-lg font-black text-slate-900 dark:text-slate-100">פעולות אחרונות</h2>
             <Link href="/privacy-rights" className={`px-4 py-2 text-sm font-bold ${btnSecondaryGlass}`}>
               זכויות פרטיות
             </Link>
           </div>
-          {error && <p className="mt-4 text-sm text-red-300">{error}</p>}
-          {!error && logs.length === 0 && <p className="mt-4 text-sm text-slate-400">אין עדיין פעולות AI מתועדות.</p>}
+          {error && <p className="mt-4 text-sm text-red-600 dark:text-red-300">{error}</p>}
+          {!error && logs.length === 0 && (
+            <p className="mt-4 text-sm text-slate-600 dark:text-slate-400">אין עדיין פעולות AI מתועדות.</p>
+          )}
           <div className="mt-4 space-y-3">
             {logs.map((log) => (
-              <article key={log._id} className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+              <article
+                key={log._id}
+                className="rounded-2xl border border-slate-200 bg-white/80 p-4 dark:border-white/10 dark:bg-white/[0.03]"
+              >
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                   <div className="flex items-start gap-3">
                     <MessageCircle className="mt-0.5 h-5 w-5 text-[#C5A059]" aria-hidden />
                     <div>
-                      <p className="font-black text-slate-100">{log.action}</p>
+                      <p className="font-black text-slate-900 dark:text-slate-100">{log.action}</p>
                       <p className="mt-1 text-xs text-slate-400">
                         מקור: {log.source} · {new Intl.DateTimeFormat("he-IL", { dateStyle: "short", timeStyle: "short" }).format(new Date(log.createdAt))}
                       </p>
@@ -73,15 +88,17 @@ export default function TransparencyPage() {
         </div>
       </section>
     </main>
+    <CitizenBottomNav active="hub" />
+    </>
   );
 }
 
 function TrustCard({ icon: Icon, title, body }: { icon: typeof Bot; title: string; body: string }) {
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white/70 p-4">
-      <Icon className="h-5 w-5 text-[#9b7430]" aria-hidden />
-      <p className="mt-3 font-black text-slate-950">{title}</p>
-      <p className="mt-1 text-sm leading-6 text-slate-600">{body}</p>
+    <div className="rounded-2xl border border-slate-200 bg-white/70 p-4 dark:border-white/10 dark:bg-slate-900/40">
+      <Icon className="h-5 w-5 text-[#9b7430] dark:text-veto-gold" aria-hidden />
+      <p className="mt-3 font-black text-slate-950 dark:text-slate-50">{title}</p>
+      <p className="mt-1 text-sm leading-6 text-slate-600 dark:text-slate-300">{body}</p>
     </div>
   );
 }

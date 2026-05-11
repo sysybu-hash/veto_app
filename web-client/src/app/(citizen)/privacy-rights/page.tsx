@@ -7,7 +7,14 @@ import {
   fetchPrivacyRequests,
   type PrivacyRequest,
 } from "@/api/advancedApi";
-import { btnPrimaryDark, btnSecondaryGlass, glassPanel, glassPanelNested } from "@/lib/vetoGlass";
+import { CitizenBottomNav } from "@/components/citizen/CitizenBottomNav";
+import {
+  btnPrimaryDark,
+  btnSecondaryGlass,
+  citizenBottomSafe,
+  glassPanel,
+  glassPanelNested,
+} from "@/lib/vetoGlass";
 
 const actions = [
   { type: "export", title: "ייצוא מידע", body: "בקשה לקבלת עותק מהמידע האישי.", icon: Download },
@@ -43,7 +50,11 @@ export default function PrivacyRightsPage() {
   };
 
   return (
-    <main className="mx-auto w-full max-w-5xl px-4 py-10 text-right" dir="rtl">
+    <>
+    <main
+      className={`mx-auto w-full max-w-5xl px-4 py-10 text-right ${citizenBottomSafe}`}
+      dir="rtl"
+    >
       <section className={`${glassPanel} p-6`}>
         <p className="text-sm font-black text-[#C5A059]">EU Compliance Mode</p>
         <h1 className="mt-2 font-frank text-3xl font-black text-slate-950">זכויות פרטיות</h1>
@@ -68,23 +79,41 @@ export default function PrivacyRightsPage() {
                 className={`${btnSecondaryGlass} p-4 text-right disabled:opacity-50`}
               >
                 <Icon className="h-5 w-5 text-[#C5A059]" aria-hidden />
-                <span className="mt-3 block font-black text-slate-100">{action.title}</span>
-                <span className="mt-1 block text-sm leading-6 text-slate-400">{action.body}</span>
+                <span className="mt-3 block font-black text-slate-900 dark:text-slate-100">
+                  {action.title}
+                </span>
+                <span className="mt-1 block text-sm leading-6 text-slate-600 dark:text-slate-400">
+                  {action.body}
+                </span>
               </button>
             );
           })}
         </div>
-        {message && <p className="mt-4 rounded-2xl bg-white/10 px-4 py-3 text-sm text-slate-200">{message}</p>}
+        {message && (
+          <p className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800 dark:border-white/10 dark:bg-white/10 dark:text-slate-200">
+            {message}
+          </p>
+        )}
 
         <div className={`${glassPanelNested} mt-6 p-4`}>
-          <h2 className="text-lg font-black text-slate-100">בקשות אחרונות</h2>
+          <h2 className="text-lg font-black text-slate-900 dark:text-slate-100">בקשות אחרונות</h2>
           <div className="mt-4 space-y-3">
-            {requests.length === 0 && <p className="text-sm text-slate-400">אין בקשות פתוחות.</p>}
+            {requests.length === 0 && (
+              <p className="text-sm text-slate-600 dark:text-slate-400">אין בקשות פתוחות.</p>
+            )}
             {requests.map((request) => (
-              <div key={request._id} className="flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+              <div
+                key={request._id}
+                className="flex items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white/80 p-4 dark:border-white/10 dark:bg-white/[0.03]"
+              >
                 <div>
-                  <p className="font-black text-slate-100">{request.type}</p>
-                  <p className="text-xs text-slate-400">{new Intl.DateTimeFormat("he-IL", { dateStyle: "short", timeStyle: "short" }).format(new Date(request.createdAt))}</p>
+                  <p className="font-black text-slate-900 dark:text-slate-100">{request.type}</p>
+                  <p className="text-xs text-slate-600 dark:text-slate-400">
+                    {new Intl.DateTimeFormat("he-IL", {
+                      dateStyle: "short",
+                      timeStyle: "short",
+                    }).format(new Date(request.createdAt))}
+                  </p>
                 </div>
                 <span className="rounded-full bg-[#C5A059]/15 px-3 py-1 text-xs font-bold text-[#D8B867]">{request.status}</span>
               </div>
@@ -96,5 +125,7 @@ export default function PrivacyRightsPage() {
         </a>
       </section>
     </main>
+    <CitizenBottomNav active="settings" />
+    </>
   );
 }
