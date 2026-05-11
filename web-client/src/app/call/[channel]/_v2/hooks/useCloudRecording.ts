@@ -74,7 +74,14 @@ export function useCloudRecording(eventId: string | null) {
           body: JSON.stringify({ granted }),
         });
         if (!res.ok) {
-          setError(`Consent failed (${res.status})`);
+          const detail = await res.text().catch(() => "");
+          const hint =
+            res.status === 404
+              ? " — אירוע לא נמצא בשרת (וודא ש-Render מעודכן ושמזהה האירוע תואם ל-Mongo)."
+              : "";
+          setError(
+            `Consent failed (${res.status})${hint}${detail ? ` ${detail.slice(0, 160)}` : ""}`,
+          );
           return;
         }
         const data = (await res.json()) as { consent?: ConsentSnapshot };
