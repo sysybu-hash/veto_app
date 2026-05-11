@@ -207,7 +207,7 @@
 - PayPal: [developer.paypal.com](https://developer.paypal.com/)
 - Sentry: [sentry.io](https://sentry.io/) — DSN ל־Node
 - TURN / ICE: `WEBRTC_ICE_SERVERS_JSON` או `TURN_*` (ראו `call.controller.js`)
-- Twilio + `RETURN_OTP_IN_JSON` — ראו `auth.controller.js` (אל תשאיר `RETURN_OTP_IN_JSON` בפרודקשן)
+- OTP ב־JSON: בפיתוח תמיד; בפרודקשן בלי Twilio — OTP ב־JSON אוטומטית; עם Twilio — רק אם `RETURN_OTP_IN_JSON=1` (ראו `auth.controller.js` + `server.js`)
 
 ---
 

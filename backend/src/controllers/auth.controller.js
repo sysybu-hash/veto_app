@@ -147,23 +147,25 @@ const requestOTP = async (req, res, next) => {
       process.env.TWILIO_ACCOUNT_SID &&
       process.env.TWILIO_AUTH_TOKEN
     );
-    /** Explicit opt-in (e.g. local/staging with NODE_ENV=production): return OTP in JSON */
     const returnOtpInJson =
       process.env.RETURN_OTP_IN_JSON === '1' ||
       process.env.RETURN_OTP_IN_JSON === 'true';
 
-    // Development / staging tests: always expose OTP unless hard production without flag.
-    const includeOtpInResponse = !isProd || returnOtpInJson;
-
-    if (isProd && returnOtpInJson) {
-      console.warn(
-        '[AUTH] RETURN_OTP_IN_JSON is set: OTP is included in JSON responses. Turn off for real production.',
-      );
-    }
+    // Dev: always include OTP in JSON (unchanged).
+    // Prod without Twilio: include OTP in JSON so hosted stacks (e.g. Render) work without SMS.
+    // Prod with Twilio: omit OTP from JSON unless RETURN_OTP_IN_JSON is set (e.g. QA).
+    const includeOtpInResponse =
+      !isProd || !twilioConfigured || returnOtpInJson;
 
     if (isProd && !twilioConfigured) {
       console.warn(
-        'CRITICAL: Twilio is not configured in production. SMS will not be sent.',
+        '[AUTH] Twilio not configured in production — OTP is returned in JSON for login. Add Twilio when ready for SMS-only delivery.',
+      );
+    }
+
+    if (isProd && twilioConfigured && returnOtpInJson) {
+      console.warn(
+        '[AUTH] RETURN_OTP_IN_JSON is set while Twilio is configured — OTP is still included in JSON. Unset RETURN_OTP_IN_JSON when SMS-only is desired.',
       );
     }
 

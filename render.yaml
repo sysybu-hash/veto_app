@@ -97,13 +97,10 @@ services:
       - key: SENTRY_DSN
         sync: false
 
-      # ── OTP בלי SMS (Render / בדיקות) ─────────────────────────
-      # RETURN_OTP_IN_JSON=1 מחזיר OTP ב-JSON כשאין Twilio — השרת יעלה; יודפס אזהרה בלבד.
-      # אם Twilio מוגדר וגם RETURN_OTP_IN_JSON=1 — חובה ALLOW_OTP_IN_JSON_PRODUCTION=1 או להסיר את RETURN_OTP_IN_JSON.
-      # - key: RETURN_OTP_IN_JSON
-      #   value: "1"
-      # - key: ALLOW_OTP_IN_JSON_PRODUCTION
-      #   value: "1"
+      # ── OTP / SMS ─────────────────────────────────────────────
+      # בלי Twilio: ה-OTP יוחזר ב-JSON אוטומטית (לא חובה RETURN_OTP_IN_JSON).
+      # RETURN_OTP_IN_JSON רק כשיש Twilio ועדיין רוצים OTP גם בגוף ה-API (בדיקות).
+      # אם Twilio + RETURN_OTP_IN_JSON בלי הצדקה — השרת ייכשל ב-boot אלא אם ALLOW_OTP_IN_JSON_PRODUCTION=1.
 
   # ────────────────────────────────────────────────────────────
   # Health Ping — Render Free dynos sleep after 15 min of inactivity.
