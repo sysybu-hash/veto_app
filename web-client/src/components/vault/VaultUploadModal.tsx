@@ -8,6 +8,8 @@ import {
   btnSecondaryGlass,
   glassInput,
   glassPanel,
+  modalBackdrop,
+  focusRing,
 } from "@/lib/vetoGlass";
 import { useToastStore } from "@/store/useToastStore";
 import { useTranslation } from "@/lib/i18n/LocaleProvider";
@@ -138,7 +140,7 @@ export function VaultUploadModal({
 
   return (
     <div
-      className="fixed inset-0 z-[60] flex items-end justify-center bg-slate-900/50 p-4 sm:items-center"
+      className={`fixed inset-0 z-[60] flex items-end justify-center p-4 sm:items-center ${modalBackdrop}`}
       role="presentation"
       onMouseDown={(e) => {
         if (e.target === e.currentTarget && !isUploading) handleClose();
@@ -151,15 +153,15 @@ export function VaultUploadModal({
         aria-labelledby="vault-upload-title"
         onMouseDown={(e) => e.stopPropagation()}
       >
-        <div className="flex items-start justify-between border-b border-white/10 px-5 py-4">
+        <div className="flex items-start justify-between border-b border-slate-200 px-5 py-4 dark:border-white/10">
           <div>
             <h2
               id="vault-upload-title"
-              className="font-frank text-lg font-bold text-slate-100"
+              className="font-frank text-lg font-bold text-slate-900 dark:text-slate-50"
             >
               {t("vault.uploadModalTitle")}
             </h2>
-            <p className="mt-0.5 text-sm text-slate-400">
+            <p className="mt-0.5 text-sm text-slate-600 dark:text-slate-400">
               {t("vault.uploadModalSubtitle")}
             </p>
           </div>
@@ -167,7 +169,7 @@ export function VaultUploadModal({
             type="button"
             onClick={handleClose}
             disabled={isUploading}
-            className="rounded-lg p-2 text-slate-400 hover:bg-white/[0.04] hover:text-slate-100 disabled:cursor-not-allowed disabled:opacity-40"
+            className={`rounded-lg p-2 text-slate-500 hover:bg-slate-100 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-40 dark:text-slate-400 dark:hover:bg-white/10 dark:hover:text-slate-100 ${focusRing}`}
             aria-label={t("vault.uploadCloseAria")}
           >
             <svg
@@ -186,7 +188,7 @@ export function VaultUploadModal({
           <div>
             <label
               htmlFor="vault-folder-select"
-              className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-400"
+              className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-400"
             >
               {t("vault.destinationFolder")}
             </label>
@@ -206,7 +208,7 @@ export function VaultUploadModal({
           </div>
 
           <div>
-            <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-slate-400">
+            <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-400">
               {t("vault.uploadFilesHeading")}
             </p>
             <div
@@ -216,7 +218,7 @@ export function VaultUploadModal({
               className={`rounded-2xl border-2 border-dashed px-4 py-10 text-center backdrop-blur-sm transition ${
                 dragActive
                   ? "border-[#C5A059] bg-[#C5A059]/15 shadow-[0_0_24px_rgba(197,160,89,0.25)]"
-                  : "border-white/10 bg-white/[0.03] hover:border-white/70"
+                  : "border-slate-300 bg-slate-50/80 hover:border-veto-gold/50 dark:border-white/10 dark:bg-white/[0.03] dark:hover:border-white/40"
               } ${isUploading ? "pointer-events-none opacity-60" : ""}`}
             >
               <input
@@ -230,33 +232,33 @@ export function VaultUploadModal({
               />
               <label
                 htmlFor="vault-file-input"
-                className={`cursor-pointer text-sm text-slate-300 ${isUploading ? "cursor-not-allowed" : ""}`}
+                className={`cursor-pointer text-sm text-slate-700 dark:text-slate-300 ${isUploading ? "cursor-not-allowed" : ""}`}
               >
-                <span className="font-semibold text-[#8a6d3d]">
+                <span className="font-semibold text-veto-gold-dark dark:text-[#e8c987]">
                   {t("vault.browseFiles")}
                 </span>
-                <span className="text-slate-400">
+                <span className="text-slate-600 dark:text-slate-400">
                   {t("vault.dragDropSuffix")}
                 </span>
               </label>
-              <p className="mt-2 text-xs text-slate-500">
+              <p className="mt-2 text-xs text-slate-500 dark:text-slate-500">
                 {t("vault.fileTypesHint")}
               </p>
             </div>
           </div>
 
           {picked.length > 0 && (
-            <ul className="max-h-40 space-y-2 overflow-y-auto rounded-xl border border-white/10 bg-white/[0.04] p-2 backdrop-blur-md">
+            <ul className="max-h-40 space-y-2 overflow-y-auto rounded-xl border border-slate-200 bg-slate-50/90 p-2 backdrop-blur-md dark:border-white/10 dark:bg-white/[0.04]">
               {picked.map((f, i) => (
                 <li
                   key={`${f.name}-${i}`}
-                  className="flex items-center justify-between gap-2 rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-slate-200 backdrop-blur-sm"
+                  className="flex items-center justify-between gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 backdrop-blur-sm dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-200"
                 >
                   <span className="truncate font-medium">{f.name}</span>
                   <button
                     type="button"
                     disabled={isUploading}
-                    className="shrink-0 text-xs font-semibold text-red-600 hover:underline disabled:cursor-not-allowed disabled:opacity-40"
+                    className={`shrink-0 min-h-[44px] rounded-lg px-2 text-xs font-semibold text-red-600 hover:underline disabled:cursor-not-allowed disabled:opacity-40 dark:text-red-400 ${focusRing}`}
                     onClick={() =>
                       setPicked((prev) => prev.filter((_, idx) => idx !== i))
                     }
@@ -278,7 +280,7 @@ export function VaultUploadModal({
           )}
         </div>
 
-        <div className="flex gap-3 border-t border-white/10 px-5 py-4">
+        <div className="flex gap-3 border-t border-slate-200 px-5 py-4 dark:border-white/10">
           <button
             type="button"
             onClick={handleClose}

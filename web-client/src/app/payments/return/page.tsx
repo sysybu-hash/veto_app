@@ -107,27 +107,27 @@ function PaymentReturnInner() {
       dir={locale === "he" ? "rtl" : "ltr"}
     >
       <main className={`w-full max-w-md p-6 md:p-8 ${glassPanelNested}`}>
-        <h1 className="font-frank text-xl font-bold text-slate-100">
+        <h1 className="font-frank text-xl font-bold text-slate-900 dark:text-slate-50">
           {t("payments.returnTitle")}
         </h1>
 
         {status === "working" && (
-          <p className="mt-4 text-sm text-slate-400">
+          <p className="mt-4 text-sm text-slate-600 dark:text-slate-400">
             {t("payments.returnWorking")}
           </p>
         )}
         {status === "ok" && (
-          <p className="mt-4 text-sm text-emerald-300">
+          <p className="mt-4 text-sm text-emerald-700 dark:text-emerald-300">
             {t("payments.returnSuccess")}
           </p>
         )}
         {status === "cancel" && (
-          <p className="mt-4 text-sm text-slate-300">
+          <p className="mt-4 text-sm text-slate-700 dark:text-slate-300">
             {t("payments.returnCancelled")}
           </p>
         )}
         {status === "err" && detail && (
-          <p className="mt-4 text-sm text-red-300" role="alert">
+          <p className="mt-4 text-sm text-red-700 dark:text-red-300" role="alert">
             {detail}
           </p>
         )}
@@ -162,7 +162,7 @@ export default function PaymentReturnPage() {
   return (
     <Suspense
       fallback={
-        <div className="flex min-h-screen items-center justify-center p-8 text-slate-400">
+        <div className="flex min-h-screen items-center justify-center p-8 text-slate-600 dark:text-slate-400">
           {t("payments.returnWorking")}
         </div>
       }

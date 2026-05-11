@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { authFetch, apiUrl } from "@/api/apiClient";
 import { CitizenBottomNav } from "@/components/citizen/CitizenBottomNav";
-import { btnPrimaryDark, btnSecondaryGlass } from "@/lib/vetoGlass";
+import { btnPrimaryDark, btnSecondaryGlass, citizenBottomSafe } from "@/lib/vetoGlass";
 import { getJwt } from "@/lib/authToken";
 
 type FamilyState = {
@@ -88,7 +88,10 @@ export default function FamilyPage() {
   };
 
   return (
-    <div dir="rtl" className="mx-auto flex w-full max-w-2xl flex-col gap-6 px-4 py-8 pb-28">
+    <div
+      dir="rtl"
+      className={`mx-auto flex w-full max-w-2xl flex-col gap-6 px-4 py-8 ${citizenBottomSafe}`}
+    >
       <header className="text-right">
         <h1 className="font-frank text-2xl font-bold text-slate-100">מנוי משפחתי</h1>
         <p className="mt-1 text-sm text-slate-400">

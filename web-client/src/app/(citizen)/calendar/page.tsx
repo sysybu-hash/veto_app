@@ -16,6 +16,7 @@ import { useTranslation } from "@/lib/i18n/LocaleProvider";
 import {
   btnPrimaryGold,
   btnSecondaryGlass,
+  citizenBottomSafe,
   glassPanel,
 } from "@/lib/vetoGlass";
 
@@ -270,7 +271,9 @@ export default function CitizenCalendarPage() {
 
   return (
     <>
-      <main className="mx-auto flex w-full max-w-lg flex-1 flex-col gap-6 px-4 py-8 pb-28">
+      <main
+        className={`mx-auto flex w-full max-w-lg flex-1 flex-col gap-6 px-4 py-8 ${citizenBottomSafe}`}
+      >
         <div>
           <h1 className="font-frank text-2xl font-bold tracking-tight text-slate-100">
             {t("calendar.heroTitle")}

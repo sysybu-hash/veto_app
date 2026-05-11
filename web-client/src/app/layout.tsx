@@ -1,8 +1,10 @@
 import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
+import { cookies } from "next/headers";
 import { Frank_Ruhl_Libre, Heebo } from "next/font/google";
 import { JwtCookieSync } from "@/components/providers/JwtCookieSync";
 import {
+  THEME_COOKIE,
   ThemeProvider,
   themeBootstrapScript,
 } from "@/components/providers/ThemeProvider";
@@ -66,7 +68,7 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
-      { url: "/veto-logo.svg?v=20260210", type: "image/svg+xml" },
+      { url: "/veto-brand.png?v=20260511", type: "image/png", sizes: "985x1024" },
       { url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
       { url: "/icons/icon-512.png", sizes: "512x512", type: "image/png" },
     ],
@@ -83,11 +85,16 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: ReactNode;
 }>) {
+  const cookieStore = await cookies();
+  const themePref = cookieStore.get(THEME_COOKIE)?.value;
+  const themeClass =
+    themePref === "dark" ? "veto-dark" : "veto-light";
+
   const orgJsonLd = {
     "@context": "https://schema.org",
     "@type": "LegalService",
@@ -102,7 +109,7 @@ export default function RootLayout({
       lang="he"
       dir="rtl"
       suppressHydrationWarning
-      className={`${heebo.variable} ${frank.variable} h-full`}
+      className={`${heebo.variable} ${frank.variable} h-full ${themeClass}`}
     >
       <head>
         {/*
@@ -114,7 +121,10 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{ __html: themeBootstrapScript }}
         />
       </head>
-      <body className="veto-light relative min-h-screen bg-[#eef1f5] font-heebo text-slate-950 antialiased">
+      <body
+        suppressHydrationWarning
+        className={`${themeClass} relative min-h-screen bg-[#eef1f5] font-heebo text-slate-950 antialiased dark:bg-[#0f172a] dark:text-slate-100`}
+      >
         <ThemeProvider>
           <LocaleProvider>
             <JwtCookieSync />
@@ -125,7 +135,7 @@ export default function RootLayout({
               dangerouslySetInnerHTML={{ __html: JSON.stringify(orgJsonLd) }}
             />
             <div className="fixed inset-0 -z-50 overflow-hidden" aria-hidden>
-              <div className="veto-page-underlay absolute inset-0 bg-[#eef1f5]" />
+              <div className="veto-page-underlay absolute inset-0 bg-[#eef1f5] dark:bg-[#0f172a]" />
               <div className="veto-bg-glow absolute inset-0" />
               <div className="veto-bg-grid absolute inset-0" />
             </div>
