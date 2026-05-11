@@ -17,6 +17,7 @@ export function EndCallSummary({
   actionPlan,
   eventId,
   onClose,
+  showVault = true,
   saveStatus,
   saveError,
   savedCount,
@@ -26,6 +27,8 @@ export function EndCallSummary({
   actionPlan: ActionPlan | null;
   eventId: string | null;
   onClose: () => void;
+  /** Only the citizen may save call artifacts to their vault. */
+  showVault?: boolean;
   saveStatus: "idle" | "saving" | "saved" | "error";
   saveError: string | null;
   savedCount: number;
@@ -80,34 +83,36 @@ export function EndCallSummary({
           </section>
         )}
 
-        <section className="mt-4 rounded-2xl border border-emerald-500/30 bg-emerald-950/30 p-3">
-          <p className="text-sm font-bold text-emerald-200">
-            {t("call.v2.summary.vaultTitle", "Save to my vault")}
-          </p>
-          <p className="mt-1 text-[11px] leading-5 text-emerald-100/80">
-            {t(
-              "call.v2.summary.vaultBody",
-              "Recording + transcript become signed evidence in your private vault.",
-            )}
-          </p>
-          <div className="mt-3 flex items-center gap-2">
-            <button
-              type="button"
-              onClick={onSaveToVault}
-              disabled={saveStatus === "saving" || saveStatus === "saved"}
-              className="rounded-xl bg-emerald-500 px-3 py-1.5 text-xs font-bold text-emerald-950 hover:bg-emerald-400 disabled:opacity-50"
-            >
-              {saveStatus === "saving"
-                ? t("call.v2.summary.vaultSaving", "Saving…")
-                : saveStatus === "saved"
-                  ? t("call.v2.summary.vaultSaved", `Saved (${savedCount})`)
-                  : t("call.v2.summary.vaultBtn", "Save to vault")}
-            </button>
-            {saveStatus === "error" && saveError && (
-              <span className="text-[11px] text-red-300">{saveError}</span>
-            )}
-          </div>
-        </section>
+        {showVault && (
+          <section className="mt-4 rounded-2xl border border-emerald-500/30 bg-emerald-950/30 p-3">
+            <p className="text-sm font-bold text-emerald-200">
+              {t("call.v2.summary.vaultTitle", "Save to my vault")}
+            </p>
+            <p className="mt-1 text-[11px] leading-5 text-emerald-100/80">
+              {t(
+                "call.v2.summary.vaultBody",
+                "Recording + transcript become signed evidence in your private vault.",
+              )}
+            </p>
+            <div className="mt-3 flex items-center gap-2">
+              <button
+                type="button"
+                onClick={onSaveToVault}
+                disabled={saveStatus === "saving" || saveStatus === "saved"}
+                className="rounded-xl bg-emerald-500 px-3 py-1.5 text-xs font-bold text-emerald-950 hover:bg-emerald-400 disabled:opacity-50"
+              >
+                {saveStatus === "saving"
+                  ? t("call.v2.summary.vaultSaving", "Saving…")
+                  : saveStatus === "saved"
+                    ? t("call.v2.summary.vaultSaved", `Saved (${savedCount})`)
+                    : t("call.v2.summary.vaultBtn", "Save to vault")}
+              </button>
+              {saveStatus === "error" && saveError && (
+                <span className="text-[11px] text-red-300">{saveError}</span>
+              )}
+            </div>
+          </section>
+        )}
 
         <div className="mt-5 flex justify-between gap-2">
           <button

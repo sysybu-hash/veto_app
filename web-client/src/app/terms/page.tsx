@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { VetoBrandLogo } from "@/components/brand/VetoBrandLogo";
 import { authGlassPanel, btnPrimaryDark } from "@/lib/vetoGlass";
 
 export const metadata: Metadata = {
@@ -24,10 +25,10 @@ export default function TermsPage() {
         </div>
 
         <header className="mb-8 text-center md:text-right">
-          <p className="text-sm font-semibold tracking-wide text-veto-gold">
-            VETO Legal
-          </p>
-          <h1 className="mt-2 font-display text-3xl font-bold text-white md:text-4xl">
+          <div className="mb-4 flex justify-center md:justify-end">
+            <VetoBrandLogo className="h-9 w-auto sm:h-10" />
+          </div>
+          <h1 className="font-display text-3xl font-bold text-white md:text-4xl">
             תקנון ותנאי שימוש
           </h1>
           <p className="mt-3 text-sm text-slate-400">

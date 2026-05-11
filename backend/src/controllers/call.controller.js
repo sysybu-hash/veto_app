@@ -557,6 +557,9 @@ exports.startCloudRecording = async (req, res, next) => {
     if (!canAccessEvent(event, req.user)) {
       return res.status(403).json({ error: 'Not authorized' });
     }
+    if (String(event.user_id) !== String(req.user.userId)) {
+      return res.status(403).json({ error: 'Only the citizen can start cloud recording.' });
+    }
 
     if (event.agora_cloud_recording_sid) {
       return res.json({
@@ -660,6 +663,9 @@ exports.stopCloudRecording = async (req, res, next) => {
 
     if (!canAccessEvent(event, req.user)) {
       return res.status(403).json({ error: 'Not authorized' });
+    }
+    if (String(event.user_id) !== String(req.user.userId)) {
+      return res.status(403).json({ error: 'Only the citizen can stop cloud recording.' });
     }
 
     const rid = event.agora_cloud_recording_resource_id;
@@ -864,9 +870,8 @@ const rttBuilderTokens = new Map();
 /**
  * POST /api/calls/:eventId/consent
  * Body: { granted: boolean }
- * Records GDPR consent for cloud recording. Both citizen and lawyer
- * must call this with `granted=true` before /cloud-recording/start
- * will succeed.
+ * Only the citizen (emergency event owner) may consent to cloud recording.
+ * The lawyer is informed in the UI that recording is citizen-controlled.
  */
 exports.recordConsent = async (req, res, next) => {
   try {
@@ -877,26 +882,28 @@ exports.recordConsent = async (req, res, next) => {
     if (!canAccessEvent(event, req.user)) {
       return res.status(403).json({ error: 'Not authorized' });
     }
-
-    const update = {};
-    if (req.user.role === 'lawyer') {
-      update['recording_consent.lawyer_at'] = granted ? new Date() : null;
-    } else {
-      update['recording_consent.citizen_at'] = granted ? new Date() : null;
+    if (String(event.user_id) !== String(req.user.userId)) {
+      return res.status(403).json({ error: 'Only the citizen can consent to recording.' });
     }
-    await EmergencyEvent.findByIdAndUpdate(eventId, { $set: update });
+
+    await EmergencyEvent.findByIdAndUpdate(eventId, {
+      $set: {
+        'recording_consent.citizen_at': granted ? new Date() : null,
+        // Legacy field — no longer used for gating; clear to avoid confusion.
+        'recording_consent.lawyer_at': null,
+      },
+    });
 
     const fresh = await EmergencyEvent.findById(eventId)
       .select('recording_consent')
       .lean();
+    const citizen = !!fresh?.recording_consent?.citizen_at;
     res.json({
       success: true,
       consent: {
-        citizen: !!fresh?.recording_consent?.citizen_at,
-        lawyer: !!fresh?.recording_consent?.lawyer_at,
-        bothGranted:
-          !!fresh?.recording_consent?.citizen_at &&
-          !!fresh?.recording_consent?.lawyer_at,
+        citizen,
+        lawyer: false,
+        bothGranted: citizen,
       },
     });
   } catch (err) {

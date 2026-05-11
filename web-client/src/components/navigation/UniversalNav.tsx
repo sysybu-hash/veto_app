@@ -17,6 +17,7 @@ import {
   UserPlus,
   X,
 } from "lucide-react";
+import { VetoBrandLogo } from "@/components/brand/VetoBrandLogo";
 import { LanguageSwitcher } from "@/components/i18n/LanguageSwitcher";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { clearJwt, getJwt, getRoleFromJwt } from "@/lib/authToken";
@@ -131,15 +132,9 @@ export function UniversalNav() {
   return (
     <>
       <nav className={navBarClass} aria-label="ניווט ראשי">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-1">
-          <Link href={homeHref(role, hasToken)} className="flex shrink-0 items-center" aria-label="VETO">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/veto-logo.svg"
-              alt="VETO Legal"
-              className={`h-11 w-auto select-none ${isLanding ? "brightness-0 invert" : ""}`}
-              draggable={false}
-            />
+        <div className="mx-auto flex min-h-12 max-w-7xl items-center justify-between gap-2 px-2 sm:min-h-0 sm:gap-4 sm:px-3">
+          <Link href={homeHref(role, hasToken)} className="flex min-w-0 shrink-0 items-center" aria-label="VETO">
+            <VetoBrandLogo priority className="h-11 w-auto" />
           </Link>
 
           <div
@@ -155,7 +150,7 @@ export function UniversalNav() {
             })}
           </div>
 
-          <div className="flex shrink-0 items-center gap-2">
+          <div className="flex min-w-0 shrink-0 items-center justify-end gap-1.5 sm:gap-2">
             <ThemeToggle
               className={
                 isLanding
@@ -178,7 +173,7 @@ export function UniversalNav() {
                 </Link>
                 <Link
                   href="/login"
-                  className="rounded-xl border border-[#C5A059]/50 bg-[#C5A059] px-4 py-2.5 text-sm font-black text-slate-950 shadow-[0_0_24px_-8px_rgba(197,160,89,0.8)] transition hover:bg-[#d8b867]"
+                  className="whitespace-nowrap rounded-xl border border-[#C5A059]/50 bg-[#C5A059] px-3 py-2 text-xs font-black text-slate-950 shadow-[0_0_24px_-8px_rgba(197,160,89,0.8)] transition hover:bg-[#d8b867] sm:px-4 sm:py-2.5 sm:text-sm"
                 >
                   אזור אישי
                 </Link>
@@ -224,13 +219,7 @@ export function UniversalNav() {
               className={`flex items-center justify-between border-b px-4 py-3 ${isLanding ? "border-white/10" : "border-slate-200"}`}
             >
               <Link href={homeHref(role, hasToken)} className="flex items-center" onClick={() => setOpen(false)} aria-label="VETO">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src="/veto-logo.svg"
-                  alt="VETO Legal"
-                  className={`h-11 w-auto select-none ${isLanding ? "brightness-0 invert" : ""}`}
-                  draggable={false}
-                />
+                <VetoBrandLogo className="h-11 w-auto" />
               </Link>
               <button
                 type="button"

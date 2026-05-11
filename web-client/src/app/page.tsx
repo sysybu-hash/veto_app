@@ -152,7 +152,7 @@ export default function Home() {
             </Link>
             <Link
               href="/register/lawyer"
-              className="flex items-center justify-center rounded-2xl border border-white/10 bg-white/5 px-8 py-4 font-medium text-white backdrop-blur-md transition-all hover:bg-white/10 active:scale-95"
+              className="flex items-center justify-center rounded-2xl border border-veto-gold/45 bg-[rgba(197,160,89,0.14)] px-8 py-4 text-lg font-bold text-veto-gold shadow-[inset_0_1px_0_rgba(255,255,255,0.12)] backdrop-blur-md transition-all hover:border-veto-gold/70 hover:bg-[rgba(197,160,89,0.24)] hover:text-veto-gold-light active:scale-95"
             >
               הצטרפות עורכי דין
             </Link>

@@ -458,9 +458,10 @@ export function CallShell({ channel }: { channel: string }) {
   }, [screen]);
 
   const toggleRecording = useCallback(async () => {
+    if (myRole !== "user") return;
     if (recording.status === "recording") await recording.stop();
     else await recording.start();
-  }, [recording]);
+  }, [myRole, recording]);
 
   const toggleCaptions = useCallback(async () => {
     if (captionsOn) {
@@ -549,8 +550,13 @@ export function CallShell({ channel }: { channel: string }) {
       router.replace("/hub");
       return;
     }
-    // Stop server-side artifacts before leaving the channel.
-    if (recording.status === "recording") {
+    // Cloud recording stop is citizen-only on the API; avoid 403 for lawyers.
+    if (
+      myRole === "user" &&
+      (recording.status === "recording" ||
+        recording.status === "starting" ||
+        recording.status === "stopping")
+    ) {
       try {
         await recording.stop();
       } catch {
@@ -579,6 +585,7 @@ export function CallShell({ channel }: { channel: string }) {
     rtt,
     finishBilling,
     eventId,
+    myRole,
   ]);
 
   const closeSummary = useCallback(() => {
@@ -620,11 +627,6 @@ export function CallShell({ channel }: { channel: string }) {
     );
   }
 
-  const myConsent = (() => {
-    if (myRole === "user") return recording.consent.citizen ? true : null;
-    return recording.consent.lawyer ? true : null;
-  })();
-
   return (
     <div className="@container/shell veto-call-keep-dark fixed inset-0 z-[70] flex h-[100dvh] w-screen flex-col overflow-hidden bg-black text-white">
       {/* Top header strip */}
@@ -653,9 +655,9 @@ export function CallShell({ channel }: { channel: string }) {
 
         <ConsentBanner
           consent={recording.consent}
-          myConsent={myConsent}
           onChoose={(g) => void recording.recordOwnConsent(g)}
           myRole={myRole}
+          recordingStatus={recording.status}
         />
 
         <CaptionsOverlay
@@ -698,7 +700,8 @@ export function CallShell({ channel }: { channel: string }) {
         captionsOn={captionsOn}
         translateOn={translateCaptions}
         chatOpen={sideOpen}
-        bothConsented={recording.consent.bothGranted}
+        citizenConsented={recording.consent.citizen}
+        myRole={myRole}
         onToggleMic={() => setMicOn((v) => !v)}
         onToggleCamera={() => setCameraOn((v) => !v)}
         onToggleDenoiser={() => void toggleDenoiser()}
@@ -726,6 +729,7 @@ export function CallShell({ channel }: { channel: string }) {
           actionPlan={actionPlan}
           eventId={eventId}
           onClose={closeSummary}
+          showVault={myRole === "user"}
           saveStatus={vault.status}
           saveError={vault.error}
           savedCount={vault.savedCount}

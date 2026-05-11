@@ -109,6 +109,30 @@
 }
 
 /*
+ * Admin console under `.veto-light`: undo broad slate/text/border overrides
+ * so the dark control room stays readable (see `.veto-light` rules above).
+ */
+.veto-light .veto-admin-keep-dark [class*="text-slate-100"] {
+  color: #f1f5f9;
+}
+.veto-light .veto-admin-keep-dark [class*="text-slate-200"] {
+  color: #e2e8f0;
+}
+.veto-light .veto-admin-keep-dark [class*="text-slate-300"] {
+  color: #cbd5e1;
+}
+.veto-light .veto-admin-keep-dark [class*="text-slate-400"] {
+  color: #94a3b8;
+}
+.veto-light .veto-admin-keep-dark [class*="text-slate-500"] {
+  color: #64748b;
+}
+
+.veto-light .veto-admin-keep-dark [class*="border-white/"] {
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+/*
  * Dark mode (Phase 5)
  * --------------------
  * The component class names already encode a dark base

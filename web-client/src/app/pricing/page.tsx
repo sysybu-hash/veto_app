@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { VetoBrandLogo } from "@/components/brand/VetoBrandLogo";
 import { PricingPlansClient } from "./PricingPlansClient";
 
 export const metadata: Metadata = {
@@ -60,7 +61,10 @@ export default function PricingPage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(offersJsonLd) }}
       />
       <section className="mx-auto max-w-7xl">
-        <p className="text-xs font-black tracking-[0.24em] text-[#D8B867]">VETO PRICING</p>
+        <div className="flex flex-wrap items-end gap-4">
+          <VetoBrandLogo className="h-8 w-auto opacity-95 sm:h-9" />
+          <p className="pb-1 text-xs font-black tracking-[0.24em] text-[#D8B867]">PRICING</p>
+        </div>
         <h1 className="mt-4 max-w-3xl font-frank text-5xl font-black leading-tight text-white">
           מנוי משפטי ברור, עם PayPal Subscription אמיתי
         </h1>

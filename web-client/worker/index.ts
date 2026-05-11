@@ -17,8 +17,8 @@ self.addEventListener("push", (event) => {
     body:
       data?.body ||
       "עורך דין, ישנה קריאת SOS חדשה שממתינה למענה מיידי.",
-    icon: "/icons/icon-192x192.png",
-    badge: "/icons/icon-192x192.png",
+    icon: "/icons/icon-192.png",
+    badge: "/icons/icon-192.png",
     data: {
       url: data?.url || "/",
     },

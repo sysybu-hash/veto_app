@@ -16,7 +16,10 @@ export type ControlBarProps = {
   captionsOn: boolean;
   translateOn: boolean;
   chatOpen: boolean;
-  bothConsented: boolean;
+  /** Citizen has approved recording (required to use the record control). */
+  citizenConsented: boolean;
+  /** Citizen can start/stop; lawyer only sees recording status. */
+  myRole: "user" | "lawyer";
   onToggleMic: () => void;
   onToggleCamera: () => void;
   onToggleDenoiser: () => void;
@@ -40,6 +43,7 @@ export function ControlBar(p: ControlBarProps) {
   const isVideo = p.mode === "video";
   const recBusy = p.recording === "starting" || p.recording === "stopping";
   const recOn = p.recording === "recording";
+  const lawyerView = p.myRole === "lawyer";
 
   return (
     <div className="@container/cb pointer-events-none absolute inset-x-0 bottom-0 z-30 px-3 pb-3">
@@ -129,27 +133,47 @@ export function ControlBar(p: ControlBarProps) {
             )}
           />
         )}
-        <CtrlBtn
-          active={recOn}
-          disabled={!p.bothConsented || recBusy}
-          onClick={p.onToggleRecording}
-          activeClass="bg-red-600 text-white"
-          label={
-            recOn
-              ? t("call.v2.controls.recordStop", "Stop rec")
-              : recBusy
-                ? "…"
-                : t("call.v2.controls.recordStart", "Record")
-          }
-          title={
-            !p.bothConsented
-              ? t(
-                  "call.v2.controls.recordBlocked",
-                  "Recording requires consent from both sides.",
-                )
-              : undefined
-          }
-        />
+        {lawyerView ? (
+          <div
+            role="status"
+            aria-label={t("call.v2.controls.recordLawyerAria", "Recording status")}
+            title={t(
+              "call.v2.controls.recordLawyerTitle",
+              "Only the citizen can start or stop cloud recording.",
+            )}
+            className={`whitespace-nowrap rounded-full px-3 py-2 text-xs font-semibold ${
+              recOn || recBusy
+                ? "bg-red-600 text-white"
+                : "bg-white/10 text-slate-300"
+            }`}
+          >
+            {recOn || recBusy
+              ? t("call.v2.controls.recordLawyerOn", "Recording on")
+              : t("call.v2.controls.recordLawyerOff", "Not recording")}
+          </div>
+        ) : (
+          <CtrlBtn
+            active={recOn}
+            disabled={!p.citizenConsented || recBusy}
+            onClick={p.onToggleRecording}
+            activeClass="bg-red-600 text-white"
+            label={
+              recOn
+                ? t("call.v2.controls.recordStop", "Stop rec")
+                : recBusy
+                  ? "…"
+                  : t("call.v2.controls.recordStart", "Record")
+            }
+            title={
+              !p.citizenConsented
+                ? t(
+                    "call.v2.controls.recordBlockedCitizen",
+                    "Approve recording in the banner first.",
+                  )
+                : undefined
+            }
+          />
+        )}
         <CtrlBtn
           active={p.chatOpen}
           onClick={p.onToggleChat}

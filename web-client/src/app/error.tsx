@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { VetoBrandLogo } from "@/components/brand/VetoBrandLogo";
 import { useTranslation } from "@/lib/i18n/LocaleProvider";
 import { btnSecondaryGlass, glassPanel } from "@/lib/vetoGlass";
 
@@ -25,6 +26,9 @@ export default function AppError({
       <div
         className={`w-full max-w-md space-y-4 p-8 text-center shadow-lg shadow-slate-900/10 ${glassPanel}`}
       >
+        <div className="flex justify-center">
+          <VetoBrandLogo className="h-9 w-auto" />
+        </div>
         <h1 className="font-frank text-xl font-black text-slate-100">
           {t("errorPage.title")}
         </h1>
