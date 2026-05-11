@@ -81,12 +81,12 @@ export function PreCallCheck({
   if (mode === "chat") return null;
 
   return (
-    <div className="veto-call-keep-dark fixed inset-0 z-[80] flex items-center justify-center bg-black/85 px-4 py-8 backdrop-blur-md">
+    <div className="veto-call-keep-dark fixed inset-0 z-[80] flex items-center justify-center bg-gradient-to-b from-black via-zinc-950 to-black px-4 py-8 backdrop-blur-md">
       <div
         role="dialog"
         aria-modal="true"
         aria-labelledby="pre-call-title"
-        className="w-full max-w-md rounded-2xl border border-white/10 bg-slate-950/90 p-5 text-slate-100 shadow-2xl"
+        className="w-full max-w-md rounded-3xl border border-[#C5A059]/25 bg-zinc-900/90 p-6 text-slate-100 shadow-[0_24px_80px_rgba(0,0,0,0.65)]"
       >
         <h2 id="pre-call-title" className="font-frank text-xl font-bold">
           {t("call.v2.preCheck.title", "Ready your call")}

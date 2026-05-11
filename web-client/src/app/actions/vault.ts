@@ -115,6 +115,225 @@ export async function saveEvidence(data: {
   }
 }
 
+export type SosArtifactRow = {
+  _id: string;
+  recording_url?: string | null;
+  screen_recording_url?: string | null;
+  call_transcript?: string | null;
+  transcript_language?: string | null;
+  triggered_at?: string | null;
+};
+
+async function fetchMySosArtifacts(
+  token: string,
+  base: string,
+): Promise<
+  { ok: true; items: SosArtifactRow[] } | { ok: false; error: string }
+> {
+  try {
+    const res = await fetch(`${base}/api/calls/my-sos-artifacts`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        ...tunnelBypassHeaders(),
+      },
+    });
+    if (!res.ok) {
+      const err = await res.text().catch(() => "");
+      return {
+        ok: false,
+        error: `טעינת ארכיון SOS נכשלה (${res.status})${err ? `: ${err.slice(0, 120)}` : ""}`,
+      };
+    }
+    const data = (await res.json()) as {
+      success?: boolean;
+      items?: SosArtifactRow[];
+    };
+    if (!data.success || !Array.isArray(data.items)) {
+      return { ok: false, error: "תגובת שרת לא צפויה" };
+    }
+    return { ok: true, items: data.items };
+  } catch (e) {
+    console.error("[vault] sync SOS fetch:", e);
+    return { ok: false, error: "שגיאת רשת בארכיון SOS" };
+  }
+}
+
+/** Upsert Prisma Evidence rows for artifact list (no-op if DATABASE_URL unset). */
+async function syncPrismaFromArtifactItems(
+  externalId: string,
+  role: string | null | undefined,
+  items: SosArtifactRow[],
+): Promise<number> {
+  if (!process.env.DATABASE_URL?.trim()) {
+    return 0;
+  }
+
+  const user = await ensureUserForExternalId(externalId, role);
+  let added = 0;
+
+  for (const row of items) {
+    const mongoId = row._id;
+    if (!mongoId) continue;
+
+    const hasRec =
+      typeof row.recording_url === "string" && row.recording_url.length > 0;
+    const hasScreen =
+      typeof row.screen_recording_url === "string" &&
+      row.screen_recording_url.length > 0;
+    const hasTr =
+      typeof row.call_transcript === "string" &&
+      row.call_transcript.trim().length > 0;
+    if (!hasRec && !hasScreen && !hasTr) continue;
+
+    const when =
+      row.triggered_at && !Number.isNaN(Date.parse(row.triggered_at))
+        ? new Date(row.triggered_at).toISOString().slice(0, 16)
+        : new Date().toISOString().slice(0, 16);
+
+    if (hasRec) {
+      const recId = mongoId;
+      const existingRec = await prisma.evidence.findFirst({
+        where: { ownerId: user.id, sourceEmergencyEventId: recId },
+      });
+      if (!existingRec) {
+        const url = String(row.recording_url);
+        const hash = createHash("sha512")
+          .update(`rec|${mongoId}|${url}`)
+          .digest("hex");
+        await prisma.evidence.create({
+          data: {
+            title: `SOS · הקלטה · ${when}`,
+            fileUrl: url,
+            fileHash: hash,
+            category: "sos_recording",
+            ownerId: user.id,
+            sourceEmergencyEventId: recId,
+          },
+        });
+        added += 1;
+      }
+    }
+
+    if (hasScreen) {
+      const screenId = `${mongoId}:screen`;
+      const existingScreen = await prisma.evidence.findFirst({
+        where: { ownerId: user.id, sourceEmergencyEventId: screenId },
+      });
+      if (!existingScreen) {
+        const url = String(row.screen_recording_url);
+        const hash = createHash("sha512")
+          .update(`screen|${mongoId}|${url}`)
+          .digest("hex");
+        await prisma.evidence.create({
+          data: {
+            title: `SOS · מסך · ${when}`,
+            fileUrl: url,
+            fileHash: hash,
+            category: "sos_screen_recording",
+            ownerId: user.id,
+            sourceEmergencyEventId: screenId,
+          },
+        });
+        added += 1;
+      }
+    }
+
+    if (hasTr) {
+      const trId = `${mongoId}:transcript`;
+      const existingTr = await prisma.evidence.findFirst({
+        where: { ownerId: user.id, sourceEmergencyEventId: trId },
+      });
+      if (!existingTr) {
+        const text = String(row.call_transcript);
+        const enc = encodeURIComponent(text);
+        const dataUrl = `data:text/plain;charset=utf-8,${enc}`;
+        const hash = createHash("sha512")
+          .update(`tr|${mongoId}|${text.slice(0, 2000)}`)
+          .digest("hex");
+        await prisma.evidence.create({
+          data: {
+            title: `SOS · תמלול · ${when}`,
+            fileUrl: dataUrl,
+            fileHash: hash,
+            category: "sos_transcript",
+            ownerId: user.id,
+            sourceEmergencyEventId: trId,
+          },
+        });
+        added += 1;
+      }
+    }
+  }
+
+  return added;
+}
+
+/**
+ * After a call: mark artifacts saved on the API (Mongo + VaultFile), then
+ * optionally mirror into Postgres Evidence when DATABASE_URL is set.
+ */
+export async function saveCallArtifactsToVault(eventId: string): Promise<
+  | { success: true; prismaAdded: number; mongoSaved: true }
+  | { success: false; error: string }
+> {
+  const externalId = await getVetoUserIdFromCookies();
+  if (!externalId) {
+    return { success: false, error: "נדרשת התחברות" };
+  }
+
+  const role = await getVetoRoleFromCookies();
+  if (role !== "user" && role !== "admin") {
+    return { success: false, error: "זמין לאזרחים בלבד" };
+  }
+
+  const token = await getVetoJwtFromCookies();
+  const base = getPublicApiOrigin();
+  if (!token?.trim()) {
+    return { success: false, error: "נדרשת התחברות" };
+  }
+  if (!base) {
+    return { success: false, error: "חסרה הגדרת API" };
+  }
+
+  const encId = encodeURIComponent(eventId);
+  const saveRes = await fetch(`${base}/api/calls/${encId}/artifacts/save`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+      ...tunnelBypassHeaders(),
+    },
+    body: "{}",
+  });
+  if (!saveRes.ok) {
+    const err = await saveRes.text().catch(() => "");
+    return {
+      success: false,
+      error: `שמירה בשרת נכשלה (${saveRes.status})${err ? `: ${err.slice(0, 160)}` : ""}`,
+    };
+  }
+
+  const fetched = await fetchMySosArtifacts(token, base);
+  if (!fetched.ok) {
+    return { success: false, error: fetched.error };
+  }
+
+  let prismaAdded = 0;
+  try {
+    prismaAdded = await syncPrismaFromArtifactItems(
+      externalId,
+      role,
+      fetched.items,
+    );
+  } catch (e) {
+    console.error("[vault] saveCallArtifactsToVault prisma (Mongo save already OK):", e);
+  }
+
+  revalidatePath("/vault");
+  return { success: true, prismaAdded, mongoSaved: true as const };
+}
+
 /** Fetch SOS recording/transcript artifacts from Mongo (via API) and upsert Prisma Evidence. */
 export async function syncSosArtifactsToVault(): Promise<
   { success: true; added: number } | { success: false; error: string }
@@ -139,111 +358,16 @@ export async function syncSosArtifactsToVault(): Promise<
       return { success: false, error: "חסרה הגדרת API" };
     }
 
-    let items: Array<{
-      _id: string;
-      recording_url?: string | null;
-      call_transcript?: string | null;
-      transcript_language?: string | null;
-      triggered_at?: string | null;
-    }>;
-
-    try {
-      const res = await fetch(`${base}/api/calls/my-sos-artifacts`, {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          ...tunnelBypassHeaders(),
-        },
-      });
-      if (!res.ok) {
-        const err = await res.text().catch(() => "");
-        return {
-          success: false,
-          error: `טעינת ארכיון SOS נכשלה (${res.status})${err ? `: ${err.slice(0, 120)}` : ""}`,
-        };
-      }
-      const data = (await res.json()) as {
-        success?: boolean;
-        items?: typeof items;
-      };
-      if (!data.success || !Array.isArray(data.items)) {
-        return { success: false, error: "תגובת שרת לא צפויה" };
-      }
-      items = data.items;
-    } catch (e) {
-      console.error("[vault] sync SOS fetch:", e);
-      return { success: false, error: "שגיאת רשת בארכיון SOS" };
+    const fetched = await fetchMySosArtifacts(token, base);
+    if (!fetched.ok) {
+      return { success: false, error: fetched.error };
     }
 
-    const user = await ensureUserForExternalId(externalId, role);
-    let added = 0;
-
-    for (const row of items) {
-      const mongoId = row._id;
-      if (!mongoId) continue;
-
-      const hasRec =
-        typeof row.recording_url === "string" && row.recording_url.length > 0;
-      const hasTr =
-        typeof row.call_transcript === "string" &&
-        row.call_transcript.trim().length > 0;
-      if (!hasRec && !hasTr) continue;
-
-      const when =
-        row.triggered_at && !Number.isNaN(Date.parse(row.triggered_at))
-          ? new Date(row.triggered_at).toISOString().slice(0, 16)
-          : new Date().toISOString().slice(0, 16);
-
-      if (hasRec) {
-        const recId = mongoId;
-        const existingRec = await prisma.evidence.findFirst({
-          where: { ownerId: user.id, sourceEmergencyEventId: recId },
-        });
-        if (!existingRec) {
-          const url = String(row.recording_url);
-          const hash = createHash("sha512")
-            .update(`rec|${mongoId}|${url}`)
-            .digest("hex");
-          await prisma.evidence.create({
-            data: {
-              title: `SOS · הקלטה · ${when}`,
-              fileUrl: url,
-              fileHash: hash,
-              category: "sos_recording",
-              ownerId: user.id,
-              sourceEmergencyEventId: recId,
-            },
-          });
-          added += 1;
-        }
-      }
-
-      if (hasTr) {
-        const trId = `${mongoId}:transcript`;
-        const existingTr = await prisma.evidence.findFirst({
-          where: { ownerId: user.id, sourceEmergencyEventId: trId },
-        });
-        if (!existingTr) {
-          const text = String(row.call_transcript);
-          const enc = encodeURIComponent(text);
-          const dataUrl = `data:text/plain;charset=utf-8,${enc}`;
-          const hash = createHash("sha512")
-            .update(`tr|${mongoId}|${text.slice(0, 2000)}`)
-            .digest("hex");
-          await prisma.evidence.create({
-            data: {
-              title: `SOS · תמלול · ${when}`,
-              fileUrl: dataUrl,
-              fileHash: hash,
-              category: "sos_transcript",
-              ownerId: user.id,
-              sourceEmergencyEventId: trId,
-            },
-          });
-          added += 1;
-        }
-      }
-    }
+    const added = await syncPrismaFromArtifactItems(
+      externalId,
+      role,
+      fetched.items,
+    );
 
     if (added > 0) {
       revalidatePath("/vault");
@@ -252,12 +376,9 @@ export async function syncSosArtifactsToVault(): Promise<
   } catch (e) {
     console.error("[vault] syncSosArtifactsToVault:", e);
     const msg = e instanceof Error ? e.message : String(e);
-    const dbHint =
-      /prisma|database|P1001|P1017|connection/i.test(msg) ||
-      (typeof process !== "undefined" &&
-        !process.env.DATABASE_URL?.trim())
-        ? " בדוק ש-DATABASE_URL מוגדר ב-Vercel (כספת Prisma)."
-        : "";
+    const dbHint = /prisma|database|P1001|P1017|connection/i.test(msg)
+      ? " בדוק חיבור ל-DATABASE_URL (כספת Prisma באתר)."
+      : "";
     return {
       success: false,
       error: `שמירה לכספת נכשלה.${dbHint} אם הבעיה נמשכת, פנה לתמיכה.`,

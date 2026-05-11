@@ -82,10 +82,10 @@ export function CallStage({
   const showLocalSelf = videoEnabled && cameraOn && localCameraTrack;
 
   return (
-    <div className="@container relative h-full w-full">
+    <div className="@container relative h-full w-full min-h-0">
       <div
         ref={remoteRef}
-        className="h-full w-full bg-slate-900 [&_video]:h-full [&_video]:w-full [&_video]:object-cover"
+        className="h-full w-full min-h-0 bg-zinc-950 [&_video]:h-full [&_video]:w-full [&_video]:object-cover"
       />
       {!remote && (
         <div className="absolute inset-0 flex items-center justify-center text-sm text-slate-400">

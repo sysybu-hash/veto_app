@@ -1,30 +1,32 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { syncSosArtifactsToVault } from "@/app/actions/vault";
+import { saveCallArtifactsToVault } from "@/app/actions/vault";
 
 type SaveStatus = "idle" | "saving" | "saved" | "error";
 
 /**
- * Pulls the citizen's most recent SOS artifacts (recording + transcript)
- * out of MongoDB and pushes them into the Postgres `Evidence` vault with
- * a digital seal so the citizen can later reference them as evidence.
- *
- * Wraps the existing `syncSosArtifactsToVault` server action so we don't
- * leak Postgres concerns into the call UI.
+ * Marks the current call's recording/transcript as saved on the API (Mongo +
+ * VaultFile), then optionally mirrors rows into Postgres Evidence when
+ * DATABASE_URL is configured.
  */
-export function useSaveToVault() {
+export function useSaveToVault(eventId: string | null) {
   const [status, setStatus] = useState<SaveStatus>("idle");
   const [error, setError] = useState<string | null>(null);
   const [savedCount, setSavedCount] = useState<number>(0);
 
   const save = useCallback(async () => {
+    if (!eventId?.trim()) {
+      setStatus("error");
+      setError("חסר מזהה שיחה — לא ניתן לשמור.");
+      return;
+    }
     setStatus("saving");
     setError(null);
     try {
-      const result = await syncSosArtifactsToVault();
+      const result = await saveCallArtifactsToVault(eventId);
       if (result.success) {
-        setSavedCount(result.added);
+        setSavedCount(result.prismaAdded);
         setStatus("saved");
       } else {
         setStatus("error");
@@ -34,7 +36,7 @@ export function useSaveToVault() {
       setStatus("error");
       setError(err instanceof Error ? err.message : String(err));
     }
-  }, []);
+  }, [eventId]);
 
   return { status, error, savedCount, save };
 }
