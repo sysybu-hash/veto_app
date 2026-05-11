@@ -89,6 +89,9 @@ export function UniversalNav() {
   const [open, setOpen] = useState(false);
   const { hasToken, role } = session;
   const items = useMemo(() => resolveItems(role, hasToken), [hasToken, role]);
+  /** אזרחים: קישורים כבר במגירה וב־CitizenBottomNav — בלי כפילות בשורה העליונה */
+  const showDesktopLinkRow =
+    !hasToken || role === "lawyer" || role === "admin";
 
   useEffect(() => {
     queueMicrotask(() => {
@@ -122,12 +125,12 @@ export function UniversalNav() {
 
   const navBarClass = isLanding
     ? "sticky top-0 z-40 border-b border-white/10 bg-veto-ink/60 px-3 py-2.5 shadow-none backdrop-blur-md supports-[backdrop-filter]:bg-veto-ink/50"
-    : "sticky top-0 z-40 border-b border-slate-200/80 bg-white/82 px-3 py-2.5 shadow-sm shadow-slate-900/5 backdrop-blur-xl supports-[backdrop-filter]:bg-white/78";
+    : "sticky top-0 z-40 border-b border-slate-200/80 bg-white/82 px-3 py-2.5 shadow-sm shadow-slate-900/5 backdrop-blur-xl supports-[backdrop-filter]:bg-white/78 dark:border-white/10 dark:bg-slate-950/90 dark:shadow-black/30 dark:supports-[backdrop-filter]:bg-slate-950/85";
 
   const desktopLinkClass = (active: boolean) =>
     isLanding
       ? `transition-colors ${active ? "text-veto-gold" : "text-white/90 hover:text-veto-gold"}`
-      : `transition-colors ${active ? "text-[#9b7430]" : "hover:text-[#9b7430]"}`;
+      : `transition-colors ${active ? "text-[#9b7430] dark:text-veto-gold" : "text-slate-800 hover:text-[#9b7430] dark:text-slate-200 dark:hover:text-veto-gold"}`;
 
   return (
     <>
@@ -137,18 +140,20 @@ export function UniversalNav() {
             <VetoBrandLogo priority className="h-11 w-auto" />
           </Link>
 
-          <div
-            className={`hidden min-w-0 flex-1 items-center justify-center gap-8 text-sm font-bold md:flex ${isLanding ? "text-white" : "text-slate-800"}`}
-          >
-            {items.slice(0, hasToken ? items.length : 3).map((item) => {
-              const active = item.match?.(pathname) ?? pathname === item.href;
-              return (
-                <Link key={item.href} href={item.href} className={desktopLinkClass(active)}>
-                  {item.label}
-                </Link>
-              );
-            })}
-          </div>
+          {showDesktopLinkRow ? (
+            <div
+              className={`hidden min-w-0 flex-1 items-center justify-center gap-8 text-sm font-bold md:flex ${isLanding ? "text-white" : "text-slate-800 dark:text-slate-100"}`}
+            >
+              {items.slice(0, hasToken ? items.length : 3).map((item) => {
+                const active = item.match?.(pathname) ?? pathname === item.href;
+                return (
+                  <Link key={item.href} href={item.href} className={desktopLinkClass(active)}>
+                    {item.label}
+                  </Link>
+                );
+              })}
+            </div>
+          ) : null}
 
           <div className="flex min-w-0 shrink-0 items-center justify-end gap-1.5 sm:gap-2">
             <ThemeToggle
@@ -166,7 +171,7 @@ export function UniversalNav() {
                   className={
                     isLanding
                       ? "hidden rounded-xl px-3 py-2 text-sm font-bold text-white/90 transition-colors hover:text-veto-gold sm:inline-flex"
-                      : "hidden rounded-xl px-3 py-2 text-sm font-bold text-slate-800 transition-colors hover:text-[#9b7430] sm:inline-flex"
+                      : "hidden rounded-xl px-3 py-2 text-sm font-bold text-slate-800 transition-colors hover:text-[#9b7430] dark:text-slate-200 dark:hover:text-veto-gold sm:inline-flex"
                   }
                 >
                   הצטרפות עורכי דין
@@ -188,7 +193,7 @@ export function UniversalNav() {
               className={
                 isLanding
                   ? "flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-white/20 bg-white/10 text-white shadow-none transition hover:bg-white/15 hover:text-veto-gold"
-                  : "flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-slate-300 bg-white/90 text-slate-900 shadow-sm transition hover:bg-white hover:text-[#9b7430]"
+                  : "flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-slate-300 bg-white/90 text-slate-900 shadow-sm transition hover:bg-white hover:text-[#9b7430] dark:border-white/15 dark:bg-white/10 dark:text-white dark:hover:bg-white/15 dark:hover:text-veto-gold"
               }
             >
               <Menu className="h-5 w-5" aria-hidden />
@@ -200,7 +205,7 @@ export function UniversalNav() {
       {open ? (
         <>
           <div
-            className={`fixed inset-0 z-50 backdrop-blur-sm ${isLanding ? "bg-black/50" : "bg-slate-900/35"}`}
+            className={`fixed inset-0 z-50 backdrop-blur-sm ${isLanding ? "bg-black/50" : "bg-slate-900/35 dark:bg-black/55"}`}
             onClick={() => setOpen(false)}
             aria-hidden
           />
@@ -212,11 +217,11 @@ export function UniversalNav() {
             className={
               isLanding
                 ? "fixed inset-y-0 start-0 z-50 flex w-80 max-w-[88vw] flex-col border-e border-white/10 bg-veto-ink/95 text-white shadow-2xl backdrop-blur-xl"
-                : "fixed inset-y-0 start-0 z-50 flex w-80 max-w-[88vw] flex-col border-e border-slate-200 bg-white/95 text-slate-950 shadow-2xl backdrop-blur-xl"
+                : "fixed inset-y-0 start-0 z-50 flex w-80 max-w-[88vw] flex-col border-e border-slate-200 bg-white/95 text-slate-950 shadow-2xl backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/96 dark:text-slate-100"
             }
           >
             <div
-              className={`flex items-center justify-between border-b px-4 py-3 ${isLanding ? "border-white/10" : "border-slate-200"}`}
+              className={`flex items-center justify-between border-b px-4 py-3 ${isLanding ? "border-white/10" : "border-slate-200 dark:border-white/10"}`}
             >
               <Link href={homeHref(role, hasToken)} className="flex items-center" onClick={() => setOpen(false)} aria-label="VETO">
                 <VetoBrandLogo className="h-11 w-auto" />
@@ -228,7 +233,7 @@ export function UniversalNav() {
                 className={
                   isLanding
                     ? "flex h-9 w-9 items-center justify-center rounded-xl border border-white/20 bg-white/10 text-white transition hover:bg-white/15"
-                    : "flex h-9 w-9 items-center justify-center rounded-xl border border-slate-300 bg-white text-slate-900 transition hover:bg-slate-100"
+                    : "flex h-9 w-9 items-center justify-center rounded-xl border border-slate-300 bg-white text-slate-900 transition hover:bg-slate-100 dark:border-white/15 dark:bg-white/10 dark:text-white dark:hover:bg-white/15"
                 }
               >
                 <X className="h-5 w-5" aria-hidden />
@@ -236,7 +241,7 @@ export function UniversalNav() {
             </div>
 
             <div
-              className={`border-b px-4 py-3 text-xs font-bold ${isLanding ? "border-white/10 text-slate-400" : "border-slate-200 text-slate-600"}`}
+              className={`border-b px-4 py-3 text-xs font-bold ${isLanding ? "border-white/10 text-slate-400" : "border-slate-200 text-slate-600 dark:border-white/10 dark:text-slate-400"}`}
             >
               {roleLabel(role, hasToken)}
             </div>
@@ -256,8 +261,8 @@ export function UniversalNav() {
                             ? "bg-veto-gold/20 text-veto-gold"
                             : "text-white/90 hover:bg-white/10"
                           : active
-                            ? "bg-[#C5A059]/15 text-[#8a6d35]"
-                            : "text-slate-800 hover:bg-slate-100"
+                            ? "bg-[#C5A059]/15 text-[#8a6d35] dark:bg-veto-gold/15 dark:text-veto-gold"
+                            : "text-slate-800 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-white/5"
                       }`}
                     >
                       <Icon className={`h-5 w-5 ${isLanding && !active ? "text-veto-gold/90" : ""}`} aria-hidden />
@@ -268,7 +273,7 @@ export function UniversalNav() {
               })}
             </ul>
 
-            <div className={`border-t p-3 ${isLanding ? "border-white/10" : "border-slate-200"}`}>
+            <div className={`border-t p-3 ${isLanding ? "border-white/10" : "border-slate-200 dark:border-white/10"}`}>
               {hasToken ? (
                 <button
                   type="button"
@@ -276,7 +281,7 @@ export function UniversalNav() {
                   className={
                     isLanding
                       ? "flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-sm font-bold text-red-400 transition hover:bg-red-500/10"
-                      : "flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-sm font-bold text-red-700 transition hover:bg-red-50"
+                      : "flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-sm font-bold text-red-700 transition hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/40"
                   }
                 >
                   <LogOut className="h-5 w-5" aria-hidden />
@@ -289,7 +294,7 @@ export function UniversalNav() {
                   className={
                     isLanding
                       ? "flex items-center gap-3 rounded-2xl px-3 py-3 text-sm font-bold text-white/90 transition hover:bg-white/10"
-                      : "flex items-center gap-3 rounded-2xl px-3 py-3 text-sm font-bold text-slate-800 transition hover:bg-slate-100"
+                      : "flex items-center gap-3 rounded-2xl px-3 py-3 text-sm font-bold text-slate-800 transition hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-white/5"
                   }
                 >
                   <UserPlus

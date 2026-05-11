@@ -5,6 +5,9 @@ import {
   btnPrimaryGold,
   btnSecondaryGlass,
   glassInput,
+  glassPanelNested,
+  modalBackdrop,
+  focusRing,
 } from "@/lib/vetoGlass";
 import { useTranslation } from "@/lib/i18n/LocaleProvider";
 
@@ -49,7 +52,7 @@ export function CreateEventModal({ open, onClose, onSubmit }: Props) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/40 p-0 backdrop-blur-sm sm:items-center sm:p-4"
+      className={`fixed inset-0 z-50 flex items-end justify-center p-0 sm:items-center sm:p-4 ${modalBackdrop}`}
       role="dialog"
       aria-modal="true"
       aria-labelledby="create-event-title"
@@ -62,12 +65,12 @@ export function CreateEventModal({ open, onClose, onSubmit }: Props) {
       />
 
       <div
-        className="relative z-10 w-full max-w-md rounded-t-3xl border border-white/10 bg-white/[0.05] p-6 shadow-2xl shadow-slate-900/20 backdrop-blur-xl sm:rounded-3xl"
+        className={`relative z-10 w-full max-w-md rounded-t-3xl p-6 shadow-2xl sm:rounded-3xl ${glassPanelNested}`}
       >
         <div className="mb-4 flex items-start justify-between gap-3">
           <h2
             id="create-event-title"
-            className="font-frank text-lg font-bold tracking-tight text-slate-100"
+            className="font-frank text-lg font-bold tracking-tight text-slate-900 dark:text-slate-50"
           >
             {t("calendar.modalTitle")}
           </h2>
@@ -75,7 +78,7 @@ export function CreateEventModal({ open, onClose, onSubmit }: Props) {
             type="button"
             onClick={handleClose}
             disabled={submitting}
-            className="rounded-lg p-1 text-slate-400 transition hover:bg-white/[0.04] hover:text-slate-100 disabled:opacity-50"
+            className={`rounded-lg p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 disabled:opacity-50 dark:text-slate-400 dark:hover:bg-white/10 dark:hover:text-slate-100 ${focusRing}`}
             aria-label={t("common.close")}
           >
             <svg
@@ -119,7 +122,7 @@ export function CreateEventModal({ open, onClose, onSubmit }: Props) {
           }}
         >
           <div>
-            <label className="mb-1 block text-xs font-medium text-slate-400">
+            <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400">
               {t("calendar.fieldTitle")}
             </label>
             <input
@@ -132,7 +135,7 @@ export function CreateEventModal({ open, onClose, onSubmit }: Props) {
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="mb-1 block text-xs font-medium text-slate-400">
+              <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400">
                 {t("calendar.fieldDate")}
               </label>
               <input
@@ -143,7 +146,7 @@ export function CreateEventModal({ open, onClose, onSubmit }: Props) {
               />
             </div>
             <div>
-              <label className="mb-1 block text-xs font-medium text-slate-400">
+              <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400">
                 {t("calendar.fieldTime")}
               </label>
               <input
@@ -155,7 +158,7 @@ export function CreateEventModal({ open, onClose, onSubmit }: Props) {
             </div>
           </div>
           <div>
-            <label className="mb-1 block text-xs font-medium text-slate-400">
+            <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400">
               {t("calendar.fieldNotes")}
             </label>
             <textarea
@@ -168,7 +171,7 @@ export function CreateEventModal({ open, onClose, onSubmit }: Props) {
           </div>
 
           {error && (
-            <p className="text-sm text-red-300" role="alert">
+            <p className="text-sm text-red-600 dark:text-red-300" role="alert">
               {error}
             </p>
           )}

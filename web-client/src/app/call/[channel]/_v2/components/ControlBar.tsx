@@ -219,7 +219,7 @@ function CtrlBtn({
       disabled={disabled}
       aria-pressed={active}
       title={title ?? (shortcut ? `${label} (${shortcut})` : label)}
-      className={`min-h-[40px] whitespace-nowrap rounded-full px-3 py-2 text-xs font-semibold transition focus-visible:ring-2 focus-visible:ring-[#C5A059] disabled:cursor-not-allowed disabled:opacity-50 ${
+      className={`min-h-[44px] whitespace-nowrap rounded-full px-3 py-2 text-xs font-semibold transition focus-visible:ring-2 focus-visible:ring-[#C5A059] disabled:cursor-not-allowed disabled:opacity-50 ${
         active ? activeClass : "bg-white/12 text-white hover:bg-white/18"
       }`}
     >

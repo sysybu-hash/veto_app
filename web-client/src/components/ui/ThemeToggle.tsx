@@ -21,11 +21,16 @@ const STORAGE_KEY = "veto:theme";
 
 function subscribeStorage(cb: () => void) {
   if (typeof window === "undefined") return () => {};
-  const handler = (e: StorageEvent) => {
+  const onStorage = (e: StorageEvent) => {
     if (e.key === STORAGE_KEY) cb();
   };
-  window.addEventListener("storage", handler);
-  return () => window.removeEventListener("storage", handler);
+  const onThemeChange = () => cb();
+  window.addEventListener("storage", onStorage);
+  window.addEventListener("veto-theme-change", onThemeChange);
+  return () => {
+    window.removeEventListener("storage", onStorage);
+    window.removeEventListener("veto-theme-change", onThemeChange);
+  };
 }
 
 function readTheme(): Theme {
@@ -90,7 +95,7 @@ export function ThemeToggle({
       onClick={toggle}
       aria-label={label}
       title={label}
-      className={`inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-300/70 bg-white/80 text-slate-900 shadow-sm transition hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-veto-gold/60 ${className}`}
+      className={`inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-300/70 bg-white/80 text-slate-900 shadow-sm transition hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-veto-gold/60 dark:border-white/20 dark:bg-white/10 dark:text-white dark:hover:bg-white/15 ${className}`}
     >
       {isDark ? (
         // Sun icon — currently dark, click to go light
