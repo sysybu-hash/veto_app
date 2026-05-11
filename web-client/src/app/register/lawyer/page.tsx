@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { apiUrl, isApiOriginConfigured, tunnelBypassHeaders } from "@/lib/env";
 import { normalizePhoneForVeto } from "@/lib/phone";
+import { VetoBrandLogo } from "@/components/brand/VetoBrandLogo";
 import { glassInput, glassPanelNested } from "@/lib/vetoGlass";
 
 const SPECIALIZATIONS = [
@@ -85,10 +86,10 @@ export default function LawyerRegisterPage() {
           </div>
         ) : null}
 
-        <p className="text-xs font-bold tracking-[0.25em] text-[#C5A059]">
-          VETO LAWYERS
-        </p>
-        <h1 className="mt-2 font-frank text-3xl font-black text-slate-100">
+        <div className="mb-3 flex justify-start">
+          <VetoBrandLogo className="h-9 w-auto sm:h-10" />
+        </div>
+        <h1 className="font-frank text-3xl font-black text-slate-100">
           הצטרפות עורכי דין
         </h1>
         <p className="mt-2 text-sm leading-6 text-slate-400">

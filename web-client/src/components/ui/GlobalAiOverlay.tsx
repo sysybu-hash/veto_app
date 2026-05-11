@@ -548,7 +548,7 @@ export function GlobalAiOverlay() {
             whileHover={{ scale: 1.08 }}
             whileTap={{ scale: 0.92 }}
             onClick={handleToggleChat}
-            className="pointer-events-auto fixed bottom-32 start-8 flex h-16 w-16 items-center justify-center rounded-full border-2 border-[#C5A059]/80 bg-white text-[#8a6d35] shadow-[0_10px_34px_-18px_rgba(15,23,42,0.45)] focus:outline-none focus-visible:ring-4 focus-visible:ring-[#C5A059]/35 sm:bottom-8"
+            className="pointer-events-auto fixed bottom-32 end-8 flex h-16 w-16 items-center justify-center rounded-full border-2 border-[#C5A059]/80 bg-white text-[#8a6d35] shadow-[0_10px_34px_-18px_rgba(15,23,42,0.45)] focus:outline-none focus-visible:ring-4 focus-visible:ring-[#C5A059]/35 sm:bottom-8"
             aria-label={t("ai.openAssistant")}
           >
             <motion.span
@@ -616,7 +616,7 @@ export function GlobalAiOverlay() {
                   ? "min(600px, calc(100dvh - 7rem))"
                   : "min(520px, calc(100dvh - 7rem))",
             }}
-            className={`pointer-events-auto fixed bottom-28 flex max-h-[calc(100dvh-6rem)] w-[min(calc(100%-2rem),450px)] max-w-[450px] flex-col overflow-hidden max-sm:inset-x-4 sm:start-8 sm:end-auto ${glassPanel} shadow-2xl`}
+            className={`pointer-events-auto fixed bottom-28 flex max-h-[calc(100dvh-6rem)] w-[min(calc(100%-2rem),450px)] max-w-[450px] flex-col overflow-hidden max-sm:inset-x-4 sm:end-8 sm:start-auto ${glassPanel} shadow-2xl`}
           >
             <header className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-b border-slate-200 bg-white/80 px-3 py-3 backdrop-blur-md sm:gap-3 sm:px-4">
               <div className="flex min-w-0 flex-1 items-center gap-2 sm:flex-initial sm:gap-3">

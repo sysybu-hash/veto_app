@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { VetoBrandLogo } from "@/components/brand/VetoBrandLogo";
 
 export const metadata: Metadata = {
   title: "מדיניות עוגיות",
@@ -9,7 +10,9 @@ export const metadata: Metadata = {
 export default function CookiesPage() {
   return (
     <main className="mx-auto w-full max-w-4xl px-5 py-16 text-right text-slate-100" dir="rtl">
-      <p className="text-sm font-semibold text-[#C5A059]">VETO Legal</p>
+      <div className="flex justify-end">
+        <VetoBrandLogo className="h-9 w-auto sm:h-10" />
+      </div>
       <h1 className="mt-3 font-frank text-4xl font-black">מדיניות עוגיות</h1>
       <div className="mt-8 space-y-6 rounded-2xl border border-white/10 bg-white/[0.04] p-6 leading-8 text-slate-300">
         <section>

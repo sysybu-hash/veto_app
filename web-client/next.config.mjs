@@ -1,8 +1,38 @@
 import { dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+import withBundleAnalyzerFactory from "@next/bundle-analyzer";
+import withPWAInit from "@ducanh2912/next-pwa";
 
 /** שורש `web-client` — מונע בחירת שורש שגוי כשיש כמה lockfiles (ראה Turbopack). */
 const webClientRoot = dirname(fileURLToPath(import.meta.url));
+
+const withPWA = withPWAInit({
+  dest: "public",
+  /** מיזוג לוגיקת Web Push לתוך ה-SW שנוצר ב-`/sw.js` */
+  customWorkerSrc: "worker",
+  disable: process.env.NODE_ENV === "development",
+  cacheOnFrontEndNav: true,
+  aggressiveFrontEndNavCaching: true,
+  reloadOnOnline: true,
+  /** דף App Router — `src/app/~offline/page.tsx` */
+  fallbacks: {
+    document: "/~offline",
+  },
+  workboxOptions: {
+    disableDevLogs: true,
+  },
+});
+
+/**
+ * Bundle analyzer wrapper — `npm run analyze` sets `ANALYZE=true` and the
+ * resulting client/server reports land in `.next/analyze/`. Useful for
+ * Phase 4 verification that `agora-rtc-sdk-ng` and the AI Denoiser /
+ * Virtual Background extensions live in the `/call/*` chunk only.
+ */
+const withBundleAnalyzer = withBundleAnalyzerFactory({
+  enabled: process.env.ANALYZE === "true",
+  openAnalyzer: false,
+});
 
 // path: web-client/next.config.mjs
 /** @type {import('next').NextConfig} */
@@ -36,7 +66,7 @@ const nextConfig = {
   async headers() {
     return [
       {
-        source: "/custom-sw.js",
+        source: "/sw.js",
         headers: [
           { key: "Content-Type", value: "application/javascript; charset=utf-8" },
           { key: "Cache-Control", value: "no-cache, no-store, must-revalidate" },
@@ -59,4 +89,5 @@ const nextConfig = {
     ];
   },
 };
-export default nextConfig;
+
+export default withBundleAnalyzer(withPWA(nextConfig));

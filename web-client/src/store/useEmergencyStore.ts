@@ -9,6 +9,8 @@ export type SessionReadyState = {
   uid: number;
   callType: SessionCallType;
   tokenExpiresAt?: number;
+  /** Per-event shared secret for Agora E2EE (from server, same for citizen & lawyer). */
+  e2eeSecret?: string;
 };
 
 type EmergencyState = {

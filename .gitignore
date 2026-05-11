@@ -20,6 +20,13 @@ backend-dev.log
 backend-dev.err.log
 backend-dev*.log
 web-client-dev*.log
+# Catch-all for stray dev/server logs anywhere in the repo
+*.log
+!**/CHANGELOG*
+# Build artifacts
+*.tsbuildinfo
+web-client/.next/
+web-client/out/
 
 # Flutter
 frontend/.dart_tool/

@@ -1,5 +1,6 @@
 "use client";
 
+import { VetoBrandLogo } from "@/components/brand/VetoBrandLogo";
 import { useTranslation } from "@/lib/i18n/LocaleProvider";
 import { glassPanel } from "@/lib/vetoGlass";
 
@@ -14,9 +15,10 @@ export default function RootLoading() {
       dir={locale === "he" ? "rtl" : "ltr"}
     >
       <div className="w-full max-w-sm space-y-4 text-center">
-        <p className="font-frank text-lg font-black tracking-tight text-slate-100">
-          {t("loadingPage.brand")}
-        </p>
+        <div className="flex justify-center">
+          <VetoBrandLogo className="mx-auto h-10 w-auto sm:h-11" />
+        </div>
+        <p className="sr-only">{t("loadingPage.brand")}</p>
         <div
           className={`flex flex-col gap-4 p-6 shadow-lg shadow-slate-900/10 ${glassPanel}`}
         >

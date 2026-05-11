@@ -1,7 +1,7 @@
 const express = require('express');
 const { protect, authorize } = require('../middleware/auth.middleware');
 const {
-  getAdminSettings, updateFixedOtpSetting, getAdminStats,
+  getAdminSettings, updateFixedOtpSetting, getDashboardStats,
   updateEuComplianceMode,
   getAllUsers, createUser, updateUser, deleteUser,
   getAllLawyers, createLawyer, updateLawyer, deleteLawyer,
@@ -38,7 +38,7 @@ router.get('/users-with-status', getAllUsersWithStatus);
 // Subscriptions endpoint — returns all users with sub status (for SubscriptionAdminScreen)
 router.get('/subscriptions', getAllUsersWithStatus);
 
-// Dashboard KPI stats
-router.get('/stats', getAdminStats);
+// Dashboard KPI stats + live emergency events (Mission 8 command center)
+router.get('/stats', getDashboardStats);
 
 module.exports = router;

@@ -1,13 +1,43 @@
 @import "tailwindcss";
 
+/*
+ * VETO design tokens (Phase 5)
+ * ---------------------------------------------------------------
+ * Single source of truth for the brand palette. Anything inline
+ * (`bg-[#C5A059]`, `rgba(197, 160, 89, ...)`) should migrate to
+ * one of the utility classes below over time:
+ *
+ *   text-veto-gold / bg-veto-gold / border-veto-gold     →  #C5A059
+ *   text-veto-gold-light / bg-veto-gold-light            →  #d4b06a (hover)
+ *   text-veto-gold-dark                                   →  #9b7430 (gradient cap)
+ *   bg-veto-ink / text-veto-ink                          →  #0f172a (slate-950 alias)
+ *   bg-veto-canvas                                        →  #eef1f5 (page bg)
+ *
+ * Tokens are defined in `@theme` so Tailwind v4 generates the
+ * `bg-*`, `text-*`, `border-*`, `ring-*`, `divide-*`, `from-*`,
+ * `to-*`, `via-*`, `outline-*` and `shadow-*` variants for free.
+ */
 :root {
   --background: #eef1f5;
   --foreground: #0f172a;
+
+  --veto-gold: #c5a059;
+  --veto-gold-light: #d4b06a;
+  --veto-gold-dark: #9b7430;
+  --veto-gold-deep: #6f5528;
+  --veto-ink: #0f172a;
+  --veto-canvas: #eef1f5;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-veto-gold: var(--veto-gold);
+  --color-veto-gold-light: var(--veto-gold-light);
+  --color-veto-gold-dark: var(--veto-gold-dark);
+  --color-veto-gold-deep: var(--veto-gold-deep);
+  --color-veto-ink: var(--veto-ink);
+  --color-veto-canvas: var(--veto-canvas);
   --font-sans: var(--font-heebo), ui-sans-serif, system-ui, sans-serif;
   --font-mono: ui-monospace, monospace;
 }
@@ -76,6 +106,117 @@
 .veto-light ::placeholder {
   color: #64748b;
   opacity: 1;
+}
+
+/*
+ * Admin console under `.veto-light`: undo broad slate/text/border overrides
+ * so the dark control room stays readable (see `.veto-light` rules above).
+ */
+.veto-light .veto-admin-keep-dark [class*="text-slate-100"] {
+  color: #f1f5f9;
+}
+.veto-light .veto-admin-keep-dark [class*="text-slate-200"] {
+  color: #e2e8f0;
+}
+.veto-light .veto-admin-keep-dark [class*="text-slate-300"] {
+  color: #cbd5e1;
+}
+.veto-light .veto-admin-keep-dark [class*="text-slate-400"] {
+  color: #94a3b8;
+}
+.veto-light .veto-admin-keep-dark [class*="text-slate-500"] {
+  color: #64748b;
+}
+
+.veto-light .veto-admin-keep-dark [class*="border-white/"] {
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+/*
+ * Dark mode (Phase 5)
+ * --------------------
+ * The component class names already encode a dark base
+ * (slate-900, white/15, etc.) — `.veto-light` overrides them
+ * to a light palette. `.veto-dark` is a thin reset that keeps
+ * the page background dark and adjusts the global gradient so
+ * the readable canvas is restored when light overrides aren't
+ * applied. Add `.veto-dark` on <body> via the ThemeProvider
+ * to opt back into the original dark theme.
+ */
+.veto-dark {
+  background-color: #0f172a;
+  color: #e2e8f0;
+}
+
+.veto-dark .veto-bg-glow {
+  opacity: 0.5;
+  background:
+    radial-gradient(ellipse 70% 38% at 50% -10%, rgba(197, 160, 89, 0.18), transparent 65%),
+    radial-gradient(ellipse 52% 34% at 88% 92%, rgba(197, 160, 89, 0.14), transparent 62%);
+}
+
+.veto-dark .veto-bg-grid {
+  opacity: 0.18;
+  background-image:
+    linear-gradient(rgba(148, 163, 184, 0.18) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(148, 163, 184, 0.18) 1px, transparent 1px);
+}
+
+/* Tone down the always-light page underlay when in dark mode so the
+ * dark theme actually shows through. */
+.veto-dark .veto-page-underlay {
+  background-color: #0f172a !important;
+}
+
+/*
+ * View Transitions API (Phase 5)
+ * --------------------------------
+ * Smooth crossfade between routes when navigated through
+ * `useViewTransitionRouter()` from `@/lib/viewTransitions`.
+ * Browsers without View Transitions ignore this entirely.
+ *
+ * The call surface (.veto-call-keep-dark) opts out so that
+ * starting / leaving a video call doesn't get a jarring fade
+ * over the live remote video.
+ */
+@view-transition {
+  navigation: auto;
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 220ms;
+  animation-timing-function: cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+::view-transition-old(root) {
+  animation-name: veto-vt-fade-out;
+}
+
+::view-transition-new(root) {
+  animation-name: veto-vt-fade-in;
+}
+
+@keyframes veto-vt-fade-out {
+  to {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
+@keyframes veto-vt-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation-duration: 1ms;
+    animation-name: none;
+  }
 }
 
 @keyframes sos-pulse {

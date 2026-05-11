@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState, useSyncExternalStore } from "react";
+import { VetoBrandLogo } from "@/components/brand/VetoBrandLogo";
 
 const STORAGE_KEY = "veto_cookie_consent_v1";
 const CHANGE_EVENT = "veto-cookie-consent-change";
@@ -59,6 +60,9 @@ export function CookieConsent() {
     >
       <div className="grid gap-4 md:grid-cols-[1fr_auto] md:items-start">
         <div>
+          <div className="mb-2 flex justify-start">
+            <VetoBrandLogo className="h-7 w-auto max-w-[180px]" />
+          </div>
           <h2 className="text-base font-bold">העדפות פרטיות</h2>
           <p className="mt-1 text-sm leading-6 text-slate-600">
             אנחנו משתמשים בעוגיות חיוניות להפעלת VETO. עוגיות מדידה או שיווק יופעלו רק לאחר אישור מפורש.

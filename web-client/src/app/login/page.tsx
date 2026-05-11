@@ -13,12 +13,15 @@ import {
 import { useTranslation } from "@/lib/i18n/LocaleProvider";
 import { normalizePhoneForVeto } from "@/lib/phone";
 import { loginWithPasskey, passkeysSupported } from "@/api/passkeyApi";
+import { OtpInput } from "@/components/auth/OtpInput";
 import {
+  authBtnPasskey,
+  authBtnSecondary,
+  authGlassInput,
+  authGlassPanel,
   btnPrimaryDark,
-  btnSecondaryGlass,
-  glassInput,
-  glassPanelNested,
 } from "@/lib/vetoGlass";
+import { Fingerprint } from "lucide-react";
 
 type LoginRole = "admin" | "citizen" | "lawyer";
 
@@ -171,6 +174,8 @@ function LoginPageInner() {
   const [adminLoginOpen, setAdminLoginOpen] = useState(false);
   const [autoOtpPhone, setAutoOtpPhone] = useState<string | null>(null);
   const autoOtpConsumedRef = useRef<string | null>(null);
+  const [resendCooldown, setResendCooldown] = useState(0);
+  const [allowOtpResend, setAllowOtpResend] = useState(false);
 
   const googleClientId =
     process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID?.trim() ?? "";
@@ -213,6 +218,14 @@ function LoginPageInner() {
       }
     });
   }, [searchParams, t]);
+
+  useEffect(() => {
+    if (resendCooldown <= 0) return;
+    const tmr = window.setInterval(() => {
+      setResendCooldown((s) => Math.max(0, s - 1));
+    }, 1000);
+    return () => window.clearInterval(tmr);
+  }, [resendCooldown]);
 
   const completeGoogleLogin = useCallback(
     async (accessToken: string) => {
@@ -337,7 +350,7 @@ function LoginPageInner() {
       const data = await loginWithPasskey(normalizedPhone);
       await prepareLoginSession(data.token);
       setSocketAuthToken(data.token);
-      routeByRole(router, data.role);
+      routeAfterAuth(router, data as Record<string, unknown>);
     } catch (e) {
       setMessage(e instanceof Error ? e.message : "לא ניתן להיכנס עם Passkey כרגע.");
     } finally {
@@ -359,6 +372,8 @@ function LoginPageInner() {
       const data = await postJson("/api/auth/request-otp", {
         phone: normalizedPhone,
       });
+      setAllowOtpResend(true);
+      setResendCooldown(60);
       const returned = pickOtpFromResponse(data);
       if (returned) {
         setDevOtp(returned);
@@ -394,9 +409,10 @@ function LoginPageInner() {
     setBusy(true);
     setMessage(null);
     try {
+      const code = otp.replace(/\D/g, "").slice(0, 6);
       const data = await postJson("/api/auth/verify-otp", {
         phone: normalizedPhone,
-        otp,
+        otp: code,
       });
       const token = typeof data.token === "string" ? data.token : null;
       if (!token) throw new Error("No token in response");
@@ -483,13 +499,14 @@ function LoginPageInner() {
   };
 
   const canRequestOtp = !busy;
-  const canVerifyOtp = !!otp.trim() && !busy;
+  const otpDigits = otp.replace(/\D/g, "");
+  const canVerifyOtp = otpDigits.length === 6 && !busy;
 
   return (
     <>
-      <div className="flex min-h-screen w-full items-center justify-center px-4 py-12 md:px-6 md:py-16">
+      <div className="flex min-h-screen w-full items-center justify-center bg-veto-ink px-4 py-12 md:px-6 md:py-16">
       <main
-        className={`w-full max-w-md p-6 shadow-[0_24px_64px_rgba(15,23,42,0.15)] backdrop-blur-2xl md:p-8 ${glassPanelNested}`}
+        className={`w-full max-w-md p-6 md:p-8 ${authGlassPanel}`}
         dir={locale === "he" ? "rtl" : "ltr"}
       >
         <div className="text-center">
@@ -520,7 +537,7 @@ function LoginPageInner() {
             type="button"
             onClick={handleGoogle}
             disabled={busy}
-            className={`flex w-full items-center justify-center gap-3 px-4 py-3 text-sm font-semibold shadow-sm transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900 disabled:opacity-50 ${btnSecondaryGlass}`}
+            className={`flex w-full items-center justify-center gap-3 px-4 py-3 text-sm font-semibold shadow-sm transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-veto-gold disabled:opacity-50 ${authBtnSecondary}`}
           >
             <svg className="h-5 w-5 shrink-0" viewBox="0 0 24 24" aria-hidden>
               <path
@@ -551,10 +568,38 @@ function LoginPageInner() {
               <div className="w-full border-t border-white/10" />
             </div>
             <div className="relative flex justify-center text-xs font-medium">
-              <span className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-0.5 text-slate-400 backdrop-blur-sm">
+              <span className="rounded-full border border-white/10 bg-white/[0.06] px-3 py-0.5 text-slate-400 backdrop-blur-sm">
                 {t("login.orPhone")}
               </span>
             </div>
+          </div>
+        </div>
+
+        <div className="mt-4">
+          <button
+            type="button"
+            disabled={busy || !phone.trim() || !passkeysSupported()}
+            onClick={() => void handlePasskeyLogin()}
+            className={`flex w-full items-center justify-center gap-3 px-4 py-4 text-base transition disabled:opacity-50 ${authBtnPasskey}`}
+          >
+            <Fingerprint className="h-6 w-6 shrink-0" aria-hidden />
+            כניסה מהירה עם Passkey (טביעת אצבע / פנים)
+          </button>
+          {!passkeysSupported() && (
+            <p className="mt-2 text-center text-xs text-slate-500">
+              הדפדפן אינו תומך ב-Passkeys. השתמשו בקוד SMS.
+            </p>
+          )}
+        </div>
+
+        <div className="relative py-3">
+          <div className="absolute inset-0 flex items-center" aria-hidden>
+            <div className="w-full border-t border-white/10" />
+          </div>
+          <div className="relative flex justify-center text-xs font-medium">
+            <span className="rounded-full border border-white/10 bg-white/[0.06] px-3 py-0.5 text-slate-400 backdrop-blur-sm">
+              או קוד ב-SMS
+            </span>
           </div>
         </div>
 
@@ -569,8 +614,10 @@ function LoginPageInner() {
                 setPhone(e.target.value);
                 setDevOtp(null);
                 setOtpCopied(false);
+                setAllowOtpResend(false);
+                setResendCooldown(0);
               }}
-              className={glassInput}
+              className={authGlassInput}
               placeholder={t("login.phonePlaceholder")}
               autoComplete="tel"
             />
@@ -585,24 +632,14 @@ function LoginPageInner() {
             </p>
           </div>
 
-          <div className="flex flex-wrap gap-2">
-            <button
-              type="button"
-              disabled={!canRequestOtp}
-              onClick={() => void handleOtpLogin()}
-              className={`px-4 py-2.5 text-sm font-semibold shadow-md ${btnPrimaryDark} disabled:opacity-50`}
-            >
-              {t("login.sendOtp")}
-            </button>
-            <button
-              type="button"
-              disabled={busy || !phone.trim() || !passkeysSupported()}
-              onClick={() => void handlePasskeyLogin()}
-              className={`px-4 py-2.5 text-sm font-semibold shadow-md ${btnSecondaryGlass} disabled:opacity-50`}
-            >
-              כניסה עם Passkey
-            </button>
-          </div>
+          <button
+            type="button"
+            disabled={!canRequestOtp}
+            onClick={() => void handleOtpLogin()}
+            className={`w-full px-4 py-3 text-sm font-semibold shadow-md ${btnPrimaryDark} disabled:opacity-50`}
+          >
+            {t("login.sendOtp")}
+          </button>
 
           {devOtp && (
             <div
@@ -615,7 +652,7 @@ function LoginPageInner() {
               </p>
               <div className="mt-3 flex flex-wrap items-center justify-center gap-3">
                 <code
-                  className={`min-w-[8.5rem] px-4 py-2 text-center text-2xl font-bold tracking-[0.35em] text-slate-100 shadow-inner ${glassPanelNested}`}
+                  className="min-w-[8.5rem] rounded-xl border border-white/10 bg-white/[0.06] px-4 py-2 text-center text-2xl font-bold tracking-[0.35em] text-slate-100 shadow-inner backdrop-blur-md"
                   dir="ltr"
                 >
                   {devOtp}
@@ -635,12 +672,15 @@ function LoginPageInner() {
             <label className="text-xs font-medium text-slate-300">
               {t("login.otpLabel")}
             </label>
-            <input
+            <OtpInput
               value={otp}
-              onChange={(e) => setOtp(e.target.value)}
-              className={glassInput}
-              placeholder={t("login.otpPlaceholder")}
-              autoComplete="one-time-code"
+              onChange={setOtp}
+              disabled={busy}
+              resendCooldown={allowOtpResend ? resendCooldown : 0}
+              resendBusy={busy}
+              onResend={
+                allowOtpResend ? () => void handleOtpLogin() : undefined
+              }
             />
             <button
               type="button"
@@ -669,7 +709,7 @@ function LoginPageInner() {
           }}
         >
           <div
-            className={`w-full max-w-sm p-5 md:p-6 ${glassPanelNested}`}
+            className={`w-full max-w-sm p-5 md:p-6 ${authGlassPanel}`}
             dir={locale === "he" ? "rtl" : "ltr"}
             role="dialog"
             aria-modal="true"
@@ -686,7 +726,7 @@ function LoginPageInner() {
               <input
                 value={devUsername}
                 onChange={(e) => setDevUsername(e.target.value)}
-                className={glassInput}
+                className={authGlassInput}
                 autoComplete="username"
               />
             </div>
@@ -697,7 +737,7 @@ function LoginPageInner() {
                 type="password"
                 value={devPassword}
                 onChange={(e) => setDevPassword(e.target.value)}
-                className={glassInput}
+                className={authGlassInput}
                 autoComplete="current-password"
               />
             </div>
@@ -707,7 +747,7 @@ function LoginPageInner() {
               <select
                 value={devRole}
                 onChange={(e) => setDevRole(e.target.value as LoginRole)}
-                className={glassInput}
+                className={authGlassInput}
               >
                 <option value="admin">אדמין</option>
                 <option value="citizen">אזרח</option>
@@ -719,7 +759,7 @@ function LoginPageInner() {
               <button
                 type="button"
                 onClick={() => setAdminLoginOpen(false)}
-                className={`flex-1 px-4 py-2.5 text-sm ${btnSecondaryGlass}`}
+                className={`flex-1 px-4 py-2.5 text-sm ${authBtnSecondary}`}
               >
                 ביטול
               </button>
