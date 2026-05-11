@@ -289,6 +289,11 @@ export const en: Dict = {
         recordStop: "Stop rec",
         recordStart: "Record",
         recordBlocked: "Recording requires consent from both sides.",
+        recordBlockedCitizen: "Approve recording in the banner first.",
+        recordLawyerAria: "Recording status",
+        recordLawyerTitle: "Only the citizen can start or stop cloud recording.",
+        recordLawyerOn: "Recording on",
+        recordLawyerOff: "Not recording",
         chat: "Chat",
       },
       captions: {
@@ -298,12 +303,19 @@ export const en: Dict = {
         title: "Cloud recording consent (GDPR)",
         decline: "Decline",
         accept: "I consent to recording",
-        bothOk: "Both parties consented — recording allowed.",
-        waiting: "Waiting for the other side to consent to recording.",
+        bothOk: "You approved recording — use the Record button below to start or stop.",
+        waiting: "Waiting for the citizen to approve recording.",
+        citizenOk:
+          "You approved recording — use Record below to start or stop when you want.",
+        lawyerRecordingOn:
+          "This call is being recorded. Only the citizen controls recording and saving.",
+        lawyerCitizenConsented:
+          "The citizen has approved recording if they choose to start it. You cannot start or stop recording.",
+        lawyerWaitingCitizen: "Recording is off until the citizen approves and starts it.",
         bodyCitizen:
-          "Recording is encrypted and stored only in your private vault. Both sides must consent before recording starts.",
+          "Recording is encrypted and stored only in your private vault. You approve and control recording; the lawyer only sees a status indicator.",
         bodyLawyer:
-          "Recording is stored only in the citizen's vault. Both sides must consent before recording starts.",
+          "Recordings are stored only in the citizen's vault. They approve and control recording; you only see whether recording is active.",
       },
       summary: {
         title: "Call summary",

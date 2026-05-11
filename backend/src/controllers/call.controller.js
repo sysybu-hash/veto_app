@@ -9,7 +9,23 @@
 // ============================================================
 
 const axios = require('axios');
+const mongoose = require('mongoose');
 const EmergencyEvent = require('../models/EmergencyEvent');
+
+/**
+ * Resolve EmergencyEvent from :eventId URL param (canonical Mongo _id or `room_id` slug).
+ * Prevents false "Event not found" when the client only knows the Agora channel / room_id.
+ * @param {string} [eventIdParam]
+ * @returns {Record<string, unknown>|null}
+ */
+function buildCallEventQuery(eventIdParam) {
+  const raw = String(eventIdParam ?? '').trim();
+  if (!raw) return null;
+  if (mongoose.isValidObjectId(raw)) {
+    return { $or: [{ _id: raw }, { room_id: raw }] };
+  }
+  return { room_id: raw };
+}
 const User = require('../models/User');
 const { cloudinary } = require('../config/cloudinary');
 const { getGeminiModelId } = require('../config/gemini.config');
@@ -54,7 +70,7 @@ exports.issueAgoraToken = async (req, res, next) => {
     const { eventId } = req.params;
     const { userId, role } = req.user;
 
-    const event = await EmergencyEvent.findById(eventId)
+    const event = await EmergencyEvent.findOne(buildCallEventQuery(eventId))
       .select('user_id assigned_lawyer_id room_id status')
       .lean();
     if (!event) return res.status(404).json({ error: 'Event not found' });
@@ -94,7 +110,7 @@ exports.uploadRecording = async (req, res, next) => {
     const { eventId } = req.params;
     const { userId }  = req.user;
 
-    const event = await EmergencyEvent.findById(eventId);
+    const event = await EmergencyEvent.findOne(buildCallEventQuery(eventId));
     if (!event) return res.status(404).json({ error: 'Event not found' });
 
     // Check access: only participants of this event
@@ -126,7 +142,7 @@ exports.uploadRecording = async (req, res, next) => {
     });
 
     // Save recording URL to event
-    await EmergencyEvent.findByIdAndUpdate(eventId, {
+    await EmergencyEvent.findOneAndUpdate(buildCallEventQuery(eventId), {
       recording_url:               uploadResult.secure_url,
       recording_public_id:         uploadResult.public_id || null,
       recording_duration_seconds:  uploadResult.duration != null ? Number(uploadResult.duration) : null,
@@ -157,7 +173,7 @@ exports.transcribeRecording = async (req, res, next) => {
     const { userId }  = req.user;
     const { audioBase64, language, mimeType } = req.body;
 
-    const event = await EmergencyEvent.findById(eventId);
+    const event = await EmergencyEvent.findOne(buildCallEventQuery(eventId));
     if (!event) return res.status(404).json({ error: 'Event not found' });
 
     // Access check
@@ -256,7 +272,7 @@ Rules:
     }
 
     // Save transcript to event
-    await EmergencyEvent.findByIdAndUpdate(eventId, {
+    await EmergencyEvent.findOneAndUpdate(buildCallEventQuery(eventId), {
       call_transcript: transcript,
       transcript_language: language || event.language,
       recording_transcription_status: 'ready',
@@ -281,15 +297,15 @@ Rules:
 
 async function transcribeEventRecording({ eventId, language }) {
   if (!process.env.GEMINI_API_KEY) {
-    await EmergencyEvent.findByIdAndUpdate(eventId, { recording_transcription_status: 'failed' });
+    await EmergencyEvent.findOneAndUpdate(buildCallEventQuery(eventId), { recording_transcription_status: 'failed' });
     return;
   }
-  const event = await EmergencyEvent.findById(eventId);
+  const event = await EmergencyEvent.findOne(buildCallEventQuery(eventId));
   if (!event?.recording_url) {
-    await EmergencyEvent.findByIdAndUpdate(eventId, { recording_transcription_status: 'failed' });
+    await EmergencyEvent.findOneAndUpdate(buildCallEventQuery(eventId), { recording_transcription_status: 'failed' });
     return;
   }
-  await EmergencyEvent.findByIdAndUpdate(eventId, { recording_transcription_status: 'pending' });
+  await EmergencyEvent.findOneAndUpdate(buildCallEventQuery(eventId), { recording_transcription_status: 'pending' });
   try {
     const audioResp = await axios.get(event.recording_url, {
       responseType: 'arraybuffer',
@@ -315,14 +331,14 @@ Rules:
       { text: prompt },
       { inlineData: { mimeType, data: buf.toString('base64') } },
     ]);
-    await EmergencyEvent.findByIdAndUpdate(eventId, {
+    await EmergencyEvent.findOneAndUpdate(buildCallEventQuery(eventId), {
       call_transcript: sanitizeTranscript(result.response.text()),
       transcript_language: language || event.language,
       recording_transcription_status: 'ready',
     });
   } catch (err) {
     console.error('[call] transcription finalize failed', eventId, err);
-    await EmergencyEvent.findByIdAndUpdate(eventId, { recording_transcription_status: 'failed' });
+    await EmergencyEvent.findOneAndUpdate(buildCallEventQuery(eventId), { recording_transcription_status: 'failed' });
   }
 }
 
@@ -330,7 +346,7 @@ Rules:
 exports.finishCallBilling = async (req, res, next) => {
   try {
     const { eventId } = req.params;
-    const event = await EmergencyEvent.findById(eventId);
+    const event = await EmergencyEvent.findOne(buildCallEventQuery(eventId));
     if (!event) return res.status(404).json({ error: 'Event not found' });
     if (!canAccessEvent(event, req.user)) {
       return res.status(403).json({ error: 'Not authorized' });
@@ -386,7 +402,7 @@ exports.finishCallBilling = async (req, res, next) => {
 exports.createActionPlan = async (req, res, next) => {
   try {
     const { eventId } = req.params;
-    const event = await EmergencyEvent.findById(eventId)
+    const event = await EmergencyEvent.findOne(buildCallEventQuery(eventId))
       .select('user_id assigned_lawyer_id status call_type call_duration_seconds recording_url screen_recording_url call_transcript charge_status charge_amount_ils charge_overtime_minutes recording_saved_decision')
       .lean();
     if (!event) return res.status(404).json({ error: 'Event not found' });
@@ -446,7 +462,7 @@ exports.createActionPlan = async (req, res, next) => {
 exports.getCallDetails = async (req, res, next) => {
   try {
     const { eventId } = req.params;
-    const event = await EmergencyEvent.findById(eventId)
+    const event = await EmergencyEvent.findOne(buildCallEventQuery(eventId))
       .select(
         // Original fields…
         'user_id assigned_lawyer_id room_id status call_type call_started_at call_duration_seconds ' +
@@ -521,7 +537,7 @@ exports.listMySosArtifacts = async (req, res, next) => {
 exports.getCloudRecordingStatus = async (req, res, next) => {
   try {
     const { eventId } = req.params;
-    const event = await EmergencyEvent.findById(eventId)
+    const event = await EmergencyEvent.findOne(buildCallEventQuery(eventId))
       .select('user_id assigned_lawyer_id')
       .lean();
     if (!event) return res.status(404).json({ error: 'Event not found' });
@@ -549,7 +565,7 @@ exports.startCloudRecording = async (req, res, next) => {
     const { eventId } = req.params;
     const wantVideo = !!req.body?.wantVideo;
 
-    const event = await EmergencyEvent.findById(eventId)
+    const event = await EmergencyEvent.findOne(buildCallEventQuery(eventId))
       .select('user_id assigned_lawyer_id room_id agora_cloud_recording_sid agora_cloud_recording_resource_id agora_cloud_recording_uid')
       .lean();
     if (!event) return res.status(404).json({ error: 'Event not found' });
@@ -578,7 +594,7 @@ exports.startCloudRecording = async (req, res, next) => {
       wantVideo,
     });
 
-    await EmergencyEvent.findByIdAndUpdate(eventId, {
+    await EmergencyEvent.findOneAndUpdate(buildCallEventQuery(eventId), {
       agora_cloud_recording_resource_id: resourceId,
       agora_cloud_recording_sid: sid,
       agora_cloud_recording_uid: Number(uidStr),
@@ -629,7 +645,7 @@ async function finalizeCloudRecordingToCloudinary({
     );
     uploadStream.end(mp4Buffer);
   });
-  await EmergencyEvent.findByIdAndUpdate(eventId, {
+  await EmergencyEvent.findOneAndUpdate(buildCallEventQuery(eventId), {
     recording_url:               uploadResult.secure_url,
     recording_public_id:         uploadResult.public_id || null,
     recording_duration_seconds:  uploadResult.duration != null ? Number(uploadResult.duration) : null,
@@ -658,7 +674,7 @@ exports.stopCloudRecording = async (req, res, next) => {
     }
     const { eventId } = req.params;
 
-    const event = await EmergencyEvent.findById(eventId);
+    const event = await EmergencyEvent.findOne(buildCallEventQuery(eventId));
     if (!event) return res.status(404).json({ error: 'Event not found' });
 
     if (!canAccessEvent(event, req.user)) {
@@ -723,7 +739,7 @@ exports.stopCloudRecording = async (req, res, next) => {
           .catch(async (err) => {
             console.error('[agora-cloud-recording] finalize failed', ctx.eventId, err);
             try {
-              await EmergencyEvent.findByIdAndUpdate(ctx.eventId, {
+              await EmergencyEvent.findOneAndUpdate(buildCallEventQuery(ctx.eventId), {
                 agora_cloud_recording_resource_id: null,
                 agora_cloud_recording_sid:         null,
                 agora_cloud_recording_uid:         null,
@@ -748,7 +764,7 @@ exports.stopCloudRecording = async (req, res, next) => {
 exports.saveCallArtifacts = async (req, res, next) => {
   try {
     const { eventId } = req.params;
-    const event = await EmergencyEvent.findById(eventId);
+    const event = await EmergencyEvent.findOne(buildCallEventQuery(eventId));
     if (!event) return res.status(404).json({ error: 'Event not found' });
     if (!canAccessEvent(event, req.user)) {
       return res.status(403).json({ error: 'Not authorized' });
@@ -781,7 +797,7 @@ exports.saveCallArtifacts = async (req, res, next) => {
 exports.deleteCallArtifacts = async (req, res, next) => {
   try {
     const { eventId } = req.params;
-    const event = await EmergencyEvent.findById(eventId);
+    const event = await EmergencyEvent.findOne(buildCallEventQuery(eventId));
     if (!event) return res.status(404).json({ error: 'Event not found' });
     if (!canAccessEvent(event, req.user)) {
       return res.status(403).json({ error: 'Not authorized' });
@@ -799,7 +815,7 @@ exports.deleteCallArtifacts = async (req, res, next) => {
     }
     await Promise.allSettled(deletions);
 
-    await EmergencyEvent.findByIdAndUpdate(eventId, {
+    await EmergencyEvent.findOneAndUpdate(buildCallEventQuery(eventId), {
       recording_url: null,
       recording_public_id: null,
       recording_duration_seconds: null,
@@ -821,7 +837,7 @@ exports.deleteCallArtifacts = async (req, res, next) => {
 exports.uploadScreenRecording = async (req, res, next) => {
   try {
     const { eventId } = req.params;
-    const event = await EmergencyEvent.findById(eventId);
+    const event = await EmergencyEvent.findOne(buildCallEventQuery(eventId));
     if (!event) return res.status(404).json({ error: 'Event not found' });
     if (!canAccessEvent(event, req.user)) {
       return res.status(403).json({ error: 'Not authorized' });
@@ -843,7 +859,7 @@ exports.uploadScreenRecording = async (req, res, next) => {
       );
       uploadStream.end(req.file.buffer);
     });
-    await EmergencyEvent.findByIdAndUpdate(eventId, {
+    await EmergencyEvent.findOneAndUpdate(buildCallEventQuery(eventId), {
       screen_recording_url: uploadResult.secure_url,
       screen_recording_public_id: uploadResult.public_id || null,
       recording_saved_decision: 'pending',
@@ -877,7 +893,7 @@ exports.recordConsent = async (req, res, next) => {
   try {
     const { eventId } = req.params;
     const granted = req.body?.granted === true;
-    const event = await EmergencyEvent.findById(eventId);
+    const event = await EmergencyEvent.findOne(buildCallEventQuery(eventId));
     if (!event) return res.status(404).json({ error: 'Event not found' });
     if (!canAccessEvent(event, req.user)) {
       return res.status(403).json({ error: 'Not authorized' });
@@ -886,7 +902,7 @@ exports.recordConsent = async (req, res, next) => {
       return res.status(403).json({ error: 'Only the citizen can consent to recording.' });
     }
 
-    await EmergencyEvent.findByIdAndUpdate(eventId, {
+    await EmergencyEvent.findOneAndUpdate(buildCallEventQuery(eventId), {
       $set: {
         'recording_consent.citizen_at': granted ? new Date() : null,
         // Legacy field — no longer used for gating; clear to avoid confusion.
@@ -894,7 +910,7 @@ exports.recordConsent = async (req, res, next) => {
       },
     });
 
-    const fresh = await EmergencyEvent.findById(eventId)
+    const fresh = await EmergencyEvent.findOne(buildCallEventQuery(eventId))
       .select('recording_consent')
       .lean();
     const citizen = !!fresh?.recording_consent?.citizen_at;
@@ -919,7 +935,7 @@ exports.recordConsent = async (req, res, next) => {
 exports.startRealtimeTranscription = async (req, res, next) => {
   try {
     const { eventId } = req.params;
-    const event = await EmergencyEvent.findById(eventId);
+    const event = await EmergencyEvent.findOne(buildCallEventQuery(eventId));
     if (!event) return res.status(404).json({ error: 'Event not found' });
     if (!canAccessEvent(event, req.user)) {
       return res.status(403).json({ error: 'Not authorized' });
@@ -943,7 +959,7 @@ exports.startRealtimeTranscription = async (req, res, next) => {
       eventIdHex: String(event._id),
     });
     rttBuilderTokens.set(taskId, builderToken);
-    await EmergencyEvent.findByIdAndUpdate(eventId, { agora_rtt_task_id: taskId });
+    await EmergencyEvent.findOneAndUpdate(buildCallEventQuery(eventId), { agora_rtt_task_id: taskId });
 
     res.json({ success: true, taskId, alreadyRunning: false });
   } catch (err) {
@@ -955,7 +971,7 @@ exports.startRealtimeTranscription = async (req, res, next) => {
 exports.stopRealtimeTranscription = async (req, res, next) => {
   try {
     const { eventId } = req.params;
-    const event = await EmergencyEvent.findById(eventId);
+    const event = await EmergencyEvent.findOne(buildCallEventQuery(eventId));
     if (!event) return res.status(404).json({ error: 'Event not found' });
     if (!canAccessEvent(event, req.user)) {
       return res.status(403).json({ error: 'Not authorized' });
@@ -971,7 +987,7 @@ exports.stopRealtimeTranscription = async (req, res, next) => {
       console.warn('[call] rtt stop best-effort:', err.message);
     }
     rttBuilderTokens.delete(taskId);
-    await EmergencyEvent.findByIdAndUpdate(eventId, { agora_rtt_task_id: null });
+    await EmergencyEvent.findOneAndUpdate(buildCallEventQuery(eventId), { agora_rtt_task_id: null });
     res.json({ success: true, stopped: true });
   } catch (err) {
     next(err);
@@ -985,7 +1001,7 @@ exports.stopRealtimeTranscription = async (req, res, next) => {
 exports.getChatHistory = async (req, res, next) => {
   try {
     const { eventId } = req.params;
-    const event = await EmergencyEvent.findById(eventId)
+    const event = await EmergencyEvent.findOne(buildCallEventQuery(eventId))
       .select('user_id assigned_lawyer_id call_chat_messages')
       .lean();
     if (!event) return res.status(404).json({ error: 'Event not found' });
@@ -1011,7 +1027,7 @@ exports.postChatMessage = async (req, res, next) => {
     if (!text) return res.status(400).json({ error: 'text is required' });
     if (text.length > 4000) return res.status(400).json({ error: 'text too long' });
 
-    const event = await EmergencyEvent.findById(eventId);
+    const event = await EmergencyEvent.findOne(buildCallEventQuery(eventId));
     if (!event) return res.status(404).json({ error: 'Event not found' });
     if (!canAccessEvent(event, req.user)) {
       return res.status(403).json({ error: 'Not authorized' });
@@ -1024,7 +1040,7 @@ exports.postChatMessage = async (req, res, next) => {
       text,
       ts: new Date(),
     };
-    await EmergencyEvent.findByIdAndUpdate(eventId, {
+    await EmergencyEvent.findOneAndUpdate(buildCallEventQuery(eventId), {
       $push: { call_chat_messages: message },
     });
 
@@ -1057,7 +1073,7 @@ exports.postChatMessage = async (req, res, next) => {
 exports.shareFileInCall = async (req, res, next) => {
   try {
     const { eventId } = req.params;
-    const event = await EmergencyEvent.findById(eventId);
+    const event = await EmergencyEvent.findOne(buildCallEventQuery(eventId));
     if (!event) return res.status(404).json({ error: 'Event not found' });
     if (!canAccessEvent(event, req.user)) {
       return res.status(403).json({ error: 'Not authorized' });
@@ -1091,7 +1107,7 @@ exports.shareFileInCall = async (req, res, next) => {
       original_name: req.file.originalname || null,
       ts: new Date(),
     };
-    await EmergencyEvent.findByIdAndUpdate(eventId, {
+    await EmergencyEvent.findOneAndUpdate(buildCallEventQuery(eventId), {
       $push: { shared_files: entry },
     });
 

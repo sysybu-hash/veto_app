@@ -10,7 +10,8 @@ const DEFAULT_DEV_API_ORIGIN = "http://localhost:5001";
 export function getPublicApiOrigin(): string {
   const raw = process.env.NEXT_PUBLIC_API_ORIGIN?.trim();
   if (raw) {
-    return raw.replace(/\/$/, "");
+    // Common misconfiguration: `https://host.onrender.com/api` breaks paths like `/api/calls/...`
+    return raw.replace(/\/$/, "").replace(/\/api$/i, "");
   }
   if (process.env.NODE_ENV === "production") {
     return "";

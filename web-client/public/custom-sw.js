@@ -1,11 +1,11 @@
 /* global self */
 // VETO Legal — PWA shell cache + push + notification click handler (scope: site root)
 
-const CACHE_NAME = "veto-pwa-v2";
+const CACHE_NAME = "veto-pwa-v3";
 const APP_SHELL = [
   "/offline.html",
   "/manifest.webmanifest",
-  "/veto-logo.svg",
+  "/veto-logo.svg?v=20260210",
   "/icons/icon-192.png",
   "/icons/icon-512.png",
   "/icons/maskable-192.png",
