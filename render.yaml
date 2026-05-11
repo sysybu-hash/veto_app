@@ -97,10 +97,9 @@ services:
       - key: SENTRY_DSN
         sync: false
 
-      # ── OTP בפיתוח (אין SMS עדיין) ────────────────────────────
-      # אם ב-Dashboard מוגדר RETURN_OTP_IN_JSON=1 בפרודקשן, השרת לא יעלה עד שאחד מהבאים:
-      #   • הסר את RETURN_OTP_IN_JSON כשיש ספק SMS אמיתי, או
-      #   • הוסף ALLOW_OTP_IN_JSON_PRODUCTION=1 (רק לסטייג'ינג / בדיקות — לא לפרודקשן ציבורי)
+      # ── OTP בלי SMS (Render / בדיקות) ─────────────────────────
+      # RETURN_OTP_IN_JSON=1 מחזיר OTP ב-JSON כשאין Twilio — השרת יעלה; יודפס אזהרה בלבד.
+      # אם Twilio מוגדר וגם RETURN_OTP_IN_JSON=1 — חובה ALLOW_OTP_IN_JSON_PRODUCTION=1 או להסיר את RETURN_OTP_IN_JSON.
       # - key: RETURN_OTP_IN_JSON
       #   value: "1"
       # - key: ALLOW_OTP_IN_JSON_PRODUCTION
