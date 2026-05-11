@@ -98,9 +98,12 @@ services:
         sync: false
 
       # ── OTP בפיתוח (אין SMS עדיין) ────────────────────────────
-      # הפעל ב-Dashboard: key=RETURN_OTP_IN_JSON  value=1
-      # הסר או שנה ל-0 כשמחברים ספק SMS אמיתי
+      # אם ב-Dashboard מוגדר RETURN_OTP_IN_JSON=1 בפרודקשן, השרת לא יעלה עד שאחד מהבאים:
+      #   • הסר את RETURN_OTP_IN_JSON כשיש ספק SMS אמיתי, או
+      #   • הוסף ALLOW_OTP_IN_JSON_PRODUCTION=1 (רק לסטייג'ינג / בדיקות — לא לפרודקשן ציבורי)
       # - key: RETURN_OTP_IN_JSON
+      #   value: "1"
+      # - key: ALLOW_OTP_IN_JSON_PRODUCTION
       #   value: "1"
 
   # ────────────────────────────────────────────────────────────
