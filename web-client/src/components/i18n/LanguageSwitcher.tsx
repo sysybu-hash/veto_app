@@ -51,7 +51,7 @@ export function LanguageSwitcher({ className = "" }: { className?: string }) {
         aria-expanded={open}
         aria-haspopup="menu"
         aria-label={t("language.label")}
-        className={`${glassPanelNested} flex min-w-[108px] items-center justify-between gap-2 px-3 py-2 text-xs font-semibold text-slate-200 shadow-lg transition hover:bg-white/[0.05]`}
+        className={`${glassPanelNested} flex min-w-[108px] items-center justify-between gap-2 px-3 py-2 text-xs font-semibold text-slate-900 shadow-lg transition hover:bg-slate-50/90 dark:text-slate-100 dark:hover:bg-white/8`}
       >
         <span className="truncate">{currentLabel}</span>
         <svg
@@ -96,8 +96,8 @@ export function LanguageSwitcher({ className = "" }: { className?: string }) {
                 }}
                 className={
                   active
-                    ? "rounded-2xl bg-[#C5A059] px-3 py-2 text-start text-xs font-black text-black shadow-sm"
-                    : "rounded-2xl px-3 py-2 text-start text-xs font-semibold text-slate-300 transition hover:bg-white/[0.04]"
+                    ? "rounded-2xl bg-[#C5A059] px-3 py-2 text-start text-xs font-black text-black shadow-sm dark:text-slate-950"
+                    : "rounded-2xl px-3 py-2 text-start text-xs font-semibold text-slate-700 transition hover:bg-slate-100/90 dark:text-slate-300 dark:hover:bg-white/6"
                 }
               >
                 {label}

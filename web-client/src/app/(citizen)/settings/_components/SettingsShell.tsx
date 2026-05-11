@@ -63,7 +63,7 @@ function SettingsChrome({
   return (
     <>
       <main
-        className={`mx-auto flex w-full max-w-lg flex-1 flex-col gap-6 px-4 py-8 ${variant === "citizen" ? "pb-40" : "pb-12"}`}
+        className={`mx-auto flex w-full max-w-lg flex-1 flex-col gap-6 px-4 py-8 ${variant === "citizen" ? "pb-[calc(10rem+env(safe-area-inset-bottom))]" : "pb-12"}`}
       >
         {variant === "admin" && (
           <Link
@@ -75,16 +75,16 @@ function SettingsChrome({
         )}
 
         <div>
-          <h1 className="font-frank text-2xl font-bold tracking-tight text-slate-100">
+          <h1 className="font-frank text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-50">
             {tr("settings.title")}
           </h1>
-          <p className="font-heebo mt-1 text-sm text-slate-400">
+          <p className="font-heebo mt-1 text-sm text-slate-600 dark:text-slate-400">
             {tr("settings.shellSubtitle")}
           </p>
         </div>
 
         <nav
-          className="flex flex-wrap gap-2 rounded-2xl border border-white/10 bg-white/[0.03] p-2 backdrop-blur-md"
+          className="flex flex-wrap gap-2 rounded-2xl border border-slate-200 bg-slate-50/90 p-2 backdrop-blur-md dark:border-white/10 dark:bg-white/[0.03]"
           aria-label="Settings sections"
         >
           {TABS.map((tab) => {
@@ -95,8 +95,8 @@ function SettingsChrome({
                 href={`${settingsBase}?tab=${tab.tab}`}
                 className={`rounded-xl px-3 py-2 text-center text-xs font-semibold sm:flex-1 sm:px-4 sm:text-sm ${
                   active
-                    ? "border border-[#C5A059]/50 bg-[#C5A059]/25 text-slate-100 shadow-[0_0_14px_rgba(197,160,89,0.3)]"
-                    : `${btnSecondaryGlass} border-transparent bg-white/[0.03]`
+                    ? "border border-[#C5A059]/50 bg-[#C5A059]/25 text-slate-900 shadow-[0_0_14px_rgba(197,160,89,0.3)] dark:text-slate-50"
+                    : `${btnSecondaryGlass} border-transparent bg-transparent dark:bg-white/[0.03]`
                 }`}
               >
                 {tr(tab.labelKey)}
@@ -106,16 +106,16 @@ function SettingsChrome({
         </nav>
 
         {loading ? (
-          <div className="h-64 animate-pulse rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-md" />
+          <div className="h-64 animate-pulse rounded-2xl border border-slate-200 bg-slate-100/80 backdrop-blur-md dark:border-white/10 dark:bg-white/[0.03]" />
         ) : (
           children
         )}
 
         {!loading && (
-          <div className="mt-2 flex flex-col gap-3 border-t border-white/10 pt-6">
+          <div className="mt-2 flex flex-col gap-3 border-t border-slate-200 pt-6 dark:border-white/10">
             {error && (
               <p
-                className="font-heebo rounded-xl border border-red-500/30 bg-red-500/15 px-3 py-2 text-sm text-red-200 backdrop-blur-md"
+                className="font-heebo rounded-xl border border-red-500/30 bg-red-500/15 px-3 py-2 text-sm text-red-800 backdrop-blur-md dark:text-red-200"
                 role="alert"
               >
                 {error}
@@ -123,7 +123,7 @@ function SettingsChrome({
             )}
 
             {message && (
-              <p className="font-heebo rounded-xl border border-emerald-500/30 bg-emerald-500/15 px-3 py-2 text-sm text-emerald-200 backdrop-blur-md">
+              <p className="font-heebo rounded-xl border border-emerald-500/30 bg-emerald-500/15 px-3 py-2 text-sm text-emerald-900 backdrop-blur-md dark:text-emerald-200">
                 {message}
               </p>
             )}
@@ -142,7 +142,7 @@ function SettingsChrome({
             <button
               type="button"
               onClick={handleLogout}
-              className="font-heebo w-full py-3 text-center text-sm font-semibold text-red-300 transition hover:text-red-200"
+              className="font-heebo min-h-[44px] w-full rounded-lg py-3 text-center text-sm font-semibold text-red-700 transition hover:text-red-800 dark:text-red-300 dark:hover:text-red-200"
             >
               {tr("settings.logout")}
             </button>

@@ -22,9 +22,11 @@ import {
   btnPrimaryDark,
   btnPrimaryGold,
   btnSecondaryGlass,
+  citizenBottomSafe,
   glassInput,
   glassPanel,
   glassPanelNested,
+  modalBackdrop,
 } from "@/lib/vetoGlass";
 
 /** UI contract status — maps to backend `CitizenContract.status`. */
@@ -211,6 +213,15 @@ function CreateContractModal({
     });
   }, [open]);
 
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && !saving) onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open, saving, onClose]);
+
   if (!open) return null;
 
   const save = async () => {
@@ -237,7 +248,7 @@ function CreateContractModal({
 
   return (
     <div
-      className="fixed inset-0 z-[60] flex items-end justify-center bg-slate-900/50 p-4 sm:items-center"
+      className={`fixed inset-0 z-[60] flex items-end justify-center p-4 sm:items-center ${modalBackdrop}`}
       role="presentation"
       onMouseDown={(e) => {
         if (e.target === e.currentTarget && !saving) onClose();
@@ -330,7 +341,7 @@ function CreateContractModal({
             type="button"
             onClick={() => !saving && onClose()}
             disabled={saving}
-            className={`flex-1 py-3 text-sm ${btnSecondaryGlass} disabled:cursor-not-allowed disabled:opacity-50`}
+            className={`flex-1 min-h-[44px] py-3 text-sm ${btnSecondaryGlass} disabled:cursor-not-allowed disabled:opacity-50`}
           >
             {t("common.cancel")}
           </button>
@@ -338,7 +349,7 @@ function CreateContractModal({
             type="button"
             onClick={() => void save()}
             disabled={!title.trim() || !partyName.trim() || saving}
-            className={`flex-1 py-3 text-sm ${btnPrimaryGold} disabled:cursor-not-allowed disabled:opacity-50`}
+            className={`flex-1 min-h-[44px] py-3 text-sm ${btnPrimaryGold} disabled:cursor-not-allowed disabled:opacity-50`}
           >
             {saving ? t("settings.saving") : t("productivity.saveContract")}
           </button>
@@ -356,10 +367,21 @@ function ContractViewModal({
   onClose: () => void;
 }) {
   const { t } = useTranslation();
+
+  useEffect(() => {
+    if (!contract) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [contract, onClose]);
+
   if (!contract) return null;
   return (
     <div
-      className="fixed inset-0 z-[60] flex items-end justify-center bg-slate-900/50 p-4 sm:items-center"
+      className={`fixed inset-0 z-[60] flex items-end justify-center p-4 sm:items-center ${modalBackdrop}`}
+      role="presentation"
       onMouseDown={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
@@ -392,7 +414,7 @@ function ContractViewModal({
         <button
           type="button"
           onClick={onClose}
-          className={`mt-6 w-full py-3 text-sm ${btnPrimaryDark}`}
+          className={`mt-6 w-full min-h-[44px] py-3 text-sm ${btnPrimaryDark}`}
         >
           {t("common.close")}
         </button>
@@ -564,7 +586,7 @@ export default function ProductivityPage() {
   };
 
   return (
-    <div className="mx-auto min-h-0 w-full max-w-4xl flex-1 px-4 pb-28 pt-6 md:px-6">
+    <div className={`mx-auto min-h-0 w-full max-w-4xl flex-1 px-4 pt-6 md:px-6 ${citizenBottomSafe}`}>
       <div className={`overflow-hidden ${glassPanel}`}>
         <div className="border-b border-white/10 bg-white/[0.03] px-4 py-4 backdrop-blur-md sm:flex sm:items-center sm:justify-between sm:px-6">
           <div className="mb-4 sm:mb-0">

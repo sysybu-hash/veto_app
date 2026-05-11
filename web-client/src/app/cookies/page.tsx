@@ -9,32 +9,35 @@ export const metadata: Metadata = {
 
 export default function CookiesPage() {
   return (
-    <main className="mx-auto w-full max-w-4xl px-5 py-16 text-right text-slate-100" dir="rtl">
+    <main
+      className="mx-auto w-full max-w-4xl px-5 py-16 text-right text-slate-900 dark:text-slate-100"
+      dir="rtl"
+    >
       <div className="flex justify-end">
         <VetoBrandLogo className="h-9 w-auto sm:h-10" />
       </div>
       <h1 className="mt-3 font-frank text-4xl font-black">מדיניות עוגיות</h1>
-      <div className="mt-8 space-y-6 rounded-2xl border border-white/10 bg-white/[0.04] p-6 leading-8 text-slate-300">
+      <div className="mt-8 space-y-6 rounded-2xl border border-slate-200 bg-white/90 p-6 leading-8 text-slate-700 shadow-sm dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-300">
         <section>
-          <h2 className="text-xl font-bold text-white">עוגיות חיוניות</h2>
+          <h2 className="text-xl font-bold text-slate-900 dark:text-white">עוגיות חיוניות</h2>
           <p className="mt-2">
             נדרשות להתחברות, אבטחה, שמירת העדפות שפה, תפעול תשלומים והגנה מפני שימוש לרעה. לא ניתן לכבות אותן בלי
             לפגוע בשירות.
           </p>
         </section>
         <section>
-          <h2 className="text-xl font-bold text-white">מדידה ושיפור</h2>
+          <h2 className="text-xl font-bold text-slate-900 dark:text-white">מדידה ושיפור</h2>
           <p className="mt-2">
             יופעלו רק לאחר הסכמה. המטרה היא להבין ביצועים, תקלות וחוויית שימוש בלי למכור מידע אישי.
           </p>
         </section>
         <section>
-          <h2 className="text-xl font-bold text-white">שיווק</h2>
+          <h2 className="text-xl font-bold text-slate-900 dark:text-white">שיווק</h2>
           <p className="mt-2">
             יופעל רק לאחר הסכמה מפורשת, אם וכאשר יתווספו קמפיינים שיווקיים או מדידת המרות.
           </p>
         </section>
-        <p className="text-sm text-slate-400">
+        <p className="text-sm text-slate-600 dark:text-slate-400">
           ניתן לנקות את העדפות העוגיות דרך הגדרות הדפדפן. בהמשך יתווסף מרכז העדפות מלא מתוך החשבון.
         </p>
       </div>

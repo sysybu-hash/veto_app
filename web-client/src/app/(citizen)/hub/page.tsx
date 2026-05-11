@@ -8,7 +8,12 @@ import { fetchProfile, type UserProfile } from "@/api/userApi";
 import { fetchEntitlement, type Entitlement } from "@/api/advancedApi";
 import { CitizenBottomNav } from "@/components/citizen/CitizenBottomNav";
 import { SpecializationDialog } from "@/components/dialogs/SpecializationDialog";
-import { btnPrimaryDark, btnSecondaryGlass, glassPanelNested } from "@/lib/vetoGlass";
+import {
+  btnPrimaryDark,
+  btnSecondaryGlass,
+  citizenBottomSafe,
+  glassPanelNested,
+} from "@/lib/vetoGlass";
 import { getJwt } from "@/lib/authToken";
 import { useTranslation } from "@/lib/i18n/LocaleProvider";
 import { type SpecializationId } from "@/lib/specializations";
@@ -327,26 +332,30 @@ export default function CitizenHubPage() {
 
   return (
     <>
-      <main className="mx-auto flex w-full max-w-lg flex-1 flex-col items-center justify-center gap-8 px-6 py-12 pb-28">
-        <div className="w-full rounded-2xl border border-white/50 bg-white/55 px-5 py-6 text-center shadow-sm backdrop-blur-xl">
-          <h1 className="font-frank text-2xl font-bold text-slate-900">
+      <main
+        className={`mx-auto flex w-full max-w-lg flex-1 flex-col items-center justify-center gap-8 px-6 py-12 ${citizenBottomSafe}`}
+      >
+        <div className="w-full rounded-2xl border border-white/50 bg-white/55 px-5 py-6 text-center shadow-sm backdrop-blur-xl dark:border-white/10 dark:bg-slate-900/75 dark:shadow-none">
+          <h1 className="font-frank text-2xl font-bold text-slate-900 dark:text-slate-50">
             {t("hub.title")}
           </h1>
-          <p className="mt-2 text-sm text-slate-600">{t("hub.subtitle")}</p>
+          <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">{t("hub.subtitle")}</p>
         </div>
 
-        <div className="w-full rounded-2xl border border-[#C5A059]/35 bg-[#C5A059]/10 px-4 py-3 text-sm shadow-sm backdrop-blur-xl">
+        <div className="w-full rounded-2xl border border-[#C5A059]/35 bg-[#C5A059]/10 px-4 py-3 text-sm shadow-sm backdrop-blur-xl dark:border-veto-gold/30 dark:bg-veto-gold/10">
           <div className="flex items-center justify-between gap-3">
             <div className="min-w-0">
-              <p className="font-bold text-slate-900">{t("hub.subscriptionLabel")}</p>
-              <p className="mt-0.5 truncate text-xs text-slate-600">
+              <p className="font-bold text-slate-900 dark:text-slate-50">
+                {t("hub.subscriptionLabel")}
+              </p>
+              <p className="mt-0.5 truncate text-xs text-slate-600 dark:text-slate-300">
                 {profile?.full_name || profile?.phone || t("hub.defaultUserName")}
               </p>
             </div>
             <span className={`shrink-0 rounded-full px-3 py-1 text-xs font-black ${
               profile?.is_payment_exempt || profile?.is_subscribed
-                ? "bg-emerald-100 text-emerald-900"
-                : "bg-amber-100 text-amber-950"
+                ? "bg-emerald-100 text-emerald-900 dark:bg-emerald-950/60 dark:text-emerald-100"
+                : "bg-amber-100 text-amber-950 dark:bg-amber-950/50 dark:text-amber-100"
             }`}>
               {profile?.is_payment_exempt
                 ? t("hub.statusExempt")
@@ -356,7 +365,7 @@ export default function CitizenHubPage() {
             </span>
           </div>
           {entitlement && (
-            <p className="mt-2 text-xs font-semibold text-slate-600">
+            <p className="mt-2 text-xs font-semibold text-slate-600 dark:text-slate-300">
               {entitlement.reason}
             </p>
           )}
@@ -372,13 +381,13 @@ export default function CitizenHubPage() {
         </button>
 
         {isSearching && !lawyerFound && (
-          <p className="text-center text-sm font-medium text-amber-800">
+          <p className="text-center text-sm font-medium text-amber-800 dark:text-amber-200">
             {t("hub.searching")}
           </p>
         )}
 
         {lawyerFound && lawyerName && (
-          <p className="text-center text-sm font-medium text-emerald-800">
+          <p className="text-center text-sm font-medium text-emerald-800 dark:text-emerald-200">
             {t("hub.lawyerAccepted").replace("{name}", lawyerName)}
           </p>
         )}
@@ -386,7 +395,7 @@ export default function CitizenHubPage() {
         {statusMessage && (
           <div
             role="alert"
-            className="w-full rounded-xl border border-red-300/80 bg-red-50/90 px-4 py-3 text-center text-sm text-red-900 backdrop-blur-md"
+            className="w-full rounded-xl border border-red-300/80 bg-red-50/90 px-4 py-3 text-center text-sm text-red-900 backdrop-blur-md dark:border-red-500/40 dark:bg-red-950/40 dark:text-red-100"
           >
             {statusMessage}
             <div className="mt-3">
@@ -434,11 +443,11 @@ export default function CitizenHubPage() {
           >
             <h2
               id="sos-dialog-title"
-              className="font-frank text-lg font-bold text-slate-900"
+              className="font-frank text-lg font-bold text-slate-900 dark:text-slate-50"
             >
               {t("hub.dialogTitle")}
             </h2>
-            <p className="mt-3 text-sm leading-relaxed text-slate-700">
+            <p className="mt-3 text-sm leading-relaxed text-slate-700 dark:text-slate-300">
               {t("hub.dialogBody")}
             </p>
             <div className="mt-6 flex flex-wrap justify-end gap-2">
@@ -482,11 +491,11 @@ export default function CitizenHubPage() {
           >
             <h2
               id="call-type-dialog-title"
-              className="font-frank text-lg font-bold text-slate-900"
+              className="font-frank text-lg font-bold text-slate-900 dark:text-slate-50"
             >
               {t("dialog.chooseCallType")}
             </h2>
-            <p className="mt-2 text-sm text-slate-700">{t("hub.callTypeHint")}</p>
+            <p className="mt-2 text-sm text-slate-700 dark:text-slate-300">{t("hub.callTypeHint")}</p>
 
             <div className="mt-5 grid gap-2">
               <button

@@ -90,7 +90,7 @@ export function OtpInput({
             }}
             onKeyDown={(e) => onKeyDown(i, e)}
             onPaste={i === 0 ? onPaste : undefined}
-            className={`h-12 w-10 text-center text-lg font-bold ${authGlassInput}`}
+            className={`h-12 min-h-[48px] w-11 min-w-[44px] text-center text-lg font-bold ${authGlassInput}`}
             aria-label={`ספרת קוד ${i + 1} מתוך ${OTP_LEN}`}
           />
         ))}
@@ -101,7 +101,7 @@ export function OtpInput({
             type="button"
             disabled={resendCooldown > 0 || resendBusy || disabled}
             onClick={() => void onResend()}
-            className="text-sm font-semibold text-veto-gold underline-offset-2 hover:underline disabled:cursor-not-allowed disabled:opacity-40 disabled:no-underline"
+            className="min-h-[44px] rounded-lg px-2 text-sm font-semibold text-veto-gold underline-offset-2 outline-none hover:underline focus-visible:ring-2 focus-visible:ring-veto-gold/50 disabled:cursor-not-allowed disabled:opacity-40 disabled:no-underline"
           >
             {resendCooldown > 0
               ? `שלח שוב בעוד ${resendCooldown} ש׳`

@@ -40,6 +40,7 @@ import { useTranslation } from "@/lib/i18n/LocaleProvider";
 import {
   btnPrimaryDark,
   btnSecondaryGlass,
+  citizenBottomSafe,
   glassInput,
   glassPanel,
   glassPanelNested,
@@ -554,7 +555,9 @@ export default function ChatPage() {
 
   return (
     <>
-      <main className="mx-auto grid w-full max-w-7xl flex-1 gap-4 px-4 py-5 pb-28 lg:grid-cols-[310px_minmax(0,1fr)_360px]">
+      <main
+        className={`mx-auto grid w-full max-w-7xl flex-1 gap-4 px-4 py-5 lg:grid-cols-[310px_minmax(0,1fr)_360px] ${citizenBottomSafe}`}
+      >
         <section className={`${glassPanel} flex min-h-[260px] flex-col p-4`}>
           <div className="mb-4 flex items-start justify-between gap-3">
             <div>

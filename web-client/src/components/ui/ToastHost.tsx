@@ -6,11 +6,12 @@ import { useToastStore } from "@/store/useToastStore";
 
 const variantStyles: Record<string, string> = {
   success:
-    "border-[#C5A059]/45 bg-[#C5A059]/15 text-slate-950 ring-1 ring-[#C5A059]/30",
-  error: "border-red-300 bg-red-50 text-red-800 ring-1 ring-red-200",
-  info: "border-slate-200 bg-white text-slate-900 ring-1 ring-slate-200",
+    "border-[#C5A059]/45 bg-[#C5A059]/15 text-slate-950 ring-1 ring-[#C5A059]/30 dark:border-veto-gold/40 dark:bg-veto-gold/12 dark:text-slate-50 dark:ring-veto-gold/25",
+  error:
+    "border-red-300 bg-red-50 text-red-800 ring-1 ring-red-200 dark:border-red-500/45 dark:bg-red-950/55 dark:text-red-100 dark:ring-red-500/30",
+  info: "border-slate-200 bg-white text-slate-900 ring-1 ring-slate-200 dark:border-white/12 dark:bg-slate-900/92 dark:text-slate-100 dark:ring-white/10",
   alert:
-    "border-red-300 bg-gradient-to-br from-red-50 to-[#C5A059]/15 text-slate-950 ring-2 ring-red-300 shadow-[0_0_28px_rgba(239,68,68,0.18)]",
+    "border-red-300 bg-gradient-to-br from-red-50 to-[#C5A059]/15 text-slate-950 ring-2 ring-red-300 shadow-[0_0_28px_rgba(239,68,68,0.18)] dark:from-red-950/80 dark:to-veto-gold/10 dark:text-slate-50 dark:ring-red-400/50",
 };
 
 export function ToastHost() {

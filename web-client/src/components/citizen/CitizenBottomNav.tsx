@@ -15,16 +15,16 @@ const linkBase =
   "relative flex min-w-0 flex-1 flex-col items-center gap-0.5 rounded-xl px-0.5 py-2 text-center sm:px-2";
 
 const idle =
-  "border-2 border-transparent text-slate-600 transition hover:bg-slate-100 hover:text-slate-950 sm:border-transparent";
+  "border-2 border-transparent text-slate-600 transition hover:bg-slate-100 hover:text-slate-950 dark:text-slate-400 dark:hover:bg-white/5 dark:hover:text-slate-100 sm:border-transparent";
 
 const activeStyle =
-  "relative border-2 border-[#C5A059] bg-[#C5A059]/16 text-[11px] font-black text-[#8a6d35] shadow-[0_0_18px_rgba(197,160,89,0.22)] sm:text-xs";
+  "relative border-2 border-[#C5A059] bg-[#C5A059]/16 text-[11px] font-black text-[#8a6d35] shadow-[0_0_18px_rgba(197,160,89,0.22)] dark:border-veto-gold/45 dark:bg-veto-gold/15 dark:text-veto-gold dark:shadow-[0_0_18px_rgba(197,160,89,0.12)] sm:text-xs";
 
 export function CitizenBottomNav({ active }: { active: CitizenNavActive }) {
   const { t } = useTranslation();
 
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white/86 px-1 pb-[calc(0.5rem+env(safe-area-inset-bottom))] pt-2 shadow-[0_-16px_40px_-30px_rgba(15,23,42,0.45)] backdrop-blur-xl supports-[backdrop-filter]:bg-white/80 sm:px-3 sm:pb-[calc(0.75rem+env(safe-area-inset-bottom))] sm:pt-3">
+    <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white/86 px-1 pb-[calc(0.5rem+env(safe-area-inset-bottom))] pt-2 shadow-[0_-16px_40px_-30px_rgba(15,23,42,0.45)] backdrop-blur-xl supports-[backdrop-filter]:bg-white/80 dark:border-white/10 dark:bg-slate-950/92 dark:shadow-[0_-16px_48px_-24px_rgba(0,0,0,0.75)] dark:supports-[backdrop-filter]:bg-slate-950/88 sm:px-3 sm:pb-[calc(0.75rem+env(safe-area-inset-bottom))] sm:pt-3">
       <div className="mx-auto flex max-w-lg justify-between gap-0.5 sm:gap-2">
         <Link
           href="/hub"
@@ -33,8 +33,8 @@ export function CitizenBottomNav({ active }: { active: CitizenNavActive }) {
           <svg
             className={`mx-auto h-5 w-5 stroke-[1.75] sm:h-6 sm:w-6 ${
               active === "hub"
-                ? "text-[#8a6d35]"
-                : "text-slate-600"
+                ? "text-[#8a6d35] dark:text-veto-gold"
+                : "text-slate-600 dark:text-slate-400"
             }`}
             fill="none"
             stroke="currentColor"
@@ -59,7 +59,9 @@ export function CitizenBottomNav({ active }: { active: CitizenNavActive }) {
         >
           <svg
             className={`mx-auto h-5 w-5 stroke-[1.75] sm:h-6 sm:w-6 ${
-              active === "chat" ? "text-[#8a6d35]" : "text-slate-600"
+              active === "chat"
+                ? "text-[#8a6d35] dark:text-veto-gold"
+                : "text-slate-600 dark:text-slate-400"
             }`}
             fill="none"
             stroke="currentColor"
@@ -79,7 +81,9 @@ export function CitizenBottomNav({ active }: { active: CitizenNavActive }) {
         >
           <svg
             className={`mx-auto h-5 w-5 stroke-[1.75] sm:h-6 sm:w-6 ${
-              active === "vault" ? "text-[#8a6d35]" : "text-slate-600"
+              active === "vault"
+                ? "text-[#8a6d35] dark:text-veto-gold"
+                : "text-slate-600 dark:text-slate-400"
             }`}
             fill="none"
             stroke="currentColor"
@@ -99,7 +103,9 @@ export function CitizenBottomNav({ active }: { active: CitizenNavActive }) {
         >
           <svg
             className={`mx-auto h-5 w-5 stroke-[1.75] sm:h-6 sm:w-6 ${
-              active === "calendar" ? "text-[#8a6d35]" : "text-slate-600"
+              active === "calendar"
+                ? "text-[#8a6d35] dark:text-veto-gold"
+                : "text-slate-600 dark:text-slate-400"
             }`}
             fill="none"
             stroke="currentColor"
@@ -119,7 +125,9 @@ export function CitizenBottomNav({ active }: { active: CitizenNavActive }) {
         >
           <svg
             className={`mx-auto h-5 w-5 stroke-[1.75] sm:h-6 sm:w-6 ${
-              active === "settings" ? "text-[#8a6d35]" : "text-slate-600"
+              active === "settings"
+                ? "text-[#8a6d35] dark:text-veto-gold"
+                : "text-slate-600 dark:text-slate-400"
             }`}
             fill="none"
             stroke="currentColor"
