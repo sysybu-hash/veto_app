@@ -17,6 +17,7 @@
     "@google/generative-ai": "^0.24.1",
     "@paypal/react-paypal-js": "^9.2.0",
     "@prisma/client": "^6.19.2",
+    "@sentry/nextjs": "^10.52.0",
     "@simplewebauthn/browser": "^13.3.0",
     "ably": "^2.21.0",
     "agora-extension-ai-denoiser": "^1.1.0",

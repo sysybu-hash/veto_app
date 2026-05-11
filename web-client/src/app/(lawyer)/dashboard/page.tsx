@@ -21,7 +21,6 @@ import {
   Wifi,
   WifiOff,
 } from "lucide-react";
-import { VetoBrandLogo } from "@/components/brand/VetoBrandLogo";
 import { fetchProfile, updateLawyerAvailability, type UserProfile } from "@/api/userApi";
 import { fetchLawyerCockpit, type LawyerCockpit } from "@/api/advancedApi";
 import { useTranslation } from "@/lib/i18n/LocaleProvider";
@@ -347,9 +346,6 @@ export default function LawyerDashboardPage() {
       <header className="border-b border-white/40 bg-white/70 shadow-sm backdrop-blur-xl">
         <div className="mx-auto flex max-w-6xl flex-col gap-4 px-4 py-4 md:flex-row md:items-center md:justify-between md:px-8">
           <div>
-            <div className="mb-2 flex justify-start">
-              <VetoBrandLogo className="h-8 w-auto max-w-[min(100%,220px)] sm:h-9" />
-            </div>
             <h1 className="font-frank text-2xl font-black text-slate-950">לוח עורך דין</h1>
             <p className="mt-1 text-sm text-slate-600">
               קריאות, שיחות, כספת, תורים וזמינות במקום אחד.

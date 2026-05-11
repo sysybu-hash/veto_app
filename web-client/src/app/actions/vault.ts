@@ -20,6 +20,8 @@ export type EvidenceDTO = {
   isVerified: boolean;
   digitalSeal: string | null;
   createdAt: string;
+  /** Prisma: e.g. `<mongoEventId>:transcript` for SOS transcripts */
+  sourceEmergencyEventId?: string | null;
 };
 
 function mapJwtRoleToPrisma(role: string | null | undefined): Role {
@@ -68,6 +70,7 @@ export async function listEvidenceForSession(): Promise<EvidenceDTO[]> {
       isVerified: e.isVerified,
       digitalSeal: e.digitalSeal,
       createdAt: e.createdAt.toISOString(),
+      sourceEmergencyEventId: e.sourceEmergencyEventId ?? null,
     }));
   } catch (e) {
     console.error("[vault] listEvidenceForSession:", e);
