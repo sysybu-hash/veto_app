@@ -16,6 +16,7 @@ import { useRouter } from "next/navigation";
 import { useMemo, useRef, useState } from "react";
 import { saveEvidence } from "@/app/actions/vault";
 import { uploadFile } from "@/api/vaultApi";
+import { VetoBrandLogo } from "@/components/brand/VetoBrandLogo";
 import { CitizenBottomNav } from "@/components/citizen/CitizenBottomNav";
 import { btnPrimaryDark, btnPrimaryGold, btnSecondaryGlass, glassInput, glassPanel, glassPanelNested } from "@/lib/vetoGlass";
 import { useToastStore } from "@/store/useToastStore";
@@ -362,9 +363,13 @@ export default function DocumentGeneratorPage() {
               contentEditable
               suppressContentEditableWarning
             >
-              <header className="mb-8 border-b-2 border-slate-900 pb-4">
-                <p className="font-frank text-xl font-black">VETO Legal</p>
-                <p className="mt-1 text-sm text-slate-500">נוצר בתאריך {new Date().toLocaleDateString("he-IL")}</p>
+              <header
+                className="mb-8 border-b-2 border-slate-900 pb-4"
+                contentEditable={false}
+                suppressContentEditableWarning
+              >
+                <VetoBrandLogo className="h-8 w-auto max-w-[200px]" />
+                <p className="mt-3 text-sm text-slate-500">נוצר בתאריך {new Date().toLocaleDateString("he-IL")}</p>
               </header>
               <h2 className="mb-8 text-center font-frank text-3xl font-black underline underline-offset-4">{document.title}</h2>
               <p className="mb-8 whitespace-pre-wrap text-base leading-8">{document.preamble}</p>

@@ -324,7 +324,7 @@ function InfoTab({
       <p className="rounded-xl bg-white/[0.04] p-3 text-[11px] leading-5 text-slate-400">
         {t(
           "call.v2.side.privacyNote",
-          "Audio and video are end-to-end encrypted between you and the lawyer. Recording is opt-in for both sides.",
+          "Audio and video are end-to-end encrypted between you and the lawyer. Cloud recording is controlled and approved only by the citizen; the lawyer sees recording status only.",
         )}
       </p>
     </dl>

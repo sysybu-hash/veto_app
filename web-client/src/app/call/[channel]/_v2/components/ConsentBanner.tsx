@@ -1,37 +1,33 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { useTrWithFallback } from "../lib/trWithFallback";
-import type { ConsentSnapshot } from "../hooks/useCloudRecording";
+import type { ConsentSnapshot, RecordingStatus } from "../hooks/useCloudRecording";
 
 /**
- * GDPR consent strip — appears at the top of the call surface until the
- * current user has given (or refused) consent for cloud recording. The
- * recording control in ControlBar stays disabled until both sides accept.
+ * GDPR / privacy strip for cloud recording.
+ * - Citizen: must explicitly accept or decline; only they can enable recording in the control bar.
+ * - Lawyer: read-only status — they see whether recording is active / whether the citizen has consented,
+ *   but cannot grant consent or start/stop recording from here.
  */
 export function ConsentBanner({
   consent,
-  myConsent,
   onChoose,
   myRole,
+  recordingStatus,
 }: {
   consent: ConsentSnapshot;
-  /** `true` if I've already granted; `false` if denied; `null` = undecided. */
-  myConsent: boolean | null;
   onChoose: (granted: boolean) => void;
   myRole: "user" | "lawyer";
+  recordingStatus: RecordingStatus;
 }) {
   const t = useTrWithFallback();
-  const [collapsed, setCollapsed] = useState(false);
 
-  // Re-show if consent changes server-side after a user already collapsed.
-  useEffect(() => {
-    if (!consent.bothGranted && myConsent === true) {
-      queueMicrotask(() => setCollapsed(true));
-    }
-  }, [consent.bothGranted, myConsent]);
+  const recOn =
+    recordingStatus === "recording" ||
+    recordingStatus === "starting" ||
+    recordingStatus === "stopping";
 
-  if (myConsent !== null && (collapsed || consent.bothGranted)) {
+  if (myRole === "lawyer") {
     return (
       <div
         className="pointer-events-none absolute inset-x-0 top-0 z-30 flex justify-center pt-2"
@@ -39,21 +35,46 @@ export function ConsentBanner({
         aria-live="polite"
       >
         <span
-          className={`pointer-events-auto rounded-full border px-3 py-1 text-[11px] font-semibold backdrop-blur ${
-            consent.bothGranted
-              ? "border-emerald-500/40 bg-emerald-950/60 text-emerald-200"
-              : "border-amber-500/40 bg-amber-950/60 text-amber-200"
+          className={`pointer-events-auto max-w-[min(100%,28rem)] rounded-full border px-3 py-1 text-center text-[11px] font-semibold leading-snug backdrop-blur ${
+            recOn
+              ? "border-red-500/50 bg-red-950/70 text-red-100"
+              : consent.citizen
+                ? "border-slate-500/40 bg-slate-900/75 text-slate-200"
+                : "border-amber-500/40 bg-amber-950/60 text-amber-100"
           }`}
         >
-          {consent.bothGranted
+          {recOn
             ? t(
-                "call.v2.consent.bothOk",
-                "Both parties consented — recording allowed.",
+                "call.v2.consent.lawyerRecordingOn",
+                "This call is being recorded. Only the citizen controls recording and saving.",
               )
-            : t(
-                "call.v2.consent.waiting",
-                "Waiting for the other side to consent to recording.",
-              )}
+            : consent.citizen
+              ? t(
+                  "call.v2.consent.lawyerCitizenConsented",
+                  "The citizen has approved recording if they choose to start it. You cannot start or stop recording.",
+                )
+              : t(
+                  "call.v2.consent.lawyerWaitingCitizen",
+                  "Recording is off until the citizen approves and starts it.",
+                )}
+        </span>
+      </div>
+    );
+  }
+
+  // Citizen: compact reminder once consent is stored server-side
+  if (consent.citizen) {
+    return (
+      <div
+        className="pointer-events-none absolute inset-x-0 top-0 z-30 flex justify-center pt-2"
+        role="status"
+        aria-live="polite"
+      >
+        <span className="pointer-events-auto rounded-full border border-emerald-500/40 bg-emerald-950/60 px-3 py-1 text-[11px] font-semibold text-emerald-200 backdrop-blur">
+          {t(
+            "call.v2.consent.citizenOk",
+            "You approved recording — use Record below to start or stop when you want.",
+          )}
         </span>
       </div>
     );
@@ -69,15 +90,10 @@ export function ConsentBanner({
         {t("call.v2.consent.title", "Cloud recording consent (GDPR)")}
       </p>
       <p className="mt-1 text-xs leading-5 text-slate-300">
-        {myRole === "user"
-          ? t(
-              "call.v2.consent.bodyCitizen",
-              "Recording is encrypted and stored only in your private vault. Both sides must consent before recording starts.",
-            )
-          : t(
-              "call.v2.consent.bodyLawyer",
-              "Recording is stored only in the citizen's vault. Both sides must consent before recording starts.",
-            )}
+        {t(
+          "call.v2.consent.bodyCitizen",
+          "Recording is encrypted and stored only in your private vault. You decide whether to record; the lawyer only sees a status indicator, not your vault.",
+        )}
       </p>
       <div className="mt-3 flex flex-wrap justify-end gap-2">
         <button

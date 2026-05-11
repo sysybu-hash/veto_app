@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { apiUrl, authFetch } from "@/api/apiClient";
 
-type RecordingStatus =
+export type RecordingStatus =
   | "idle"
   | "starting"
   | "recording"
@@ -20,9 +20,9 @@ export type ConsentSnapshot = {
 /**
  * Drives Agora Cloud Recording lifecycle from the v2 call UI.
  *
- *  - You can only start once both peers have logged consent.
- *  - We poll every ~10s while recording so the indicator stays accurate
- *    even if the lawyer started/stopped recording from their end.
+ *  - Only the citizen (event owner) may consent; recording is allowed once
+ *    they grant consent (`bothGranted` in API payloads means citizen-only).
+ *  - We poll every ~10s while recording so the indicator stays accurate.
  */
 export function useCloudRecording(eventId: string | null) {
   const [status, setStatus] = useState<RecordingStatus>("idle");
@@ -52,7 +52,7 @@ export function useCloudRecording(eventId: string | null) {
       const callDoc = data.call ?? {};
       const citizen = !!callDoc.recording_consent?.citizen_at;
       const lawyer = !!callDoc.recording_consent?.lawyer_at;
-      setConsent({ citizen, lawyer, bothGranted: citizen && lawyer });
+      setConsent({ citizen, lawyer, bothGranted: citizen });
       // Derive status from server state — if a resource id exists we're
       // mid-recording; if a recording_url is present we've stopped.
       if (callDoc.agora_cloud_recording_resource_id) {
@@ -95,8 +95,8 @@ export function useCloudRecording(eventId: string | null) {
 
   const start = useCallback(async () => {
     if (!eventId) return;
-    if (!consent.bothGranted) {
-      setError("Both parties must consent before recording starts.");
+    if (!consent.citizen) {
+      setError("Citizen must consent before recording starts.");
       return;
     }
     setStatus("starting");
@@ -116,7 +116,7 @@ export function useCloudRecording(eventId: string | null) {
       setStatus("error");
       setError(err instanceof Error ? err.message : String(err));
     }
-  }, [eventId, consent.bothGranted]);
+  }, [eventId, consent.citizen]);
 
   const stop = useCallback(async () => {
     if (!eventId) return;

@@ -21,6 +21,7 @@ import {
   Wifi,
   WifiOff,
 } from "lucide-react";
+import { VetoBrandLogo } from "@/components/brand/VetoBrandLogo";
 import { fetchProfile, updateLawyerAvailability, type UserProfile } from "@/api/userApi";
 import { fetchLawyerCockpit, type LawyerCockpit } from "@/api/advancedApi";
 import { useTranslation } from "@/lib/i18n/LocaleProvider";
@@ -346,7 +347,9 @@ export default function LawyerDashboardPage() {
       <header className="border-b border-white/40 bg-white/70 shadow-sm backdrop-blur-xl">
         <div className="mx-auto flex max-w-6xl flex-col gap-4 px-4 py-4 md:flex-row md:items-center md:justify-between md:px-8">
           <div>
-            <p className="text-xs font-black uppercase tracking-widest text-blue-600">VETO LEGAL</p>
+            <div className="mb-2 flex justify-start">
+              <VetoBrandLogo className="h-8 w-auto max-w-[min(100%,220px)] sm:h-9" />
+            </div>
             <h1 className="font-frank text-2xl font-black text-slate-950">לוח עורך דין</h1>
             <p className="mt-1 text-sm text-slate-600">
               קריאות, שיחות, כספת, תורים וזמינות במקום אחד.
@@ -389,7 +392,7 @@ export default function LawyerDashboardPage() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-6xl px-4 py-6 md:px-8">
+      <main className="mx-auto max-w-6xl px-3 py-5 sm:px-4 sm:py-6 md:px-8">
         {lastError && (
           <div className="mb-4 rounded-2xl border border-amber-200 bg-amber-50/90 px-4 py-3 text-sm font-semibold text-amber-950" role="alert">
             {lastError}
@@ -399,7 +402,10 @@ export default function LawyerDashboardPage() {
           </div>
         )}
 
-        <nav className={`${glassPanelNested} grid grid-cols-2 gap-2 p-2 md:grid-cols-6`} aria-label={t("lawyerDashboard.navAria")}>
+        <nav
+          className={`${glassPanelNested} grid grid-cols-2 gap-2 p-2 sm:grid-cols-3 md:grid-cols-6`}
+          aria-label={t("lawyerDashboard.navAria")}
+        >
           {tabs.map((tabItem) => {
             const Icon = tabItem.icon;
             const active = activeTab === tabItem.id;
@@ -408,12 +414,14 @@ export default function LawyerDashboardPage() {
                 key={tabItem.id}
                 type="button"
                 onClick={() => setActiveTab(tabItem.id)}
-                className={`flex min-h-14 items-center justify-center gap-2 rounded-xl px-3 py-2 text-sm font-black transition ${
-                  active ? "bg-slate-900 text-white shadow-lg" : "text-slate-700 hover:bg-white/55"
+                className={`flex min-h-14 flex-col items-center justify-center gap-1 rounded-xl border px-2 py-2.5 text-center text-xs font-black transition sm:flex-row sm:gap-2 sm:px-3 sm:text-sm ${
+                  active
+                    ? "border-veto-gold/60 bg-veto-gold/20 text-slate-950 shadow-md ring-1 ring-veto-gold/30"
+                    : "border-slate-200/90 bg-white/80 text-slate-800 hover:border-slate-300 hover:bg-white"
                 }`}
               >
-                <Icon className="h-4 w-4" aria-hidden />
-                {tabItem.label}
+                <Icon className="h-4 w-4 shrink-0" aria-hidden />
+                <span className="leading-tight">{tabItem.label}</span>
               </button>
             );
           })}
@@ -631,6 +639,8 @@ function ChatPanel() {
   );
 }
 
+const LAWYER_HOURS_STORAGE_KEY = "veto-lawyer-schedule-hours";
+
 function SchedulePanel({
   scheduleOpen,
   setScheduleOpen,
@@ -642,6 +652,58 @@ function SchedulePanel({
   autoAccept: boolean;
   setAutoAccept: (value: boolean) => void;
 }) {
+  const [hourOpen, setHourOpen] = useState<boolean[]>(() =>
+    Array.from({ length: 24 }, () => false),
+  );
+  const [hoursHydrated, setHoursHydrated] = useState(false);
+
+  useEffect(() => {
+    queueMicrotask(() => {
+      try {
+        const raw = window.localStorage.getItem(LAWYER_HOURS_STORAGE_KEY);
+        if (raw) {
+          const arr = JSON.parse(raw) as unknown;
+          if (Array.isArray(arr) && arr.length === 24) {
+            setHourOpen(arr.map((x) => Boolean(x)));
+          }
+        }
+      } catch {
+        /* ignore */
+      }
+      setHoursHydrated(true);
+    });
+  }, []);
+
+  useEffect(() => {
+    if (!hoursHydrated || typeof window === "undefined") return;
+    try {
+      window.localStorage.setItem(
+        LAWYER_HOURS_STORAGE_KEY,
+        JSON.stringify(hourOpen),
+      );
+    } catch {
+      /* ignore */
+    }
+  }, [hourOpen, hoursHydrated]);
+
+  const toggleHour = (h: number) => {
+    setHourOpen((prev) => {
+      const next = [...prev];
+      next[h] = !next[h];
+      return next;
+    });
+  };
+
+  const applyPreset = (preset: "business" | "clear") => {
+    if (preset === "clear") {
+      setHourOpen(Array.from({ length: 24 }, () => false));
+      return;
+    }
+    const next = Array.from({ length: 24 }, () => false);
+    for (let h = 9; h <= 17; h += 1) next[h] = true;
+    setHourOpen(next);
+  };
+
   return (
     <section className={`${glassPanel} p-5 md:p-7`}>
       <h2 className="font-frank text-2xl font-black text-slate-950">ניהול תורים</h2>
@@ -650,12 +712,47 @@ function SchedulePanel({
         <ToggleLine title="יומן פתוח להזמנות" body="אזרחים יוכלו לבקש ייעוץ מתוכנן." checked={scheduleOpen} onChange={setScheduleOpen} />
         <ToggleLine title="קבלה מהירה של תיק מתאים" body="המערכת תבליט קריאות שתואמות את ההתמחות." checked={autoAccept} onChange={setAutoAccept} />
       </div>
-      <div className="mt-5 grid gap-3 md:grid-cols-3">
-        {["09:00-12:00", "13:00-16:00", "18:00-21:00"].map((slot) => (
-          <button key={slot} type="button" className={`px-4 py-4 text-sm font-black ${btnSecondaryGlass}`}>
-            {slot}
-          </button>
-        ))}
+
+      <div className="mt-6">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <h3 className="text-sm font-black text-slate-900">שעות זמינות ביממה (00–23)</h3>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => applyPreset("business")}
+              className={`rounded-lg px-3 py-1.5 text-xs font-bold ${btnSecondaryGlass}`}
+            >
+              09:00–17:00
+            </button>
+            <button
+              type="button"
+              onClick={() => applyPreset("clear")}
+              className={`rounded-lg px-3 py-1.5 text-xs font-bold ${btnSecondaryGlass}`}
+            >
+              נקה הכל
+            </button>
+          </div>
+        </div>
+        <p className="mt-1 text-xs text-slate-500">
+          סמנו כל שעה שבה אתם מוכנים לקבוע ייעוץ או להופיע ביומן. השמירה היא מקומית בדפדפן (לפני חיבור לשרת).
+        </p>
+        <div className="mt-3 grid grid-cols-4 gap-2 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-12">
+          {hourOpen.map((on, h) => (
+            <button
+              key={h}
+              type="button"
+              onClick={() => toggleHour(h)}
+              className={`rounded-lg border px-1 py-2 text-center text-[11px] font-black transition sm:text-xs ${
+                on
+                  ? "border-veto-gold/70 bg-veto-gold/25 text-slate-950 shadow-sm"
+                  : "border-slate-200 bg-white/90 text-slate-600 hover:border-slate-300"
+              }`}
+              aria-pressed={on}
+            >
+              {`${String(h).padStart(2, "0")}`}
+            </button>
+          ))}
+        </div>
       </div>
     </section>
   );
