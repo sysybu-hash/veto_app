@@ -168,25 +168,33 @@ app.use(express.json());
 // ── Data Sanitization against NoSQL Injection ─────────────────
 app.use(mongoSanitize());
 
-// ── Production safety: refuse to boot with unsafe OTP exposure ──
-// RETURN_OTP_IN_JSON returns the OTP in the request body so we can
-// run staging tests without a real SMS provider. In production with
-// NODE_ENV=production it must NOT be left on by accident — require
-// a second explicit acknowledgement env var to keep it.
+// ── Production safety: refuse to boot only for the dangerous combo ──
+// RETURN_OTP_IN_JSON puts OTP in API JSON (needed on hosts without Twilio).
+// If Twilio SMS is also configured, returning OTP in JSON is redundant and risky;
+// require ALLOW_OTP_IN_JSON_PRODUCTION=1 in that case. Without Twilio, we only warn.
 (function guardOtpInProduction() {
   const isProd = process.env.NODE_ENV === 'production';
   const otpInJson =
     process.env.RETURN_OTP_IN_JSON === '1' ||
     process.env.RETURN_OTP_IN_JSON === 'true';
   const ack = process.env.ALLOW_OTP_IN_JSON_PRODUCTION === '1';
-  if (isProd && otpInJson && !ack) {
+  const twilioSms =
+    Boolean(process.env.TWILIO_ACCOUNT_SID) && Boolean(process.env.TWILIO_AUTH_TOKEN);
+
+  if (isProd && otpInJson && twilioSms && !ack) {
     console.error(
-      '❌ Refusing to boot: RETURN_OTP_IN_JSON is enabled in production. ' +
-      'Either (A) remove RETURN_OTP_IN_JSON from Render when using real SMS, or ' +
-      '(B) set ALLOW_OTP_IN_JSON_PRODUCTION=1 alongside RETURN_OTP_IN_JSON if you ' +
-      'intentionally expose OTP in JSON on this host (e.g. staging only).',
+      '❌ Refusing to boot: RETURN_OTP_IN_JSON is on in production while Twilio SMS is configured. ' +
+      'Remove RETURN_OTP_IN_JSON (recommended) or set ALLOW_OTP_IN_JSON_PRODUCTION=1 if you ' +
+      'really need OTP in JSON alongside SMS.',
     );
     process.exit(1);
+  }
+
+  if (isProd && otpInJson && !twilioSms) {
+    console.warn(
+      '[BOOT] RETURN_OTP_IN_JSON is on without Twilio — OTP is returned in JSON (typical for Render until SMS is wired). ' +
+      'Configure Twilio and unset RETURN_OTP_IN_JSON for public production.',
+    );
   }
 })();
 
