@@ -2,6 +2,7 @@ import { dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import withBundleAnalyzerFactory from "@next/bundle-analyzer";
 import withPWAInit from "@ducanh2912/next-pwa";
+import { withSentryConfig } from "@sentry/nextjs";
 
 /** שורש `web-client` — מונע בחירת שורש שגוי כשיש כמה lockfiles (ראה Turbopack). */
 const webClientRoot = dirname(fileURLToPath(import.meta.url));
@@ -90,4 +91,9 @@ const nextConfig = {
   },
 };
 
-export default withBundleAnalyzer(withPWA(nextConfig));
+/** Sentry: קובצי sentry.*.config.ts בשורש web-client; DSN מ־SENTRY_DSN / NEXT_PUBLIC_SENTRY_DSN */
+export default withSentryConfig(withBundleAnalyzer(withPWA(nextConfig)), {
+  silent: true,
+  widenClientFileUpload: true,
+  hideSourceMaps: true,
+});

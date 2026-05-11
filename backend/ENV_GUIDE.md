@@ -248,7 +248,38 @@
 
 ## 10) Neon
 
-- VETO משתמש ב־**MongoDB (Atlas)**, לא ב־**Neon (Postgres)**. אין מיפוי ישיר ביניהם בלי מיגרציית DB.
+- ה־**backend** על Render משתמש ב־**MongoDB (Atlas)** — לא ב־Postgres.
+- ה־**web-client** (Next.js ב־Vercel) יכול להשתמש ב־**Neon (Postgres)** דרך Prisma (`DATABASE_URL`) לכספת וראיות — זה נפרד מהמונגו של ה־API.
+
+---
+
+## 11) סנכרון משתנים ל־Vercel ול־Render
+
+ה־**Next.js web-client** (Prisma, כספת) קורא **`web-client/.env`** במחשב המקומי; בפרודקשן המשתנים מגיעים מ־**Vercel**. ה־**backend** ב־Render נטען ממשתני הסביבה של השירות בדשבורד.
+
+מומלץ לאגד את כל המפתחות הרלוונטיים ב־**`web-client/.env`** (לא ב־git). הסקריפט `npm run env:sync` קורא כברירת מחדל את **`web-client/.env`** אם הקובץ קיים; אחרת **`veto_legal/.env`** בשורש. אפשר לעקוף עם `ENV_FILE` או `--env-file`.
+
+אם כל הערכים אצלכם בקובץ env אחד (כמו למעלה), אפשר לדחוף לפלטפורמות עם הסקריפט:
+
+1. **מפתחות API (בשליטתכם בלבד, לא ב־git):**
+   - [Vercel → Account → Tokens](https://vercel.com/account/tokens) → `VERCEL_TOKEN`
+   - Vercel → Project → Settings → General → **Project ID** → `VERCEL_PROJECT_ID` (מתחיל ב־`prj_`)
+   - אם הפרויקט תחת צוות: Team Settings → **Team ID** → `VERCEL_TEAM_ID` (אופציונלי)
+   - [Render → Account Settings → API Keys](https://dashboard.render.com/u/settings#api-keys) → `RENDER_API_KEY`
+   - Render → Web Service (ה־API) → Settings → **Service ID** → `RENDER_SERVICE_ID` (מתחיל ב־`srv_`)
+
+2. **בדיקה יבשה (לא שולח ערכים):**
+
+   ```powershell
+   cd C:\Users\User\Desktop\veto_legal
+   $env:VERCEL_TOKEN="..."; $env:VERCEL_PROJECT_ID="prj_..."
+   $env:RENDER_API_KEY="rnd_..."; $env:RENDER_SERVICE_ID="srv-..."
+   npm run env:sync -- --vercel --render --target production --dry-run
+   ```
+
+3. **סנכרון אמיתי:** אותה פקודה **בלי** `--dry-run`. אחרי זה — **Redeploy** ב־Vercel וב־Render (או המתנה לדיפלוי אוטומטי) כדי שהבנייה תקרא את המשתנים החדשים.
+
+רשימת המפתחות שנדחפים מוגדרת ב־[`scripts/env-sync.allowlists.json`](../scripts/env-sync.allowlists.json) — אם הוספתם משתנה חדש בשרת או ב־web, הוסיפו אותו שם.
 
 ---
 

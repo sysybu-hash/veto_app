@@ -64,6 +64,44 @@ function mapEvidenceToEntry(e: EvidenceDTO): VaultFileEntry {
   };
 }
 
+function decodePlainDataUrl(url: string): string | null {
+  if (!url.startsWith("data:text/plain")) return null;
+  const comma = url.indexOf(",");
+  if (comma === -1) return null;
+  try {
+    return decodeURIComponent(url.slice(comma + 1));
+  } catch {
+    return null;
+  }
+}
+
+function findTranscriptEvidence(
+  rows: EvidenceDTO[],
+  item: TimelineItem,
+): EvidenceDTO | undefined {
+  if (item.type !== "sos" || !item.id) return undefined;
+  const want = `${item.id}:transcript`;
+  const byKey = rows.find(
+    (e) => e.category === "sos_transcript" && e.sourceEmergencyEventId === want,
+  );
+  if (byKey) return byKey;
+  const tItem = item.at ? new Date(item.at).getTime() : NaN;
+  if (!Number.isFinite(tItem)) return undefined;
+  let best: EvidenceDTO | undefined;
+  let bestDelta = Infinity;
+  for (const e of rows) {
+    if (e.category !== "sos_transcript") continue;
+    const dt = new Date(e.createdAt).getTime();
+    if (!Number.isFinite(dt)) continue;
+    const d = Math.abs(dt - tItem);
+    if (d < bestDelta) {
+      bestDelta = d;
+      best = e;
+    }
+  }
+  return best && bestDelta < 6 * 60 * 60 * 1000 ? best : undefined;
+}
+
 function FolderIcon({ className }: { className?: string }) {
   return (
     <svg
@@ -173,6 +211,10 @@ export function VaultPageClient({
   const [syncBusy, setSyncBusy] = useState(false);
   const [syncMsg, setSyncMsg] = useState<string | null>(null);
   const [timeline, setTimeline] = useState<TimelineItem[]>([]);
+  const [transcriptViewer, setTranscriptViewer] = useState<{
+    title: string;
+    body: string;
+  } | null>(null);
   const syncOnce = useRef(false);
 
   useEffect(() => {
@@ -194,7 +236,13 @@ export function VaultPageClient({
     let cancelled = false;
     void fetchVaultTimeline()
       .then((items) => {
-        if (!cancelled) setTimeline(items.slice(0, 6));
+        if (!cancelled) {
+          const sorted = [...items].sort(
+            (a, b) =>
+              new Date(b.at || 0).getTime() - new Date(a.at || 0).getTime(),
+          );
+          setTimeline(sorted.slice(0, 48));
+        }
       })
       .catch(() => {
         if (!cancelled) setTimeline([]);
@@ -202,7 +250,7 @@ export function VaultPageClient({
     return () => {
       cancelled = true;
     };
-  }, [evidenceRows.length]);
+  }, [initialEvidence, evidenceRows.length]);
 
   const folderList: FolderBase[] = useMemo(() => {
     const cats = [...new Set(evidenceRows.map((e) => e.category))];
@@ -421,7 +469,12 @@ export function VaultPageClient({
                 </button>
               </div>
               <div className="grid gap-3 md:grid-cols-2">
-                {timeline.map((item) => (
+                {timeline.map((item) => {
+                  const transcriptEv =
+                    item.type === "sos" && item.hasTranscript
+                      ? findTranscriptEvidence(evidenceRows, item)
+                      : undefined;
+                  return (
                   <article key={`${item.type}-${item.id}`} className="rounded-2xl border border-white/10 bg-slate-950/40 p-4">
                     <div className="flex items-start justify-between gap-3">
                       <div>
@@ -440,8 +493,36 @@ export function VaultPageClient({
                       {item.hasTranscript && <span className="rounded-full bg-white/10 px-2 py-1">תמלול</span>}
                       {item.sharedWithLawyer && <span className="rounded-full bg-white/10 px-2 py-1">שותף</span>}
                     </div>
+                    {item.type === "sos" && item.hasTranscript ? (
+                      <div className="mt-3">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (transcriptEv) {
+                              const body =
+                                decodePlainDataUrl(transcriptEv.fileUrl) ??
+                                "לא ניתן לפענח את התמלול.";
+                              setTranscriptViewer({
+                                title: transcriptEv.title,
+                                body,
+                              });
+                            } else {
+                              setTranscriptViewer({
+                                title: item.title,
+                                body:
+                                  "התמלול מסומן בשירות אך עדיין לא הועתק לכספת (Neon). לחצו ״סנכרן SOS״ למעלה או רעננו את הדף בעוד רגע.",
+                              });
+                            }
+                          }}
+                          className={`text-xs font-bold ${btnSecondaryGlass} border-[#C5A059]/35 text-[#e8c987]`}
+                        >
+                          צפייה בתמלול
+                        </button>
+                      </div>
+                    ) : null}
                   </article>
-                ))}
+                  );
+                })}
               </div>
             </section>
           )}
@@ -555,14 +636,31 @@ export function VaultPageClient({
                       · {file.sizeLabel} · {file.updatedAt}
                     </p>
                   </div>
-                  <a
-                    href={evidenceRows.find((e) => e.id === file.id)?.fileUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="shrink-0 rounded-lg px-2 py-1 text-xs font-semibold text-[#e8c987] hover:bg-white/[0.06]"
-                  >
-                    {t("vault.open")}
-                  </a>
+                  {file.folderId === "sos_transcript" ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const ev = evidenceRows.find((e) => e.id === file.id);
+                        if (!ev) return;
+                        const body =
+                          decodePlainDataUrl(ev.fileUrl) ??
+                          "לא ניתן לפענח את התמלול.";
+                        setTranscriptViewer({ title: ev.title, body });
+                      }}
+                      className="shrink-0 rounded-lg px-2 py-1 text-xs font-semibold text-[#e8c987] hover:bg-white/[0.06]"
+                    >
+                      צפייה בתמלול
+                    </button>
+                  ) : (
+                    <a
+                      href={evidenceRows.find((e) => e.id === file.id)?.fileUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="shrink-0 rounded-lg px-2 py-1 text-xs font-semibold text-[#e8c987] hover:bg-white/[0.06]"
+                    >
+                      {t("vault.open")}
+                    </a>
+                  )}
                   <button
                     type="button"
                     disabled={deletingId === file.id}
@@ -587,6 +685,44 @@ export function VaultPageClient({
           refreshVault();
         }}
       />
+
+      {transcriptViewer ? (
+        <div
+          className="fixed inset-0 z-[80] flex items-end justify-center bg-black/70 p-0 backdrop-blur-sm sm:items-center sm:p-6"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="vault-transcript-title"
+        >
+          <button
+            type="button"
+            className="absolute inset-0 cursor-default"
+            aria-label={t("common.close")}
+            onClick={() => setTranscriptViewer(null)}
+          />
+          <div className="relative z-[81] flex max-h-[min(88dvh,720px)] w-full max-w-lg flex-col overflow-hidden rounded-t-2xl border border-white/15 bg-slate-950 shadow-2xl sm:rounded-2xl">
+            <div className="flex items-center justify-between gap-3 border-b border-white/10 px-4 py-3">
+              <h2
+                id="vault-transcript-title"
+                className="min-w-0 truncate font-frank text-base font-bold text-slate-100"
+              >
+                {transcriptViewer.title}
+              </h2>
+              <button
+                type="button"
+                onClick={() => setTranscriptViewer(null)}
+                className={`shrink-0 rounded-lg px-3 py-1.5 text-xs font-bold ${btnSecondaryGlass}`}
+              >
+                {t("common.close")}
+              </button>
+            </div>
+            <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4">
+              <pre className="whitespace-pre-wrap break-words font-sans text-sm leading-relaxed text-slate-200">
+                {transcriptViewer.body}
+              </pre>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       {!adminContext ? <CitizenBottomNav active="vault" /> : null}
     </div>
