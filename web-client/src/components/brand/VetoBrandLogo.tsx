@@ -13,7 +13,7 @@ export function VetoBrandLogo({
   return (
     // eslint-disable-next-line @next/next/no-img-element -- static SVG from /public
     <img
-      src="/veto-logo.svg"
+      src="/veto-logo.svg?v=20260210"
       alt="VETO Legal"
       width={256}
       height={72}
