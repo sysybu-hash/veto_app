@@ -11,6 +11,7 @@
 const axios = require('axios');
 const mongoose = require('mongoose');
 const EmergencyEvent = require('../models/EmergencyEvent');
+const VaultFile = require('../models/VaultFile');
 
 /**
  * Resolve EmergencyEvent from :eventId URL param (canonical Mongo _id or `room_id` slug).
@@ -514,14 +515,15 @@ exports.listMySosArtifacts = async (req, res, next) => {
 
     const items = await EmergencyEvent.find({
       user_id: userId,
-      recording_saved_decision: 'saved',
+      recording_saved_decision: { $in: ['pending', 'saved'] },
       $or: [
         { recording_url: { $exists: true, $nin: [null, ''] } },
+        { screen_recording_url: { $exists: true, $nin: [null, ''] } },
         { call_transcript: { $exists: true, $nin: [null, ''] } },
       ],
     })
       .select(
-        '_id status recording_url call_transcript transcript_language triggered_at completed_at recording_saved_decision recording_transcription_status screen_recording_url',
+        '_id status recording_url screen_recording_url call_transcript transcript_language triggered_at completed_at recording_saved_decision recording_transcription_status recording_size_bytes',
       )
       .sort({ triggered_at: -1 })
       .limit(50)
@@ -761,6 +763,78 @@ exports.stopCloudRecording = async (req, res, next) => {
   }
 };
 
+/**
+ * Mirror call recording / transcript into Mongo VaultFile so /vault and timeline show them
+ * without requiring Postgres (Prisma) on Vercel.
+ */
+async function mirrorCallArtifactsToVaultFiles(eventDoc) {
+  const userId = eventDoc.user_id;
+  const srcEv = eventDoc._id;
+  if (!userId || !srcEv) return;
+
+  const recUrl = eventDoc.recording_url && String(eventDoc.recording_url).trim();
+  if (recUrl) {
+    const exists = await VaultFile.findOne({
+      user_id: userId,
+      sourceEventId: srcEv,
+      url: recUrl,
+    }).lean();
+    if (!exists) {
+      await VaultFile.create({
+        user_id: userId,
+        name: 'VETO · הקלטת שיחה',
+        mimeType: 'video/mp4',
+        url: recUrl,
+        sizeBytes: Number(eventDoc.recording_size_bytes) || 0,
+        lawyerAccess: false,
+        sourceEventId: srcEv,
+      });
+    }
+  }
+
+  const scrUrl = eventDoc.screen_recording_url && String(eventDoc.screen_recording_url).trim();
+  if (scrUrl) {
+    const exists = await VaultFile.findOne({
+      user_id: userId,
+      sourceEventId: srcEv,
+      url: scrUrl,
+    }).lean();
+    if (!exists) {
+      await VaultFile.create({
+        user_id: userId,
+        name: 'VETO · הקלטת מסך',
+        mimeType: 'video/mp4',
+        url: scrUrl,
+        sizeBytes: 0,
+        lawyerAccess: false,
+        sourceEventId: srcEv,
+      });
+    }
+  }
+
+  const tr = eventDoc.call_transcript && String(eventDoc.call_transcript).trim();
+  if (tr) {
+    const enc = encodeURIComponent(tr);
+    const dataUrl = `data:text/plain;charset=utf-8,${enc}`;
+    const exists = await VaultFile.findOne({
+      user_id: userId,
+      sourceEventId: srcEv,
+      name: 'VETO · תמלול שיחה',
+    }).lean();
+    if (!exists) {
+      await VaultFile.create({
+        user_id: userId,
+        name: 'VETO · תמלול שיחה',
+        mimeType: 'text/plain',
+        url: dataUrl,
+        sizeBytes: Buffer.byteLength(tr, 'utf8'),
+        lawyerAccess: false,
+        sourceEventId: srcEv,
+      });
+    }
+  }
+}
+
 exports.saveCallArtifacts = async (req, res, next) => {
   try {
     const { eventId } = req.params;
@@ -777,6 +851,11 @@ exports.saveCallArtifacts = async (req, res, next) => {
       event.recording_transcription_status = 'pending';
     }
     await event.save();
+    try {
+      await mirrorCallArtifactsToVaultFiles(event);
+    } catch (mirrorErr) {
+      console.error('[call] mirrorCallArtifactsToVaultFiles', eventId, mirrorErr);
+    }
     if (event.recording_url && event.recording_transcription_status !== 'ready') {
       setImmediate(() => {
         transcribeEventRecording({ eventId, language: event.language }).catch((err) => {

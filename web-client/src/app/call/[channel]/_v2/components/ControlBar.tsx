@@ -46,10 +46,10 @@ export function ControlBar(p: ControlBarProps) {
   const lawyerView = p.myRole === "lawyer";
 
   return (
-    <div className="@container/cb pointer-events-none absolute inset-x-0 bottom-0 z-30 px-3 pb-3">
+    <div className="@container/cb pointer-events-none absolute inset-x-0 bottom-0 z-30 px-2 pb-3 @md:px-4">
       <div
-        className="pointer-events-auto mx-auto flex max-w-3xl items-center justify-center gap-2 overflow-x-auto rounded-2xl border border-white/10 bg-black/65 px-3 py-2 shadow-2xl backdrop-blur-md
-                   @md/cb:gap-3 @md/cb:px-4 @md/cb:py-3"
+        className="pointer-events-auto mx-auto flex max-w-3xl items-center justify-center gap-1.5 overflow-x-auto rounded-2xl border border-[#C5A059]/20 bg-zinc-950/80 px-2 py-2 shadow-[0_12px_40px_rgba(0,0,0,0.55)] backdrop-blur-xl
+                   @md/cb:gap-2.5 @md/cb:px-3 @md/cb:py-2.5"
         role="toolbar"
         aria-label={t("call.v2.controls.aria", "Call controls")}
       >
@@ -186,7 +186,7 @@ export function ControlBar(p: ControlBarProps) {
           type="button"
           onClick={p.onEndCall}
           aria-label={t("call.end", "End call")}
-          className="ms-auto whitespace-nowrap rounded-full bg-red-600 px-4 py-2 text-sm font-bold text-white hover:bg-red-500 focus-visible:ring-2 focus-visible:ring-red-300"
+          className="ms-auto min-h-[44px] whitespace-nowrap rounded-full bg-red-600 px-4 py-2 text-sm font-bold text-white shadow-lg shadow-red-900/40 hover:bg-red-500 focus-visible:ring-2 focus-visible:ring-red-300"
         >
           {t("call.end", "End call")}
         </button>
@@ -219,8 +219,8 @@ function CtrlBtn({
       disabled={disabled}
       aria-pressed={active}
       title={title ?? (shortcut ? `${label} (${shortcut})` : label)}
-      className={`whitespace-nowrap rounded-full px-3 py-2 text-xs font-semibold transition focus-visible:ring-2 focus-visible:ring-amber-300 disabled:cursor-not-allowed disabled:opacity-50 ${
-        active ? activeClass : "bg-white/15 text-white hover:bg-white/20"
+      className={`min-h-[40px] whitespace-nowrap rounded-full px-3 py-2 text-xs font-semibold transition focus-visible:ring-2 focus-visible:ring-[#C5A059] disabled:cursor-not-allowed disabled:opacity-50 ${
+        active ? activeClass : "bg-white/12 text-white hover:bg-white/18"
       }`}
     >
       {label}

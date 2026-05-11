@@ -111,7 +111,7 @@ export function CallShell({ channel }: { channel: string }) {
 
   // Recording / transcription / chat / files.
   const eventId = session?.eventId ?? null;
-  const recording = useCloudRecording(eventId);
+  const recording = useCloudRecording(eventId, { wantVideo: isVideo });
   const rtt = useRealtimeTranscription(eventId, client);
   const chat = useCallChat({
     eventId,
@@ -149,7 +149,7 @@ export function CallShell({ channel }: { channel: string }) {
   const [sideOpen, setSideOpen] = useState(false);
   const [summary, setSummary] = useState<SummaryShape | null>(null);
   const [actionPlan, setActionPlan] = useState<ActionPlan | null>(null);
-  const vault = useSaveToVault();
+  const vault = useSaveToVault(eventId);
 
   // Timer.
   const [callStartedAt] = useState<number>(() => Date.now());
@@ -628,13 +628,24 @@ export function CallShell({ channel }: { channel: string }) {
   }
 
   return (
-    <div className="@container/shell veto-call-keep-dark fixed inset-0 z-[70] flex h-[100dvh] w-screen flex-col overflow-hidden bg-black text-white">
+    <div className="@container/shell veto-call-keep-dark fixed inset-0 z-[70] flex h-[100dvh] w-screen flex-col overflow-hidden bg-gradient-to-b from-zinc-950 via-black to-zinc-950 text-white">
+      <div
+        className="pointer-events-none absolute inset-0 opacity-[0.12]"
+        style={{
+          backgroundImage:
+            "radial-gradient(ellipse 80% 50% at 50% -20%, rgba(197,160,89,0.45), transparent 55%)",
+        }}
+        aria-hidden
+      />
+
       {/* Top header strip */}
       <div className="absolute inset-x-0 top-0 z-20 flex items-start justify-between gap-2 px-3 pt-3">
-        <div className="rounded-full border border-white/10 bg-black/60 px-3 py-1 text-xs font-mono text-slate-200 backdrop-blur">
-          {timerLabel}
+        <div className="flex items-center gap-2 rounded-2xl border border-[#C5A059]/25 bg-black/55 px-3 py-1.5 text-xs text-slate-100 shadow-lg backdrop-blur-md">
+          <span className="font-mono tabular-nums tracking-tight text-[#C5A059]">
+            {timerLabel}
+          </span>
           {overSec > 0 && (
-            <span className="ms-2 text-amber-300">
+            <span className="border-s border-white/15 ps-2 text-amber-200/95">
               +₪{overtimePreviewIls.toFixed(2)}
             </span>
           )}
@@ -643,7 +654,8 @@ export function CallShell({ channel }: { channel: string }) {
       </div>
 
       {/* Main video stage */}
-      <div className="relative flex-1 overflow-hidden">
+      <div className="relative flex-1 overflow-hidden px-2 pb-2 pt-14 @md:px-4 @md:pb-3 @md:pt-16">
+        <div className="relative h-full min-h-0 overflow-hidden rounded-3xl border border-white/[0.08] bg-zinc-950/80 shadow-[0_0_0_1px_rgba(197,160,89,0.06),0_24px_80px_rgba(0,0,0,0.65)] ring-1 ring-[#C5A059]/10">
         <CallStage
           localCameraTrack={cameraTrack as ILocalVideoTrack | null}
           remoteUsers={remoteUsers}
@@ -669,10 +681,11 @@ export function CallShell({ channel }: { channel: string }) {
         <ReconnectingOverlay state={connectionState} />
 
         {joinError && (
-          <div className="absolute inset-x-2 top-14 z-30 mx-auto max-w-md rounded-lg bg-red-950/90 px-3 py-2 text-center text-xs text-red-100">
+          <div className="absolute inset-x-2 top-14 z-30 mx-auto max-w-md rounded-xl border border-red-500/30 bg-red-950/90 px-3 py-2 text-center text-xs text-red-100 shadow-lg backdrop-blur">
             {joinError}
           </div>
         )}
+        </div>
       </div>
 
       {/* Side panel overlays the stage on small screens, sits next to it on >md */}

@@ -24,7 +24,10 @@ export type ConsentSnapshot = {
  *    they grant consent (`bothGranted` in API payloads means citizen-only).
  *  - We poll every ~10s while recording so the indicator stays accurate.
  */
-export function useCloudRecording(eventId: string | null) {
+export function useCloudRecording(
+  eventId: string | null,
+  opts?: { wantVideo?: boolean },
+) {
   const [status, setStatus] = useState<RecordingStatus>("idle");
   const [consent, setConsent] = useState<ConsentSnapshot>({
     citizen: false,
@@ -104,7 +107,10 @@ export function useCloudRecording(eventId: string | null) {
     try {
       const res = await authFetch(
         apiUrl(`/api/calls/${eventId}/cloud-recording/start`),
-        { method: "POST" },
+        {
+          method: "POST",
+          body: JSON.stringify({ wantVideo: !!opts?.wantVideo }),
+        },
       );
       if (!res.ok) {
         setStatus("error");
@@ -116,7 +122,7 @@ export function useCloudRecording(eventId: string | null) {
       setStatus("error");
       setError(err instanceof Error ? err.message : String(err));
     }
-  }, [eventId, consent.citizen]);
+  }, [eventId, consent.citizen, opts?.wantVideo]);
 
   const stop = useCallback(async () => {
     if (!eventId) return;
