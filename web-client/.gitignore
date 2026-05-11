@@ -35,6 +35,9 @@ web-dev*.log
 .env*
 !.env.example
 
+# Agora AI Denoiser WASM — copied by `npm run postinstall` from node_modules
+/public/agora-ai-denoiser/
+
 # vercel
 .vercel
 

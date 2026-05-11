@@ -56,13 +56,10 @@ const helmet  = require('helmet');
 const rateLimit = require('express-rate-limit');
 const mongoSanitize = require('express-mongo-sanitize');
 const { Server } = require('socket.io');
+const { createAdapter } = require('@socket.io/redis-adapter');
+const { initRedis } = require('./src/config/redis');
+const { RateLimiterMemory } = require('rate-limiter-flexible');
 const connectDB  = require('./src/config/db');
-const agoraCrHealth = require('./src/services/agoraCloudRecording.service');
-
-/** ל-Render health check: השרת חי לפני ש-Mongo מחובר */
-let mongoState = 'pending';
-let ioReady    = false;
-
 const app = express();
 const server = http.createServer(app);
 
@@ -171,6 +168,27 @@ app.use(express.json());
 // ── Data Sanitization against NoSQL Injection ─────────────────
 app.use(mongoSanitize());
 
+// ── Production safety: refuse to boot with unsafe OTP exposure ──
+// RETURN_OTP_IN_JSON returns the OTP in the request body so we can
+// run staging tests without a real SMS provider. In production with
+// NODE_ENV=production it must NOT be left on by accident — require
+// a second explicit acknowledgement env var to keep it.
+(function guardOtpInProduction() {
+  const isProd = process.env.NODE_ENV === 'production';
+  const otpInJson =
+    process.env.RETURN_OTP_IN_JSON === '1' ||
+    process.env.RETURN_OTP_IN_JSON === 'true';
+  const ack = process.env.ALLOW_OTP_IN_JSON_PRODUCTION === '1';
+  if (isProd && otpInJson && !ack) {
+    console.error(
+      '❌ Refusing to boot: RETURN_OTP_IN_JSON is enabled in production. ' +
+      'Set ALLOW_OTP_IN_JSON_PRODUCTION=1 in addition to RETURN_OTP_IN_JSON ' +
+      'if this is intentional (e.g. internal staging on the production env).',
+    );
+    process.exit(1);
+  }
+})();
+
 app.use('/api/', apiLimiter);
 
 // Browser / tools often open exactly http://localhost:5001/api — give JSON, not 404.
@@ -206,10 +224,63 @@ const io = new Server(server, {
 });
 app.set('io', io);
 
-app.use('/api/auth', authLimiter, require('./src/routes/auth.routes'));
-app.use('/api/users', require('./src/routes/user.routes'));
-app.use('/api/lawyers', require('./src/routes/lawyer.routes'));
-app.use('/api/notifications', require('./src/routes/notifications.routes'));
+// Setup Redis Adapter for multi-instance Socket.io (optional when REDIS_URL is set)
+initRedis().then((redisClients) => {
+  if (redisClients) {
+    io.adapter(createAdapter(redisClients.pubClient, redisClients.subClient));
+  }
+});
+
+// Global Socket.io handshake rate limit (per connecting IP)
+const socketHandshakeRateLimiter = new RateLimiterMemory({
+  points: 20,
+  duration: 1,
+});
+
+io.use(async (socket, next) => {
+  try {
+    await socketHandshakeRateLimiter.consume(socket.handshake.address);
+    next();
+  } catch {
+    next(new Error('Rate limit exceeded. Disconnecting.'));
+  }
+});
+
+/**
+ * Defensive route mounter.
+ * If a single route file blows up at require()-time (syntax error, bad import,
+ * missing optional dep), we don't want the entire API to fail booting.
+ * - In dev: log loud and continue, mount a stub returning 503 on that prefix.
+ * - In prod: same, plus Sentry capture so we see it in the alert pipe.
+ */
+function mountRoute(prefix, requirePath, ...preMiddleware) {
+  try {
+    const routerModule = require(requirePath);
+    if (preMiddleware.length > 0) {
+      app.use(prefix, ...preMiddleware, routerModule);
+    } else {
+      app.use(prefix, routerModule);
+    }
+  } catch (err) {
+    console.error(`❌ Failed to mount ${prefix} from ${requirePath}:`, err.message);
+    if (Sentry.__vetoInstrumented && typeof Sentry.captureException === 'function') {
+      try { Sentry.captureException(err); } catch (_) { /* best effort */ }
+    }
+    app.use(prefix, (_req, res) =>
+      res.status(503).json({
+        error: 'Subsystem temporarily unavailable.',
+        prefix,
+      }),
+    );
+  }
+}
+
+mountRoute('/health', './src/routes/health.routes');
+
+mountRoute('/api/auth', './src/routes/auth.routes', authLimiter);
+mountRoute('/api/users', './src/routes/user.routes');
+mountRoute('/api/lawyers', './src/routes/lawyer.routes');
+mountRoute('/api/notifications', './src/routes/notifications.routes');
 
 // ── Public VAPID key for browser push subscription ────────────
 app.get('/api/push/vapid-key', (_, res) => {
@@ -217,22 +288,29 @@ app.get('/api/push/vapid-key', (_, res) => {
   if (!key) return res.status(503).json({ error: 'Push notifications not configured.' });
   res.json({ publicKey: key });
 });
-const { exportIcs: calendarExportIcs } = require('./src/controllers/calendar.controller');
-app.get('/api/calendar/export.ics', calendarExportIcs);
-app.use('/api/calendar', require('./src/routes/calendar.routes'));
-app.use('/api/legal-notebook', require('./src/routes/legalNotebook.routes'));
-app.use('/api/integrations/gcal', require('./src/routes/gcalOAuth.routes'));
-app.use('/api/events', require('./src/routes/event.routes'));
-app.use('/api/admin', require('./src/routes/admin.routes'));
-app.use('/api/ai', require('./src/routes/ai.routes'));
-app.use('/api/payments', require('./src/routes/payment.routes'));
-app.use('/api/billing', require('./src/routes/billing.routes'));
-app.use('/api/chat', require('./src/routes/chat.routes'));
-app.use('/api/vault', require('./src/routes/vault.routes'));
-app.use('/api/citizen-dashboard', require('./src/routes/citizenDashboard.routes'));
-app.use('/api/calls', require('./src/routes/call.routes'));
-app.use('/api/legal-assistant', require('./src/routes/legalAssistant.routes'));
-app.use('/api/legal-documents', require('./src/routes/legalDocuments.routes'));
+try {
+  const { exportIcs: calendarExportIcs } = require('./src/controllers/calendar.controller');
+  app.get('/api/calendar/export.ics', calendarExportIcs);
+} catch (err) {
+  console.error('❌ Failed to mount /api/calendar/export.ics:', err.message);
+}
+mountRoute('/api/calendar', './src/routes/calendar.routes');
+mountRoute('/api/legal-notebook', './src/routes/legalNotebook.routes');
+mountRoute('/api/integrations/gcal', './src/routes/gcalOAuth.routes');
+mountRoute('/api/events', './src/routes/event.routes');
+mountRoute('/api/admin', './src/routes/admin.routes');
+mountRoute('/api/ai', './src/routes/ai.routes');
+mountRoute('/api/payments', './src/routes/payment.routes');
+mountRoute('/api/billing', './src/routes/billing.routes');
+mountRoute('/api/chat', './src/routes/chat.routes');
+mountRoute('/api/vault', './src/routes/vault.routes');
+mountRoute('/api/citizen-dashboard', './src/routes/citizenDashboard.routes');
+const sentryTracing = require('./src/middleware/sentryTracing.middleware');
+mountRoute('/api/calls', './src/routes/call.routes', sentryTracing('calls'));
+mountRoute('/api/legal-assistant', './src/routes/legalAssistant.routes');
+mountRoute('/api/legal-documents', './src/routes/legalDocuments.routes');
+mountRoute('/api/documents', './src/routes/document.routes');
+mountRoute('/api/config', './src/routes/config.routes');
 
 app.get('/', (_, res) =>
   res.json({
@@ -257,23 +335,8 @@ app.get('/', (_, res) =>
   }),
 );
 
-app.get('/health', (_, res) =>
-  res.status(200).json({
-    status: 'ok',
-    app: 'VETO',
-    message: 'VETO Server is Alive!',
-    env: process.env.NODE_ENV || 'development',
-    mongo: mongoState,
-    db: mongoState,          // alias used by AdminDashboard
-    socket: ioReady,         // socket.io ready flag
-    /** true כשכל משתני Agora Cloud Recording + S3 מלאים (בלי לחשוף סודות) */
-    cloudRecordingConfigured: agoraCrHealth.isCloudRecordingConfigured(),
-  }),
-);
-
 require('./src/socket/dispatch.socket')(io);
 require('./src/socket/webrtc.socket')(io);
-ioReady = true;
 
 // Sentry + global error handler (must be after routes; must run before listen())
 if (Sentry.__vetoInstrumented) {
@@ -301,7 +364,7 @@ function start() {
     console.log(`   REST  → GET http://localhost:${PORT}/api (JSON discovery) · routes under /api/*`);
     console.log(`   Auth  → POST http://localhost:${PORT}/api/auth/register`);
     console.log(`   WS    → ws://localhost:${PORT}`);
-    console.log(`   Health → GET /health (mongo: pending → connected | error)`);
+    console.log(`   Health → GET /health (Mongo + Redis + config diagnostics)`);
     console.log(
       '   Dev OTP → terminal shows: ********** OTP FOR <phone>: <code> **********',
     );
@@ -317,15 +380,10 @@ function start() {
         ' | Flutter host ≠ active tunnel | tunnel terminal closed.',
     );
 
-    connectDB()
-      .then(() => {
-        mongoState = 'connected';
-      })
-      .catch((err) => {
-        mongoState = 'error';
-        console.error('❌ MongoDB not connected — fix MONGO_URI / Atlas Network Access.');
-        console.error('   ', err.message);
-      });
+    connectDB().catch((err) => {
+      console.error('❌ MongoDB not connected — fix MONGO_URI / Atlas Network Access.');
+      console.error('   ', err.message);
+    });
   });
 }
 

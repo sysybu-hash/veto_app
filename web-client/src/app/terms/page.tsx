@@ -1,49 +1,184 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { VetoBrandLogo } from "@/components/brand/VetoBrandLogo";
+import { authGlassPanel, btnPrimaryDark } from "@/lib/vetoGlass";
 
 export const metadata: Metadata = {
-  title: "תנאי שימוש",
-  description: "תנאי שימוש בסיסיים עבור VETO Legal.",
+  title: "תנאי שימוש | VETO Legal",
+  description: "תקנון ותנאי שימוש בפלטפורמת VETO Legal.",
 };
 
 export default function TermsPage() {
   return (
-    <main className="mx-auto w-full max-w-4xl px-5 py-16 text-right text-slate-100" dir="rtl">
-      <p className="text-sm font-semibold text-[#C5A059]">VETO Legal</p>
-      <h1 className="mt-3 font-frank text-4xl font-black">תנאי שימוש</h1>
-      <div className="mt-8 space-y-6 rounded-2xl border border-white/10 bg-white/[0.04] p-6 leading-8 text-slate-300">
-        <p>
-          VETO מספקת תשתית טכנולוגית לחיבור מהיר בין אזרחים לעורכי דין, כספת ראיות וכלי מסמכים. השירות אינו מחליף
-          ייעוץ משפטי פרטני מעורך דין מוסמך.
-        </p>
-        <section>
-          <h2 className="text-xl font-bold text-white">שימוש אחראי</h2>
-          <p className="mt-2">
-            המשתמש מתחייב למסור מידע נכון, לא להעלות תוכן בלתי חוקי, לא להתחזות לאחר, ולא להשתמש בשירות כדי לפגוע
-            באחרים או לשבש מערכות.
+    <div className="min-h-screen bg-veto-ink text-slate-100">
+      <main
+        className="mx-auto w-full max-w-3xl px-4 py-8 md:px-6 md:py-12"
+        dir="rtl"
+      >
+        <div className="mb-8">
+          <Link
+            href="/"
+            className={`inline-flex items-center justify-center rounded-xl px-5 py-2.5 text-sm font-bold transition hover:opacity-90 ${btnPrimaryDark}`}
+          >
+            חזרה לדף הבית
+          </Link>
+        </div>
+
+        <header className="mb-8 text-center md:text-right">
+          <div className="mb-4 flex justify-center md:justify-end">
+            <VetoBrandLogo className="h-9 w-auto sm:h-10" />
+          </div>
+          <h1 className="font-display text-3xl font-bold text-white md:text-4xl">
+            תקנון ותנאי שימוש
+          </h1>
+          <p className="mt-3 text-sm text-slate-400">
+            עדכון אחרון לצורכי תיעוד מוצרי — יש לקבל אישור משפטי לפני פרסום
+            מסחרי סופי.
           </p>
-        </section>
-        <section>
-          <h2 className="text-xl font-bold text-white">עורכי דין</h2>
-          <p className="mt-2">
-            עורכי דין נדרשים להזדהות, למסור מספר רישיון ותחומי התמחות, ולהמתין לאישור מנהל לפני קבלת קריאות. אישור
-            במערכת אינו מהווה המלצה משפטית או התחייבות לזמינות.
+        </header>
+
+        <article
+          className={`space-y-10 p-6 text-sm text-slate-300 md:p-8 md:text-base ${authGlassPanel}`}
+        >
+          <section className="space-y-3 leading-relaxed">
+            <h2 className="text-lg font-bold text-white md:text-xl">1. מבוא והסכמה</h2>
+            <p>
+              ברוכים הבאים ל־VETO Legal (&quot;המערכת&quot;, &quot;השירות&quot;,
+              &quot;אנחנו&quot;). השימוש באתר, ביישומון ובשירותים הנלווים כפוף
+              לתנאים המפורטים להלן. על ידי הרשמה, כניסה או שימוש בשירות — אתם
+              מאשרים כי קראתם והבנתם את התנאים וכי הם מחייבים אתכם.
+            </p>
+          </section>
+
+          <section className="space-y-3 leading-relaxed">
+            <h2 className="text-lg font-bold text-white md:text-xl">
+              2. מהות השירות — פלטפורמה טכנולוגית בלבד
+            </h2>
+            <p>
+              VETO היא <strong className="text-slate-200">פלטפורמה טכנולוגית</strong>{" "}
+              המאפשרת קישור בין משתמשים לבין עורכי דין רשומים, לרבות תיאום שיחות
+              וידאו/קול, ניהול מסמכים וכלים משלימים.{" "}
+              <strong className="text-slate-200">
+                VETO אינה משרד עורכי דין, אינה מחזיקה ברישיון לשכה ואינה מעניקה
+                ייעוץ משפטי מטעמה.
+              </strong>{" "}
+              כל תוכן משפטי, חוות דעת או הכוונה מקצועית מסופקים אך ורק על ידי עורך
+              הדין העצמאי המעורב באירוע — ולא על ידי VETO.
+            </p>
+          </section>
+
+          <section className="space-y-3 leading-relaxed">
+            <h2 className="text-lg font-bold text-white md:text-xl">
+              3. אחריות משפטית ויחסי עו״ד–לקוח
+            </h2>
+            <p>
+              <strong className="text-slate-200">
+                האחריות הבלעדית לייעוץ המשפטי, לדיוק המידע ולשיקול הדעת המקצועי
+                חלה על עורך הדין המייעץ בשיחה או בערוץ התקשורת במערכת.
+              </strong>{" "}
+              VETO אינה צד ליחסי עו״ד–לקוח ואינה אחראית לתוצאות הליכים, להחלטות
+              משפטיות או ליישום המלצות. המשתמש מצהיר כי יפנה לעורך דין נוסף או
+              לערכאות במידת הצורך, וכי אינו סומך על השירות כתחליף לליווי משפטי
+              מלא כאשר נדרש.
+            </p>
+          </section>
+
+          <section className="space-y-3 leading-relaxed">
+            <h2 className="text-lg font-bold text-white md:text-xl">
+              4. מצבי חירום וסכנת חיים
+            </h2>
+            <p>
+              המערכת נועדה לסיוע משפטי ראשוני ולתיאום עם עורכי דין, ואינה מהווה
+              קו חירום רפואי, ביטחוני או משטרתי.{" "}
+              <strong className="text-slate-200">
+                במקרה של סכנת חיים, אלימות מיידית או איום בטיחותי — יש לפנות תחילה
+                לכוחות הביטחון, להצלה או למוקדי חירום הרלוונטיים (למשל משטרה,
+                מגן דוד אדום)
+              </strong>
+              , ולא להסתמך על VETO כערוץ יחיד.
+            </p>
+          </section>
+
+          <section className="space-y-3 leading-relaxed">
+            <h2 className="text-lg font-bold text-white md:text-xl">
+              5. חובות המשתמש והתנהגות מקובלת
+            </h2>
+            <p>
+              המשתמש מתחייב למסור פרטים נכונים, שלא להתחזות לאחר, שלא להעלות או
+              לשתף תוכן בלתי חוקי, ולא לעשות שימוש לרעה בתשתית (לרבות ניסיונות
+              פריצה, ספאם או הפרעה לשירות). עורכי דין נדרשים לספק פרטי זיהוי
+              מקצועיים נכונים ולפעול בהתאם לכללי לשכת עורכי הדין ולדין החל.
+            </p>
+          </section>
+
+          <section className="space-y-3 leading-relaxed">
+            <h2 className="text-lg font-bold text-white md:text-xl">
+              6. תשלומים, מנויים וביטול עסקה
+            </h2>
+            <p>
+              השימוש במערכת עשוי להיות כרוך בתשלום בהתאם למסלול, לחבילה או לשירות
+              שנרכשו, כפי שמוצג בעת הרכישה. עיבוד תשלומים עשוי להתבצע באמצעות ספקי
+              סליקה חיצוניים, והתנאים המסחריים שלהם חלים בנוסף לתנאים אלה.{" "}
+              <strong className="text-slate-200">
+                ביטול עסקה, זיכויים והחזרים יתבצעו בהתאם להוראות חוק הגנת הצרכן,
+                התשמ&quot;א–1981, ולמדיניות הביטולים המפורסמת בממשק הרכישה
+              </strong>
+              , ככל שהדין חל על העסקה.
+            </p>
+          </section>
+
+          <section className="space-y-3 leading-relaxed">
+            <h2 className="text-lg font-bold text-white md:text-xl">
+              7. קניין רוחני
+            </h2>
+            <p>
+              זכויות היוצרים, הסימנים המסחריים, עיצוב הממשק, הקוד, התיעוד והמסדים
+              השייכים ל־VETO Legal שמורים לה בלבד, אלא אם צוין אחרת בכתב. אין
+              להעתיק, לשכפל, לבצע הנדסה לאחור או לעשות שימוש מסחרי ללא הסכמה מפורשת.
+            </p>
+          </section>
+
+          <section className="space-y-3 leading-relaxed">
+            <h2 className="text-lg font-bold text-white md:text-xl">
+              8. הגבלת אחריות
+            </h2>
+            <p>
+              השירות ניתן &quot;כמות שהוא&quot; (AS IS), בכפוף לשיפורים ולתחזוקה
+              שוטפת. במידה המרבית המותרת בדין, VETO לא תהיה אחראית לנזקים עקיפים,
+              תוצאתיים, אובדן רווח או אובדן מידע שאינם נגרמו במישרין מתוך רשלנות
+              כבדה מוכחת. אחריות כלפי המשתמש תוגבל, ככל שהדין מאפשר, לסכומים
+              ששולמו בפועל עבור השירות בתקופה הרלוונטית.
+            </p>
+          </section>
+
+          <section className="space-y-3 leading-relaxed">
+            <h2 className="text-lg font-bold text-white md:text-xl">
+              9. שינויים בתנאים וסיום שירות
+            </h2>
+            <p>
+              אנו רשאים לעדכן את תנאי השימוש מעת לעת. שינוי מהותי יפורסם בממשק
+              או בערוץ התקשורת המתאים. המשך שימוש לאחר פרסום עשוי להוות הסכמה
+              לנוסח המעודכן. שמורה לנו הזכות להשעות או לסיים גישה במקרה של הפרת
+              תנאים או סיכון לאבטחה.
+            </p>
+          </section>
+
+          <section className="space-y-3 leading-relaxed">
+            <h2 className="text-lg font-bold text-white md:text-xl">10. יצירת קשר</h2>
+            <p>
+              לשאלות בנוגע לתנאי השימוש ניתן לפנות דרך ערוצי התמיכה המפורסמים
+              באתר או ביישומון. לעניינים משפטיים רשמיים יש לפנות לכתובת שתפורסם
+              על ידי החברה.
+            </p>
+          </section>
+
+          <p className="border-t border-white/10 pt-6 text-xs leading-relaxed text-slate-500">
+            מסמך זה מהווה מסגרת מוצרית. אין במסמך זה כדי ליצור יחסי עו״ד–לקוח עם
+            VETO, ואין להסתמך עליו כייעוץ משפטי אישי. יש להתייעץ עם עורך דין לפני
+            קבלת החלטות משפטיות.
           </p>
-        </section>
-        <section>
-          <h2 className="text-xl font-bold text-white">תשלומים ומנויים</h2>
-          <p className="mt-2">
-            מנויים, ייעוצים ודקות נוספות מחויבים לפי המחירים שמוצגים באתר בזמן הרכישה. תשלומי PayPal מנוהלים אצל
-            PayPal, והסטטוס במערכת מתעדכן לאחר אישור התשלום או webhook.
-          </p>
-        </section>
-        <p className="text-sm text-slate-400">
-          הנוסח הוא תשתית מוצרית ראשונית ונדרש אישור משפטי לפני פרסום מסחרי מלא.
-        </p>
-      </div>
-      <Link href="/" className="mt-8 inline-flex rounded-xl bg-[#C5A059] px-5 py-3 text-sm font-bold text-slate-950">
-        חזרה לדף הבית
-      </Link>
-    </main>
+        </article>
+      </main>
+    </div>
   );
 }

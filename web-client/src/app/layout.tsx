@@ -2,7 +2,10 @@ import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
 import { Frank_Ruhl_Libre, Heebo } from "next/font/google";
 import { JwtCookieSync } from "@/components/providers/JwtCookieSync";
-import { PwaRegistrar } from "@/components/providers/PwaRegistrar";
+import {
+  ThemeProvider,
+  themeBootstrapScript,
+} from "@/components/providers/ThemeProvider";
 import { LocaleProvider } from "@/lib/i18n/LocaleProvider";
 import { AiOverlayErrorBoundary } from "@/components/ui/AiOverlayErrorBoundary";
 import { GlobalAiOverlay } from "@/components/ui/GlobalAiOverlay";
@@ -53,8 +56,8 @@ export const metadata: Metadata = {
   },
   appleWebApp: {
     capable: true,
-    statusBarStyle: "default",
-    title: "VETO",
+    statusBarStyle: "black-translucent",
+    title: "VETO Legal",
   },
   formatDetection: {
     telephone: true,
@@ -63,6 +66,7 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
+      { url: "/veto-logo.svg", type: "image/svg+xml" },
       { url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
       { url: "/icons/icon-512.png", sizes: "512x512", type: "image/png" },
     ],
@@ -71,10 +75,12 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
+  themeColor: "#0a0a0f",
   width: "device-width",
   initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
   viewportFit: "cover",
-  themeColor: "#eef1f5",
 };
 
 export default function RootLayout({
@@ -98,31 +104,42 @@ export default function RootLayout({
       suppressHydrationWarning
       className={`${heebo.variable} ${frank.variable} h-full`}
     >
+      <head>
+        {/*
+          Run before paint to apply the persisted (or system) theme
+          via .veto-light / .veto-dark. Avoids flash of wrong theme.
+        */}
+        <script
+          suppressHydrationWarning
+          dangerouslySetInnerHTML={{ __html: themeBootstrapScript }}
+        />
+      </head>
       <body className="veto-light relative min-h-screen bg-[#eef1f5] font-heebo text-slate-950 antialiased">
-        <LocaleProvider>
-          <PwaRegistrar />
-          <JwtCookieSync />
-          <ToastHost />
-          <script
-            type="application/ld+json"
-            suppressHydrationWarning
-            dangerouslySetInnerHTML={{ __html: JSON.stringify(orgJsonLd) }}
-          />
-          <div className="fixed inset-0 -z-50 overflow-hidden" aria-hidden>
-            <div className="absolute inset-0 bg-[#eef1f5]" />
-            <div className="veto-bg-glow absolute inset-0" />
-            <div className="veto-bg-grid absolute inset-0" />
-          </div>
+        <ThemeProvider>
+          <LocaleProvider>
+            <JwtCookieSync />
+            <ToastHost />
+            <script
+              type="application/ld+json"
+              suppressHydrationWarning
+              dangerouslySetInnerHTML={{ __html: JSON.stringify(orgJsonLd) }}
+            />
+            <div className="fixed inset-0 -z-50 overflow-hidden" aria-hidden>
+              <div className="veto-page-underlay absolute inset-0 bg-[#eef1f5]" />
+              <div className="veto-bg-glow absolute inset-0" />
+              <div className="veto-bg-grid absolute inset-0" />
+            </div>
 
-          <div className="relative z-10 flex min-h-screen flex-col">
-            <UniversalNav />
-            <div className="flex min-h-0 flex-1 flex-col">{children}</div>
-          </div>
-          <AiOverlayErrorBoundary>
-            <GlobalAiOverlay />
-          </AiOverlayErrorBoundary>
-          <CookieConsent />
-        </LocaleProvider>
+            <div className="relative z-10 flex min-h-screen flex-col">
+              <UniversalNav />
+              <div className="flex min-h-0 flex-1 flex-col">{children}</div>
+            </div>
+            <AiOverlayErrorBoundary>
+              <GlobalAiOverlay />
+            </AiOverlayErrorBoundary>
+            <CookieConsent />
+          </LocaleProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

@@ -71,6 +71,8 @@ const authorize = (...roles) => (req, res, next) => {
 };
 
 // ── Socket.io Middleware ───────────────────────────────────
+const ALLOWED_SOCKET_ROLES = new Set(['user', 'lawyer', 'admin']);
+
 const socketAuth = (socket, next) => {
   const token = socket.handshake.auth?.token;
 
@@ -78,24 +80,33 @@ const socketAuth = (socket, next) => {
     return next(new Error('Socket auth failed: no token.'));
   }
 
+  let decoded;
   try {
-    const decoded = jwt.verify(token, jwtSecret());
-    let uid = decoded.userId ?? decoded.id ?? decoded._id;
-    if (uid != null && typeof uid === 'object' && uid.toString) {
-      uid = uid.toString();
-    }
-    if ((uid == null || String(uid).trim() === '') && decoded.sub != null) {
-      const s = String(decoded.sub).trim();
-      if (mongoose.isValidObjectId(s)) uid = s;
-    }
-    if (uid != null) {
-      decoded.userId = String(uid).trim();
-    }
-    socket.handshake.auth.decoded = decoded;
-    next();
+    decoded = jwt.verify(token, jwtSecret());
   } catch {
     return next(new Error('Socket auth failed: invalid token.'));
   }
+
+  let uid = decoded.userId ?? decoded.id ?? decoded._id;
+  if (uid != null && typeof uid === 'object' && uid.toString) {
+    uid = uid.toString();
+  }
+  if ((uid == null || String(uid).trim() === '') && decoded.sub != null) {
+    const s = String(decoded.sub).trim();
+    if (mongoose.isValidObjectId(s)) uid = s;
+  }
+  uid = uid != null ? String(uid).trim() : '';
+
+  if (!uid || !mongoose.isValidObjectId(uid)) {
+    return next(new Error('Socket auth failed: missing or invalid user id.'));
+  }
+  if (!decoded.role || !ALLOWED_SOCKET_ROLES.has(decoded.role)) {
+    return next(new Error('Socket auth failed: missing or unrecognised role.'));
+  }
+
+  decoded.userId = uid;
+  socket.handshake.auth.decoded = decoded;
+  next();
 };
 
 // ── Token Generator (auth.controller.js) ──────────────────

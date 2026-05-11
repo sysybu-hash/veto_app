@@ -157,8 +157,81 @@ async function geminiChat(history, userMessage, lang = 'he') {
   throw new Error('Gemini request failed');
 }
 
+const TRANSLATION_LANG_LABELS = {
+  he: 'Hebrew',
+  en: 'English',
+  ru: 'Russian',
+  ar: 'Arabic',
+};
+
+/**
+ * Lightweight translation helper for live call captions.
+ * Returns a parallel array of translated strings (or null on individual failures).
+ * Stays cheap by batching up to 50 segments per call.
+ */
+async function geminiTranslateSegments(segments, targetLang = 'en') {
+  if (!hasGeminiApiKey()) {
+    throw new Error('GEMINI_API_KEY is not configured');
+  }
+  const list = Array.isArray(segments) ? segments.filter((s) => typeof s === 'string') : [];
+  if (list.length === 0) return [];
+
+  const targetLabel = TRANSLATION_LANG_LABELS[targetLang] || TRANSLATION_LANG_LABELS.en;
+  const ai = getGenAI();
+
+  const numbered = list.map((s, i) => `${i + 1}. ${s.replace(/\s+/g, ' ').trim()}`).join('\n');
+  const prompt = `Translate each numbered line into ${targetLabel}. Output ONLY a JSON array of translated strings in the same order, no commentary.
+
+Lines:
+${numbered}`;
+
+  for (let attempt = 0; attempt < MAX_GEMINI_ATTEMPTS; attempt += 1) {
+    try {
+      const response = await ai.models.generateContent({
+        model: getGeminiModelId(),
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
+        config: {
+          systemInstruction:
+            'You translate spoken-conversation segments. Preserve meaning, keep names/numbers verbatim. Return strict JSON array of strings.',
+          responseMimeType: 'application/json',
+        },
+      });
+      const text =
+        typeof response.text === 'string'
+          ? response.text
+          : response.text != null
+            ? String(response.text)
+            : '';
+      if (isApiErrorPayloadText(text)) throw new Error(text);
+      let parsed;
+      try {
+        parsed = JSON.parse(text);
+      } catch (_) {
+        const m = text.match(/\[[\s\S]*\]/);
+        if (m) parsed = JSON.parse(m[0]);
+      }
+      if (!Array.isArray(parsed)) {
+        return list.map(() => null);
+      }
+      return list.map((_, i) => {
+        const v = parsed[i];
+        return typeof v === 'string' ? v : null;
+      });
+    } catch (err) {
+      if (isTransientGeminiFailure(err) && attempt < MAX_GEMINI_ATTEMPTS - 1) {
+        const delayMs = Math.min(1200 * (attempt + 1), 4000);
+        await new Promise((resolve) => setTimeout(resolve, delayMs));
+        continue;
+      }
+      throw err;
+    }
+  }
+  throw new Error('Gemini translation failed');
+}
+
 module.exports = {
   geminiChat,
+  geminiTranslateSegments,
   hasGeminiApiKey,
   isTransientGeminiFailure,
   isApiErrorPayloadText,

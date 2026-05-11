@@ -4,7 +4,6 @@
 //  Flow: Register → Request OTP → Verify OTP → JWT issued
 // ============================================================
 
-const crypto = require('crypto');
 const User      = require('../models/User');
 const Lawyer    = require('../models/Lawyer');
 const LoginLog  = require('../models/LoginLog');
@@ -17,6 +16,20 @@ const {
   verifyAuthenticationResponse,
 } = require('@simplewebauthn/server');
 
+const {
+  cleanPhone,
+  normalizePhoneForVeto,
+  isAdminPhone,
+} = require('../services/auth/phone.service');
+const { generateOTP, otpExpiry } = require('../services/auth/otp.service');
+const {
+  findByPhone,
+  modelFor,
+  findAccountById,
+  publicAccount,
+} = require('../services/auth/account.service');
+const { webauthnConfig } = require('../services/auth/webauthn.service');
+
 // ── Helper: persist login attempt log ─────────────────────────
 async function logEvent(data) {
   try {
@@ -24,125 +37,6 @@ async function logEvent(data) {
   } catch {
     /* ignore log failures */
   }
-}
-
-// ── Helpers ─────────────────────────────────────────────────
-
-/** Generate a cryptographically-safe 6-digit OTP */
-function generateOTP() {
-  return String(crypto.randomInt(100000, 1000000));
-}
-
-/** OTP valid for 10 minutes */
-function otpExpiry() {
-  return new Date(Date.now() + 10 * 60 * 1000);
-}
-
-/**
- * Find a document in both User and Lawyer collections by phone.
- * Returns { doc, role } or null.
- */
-async function findByPhone(phone) {
-  const user = await User.findOne({ phone });
-  if (user) {
-    const appRole = user.role === 'admin' ? 'admin' : 'user';
-    return { doc: user, role: appRole };
-  }
-
-  const lawyer = await Lawyer.findOne({ phone });
-  if (lawyer) return { doc: lawyer, role: 'lawyer' };
-
-  return null;
-}
-
-/** Choose the right Model based on role string */
-function modelFor(role) {
-  if (role === 'lawyer') return Lawyer;
-  return User;
-}
-
-/** Normalize phone: remove + for comparison */
-function cleanPhone(phone) {
-  return String(phone).replace(/\+/g, '');
-}
-
-/**
- * Normalize user input to E.164 (+...) as stored in User/Lawyer.
- * Accepts +972501111111, 972501111111, 0501111111, 501111111 (IL mobile), other intl digits.
- */
-function normalizePhoneForVeto(raw) {
-  if (raw == null) return null;
-  const trimmed = String(raw).trim();
-  if (!trimmed) return null;
-
-  const s = trimmed.replace(/[\s\-().]/g, '');
-  if (!s) return null;
-
-  let d;
-  if (s.startsWith('+')) {
-    d = s.slice(1).replace(/\D/g, '');
-    if (!/^[1-9]\d{7,14}$/.test(d)) return null;
-    return `+${d}`;
-  }
-
-  d = s.replace(/\D/g, '');
-  if (!d) return null;
-
-  if (d.startsWith('972')) {
-    if (!/^[1-9]\d{7,14}$/.test(d)) return null;
-    return `+${d}`;
-  }
-
-  if (d.startsWith('0')) {
-    const rest = d.slice(1);
-    if (!/^[1-9]\d{6,12}$/.test(rest)) return null;
-    return `+972${rest}`;
-  }
-
-  if (d.length === 9 && d.startsWith('5')) {
-    return `+972${d}`;
-  }
-
-  if (/^[1-9]\d{7,14}$/.test(d)) {
-    return `+${d}`;
-  }
-
-  return null;
-}
-
-/** Check if phone belongs to a hardcoded admin */
-function isAdminPhone(phone) {
-  const clean = cleanPhone(phone);
-  return clean === '972525640021' || clean === '972506400030';
-}
-
-function webauthnConfig(req) {
-  const appUrl = process.env.WEB_APP_URL || process.env.FRONTEND_URL || `${req.protocol}://${req.get('host')}`;
-  const origin = new URL(appUrl).origin;
-  return {
-    rpName: process.env.WEBAUTHN_RP_NAME || 'VETO Legal',
-    rpID: process.env.WEBAUTHN_RP_ID || new URL(origin).hostname,
-    origin,
-  };
-}
-
-async function findAccountById(id, role, includePasskeys = false) {
-  const Model = role === 'lawyer' ? Lawyer : User;
-  const query = Model.findById(id);
-  if (includePasskeys) query.select('+passkeys');
-  const doc = await query;
-  if (!doc) return null;
-  return { doc, role: role === 'admin' ? 'admin' : role };
-}
-
-function publicAccount(doc, role) {
-  return {
-    id: doc._id,
-    role,
-    full_name: doc.full_name,
-    phone: doc.phone,
-    email: doc.email || null,
-  };
 }
 
 // ============================================================
@@ -533,7 +427,15 @@ const passkeyLoginVerify = async (req, res, next) => {
     logEvent({ phone: normalizedPhone, role: account.role, event: 'passkey_login', success: true, user_id: account.doc._id, ip: req.ip, user_agent: req.headers['user-agent'] });
 
     const token = signToken({ userId: account.doc._id, role: account.role });
-    res.json({ token, role: account.role, user: publicAccount(account.doc, account.role) });
+    const baseUser = publicAccount(account.doc, account.role);
+    const user =
+      account.role === 'user' || account.role === 'admin'
+        ? {
+            ...baseUser,
+            onboarding_completed: account.doc.onboarding_completed ?? false,
+          }
+        : baseUser;
+    res.json({ token, role: account.role, user });
   } catch (err) { next(err); }
 };
 

@@ -1,10 +1,11 @@
 /* global self */
 // VETO Legal — PWA shell cache + push + notification click handler (scope: site root)
 
-const CACHE_NAME = "veto-pwa-v1";
+const CACHE_NAME = "veto-pwa-v2";
 const APP_SHELL = [
   "/offline.html",
   "/manifest.webmanifest",
+  "/veto-logo.svg",
   "/icons/icon-192.png",
   "/icons/icon-512.png",
   "/icons/maskable-192.png",
@@ -49,7 +50,8 @@ self.addEventListener("fetch", (event) => {
   if (
     url.pathname.startsWith("/icons/") ||
     url.pathname === "/manifest.webmanifest" ||
-    url.pathname === "/offline.html"
+    url.pathname === "/offline.html" ||
+    url.pathname === "/veto-logo.svg"
   ) {
     event.respondWith(
       caches.match(request).then((cached) => cached || fetch(request)),
@@ -87,7 +89,7 @@ self.addEventListener("push", (event) => {
     }
   }
 
-  const absoluteIcon = new URL("/icon.png", self.location.origin).href;
+  const absoluteIcon = new URL("/icons/icon-192.png", self.location.origin).href;
 
   event.waitUntil(
     self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clientList) => {

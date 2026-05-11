@@ -1,49 +1,194 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { VetoBrandLogo } from "@/components/brand/VetoBrandLogo";
+import { authGlassPanel, btnPrimaryDark } from "@/lib/vetoGlass";
 
 export const metadata: Metadata = {
-  title: "מדיניות פרטיות",
-  description: "מדיניות פרטיות בסיסית עבור VETO Legal.",
+  title: "מדיניות פרטיות | VETO Legal",
+  description: "מדיניות הפרטיות של פלטפורמת VETO Legal.",
 };
 
 export default function PrivacyPage() {
   return (
-    <main className="mx-auto w-full max-w-4xl px-5 py-16 text-right text-slate-100" dir="rtl">
-      <p className="text-sm font-semibold text-[#C5A059]">VETO Legal</p>
-      <h1 className="mt-3 font-frank text-4xl font-black">מדיניות פרטיות</h1>
-      <div className="mt-8 space-y-6 rounded-2xl border border-white/10 bg-white/[0.04] p-6 leading-8 text-slate-300">
-        <p>
-          VETO נבנית כמערכת Legal OS שמטפלת במידע רגיש. אנחנו אוספים מידע רק לצורך מתן השירות:
-          אימות משתמשים, חיבור לעורך דין, ניהול כספת ראיות, תשלומים, מנויים ותיעוד פעולות אבטחה.
-        </p>
-        <section>
-          <h2 className="text-xl font-bold text-white">מידע שנשמר</h2>
-          <p className="mt-2">
-            פרטי חשבון, טלפון, אימייל, תפקיד, סטטוס מנוי, קריאות SOS, מסמכים שהמשתמש יוצר או שומר,
-            ותיעוד טכני שנדרש לאבטחה ולתפעול. הקלטות או תמלולים נשמרים רק כחלק מהשירות ובכפוף לבחירת המשתמש וההרשאות.
+    <div className="min-h-screen bg-veto-ink text-slate-100">
+      <main
+        className="mx-auto w-full max-w-3xl px-4 py-8 md:px-6 md:py-12"
+        dir="rtl"
+      >
+        <div className="mb-8">
+          <Link
+            href="/"
+            className={`inline-flex items-center justify-center rounded-xl px-5 py-2.5 text-sm font-bold transition hover:opacity-90 ${btnPrimaryDark}`}
+          >
+            חזרה לדף הבית
+          </Link>
+        </div>
+
+        <header className="mb-8 text-center md:text-right">
+          <div className="mb-4 flex justify-center md:justify-end">
+            <VetoBrandLogo className="h-9 w-auto sm:h-10" />
+          </div>
+          <h1 className="font-display text-3xl font-bold text-white md:text-4xl">
+            מדיניות פרטיות
+          </h1>
+          <p className="mt-3 text-sm text-slate-400">
+            עדכון אחרון לצורכי תיעוד מוצרי — יש לקבל אישור משפטי ופרטיות (DPO)
+            לפני פרסום מסחרי סופי.
           </p>
-        </section>
-        <section>
-          <h2 className="text-xl font-bold text-white">זכויות משתמש</h2>
-          <p className="mt-2">
-            משתמשים יכולים לבקש גישה, תיקון, מחיקה, הגבלת עיבוד או ייצוא מידע אישי. בקשות מחיקה ייבדקו מול חובות
-            שמירה, מניעת הונאה, תיעוד משפטי ואבטחת מידע.
+        </header>
+
+        <article
+          className={`space-y-10 p-6 text-sm text-slate-300 md:p-8 md:text-base ${authGlassPanel}`}
+        >
+          <section className="space-y-3 leading-relaxed">
+            <h2 className="text-lg font-bold text-white md:text-xl">1. מבוא</h2>
+            <p>
+              מדיניות זו מסבירה כיצד VETO Legal (&quot;אנחנו&quot;, &quot;המערכת&quot;)
+              אוספת, משתמשת, מאחסנת ומגנה על מידע אישי ובהיקף השירות. אנו מחויבים
+              לשקיפות ולמינימיזציה של נתונים — תוך מתן שירות חירום ומשפטי איכותי.
+            </p>
+          </section>
+
+          <section className="space-y-3 leading-relaxed">
+            <h2 className="text-lg font-bold text-white md:text-xl">
+              2. איזה מידע אנו אוספים
+            </h2>
+            <ul className="list-inside list-disc space-y-2 marker:text-veto-gold">
+              <li>
+                <strong className="text-slate-200">פרטי זיהוי וחשבון:</strong> שם,
+                מספר טלפון, דוא״ל (אם סופק), תפקיד (אזרח/עורך דין/מנהל), העדפות
+                שפה והגדרות חשבון.
+              </li>
+              <li>
+                <strong className="text-slate-200">מיקום גיאוגרפי:</strong> בעת
+                הפעלת מצבי חירום (למשל SOS) או כאשר המשתמש מאשר — נאסף מיקום
+                לצורך תיאום עם עורך דין ושירותי שדה. המיקום אינו נאסף לצורכי פרופיל
+                שיווקי.
+              </li>
+              <li>
+                <strong className="text-slate-200">נתוני שימוש וטכניים:</strong>{" "}
+                יומני גישה, מזהי מכשיר, כתובת IP (לצורכי אבטחה ומניעת הונאה),
+                אירועי מערכת ומדדי ביצועים — לשם שיפור השירות ויציבות התשתית.
+              </li>
+              <li>
+                <strong className="text-slate-200">תוכן משתמש:</strong> מסמכים,
+                קבצים, הודעות צ&apos;אט ופניות תמיכה שהועלו במסגרת השירות, בכפוף
+                להרשאות והגדרות הכספת.
+              </li>
+            </ul>
+          </section>
+
+          <section className="space-y-3 leading-relaxed">
+            <h2 className="text-lg font-bold text-white md:text-xl">
+              3. בסיסים משפטיים ומטרות עיבוד
+            </h2>
+            <p>
+              העיבוד מבוצע לצורך ביצוע חוזה (מתן השירות), אינטרסים לגיטימיים
+              (אבטחה, שיפור מוצר), עמידה בחובות חוקיות, ובמקרים מסוימים — הסכמה
+              מפורשת (למשל התראות או תכונות אופציונליות). איננו משתמשים במידע
+              לפרופיל שיווקי חיצוני ללא בסיס חוקי מתאים.
+            </p>
+          </section>
+
+          <section className="space-y-3 leading-relaxed">
+            <h2 className="text-lg font-bold text-white md:text-xl">
+              4. חיסיון עו״ד–לקוח והצפנה מקצה לקצה (E2EE)
+            </h2>
+            <p>
+              שיחות הווידאו והקול במערכת עשויות להיות מוגנות בהצפנה מקצה לקצה
+              (E2EE), בהתאם לתצורת המוצר והספקים הטכנולוגיים.{" "}
+              <strong className="text-slate-200">
+                VETO אינה צופה, אינה מאזינה ואינה מנתחת את תוכן השיחות המוגנות
+                בחיסיון עו״ד–לקוח
+              </strong>{" "}
+              במסגרת התכונה הזו, בכפוף לדין החל, להגדרות המוצר ולחריגים טכניים
+              מוגבלים (למשל מטא-דאטה לצורך חיבור השיחה או עמידה בצו שיפוטי).
+            </p>
+          </section>
+
+          <section className="space-y-3 leading-relaxed">
+            <h2 className="text-lg font-bold text-white md:text-xl">
+              5. הקלטות, תמלולים וכספת (Vault)
+            </h2>
+            <p>
+              אם המשתמש בחר במפורש בהקלטה או בתיעוד, והרשאות המערכת מאפשרות זאת,
+              הקבצים עשויים להישמר בכספת מאובטחת (Vault) או באחסון מוצפן,{" "}
+              <strong className="text-slate-200">
+                בנגישות מוגבלת למשתמש ולעורך הדין המטפל באירוע — בכפוף להרשאות,
+                להסכמות ולדין
+              </strong>
+              . VETO אינה משתמשת בתוכן ההקלטות לצורכי שיווק. שמירת חומר רגיש היא
+              באחריות המשתמש לנהל הרשאות וסיסמאות בצורה נאותה.
+            </p>
+          </section>
+
+          <section className="space-y-3 leading-relaxed">
+            <h2 className="text-lg font-bold text-white md:text-xl">
+              6. שיתוף מידע וצדדים שלישיים
+            </h2>
+            <p>
+              <strong className="text-slate-200">
+                המידע לא יימכר ולא יועבר לצד ג&apos; למטרות שיווקיות של צדדים
+                חיצוניים.
+              </strong>{" "}
+              שיתוף יתבצע רק ככל הנדרש לתפעול השירות — לדוגמה ספקי ענן, תשלומים,
+              אימות זהות, תמיכה טכנית ואבטחה — ובהתאם להסכמי עיבוד (DPA) ולתקן
+              האבטחה המקובל. ייתכן מסירת מידע לפי צו שיפוטי חוקי או דרישת רגולטור,
+              לאחר בדיקה משפטית.
+            </p>
+          </section>
+
+          <section className="space-y-3 leading-relaxed">
+            <h2 className="text-lg font-bold text-white md:text-xl">
+              7. אבטחה ושמירת מידע
+            </h2>
+            <p>
+              אנו מיישמים אמצעי אבטחה ארגוניים וטכנולוגיים (הרשאות, הצפנה במעבר
+              ובמנוחה ככל הניתן, ניטור, גיבויים). אין מערכת חסינה ב־100% — במקרה
+              של דליפה נפעל בהתאם לדין להודעה ולתיקון.
+            </p>
+          </section>
+
+          <section className="space-y-3 leading-relaxed">
+            <h2 className="text-lg font-bold text-white md:text-xl">
+              8. זכויות נושאי מידע
+            </h2>
+            <p>
+              בכפוף לדין החל (לרבות תקנות הגנת הפרטיות, התשמ&quot;א–1981, וחוקים
+              בינלאומיים כאשר רלוונטי), ניתן לבקש גישה, תיקון, מחיקה, הגבלת עיבוד
+              או העברת נתונים. בקשות יטופלו בתוך פרקי זמן סבירים, בכפוף לאימות
+              זהות ולמגבלות חוקיות (שמירה לצורך הליכים, מניעת הונאה וכו׳).
+            </p>
+          </section>
+
+          <section className="space-y-3 leading-relaxed">
+            <h2 className="text-lg font-bold text-white md:text-xl">
+              9. העברה בינלאומית וספקי שירות
+            </h2>
+            <p>
+              חלק מספקי התשתית עשויים לאחסן מידע מחוץ לישראל או לאיחוד האירופי.
+              במקרה כזה נפעל להבטחת מנגנונים חוקיים להעברה (הסכמים, סעיפי הגנה
+              מתאימים) ככל שנדרש.
+            </p>
+          </section>
+
+          <section className="space-y-3 leading-relaxed">
+            <h2 className="text-lg font-bold text-white md:text-xl">
+              10. שינויים במדיניות ויצירת קשר
+            </h2>
+            <p>
+              מדיניות זו עשויה להתעדכן. שינוי מהותי יפורסם בממשק השירות. לשאלות
+              בנוגע לפרטיות ניתן לפנות דרך ערוצי התמיכה המפורסמים באתר או
+              ביישומון.
+            </p>
+          </section>
+
+          <p className="border-t border-white/10 pt-6 text-xs leading-relaxed text-slate-500">
+            מסמך זה נועד לשקיפות מוצרית. אין במסמך משום ייעוץ משפטי אישי; לשאלות
+            ספציפיות על זכויותיכם מול VETO מומלץ לפנות לייעוץ משפטי עצמאי.
           </p>
-        </section>
-        <section>
-          <h2 className="text-xl font-bold text-white">עיבוד מחוץ לאיחוד האירופי</h2>
-          <p className="mt-2">
-            השירות עשוי להשתמש בספקי ענן, תשלומים ובינה מלאכותית. לפני הפעלה מלאה באירופה יש לאשר משפטית את הסכמי
-            העיבוד, העברת המידע ומנגנוני האבטחה מול כל ספק.
-          </p>
-        </section>
-        <p className="text-sm text-slate-400">
-          הנוסח הוא תשתית מוצרית ראשונית ואינו מחליף מדיניות פרטיות משפטית חתומה.
-        </p>
-      </div>
-      <Link href="/" className="mt-8 inline-flex rounded-xl bg-[#C5A059] px-5 py-3 text-sm font-bold text-slate-950">
-        חזרה לדף הבית
-      </Link>
-    </main>
+        </article>
+      </main>
+    </div>
   );
 }

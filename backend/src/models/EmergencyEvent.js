@@ -95,6 +95,12 @@ const EmergencyEventSchema = new mongoose.Schema(
       default: null, // null until a lawyer accepts
     },
 
+    /** Per-event shared secret for Agora E2EE (not the user JWT). Use .select('+e2ee_secret') when needed. */
+    e2ee_secret: {
+      type: String,
+      select: false,
+    },
+
     // ── Status ────────────────────────────────────────────────
     status: {
       type: String,
@@ -293,6 +299,76 @@ const EmergencyEventSchema = new mongoose.Schema(
       type: String,
       enum: ['en', 'he', 'ar', 'ru'],
       default: null,
+    },
+
+    // ── Call v2 (Phase 3 rewrite) ────────────────────────────
+    /**
+     * GDPR consent for cloud recording. Both timestamps must be set
+     * before /api/calls/:eventId/cloud-recording/start will accept.
+     * Cleared (set to null) when the call ends — consent does not
+     * persist across separate sessions.
+     */
+    recording_consent: {
+      citizen_at: { type: Date, default: null },
+      lawyer_at:  { type: Date, default: null },
+    },
+
+    /**
+     * Persisted in-call chat (replaces socket-only `call-chat-message`).
+     * Survives reload, accessible after the call ends.
+     */
+    call_chat_messages: {
+      type: [
+        {
+          author_role: { type: String, enum: ['user', 'lawyer'], required: true },
+          author_id: { type: mongoose.Schema.Types.ObjectId, required: true },
+          text: { type: String, maxlength: 4000, required: true },
+          ts: { type: Date, default: Date.now },
+        },
+      ],
+      default: [],
+    },
+
+    /**
+     * Real-time transcription segments produced by Agora RTT.
+     * `is_final: false` rows are interim hypotheses and may get replaced
+     * by a final row sharing the same `segment_id`.
+     */
+    transcript_realtime_segments: {
+      type: [
+        {
+          segment_id: { type: String, default: null },
+          speaker: { type: String, default: null },
+          speaker_uid: { type: Number, default: null },
+          text: { type: String, default: '' },
+          lang: { type: String, default: null },
+          ts: { type: Date, default: Date.now },
+          is_final: { type: Boolean, default: false },
+        },
+      ],
+      default: [],
+    },
+
+    /** Agora Real-Time Transcription task id — non-null while RTT is running. */
+    agora_rtt_task_id: {
+      type: String,
+      default: null,
+    },
+
+    /** Files dropped/shared during the call (Cloudinary URLs). */
+    shared_files: {
+      type: [
+        {
+          cloud_url: { type: String, required: true },
+          mime: { type: String, default: null },
+          size: { type: Number, default: 0 },
+          by_role: { type: String, enum: ['user', 'lawyer'], required: true },
+          by_id: { type: mongoose.Schema.Types.ObjectId, required: true },
+          original_name: { type: String, default: null },
+          ts: { type: Date, default: Date.now },
+        },
+      ],
+      default: [],
     },
 
     // ── Smart Dispatch Log ────────────────────────────────────
