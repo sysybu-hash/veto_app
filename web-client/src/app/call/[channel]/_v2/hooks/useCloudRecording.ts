@@ -28,6 +28,7 @@ export function useCloudRecording(
   eventId: string | null,
   opts?: { wantVideo?: boolean },
 ) {
+  const wantVideo = !!opts?.wantVideo;
   const [status, setStatus] = useState<RecordingStatus>("idle");
   const [consent, setConsent] = useState<ConsentSnapshot>({
     citizen: false,
@@ -109,7 +110,7 @@ export function useCloudRecording(
         apiUrl(`/api/calls/${eventId}/cloud-recording/start`),
         {
           method: "POST",
-          body: JSON.stringify({ wantVideo: !!opts?.wantVideo }),
+          body: JSON.stringify({ wantVideo }),
         },
       );
       if (!res.ok) {
@@ -122,7 +123,7 @@ export function useCloudRecording(
       setStatus("error");
       setError(err instanceof Error ? err.message : String(err));
     }
-  }, [eventId, consent.citizen, opts?.wantVideo]);
+  }, [eventId, consent.citizen, wantVideo]);
 
   const stop = useCallback(async () => {
     if (!eventId) return;
