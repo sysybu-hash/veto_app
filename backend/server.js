@@ -182,8 +182,9 @@ app.use(mongoSanitize());
   if (isProd && otpInJson && !ack) {
     console.error(
       '❌ Refusing to boot: RETURN_OTP_IN_JSON is enabled in production. ' +
-      'Set ALLOW_OTP_IN_JSON_PRODUCTION=1 in addition to RETURN_OTP_IN_JSON ' +
-      'if this is intentional (e.g. internal staging on the production env).',
+      'Either (A) remove RETURN_OTP_IN_JSON from Render when using real SMS, or ' +
+      '(B) set ALLOW_OTP_IN_JSON_PRODUCTION=1 alongside RETURN_OTP_IN_JSON if you ' +
+      'intentionally expose OTP in JSON on this host (e.g. staging only).',
     );
     process.exit(1);
   }
