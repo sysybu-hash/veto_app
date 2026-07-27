@@ -277,10 +277,11 @@ async function resolveMp4S3Key({
   const deadline = Date.now() + maxWaitMs;
   let lastKeys = [];
   while (Date.now() < deadline) {
+    // Agora's async_stop leaves the mix in a transitional state right after
+    // `stop` — an immediate `query` can 404 even though the file will show
+    // up seconds later. Keep polling instead of giving up on the first 404,
+    // since this is the only path that doesn't require S3 `ListBucket`.
     const qr = await queryMix({ resourceId, sid, cname, uidStr });
-    if (qr.status === 404) {
-      break;
-    }
     if (qr.status === 200 && qr.data) {
       lastKeys = collectMp4KeysFromQueryPayload(qr.data);
       if (lastKeys.length > 0) {
@@ -289,9 +290,15 @@ async function resolveMp4S3Key({
     }
     await new Promise((r) => setTimeout(r, 2000));
   }
-  const fallback = await findLatestMp4UnderPrefix(s3Prefix);
-  if (fallback) return fallback;
   if (lastKeys.length > 0) return lastKeys[lastKeys.length - 1];
+  try {
+    const fallback = await findLatestMp4UnderPrefix(s3Prefix);
+    if (fallback) return fallback;
+  } catch (err) {
+    throw new Error(
+      `Cloud recording: Agora query never returned a file, and the S3 ListBucket fallback failed (${err.message})`,
+    );
+  }
   throw new Error('Cloud recording: no MP4 file found after stop (check S3 prefix / Agora console)');
 }
 
