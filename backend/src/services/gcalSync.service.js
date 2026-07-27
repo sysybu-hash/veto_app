@@ -5,6 +5,7 @@
 // ============================================================
 
 const { OAuth2Client } = require('google-auth-library');
+const logger = require('../lib/logger');
 const CalendarEvent = require('../models/CalendarEvent');
 const User = require('../models/User');
 const Lawyer = require('../models/Lawyer');
@@ -130,10 +131,7 @@ async function exportForAccount(oauth2, accountId, accountRole, calendarId) {
         await ev.save();
       }
     } catch (e) {
-      console.error(
-        `[gcal-sync] export fail account=${accountId} event=${ev._id}:`,
-        e.message || e,
-      );
+      logger.error({ err: e, accountId, eventId: ev._id }, '[gcal-sync] export fail');
     }
   }
 }
@@ -240,7 +238,7 @@ async function syncOneAccount(accountId, accountRole) {
   if (!doc?.gcalRefreshTokenEnc) return { skipped: true };
   const refresh = decryptToken(doc.gcalRefreshTokenEnc);
   if (!refresh) {
-    console.error(`[gcal-sync] decrypt failed account=${accountId}`);
+    logger.error({ accountId }, '[gcal-sync] decrypt failed');
     return { error: 'decrypt_failed' };
   }
   const oauth2 = oauthClientWithRefresh(refresh);
@@ -253,7 +251,7 @@ async function syncOneAccount(accountId, accountRole) {
 
 async function syncAllAccounts() {
   if (!gcalEnv().clientId) {
-    console.warn('[gcal-sync] GOOGLE_CALENDAR_CLIENT_ID not set — skipping');
+    logger.warn('[gcal-sync] GOOGLE_CALENDAR_CLIENT_ID not set — skipping');
     return;
   }
   const users = await User.find({
@@ -268,14 +266,14 @@ async function syncAllAccounts() {
     try {
       await syncOneAccount(String(u._id), role);
     } catch (e) {
-      console.error(`[gcal-sync] user ${u._id}:`, e.message || e);
+      logger.error({ err: e, userId: u._id }, '[gcal-sync] user sync failed');
     }
   }
   for (const l of lawyers) {
     try {
       await syncOneAccount(String(l._id), 'lawyer');
     } catch (e) {
-      console.error(`[gcal-sync] lawyer ${l._id}:`, e.message || e);
+      logger.error({ err: e, lawyerId: l._id }, '[gcal-sync] lawyer sync failed');
     }
   }
 }
@@ -296,7 +294,7 @@ async function deleteRemoteIfMirrored(accountId, accountRole, googleEventId, cal
     const eid = encodeURIComponent(googleEventId);
     await gcalRequest(oauth2, 'DELETE', `/calendars/${cal}/events/${eid}`, null);
   } catch (e) {
-    console.warn('[gcal-sync] deleteRemoteIfMirrored:', e.message || e);
+    logger.warn({ err: e }, '[gcal-sync] deleteRemoteIfMirrored failed');
   }
 }
 

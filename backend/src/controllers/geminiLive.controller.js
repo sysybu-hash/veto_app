@@ -4,6 +4,7 @@
 // ============================================================
 
 const { GoogleGenAI } = require('@google/genai');
+const logger = require('../lib/logger');
 const { getGeminiLiveModelId } = require('../config/gemini.config');
 const { SYSTEM_INSTRUCTIONS } = require('../services/gemini.service');
 
@@ -97,7 +98,7 @@ exports.createLiveToken = async (req, res) => {
       voiceName,
     });
   } catch (err) {
-    console.error('[VETO] authTokens.create (live) failed:', err?.message || err);
+    logger.error({ err }, '[VETO] authTokens.create (live) failed');
     return res.status(500).json({
       error: 'Failed to create live session token',
       detail: process.env.NODE_ENV !== 'production' ? String(err?.message || err) : undefined,

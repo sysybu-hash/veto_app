@@ -3,6 +3,8 @@
 //  Env: FIREBASE_SERVICE_ACCOUNT — JSON string of the service account
 // ============================================================
 
+const logger = require('../lib/logger');
+
 let _inited;
 function getAdmin() {
   if (_inited !== undefined) return _inited;
@@ -19,7 +21,7 @@ function getAdmin() {
     }
     _inited = admin;
   } catch (e) {
-    console.error('[FCM] Init failed:', e.message);
+    logger.error({ err: e }, '[FCM] Init failed');
     _inited = null;
   }
   return _inited;

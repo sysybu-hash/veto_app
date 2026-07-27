@@ -234,8 +234,11 @@
 
 #### web-client (Next.js) על Vercel + CORS
 
-- ב־[server.js](server.js) ברירת המחדל היא **שיקוף Origin** (`origin: true` כש־`CORS_ALLOWED_ORIGINS` לא מוגדר) — כל דומיין לגיטימי של האתר (כולל `https://….vercel.app` בפריוויו ובפרוד) מקבل ל־`fetch` / Socket.io עם `credentials`.
-- אם הגדרתם **`CORS_ALLOWED_ORIGINS`** (רשימה מופרדת בפסיקים, origins מדויקים בלי `/` בסוף), רק הם יאושרו — הוסיפו את כל דומייני Vercel שבהם אתם משתמשים + דומיין מותאם אם קיים.
+> **שונה (2026-07): בוטל שיקוף `*.vercel.app` כברירת מחדל.** קודם, כל דומיין תחת `*.vercel.app` (כולל דומיין שתוקף עלול לפרוס) התקבל עם `credentials: true` — חור אבטחה. כעת:
+
+- ב־[server.js](server.js) בפרודקשן **חובה** להגדיר **`CORS_ALLOWED_ORIGINS`** (רשימה מופרדת בפסיקים, origins מדויקים בלי `/` בסוף) או `FRONTEND_URL`/`WEB_APP_URL` — רק אלה + הדיפולטים הקשיחים (`localhost:3000`, הדומיין הרשמי) יאושרו.
+- אם צריך גם preview deployments של Vercel (`*.vercel.app` כלשהו, לדוגמה בסביבת staging) — יש להפעיל זאת **במפורש** עם `ALLOW_VERCEL_PREVIEW_ORIGINS=1`. **לא** להפעיל את זה בפרודקשן הראשי.
+- אם `CORS_ALLOWED_ORIGINS`/`FRONTEND_URL` לא מוגדרים בפרודקשן, השרת ידפיס אזהרה ב-boot (`⚠️ CORS: no CORS_ALLOWED_ORIGINS/FRONTEND_URL set in production`).
 - חסימה טיפוסית היא **לא CORS** אלא לקוח שפונה ל־`localhost` מפריסת Vercel — ב־Vercel חובה **`NEXT_PUBLIC_API_ORIGIN`** לכתובת ה־API ב־Render (ראו [web-client/.env.example](../web-client/.env.example)).
 
 ### URL אחד, שירות אחד (פרודקשן)

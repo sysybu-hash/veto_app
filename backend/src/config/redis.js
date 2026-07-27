@@ -1,5 +1,6 @@
 const { createClient } = require('redis');
 const Sentry = require('@sentry/node');
+const logger = require('../lib/logger');
 
 // Fallback to memory if Redis is not configured (useful for local dev)
 const REDIS_URL = process.env.REDIS_URL || null;
@@ -10,7 +11,7 @@ let subClient = null;
 
 async function initRedis() {
   if (!REDIS_URL) {
-    console.warn('⚠️ No REDIS_URL provided. Socket.io will run in memory-only mode (Not recommended for multi-instance production).');
+    logger.warn('No REDIS_URL provided. Socket.io will run in memory-only mode (not recommended for multi-instance production).');
     return null;
   }
 
@@ -29,10 +30,10 @@ async function initRedis() {
       subClient.connect()
     ]);
 
-    console.log('✅ Redis connected successfully for Socket.io Adapter.');
+    logger.info('Redis connected successfully for Socket.io Adapter.');
     return { pubClient, subClient };
   } catch (error) {
-    console.error('❌ Redis connection failed:', error);
+    logger.error({ err: error }, 'Redis connection failed');
     Sentry.captureException(error);
     return null;
   }

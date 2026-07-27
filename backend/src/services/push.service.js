@@ -13,6 +13,7 @@
 // ============================================================
 
 const webpush = require('web-push');
+const logger = require('../lib/logger');
 
 let _configured = false;
 
@@ -48,7 +49,7 @@ async function sendToLawyer(lawyer, { title, body, data = {} }) {
       const Lawyer = require('../models/Lawyer');
       await Lawyer.findByIdAndUpdate(lawyer._id, { $unset: { push_subscription: 1 } });
     }
-    console.error(`[PUSH] Failed for lawyer ${lawyer._id}:`, err.message);
+    logger.error({ err, lawyerId: lawyer._id }, '[PUSH] Failed for lawyer');
     return { sent: false, reason: err.message };
   }
 }
@@ -83,7 +84,7 @@ async function sendToUser(user, { title, body, data = {} }) {
     if (err.statusCode === 410 || err.statusCode === 404) {
       await User.findByIdAndUpdate(user._id, { $unset: { push_subscription: 1 } });
     }
-    console.error(`[PUSH] Failed for user ${user._id}:`, err.message);
+    logger.error({ err, userId: user._id }, '[PUSH] Failed for user');
     return { sent: false, reason: err.message };
   }
 }

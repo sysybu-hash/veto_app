@@ -3,6 +3,7 @@
 // ============================================================
 
 const crypto = require('crypto');
+const logger = require('../lib/logger');
 const mongoose = require('mongoose');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const Document = require('../models/Document');
@@ -102,7 +103,7 @@ exports.generateDocument = async (req, res) => {
 
     return res.status(200).json(savedDoc);
   } catch (error) {
-    console.error('Document Gen Error:', error);
+    logger.error({ err: error }, 'Document Gen Error');
     return res.status(500).json({ error: 'Failed to generate document' });
   }
 };
@@ -163,7 +164,7 @@ exports.signDocument = async (req, res) => {
 
     return res.status(200).json({ status: 'success', signature, document: updated });
   } catch (error) {
-    console.error('signDocument:', error);
+    logger.error({ err: error }, 'signDocument failed');
     return res.status(500).json({ error: 'Failed to sign document' });
   }
 };
@@ -195,7 +196,7 @@ exports.requestLawyerSignature = async (req, res) => {
       message: 'Lawyer requested successfully',
     });
   } catch (error) {
-    console.error('requestLawyerSignature:', error);
+    logger.error({ err: error }, 'requestLawyerSignature failed');
     return res.status(500).json({ error: 'Failed to request lawyer' });
   }
 };

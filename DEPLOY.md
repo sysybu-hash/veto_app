@@ -3,6 +3,27 @@
 
 ---
 
+## הכנה לפרודקשן — מה נוסף (2026-07)
+
+תוכנית מלאה נמצאת ב-[docs/](docs/) (ר' `SOS_MVP_DECISIONS.md`, `DOMAIN_SOURCE_OF_TRUTH.md`, `LEGAL_REVIEW_PACKAGE.md`). שינויים שכבר יושמו בקוד:
+
+- **CORS**: `*.vercel.app` הוסר כברירת מחדל — חובה `CORS_ALLOWED_ORIGINS` בפרודקשן. ר' [backend/ENV_GUIDE.md](backend/ENV_GUIDE.md#web-client-nextjs-על-vercel--cors).
+- **PayPal webhook**: השרת מסרב לעלות בפרודקשן אם `PAYPAL_CLIENT_ID` מוגדר בלי `PAYPAL_WEBHOOK_ID`.
+- **OTP**: rate limiting ייעודי (keyed by phone) על `/api/auth/verify-otp`.
+- **Health check** (`GET /health`): פינג אמיתי ל-Mongo/Redis, לא רק `readyState`.
+- **SOS**: כשל Ably כבר לא מוחק את רשומת ה-`SosEvent` — מסומן `PENDING_DELIVERY` + Sentry alert.
+- **CI** (`.github/workflows/ci.yml`): נוספו jobs ל-secret scanning (gitleaks, כל היסטוריית git), `npm audit` (report-only כרגע — יש vulnerabilities קיימים שדורשים טיפול ייעודי), ו-Playwright E2E (report-only, artifact מועלה).
+- **Keepalive** (`.github/workflows/keepalive.yml`): פינג `/health` כל 14 דק' — אלטרנטיבה חינמית לשדרוג Render.
+- **Logging**: `pino` מובנה (`backend/src/lib/logger.js`) + `pino-http` ללוגים מובנים לכל בקשה; auth/payment/call controllers הומרו (שאר הקבצים ב-backlog).
+- **404 גלובלי**: תגובת JSON אחידה לכל נתיב לא מוכר.
+- **אינדקסים**: נוספו אינדקסים מורכבים ל-`EmergencyEvent` ו-`VaultFile` (האחרון לא היה מאונדקס בכלל לפי `user_id`).
+- **`npm audit fix`** (ללא `--force`) הורץ בשני הפרויקטים ואומת (build+lint+tests+boot מקומי אמיתי): **backend** 32→16 פרצות, **הקריטית היחידה (`websocket-driver`) נסגרה**. **web-client** 23→21.
+  - **נותר, דורש `--force` (לא בוצע — סיכון שבירה, לא טופל אוטומטית):**
+    - backend: שרשרת טרנזיטיבית של `firebase-admin`/`@google-cloud/*` (moderate/high) — שדרוג `firebase-admin` ישיר עצמו כשמוכן.
+    - web-client: `next` יידרש לעלות ל-`16.2.12` (מחוץ לפין המדויק `16.2.6` שנבחר בכוונה — ר' `web-client/AGENTS.md`), ו-`@ducanh2912/next-pwa` יירד ל-`10.2.6` (breaking change, נמוך מהפין הנוכחי `^10.2.9`). לפני שדרוג: לבדוק release notes + להריץ build+E2E מלא.
+
+---
+
 ## ארכיטקטורת Deploy
 
 ```
@@ -151,7 +172,9 @@ Framework זוהה בדרך־כלל כ־**Next.js** אוטומטית. Build: `np
 
 ---
 
-### Flutter Web (legacy) — `frontend/build/web`
+### Flutter Web (legacy, קפוא) — `frontend/build/web`
+
+> ⚠️ **`frontend/` קפוא — אין לפתח כאן.** ר' [frontend/README.md](frontend/README.md). ההוראות הבאות נשמרות רק לצורך תחזוקת הארטיפקט הקיים (אם עדיין מוגש איפשהו), לא לפיתוח פעיל. הלקוח הפעיל היחיד הוא `web-client/`. תחליף המובייל העתידי הוא `mobile/` (Expo, WIP — ר' [mobile/README.md](mobile/README.md)), לא `frontend/`.
 
 Flutter Web בנוי מראש ל-`frontend/build/web/` (**כלול ב-git אם נשמר שם ארטיפקט**).  
 Vercel מגיש את התיקייה הזו ישירות — **אין צורך ב-build step** במודל הישן.
