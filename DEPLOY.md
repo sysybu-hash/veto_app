@@ -7,6 +7,8 @@
 
 תוכנית מלאה נמצאת ב-[docs/](docs/) (ר' `SOS_MVP_DECISIONS.md`, `DOMAIN_SOURCE_OF_TRUTH.md`, `LEGAL_REVIEW_PACKAGE.md`). שינויים שכבר יושמו בקוד:
 
+- **⚠️ Service Worker לא נבנה כלל (תוקן 2026-07)**: `next build` (ברירת מחדל, Next.js 16) משתמש ב-Turbopack; `@ducanh2912/next-pwa` נתלה רק ב-hook של webpack ולכן היה **no-op שקט** — `/sw.js` החזיר 404 בפרודקשן החי, ומשמעות מעשית: **התראות Push ל-SOS לעורכי דין (`worker/index.ts`) כנראה לא עבדו כלל** מזמן שה-build עבר ל-Next 16. תוקן: `package.json` `build` משתמש עכשיו ב-`next build --webpack` (ר' `web-client/next.config.mjs`). **אחרי כל deploy — לוודא `curl -I https://<domain>/sw.js` מחזיר 200, לא 404.**
+  - כחלק מהתיקון גם צומצם `cacheOnFrontEndNav`/`aggressiveFrontEndNavCaching` (היו `true`, עכשיו `false`) — הם שמרו HTML/RSC של ניווטים בקאש, מה שיצר תרחיש של HTML ישן + JS חדש (React hydration error #418) בטאבים שנשארו פתוחים מעבר ל-deploy. משתמשים עם מצב תקוע: hard refresh / "Clear site data".
 - **CORS**: `*.vercel.app` הוסר כברירת מחדל — חובה `CORS_ALLOWED_ORIGINS` בפרודקשן. ר' [backend/ENV_GUIDE.md](backend/ENV_GUIDE.md#web-client-nextjs-על-vercel--cors).
 - **PayPal webhook**: השרת מסרב לעלות בפרודקשן אם `PAYPAL_CLIENT_ID` מוגדר בלי `PAYPAL_WEBHOOK_ID`.
 - **OTP**: rate limiting ייעודי (keyed by phone) על `/api/auth/verify-otp`.
@@ -14,7 +16,7 @@
 - **SOS**: כשל Ably כבר לא מוחק את רשומת ה-`SosEvent` — מסומן `PENDING_DELIVERY` + Sentry alert.
 - **CI** (`.github/workflows/ci.yml`): נוספו jobs ל-secret scanning (gitleaks, כל היסטוריית git), `npm audit` (report-only כרגע — יש vulnerabilities קיימים שדורשים טיפול ייעודי), ו-Playwright E2E (report-only, artifact מועלה).
 - **Keepalive** (`.github/workflows/keepalive.yml`): פינג `/health` כל 14 דק' — אלטרנטיבה חינמית לשדרוג Render.
-- **Logging**: `pino` מובנה (`backend/src/lib/logger.js`) + `pino-http` ללוגים מובנים לכל בקשה; auth/payment/call controllers הומרו (שאר הקבצים ב-backlog).
+- **Logging**: `pino` מובנה (`backend/src/lib/logger.js`) + `pino-http` ללוגים מובנים לכל בקשה; **כל** `console.log/error/warn` ב-`backend/src` הומר.
 - **404 גלובלי**: תגובת JSON אחידה לכל נתיב לא מוכר.
 - **אינדקסים**: נוספו אינדקסים מורכבים ל-`EmergencyEvent` ו-`VaultFile` (האחרון לא היה מאונדקס בכלל לפי `user_id`).
 - **`npm audit fix`** (ללא `--force`) הורץ בשני הפרויקטים ואומת (build+lint+tests+boot מקומי אמיתי): **backend** 32→16 פרצות, **הקריטית היחידה (`websocket-driver`) נסגרה**. **web-client** 23→21.

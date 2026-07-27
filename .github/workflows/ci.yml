@@ -114,6 +114,16 @@ jobs:
           npm ci
           npm run build
 
+      - name: Verify PWA service worker was actually generated
+        working-directory: web-client
+        # Regression guard: next-pwa only hooks into webpack, not Turbopack (Next 16's
+        # default for `next build`). If `build` script ever loses `--webpack`, this
+        # silently stops producing /sw.js — which also kills SOS push notifications to
+        # lawyers (worker/index.ts) with zero errors anywhere in the build log.
+        run: |
+          set -e
+          test -f public/sw.js || { echo "::error::public/sw.js was not generated — PWA/push notifications will be broken in production. Check next.config.mjs / package.json build script uses 'next build --webpack'."; exit 1; }
+
       - name: Vercel CLI (auth check)
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
