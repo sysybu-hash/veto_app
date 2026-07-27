@@ -165,7 +165,7 @@ exports.uploadRecording = async (req, res, next) => {
 // ── Transcribe recording with Gemini ─────────────────────────
 exports.transcribeRecording = async (req, res, next) => {
   try {
-    if (!process.env.GEMINI_API_KEY) {
+    if (!isGoogleAIConfigured()) {
       return res.status(503).json({ error: 'Transcription not configured' });
     }
 
@@ -194,7 +194,8 @@ exports.transcribeRecording = async (req, res, next) => {
     };
     const lang = langMap[language || event.language] || 'the call language';
 
-    const model = genAI.getGenerativeModel({ model: getGeminiModelId() });
+    const ai = getGoogleAIClient();
+    const geminiModel = getGeminiModelId();
 
     let transcript;
 
@@ -211,17 +212,22 @@ Rules:
 - If something is unclear, leave it out rather than describing non-speech sounds.
       `.trim();
 
-      const result = await model.generateContent([
-        { text: prompt },
-        {
-          inlineData: {
-            mimeType: mimeType || 'audio/webm',
-            data:     audioBase64,
+      const response = await ai.models.generateContent({
+        model: geminiModel,
+        contents: [
+          {
+            role: 'user',
+            parts: [
+              { text: prompt },
+              { inlineData: { mimeType: mimeType || 'audio/webm', data: audioBase64 } },
+            ],
           },
-        },
-      ]);
+        ],
+      });
 
-      transcript = sanitizeTranscript(result.response.text());
+      transcript = sanitizeTranscript(
+        typeof response.text === 'string' ? response.text : String(response.text ?? ''),
+      );
     } else if (event.recording_url) {
       // Fetch stored recording (e.g. Cloudinary) and transcribe like inline audio.
       const audioResp = await axios.get(event.recording_url, {
@@ -256,17 +262,22 @@ Rules:
 - If something is unclear, leave it out rather than describing non-speech sounds.
       `.trim();
 
-      const result = await model.generateContent([
-        { text: prompt },
-        {
-          inlineData: {
-            mimeType,
-            data: audioBase64FromUrl,
+      const response = await ai.models.generateContent({
+        model: geminiModel,
+        contents: [
+          {
+            role: 'user',
+            parts: [
+              { text: prompt },
+              { inlineData: { mimeType, data: audioBase64FromUrl } },
+            ],
           },
-        },
-      ]);
+        ],
+      });
 
-      transcript = sanitizeTranscript(result.response.text());
+      transcript = sanitizeTranscript(
+        typeof response.text === 'string' ? response.text : String(response.text ?? ''),
+      );
     } else {
       return res.status(400).json({ error: 'No audio data or recording URL available' });
     }
