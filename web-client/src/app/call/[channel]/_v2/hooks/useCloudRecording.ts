@@ -37,6 +37,7 @@ export function useCloudRecording(
   });
   const [error, setError] = useState<string | null>(null);
   const pollTimer = useRef<number | null>(null);
+  const stopInFlight = useRef(false);
 
   const refreshConsent = useCallback(async () => {
     if (!eventId) return;
@@ -126,7 +127,12 @@ export function useCloudRecording(
   }, [eventId, consent.citizen, wantVideo]);
 
   const stop = useCallback(async () => {
-    if (!eventId) return;
+    // Guard against duplicate calls racing in (e.g. a double-click on "end
+    // call" reading a stale `status` from the closure before the first call's
+    // `setStatus("stopping")` has re-rendered) — Agora rejects a second stop
+    // on an already-stopping mix, which used to surface as a 500 in the logs.
+    if (!eventId || stopInFlight.current) return;
+    stopInFlight.current = true;
     setStatus("stopping");
     try {
       const res = await authFetch(
@@ -137,6 +143,8 @@ export function useCloudRecording(
     } catch (err) {
       setStatus("error");
       setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      stopInFlight.current = false;
     }
   }, [eventId]);
 
