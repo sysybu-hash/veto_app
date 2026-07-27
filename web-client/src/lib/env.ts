@@ -1,19 +1,32 @@
 const DEFAULT_DEV_API_ORIGIN = "http://localhost:5001";
 
+function normalizeApiOrigin(raw: string): string {
+  return raw.replace(/\/$/, "").replace(/\/api$/i, "");
+}
+
 /**
  * API + Socket origin (no /api suffix). E.g. http://localhost:5001 or https://xxx.loca.lt
  *
- * In production (Vercel / `next start`), there is no localhost default — the browser would
- * call the *user's* machine (ERR_CONNECTION_REFUSED). Set NEXT_PUBLIC_API_ORIGIN to your
- * deployed API (e.g. https://your-service.onrender.com) and redeploy.
+ * - **Production build:** uses `NEXT_PUBLIC_API_ORIGIN` (must be your deployed API, e.g.
+ *   https://your-service.onrender.com). Never leave localhost there for Vercel.
+ * - **Development (`next dev`):** prefers `NEXT_PUBLIC_API_ORIGIN_DEV` when set, then
+ *   `NEXT_PUBLIC_API_ORIGIN`, then falls back to localhost:5001.
  */
 export function getPublicApiOrigin(): string {
-  const raw = process.env.NEXT_PUBLIC_API_ORIGIN?.trim();
-  if (raw) {
-    // Common misconfiguration: `https://host.onrender.com/api` breaks paths like `/api/calls/...`
-    return raw.replace(/\/$/, "").replace(/\/api$/i, "");
+  const isDev = process.env.NODE_ENV !== "production";
+  let raw = "";
+  if (isDev) {
+    raw =
+      process.env.NEXT_PUBLIC_API_ORIGIN_DEV?.trim() ||
+      process.env.NEXT_PUBLIC_API_ORIGIN?.trim() ||
+      "";
+  } else {
+    raw = process.env.NEXT_PUBLIC_API_ORIGIN?.trim() || "";
   }
-  if (process.env.NODE_ENV === "production") {
+  if (raw) {
+    return normalizeApiOrigin(raw);
+  }
+  if (!isDev) {
     return "";
   }
   return DEFAULT_DEV_API_ORIGIN;

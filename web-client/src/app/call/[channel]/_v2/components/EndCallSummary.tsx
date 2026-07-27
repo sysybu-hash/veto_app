@@ -1,8 +1,10 @@
 "use client";
 
+import Link from "next/link";
 import { useTrWithFallback } from "../lib/trWithFallback";
 import type { ActionPlan } from "@/api/advancedApi";
 import { createOvertimeOrder } from "@/api/paymentApi";
+import type { TranscriptSegment } from "../hooks/useRealtimeTranscription";
 
 export type SummaryShape = {
   minutes: number;
@@ -40,6 +42,7 @@ export function EndCallSummary({
   saveError,
   savedCount,
   onSaveToVault,
+  transcriptSegments,
 }: {
   summary: SummaryShape;
   actionPlan: ActionPlan | null;
@@ -50,6 +53,8 @@ export function EndCallSummary({
   saveError: string | null;
   savedCount: number;
   onSaveToVault: () => void;
+  /** Live RTT segments from this session (shown even before vault sync). */
+  transcriptSegments?: TranscriptSegment[];
 }) {
   const t = useTrWithFallback();
 
@@ -111,6 +116,29 @@ export function EndCallSummary({
             </div>
           </div>
 
+          {!!transcriptSegments?.length && (
+            <section className="mt-5 rounded-2xl border border-white/[0.06] bg-white/[0.03] p-4">
+              <p className="text-sm font-bold text-slate-200">
+                {t("call.v2.summary.transcriptTitle", "Transcript (this session)")}
+              </p>
+              <div className="mt-2 max-h-44 overflow-y-auto rounded-xl border border-white/[0.06] bg-black/25 p-3 text-xs leading-relaxed text-slate-200">
+                {transcriptSegments.map((s) => (
+                  <p
+                    key={s.segmentId}
+                    className={`mb-1.5 ${s.isFinal ? "text-slate-100" : "text-slate-500 italic"}`}
+                  >
+                    {s.speaker ? (
+                      <span className="me-1 font-semibold text-amber-300/90">
+                        {s.speaker}:
+                      </span>
+                    ) : null}
+                    {s.text}
+                  </p>
+                ))}
+              </div>
+            </section>
+          )}
+
           {actionPlan && (
             <section className="mt-5 rounded-2xl border border-[#C5A059]/20 bg-[#C5A059]/[0.06] p-4">
               <p className="text-sm font-bold text-[#C5A059]">
@@ -168,6 +196,20 @@ export function EndCallSummary({
                   </p>
                 )}
               </div>
+              {saveStatus === "saved" && (
+                <p className="mt-3 text-center text-xs leading-relaxed text-emerald-100/90">
+                  {t(
+                    "call.v2.summary.vaultSavedHint",
+                    "The entry appears under “Evidence timeline” on the vault page.",
+                  )}{" "}
+                  <Link
+                    href="/vault"
+                    className="font-bold text-emerald-50 underline decoration-emerald-300/70 underline-offset-2 hover:text-white"
+                  >
+                    {t("call.v2.summary.vaultOpenLink", "Open vault")}
+                  </Link>
+                </p>
+              )}
             </section>
           )}
 

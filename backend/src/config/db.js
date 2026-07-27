@@ -5,13 +5,14 @@
 
 const dns = require('dns');
 const mongoose = require('mongoose');
+const logger = require('../lib/logger');
 
 const connectDB = async () => {
   const uri = process.env.MONGO_URI;
   if (!uri || typeof uri !== 'string' || !uri.trim()) {
     const msg =
       'MONGO_URI is missing or empty. Set it in backend/.env locally or in Render Environment.';
-    console.error(`❌ ${msg}`);
+    logger.error(msg);
     throw new Error(msg);
   }
 
@@ -28,16 +29,12 @@ const connectDB = async () => {
       family: 4,
     });
 
-    console.log('✅ VETO Atlas Connected');
-    console.log(`   Host: ${conn.connection.host}`);
+    logger.info({ host: conn.connection.host }, 'VETO Atlas Connected');
   } catch (error) {
-    console.error(`❌ MongoDB connection error: ${error.message}`);
-    if (String(error.message).includes('querySrv')) {
-      console.error('');
-      console.error('   טיפ: שגיאת querySrv = בעיית DNS ל־mongodb+srv.');
-      console.error('   נסה: הגדרת DNS בווינדוס ל־8.8.8.8, או ב-Atlas קח מחרוזת');
-      console.error('   "Standard connection" (mongodb://...) במקום srv, ועדכן MONGO_URI.');
-    }
+    const hint = String(error.message).includes('querySrv')
+      ? 'querySrv = DNS issue for mongodb+srv. Try: set Windows DNS to 8.8.8.8, or use Atlas "Standard connection" (mongodb://...) instead of srv, and update MONGO_URI.'
+      : undefined;
+    logger.error({ err: error, hint }, 'MongoDB connection error');
     throw error;
   }
 };

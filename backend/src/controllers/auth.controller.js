@@ -4,6 +4,7 @@
 //  Flow: Register → Request OTP → Verify OTP → JWT issued
 // ============================================================
 
+const logger    = require('../lib/logger');
 const User      = require('../models/User');
 const Lawyer    = require('../models/Lawyer');
 const LoginLog  = require('../models/LoginLog');
@@ -136,9 +137,8 @@ const requestOTP = async (req, res, next) => {
     doc.otp_code       = otp;
     doc.otp_expires_at = otpExpiry();
     await doc.save();
-    console.log(`[AUTH] OTP for ${normalizedPhone}: ${otp}`);
 
-    console.log(`[AUTH] OTP requested for ${normalizedPhone} (role: ${role})`);
+    logger.info({ phone: normalizedPhone, role }, '[AUTH] OTP requested');
 
     logEvent({ phone: normalizedPhone, role, event: 'otp_request', success: true, user_id: doc._id, ip: req.ip, user_agent: req.headers['user-agent'] });
 
@@ -157,14 +157,22 @@ const requestOTP = async (req, res, next) => {
     const includeOtpInResponse =
       !isProd || !twilioConfigured || returnOtpInJson;
 
+    // Only ever write the OTP value itself to logs on the same paths where it's also
+    // returned in the JSON response (dev / no-Twilio hosts / explicit QA opt-in). When
+    // Twilio is the real delivery channel, the OTP must stay out of both the response
+    // AND the logs — previously this line logged it unconditionally in every case.
+    if (includeOtpInResponse) {
+      logger.debug({ phone: normalizedPhone, otp }, '[AUTH] OTP value (dev/no-SMS path only)');
+    }
+
     if (isProd && !twilioConfigured) {
-      console.warn(
+      logger.warn(
         '[AUTH] Twilio not configured in production — OTP is returned in JSON for login. Add Twilio when ready for SMS-only delivery.',
       );
     }
 
     if (isProd && twilioConfigured && returnOtpInJson) {
-      console.warn(
+      logger.warn(
         '[AUTH] RETURN_OTP_IN_JSON is set while Twilio is configured — OTP is still included in JSON. Unset RETURN_OTP_IN_JSON when SMS-only is desired.',
       );
     }
@@ -207,7 +215,7 @@ const verifyOTP = async (req, res, next) => {
       if (isAdminPhone(normalizedPhone) && doc.role !== 'admin') {
         doc.role = 'admin';
         await doc.save();
-        console.log(`[AUTH] ${normalizedPhone} promoted to ADMIN.`);
+        logger.info({ phone: normalizedPhone }, '[AUTH] promoted to ADMIN');
       }
 
       role = doc.role === 'admin' ? 'admin' : 'user';
@@ -607,7 +615,7 @@ const devLogin = async (req, res) => {
   }
 
   if (process.env.NODE_ENV === 'production' && allowInProd) {
-    console.warn(
+    logger.warn(
       '[AUTH] ALLOW_DEV_LOGIN is set: POST /auth/dev-login is enabled on production. Remove for real production.',
     );
   }
@@ -664,7 +672,7 @@ const devLogin = async (req, res) => {
       },
     });
   } catch (err) {
-    console.error('[AUTH] dev-login getOrCreateDevAccount:', err?.message || err);
+    logger.error({ err }, '[AUTH] dev-login getOrCreateDevAccount failed');
     return res.status(500).json({
       error: 'Could not prepare dev session. Check MongoDB and shadow phone uniqueness.',
     });

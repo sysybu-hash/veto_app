@@ -19,4 +19,9 @@ const VaultFileSchema = new mongoose.Schema({
   uploadedAt: { type: Date, default: Date.now },
 });
 
+// Every vault read in vault.controller.js filters by user_id (the citizen's own vault —
+// the most-hit query in this collection) and sorts by uploadedAt. user_id had no index
+// at all before this; without it every vault list does a full collection scan.
+VaultFileSchema.index({ user_id: 1, uploadedAt: -1 });
+
 module.exports = mongoose.model('VaultFile', VaultFileSchema);

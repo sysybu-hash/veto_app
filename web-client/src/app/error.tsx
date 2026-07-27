@@ -1,5 +1,6 @@
 "use client";
 
+import * as Sentry from "@sentry/nextjs";
 import { useEffect } from "react";
 import { VetoBrandLogo } from "@/components/brand/VetoBrandLogo";
 import { useTranslation } from "@/lib/i18n/LocaleProvider";
@@ -16,6 +17,7 @@ export default function AppError({
 
   useEffect(() => {
     console.error("[VETO] route error:", error);
+    Sentry.captureException(error);
   }, [error]);
 
   return (

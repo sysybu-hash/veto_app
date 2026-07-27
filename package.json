@@ -17,6 +17,7 @@
     "tunnel:help": "npm run tunnel:help --prefix backend",
     "dev:urls": "npm run dev:urls --prefix backend",
     "dev:web": "npm run dev --prefix web-client",
+    "env:sync": "node scripts/sync-env-to-platforms.mjs",
     "db:push": "node scripts/prisma-from-root-env.cjs db push",
     "db:generate": "node scripts/prisma-from-root-env.cjs generate",
     "build:web": "cd frontend && flutter build web --release --no-wasm-dry-run --no-tree-shake-icons --pwa-strategy=none --no-web-resources-cdn --dart-define=VETO_API_BASE=https://veto-app-new.onrender.com",

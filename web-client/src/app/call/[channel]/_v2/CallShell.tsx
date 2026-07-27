@@ -151,6 +151,11 @@ export function CallShell({ channel }: { channel: string }) {
   const [actionPlan, setActionPlan] = useState<ActionPlan | null>(null);
   const vault = useSaveToVault(eventId);
 
+  useEffect(() => {
+    if (vault.status !== "saved") return;
+    router.refresh();
+  }, [vault.status, router]);
+
   // Timer.
   const [callStartedAt] = useState<number>(() => Date.now());
   const { elapsedSec, label: timerLabel } = useCallTimer(callStartedAt);
@@ -747,6 +752,7 @@ export function CallShell({ channel }: { channel: string }) {
           saveError={vault.error}
           savedCount={vault.savedCount}
           onSaveToVault={vault.save}
+          transcriptSegments={rtt.segments}
         />
       )}
 

@@ -5,18 +5,20 @@
   "scripts": {
     "postinstall": "node scripts/copy-agora-denoiser-wasm.mjs",
     "dev": "next dev",
-    "build": "prisma generate && npm run lint && next build",
+    "build": "prisma generate && npm run lint && next build --webpack",
     "start": "next start",
     "lint": "eslint",
     "analyze": "cross-env ANALYZE=true next build",
     "db:generate": "prisma generate",
-    "db:push": "prisma db push"
+    "db:push": "prisma db push",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@ducanh2912/next-pwa": "^10.2.9",
     "@google/generative-ai": "^0.24.1",
     "@paypal/react-paypal-js": "^9.2.0",
     "@prisma/client": "^6.19.2",
+    "@sentry/nextjs": "^10.52.0",
     "@simplewebauthn/browser": "^13.3.0",
     "ably": "^2.21.0",
     "agora-extension-ai-denoiser": "^1.1.0",
@@ -39,6 +41,7 @@
   },
   "devDependencies": {
     "@next/bundle-analyzer": "^16.2.6",
+    "@playwright/test": "^1.51.1",
     "@tailwindcss/postcss": "^4",
     "@types/file-saver": "^2.0.7",
     "@types/node": "^20",

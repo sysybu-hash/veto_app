@@ -422,5 +422,15 @@ const EmergencyEventSchema = new mongoose.Schema(
 EmergencyEventSchema.index({ event_location: '2dsphere' });
 EmergencyEventSchema.index({ user_id: 1, status: 1 });
 EmergencyEventSchema.index({ assigned_lawyer_id: 1, status: 1 });
+// event.controller.js listEvents / vault.controller.js: filter by user_id (or
+// assigned_lawyer_id) then .sort({ triggered_at: -1 }) — without a matching compound
+// index, Mongo scans the equality match and sorts in memory instead of using the index
+// order once result sets grow past a handful of events per user.
+EmergencyEventSchema.index({ user_id: 1, triggered_at: -1 });
+EmergencyEventSchema.index({ assigned_lawyer_id: 1, triggered_at: -1 });
+// user.routes.js entitlement check runs this exact shape on effectively every
+// citizen dashboard/gate load — worth its own index rather than relying on the
+// {user_id,status} index above (charge_status is a different field than status).
+EmergencyEventSchema.index({ user_id: 1, charge_status: 1 });
 
 module.exports = mongoose.model('EmergencyEvent', EmergencyEventSchema);

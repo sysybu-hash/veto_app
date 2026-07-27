@@ -20,6 +20,8 @@ export type EvidenceDTO = {
   isVerified: boolean;
   digitalSeal: string | null;
   createdAt: string;
+  /** Prisma: e.g. `<mongoEventId>:transcript` for SOS transcripts */
+  sourceEmergencyEventId?: string | null;
 };
 
 function mapJwtRoleToPrisma(role: string | null | undefined): Role {
@@ -68,6 +70,7 @@ export async function listEvidenceForSession(): Promise<EvidenceDTO[]> {
       isVerified: e.isVerified,
       digitalSeal: e.digitalSeal,
       createdAt: e.createdAt.toISOString(),
+      sourceEmergencyEventId: e.sourceEmergencyEventId ?? null,
     }));
   } catch (e) {
     console.error("[vault] listEvidenceForSession:", e);
@@ -411,6 +414,13 @@ export async function deleteEvidence(
     const { fileUrl } = row;
     const isRemoteBinary =
       fileUrl.startsWith("http://") || fileUrl.startsWith("https://");
+
+    if (!legacyBase && isRemoteBinary) {
+      // LEGACY_API_URL isn't set, so the remote file is never actually deleted — only
+      // the Postgres row is. This used to fail completely silently, leaving an orphaned
+      // file on whatever storage backs the legacy API with no trace anywhere.
+      console.warn("[vault] LEGACY_API_URL not configured — remote file not deleted, only DB row:", fileUrl);
+    }
 
     if (legacyBase && isRemoteBinary) {
       const legacyToken = process.env.LEGACY_API_TOKEN ?? "";

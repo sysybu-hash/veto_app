@@ -88,11 +88,19 @@ export default function PayPalCheckout({
   if (!clientId) {
     return (
       <div
-        className="mx-auto w-full max-w-sm rounded-2xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-center text-sm text-amber-200"
+        className="mx-auto w-full max-w-sm rounded-2xl border border-amber-500/40 bg-amber-500/10 px-4 py-4 text-center text-sm text-amber-950 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-100"
         dir="rtl"
       >
-        חסר <code className="rounded bg-black/20 px-1">NEXT_PUBLIC_PAYPAL_CLIENT_ID</code>{" "}
-        ב־env של הפרונט.
+        <p className="font-semibold leading-snug">
+          תשלום PayPal אינו זמין בסביבה זו — חסר מזהה לקוח בפריסה.
+        </p>
+        <p className="mt-2 text-xs leading-relaxed text-amber-900/80 dark:text-amber-200/85">
+          הוסיפו את משתנה הסביבה{" "}
+          <code className="rounded bg-black/10 px-1 py-0.5 font-mono text-[11px] dark:bg-black/25">
+            NEXT_PUBLIC_PAYPAL_CLIENT_ID
+          </code>{" "}
+          ב־Vercel / Render (או בקובץ env מקומי) והפעילו מחדש את הבנייה.
+        </p>
       </div>
     );
   }

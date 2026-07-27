@@ -9,6 +9,7 @@ const {
   isTransientGeminiFailure,
   isApiErrorPayloadText,
 } = require('../services/gemini.service');
+const logger = require('../lib/logger');
 const Lawyer = require('../models/Lawyer');
 const AITransparencyLog = require('../models/AITransparencyLog');
 const { getMatchTerms } = require('../config/specializations');
@@ -163,7 +164,7 @@ exports.aiChat = async (req, res) => {
         : null,
     });
   } catch (err) {
-    console.error('AI chat error:', err.message);
+    logger.error({ err }, 'AI chat error');
     if (isTransientGeminiFailure(err)) {
       await recordAiLog(req, {
         action: 'AI legal chat fallback',
@@ -236,7 +237,7 @@ exports.publicAiChat = async (req, res) => {
       reply,
     });
   } catch (err) {
-    console.error('Public AI chat error:', err.message);
+    logger.error({ err }, 'Public AI chat error');
     if (isTransientGeminiFailure(err)) {
       await recordAiLog(req, {
         action: 'Public AI homepage chat fallback',
@@ -315,7 +316,7 @@ exports.translateCaptionSegments = async (req, res) => {
     });
     return res.json({ translations, configured: true });
   } catch (err) {
-    console.error('AI translate-segments error:', err.message);
+    logger.error({ err }, 'AI translate-segments error');
     if (isTransientGeminiFailure(err)) {
       return res.json({
         translations: segments.map(() => null),

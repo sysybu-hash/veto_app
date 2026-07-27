@@ -4,6 +4,7 @@
 // ============================================================
 
 const mongoose = require('mongoose');
+const logger = require('../lib/logger');
 const User = require('../models/User');
 const { createJsSdkOrder, captureOrder } = require('../services/paypal.service');
 
@@ -34,7 +35,7 @@ exports.createOrder = async (req, res) => {
     if (error.code === 'PAYPAL_CONFIG_MISSING') {
       return res.status(503).json({ error: 'PayPal is not configured on this server.' });
     }
-    console.error('Failed to create order:', error);
+    logger.error({ err: error }, 'Failed to create order');
     return res.status(500).json({ error: 'Failed to create order.' });
   }
 };
@@ -68,7 +69,7 @@ exports.captureOrder = async (req, res) => {
     if (error.code === 'PAYPAL_CONFIG_MISSING') {
       return res.status(503).json({ error: 'PayPal is not configured on this server.' });
     }
-    console.error('Failed to capture order:', error);
+    logger.error({ err: error }, 'Failed to capture order');
     return res.status(500).json({ error: 'Failed to capture order.' });
   }
 };

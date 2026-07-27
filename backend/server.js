@@ -53,8 +53,10 @@ const express = require('express');
 const cors    = require('cors');
 const http    = require('http');
 const helmet  = require('helmet');
+const pinoHttp = require('pino-http');
 const rateLimit = require('express-rate-limit');
 const mongoSanitize = require('express-mongo-sanitize');
+const logger = require('./src/lib/logger');
 const { Server } = require('socket.io');
 const { createAdapter } = require('@socket.io/redis-adapter');
 const { initRedis } = require('./src/config/redis');
@@ -67,7 +69,10 @@ const server = http.createServer(app);
  * CORS with credentials — required for cross-origin browser calls from Vercel → Render.
  * - Always allows common local dev + production Vercel app URL.
  * - Merges CORS_ALLOWED_ORIGINS, FRONTEND_URL / WEB_APP_URL (no trailing slash).
- * - Allows any *.vercel.app origin for preview deployments (add exact preview URL in GCP OAuth).
+ * - The broad *.vercel.app wildcard is OFF by default. Any attacker-owned Vercel project
+ *   is also under *.vercel.app, so trusting it with credentials:true is a real risk.
+ *   Opt in explicitly with ALLOW_VERCEL_PREVIEW_ORIGINS=1 (e.g. for a staging environment)
+ *   — production should rely on an explicit CORS_ALLOWED_ORIGINS list instead.
  */
 function buildCorsOrigin() {
   const trimOrigin = (s) => s.trim().replace(/\/$/, '');
@@ -88,6 +93,14 @@ function buildCorsOrigin() {
     [...defaults, ...fromEnv, fromWeb].filter(Boolean),
   );
 
+  const allowVercelPreviewWildcard = process.env.ALLOW_VERCEL_PREVIEW_ORIGINS === '1';
+
+  if (process.env.NODE_ENV === 'production' && !allowVercelPreviewWildcard && fromEnv.length === 0 && !fromWeb) {
+    console.warn(
+      '⚠️  CORS: no CORS_ALLOWED_ORIGINS/FRONTEND_URL set in production — only the hardcoded defaults will be allowed.',
+    );
+  }
+
   return (origin, callback) => {
     if (!origin) {
       callback(null, true);
@@ -97,14 +110,16 @@ function buildCorsOrigin() {
       callback(null, true);
       return;
     }
-    try {
-      const u = new URL(origin);
-      if (u.hostname.endsWith('.vercel.app')) {
-        callback(null, true);
-        return;
+    if (allowVercelPreviewWildcard) {
+      try {
+        const u = new URL(origin);
+        if (u.hostname.endsWith('.vercel.app')) {
+          callback(null, true);
+          return;
+        }
+      } catch {
+        /* ignore */
       }
-    } catch {
-      /* ignore */
     }
     callback(new Error(`CORS: origin not allowed: ${origin}`));
   };
@@ -131,6 +146,16 @@ app.use(
       'X-Requested-With',
       'Cookie',
     ],
+  }),
+);
+
+// ── Structured request logging (JSON in prod) ──────────────────
+app.use(
+  pinoHttp({
+    logger,
+    // /health is polled every ~14min by the keepalive workflow (and by Render itself) —
+    // logging every hit would just be noise, not signal.
+    autoLogging: { ignore: (req) => req.url === '/health' },
   }),
 );
 
@@ -195,6 +220,26 @@ app.use(mongoSanitize());
       '[BOOT] RETURN_OTP_IN_JSON is on without Twilio — OTP is returned in JSON (typical for Render until SMS is wired). ' +
       'Configure Twilio and unset RETURN_OTP_IN_JSON for public production.',
     );
+  }
+})();
+
+// ── Production safety: PayPal webhook must be verifiable if billing is enabled ──
+// Without PAYPAL_WEBHOOK_ID, /api/payment/webhook/paypal cannot verify signatures and
+// paypal.service.js now throws on every webhook call — refuse to boot instead of
+// silently running with an unverifiable billing webhook.
+(function guardPaypalWebhookInProduction() {
+  const isProd = process.env.NODE_ENV === 'production';
+  const paypalConfigured =
+    Boolean(process.env.PAYPAL_CLIENT_ID) && Boolean(process.env.PAYPAL_CLIENT_SECRET);
+  const webhookIdSet = Boolean(process.env.PAYPAL_WEBHOOK_ID);
+
+  if (isProd && paypalConfigured && !webhookIdSet) {
+    console.error(
+      '❌ Refusing to boot: PayPal is configured (PAYPAL_CLIENT_ID/SECRET set) but PAYPAL_WEBHOOK_ID ' +
+      'is missing. Without it, incoming PayPal webhooks cannot be verified and billing state could be ' +
+      'forged. Set PAYPAL_WEBHOOK_ID from the PayPal Developer Dashboard → Webhooks.',
+    );
+    process.exit(1);
   }
 })();
 
@@ -346,6 +391,13 @@ app.get('/', (_, res) =>
 
 require('./src/socket/dispatch.socket')(io);
 require('./src/socket/webrtc.socket')(io);
+
+// Catch-all 404 — must be after every route mount. Without this, an unmatched path
+// (typo, retired endpoint, probing) falls through to Express's default HTML 404 page
+// instead of a clean JSON body, which every API client here expects.
+app.use((req, res) => {
+  res.status(404).json({ error: 'Not found', path: req.originalUrl });
+});
 
 // Sentry + global error handler (must be after routes; must run before listen())
 if (Sentry.__vetoInstrumented) {

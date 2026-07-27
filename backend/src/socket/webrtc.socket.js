@@ -9,6 +9,7 @@
 // ============================================================
 
 const Sentry = require('../../instrument');
+const logger = require('../lib/logger');
 const EmergencyEvent = require('../models/EmergencyEvent');
 const Lawyer         = require('../models/Lawyer');
 const { buildRtcTokenForUid } = require('../services/agoraToken.service');
@@ -155,11 +156,12 @@ module.exports = function initCallSignaling(io) {
           }, JOIN_TIMEOUT_MS);
         }
 
-        console.log(
-          `📞 join-call-room | ${role} ${uid} | room=${roomId} | peers=${roomSockets.size} | mode=${normalizedType}`,
+        logger.info(
+          { role, uid, roomId, peers: roomSockets.size, mode: normalizedType },
+          '📞 join-call-room',
         );
       } catch (err) {
-        console.error('[Call] join-call-room error:', err);
+        logger.error({ err }, '[Call] join-call-room error');
         socket.emit('call-error', { message: 'Failed to join call room.' });
       }
     });
@@ -203,7 +205,7 @@ module.exports = function initCallSignaling(io) {
           tokenExpiresAt: expiresAt || 0,
         });
       } catch (err) {
-        console.error('[Call] call-renew-token error:', err);
+        logger.error({ err }, '[Call] call-renew-token error');
         socket.emit('call-error', { message: 'Could not renew token.' });
       }
     });
@@ -230,7 +232,7 @@ module.exports = function initCallSignaling(io) {
           userId: uid,
         });
       } catch (err) {
-        console.error('[Call] call-chat-message error:', err);
+        logger.error({ err }, '[Call] call-chat-message error');
       }
     });
 
@@ -272,18 +274,18 @@ module.exports = function initCallSignaling(io) {
         if (endedMeta?.assigned_lawyer_id) {
           await Lawyer.findByIdAndUpdate(endedMeta.assigned_lawyer_id, {
             is_available: true,
-          }).catch(console.error);
+          }).catch((err) => logger.error({ err, lawyerId: endedMeta.assigned_lawyer_id }, 'Failed to free lawyer availability'));
         }
 
-        console.log(`📞 call-ended | room=${roomId} | by=${role} | ${duration}s`);
+        logger.info({ roomId, role, durationSeconds: duration }, '📞 call-ended');
       } catch (err) {
-        console.error('[Call] call-ended error:', err);
+        logger.error({ err }, '[Call] call-ended error');
       }
     });
 
     socket.on('disconnect', (reason) => {
       const uid = userId?.toString?.() ?? String(userId);
-      console.log(`[Socket/Call] User ${uid} disconnected. Reason: ${reason}`);
+      logger.info({ uid, reason }, '[Socket/Call] User disconnected');
       if (
         Sentry.__vetoInstrumented &&
         (reason === 'transport error' || reason === 'ping timeout')
@@ -322,10 +324,10 @@ module.exports = function initCallSignaling(io) {
                 if (meta?.assigned_lawyer_id) {
                   await Lawyer.findByIdAndUpdate(meta.assigned_lawyer_id, {
                     is_available: true,
-                  }).catch(console.error);
+                  }).catch((err) => logger.error({ err, lawyerId: meta.assigned_lawyer_id }, 'Failed to free lawyer availability on disconnect'));
                 }
               } catch (e) {
-                console.error('[Call] disconnect room cleanup:', e);
+                logger.error({ err: e, roomId }, '[Call] disconnect room cleanup failed');
               }
             })();
           }
