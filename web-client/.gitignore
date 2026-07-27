@@ -38,6 +38,19 @@ web-dev*.log
 # Agora AI Denoiser WASM — copied by `npm run postinstall` from node_modules
 /public/agora-ai-denoiser/
 
+# next-pwa generated service worker (build --webpack only, see next.config.mjs) —
+# regenerated on every build, never hand-edit or commit these.
+/public/sw.js
+/public/sw.js.map
+/public/workbox-*.js
+/public/workbox-*.js.map
+/public/worker-*.js
+/public/worker-*.js.map
+/public/fallback-*.js
+/public/fallback-*.js.map
+/public/swe-worker-*.js
+/public/swe-worker-*.js.map
+
 # vercel
 .vercel
 

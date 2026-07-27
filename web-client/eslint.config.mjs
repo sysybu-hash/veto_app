@@ -12,6 +12,13 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // next-pwa generated service worker output (see next.config.mjs / .gitignore) —
+    // minified/generated, not source; only present locally after `npm run build`.
+    "public/sw.js",
+    "public/workbox-*.js",
+    "public/worker-*.js",
+    "public/fallback-*.js",
+    "public/swe-worker-*.js",
   ]),
 ]);
 
