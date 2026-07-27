@@ -140,6 +140,17 @@ export function useCloudRecording(
     }
   }, [eventId]);
 
+  // Granting consent used to only flip a flag on the server — nothing then called
+  // start(), so a citizen who clicked "I consent to recording" saw no recording
+  // actually begin until someone separately found and clicked a different toggle.
+  // Consenting should mean "start recording now".
+  useEffect(() => {
+    if (!consent.citizen || status !== "idle") return;
+    queueMicrotask(() => {
+      void start();
+    });
+  }, [consent.citizen, status, start]);
+
   useEffect(() => {
     if (!eventId) return;
     queueMicrotask(() => {

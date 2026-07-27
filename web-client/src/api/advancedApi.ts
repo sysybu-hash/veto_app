@@ -56,6 +56,11 @@ export type TimelineItem = {
   hasTranscript?: boolean;
   sharedWithLawyer?: boolean;
   mimeType?: string;
+  /** Present when hasRecording is true (type "sos") — the actual playable URL. */
+  recordingUrl?: string | null;
+  screenRecordingUrl?: string | null;
+  /** Present for type "document" — the actual file URL to open/download. */
+  fileUrl?: string | null;
   metadata?: Record<string, unknown>;
 };
 
