@@ -254,6 +254,7 @@ export const he: Dict = {
     callTypeAudio: "שיחת אודיו",
     callTypeChat: "צ׳אט בלבד",
     callTypeHint: "אפשר לבחור וידאו, אודיו או צ׳אט לפי הצורך.",
+    callTypePermissionHint: "בבחירת וידאו או אודיו תתבקשו לאשר גישה למצלמה ולמיקרופון.",
   },
   call: {
     noSession: "אין סשן שיחה פעיל לערוץ זה.",

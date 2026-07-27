@@ -255,6 +255,7 @@ export const en: Dict = {
     callTypeAudio: "Audio call",
     callTypeChat: "Chat only",
     callTypeHint: "Choose video, audio, or chat before the session starts.",
+    callTypePermissionHint: "Choosing video or audio will ask you to allow camera and microphone access.",
   },
   call: {
     noSession: "No active call session for this channel.",

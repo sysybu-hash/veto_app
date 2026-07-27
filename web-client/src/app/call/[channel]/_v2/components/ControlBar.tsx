@@ -1,7 +1,18 @@
 "use client";
 
 import type { ReactNode } from "react";
+import { useState } from "react";
+import {
+  MessageCircle,
+  Mic,
+  MicOff,
+  MoreHorizontal,
+  PhoneOff,
+  Video,
+  VideoOff,
+} from "lucide-react";
 import { useTrWithFallback } from "../lib/trWithFallback";
+import { MoreMenu } from "./MoreMenu";
 
 type Mode = "video" | "audio" | "chat";
 
@@ -16,9 +27,11 @@ export type ControlBarProps = {
   captionsOn: boolean;
   translateOn: boolean;
   chatOpen: boolean;
+  /** New messages have arrived while the chat panel is closed. */
+  chatUnread?: boolean;
   /** Citizen has approved recording (required to use the record control). */
   citizenConsented: boolean;
-  /** Citizen can start/stop; lawyer only sees recording status. */
+  /** Citizen can start/stop; lawyer only sees recording status (in ConsentBanner). */
   myRole: "user" | "lawyer";
   onToggleMic: () => void;
   onToggleCamera: () => void;
@@ -31,37 +44,64 @@ export type ControlBarProps = {
   onToggleChat: () => void;
   onEndCall: () => void;
   pipSlot?: ReactNode;
+  onSaveToVault?: () => void;
+  vaultStatus?: "idle" | "saving" | "saved" | "error";
 };
 
 /**
- * Control bar — horizontally scrollable on narrow viewports so every action
- * stays reachable without a hidden menu. Container queries hide labels at
- * tight widths but keep large 44px hit targets for touch.
+ * Primary row: mic, camera, end-call, "more", chat — large icon-only
+ * circular buttons, always visible. Everything else (blur, noise, share,
+ * captions, translate, PiP, vault save, citizen-only record) lives in
+ * `MoreMenu`, opened on demand, so the main screen stays uncluttered —
+ * important in an emergency-call context.
  */
 export function ControlBar(p: ControlBarProps) {
   const t = useTrWithFallback();
   const isVideo = p.mode === "video";
-  const recBusy = p.recording === "starting" || p.recording === "stopping";
-  const recOn = p.recording === "recording";
-  const lawyerView = p.myRole === "lawyer";
+  const [moreOpen, setMoreOpen] = useState(false);
+
+  const closeMore = () => setMoreOpen(false);
 
   return (
     <div className="@container/cb pointer-events-none absolute inset-x-0 bottom-0 z-30 px-2 pb-3 @md:px-4">
+      <MoreMenu
+        open={moreOpen}
+        onClose={closeMore}
+        mode={p.mode}
+        denoiserOn={p.denoiserOn}
+        bgBlurOn={p.bgBlurOn}
+        isSharing={p.isSharing}
+        recording={p.recording}
+        captionsOn={p.captionsOn}
+        translateOn={p.translateOn}
+        citizenConsented={p.citizenConsented}
+        myRole={p.myRole}
+        onToggleDenoiser={p.onToggleDenoiser}
+        onToggleBgBlur={p.onToggleBgBlur}
+        onToggleScreenShare={p.onToggleScreenShare}
+        onToggleRecording={p.onToggleRecording}
+        onToggleCaptions={p.onToggleCaptions}
+        onToggleTranslate={p.onToggleTranslate}
+        pipSlot={p.pipSlot}
+        onSaveToVault={p.onSaveToVault}
+        vaultStatus={p.vaultStatus}
+      />
+
       <div
-        className="pointer-events-auto mx-auto flex max-w-3xl items-center justify-center gap-1.5 overflow-x-auto rounded-2xl border border-[#C5A059]/20 bg-zinc-950/80 px-2 py-2 shadow-[0_12px_40px_rgba(0,0,0,0.55)] backdrop-blur-xl
-                   @md/cb:gap-2.5 @md/cb:px-3 @md/cb:py-2.5"
+        className="pointer-events-auto mx-auto flex max-w-md items-center justify-center gap-3 rounded-full border border-[#C5A059]/20 bg-zinc-950/80 px-3 py-2.5 shadow-[0_12px_40px_rgba(0,0,0,0.55)] backdrop-blur-xl"
         role="toolbar"
         aria-label={t("call.v2.controls.aria", "Call controls")}
       >
-        <CtrlBtn
+        <IconBtn
           active={!p.micOn}
           onClick={p.onToggleMic}
           activeClass="bg-amber-600 text-white"
           label={p.micOn ? t("call.mute", "Mute") : t("call.unmute", "Unmute")}
+          icon={p.micOn ? <Mic className="h-[22px] w-[22px]" aria-hidden /> : <MicOff className="h-[22px] w-[22px]" aria-hidden />}
           shortcut="M"
         />
         {isVideo && (
-          <CtrlBtn
+          <IconBtn
             active={!p.cameraOn}
             onClick={p.onToggleCamera}
             activeClass="bg-amber-600 text-white"
@@ -70,147 +110,60 @@ export function ControlBar(p: ControlBarProps) {
                 ? t("call.cameraOff", "Camera off")
                 : t("call.cameraOn", "Camera on")
             }
+            icon={p.cameraOn ? <Video className="h-[22px] w-[22px]" aria-hidden /> : <VideoOff className="h-[22px] w-[22px]" aria-hidden />}
             shortcut="V"
           />
         )}
-        {isVideo && (
-          <CtrlBtn
-            active={p.bgBlurOn}
-            onClick={p.onToggleBgBlur}
-            activeClass="bg-emerald-600 text-white"
-            label={
-              p.bgBlurOn
-                ? t("call.v2.controls.blurOn", "Blur on")
-                : t("call.v2.controls.blurOff", "Blur off")
-            }
-          />
-        )}
-        <CtrlBtn
-          active={p.denoiserOn}
-          onClick={p.onToggleDenoiser}
-          activeClass="bg-emerald-600 text-white"
-          label={
-            p.denoiserOn
-              ? t("call.v2.controls.denoiserOn", "AI noise: on")
-              : t("call.v2.controls.denoiserOff", "AI noise: off")
-          }
-        />
-        {isVideo && (
-          <CtrlBtn
-            active={p.isSharing}
-            onClick={p.onToggleScreenShare}
-            activeClass="bg-emerald-600 text-white"
-            label={
-              p.isSharing
-                ? t("call.v2.controls.shareStop", "Stop share")
-                : t("call.v2.controls.shareStart", "Share screen")
-            }
-          />
-        )}
-        <CtrlBtn
-          active={p.captionsOn}
-          onClick={p.onToggleCaptions}
-          activeClass="bg-emerald-600 text-white"
-          label={
-            p.captionsOn
-              ? t("call.v2.controls.captionsOn", "Captions on")
-              : t("call.v2.controls.captionsOff", "Captions off")
-          }
-        />
-        {p.captionsOn && (
-          <CtrlBtn
-            active={p.translateOn}
-            onClick={p.onToggleTranslate}
-            activeClass="bg-emerald-600 text-white"
-            label={
-              p.translateOn
-                ? t("call.v2.controls.translateOn", "Translate on")
-                : t("call.v2.controls.translateOff", "Translate off")
-            }
-            title={t(
-              "call.v2.controls.translateTitle",
-              "Translate captions to your language with Gemini",
-            )}
-          />
-        )}
-        {lawyerView ? (
-          <div
-            role="status"
-            aria-label={t("call.v2.controls.recordLawyerAria", "Recording status")}
-            title={t(
-              "call.v2.controls.recordLawyerTitle",
-              "Only the citizen can start or stop cloud recording.",
-            )}
-            className={`whitespace-nowrap rounded-full px-3 py-2 text-xs font-semibold ${
-              recOn || recBusy
-                ? "bg-red-600 text-white"
-                : "bg-white/10 text-slate-300"
-            }`}
-          >
-            {recOn || recBusy
-              ? t("call.v2.controls.recordLawyerOn", "Recording on")
-              : t("call.v2.controls.recordLawyerOff", "Not recording")}
-          </div>
-        ) : (
-          <CtrlBtn
-            active={recOn}
-            disabled={!p.citizenConsented || recBusy}
-            onClick={p.onToggleRecording}
-            activeClass="bg-red-600 text-white"
-            label={
-              recOn
-                ? t("call.v2.controls.recordStop", "Stop rec")
-                : recBusy
-                  ? "…"
-                  : t("call.v2.controls.recordStart", "Record")
-            }
-            title={
-              !p.citizenConsented
-                ? t(
-                    "call.v2.controls.recordBlockedCitizen",
-                    "Approve recording in the banner first.",
-                  )
-                : undefined
-            }
-          />
-        )}
-        <CtrlBtn
-          active={p.chatOpen}
-          onClick={p.onToggleChat}
-          activeClass="bg-white/30 text-white"
-          label={t("call.v2.controls.chat", "Chat")}
-          shortcut="/"
-        />
-        {p.pipSlot}
+
         <button
           type="button"
           onClick={p.onEndCall}
           aria-label={t("call.end", "End call")}
-          className="ms-auto min-h-[44px] whitespace-nowrap rounded-full bg-red-600 px-4 py-2 text-sm font-bold text-white shadow-lg shadow-red-900/40 hover:bg-red-500 focus-visible:ring-2 focus-visible:ring-red-300"
+          title={t("call.end", "End call")}
+          className="flex h-[62px] w-[62px] items-center justify-center rounded-full bg-red-600 text-white shadow-lg shadow-red-900/40 outline-none transition hover:bg-red-500 focus-visible:ring-2 focus-visible:ring-red-300"
         >
-          {t("call.end", "End call")}
+          <PhoneOff className="h-[26px] w-[26px]" aria-hidden />
         </button>
+
+        <IconBtn
+          active={moreOpen}
+          onClick={() => setMoreOpen((v) => !v)}
+          activeClass="bg-white/30 text-white"
+          label={t("call.v2.controls.more", "More")}
+          icon={<MoreHorizontal className="h-[22px] w-[22px]" aria-hidden />}
+        />
+        <IconBtn
+          active={p.chatOpen}
+          onClick={p.onToggleChat}
+          activeClass="bg-white/30 text-white"
+          label={t("call.v2.controls.chat", "Chat")}
+          icon={<MessageCircle className="h-[22px] w-[22px]" aria-hidden />}
+          shortcut="/"
+          badge={p.chatUnread}
+        />
       </div>
     </div>
   );
 }
 
-function CtrlBtn({
+function IconBtn({
   active,
   disabled,
   onClick,
+  icon,
   label,
   shortcut,
   activeClass,
-  title,
+  badge,
 }: {
   active: boolean;
   disabled?: boolean;
   onClick: () => void;
+  icon: ReactNode;
   label: string;
   shortcut?: string;
   activeClass: string;
-  title?: string;
+  badge?: boolean;
 }) {
   return (
     <button
@@ -218,12 +171,19 @@ function CtrlBtn({
       onClick={onClick}
       disabled={disabled}
       aria-pressed={active}
-      title={title ?? (shortcut ? `${label} (${shortcut})` : label)}
-      className={`min-h-[44px] whitespace-nowrap rounded-full px-3 py-2 text-xs font-semibold transition focus-visible:ring-2 focus-visible:ring-[#C5A059] disabled:cursor-not-allowed disabled:opacity-50 ${
+      aria-label={label}
+      title={shortcut ? `${label} (${shortcut})` : label}
+      className={`relative flex h-[52px] w-[52px] items-center justify-center rounded-full text-[22px] outline-none transition focus-visible:ring-2 focus-visible:ring-[#C5A059] disabled:cursor-not-allowed disabled:opacity-50 ${
         active ? activeClass : "bg-white/12 text-white hover:bg-white/18"
       }`}
     >
-      {label}
+      {icon}
+      {badge && (
+        <span
+          aria-hidden
+          className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-[#C5A059]"
+        />
+      )}
     </button>
   );
 }

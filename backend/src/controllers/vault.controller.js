@@ -58,6 +58,11 @@ exports.getTimeline = async (req, res, next) => {
         hasRecording: !!event.recording_url || !!event.screen_recording_url,
         hasTranscript: !!event.call_transcript,
         sharedWithLawyer: !!event.assigned_lawyer_id,
+        // The client can only offer to open/play a recording if it actually has the
+        // URL — hasRecording alone (a boolean) was previously the only signal sent,
+        // so the vault UI had nothing to link to even when a recording existed.
+        recordingUrl: event.recording_url || null,
+        screenRecordingUrl: event.screen_recording_url || null,
         metadata: {
           callType: event.call_type,
           chargeStatus: event.charge_status,
@@ -73,6 +78,8 @@ exports.getTimeline = async (req, res, next) => {
         caseId: file.caseId ? String(file.caseId) : null,
         mimeType: file.mimeType,
         sharedWithLawyer: !!file.lawyerAccess,
+        // Same gap as above: the file's own URL was never sent, only derived metadata.
+        fileUrl: file.url || null,
         metadata: {
           sizeBytes: file.sizeBytes || null,
           hasAiSummary: !!file.aiSummary,

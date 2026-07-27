@@ -493,31 +493,66 @@ export function VaultPageClient({
                       {item.hasTranscript && <span className="rounded-full bg-white/10 px-2 py-1">תמלול</span>}
                       {item.sharedWithLawyer && <span className="rounded-full bg-white/10 px-2 py-1">שותף</span>}
                     </div>
-                    {item.type === "sos" && item.hasTranscript ? (
-                      <div className="mt-3">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            if (transcriptEv) {
-                              const body =
-                                decodePlainDataUrl(transcriptEv.fileUrl) ??
-                                "לא ניתן לפענח את התמלול.";
-                              setTranscriptViewer({
-                                title: transcriptEv.title,
-                                body,
-                              });
-                            } else {
-                              setTranscriptViewer({
-                                title: item.title,
-                                body:
-                                  "התמלול מסומן בשירות אך עדיין לא הועתק לכספת (Neon). לחצו ״סנכרן SOS״ למעלה או רעננו את הדף בעוד רגע.",
-                              });
-                            }
-                          }}
-                          className={`text-xs font-bold ${btnSecondaryGlass} border-[#C5A059]/35 text-[#e8c987]`}
-                        >
-                          צפייה בתמלול
-                        </button>
+                    {(item.type === "sos" && item.hasTranscript) ||
+                    item.recordingUrl ||
+                    item.screenRecordingUrl ||
+                    (item.type === "document" && item.fileUrl) ? (
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {item.type === "sos" && item.hasTranscript && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (transcriptEv) {
+                                const body =
+                                  decodePlainDataUrl(transcriptEv.fileUrl) ??
+                                  "לא ניתן לפענח את התמלול.";
+                                setTranscriptViewer({
+                                  title: transcriptEv.title,
+                                  body,
+                                });
+                              } else {
+                                setTranscriptViewer({
+                                  title: item.title,
+                                  body:
+                                    "התמלול מסומן בשירות אך עדיין לא הועתק לכספת (Neon). לחצו ״סנכרן SOS״ למעלה או רעננו את הדף בעוד רגע.",
+                                });
+                              }
+                            }}
+                            className={`text-xs font-bold ${btnSecondaryGlass} border-[#C5A059]/35 text-[#e8c987]`}
+                          >
+                            צפייה בתמלול
+                          </button>
+                        )}
+                        {item.recordingUrl && (
+                          <a
+                            href={item.recordingUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={`text-xs font-bold ${btnSecondaryGlass} border-[#C5A059]/35 text-[#e8c987]`}
+                          >
+                            צפייה בהקלטה
+                          </a>
+                        )}
+                        {item.screenRecordingUrl && (
+                          <a
+                            href={item.screenRecordingUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={`text-xs font-bold ${btnSecondaryGlass} border-[#C5A059]/35 text-[#e8c987]`}
+                          >
+                            צפייה בהקלטת מסך
+                          </a>
+                        )}
+                        {item.type === "document" && item.fileUrl && (
+                          <a
+                            href={item.fileUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={`text-xs font-bold ${btnSecondaryGlass} border-[#C5A059]/35 text-[#e8c987]`}
+                          >
+                            פתיחת קובץ
+                          </a>
+                        )}
                       </div>
                     ) : null}
                   </article>

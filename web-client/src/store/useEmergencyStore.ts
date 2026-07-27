@@ -13,6 +13,20 @@ export type SessionReadyState = {
   e2eeSecret?: string;
 };
 
+/**
+ * Shared with `PreCallCheck.tsx` — moved here so the call-type / accept-case
+ * buttons (on `hub`/`dashboard`, a different route than `/call/[channel]`)
+ * can write a readiness result that `CallShell.tsx` later reads.
+ */
+export type PreCallReadiness = {
+  micId: string | null;
+  cameraId: string | null;
+  speakerId: string | null;
+  ready: boolean;
+};
+
+export type PreCallPermissionStatus = "idle" | "pending" | "granted" | "denied";
+
 type EmergencyState = {
   isSearching: boolean;
   lawyerFound: boolean;
@@ -21,6 +35,14 @@ type EmergencyState = {
   currentRoomId: string | null;
   sessionReady: SessionReadyState | null;
   statusMessage: string | null;
+  /**
+   * Result of the mic/camera permission request fired from the call-type
+   * (citizen) or accept-case (lawyer) button — a single user gesture that
+   * both picks the call and grants device access, so `CallShell.tsx` no
+   * longer has to show a separate PreCallCheck step on the happy path.
+   */
+  preCallReadiness: PreCallReadiness | null;
+  preCallPermissionStatus: PreCallPermissionStatus;
 
   reset: () => void;
   startSearch: () => void;
@@ -33,6 +55,8 @@ type EmergencyState = {
   setSessionReady: (payload: SessionReadyState) => void;
   setErrorMessage: (message: string | null) => void;
   clearCallSession: () => void;
+  setPreCallReadiness: (r: PreCallReadiness) => void;
+  setPreCallPermissionStatus: (s: PreCallPermissionStatus) => void;
 };
 
 const initial = {
@@ -43,6 +67,8 @@ const initial = {
   currentRoomId: null as string | null,
   sessionReady: null as SessionReadyState | null,
   statusMessage: null as string | null,
+  preCallReadiness: null as PreCallReadiness | null,
+  preCallPermissionStatus: "idle" as PreCallPermissionStatus,
 };
 
 export const useEmergencyStore = create<EmergencyState>((set) => ({
@@ -86,5 +112,13 @@ export const useEmergencyStore = create<EmergencyState>((set) => ({
       lawyerFound: false,
     }),
 
-  clearCallSession: () => set({ sessionReady: null }),
+  clearCallSession: () =>
+    set({
+      sessionReady: null,
+      preCallReadiness: null,
+      preCallPermissionStatus: "idle",
+    }),
+
+  setPreCallReadiness: (r) => set({ preCallReadiness: r }),
+  setPreCallPermissionStatus: (s) => set({ preCallPermissionStatus: s }),
 }));
