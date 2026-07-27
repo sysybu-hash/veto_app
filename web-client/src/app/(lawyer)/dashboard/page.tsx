@@ -40,6 +40,7 @@ import {
   type SessionReadyState,
 } from "@/store/useEmergencyStore";
 import { useLawyerStore, type LawyerActiveAlert } from "@/store/useLawyerStore";
+import { useAgoraDevices } from "@/app/call/[channel]/_v2/hooks/useAgoraDevices";
 
 type DashboardTab = "overview" | "calls" | "vault" | "chat" | "schedule" | "profile";
 
@@ -161,6 +162,7 @@ export default function LawyerDashboardPage() {
   const setLastError = useLawyerStore((s) => s.setLastError);
   const clearAlert = useLawyerStore((s) => s.clearAlert);
   const setSessionReady = useEmergencyStore((s) => s.setSessionReady);
+  const { requestPermission } = useAgoraDevices();
 
   useEffect(() => {
     if (!getJwt()) {
@@ -317,6 +319,26 @@ export default function LawyerDashboardPage() {
     if (!activeAlert || isAccepting) return;
     setAccepting(true);
     setLastError(null);
+    // Request mic/camera in the same click as accepting — the lawyer doesn't
+    // know the citizen's chosen call type yet, so ask for both up front; an
+    // unused camera track is simply never created if the citizen picks
+    // audio/chat. This is the single user gesture that lets /call/[channel]
+    // skip its own separate PreCallCheck screen on the happy path.
+    useEmergencyStore.getState().setPreCallPermissionStatus("pending");
+    void requestPermission({ mic: true, camera: true }).then((granted) => {
+      const store = useEmergencyStore.getState();
+      if (granted) {
+        store.setPreCallReadiness({
+          micId: null,
+          cameraId: null,
+          speakerId: null,
+          ready: true,
+        });
+        store.setPreCallPermissionStatus("granted");
+      } else {
+        store.setPreCallPermissionStatus("denied");
+      }
+    });
     try {
       const sock = getSocket();
       if (!sock.connected) {
@@ -330,7 +352,7 @@ export default function LawyerDashboardPage() {
       sock.once("connect", () => sock.emit("accept_case", { eventId: activeAlert.eventId }));
       sock.connect();
     }
-  }, [activeAlert, isAccepting, setAccepting, setLastError]);
+  }, [activeAlert, isAccepting, setAccepting, setLastError, requestPermission]);
 
   const handleLogout = useCallback(() => {
     disconnectSocket();
@@ -854,7 +876,11 @@ function CaseDetails({
       <button type="button" disabled={isAccepting} onClick={onAccept} className={`mt-4 w-full px-5 py-4 text-base font-black ${btnPrimaryGold} disabled:cursor-not-allowed disabled:opacity-60`}>
         {isAccepting ? "מקבל את הקריאה..." : "קבל קריאה ופתח שיחה"}
       </button>
-      {!compact && <p className="mt-3 text-center text-xs text-slate-500">לאחר הקבלה האזרח יבחר וידאו, אודיו או צ׳אט.</p>}
+      {!compact && (
+        <p className="mt-3 text-center text-xs text-slate-500">
+          לאחר הקבלה האזרח יבחר וידאו, אודיו או צ׳אט. בלחיצה על הכפתור תתבקשו לאשר גישה למצלמה ולמיקרופון.
+        </p>
+      )}
     </div>
   );
 }
