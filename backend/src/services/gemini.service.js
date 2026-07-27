@@ -2,8 +2,8 @@
 //  gemini.service.js - Google Gemini AI Integration
 // ============================================================
 
-const { GoogleGenAI } = require('@google/genai');
 const { getGeminiModelId } = require('../config/gemini.config');
+const { getGoogleAIClient, isGoogleAIConfigured } = require('../config/googleAI.client');
 
 const SYSTEM_INSTRUCTIONS = {
   he: `אתה עוזר משפטי חכם של VETO. עזור למשתמשים במידע משפטי כללי, זכויות, פרשנות והכוונה ראשונית. אינך מחליף עורך דין ואינך נותן ייעוץ משפטי מחייב.
@@ -67,17 +67,8 @@ Dispatch domains: criminal | family | real estate | labor | commercial | traffic
 المجالات: criminal | family | real estate | labor | commercial | traffic`,
 };
 
-let _genAI;
-function getGenAI() {
-  if (!_genAI) {
-    _genAI = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-  }
-  return _genAI;
-}
-
-function hasGeminiApiKey() {
-  return Boolean((process.env.GEMINI_API_KEY || '').trim());
-}
+const getGenAI = getGoogleAIClient;
+const hasGeminiApiKey = isGoogleAIConfigured;
 
 /** True when Google may succeed on retry: rate limit, capacity, model overload. */
 function isTransientGeminiFailure(err) {

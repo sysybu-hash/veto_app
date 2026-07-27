@@ -3,21 +3,16 @@
 //  Architecture: VETO local notebook (not consumer NotebookLM API).
 // ============================================================
 
-const { GoogleGenAI } = require('@google/genai');
 const { getGeminiModelId } = require('../config/gemini.config');
+const { getGoogleAIClient, isGoogleAIConfigured } = require('../config/googleAI.client');
 const { isTransientGeminiFailure, isApiErrorPayloadText } = require('./gemini.service');
 
 const MAX_CONTEXT_CHARS = 100_000;
 
 const SYSTEM = `You are a research assistant for the VETO legal notebook. Answer using the notebook CONTEXT below (user notes and sources). If the answer is not supported by the context, say briefly that it is not in the materials. You do not provide binding legal advice. Be concise; match the user's language when possible (Hebrew/Russian/English).`;
 
-let _ai;
 function getAI() {
-  if (!_ai) {
-    if (!process.env.GEMINI_API_KEY) return null;
-    _ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-  }
-  return _ai;
+  return isGoogleAIConfigured() ? getGoogleAIClient() : null;
 }
 
 /**

@@ -4,8 +4,8 @@
 // ============================================================
 
 const axios = require('axios');
-const { GoogleGenAI } = require('@google/genai');
 const { getGeminiModelId } = require('../config/gemini.config');
+const { getGoogleAIClient, isGoogleAIConfigured } = require('../config/googleAI.client');
 const { isTransientGeminiFailure, isApiErrorPayloadText } = require('./gemini.service');
 
 const MAX_DEFAULT = 20 * 1024 * 1024;
@@ -20,13 +20,8 @@ Respond with valid JSON only, no markdown fences, in this exact shape:
   "riskFlags": ["string"]
 }`;
 
-let _ai;
 function getAI() {
-  if (!_ai) {
-    if (!process.env.GEMINI_API_KEY) return null;
-    _ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-  }
-  return _ai;
+  return isGoogleAIConfigured() ? getGoogleAIClient() : null;
 }
 
 function maxBytes() {
