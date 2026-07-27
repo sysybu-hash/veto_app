@@ -31,7 +31,7 @@ function buildCallEventQuery(eventIdParam) {
 const User = require('../models/User');
 const { cloudinary } = require('../config/cloudinary');
 const { getGeminiModelId } = require('../config/gemini.config');
-const { GoogleGenerativeAI } = require('@google/generative-ai');
+const { getGoogleAIClient, isGoogleAIConfigured } = require('../config/googleAI.client');
 const { buildRtcTokenForUid } = require('../services/agoraToken.service');
 const agoraCr = require('../services/agoraCloudRecording.service');
 const { CONSULTATION_ILS, OVERTIME_ILS_PER_MIN, FREE_CALL_MINUTES } = require('../config/pricing');
@@ -43,8 +43,6 @@ const {
   isPaymentExemptUser,
 } = require('../services/call/billing.service');
 const { iceServersFromEnv } = require('../services/call/iceServers.service');
-
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 /** One finalize pipeline per event (avoid duplicate work if both peers call stop). */
 const cloudRecordingFinalizeLocks = new Set();
@@ -298,7 +296,7 @@ Rules:
 };
 
 async function transcribeEventRecording({ eventId, language }) {
-  if (!process.env.GEMINI_API_KEY) {
+  if (!isGoogleAIConfigured()) {
     await EmergencyEvent.findOneAndUpdate(buildCallEventQuery(eventId), { recording_transcription_status: 'failed' });
     return;
   }
@@ -319,7 +317,6 @@ async function transcribeEventRecording({ eventId, language }) {
     const mimeType = ct && (ct.startsWith('audio/') || ct.startsWith('video/')) ? ct : 'video/mp4';
     const langMap = { he: 'עברית', ar: 'Arabic', ru: 'Russian', en: 'English' };
     const lang = langMap[language || event.language] || 'the call language';
-    const model = genAI.getGenerativeModel({ model: getGeminiModelId() });
     const prompt = `
 You are a verbatim speech-to-text transcription engine.
 Transcribe the call recording in ${lang} as plain text only.
@@ -329,12 +326,20 @@ Rules:
 - Do NOT add emojis, sound descriptions, speaker labels, or timestamps.
 - If something is unclear, leave it out rather than inventing speech.
     `.trim();
-    const result = await model.generateContent([
-      { text: prompt },
-      { inlineData: { mimeType, data: buf.toString('base64') } },
-    ]);
+    const ai = getGoogleAIClient();
+    const response = await ai.models.generateContent({
+      model: getGeminiModelId(),
+      contents: [
+        {
+          role: 'user',
+          parts: [{ text: prompt }, { inlineData: { mimeType, data: buf.toString('base64') } }],
+        },
+      ],
+    });
+    const transcriptText =
+      typeof response.text === 'string' ? response.text : String(response.text ?? '');
     await EmergencyEvent.findOneAndUpdate(buildCallEventQuery(eventId), {
-      call_transcript: sanitizeTranscript(result.response.text()),
+      call_transcript: sanitizeTranscript(transcriptText),
       transcript_language: language || event.language,
       recording_transcription_status: 'ready',
     });
