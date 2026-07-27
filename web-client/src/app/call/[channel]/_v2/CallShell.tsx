@@ -13,7 +13,7 @@ import { createActionPlan, type ActionPlan } from "@/api/advancedApi";
 import { PRICING } from "@/api/paymentApi";
 import { getUserIdFromJwt, getRoleFromJwt } from "@/lib/authToken";
 import { connectSocket, getSocket } from "@/lib/socketClient";
-import { useEmergencyStore } from "@/store/useEmergencyStore";
+import { useEmergencyStore, type PreCallReadiness } from "@/store/useEmergencyStore";
 import { getPublicAgoraAppId } from "@/lib/env";
 import { useTranslation } from "@/lib/i18n/LocaleProvider";
 import { useTrWithFallback } from "./lib/trWithFallback";
@@ -30,7 +30,7 @@ import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
 import { useSaveToVault } from "./hooks/useSaveToVault";
 import { summariseQuality } from "./hooks/useNetworkQuality";
 
-import { PreCallCheck, type PreCallReadiness } from "./components/PreCallCheck";
+import { PreCallCheck } from "./components/PreCallCheck";
 import { ConsentBanner } from "./components/ConsentBanner";
 import { CallStage } from "./components/CallStage";
 import { ControlBar } from "./components/ControlBar";
@@ -78,12 +78,30 @@ export function CallShell({ channel }: { channel: string }) {
     [],
   );
 
+  // Permission grant fired from the call-type (citizen) / accept-case (lawyer)
+  // button on a *different* route (hub/dashboard) — read via the shared store
+  // instead of PreCallCheck, so the happy path skips a whole extra screen.
+  const storePreCallReadiness = useEmergencyStore((s) => s.preCallReadiness);
+  const preCallPermissionStatus = useEmergencyStore(
+    (s) => s.preCallPermissionStatus,
+  );
+
   // Pre-call lobby state.
   const [preCallReady, setPreCallReady] = useState<PreCallReadiness | null>(
     isChatOnly
       ? { micId: null, cameraId: null, speakerId: null, ready: true }
-      : null,
+      : storePreCallReadiness,
   );
+
+  // The getUserMedia() promise kicked off on hub/dashboard may still be
+  // in flight when this route mounts (fast session_ready) — pick up the
+  // store update once it resolves.
+  useEffect(() => {
+    if (preCallReady || isChatOnly || !storePreCallReadiness) return;
+    queueMicrotask(() => {
+      setPreCallReady(storePreCallReadiness);
+    });
+  }, [storePreCallReadiness, preCallReady, isChatOnly]);
 
   // Agora.
   const { client, AgoraRTC, remoteUsers, connectionState, networkQuality, ready } =
@@ -150,6 +168,18 @@ export function CallShell({ channel }: { channel: string }) {
   const [summary, setSummary] = useState<SummaryShape | null>(null);
   const [actionPlan, setActionPlan] = useState<ActionPlan | null>(null);
   const vault = useSaveToVault(eventId);
+
+  // Chat unread badge for the redesigned ControlBar — useCallChat itself has
+  // no unread concept, so track "how many messages had the panel already
+  // seen" locally and mark everything seen whenever it's opened.
+  const [lastSeenChatCount, setLastSeenChatCount] = useState(0);
+  useEffect(() => {
+    if (!sideOpen) return;
+    queueMicrotask(() => {
+      setLastSeenChatCount(chat.messages.length);
+    });
+  }, [sideOpen, chat.messages.length]);
+  const chatUnread = !sideOpen && chat.messages.length > lastSeenChatCount;
 
   useEffect(() => {
     if (vault.status !== "saved") return;
@@ -628,9 +658,32 @@ export function CallShell({ channel }: { channel: string }) {
   }
 
   if (!preCallReady) {
+    // Happy path: permission was already requested from the call-type
+    // (citizen) / accept-case (lawyer) button on the previous screen — this
+    // is a brief, non-interactive wait for that promise to resolve, not a
+    // second screen the user has to act on.
+    if (preCallPermissionStatus === "pending") {
+      return (
+        <div className="veto-call-keep-dark fixed inset-0 z-[70] flex h-[100dvh] w-screen flex-col items-center justify-center gap-3 bg-black px-6 text-center text-slate-200">
+          <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#C5A059]/30 border-t-[#C5A059]" />
+          <p className="text-sm text-slate-400">
+            {t("call.v2.preparing", "Setting up your camera & mic…")}
+          </p>
+        </div>
+      );
+    }
+    // "denied" (permission was refused) or "idle" (this route was reached
+    // without going through the new buttons — defensive fallback) both fall
+    // back to the full manual picker, unchanged.
     return (
       <div className="veto-call-keep-dark fixed inset-0 z-[70] h-[100dvh] w-screen bg-black">
-        <PreCallCheck mode={callType} onReady={setPreCallReady} />
+        <PreCallCheck
+          mode={callType}
+          onReady={(r) => {
+            useEmergencyStore.getState().setPreCallReadiness(r);
+            setPreCallReady(r);
+          }}
+        />
       </div>
     );
   }
@@ -721,6 +774,7 @@ export function CallShell({ channel }: { channel: string }) {
         captionsOn={captionsOn}
         translateOn={translateCaptions}
         chatOpen={sideOpen}
+        chatUnread={chatUnread}
         citizenConsented={recording.consent.citizen}
         myRole={myRole}
         onToggleMic={() => setMicOn((v) => !v)}
@@ -733,6 +787,8 @@ export function CallShell({ channel }: { channel: string }) {
         onToggleTranslate={() => setTranslateCaptions((v) => !v)}
         onToggleChat={() => setSideOpen((v) => !v)}
         onEndCall={() => void endCall()}
+        onSaveToVault={myRole === "user" ? () => void vault.save() : undefined}
+        vaultStatus={myRole === "user" ? vault.status : undefined}
         pipSlot={
           isVideo && (
             <DocumentPipToggle
