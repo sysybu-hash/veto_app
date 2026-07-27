@@ -1,0 +1,25 @@
+# Pings the Render backend's /health every 14 minutes so the free-tier instance never
+# idles into a cold start (Render sleeps a free web service after ~15 min of no traffic;
+# the first request after that takes 30-60s). This is the zero-cost alternative to
+# upgrading to a paid Starter plan — see DEPLOY.md.
+name: Keepalive (Render free tier)
+
+on:
+  schedule:
+    - cron: '*/14 * * * *'
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping /health
+        run: |
+          set -e
+          url="${VETO_API_BASE:-https://veto-app-new.onrender.com}/health"
+          code=$(curl -s -o /tmp/health.json -w '%{http_code}' "$url" || echo "000")
+          echo "GET $url -> $code"
+          cat /tmp/health.json || true
+          if [ "$code" != "200" ]; then
+            echo "::warning::Health check returned $code (expected 200) — service may be degraded."
+          fi

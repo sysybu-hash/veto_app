@@ -31,9 +31,25 @@ const otpLimiter = rateLimit({
   message: { error: 'Too many OTP requests. Please wait 10 minutes.' },
 });
 
+// A 6-digit OTP has only 1,000,000 combinations — without this, the global apiLimiter
+// (150 req/min) is loose enough to brute-force one within minutes. Key by phone number
+// (falling back to IP) so an attacker can't spread guesses for one victim across IPs
+// and blow past a pure-IP limiter, while still bounding a single IP hammering many phones.
+const verifyOtpLimiter = rateLimit({
+  windowMs: 10 * 60 * 1000,
+  max: 8,
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req) => String(req.body?.phone || req.body?.phoneNumber || req.ip || 'unknown'),
+  message: { error: 'Too many verification attempts. Please wait 10 minutes.' },
+});
+
+// register/google/dev-login are already covered by the mount-level `authLimiter`
+// (20 req/15min/IP, applied to the whole /api/auth prefix in server.js) — no extra
+// limiter needed here; only OTP endpoints need something stricter/differently-keyed.
 router.post('/register',    register);
 router.post('/request-otp', otpLimiter, requestOTP);
-router.post('/verify-otp',  verifyOTP);
+router.post('/verify-otp',  verifyOtpLimiter, verifyOTP);
 router.post('/google',      googleAuth);
 router.post('/dev-login',   devLogin);
 router.post('/passkeys/register/options', protect, passkeyRegisterOptions);

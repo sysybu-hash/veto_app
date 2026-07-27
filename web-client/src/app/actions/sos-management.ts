@@ -1,5 +1,7 @@
 "use server";
 
+import * as Sentry from "@sentry/nextjs";
+
 import {
   SOS_ALERTS_CHANNEL,
   SOS_CLAIMED_EVENT_NAME,
@@ -115,6 +117,7 @@ export async function claimSosEvent(eventId: string): Promise<ClaimSosResult> {
     return { success: true };
   } catch (e) {
     console.error("[sos-management] claim:", e);
+    Sentry.captureException(e, { level: "error", tags: { area: "sos", stage: "claim" }, extra: { eventId: trimmed } });
     return { success: false, error: "תפיסת אירוע נכשלה" };
   }
 }

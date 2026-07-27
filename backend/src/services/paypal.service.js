@@ -223,7 +223,12 @@ async function getBillingSubscription(subscriptionId) {
 }
 
 async function verifyWebhookSignature({ transmissionId, transmissionTime, certUrl, authAlgo, transmissionSig, webhookId, event }) {
-  if (!webhookId) return { verification_status: 'SKIPPED' };
+  if (!webhookId) {
+    // Never treat a missing webhook id as "verified" — the caller must reject the event.
+    const err = new Error('PAYPAL_WEBHOOK_ID missing in server configuration');
+    err.code = 'PAYPAL_WEBHOOK_ID_MISSING';
+    throw err;
+  }
   return paypalJson('/v1/notifications/verify-webhook-signature', {
     method: 'POST',
     body: JSON.stringify({

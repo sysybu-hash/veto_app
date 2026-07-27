@@ -9,6 +9,7 @@
 // ============================================================
 
 const axios = require('axios');
+const logger = require('../lib/logger');
 const mongoose = require('mongoose');
 const EmergencyEvent = require('../models/EmergencyEvent');
 const VaultFile = require('../models/VaultFile');
@@ -338,7 +339,7 @@ Rules:
       recording_transcription_status: 'ready',
     });
   } catch (err) {
-    console.error('[call] transcription finalize failed', eventId, err);
+    logger.error({ eventId, err }, '[call] transcription finalize failed');
     await EmergencyEvent.findOneAndUpdate(buildCallEventQuery(eventId), { recording_transcription_status: 'failed' });
   }
 }
@@ -660,7 +661,7 @@ async function finalizeCloudRecordingToCloudinary({
   });
   setImmediate(() => {
     transcribeEventRecording({ eventId, language: null }).catch((err) => {
-      console.error('[call] transcribe after cloud recording failed', eventId, err);
+      logger.error({ eventId, err }, '[call] transcribe after cloud recording failed');
     });
   });
 }
@@ -739,7 +740,7 @@ exports.stopCloudRecording = async (req, res, next) => {
       setImmediate(() => {
         finalizeCloudRecordingToCloudinary(ctx)
           .catch(async (err) => {
-            console.error('[agora-cloud-recording] finalize failed', ctx.eventId, err);
+            logger.error({ eventId: ctx.eventId, err }, '[agora-cloud-recording] finalize failed');
             try {
               await EmergencyEvent.findOneAndUpdate(buildCallEventQuery(ctx.eventId), {
                 agora_cloud_recording_resource_id: null,
@@ -854,12 +855,12 @@ exports.saveCallArtifacts = async (req, res, next) => {
     try {
       await mirrorCallArtifactsToVaultFiles(event);
     } catch (mirrorErr) {
-      console.error('[call] mirrorCallArtifactsToVaultFiles', eventId, mirrorErr);
+      logger.error({ eventId, err: mirrorErr }, '[call] mirrorCallArtifactsToVaultFiles failed');
     }
     if (event.recording_url && event.recording_transcription_status !== 'ready') {
       setImmediate(() => {
         transcribeEventRecording({ eventId, language: event.language }).catch((err) => {
-          console.error('[call] transcribe after save failed', eventId, err);
+          logger.error({ eventId, err }, '[call] transcribe after save failed');
         });
       });
     }
@@ -1063,7 +1064,7 @@ exports.stopRealtimeTranscription = async (req, res, next) => {
     try {
       await agoraRtt.stopTranscription({ taskId, builderToken });
     } catch (err) {
-      console.warn('[call] rtt stop best-effort:', err.message);
+      logger.warn({ err }, '[call] rtt stop best-effort failed');
     }
     rttBuilderTokens.delete(taskId);
     await EmergencyEvent.findOneAndUpdate(buildCallEventQuery(eventId), { agora_rtt_task_id: null });
@@ -1135,7 +1136,7 @@ exports.postChatMessage = async (req, res, next) => {
         });
       }
     } catch (err) {
-      console.warn('[call] chat-message push failed:', err.message);
+      logger.warn({ err }, '[call] chat-message push failed');
     }
 
     res.json({ success: true, message });
@@ -1199,7 +1200,7 @@ exports.shareFileInCall = async (req, res, next) => {
         });
       }
     } catch (err) {
-      console.warn('[call] file-share push failed:', err.message);
+      logger.warn({ err }, '[call] file-share push failed');
     }
 
     res.json({ success: true, file: entry });

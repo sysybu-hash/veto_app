@@ -4,6 +4,7 @@
 // ============================================================
 
 const crypto = require('crypto');
+const logger = require('../lib/logger');
 const {
   createOrder,
   captureOrder,
@@ -137,7 +138,7 @@ exports.createPlanOrder = async (req, res) => {
       status,
     });
   } catch (err) {
-    console.error('[payment] plan subscription create:', err.message);
+    logger.error({ err }, '[payment] plan subscription create failed');
     if (err.code === 'PAYPAL_CONFIG_MISSING' || err.code === 'PAYPAL_PLAN_MISSING') {
       return res.status(503).json({ success: false, message: err.message });
     }
@@ -172,7 +173,7 @@ exports.createConsultationOrder = async (req, res) => {
     );
     res.json({ orderId, approveUrl, amountIls: CONSULTATION_ILS });
   } catch (err) {
-    console.error('[payment] consultation create:', err.message);
+    logger.error({ err }, '[payment] consultation create failed');
     if (err.code === 'PAYPAL_CONFIG_MISSING') {
       return res.status(503).json({ success: false, message: err.message });
     }
@@ -243,7 +244,7 @@ exports.createOvertimeOrder = async (req, res) => {
       eventId,
     });
   } catch (err) {
-    console.error('[payment] overtime create:', err.message);
+    logger.error({ err }, '[payment] overtime create failed');
     if (err.code === 'PAYPAL_CONFIG_MISSING') {
       return res.status(503).json({ success: false, message: err.message });
     }
@@ -328,7 +329,7 @@ exports.capturePayment = async (req, res) => {
 
     return res.json({ success: true, captureId: result.captureId, status: result.status });
   } catch (err) {
-    console.error('[payment] capture:', err.message);
+    logger.error({ err }, '[payment] capture failed');
     if (err.code === 'PAYPAL_CONFIG_MISSING') {
       return res.status(503).json({ success: false, message: err.message });
     }
@@ -370,10 +371,7 @@ exports.handlePayPalWebhook = async (req, res) => {
       webhookId: process.env.PAYPAL_WEBHOOK_ID,
       event,
     });
-    if (
-      process.env.PAYPAL_WEBHOOK_ID &&
-      verification.verification_status !== 'SUCCESS'
-    ) {
+    if (verification.verification_status !== 'SUCCESS') {
       return res.status(400).json({ error: 'Invalid PayPal webhook signature.' });
     }
 
@@ -414,7 +412,10 @@ exports.handlePayPalWebhook = async (req, res) => {
 
     res.json({ received: true });
   } catch (err) {
-    console.error('[payment] webhook:', err.message);
+    logger.error({ err }, '[payment] webhook failed');
+    if (err.code === 'PAYPAL_WEBHOOK_ID_MISSING') {
+      return res.status(400).json({ error: 'Webhook not verifiable: PAYPAL_WEBHOOK_ID is not configured on the server.' });
+    }
     res.status(500).json({ error: err.message });
   }
 };

@@ -1,4 +1,5 @@
 const { geminiChat } = require('../services/gemini.service');
+const logger = require('../lib/logger');
 
 function canExecute(role, action) {
   if (role === 'admin') return true;
@@ -31,7 +32,7 @@ exports.contextChat = async (req, res) => {
       reply,
     });
   } catch (err) {
-    console.error('contextChat error:', err);
+    logger.error({ err }, 'contextChat error');
     return res.status(500).json({ error: 'Assistant unavailable' });
   }
 };

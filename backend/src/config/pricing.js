@@ -3,9 +3,32 @@
 //  Prices are stored in NIS (₪) for display and converted to USD
 //  for PayPal capture (PayPal merchant cannot capture ILS for
 //  this account, so we use a fixed conversion factor).
+//
+//  ILS_TO_USD is a STATIC rate, not a live FX fetch — deliberately: this affects real
+//  money capture, and a live rate source adds a runtime dependency (and failure mode)
+//  on a free-tier budget with no monitoring for it. Instead: track when it was last set
+//  and warn loudly (not fail) once it's stale, so a human updates it periodically instead
+//  of it silently drifting from the real market rate for months/years.
+//  Update ILS_TO_USD *and* ILS_TO_USD_SET_AT together — see backend/ENV_GUIDE.md.
 // ============================================================
 
 const ILS_TO_USD = Number(process.env.ILS_TO_USD || '0.275');
+const ILS_TO_USD_SET_AT = process.env.ILS_TO_USD_SET_AT || '2026-01-01';
+const ILS_TO_USD_STALE_DAYS = 90;
+
+(function warnIfRateIsStale() {
+  const setAt = new Date(ILS_TO_USD_SET_AT);
+  if (Number.isNaN(setAt.getTime())) return;
+  const ageDays = (Date.now() - setAt.getTime()) / (1000 * 60 * 60 * 24);
+  if (ageDays > ILS_TO_USD_STALE_DAYS) {
+    // Lazy require to avoid a hard dependency cycle at module-load time.
+    const logger = require('../lib/logger');
+    logger.warn(
+      { ILS_TO_USD, ILS_TO_USD_SET_AT, ageDays: Math.round(ageDays) },
+      `[pricing] ILS_TO_USD conversion rate is ${Math.round(ageDays)} days old — review against the current market rate and update ILS_TO_USD + ILS_TO_USD_SET_AT.`,
+    );
+  }
+})();
 
 function ilsToUsd(ils) {
   return (Number(ils) * ILS_TO_USD).toFixed(2);

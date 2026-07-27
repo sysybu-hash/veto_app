@@ -4,10 +4,10 @@
 
 ```
 veto_legal/
-├── web-client/      ← Next.js (ווב ראשי — Vercel)
-├── frontend/        ← Flutter (מובייל / ארטיפקט web legacy אם קיים)
-├── mobile/           ← Expo / ניסויים נייד (אם בשימוש)
-├── backend/          ← Node.js + Express + Socket.io (Render)
+├── web-client/      ← Next.js (ווב ראשי — Vercel) — הפיתוח הפעיל
+├── frontend/        ← Flutter — 🧊 קפוא/legacy, לא לפתח כאן (ר' frontend/README.md)
+├── mobile/           ← Expo — סקלט/WIP, לא לפרודקשן (ר' mobile/README.md)
+├── backend/          ← Node.js + Express + Socket.io (Render) — הפיתוח הפעיל
 ├── docs/             ← בדיקות, QA
 ├── design_mockups/   ← HTML סטטי (הפניה עיצובית)
 ├── .github/          ← CI, בדיקת סודות ב-git

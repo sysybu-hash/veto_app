@@ -2,6 +2,8 @@
 
 import { randomUUID } from "node:crypto";
 
+import * as Sentry from "@sentry/nextjs";
+
 import {
   SOS_ALERTS_CHANNEL,
   SOS_EVENT_NAME,
@@ -32,7 +34,7 @@ export type TriggerSosOptions = {
 
 export type TriggerSosResult =
   | { success: true; eventId: string }
-  | { success: false; error: string };
+  | { success: false; error: string; eventId?: string };
 
 /**
  * Create DB queue row + publish SOS metadata to Ably (lawyer dashboards).
@@ -103,12 +105,28 @@ export async function triggerSosAlert(
             : null,
       });
     } catch (pubErr) {
-      await prisma.sosEvent.deleteMany({ where: { eventId } }).catch(() => {});
-      throw pubErr;
+      // Ably being down must NOT lose the SOS: keep the row (marked so a human/retry job
+      // can pick it up) instead of deleting it, and page via Sentry so someone notices.
+      // Previously this deleted the just-created row and returned nothing to fall back on.
+      await prisma.sosEvent
+        .update({ where: { eventId }, data: { status: "PENDING_DELIVERY" } })
+        .catch(() => {});
+      Sentry.captureException(pubErr, {
+        level: "fatal",
+        tags: { area: "sos", stage: "ably_publish" },
+        extra: { eventId, userId, urgency },
+      });
+      console.error("[SOS] Ably publish failed, event kept as PENDING_DELIVERY:", eventId, pubErr);
+      return {
+        success: false,
+        error: "ההתראה נשמרה אך לא נשלחה בזמן אמת — הצוות יטופל ידנית",
+        eventId,
+      };
     }
     return { success: true, eventId };
   } catch (e) {
     console.error("[SOS] create/publish failed:", e);
+    Sentry.captureException(e, { level: "fatal", tags: { area: "sos", stage: "create" } });
     return { success: false, error: "פרסום התראת SOS נכשל" };
   }
 }

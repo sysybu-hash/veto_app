@@ -1,3 +1,4 @@
+const logger  = require('../lib/logger');
 const User    = require('../models/User');
 const Lawyer  = require('../models/Lawyer');
 const Event   = require('../models/EmergencyEvent');
@@ -39,7 +40,7 @@ async function logAdminAction(req, { action, targetType, targetId, before = null
       user_agent: req.headers['user-agent'] || null,
     });
   } catch (err) {
-    console.warn('[admin audit] failed:', err.message);
+    logger.warn({ err }, '[admin audit] failed');
   }
 }
 
@@ -170,7 +171,7 @@ const updateFixedOtpSetting = async (req, res, next) => {
       return res.status(400).json({ error: 'Invalid value for enable. Must be a boolean.' });
     }
     process.env.ENABLE_FIXED_OTP_FOR_ADMINS = enable.toString();
-    console.log(`[ADMIN] ENABLE_FIXED_OTP_FOR_ADMINS set to: ${enable}`);
+    logger.info({ enable }, '[ADMIN] ENABLE_FIXED_OTP_FOR_ADMINS set');
     res.status(200).json({ message: 'Fixed OTP setting updated successfully.', enableFixedOtpForAdmins: enable });
   } catch (err) {
     next(err);

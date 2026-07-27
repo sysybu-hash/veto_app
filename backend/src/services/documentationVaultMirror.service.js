@@ -3,6 +3,7 @@
  * into their personal vault (VaultFile) so it appears under כספת קבצים.
  */
 const mongoose = require('mongoose');
+const logger = require('../lib/logger');
 const VaultFile = require('../models/VaultFile');
 
 function guessMime(type, explicit) {
@@ -51,7 +52,7 @@ async function mirrorDocumentationToVault({
     });
     return file;
   } catch (err) {
-    console.error('[documentationVaultMirror]', err.message);
+    logger.error({ err }, '[documentationVaultMirror] failed');
     return null;
   }
 }
