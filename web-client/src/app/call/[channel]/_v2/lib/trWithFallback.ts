@@ -1,5 +1,6 @@
 "use client";
 
+import { useCallback } from "react";
 import { useTranslation } from "@/lib/i18n/LocaleProvider";
 
 /**
@@ -15,8 +16,11 @@ import { useTranslation } from "@/lib/i18n/LocaleProvider";
  */
 export function useTrWithFallback() {
   const { t } = useTranslation();
-  return (key: string, fallback: string) => {
-    const result = t(key);
-    return result === key ? fallback : result;
-  };
+  return useCallback(
+    (key: string, fallback: string) => {
+      const result = t(key);
+      return result === key ? fallback : result;
+    },
+    [t],
+  );
 }
