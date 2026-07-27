@@ -11,7 +11,7 @@ Run after backend (Render) and web bundle (Vercel) updates that touch Agora or `
 
 | Client | Join | Remote video | Local PIP (web) | Mic mute | Tab refresh mid-call | 30s background |
 |--------|------|----------------|-----------------|----------|------------------------|----------------|
-| Chrome (desktop) |  |  |  |  |  |  |
+| Chrome (desktop) | OK (2026-07-27) | OK (2026-07-27) |  |  |  |  |
 | Edge (desktop) |  |  |  |  |  |  |
 | Firefox (desktop) |  |  |  |  |  |  |
 | Safari (macOS) |  |  | n/a |  |  |  |
@@ -29,3 +29,11 @@ Run after backend (Render) and web bundle (Vercel) updates that touch Agora or `
 - After token errors, capped automatic recovery; then Retry / Exit on hard failure.
 
 Mark each cell **OK** or note the build / date and the failure symptom.
+
+## Manual test session — 2026-07-27 (Chrome desktop, citizen + lawyer, real 2-account call)
+
+- **Join + remote video: OK.** Both sides connected and saw each other's video.
+- **Bug found & fixed**: on call end, the **lawyer** was redirected to `/hub` (the citizen's screen) instead of `/dashboard`. Root cause: `CallShell.tsx`'s `endCall`/`closeSummary`/no-session-fallback all hardcoded `router.replace("/hub")` regardless of `myRole`. Fixed by routing to `myRole === "lawyer" ? "/dashboard" : "/hub"` in all three places (commit pending push).
+- **Additional bugs reported, not yet triaged**: user recorded a video of the session (lawyer side) showing further issues beyond the redirect — not yet itemized in this matrix. Follow up needed to extract concrete repro steps per issue.
+- **Call UI redesign requested**: user flagged the call screens as needing a visual redesign — tracked as a separate design task, not a QA regression.
+- **Still untested**: Edge, Firefox, Safari (macOS/iOS), Chrome (Android); Local PIP, Mic mute, Tab refresh mid-call, 30s background — none of these were covered by this session.

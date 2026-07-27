@@ -3,15 +3,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { useTrWithFallback } from "../lib/trWithFallback";
 import { useAgoraDevices } from "../hooks/useAgoraDevices";
+import type { PreCallReadiness } from "@/store/useEmergencyStore";
 
 type Mode = "video" | "audio" | "chat";
-
-export type PreCallReadiness = {
-  micId: string | null;
-  cameraId: string | null;
-  speakerId: string | null;
-  ready: boolean;
-};
 
 /**
  * Pre-call lobby — one-shot device picker + permission gate.

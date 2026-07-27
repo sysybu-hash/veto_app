@@ -23,6 +23,7 @@ import {
   type SessionCallType,
   type SessionReadyState,
 } from "@/store/useEmergencyStore";
+import { useAgoraDevices } from "@/app/call/[channel]/_v2/hooks/useAgoraDevices";
 
 const DEFAULT_LOCATION = { lat: 32.0853, lng: 34.7818 };
 
@@ -80,6 +81,7 @@ export default function CitizenHubPage() {
   const lawyerName = useEmergencyStore((s) => s.lawyerName);
   const currentEventId = useEmergencyStore((s) => s.currentEventId);
   const statusMessage = useEmergencyStore((s) => s.statusMessage);
+  const { requestPermission } = useAgoraDevices();
 
   const reset = useEmergencyStore((s) => s.reset);
   const startSearch = useEmergencyStore((s) => s.startSearch);
@@ -330,6 +332,38 @@ export default function CitizenHubPage() {
     setCallTypeDialogOpen(false);
   }, []);
 
+  /**
+   * Video/audio buttons: grant mic/camera permission in the SAME click as
+   * picking the call type, so the /call/[channel] route can skip its own
+   * PreCallCheck screen on the happy path. requestPermission() must be the
+   * first statement (before chooseCallType's socket round trip) so the
+   * getUserMedia() call still counts as user-gesture-triggered.
+   */
+  const chooseCallTypeWithPermission = useCallback(
+    (callType: "video" | "audio") => {
+      const needsCamera = callType === "video";
+      useEmergencyStore.getState().setPreCallPermissionStatus("pending");
+      void requestPermission({ mic: true, camera: needsCamera }).then(
+        (granted) => {
+          const store = useEmergencyStore.getState();
+          if (granted) {
+            store.setPreCallReadiness({
+              micId: null,
+              cameraId: null,
+              speakerId: null,
+              ready: true,
+            });
+            store.setPreCallPermissionStatus("granted");
+          } else {
+            store.setPreCallPermissionStatus("denied");
+          }
+        },
+      );
+      chooseCallType(callType);
+    },
+    [requestPermission, chooseCallType],
+  );
+
   return (
     <>
       <main
@@ -496,18 +530,21 @@ export default function CitizenHubPage() {
               {t("dialog.chooseCallType")}
             </h2>
             <p className="mt-2 text-sm text-slate-700 dark:text-slate-300">{t("hub.callTypeHint")}</p>
+            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+              {t("hub.callTypePermissionHint")}
+            </p>
 
             <div className="mt-5 grid gap-2">
               <button
                 type="button"
-                onClick={() => chooseCallType("video")}
+                onClick={() => chooseCallTypeWithPermission("video")}
                 className={`px-4 py-2.5 text-sm font-semibold ${btnSecondaryGlass}`}
               >
                 {t("hub.callTypeVideo")}
               </button>
               <button
                 type="button"
-                onClick={() => chooseCallType("audio")}
+                onClick={() => chooseCallTypeWithPermission("audio")}
                 className={`px-4 py-2.5 text-sm font-semibold ${btnSecondaryGlass}`}
               >
                 {t("hub.callTypeAudio")}
