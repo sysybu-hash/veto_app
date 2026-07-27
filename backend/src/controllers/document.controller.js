@@ -5,7 +5,7 @@
 const crypto = require('crypto');
 const logger = require('../lib/logger');
 const mongoose = require('mongoose');
-const { GoogleGenerativeAI } = require('@google/generative-ai');
+const { getGoogleAIClient, isGoogleAIConfigured } = require('../config/googleAI.client');
 const Document = require('../models/Document');
 
 const DOCUMENT_MODEL =
@@ -47,8 +47,7 @@ function parseModelJson(text) {
 
 exports.generateDocument = async (req, res) => {
   try {
-    const apiKey = (process.env.GEMINI_API_KEY || '').trim();
-    if (!apiKey) {
+    if (!isGoogleAIConfigured()) {
       return res.status(503).json({ error: 'GEMINI_API_KEY is not configured.' });
     }
 
@@ -58,8 +57,7 @@ exports.generateDocument = async (req, res) => {
     }
 
     const { prompt, currentContent, editInstruction } = req.body || {};
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: DOCUMENT_MODEL });
+    const ai = getGoogleAIClient();
 
     const systemPrompt = `You are a Senior Israeli Civil Attorney. Output ONLY a valid JSON object with: "title" (string), "sections" (array of objects with "heading" and "content" strings), and "footer" (string). Use formal Hebrew legal language. No markdown, no commentary — JSON only.`;
 
@@ -67,8 +65,11 @@ exports.generateDocument = async (req, res) => {
       ? `Current JSON: ${JSON.stringify(currentContent?.payload ?? currentContent ?? {})}. Instruction: ${editInstruction}. Return updated full JSON.`
       : `Draft a full legal document for: ${prompt || '(no topic)'}.`;
 
-    const result = await model.generateContent(`${systemPrompt}\n\n${userPrompt}`);
-    const text = result.response.text();
+    const response = await ai.models.generateContent({
+      model: DOCUMENT_MODEL,
+      contents: [{ role: 'user', parts: [{ text: `${systemPrompt}\n\n${userPrompt}` }] }],
+    });
+    const text = typeof response.text === 'string' ? response.text : String(response.text ?? '');
     const docData = parseModelJson(text);
 
     let savedDoc;

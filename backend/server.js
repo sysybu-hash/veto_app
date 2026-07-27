@@ -49,6 +49,8 @@ try {
   /* older Node */
 }
 
+require('./src/config/googleAI.client').bootstrapGoogleCredentials();
+
 const express = require('express');
 const cors    = require('cors');
 const http    = require('http');
