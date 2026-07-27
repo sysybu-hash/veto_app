@@ -548,11 +548,13 @@ export function CallShell({ channel }: { channel: string }) {
     }
   }, [callStartedAt, eventId]);
 
+  const postCallHome = myRole === "lawyer" ? "/dashboard" : "/hub";
+
   const endCall = useCallback(async () => {
     if (isChatOnly) {
       await finalize();
       clearCallSession();
-      router.replace("/hub");
+      router.replace(postCallHome);
       return;
     }
     // Cloud recording stop is citizen-only on the API; avoid 403 for lawyers.
@@ -591,12 +593,13 @@ export function CallShell({ channel }: { channel: string }) {
     finishBilling,
     eventId,
     myRole,
+    postCallHome,
   ]);
 
   const closeSummary = useCallback(() => {
     clearCallSession();
-    router.replace("/hub");
-  }, [clearCallSession, router]);
+    router.replace(postCallHome);
+  }, [clearCallSession, router, postCallHome]);
 
   // Keyboard shortcuts.
   useKeyboardShortcuts({
@@ -615,7 +618,7 @@ export function CallShell({ channel }: { channel: string }) {
         <p className="font-bold">{t("call.noSession", "No active session")}</p>
         <button
           type="button"
-          onClick={() => router.replace("/hub")}
+          onClick={() => router.replace(postCallHome)}
           className="rounded-xl bg-[#C5A059] px-4 py-2 text-sm font-bold text-black"
         >
           {t("call.backHub", "Back to hub")}
