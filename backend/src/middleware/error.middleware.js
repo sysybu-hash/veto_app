@@ -4,6 +4,7 @@
 // ============================================================
 
 const Sentry = require('../../instrument');
+const logger = require('../lib/logger');
 
 // eslint-disable-next-line no-unused-vars
 const errorHandler = (err, req, res, next) => {
@@ -23,7 +24,7 @@ const errorHandler = (err, req, res, next) => {
   }
 
   const statusCode = err.statusCode || err.status || 500;
-  console.error(`❌ [${req.method}] ${req.path} → ${err.message}`);
+  logger.error({ method: req.method, path: req.path, statusCode, err }, err.message);
 
   if (statusCode >= 500 && Sentry.__vetoInstrumented) {
     Sentry.captureException(err);

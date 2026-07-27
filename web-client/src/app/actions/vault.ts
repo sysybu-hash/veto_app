@@ -415,6 +415,13 @@ export async function deleteEvidence(
     const isRemoteBinary =
       fileUrl.startsWith("http://") || fileUrl.startsWith("https://");
 
+    if (!legacyBase && isRemoteBinary) {
+      // LEGACY_API_URL isn't set, so the remote file is never actually deleted — only
+      // the Postgres row is. This used to fail completely silently, leaving an orphaned
+      // file on whatever storage backs the legacy API with no trace anywhere.
+      console.warn("[vault] LEGACY_API_URL not configured — remote file not deleted, only DB row:", fileUrl);
+    }
+
     if (legacyBase && isRemoteBinary) {
       const legacyToken = process.env.LEGACY_API_TOKEN ?? "";
       const headers: Record<string, string> = {

@@ -2,13 +2,35 @@ const mongoose = require('mongoose');
 const { pubClient } = require('../config/redis');
 const agoraCrHealth = require('../services/agoraCloudRecording.service');
 
+// readyState===1 only means the socket thinks it's connected — it doesn't prove the
+// server actually responds. A real ping catches a wedged/half-open connection that
+// readyState alone would report as healthy.
+async function pingMongo() {
+  if (mongoose.connection.readyState !== 1) return false;
+  try {
+    const pingPromise = mongoose.connection.db.admin().ping();
+    const timeout = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('mongo ping timeout')), 3000),
+    );
+    await Promise.race([pingPromise, timeout]);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 exports.getHealthStatus = async (req, res) => {
   try {
-    const mongoStatus =
-      mongoose.connection.readyState === 1 ? 'connected' : 'disconnected';
+    const mongoReachable = await pingMongo();
+    const mongoStatus = mongoReachable ? 'connected' : 'disconnected';
 
+    // pubClient is null when Redis isn't configured at all — that's a valid deployment
+    // mode (single-instance Socket.io, no adapter), not a failure. Only a *configured but
+    // unreachable* Redis should mark the service unhealthy.
     let redisStatus = 'disabled/not-configured';
+    let redisConfigured = false;
     if (pubClient) {
+      redisConfigured = true;
       redisStatus = pubClient.isReady ? 'connected' : 'disconnected';
     }
 
@@ -46,7 +68,8 @@ exports.getHealthStatus = async (req, res) => {
       cloudRecordingConfigured: agoraCrHealth.isCloudRecordingConfigured(),
     };
 
-    const isHealthy = mongoStatus === 'connected';
+    const isHealthy =
+      mongoStatus === 'connected' && (!redisConfigured || redisStatus === 'connected');
 
     res.status(isHealthy ? 200 : 503).json(status);
   } catch (error) {

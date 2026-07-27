@@ -11,6 +11,7 @@ const {
   TEMPLATES,
 } = require('../services/legalDocumentEngine.service');
 const { geminiChat, isTransientGeminiFailure } = require('../services/gemini.service');
+const logger = require('../lib/logger');
 
 async function maybeAugmentWithAi(payload) {
   // Only enrich body if a Gemini key is configured AND user provided no body.
@@ -39,7 +40,7 @@ async function maybeAugmentWithAi(payload) {
     }
   } catch (err) {
     if (isTransientGeminiFailure(err)) return null;
-    console.error('Gemini augment failed:', err.message || err);
+    logger.error({ err }, 'Gemini augment failed');
   }
   return null;
 }
@@ -51,7 +52,7 @@ exports.generateDraft = async (req, res) => {
     const draft = createDraft(payload, req.user || {});
     return res.json({ ok: true, draft, aiAugmented: !!aiBody });
   } catch (err) {
-    console.error('generateDraft error:', err);
+    logger.error({ err }, 'generateDraft error');
     return res.status(500).json({ error: 'Failed to generate draft' });
   }
 };
@@ -87,7 +88,7 @@ exports.exportDraft = async (req, res) => {
     );
     return res.send(pdf);
   } catch (err) {
-    console.error('exportDraft error:', err);
+    logger.error({ err }, 'exportDraft error');
     return res.status(500).json({ error: 'Failed to export document' });
   }
 };

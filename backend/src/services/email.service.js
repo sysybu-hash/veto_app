@@ -3,6 +3,8 @@
 //  Env: SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_FROM
 // ============================================================
 
+const logger = require('../lib/logger');
+
 let _transporter;
 
 function isConfigured() {
@@ -51,7 +53,7 @@ async function sendEmail({ to, subject, text, icsContent, icsFilename = 'event.i
     await t.sendMail(mail);
     return { sent: true };
   } catch (e) {
-    console.error('[EMAIL]', e.message);
+    logger.error({ err: e }, '[EMAIL] failed');
     return { sent: false, reason: e.message };
   }
 }

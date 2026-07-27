@@ -6,6 +6,7 @@
 
 const crypto = require('crypto');
 const Sentry = require('../../instrument');
+const logger = require('../lib/logger');
 const Lawyer         = require('../models/Lawyer');
 const User           = require('../models/User');
 const EmergencyEvent = require('../models/EmergencyEvent');
@@ -47,14 +48,14 @@ module.exports = function initDispatch(io) {
   io.on('connection', (socket) => {
     const { userId, role } = socket.handshake.auth.decoded;
 
-    console.log(`🔌 Connected [${role}] id=${userId} socket=${socket.id}`);
+    logger.info({ role, userId, socketId: socket.id }, '🔌 Socket connected');
 
     // ── Lawyer comes online ────────────────────────────────
     if (role === 'lawyer') {
       Lawyer.findByIdAndUpdate(userId, {
         is_online:  true,
         socket_id:  socket.id,
-      }).catch(console.error);
+      }).catch((err) => logger.error({ err, userId }, 'Failed to mark lawyer online'));
 
       socket.join(`lawyer:${userId}`);
 
@@ -62,9 +63,9 @@ module.exports = function initDispatch(io) {
       socket.on('lawyer_availability', async ({ available }) => {
         try {
           await Lawyer.findByIdAndUpdate(userId, { is_available: !!available });
-          console.log(`Lawyer ${userId} availability set to ${!!available}`);
+          logger.info({ userId, available: !!available }, 'Lawyer availability set');
         } catch (err) {
-          console.error(`Error updating availability for ${userId}:`, err);
+          logger.error({ err, userId }, 'Error updating availability');
         }
       });
     }
@@ -302,12 +303,10 @@ module.exports = function initDispatch(io) {
           const pushTitle = '🚨 VETO Emergency!';
           const pushBody  = `A client needs legal help urgently. Tap to respond.`;
           push.sendToMany(pushLawyers, { title: pushTitle, body: pushBody, data: alertPayload })
-            .catch(e => console.error('[PUSH] sendToMany error:', e));
+            .catch((e) => logger.error({ err: e }, '[PUSH] sendToMany error'));
         }
 
-        console.log(
-          `🚨 VETO dispatched | event=${eventId} | lawyers notified=${emittedCount}`
-        );
+        logger.info({ eventId, lawyersNotified: emittedCount }, '🚨 VETO dispatched');
 
         // 6. Acknowledge dispatch to user ─────────────────────
         socket.emit('veto_dispatched', {
@@ -316,7 +315,7 @@ module.exports = function initDispatch(io) {
         });
 
       } catch (err) {
-        console.error('start_veto error:', err);
+        logger.error({ err }, 'start_veto error');
         socket.emit('veto_error', { message: 'Dispatch failed. Please try again.' });
       }
     });
@@ -374,7 +373,7 @@ module.exports = function initDispatch(io) {
             },
           },
           { arrayFilters: [{ 'elem.lawyer_id': userId }] },
-        ).catch(console.error);
+        ).catch((err) => logger.error({ err, eventId, userId }, 'accept_case dispatch_attempts update failed'));
 
         const event = updatedEvent;
 
@@ -442,12 +441,13 @@ module.exports = function initDispatch(io) {
           { arrayFilters: [{ 'elem.response': 'pending' }] }
         );
 
-        console.log(
-          `✅ Case accepted | event=${eventId} | lawyer=${lawyer.full_name} | t=${timeToAccept}s`
+        logger.info(
+          { eventId, lawyer: lawyer.full_name, timeToAcceptSeconds: timeToAccept },
+          '✅ Case accepted',
         );
 
       } catch (err) {
-        console.error('accept_case error:', err);
+        logger.error({ err }, 'accept_case error');
         socket.emit('veto_error', { message: 'Could not accept case. Please try again.' });
       }
     });
@@ -545,11 +545,18 @@ module.exports = function initDispatch(io) {
         }
 
         // Minimal, structured log — never print the token itself.
-        console.log(
-          `📞 session_ready | event=${eventId} | mode=${callType} | uids=${userAgora.agoraUid}/${lawyerAgora.agoraUid} | token=${userAgora.token ? 'yes' : 'none'}`,
+        logger.info(
+          {
+            eventId,
+            callType,
+            userUid: userAgora.agoraUid,
+            lawyerUid: lawyerAgora.agoraUid,
+            hasToken: !!userAgora.token,
+          },
+          '📞 session_ready',
         );
       } catch (err) {
-        console.error('citizen_chose_session error:', err);
+        logger.error({ err }, 'citizen_chose_session error');
         socket.emit('veto_error', { message: 'Could not start session.' });
       }
     });
@@ -572,7 +579,7 @@ module.exports = function initDispatch(io) {
           },
         },
         { arrayFilters: [{ 'elem.lawyer_id': userId }] }
-      ).catch(console.error);
+      ).catch((err) => logger.error({ err, eventId, userId }, 'reject_case update failed'));
 
       // No further action — other lawyers are still seeing the alert
     });
@@ -588,7 +595,7 @@ module.exports = function initDispatch(io) {
       await EmergencyEvent.findByIdAndUpdate(eventId, {
         status:       'cancelled',
         completed_at: new Date(),
-      }).catch(console.error);
+      }).catch((err) => logger.error({ err, eventId }, 'cancel_veto update failed'));
 
       // Tell all lawyers to dismiss the alert
       io.emit('case_taken', {
@@ -596,7 +603,7 @@ module.exports = function initDispatch(io) {
         message: 'The user has cancelled the request.',
       });
 
-      console.log(`❌ VETO cancelled | event=${eventId}`);
+      logger.info({ eventId }, '❌ VETO cancelled');
     });
 
     // ════════════════════════════════════════════════════════
@@ -604,7 +611,7 @@ module.exports = function initDispatch(io) {
     // ════════════════════════════════════════════════════════
     socket.on('disconnect', async (reason) => {
       const uid = userId?.toString?.() ?? String(userId);
-      console.log(`🔌 Disconnected [${role}] id=${uid} reason=${reason}`);
+      logger.info({ role, userId: uid, reason }, '🔌 Socket disconnected');
 
       if (
         Sentry.__vetoInstrumented &&
@@ -621,7 +628,7 @@ module.exports = function initDispatch(io) {
         await Lawyer.findByIdAndUpdate(userId, {
           is_online:  false,
           socket_id:  null,
-        }).catch(console.error);
+        }).catch((err) => logger.error({ err, userId }, 'Failed to mark lawyer offline'));
       }
     });
   });

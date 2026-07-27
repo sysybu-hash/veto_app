@@ -12,6 +12,7 @@
 // ============================================================
 
 const express  = require('express');
+const logger   = require('../lib/logger');
 const router   = express.Router();
 const multer   = require('multer');
 const { protect } = require('../middleware/auth.middleware');
@@ -40,7 +41,7 @@ if (
       cb(new Error('Only image, video, or audio files are allowed'));
     },
   });
-  console.log('📦 Evidence upload: Cloudinary storage');
+  logger.info('📦 Evidence upload: Cloudinary storage');
 } else {
   const path = require('path');
   const fs   = require('fs');
@@ -58,7 +59,7 @@ if (
       cb(new Error('Only image, video, or audio files are allowed'));
     },
   });
-  console.warn('⚠️  Evidence upload: local disk (files lost on server restart). Set CLOUDINARY_* env vars for persistent storage.');
+  logger.warn('⚠️  Evidence upload: local disk (files lost on server restart). Set CLOUDINARY_* env vars for persistent storage.');
 }
 
 // ── All event routes require authentication ────────────────
