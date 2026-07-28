@@ -214,7 +214,17 @@ export default function DocumentGeneratorPage() {
     const { default: html2canvas } = await import("html2canvas-pro");
     const { jsPDF } = await import("jspdf");
 
-    const canvas = await html2canvas(documentRef.current, { scale: 2, useCORS: true });
+    // The document is `w-full max-w-[210mm]` (responsive) — on a narrow
+    // viewport it renders far narrower than an A4 page, wraps text into a
+    // much taller column, and produces a wildly over-paginated PDF. Force
+    // html2canvas to lay it out in a virtual A4-width window (210mm @ 96dpi)
+    // regardless of the actual browser viewport.
+    const A4_WIDTH_PX = Math.round((210 / 25.4) * 96);
+    const canvas = await html2canvas(documentRef.current, {
+      scale: 2,
+      useCORS: true,
+      windowWidth: A4_WIDTH_PX,
+    });
     const imgData = canvas.toDataURL("image/jpeg", 0.98);
 
     const pdf = new jsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
