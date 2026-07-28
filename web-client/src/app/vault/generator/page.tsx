@@ -143,19 +143,39 @@ export default function DocumentGeneratorPage() {
     setIsGenerating(true);
     setErrorMsg("");
     try {
-      const res = await fetch("/api/generate-document", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          documentType: selectedType,
-          docTypeLabel: selectedLabel,
-          prompt: details,
-          structuredFacts: {
-            parties: parties.map((p, i) => ({ ...p, label: fieldsConfig.partyLabels[i] || `צד ${i + 1}` })),
-            fields: fieldsConfig.fields.map((f) => ({ label: f.label, value: structuredFields[f.key] || "" })),
-          },
-        }),
+      const requestBody = JSON.stringify({
+        documentType: selectedType,
+        docTypeLabel: selectedLabel,
+        prompt: details,
+        structuredFacts: {
+          parties: parties.map((p, i) => ({ ...p, label: fieldsConfig.partyLabels[i] || `צד ${i + 1}` })),
+          fields: fieldsConfig.fields.map((f) => ({ label: f.label, value: structuredFields[f.key] || "" })),
+        },
       });
+      // A slow generation (long structured prompt) can occasionally exceed the
+      // platform's function-duration limit (504) — retry once before giving up.
+      const TRANSIENT_STATUSES = new Set([502, 503, 504]);
+      let res: Response;
+      try {
+        res = await fetch("/api/generate-document", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: requestBody,
+        });
+        if (TRANSIENT_STATUSES.has(res.status)) {
+          res = await fetch("/api/generate-document", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: requestBody,
+          });
+        }
+      } catch {
+        res = await fetch("/api/generate-document", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: requestBody,
+        });
+      }
       const data = (await res.json().catch(() => ({}))) as LegalDocument & { error?: string };
       if (!res.ok || data.error) {
         throw new Error(data.error || "יצירת המסמך נכשלה");
@@ -183,24 +203,50 @@ export default function DocumentGeneratorPage() {
     }
   };
 
-  const buildPdfOptions = () => ({
-    margin: 10,
-    filename: `${safePdfBasename(document?.title || selectedLabel)}.pdf`,
-    image: { type: "jpeg" as const, quality: 0.98 },
-    html2canvas: { scale: 2, useCORS: true },
-    jsPDF: { unit: "mm" as const, format: "a4" as const, orientation: "portrait" as const },
-  });
+  /**
+   * html2pdf.js bundles a pre-1.5 html2canvas that throws on the `oklch()`
+   * colors Tailwind v4 emits ("unsupported color function"), which broke PDF
+   * export outright. html2canvas-pro is a maintained fork with oklch/lab/lch
+   * support — used directly here (with jsPDF) instead of via html2pdf.js.
+   */
+  const renderDocumentToPdf = async () => {
+    if (!documentRef.current) throw new Error("אין מסמך לייצוא");
+    const { default: html2canvas } = await import("html2canvas-pro");
+    const { jsPDF } = await import("jspdf");
+
+    const canvas = await html2canvas(documentRef.current, { scale: 2, useCORS: true });
+    const imgData = canvas.toDataURL("image/jpeg", 0.98);
+
+    const pdf = new jsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
+    const margin = 10;
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
+    const usableWidth = pageWidth - margin * 2;
+    const usableHeight = pageHeight - margin * 2;
+    const imgWidth = usableWidth;
+    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+    let heightLeft = imgHeight;
+    let position = margin;
+    pdf.addImage(imgData, "JPEG", margin, position, imgWidth, imgHeight);
+    heightLeft -= usableHeight;
+    while (heightLeft > 0) {
+      position = margin - (imgHeight - heightLeft);
+      pdf.addPage();
+      pdf.addImage(imgData, "JPEG", margin, position, imgWidth, imgHeight);
+      heightLeft -= usableHeight;
+    }
+    return pdf;
+  };
 
   const exportPdfBlob = async (): Promise<Blob> => {
-    if (!documentRef.current) throw new Error("אין מסמך לייצוא");
-    const html2pdf = (await import("html2pdf.js")).default;
-    return (await html2pdf().set(buildPdfOptions()).from(documentRef.current).outputPdf("blob")) as Blob;
+    const pdf = await renderDocumentToPdf();
+    return pdf.output("blob");
   };
 
   const handleExportPDF = async () => {
-    if (!documentRef.current) return;
-    const html2pdf = (await import("html2pdf.js")).default;
-    html2pdf().set(buildPdfOptions()).from(documentRef.current).save();
+    const pdf = await renderDocumentToPdf();
+    pdf.save(`${safePdfBasename(document?.title || selectedLabel)}.pdf`);
   };
 
   const handleExportDOCX = async () => {
