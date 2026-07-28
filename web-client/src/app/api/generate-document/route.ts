@@ -202,6 +202,47 @@ function normalizeDocument(value: unknown, docTypeLabel: string, prompt: string)
   };
 }
 
+type StructuredParty = { label?: unknown; name?: unknown; idNumber?: unknown; address?: unknown };
+type StructuredField = { label?: unknown; value?: unknown };
+type StructuredFacts = { parties?: StructuredParty[]; fields?: StructuredField[] };
+
+function formatStructuredFacts(structuredFacts: unknown): string {
+  if (!structuredFacts || typeof structuredFacts !== "object") return "";
+  const { parties, fields } = structuredFacts as StructuredFacts;
+  const lines: string[] = [];
+
+  const partyLines = (Array.isArray(parties) ? parties : [])
+    .map((p) => {
+      const label = typeof p.label === "string" ? p.label.trim() : "";
+      const name = typeof p.name === "string" ? p.name.trim() : "";
+      const idNumber = typeof p.idNumber === "string" ? p.idNumber.trim() : "";
+      const address = typeof p.address === "string" ? p.address.trim() : "";
+      if (!name && !idNumber && !address) return null;
+      const bits = [name && `שם: ${name}`, idNumber && `ת.ז./ח.פ.: ${idNumber}`, address && `כתובת: ${address}`]
+        .filter(Boolean)
+        .join(" | ");
+      return `- ${label || "צד"}: ${bits}`;
+    })
+    .filter((line): line is string => Boolean(line));
+  if (partyLines.length > 0) {
+    lines.push("צדדים:", ...partyLines);
+  }
+
+  const fieldLines = (Array.isArray(fields) ? fields : [])
+    .map((f) => {
+      const label = typeof f.label === "string" ? f.label.trim() : "";
+      const value = typeof f.value === "string" ? f.value.trim() : "";
+      if (!label || !value) return null;
+      return `- ${label}: ${value}`;
+    })
+    .filter((line): line is string => Boolean(line));
+  if (fieldLines.length > 0) {
+    lines.push("פרטים נוספים:", ...fieldLines);
+  }
+
+  return lines.join("\n");
+}
+
 function parseJsonLoose(text: string): unknown {
   try {
     return JSON.parse(text);
@@ -217,6 +258,7 @@ export async function POST(req: Request) {
     prompt?: unknown;
     documentType?: unknown;
     docTypeLabel?: unknown;
+    structuredFacts?: unknown;
   };
   const prompt = typeof body.prompt === "string" ? body.prompt.trim() : "";
   const documentType = typeof body.documentType === "string" ? body.documentType : "custom";
@@ -224,6 +266,7 @@ export async function POST(req: Request) {
     typeof body.docTypeLabel === "string" && body.docTypeLabel.trim()
       ? body.docTypeLabel.trim()
       : "מסמך משפטי מותאם";
+  const structuredFactsText = formatStructuredFacts(body.structuredFacts);
 
   if (!isGoogleAIConfigured()) {
     return NextResponse.json(
@@ -298,8 +341,14 @@ export async function POST(req: Request) {
               text: [
                 `סוג מסמך: ${docTypeLabel}`,
                 `מזהה תבנית: ${documentType}`,
-                `פרטי המשתמש: ${prompt || "לא נמסרו פרטים. צור טיוטה כללית עם שדות להשלמה."}`,
-              ].join("\n"),
+                structuredFactsText && `עובדות מובנות שנמסרו על ידי המשתמש:\n${structuredFactsText}`,
+                `תיאור חופשי מהמשתמש: ${prompt || "לא נמסר תיאור חופשי נוסף."}`,
+                !structuredFactsText && !prompt
+                  ? "לא נמסרו פרטים כלל. צור טיוטה כללית עם שדות להשלמה."
+                  : null,
+              ]
+                .filter(Boolean)
+                .join("\n"),
             },
           ],
         },
