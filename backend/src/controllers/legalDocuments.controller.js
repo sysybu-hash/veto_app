@@ -10,12 +10,12 @@ const {
   toPdfBuffer,
   TEMPLATES,
 } = require('../services/legalDocumentEngine.service');
-const { geminiChat, isTransientGeminiFailure } = require('../services/gemini.service');
+const { geminiChat, isTransientGeminiFailure, hasGeminiApiKey } = require('../services/gemini.service');
 const logger = require('../lib/logger');
 
 async function maybeAugmentWithAi(payload) {
-  // Only enrich body if a Gemini key is configured AND user provided no body.
-  if (!process.env.GEMINI_API_KEY) return null;
+  // Only enrich body if Gemini is configured (API key or Vertex AI) AND user provided no body.
+  if (!hasGeminiApiKey()) return null;
   if (payload.body && payload.body.trim().length) return null;
   if (!payload.intent && !payload.domain) return null;
 
