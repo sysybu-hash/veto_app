@@ -5,6 +5,7 @@ const Event   = require('../models/EmergencyEvent');
 const AdminAuditLog = require('../models/AdminAuditLog');
 const AppSetting = require('../models/AppSetting');
 const mongoose = require('mongoose');
+const { isGoogleAIConfigured } = require('../config/googleAI.client');
 
 /**
  * Normalise a raw phone string to E.164 (+972XXXXXXXXX).
@@ -597,7 +598,7 @@ const getSystemHealth = async (req, res, next) => {
       {
         key: 'gemini',
         label: 'Gemini API key',
-        status: envEnabled('GEMINI_API_KEY') ? 'ok' : 'missing',
+        status: isGoogleAIConfigured() ? 'ok' : 'missing',
       },
       {
         key: 'web-app-url',
