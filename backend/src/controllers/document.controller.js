@@ -6,10 +6,15 @@ const crypto = require('crypto');
 const logger = require('../lib/logger');
 const mongoose = require('mongoose');
 const { getGoogleAIClient, isGoogleAIConfigured } = require('../config/googleAI.client');
+const { getGeminiModelId } = require('../config/gemini.config');
 const Document = require('../models/Document');
 
+// `gemini-1.5-pro` isn't published on Vertex AI for every project/region
+// (404 "Publisher model ... was not found") — default to the same model the
+// rest of the app already verified works; override via GEMINI_DOCUMENT_MODEL
+// if a project has access to a higher-tier model.
 const DOCUMENT_MODEL =
-  process.env.GEMINI_DOCUMENT_MODEL?.trim() || 'gemini-1.5-pro';
+  process.env.GEMINI_DOCUMENT_MODEL?.trim() || getGeminiModelId();
 
 function jwtUserId(req) {
   const id = req.user?.userId ?? req.user?.id;
