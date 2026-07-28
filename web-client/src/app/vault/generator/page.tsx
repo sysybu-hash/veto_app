@@ -13,13 +13,14 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { saveEvidence } from "@/app/actions/vault";
 import { uploadFile } from "@/api/vaultApi";
 import { VetoBrandLogo } from "@/components/brand/VetoBrandLogo";
 import { CitizenBottomNav } from "@/components/citizen/CitizenBottomNav";
 import { btnPrimaryDark, btnPrimaryGold, btnSecondaryGlass, glassInput, glassPanel, glassPanelNested } from "@/lib/vetoGlass";
 import { useToastStore } from "@/store/useToastStore";
+import { emptyParties, getDocumentFieldsConfig, type PartyRow } from "./documentFields";
 
 type LegalDocument = {
   title: string;
@@ -87,6 +88,18 @@ export default function DocumentGeneratorPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
 
+  const fieldsConfig = useMemo(() => getDocumentFieldsConfig(selectedType), [selectedType]);
+  const [parties, setParties] = useState<PartyRow[]>(() => emptyParties(fieldsConfig.partyLabels.length));
+  const [structuredFields, setStructuredFields] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    queueMicrotask(() => {
+      setParties(emptyParties(fieldsConfig.partyLabels.length));
+      setStructuredFields({});
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedType]);
+
   const selectedLabel = useMemo(
     () => DOCUMENT_TYPES.find((x) => x.id === selectedType)?.label ?? "מסמך משפטי",
     [selectedType],
@@ -137,6 +150,10 @@ export default function DocumentGeneratorPage() {
           documentType: selectedType,
           docTypeLabel: selectedLabel,
           prompt: details,
+          structuredFacts: {
+            parties: parties.map((p, i) => ({ ...p, label: fieldsConfig.partyLabels[i] || `צד ${i + 1}` })),
+            fields: fieldsConfig.fields.map((f) => ({ label: f.label, value: structuredFields[f.key] || "" })),
+          },
         }),
       });
       const data = (await res.json().catch(() => ({}))) as LegalDocument & { error?: string };
@@ -276,6 +293,72 @@ export default function DocumentGeneratorPage() {
                 ))}
               </select>
             </label>
+
+            <div>
+              <span className="mb-2 block text-xs font-black text-slate-700">פרטי הצדדים</span>
+              <div className="space-y-3">
+                {fieldsConfig.partyLabels.map((label, i) => (
+                  <div key={`${selectedType}-party-${i}`} className={`${glassPanelNested} space-y-2 p-3`}>
+                    <p className="text-xs font-black text-[#9b7430]">{label}</p>
+                    <input
+                      value={parties[i]?.name || ""}
+                      onChange={(e) =>
+                        setParties((prev) => prev.map((p, idx) => (idx === i ? { ...p, name: e.target.value } : p)))
+                      }
+                      placeholder="שם מלא"
+                      className={`${glassInput} text-sm`}
+                    />
+                    <div className="grid grid-cols-2 gap-2">
+                      <input
+                        value={parties[i]?.idNumber || ""}
+                        onChange={(e) =>
+                          setParties((prev) => prev.map((p, idx) => (idx === i ? { ...p, idNumber: e.target.value } : p)))
+                        }
+                        placeholder="ת.ז. / ח.פ."
+                        className={`${glassInput} text-sm`}
+                      />
+                      <input
+                        value={parties[i]?.address || ""}
+                        onChange={(e) =>
+                          setParties((prev) => prev.map((p, idx) => (idx === i ? { ...p, address: e.target.value } : p)))
+                        }
+                        placeholder="כתובת"
+                        className={`${glassInput} text-sm`}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {fieldsConfig.fields.length > 0 ? (
+              <div>
+                <span className="mb-2 block text-xs font-black text-slate-700">פרטים נוספים</span>
+                <div className="space-y-3">
+                  {fieldsConfig.fields.map((field) => (
+                    <label key={`${selectedType}-${field.key}`} className="block">
+                      <span className="mb-1 block text-xs font-bold text-slate-600">{field.label}</span>
+                      {field.type === "textarea" ? (
+                        <textarea
+                          value={structuredFields[field.key] || ""}
+                          onChange={(e) => setStructuredFields((prev) => ({ ...prev, [field.key]: e.target.value }))}
+                          placeholder={field.placeholder}
+                          className={`${glassInput} min-h-20 resize-y text-sm leading-6`}
+                        />
+                      ) : (
+                        <input
+                          type={field.type === "date" ? "date" : "text"}
+                          value={structuredFields[field.key] || ""}
+                          onChange={(e) => setStructuredFields((prev) => ({ ...prev, [field.key]: e.target.value }))}
+                          placeholder={field.placeholder}
+                          className={`${glassInput} text-sm`}
+                        />
+                      )}
+                    </label>
+                  ))}
+                </div>
+              </div>
+            ) : null}
 
             <label className="block">
               <span className="mb-1 flex items-center justify-between gap-3 text-xs font-black text-slate-700">
