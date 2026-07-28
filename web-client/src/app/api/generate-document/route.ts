@@ -1,11 +1,11 @@
-import { GoogleGenerativeAI, SchemaType } from "@google/generative-ai";
+import { Type } from "@google/genai";
 import { NextResponse } from "next/server";
+import { getGoogleAIClient, isGoogleAIConfigured } from "@/lib/googleAI";
 
 export const runtime = "nodejs";
 export const maxDuration = 120;
 
-const apiKey = process.env.GEMINI_API_KEY || "";
-const genAI = apiKey ? new GoogleGenerativeAI(apiKey) : null;
+const DOCUMENT_MODEL = process.env.GEMINI_DOCUMENT_MODEL || "gemini-2.5-flash";
 
 type GeneratedDocument = {
   title: string;
@@ -225,54 +225,48 @@ export async function POST(req: Request) {
       ? body.docTypeLabel.trim()
       : "מסמך משפטי מותאם";
 
-  if (!genAI) {
+  if (!isGoogleAIConfigured()) {
     return NextResponse.json(
-      fallbackDocument(docTypeLabel, prompt, "נוצרה טיוטה בסיסית משום שמפתח Gemini אינו מוגדר בסביבה הזו."),
+      fallbackDocument(docTypeLabel, prompt, "נוצרה טיוטה בסיסית משום ששירות ה-AI אינו מוגדר בסביבה הזו."),
     );
   }
 
   try {
-    const model = genAI.getGenerativeModel({
-      model: process.env.GEMINI_DOCUMENT_MODEL || "gemini-1.5-flash",
-      generationConfig: {
-        temperature: 0.22,
-        responseMimeType: "application/json",
-        responseSchema: {
-          type: SchemaType.OBJECT,
-          properties: {
-            title: { type: SchemaType.STRING },
-            preamble: { type: SchemaType.STRING },
-            parties: { type: SchemaType.ARRAY, items: { type: SchemaType.STRING } },
-            definitions: { type: SchemaType.ARRAY, items: { type: SchemaType.STRING } },
-            clauses: { type: SchemaType.ARRAY, items: { type: SchemaType.STRING } },
-            attachments: { type: SchemaType.ARRAY, items: { type: SchemaType.STRING } },
-            completionChecklist: { type: SchemaType.ARRAY, items: { type: SchemaType.STRING } },
-            legalNotes: { type: SchemaType.ARRAY, items: { type: SchemaType.STRING } },
-            signatures: {
-              type: SchemaType.ARRAY,
-              items: {
-                type: SchemaType.OBJECT,
-                properties: {
-                  role: { type: SchemaType.STRING },
-                  name: { type: SchemaType.STRING },
-                },
-              },
+    const ai = getGoogleAIClient();
+    const responseSchema = {
+      type: Type.OBJECT,
+      properties: {
+        title: { type: Type.STRING },
+        preamble: { type: Type.STRING },
+        parties: { type: Type.ARRAY, items: { type: Type.STRING } },
+        definitions: { type: Type.ARRAY, items: { type: Type.STRING } },
+        clauses: { type: Type.ARRAY, items: { type: Type.STRING } },
+        attachments: { type: Type.ARRAY, items: { type: Type.STRING } },
+        completionChecklist: { type: Type.ARRAY, items: { type: Type.STRING } },
+        legalNotes: { type: Type.ARRAY, items: { type: Type.STRING } },
+        signatures: {
+          type: Type.ARRAY,
+          items: {
+            type: Type.OBJECT,
+            properties: {
+              role: { type: Type.STRING },
+              name: { type: Type.STRING },
             },
           },
-          required: [
-            "title",
-            "preamble",
-            "parties",
-            "definitions",
-            "clauses",
-            "attachments",
-            "completionChecklist",
-            "legalNotes",
-            "signatures",
-          ],
         },
       },
-    });
+      required: [
+        "title",
+        "preamble",
+        "parties",
+        "definitions",
+        "clauses",
+        "attachments",
+        "completionChecklist",
+        "legalNotes",
+        "signatures",
+      ],
+    };
 
     const instruction = [
       "אתה עורך דין ישראלי בכיר ומנסח מסמכים משפטיים בעברית.",
@@ -292,19 +286,33 @@ export async function POST(req: Request) {
     ].join("\n");
     const guidedQualityInstruction = `${qualityInstruction}\nהנחיית עומק למסמך: ${guideFor(documentType)}`;
 
-    const result = await model.generateContent([
-      { text: instruction },
-      { text: guidedQualityInstruction },
-      {
-        text: [
-          `סוג מסמך: ${docTypeLabel}`,
-          `מזהה תבנית: ${documentType}`,
-          `פרטי המשתמש: ${prompt || "לא נמסרו פרטים. צור טיוטה כללית עם שדות להשלמה."}`,
-        ].join("\n"),
+    const response = await ai.models.generateContent({
+      model: DOCUMENT_MODEL,
+      contents: [
+        {
+          role: "user",
+          parts: [
+            { text: instruction },
+            { text: guidedQualityInstruction },
+            {
+              text: [
+                `סוג מסמך: ${docTypeLabel}`,
+                `מזהה תבנית: ${documentType}`,
+                `פרטי המשתמש: ${prompt || "לא נמסרו פרטים. צור טיוטה כללית עם שדות להשלמה."}`,
+              ].join("\n"),
+            },
+          ],
+        },
+      ],
+      config: {
+        temperature: 0.22,
+        responseMimeType: "application/json",
+        responseSchema,
       },
-    ]);
+    });
 
-    return NextResponse.json(normalizeDocument(parseJsonLoose(result.response.text()), docTypeLabel, prompt));
+    const text = typeof response.text === "string" ? response.text : String(response.text ?? "");
+    return NextResponse.json(normalizeDocument(parseJsonLoose(text), docTypeLabel, prompt));
   } catch (error) {
     console.error("Document Generation Error:", error);
     return NextResponse.json(
