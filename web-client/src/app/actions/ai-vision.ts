@@ -1,6 +1,6 @@
 "use server";
 
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { getGoogleAIClient, isGoogleAIConfigured } from "@/lib/googleAI";
 
 function mimeFromPayload(base64Image: string): string {
   const m = /^data:([^;,]+)[;,]/i.exec(base64Image);
@@ -21,20 +21,16 @@ export type VisionAnalyzeResult =
 export async function analyzeLegalDocument(
   base64Image: string,
 ): Promise<VisionAnalyzeResult> {
-  const apiKey = process.env.GEMINI_API_KEY?.trim();
-  if (!apiKey) {
+  if (!isGoogleAIConfigured()) {
     return {
       success: false,
       error:
-        "שירות פענוח המסמכים לא מחובר עדיין בסביבה הזו. בפרודקשן יש להגדיר GEMINI_API_KEY.",
+        "שירות פענוח המסמכים לא מחובר עדיין בסביבה הזו. בפרודקשן יש להגדיר GEMINI_API_KEY או Vertex AI.",
     };
   }
 
   try {
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({
-      model: process.env.GEMINI_VISION_MODEL || "gemini-1.5-flash",
-    });
+    const ai = getGoogleAIClient();
     const imageData = stripDataUrl(base64Image);
     const mimeType = mimeFromPayload(base64Image);
 
@@ -45,12 +41,17 @@ export async function analyzeLegalDocument(
       "השב בקצרה, בעברית, עם כותרות ברורות. אל תמציא פרטים שלא מופיעים בתמונה.",
     ].join("\n");
 
-    const result = await model.generateContent([
-      prompt,
-      { inlineData: { data: imageData, mimeType } },
-    ]);
+    const response = await ai.models.generateContent({
+      model: process.env.GEMINI_VISION_MODEL || "gemini-2.5-flash",
+      contents: [
+        {
+          role: "user",
+          parts: [{ text: prompt }, { inlineData: { data: imageData, mimeType } }],
+        },
+      ],
+    });
 
-    const text = result.response.text().trim();
+    const text = (typeof response.text === "string" ? response.text : String(response.text ?? "")).trim();
     return { success: true, analysis: text || "לא זוהה טקסט משפטי ברור בתמונה." };
   } catch (error) {
     console.error("Vision Error:", error);
