@@ -433,7 +433,7 @@ exports.createActionPlan = async (req, res, next) => {
     const hasRecording = !!event.recording_url || !!event.screen_recording_url;
     const hasTranscript = !!event.call_transcript;
     const overtimeDue = event.charge_status === 'pending' && Number(event.charge_amount_ils || 0) > 0;
-    const aiConfigured = !!process.env.GEMINI_API_KEY;
+    const aiConfigured = isGoogleAIConfigured();
 
     const steps = [
       overtimeDue
