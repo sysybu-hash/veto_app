@@ -126,7 +126,7 @@ function RegisterInner() {
   };
 
   return (
-    <div className="flex min-h-screen w-full items-center justify-center bg-veto-ink px-4 py-12">
+    <div data-surface="ink" className="flex min-h-screen w-full items-center justify-center bg-veto-ink px-4 py-12">
       <main
         className={`w-full max-w-lg p-6 md:p-8 ${authGlassPanel}`}
         dir={locale === "he" ? "rtl" : "ltr"}
@@ -140,15 +140,13 @@ function RegisterInner() {
           </div>
         )}
 
-        <div className="mb-5 flex gap-2 rounded-xl border border-white/10 bg-white/[0.03] p-1 text-sm">
+        <div className="mb-5 flex gap-2 rounded-xl border border-subtle bg-white/[0.03] p-1 text-sm">
           <button
             type="button"
             onClick={() => setMode("user")}
             className={`flex-1 rounded-lg px-3 py-2 font-semibold transition ${
               mode === "user"
-                ? "bg-[#C5A059] text-slate-950"
-                : "text-slate-300 hover:bg-white/[0.05]"
-            }`}
+                ? "bg-veto-gold text-primary" : "text-secondary hover:bg-white/[0.05]"}`}
           >
             הרשמה כאזרח
           </button>
@@ -157,18 +155,16 @@ function RegisterInner() {
             onClick={() => setMode("lawyer")}
             className={`flex-1 rounded-lg px-3 py-2 font-semibold transition ${
               mode === "lawyer"
-                ? "bg-[#C5A059] text-slate-950"
-                : "text-slate-300 hover:bg-white/[0.05]"
-            }`}
+                ? "bg-veto-gold text-primary" : "text-secondary hover:bg-white/[0.05]"}`}
           >
             הרשמה כעורך דין
           </button>
         </div>
 
-        <h1 className="font-display text-2xl font-semibold text-slate-100">
+        <h1 className="font-display text-2xl font-semibold text-primary">
           {mode === "lawyer" ? "הצטרפות עורכי דין למערכת VETO" : t("register.title")}
         </h1>
-        <p className="mt-2 text-sm text-slate-400">
+        <p className="mt-2 text-sm text-muted">
           {mode === "lawyer"
             ? "יש למלא את הפרטים. הבקשה תועבר לאישור מנהל המערכת לפני הפעלת החשבון."
             : t("register.subtitle")}
@@ -176,7 +172,7 @@ function RegisterInner() {
 
         <div className="mt-6 flex flex-col gap-4">
           <div>
-            <label className="text-xs font-medium text-slate-300">
+            <label className="text-xs font-medium text-secondary">
               {t("register.fullName")}
             </label>
             <input
@@ -187,7 +183,7 @@ function RegisterInner() {
             />
           </div>
           <div>
-            <label className="text-xs font-medium text-slate-300">
+            <label className="text-xs font-medium text-secondary">
               {t("register.phone")}
             </label>
             <input
@@ -202,7 +198,7 @@ function RegisterInner() {
           {mode === "lawyer" && (
             <>
               <div>
-                <label className="text-xs font-medium text-slate-300">
+                <label className="text-xs font-medium text-secondary">
                   אימייל מקצועי
                 </label>
                 <input
@@ -215,7 +211,7 @@ function RegisterInner() {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs font-medium text-slate-300">
+                  <label className="text-xs font-medium text-secondary">
                     מספר רישיון לשכת עוה״ד
                   </label>
                   <input
@@ -225,7 +221,7 @@ function RegisterInner() {
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-medium text-slate-300">
+                  <label className="text-xs font-medium text-secondary">
                     שנות ותק
                   </label>
                   <input
@@ -241,7 +237,7 @@ function RegisterInner() {
                 </div>
               </div>
               <div>
-                <p className="mb-2 text-xs font-medium text-slate-300">
+                <p className="mb-2 text-xs font-medium text-secondary">
                   תחומי התמחות (בחר אחד או יותר)
                 </p>
                 <div className="flex flex-wrap gap-2">
@@ -254,9 +250,7 @@ function RegisterInner() {
                         onClick={() => toggleSpec(s.id)}
                         className={`rounded-full px-3 py-1 text-xs font-semibold transition ${
                           on
-                            ? "border border-[#C5A059] bg-[#C5A059]/15 text-[#C5A059]"
-                            : "border border-white/10 bg-white/[0.03] text-slate-400 hover:bg-white/[0.06]"
-                        }`}
+                            ? "border border-veto-gold bg-veto-gold/15 text-veto-gold" : "border border-subtle bg-white/[0.03] text-muted hover:bg-white/[0.06]"}`}
                       >
                         {s.label}
                       </button>
@@ -267,7 +261,7 @@ function RegisterInner() {
             </>
           )}
 
-          <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-white/10 bg-white/[0.04] p-4 text-sm text-slate-200">
+          <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-subtle bg-white/[0.04] p-4 text-sm text-primary">
             <input
               type="checkbox"
               checked={acceptedTerms}
@@ -294,7 +288,7 @@ function RegisterInner() {
             </span>
           </label>
 
-          <p className="rounded-xl border border-veto-gold/20 bg-veto-gold/5 p-3 text-xs leading-relaxed text-slate-300">
+          <p className="rounded-xl border border-veto-gold/20 bg-veto-gold/5 p-3 text-xs leading-relaxed text-secondary">
             חיסיון עו״ד–לקוח חל על שיחות הווידאו המבוצעות במערכת, בכפוף לדין החל
             ולנסיבות העניין.
           </p>
@@ -313,18 +307,18 @@ function RegisterInner() {
           </button>
 
           <div
-            className="flex flex-wrap items-center justify-center gap-3 border-t border-white/10 pt-4 text-xs text-slate-400"
+            className="flex flex-wrap items-center justify-center gap-3 border-t border-subtle pt-4 text-xs text-muted"
             aria-label="אבטחה ותאימות"
           >
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-subtle bg-white/[0.04] px-3 py-1.5">
               <ShieldCheck className="h-3.5 w-3.5 text-emerald-400" aria-hidden />
               GDPR Compliant
             </span>
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-subtle bg-white/[0.04] px-3 py-1.5">
               <Lock className="h-3.5 w-3.5 text-veto-gold" aria-hidden />
               AES-256 Encrypted
             </span>
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-subtle bg-white/[0.04] px-3 py-1.5">
               <Database className="h-3.5 w-3.5 text-sky-400" aria-hidden />
               Secure Vault
             </span>
@@ -349,7 +343,7 @@ function RegisterInner() {
 
 export default function RegisterPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-veto-ink" />}>
+    <Suspense fallback={<div data-surface="ink" className="min-h-screen bg-veto-ink" />}>
       <RegisterInner />
     </Suspense>
   );

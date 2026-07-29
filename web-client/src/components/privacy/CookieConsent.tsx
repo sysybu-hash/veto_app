@@ -54,9 +54,10 @@ export function CookieConsent() {
 
   return (
     <section
+      data-print="hide"
       dir="rtl"
       aria-label="העדפות פרטיות ועוגיות"
-      className="fixed inset-x-3 bottom-3 z-[70] mx-auto max-w-4xl rounded-2xl border border-slate-200 bg-white p-4 text-slate-900 shadow-2xl dark:border-white/12 dark:bg-slate-900 dark:text-slate-100 dark:shadow-[0_24px_64px_rgba(0,0,0,0.55)] sm:bottom-5 sm:p-5"
+      className="fixed inset-x-3 bottom-3 z-[70] mx-auto max-w-4xl rounded-2xl border border-subtle bg-surface-overlay p-4 text-primary shadow-2xl dark:shadow-[0_24px_64px_rgba(0,0,0,0.55)] sm:bottom-5 sm:p-5"
     >
       <div className="grid gap-4 md:grid-cols-[1fr_auto] md:items-start">
         <div>
@@ -64,13 +65,13 @@ export function CookieConsent() {
             <VetoBrandLogo className="h-7 w-auto max-w-[180px]" />
           </div>
           <h2 className="text-base font-bold">העדפות פרטיות</h2>
-          <p className="mt-1 text-sm leading-6 text-slate-600 dark:text-slate-300">
+          <p className="mt-1 text-sm leading-6 text-secondary">
             אנחנו משתמשים בעוגיות חיוניות להפעלת VETO. עוגיות מדידה או שיווק יופעלו רק לאחר אישור מפורש.
           </p>
-          <div className="mt-2 flex flex-wrap gap-3 text-xs font-semibold text-slate-500 dark:text-slate-400">
-            <Link href="/privacy" className="hover:text-slate-900 dark:hover:text-white">מדיניות פרטיות</Link>
-            <Link href="/cookies" className="hover:text-slate-900 dark:hover:text-white">מדיניות עוגיות</Link>
-            <Link href="/terms" className="hover:text-slate-900 dark:hover:text-white">תנאי שימוש</Link>
+          <div className="mt-2 flex flex-wrap gap-3 text-xs font-semibold text-muted">
+            <Link href="/privacy" className="hover:text-primary">מדיניות פרטיות</Link>
+            <Link href="/cookies" className="hover:text-primary">מדיניות עוגיות</Link>
+            <Link href="/terms" className="hover:text-primary">תנאי שימוש</Link>
           </div>
         </div>
 
@@ -78,21 +79,21 @@ export function CookieConsent() {
           <button
             type="button"
             onClick={() => accept({ analytics: false, marketing: false })}
-            className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 dark:border-white/15 dark:text-slate-200 dark:hover:bg-white/8"
+            className="rounded-xl border border-subtle px-4 py-2 text-sm font-semibold text-secondary hover:bg-hover-overlay"
           >
             חיוניות בלבד
           </button>
           <button
             type="button"
             onClick={() => setExpanded((v) => !v)}
-            className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 dark:border-white/15 dark:text-slate-200 dark:hover:bg-white/8"
+            className="rounded-xl border border-subtle px-4 py-2 text-sm font-semibold text-secondary hover:bg-hover-overlay"
           >
             התאמה אישית
           </button>
           <button
             type="button"
             onClick={() => accept({ analytics: true, marketing: true })}
-            className="rounded-xl bg-slate-950 px-4 py-2 text-sm font-bold text-white hover:bg-slate-800 dark:bg-veto-gold dark:text-slate-950 dark:hover:bg-veto-gold-light"
+            className="rounded-xl bg-veto-gold px-4 py-2 text-sm font-bold text-on-brand hover:bg-veto-gold-light"
           >
             אישור הכל
           </button>
@@ -100,8 +101,8 @@ export function CookieConsent() {
       </div>
 
       {expanded && (
-        <div className="mt-4 grid gap-3 border-t border-slate-100 pt-4 dark:border-white/10 sm:grid-cols-2">
-          <label className="flex items-start gap-3 rounded-xl bg-slate-50 p-3 dark:bg-white/5">
+        <div className="mt-4 grid gap-3 border-t border-subtle pt-4 sm:grid-cols-2">
+          <label className="flex items-start gap-3 rounded-xl bg-surface-sunken p-3 dark:bg-white/5">
             <input
               type="checkbox"
               checked={analytics}
@@ -110,10 +111,10 @@ export function CookieConsent() {
             />
             <span>
               <span className="block text-sm font-bold">מדידה ושיפור</span>
-              <span className="text-xs leading-5 text-slate-500 dark:text-slate-400">עוזר לנו להבין תקלות ושימוש באתר.</span>
+              <span className="text-xs leading-5 text-muted">עוזר לנו להבין תקלות ושימוש באתר.</span>
             </span>
           </label>
-          <label className="flex items-start gap-3 rounded-xl bg-slate-50 p-3 dark:bg-white/5">
+          <label className="flex items-start gap-3 rounded-xl bg-surface-sunken p-3 dark:bg-white/5">
             <input
               type="checkbox"
               checked={marketing}
@@ -122,13 +123,13 @@ export function CookieConsent() {
             />
             <span>
               <span className="block text-sm font-bold">שיווק</span>
-              <span className="text-xs leading-5 text-slate-500 dark:text-slate-400">מיועד לקמפיינים עתידיים, רק בהסכמה.</span>
+              <span className="text-xs leading-5 text-muted">מיועד לקמפיינים עתידיים, רק בהסכמה.</span>
             </span>
           </label>
           <button
             type="button"
             onClick={() => accept({ analytics, marketing })}
-            className="rounded-xl bg-[#C5A059] px-4 py-2 text-sm font-bold text-slate-950 sm:col-span-2"
+            className="rounded-xl bg-veto-gold px-4 py-2 text-sm font-bold text-on-brand sm:col-span-2"
           >
             שמירת העדפות
           </button>

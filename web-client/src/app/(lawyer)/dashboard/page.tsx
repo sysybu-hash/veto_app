@@ -368,20 +368,20 @@ export default function LawyerDashboardPage() {
       <header className="border-b border-white/40 bg-white/70 shadow-sm backdrop-blur-xl">
         <div className="mx-auto flex max-w-6xl flex-col gap-4 px-4 py-4 md:flex-row md:items-center md:justify-between md:px-8">
           <div>
-            <h1 className="font-frank text-2xl font-black text-slate-950">לוח עורך דין</h1>
-            <p className="mt-1 text-sm text-slate-600">
+            <h1 className="font-frank text-2xl font-black text-primary">לוח עורך דין</h1>
+            <p className="mt-1 text-sm text-secondary">
               קריאות, שיחות, כספת, תורים וזמינות במקום אחד.
             </p>
           </div>
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
             <div className={`${glassPanelNested} flex items-center justify-between gap-4 px-4 py-3`}>
               <div className="flex items-center gap-2">
-                {isAvailable ? <Wifi className="h-5 w-5 text-emerald-700" aria-hidden /> : <WifiOff className="h-5 w-5 text-slate-500" aria-hidden />}
+                {isAvailable ? <Wifi className="h-5 w-5 text-emerald-700" aria-hidden /> : <WifiOff className="h-5 w-5 text-muted" aria-hidden />}
                 <div>
-                  <p className="text-sm font-black text-slate-900">
+                  <p className="text-sm font-black text-primary">
                     {isAvailable ? "מחוברים וזמינים" : "לא מחוברים"}
                   </p>
-                  <p className="text-xs text-slate-600">
+                  <p className="text-xs text-secondary">
                     {notifPermission === "granted" ? "התראות דפדפן פעילות" : "הפעילו זמינות לקבלת SOS"}
                   </p>
                 </div>
@@ -392,10 +392,10 @@ export default function LawyerDashboardPage() {
                 aria-checked={isAvailable}
                 onClick={() => handleAvailabilityChange(!isAvailable)}
                 className={`relative h-10 w-[4.5rem] rounded-full transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#C5A059] ${
-                  isAvailable ? "bg-emerald-600" : "bg-slate-300"
+                  isAvailable ? "bg-emerald-600" : "bg-zinc-300"
                 }`}
               >
-                <span className={`absolute top-1 h-8 w-8 rounded-full bg-white shadow transition ${isAvailable ? "end-1" : "start-1"}`} />
+                <span className={`absolute top-1 h-8 w-8 rounded-full bg-surface-overlay shadow transition ${isAvailable ? "end-1" : "start-1"}`} />
               </button>
             </div>
             <button
@@ -434,9 +434,7 @@ export default function LawyerDashboardPage() {
                 onClick={() => setActiveTab(tabItem.id)}
                 className={`flex min-h-14 flex-col items-center justify-center gap-1 rounded-xl border px-2 py-2.5 text-center text-xs font-black transition sm:flex-row sm:gap-2 sm:px-3 sm:text-sm ${
                   active
-                    ? "border-veto-gold/60 bg-veto-gold/20 text-slate-950 shadow-md ring-1 ring-veto-gold/30"
-                    : "border-slate-200/90 bg-white/80 text-slate-800 hover:border-slate-300 hover:bg-white"
-                }`}
+                    ? "border-veto-gold/60 bg-veto-gold/20 text-primary shadow-md ring-1 ring-veto-gold/30" : "border-subtle bg-surface-raised text-primary hover:border-strong hover:bg-white"}`}
               >
                 <Icon className="h-4 w-4 shrink-0" aria-hidden />
                 <span className="leading-tight">{tabItem.label}</span>
@@ -532,14 +530,14 @@ function OverviewPanel({
     <section className={`${glassPanel} p-5 md:p-7`}>
       <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
         <div>
-          <h2 className="font-frank text-2xl font-black text-slate-950">
+          <h2 className="font-frank text-2xl font-black text-primary">
             {t("lawyerDashboard.helloName").replace("{name}", displayName)}
           </h2>
-          <p className="mt-1 text-sm leading-6 text-slate-600">
+          <p className="mt-1 text-sm leading-6 text-secondary">
             {t("lawyerDashboard.overviewIntro")}
           </p>
         </div>
-        <span className={`w-fit rounded-full px-3 py-1 text-xs font-black ${isAvailable ? "bg-emerald-100 text-emerald-900" : "bg-slate-200 text-slate-700"}`}>
+        <span className={`w-fit rounded-full px-3 py-1 text-xs font-black ${isAvailable ? "bg-emerald-100 text-emerald-900" : "bg-zinc-200 text-secondary"}`}>
           {isAvailable ? t("lawyerDashboard.statusAvailable") : t("lawyerDashboard.statusUnavailable")}
         </span>
       </div>
@@ -550,7 +548,7 @@ function OverviewPanel({
         <StatCard title={t("lawyerDashboard.statQueueToday")} value={t("lawyerDashboard.statValueOpen")} icon={CalendarClock} />
       </div>
       <div className={`${glassPanelNested} mt-5 p-5`}>
-        <h3 className="text-lg font-black text-slate-950">{t("lawyerDashboard.quickTasks")}</h3>
+        <h3 className="text-lg font-black text-primary">{t("lawyerDashboard.quickTasks")}</h3>
         <div className="mt-4 grid gap-2 md:grid-cols-3">
           <Link href="/chat" className={`px-4 py-3 text-center text-sm font-bold ${btnSecondaryGlass}`}>
             {t("lawyerDashboard.quickOpenChat")}
@@ -583,8 +581,8 @@ function CallsPanel({
   return (
     <section className={`${glassPanel} p-5 md:p-7`}>
       <div>
-        <h2 className="font-frank text-2xl font-black text-slate-950">ניהול קריאות</h2>
-        <p className="mt-1 text-sm text-slate-600">
+        <h2 className="font-frank text-2xl font-black text-primary">ניהול קריאות</h2>
+        <p className="mt-1 text-sm text-secondary">
           כאן מתקבלות קריאות SOS, פרטי מיקום, סוג התקשרות וקבלת התיק.
         </p>
       </div>
@@ -595,17 +593,17 @@ function CallsPanel({
             <CaseDetails alert={activeAlert} formattedAlertTime={formattedAlertTime} onAccept={onAccept} isAccepting={isAccepting} />
           ) : (
             <div className="flex min-h-64 flex-col items-center justify-center text-center">
-              <Bell className="h-10 w-10 text-[#9b7430]" aria-hidden />
-              <p className="mt-4 text-lg font-black text-slate-900">אין קריאת חירום פעילה.</p>
-              <p className="mt-2 max-w-md text-sm leading-6 text-slate-600">
+              <Bell className="h-10 w-10 text-veto-gold-dark" aria-hidden />
+              <p className="mt-4 text-lg font-black text-primary">אין קריאת חירום פעילה.</p>
+              <p className="mt-2 max-w-md text-sm leading-6 text-secondary">
                 {isAvailable ? "ממתינים לקריאת SOS. כשהיא תגיע, פרטי האזרח והמיקום יופיעו כאן." : "הפעילו זמינות כדי להתחיל לקבל קריאות."}
               </p>
             </div>
           )}
         </div>
         <div className={`${glassPanelNested} p-5`}>
-          <h3 className="text-lg font-black text-slate-950">תור SOS חי</h3>
-          <p className="mt-2 text-sm leading-6 text-slate-600">
+          <h3 className="text-lg font-black text-primary">תור SOS חי</h3>
+          <p className="mt-2 text-sm leading-6 text-secondary">
             קבלת תיק פותחת חדר שיחה מאובטח ומעבירה את האזרח למסך בחירת שיחה.
           </p>
           <div className="mt-5 space-y-3">
@@ -622,8 +620,8 @@ function CallsPanel({
 function VaultPanel() {
   return (
     <section className={`${glassPanel} p-5 md:p-7`}>
-      <h2 className="font-frank text-2xl font-black text-slate-950">כספת משפטית</h2>
-      <p className="mt-1 text-sm text-slate-600">
+      <h2 className="font-frank text-2xl font-black text-primary">כספת משפטית</h2>
+      <p className="mt-1 text-sm text-secondary">
         גישה למסמכים, ראיות וסיכומי שיחה שהאזרח משתף בתיק פעיל.
       </p>
       <div className="mt-5 grid gap-3 md:grid-cols-3">
@@ -638,15 +636,15 @@ function VaultPanel() {
 function ChatPanel() {
   return (
     <section className={`${glassPanel} p-5 md:p-7`}>
-      <h2 className="font-frank text-2xl font-black text-slate-950">צ׳אט עם אזרחים</h2>
-      <p className="mt-1 text-sm text-slate-600">
+      <h2 className="font-frank text-2xl font-black text-primary">צ׳אט עם אזרחים</h2>
+      <p className="mt-1 text-sm text-secondary">
         שיחות עם אזרחים מאושרים, כולל המשך שיחה לאחר SOS וצירוף מסמכים מהכספת.
       </p>
       <div className={`${glassPanelNested} mt-5 p-5`}>
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
-            <p className="text-lg font-black text-slate-900">חלון השיחה המלא</p>
-            <p className="mt-1 text-sm text-slate-600">רשימת שיחות, הודעות, שליחה ומחיקה לפי הרשאות השרת.</p>
+            <p className="text-lg font-black text-primary">חלון השיחה המלא</p>
+            <p className="mt-1 text-sm text-secondary">רשימת שיחות, הודעות, שליחה ומחיקה לפי הרשאות השרת.</p>
           </div>
           <Link href="/chat" className={`px-5 py-3 text-center text-sm font-black ${btnPrimaryDark}`}>
             פתח צ׳אט
@@ -724,8 +722,8 @@ function SchedulePanel({
 
   return (
     <section className={`${glassPanel} p-5 md:p-7`}>
-      <h2 className="font-frank text-2xl font-black text-slate-950">ניהול תורים</h2>
-      <p className="mt-1 text-sm text-slate-600">הגדרת שעות פעילות, ייעוצים מתוכננים ותזכורות.</p>
+      <h2 className="font-frank text-2xl font-black text-primary">ניהול תורים</h2>
+      <p className="mt-1 text-sm text-secondary">הגדרת שעות פעילות, ייעוצים מתוכננים ותזכורות.</p>
       <div className="mt-5 grid gap-3 md:grid-cols-2">
         <ToggleLine title="יומן פתוח להזמנות" body="אזרחים יוכלו לבקש ייעוץ מתוכנן." checked={scheduleOpen} onChange={setScheduleOpen} />
         <ToggleLine title="קבלה מהירה של תיק מתאים" body="המערכת תבליט קריאות שתואמות את ההתמחות." checked={autoAccept} onChange={setAutoAccept} />
@@ -733,7 +731,7 @@ function SchedulePanel({
 
       <div className="mt-6">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <h3 className="text-sm font-black text-slate-900">שעות זמינות ביממה (00–23)</h3>
+          <h3 className="text-sm font-black text-primary">שעות זמינות ביממה (00–23)</h3>
           <div className="flex flex-wrap gap-2">
             <button
               type="button"
@@ -751,7 +749,7 @@ function SchedulePanel({
             </button>
           </div>
         </div>
-        <p className="mt-1 text-xs text-slate-500">
+        <p className="mt-1 text-xs text-muted">
           סמנו כל שעה שבה אתם מוכנים לקבוע ייעוץ או להופיע ביומן. השמירה היא מקומית בדפדפן (לפני חיבור לשרת).
         </p>
         <div className="mt-3 grid grid-cols-4 gap-2 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-12">
@@ -762,9 +760,7 @@ function SchedulePanel({
               onClick={() => toggleHour(h)}
               className={`rounded-lg border px-1 py-2 text-center text-[11px] font-black transition sm:text-xs ${
                 on
-                  ? "border-veto-gold/70 bg-veto-gold/25 text-slate-950 shadow-sm"
-                  : "border-slate-200 bg-white/90 text-slate-600 hover:border-slate-300"
-              }`}
+                  ? "border-veto-gold/70 bg-veto-gold/25 text-primary shadow-sm" : "border-subtle bg-surface-raised-2 text-secondary hover:border-strong"}`}
               aria-pressed={on}
             >
               {`${String(h).padStart(2, "0")}`}
@@ -791,14 +787,14 @@ function ProfilePanel({
 }) {
   return (
     <section className={`${glassPanel} p-5 md:p-7`}>
-      <h2 className="font-frank text-2xl font-black text-slate-950">זמינות ופרופיל</h2>
-      <p className="mt-1 text-sm text-slate-600">פרטי עורך הדין והסטטוס שמפעיל קבלת קריאות.</p>
+      <h2 className="font-frank text-2xl font-black text-primary">זמינות ופרופיל</h2>
+      <p className="mt-1 text-sm text-secondary">פרטי עורך הדין והסטטוס שמפעיל קבלת קריאות.</p>
       <div className="mt-5 grid gap-4 lg:grid-cols-[0.8fr_1.2fr]">
         <div className={`${glassPanelNested} p-5`}>
-          <UserRound className="h-9 w-9 text-[#9b7430]" aria-hidden />
-          <p className="mt-4 text-lg font-black text-slate-900">{profile?.full_name || "עורך דין"}</p>
-          <p className="mt-1 text-sm text-slate-600">{profile?.email || "מייל לא מוגדר"}</p>
-          <p className="mt-1 text-sm text-slate-600">{profile?.phone || "טלפון לא מוגדר"}</p>
+          <UserRound className="h-9 w-9 text-veto-gold-dark" aria-hidden />
+          <p className="mt-4 text-lg font-black text-primary">{profile?.full_name || "עורך דין"}</p>
+          <p className="mt-1 text-sm text-secondary">{profile?.email || "מייל לא מוגדר"}</p>
+          <p className="mt-1 text-sm text-secondary">{profile?.phone || "טלפון לא מוגדר"}</p>
         </div>
         <div className={`${glassPanelNested} p-5`}>
           <ToggleLine title="מחובר לקבלת SOS" body="כשהמתג פעיל, קריאות חירום יכולות להגיע למסך הזה." checked={isAvailable} onChange={onAvailabilityChange} />
@@ -833,9 +829,9 @@ function IncomingCaseModal({
   onAccept: () => void;
 }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-950/60 p-4 backdrop-blur-sm sm:items-center" role="dialog" aria-modal="true">
-      <div className={`${glassPanel} w-full max-w-xl overflow-hidden border-red-200/80 bg-white/85`}>
-        <div className="bg-red-600 px-6 py-4 text-white">
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-surface-scrim p-4 backdrop-blur-sm sm:items-center" role="dialog" aria-modal="true">
+      <div className={`${glassPanel} w-full max-w-xl overflow-hidden border-red-200/80 bg-surface-raised`}>
+        <div className="bg-red-600 px-6 py-4 text-inverse">
           <p className="text-xs font-black uppercase tracking-widest text-red-100">SOS LIVE</p>
           <h2 className="mt-1 text-2xl font-black">קריאת חירום נכנסת</h2>
           <p className="mt-1 text-sm text-red-100">{formattedTime}</p>
@@ -870,14 +866,14 @@ function CaseDetails({
         <MiniRow icon={MessageCircle} title="שפה" value={alert.language} />
       </div>
       <div className={`${glassPanelNested} mt-4 p-4`}>
-        <p className="text-xs font-bold text-slate-500">מזהה אירוע</p>
-        <p className="mt-1 break-all font-mono text-xs text-slate-800">{alert.eventId}</p>
+        <p className="text-xs font-bold text-muted">מזהה אירוע</p>
+        <p className="mt-1 break-all font-mono text-xs text-primary">{alert.eventId}</p>
       </div>
       <button type="button" disabled={isAccepting} onClick={onAccept} className={`mt-4 w-full px-5 py-4 text-base font-black ${btnPrimaryGold} disabled:cursor-not-allowed disabled:opacity-60`}>
         {isAccepting ? "מקבל את הקריאה..." : "קבל קריאה ופתח שיחה"}
       </button>
       {!compact && (
-        <p className="mt-3 text-center text-xs text-slate-500">
+        <p className="mt-3 text-center text-xs text-muted">
           לאחר הקבלה האזרח יבחר וידאו, אודיו או צ׳אט. בלחיצה על הכפתור תתבקשו לאשר גישה למצלמה ולמיקרופון.
         </p>
       )}
@@ -896,9 +892,9 @@ function StatCard({
 }) {
   return (
     <div className={`${glassPanelNested} p-4`}>
-      <Icon className="h-5 w-5 text-[#9b7430]" aria-hidden />
-      <p className="mt-4 text-xs font-bold text-slate-500">{title}</p>
-      <p className="mt-1 text-lg font-black text-slate-950">{value}</p>
+      <Icon className="h-5 w-5 text-veto-gold-dark" aria-hidden />
+      <p className="mt-4 text-xs font-bold text-muted">{title}</p>
+      <p className="mt-1 text-lg font-black text-primary">{value}</p>
     </div>
   );
 }
@@ -915,10 +911,10 @@ function MiniRow({
   return (
     <div className="rounded-2xl border border-white/35 bg-white/35 p-4">
       <div className="flex items-start gap-3">
-        <Icon className="mt-0.5 h-5 w-5 shrink-0 text-[#9b7430]" aria-hidden />
+        <Icon className="mt-0.5 h-5 w-5 shrink-0 text-veto-gold-dark" aria-hidden />
         <div className="min-w-0">
-          <p className="text-xs font-bold text-slate-500">{title}</p>
-          <p className="mt-1 break-words text-sm font-black text-slate-900">{value}</p>
+          <p className="text-xs font-bold text-muted">{title}</p>
+          <p className="mt-1 break-words text-sm font-black text-primary">{value}</p>
         </div>
       </div>
     </div>
@@ -940,9 +936,9 @@ function FeatureCard({
 }) {
   return (
     <div className={`${glassPanelNested} p-5`}>
-      <Icon className="h-7 w-7 text-[#9b7430]" aria-hidden />
-      <h3 className="mt-4 text-lg font-black text-slate-950">{title}</h3>
-      <p className="mt-2 min-h-16 text-sm leading-6 text-slate-600">{body}</p>
+      <Icon className="h-7 w-7 text-veto-gold-dark" aria-hidden />
+      <h3 className="mt-4 text-lg font-black text-primary">{title}</h3>
+      <p className="mt-2 min-h-16 text-sm leading-6 text-secondary">{body}</p>
       <Link href={href} className={`mt-4 block w-full px-4 py-3 text-center text-sm font-bold ${btnSecondaryGlass}`}>
         {action}
       </Link>
@@ -964,17 +960,17 @@ function ToggleLine({
   return (
     <div className={`${glassPanelNested} flex items-center justify-between gap-4 p-4`}>
       <div>
-        <p className="text-sm font-black text-slate-900">{title}</p>
-        <p className="mt-1 text-xs leading-5 text-slate-600">{body}</p>
+        <p className="text-sm font-black text-primary">{title}</p>
+        <p className="mt-1 text-xs leading-5 text-secondary">{body}</p>
       </div>
       <button
         type="button"
         role="switch"
         aria-checked={checked}
         onClick={() => onChange(!checked)}
-        className={`relative h-8 w-14 shrink-0 rounded-full transition ${checked ? "bg-[#C5A059]" : "bg-slate-300"}`}
+        className={`relative h-8 w-14 shrink-0 rounded-full transition ${checked ? "bg-veto-gold" : "bg-zinc-300"}`}
       >
-        <span className={`absolute top-1 h-6 w-6 rounded-full bg-white shadow transition ${checked ? "end-1" : "start-1"}`} />
+        <span className={`absolute top-1 h-6 w-6 rounded-full bg-surface-overlay shadow transition ${checked ? "end-1" : "start-1"}`} />
       </button>
     </div>
   );

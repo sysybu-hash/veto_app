@@ -6,12 +6,13 @@ import { btnPrimaryGold } from "@/lib/vetoGlass";
 export default function OfflinePage() {
   return (
     <div
-      className="flex min-h-screen flex-col items-center justify-center bg-veto-ink p-6 text-center text-white"
+      data-surface="ink"
+      className="flex min-h-screen flex-col items-center justify-center bg-veto-ink p-6 text-center text-primary"
       dir="rtl"
     >
       <WifiOff size={64} className="mb-6 text-veto-gold opacity-80" aria-hidden />
       <h1 className="mb-4 text-3xl font-bold">אין חיבור לאינטרנט</h1>
-      <p className="mb-8 max-w-md text-slate-400">
+      <p className="mb-8 max-w-md text-muted">
         המכשיר שלך כרגע לא מחובר לרשת. אנא ודא שהאינטרנט הסלולרי או ה-Wi-Fi
         פועלים כדי שנוכל לחבר אותך לעורך דין בזמן אמת.
       </p>

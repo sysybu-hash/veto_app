@@ -148,7 +148,7 @@ export default function LoginPage() {
   return (
     <Suspense
       fallback={
-        <div className="flex min-h-screen items-center justify-center text-slate-400">
+        <div className="flex min-h-screen items-center justify-center text-muted">
           …
         </div>
       }
@@ -504,7 +504,7 @@ function LoginPageInner() {
 
   return (
     <>
-      <div className="flex min-h-screen w-full items-center justify-center bg-veto-ink px-4 py-12 md:px-6 md:py-16">
+      <div data-surface="ink" className="flex min-h-screen w-full items-center justify-center bg-veto-ink px-4 py-12 md:px-6 md:py-16">
       <main
         className={`w-full max-w-md p-6 md:p-8 ${authGlassPanel}`}
         dir={locale === "he" ? "rtl" : "ltr"}
@@ -527,7 +527,7 @@ function LoginPageInner() {
               {t("login.alertMissingApiOrigin")}
             </div>
           )}
-          <h1 className="font-display text-2xl font-semibold text-slate-100 md:text-3xl">
+          <h1 className="font-display text-2xl font-semibold text-primary md:text-3xl">
             {t("login.title")}
           </h1>
         </div>
@@ -565,10 +565,10 @@ function LoginPageInner() {
               className="absolute inset-0 flex items-center"
               aria-hidden
             >
-              <div className="w-full border-t border-white/10" />
+              <div className="w-full border-t border-subtle" />
             </div>
             <div className="relative flex justify-center text-xs font-medium">
-              <span className="rounded-full border border-white/10 bg-white/[0.06] px-3 py-0.5 text-slate-400 backdrop-blur-sm">
+              <span className="rounded-full border border-subtle bg-white/[0.06] px-3 py-0.5 text-muted backdrop-blur-sm">
                 {t("login.orPhone")}
               </span>
             </div>
@@ -586,7 +586,7 @@ function LoginPageInner() {
             כניסה מהירה עם Passkey (טביעת אצבע / פנים)
           </button>
           {!passkeysSupported() && (
-            <p className="mt-2 text-center text-xs text-slate-500">
+            <p className="mt-2 text-center text-xs text-muted">
               הדפדפן אינו תומך ב-Passkeys. השתמשו בקוד SMS.
             </p>
           )}
@@ -594,10 +594,10 @@ function LoginPageInner() {
 
         <div className="relative py-3">
           <div className="absolute inset-0 flex items-center" aria-hidden>
-            <div className="w-full border-t border-white/10" />
+            <div className="w-full border-t border-subtle" />
           </div>
           <div className="relative flex justify-center text-xs font-medium">
-            <span className="rounded-full border border-white/10 bg-white/[0.06] px-3 py-0.5 text-slate-400 backdrop-blur-sm">
+            <span className="rounded-full border border-subtle bg-white/[0.06] px-3 py-0.5 text-muted backdrop-blur-sm">
               או קוד ב-SMS
             </span>
           </div>
@@ -605,7 +605,7 @@ function LoginPageInner() {
 
         <div className="mt-2 flex flex-col gap-6">
           <div className="flex flex-col gap-2">
-            <label className="text-xs font-medium text-slate-300">
+            <label className="text-xs font-medium text-secondary">
               {t("login.phone")}
             </label>
             <input
@@ -621,11 +621,11 @@ function LoginPageInner() {
               placeholder={t("login.phonePlaceholder")}
               autoComplete="tel"
             />
-            <p className="text-center text-xs text-slate-400">
+            <p className="text-center text-xs text-muted">
               {t("login.needRegister")}{" "}
               <Link
                 href="/register"
-                className="font-bold text-[#8a6d3d] underline underline-offset-2"
+                className="font-bold text-brand-700 underline underline-offset-2"
               >
                 {t("login.registerLink")}
               </Link>
@@ -652,7 +652,7 @@ function LoginPageInner() {
               </p>
               <div className="mt-3 flex flex-wrap items-center justify-center gap-3">
                 <code
-                  className="min-w-[8.5rem] rounded-xl border border-white/10 bg-white/[0.06] px-4 py-2 text-center text-2xl font-bold tracking-[0.35em] text-slate-100 shadow-inner backdrop-blur-md"
+                  className="min-w-[8.5rem] rounded-xl border border-subtle bg-white/[0.06] px-4 py-2 text-center text-2xl font-bold tracking-[0.35em] text-primary shadow-inner backdrop-blur-md"
                   dir="ltr"
                 >
                   {devOtp}
@@ -660,7 +660,7 @@ function LoginPageInner() {
                 <button
                   type="button"
                   onClick={() => void copyDevOtp()}
-                  className="rounded-xl bg-amber-600 px-4 py-2.5 text-sm font-bold text-white shadow transition hover:bg-amber-700"
+                  className="rounded-xl bg-amber-600 px-4 py-2.5 text-sm font-bold text-inverse shadow transition hover:bg-amber-700"
                 >
                   {otpCopied ? t("common.copied") : t("common.copy")}
                 </button>
@@ -669,7 +669,7 @@ function LoginPageInner() {
           )}
 
           <div className="flex flex-col gap-2">
-            <label className="text-xs font-medium text-slate-300">
+            <label className="text-xs font-medium text-secondary">
               {t("login.otpLabel")}
             </label>
             <OtpInput
@@ -686,7 +686,7 @@ function LoginPageInner() {
               type="button"
               disabled={!canVerifyOtp}
               onClick={() => void handleVerify()}
-              className="mt-1 rounded-xl bg-emerald-700 px-4 py-2.5 text-sm font-semibold text-white shadow-md transition hover:bg-emerald-600 disabled:opacity-50"
+              className="mt-1 rounded-xl bg-emerald-700 px-4 py-2.5 text-sm font-semibold text-inverse shadow-md transition hover:bg-emerald-600 disabled:opacity-50"
             >
               {t("login.verify")}
             </button>
@@ -702,13 +702,14 @@ function LoginPageInner() {
 
       {adminLoginOpen && (
         <div
-          className="fixed inset-0 z-[120] flex items-center justify-center bg-slate-900/45 p-4"
+          className="fixed inset-0 z-[120] flex items-center justify-center bg-surface-scrim p-4"
           role="presentation"
           onMouseDown={(e) => {
             if (e.target === e.currentTarget) setAdminLoginOpen(false);
           }}
         >
           <div
+            data-surface="ink"
             className={`w-full max-w-sm p-5 md:p-6 ${authGlassPanel}`}
             dir={locale === "he" ? "rtl" : "ltr"}
             role="dialog"
@@ -716,13 +717,13 @@ function LoginPageInner() {
             aria-label="כניסת מנהל"
             onMouseDown={(e) => e.stopPropagation()}
           >
-            <h3 className="text-lg font-bold text-slate-100">כניסת מנהל</h3>
-            <p className="mt-1 text-xs text-slate-400">
+            <h3 className="text-lg font-bold text-primary">כניסת מנהל</h3>
+            <p className="mt-1 text-xs text-muted">
               התחברות בדיקות עם שם משתמש וסיסמה ובחירת תפקיד.
             </p>
 
             <div className="mt-4 flex flex-col gap-2">
-              <label className="text-xs font-medium text-slate-300">שם משתמש</label>
+              <label className="text-xs font-medium text-secondary">שם משתמש</label>
               <input
                 value={devUsername}
                 onChange={(e) => setDevUsername(e.target.value)}
@@ -732,7 +733,7 @@ function LoginPageInner() {
             </div>
 
             <div className="mt-3 flex flex-col gap-2">
-              <label className="text-xs font-medium text-slate-300">סיסמה</label>
+              <label className="text-xs font-medium text-secondary">סיסמה</label>
               <input
                 type="password"
                 value={devPassword}
@@ -743,7 +744,7 @@ function LoginPageInner() {
             </div>
 
             <div className="mt-3 flex flex-col gap-2">
-              <label className="text-xs font-medium text-slate-300">כניסה כ</label>
+              <label className="text-xs font-medium text-secondary">כניסה כ</label>
               <select
                 value={devRole}
                 onChange={(e) => setDevRole(e.target.value as LoginRole)}

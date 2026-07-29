@@ -54,7 +54,7 @@ export function CaptionsOverlay({
   if (recent.length === 0) {
     return (
       <div className="pointer-events-none absolute inset-x-0 bottom-24 z-20 flex justify-center">
-        <span className="rounded-full bg-black/60 px-3 py-1 text-[11px] font-semibold text-slate-300 backdrop-blur">
+        <span className="rounded-full bg-black/60 px-3 py-1 text-[11px] font-semibold text-secondary backdrop-blur">
           {t("call.v2.captions.listening", "Captions on — listening…")}
         </span>
       </div>
@@ -69,14 +69,14 @@ export function CaptionsOverlay({
       aria-live="polite"
       aria-atomic="false"
     >
-      <div className="max-w-3xl space-y-1 rounded-2xl bg-black/70 px-4 py-2 text-center text-sm leading-6 text-white backdrop-blur">
+      <div className="max-w-3xl space-y-1 rounded-2xl bg-black/70 px-4 py-2 text-center text-sm leading-6 text-inverse backdrop-blur">
         {recent.map((seg) => {
           const translated = translations?.[seg.segmentId];
           return (
             <div key={seg.segmentId} className="space-y-0.5">
               <p
                 className={
-                  seg.isFinal ? "text-white" : "text-slate-300 italic"
+                  seg.isFinal ? "text-white" : "text-secondary italic"
                 }
               >
                 {seg.speaker && (

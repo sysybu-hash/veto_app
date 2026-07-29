@@ -88,17 +88,14 @@ export function CallStage({
         className="h-full w-full min-h-0 bg-zinc-950 [&_video]:h-full [&_video]:w-full [&_video]:object-cover"
       />
       {!remote && (
-        <div className="absolute inset-0 flex items-center justify-center text-sm text-slate-400">
+        <div className="absolute inset-0 flex items-center justify-center text-sm text-muted">
           {t("call.v2.stage.waiting", "Waiting for the other side…")}
         </div>
       )}
 
       {showLocalSelf && (
         <div
-          className="absolute end-3 top-3 z-10 overflow-hidden rounded-xl border border-white/15 shadow-xl
-                     @sm:end-4 @sm:top-4
-                     w-24 h-32 @md:w-28 @md:h-36 @lg:w-36 @lg:h-44
-                     [&_video]:h-full [&_video]:w-full [&_video]:object-cover"
+          className="absolute end-3 top-3 z-10 overflow-hidden rounded-xl border border-subtle shadow-xl @sm:end-4 @sm:top-4 w-24 h-32 @md:w-28 @md:h-36 @lg:w-36 @lg:h-44 [&_video]:h-full [&_video]:w-full [&_video]:object-cover"
         >
           <div ref={localRef} className="h-full w-full" />
         </div>

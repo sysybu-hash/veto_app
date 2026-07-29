@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 
 export default function PrivacyPage() {
   return (
-    <div className="min-h-screen bg-veto-ink text-slate-100">
+    <div data-surface="ink" className="min-h-screen bg-veto-ink text-primary">
       <main
         className="mx-auto w-full max-w-3xl px-4 py-8 md:px-6 md:py-12"
         dir="rtl"
@@ -28,10 +28,10 @@ export default function PrivacyPage() {
           <div className="mb-4 flex justify-center md:justify-end">
             <VetoBrandLogo className="h-9 w-auto sm:h-10" />
           </div>
-          <h1 className="font-display text-3xl font-bold text-white md:text-4xl">
+          <h1 className="font-display text-3xl font-bold text-primary md:text-4xl">
             מדיניות פרטיות
           </h1>
-          <p className="mt-3 text-sm text-slate-400">
+          <p className="mt-3 text-sm text-muted">
             עדכון אחרון לצורכי תיעוד מוצרי — יש לקבל אישור משפטי ופרטיות (DPO)
             לפני פרסום מסחרי סופי.
           </p>
@@ -41,7 +41,7 @@ export default function PrivacyPage() {
           className={`space-y-10 p-6 text-sm text-slate-300 md:p-8 md:text-base ${authGlassPanel}`}
         >
           <section className="space-y-3 leading-relaxed">
-            <h2 className="text-lg font-bold text-white md:text-xl">1. מבוא</h2>
+            <h2 className="text-lg font-bold text-primary md:text-xl">1. מבוא</h2>
             <p>
               מדיניות זו מסבירה כיצד VETO Legal (&quot;אנחנו&quot;, &quot;המערכת&quot;)
               אוספת, משתמשת, מאחסנת ומגנה על מידע אישי ובהיקף השירות. אנו מחויבים
@@ -50,28 +50,28 @@ export default function PrivacyPage() {
           </section>
 
           <section className="space-y-3 leading-relaxed">
-            <h2 className="text-lg font-bold text-white md:text-xl">
+            <h2 className="text-lg font-bold text-primary md:text-xl">
               2. איזה מידע אנו אוספים
             </h2>
             <ul className="list-inside list-disc space-y-2 marker:text-veto-gold">
               <li>
-                <strong className="text-slate-200">פרטי זיהוי וחשבון:</strong> שם,
+                <strong className="text-primary">פרטי זיהוי וחשבון:</strong> שם,
                 מספר טלפון, דוא״ל (אם סופק), תפקיד (אזרח/עורך דין/מנהל), העדפות
                 שפה והגדרות חשבון.
               </li>
               <li>
-                <strong className="text-slate-200">מיקום גיאוגרפי:</strong> בעת
+                <strong className="text-primary">מיקום גיאוגרפי:</strong> בעת
                 הפעלת מצבי חירום (למשל SOS) או כאשר המשתמש מאשר — נאסף מיקום
                 לצורך תיאום עם עורך דין ושירותי שדה. המיקום אינו נאסף לצורכי פרופיל
                 שיווקי.
               </li>
               <li>
-                <strong className="text-slate-200">נתוני שימוש וטכניים:</strong>{" "}
+                <strong className="text-primary">נתוני שימוש וטכניים:</strong>{" "}
                 יומני גישה, מזהי מכשיר, כתובת IP (לצורכי אבטחה ומניעת הונאה),
                 אירועי מערכת ומדדי ביצועים — לשם שיפור השירות ויציבות התשתית.
               </li>
               <li>
-                <strong className="text-slate-200">תוכן משתמש:</strong> מסמכים,
+                <strong className="text-primary">תוכן משתמש:</strong> מסמכים,
                 קבצים, הודעות צ&apos;אט ופניות תמיכה שהועלו במסגרת השירות, בכפוף
                 להרשאות והגדרות הכספת.
               </li>
@@ -79,7 +79,7 @@ export default function PrivacyPage() {
           </section>
 
           <section className="space-y-3 leading-relaxed">
-            <h2 className="text-lg font-bold text-white md:text-xl">
+            <h2 className="text-lg font-bold text-primary md:text-xl">
               3. בסיסים משפטיים ומטרות עיבוד
             </h2>
             <p>
@@ -91,13 +91,13 @@ export default function PrivacyPage() {
           </section>
 
           <section className="space-y-3 leading-relaxed">
-            <h2 className="text-lg font-bold text-white md:text-xl">
+            <h2 className="text-lg font-bold text-primary md:text-xl">
               4. חיסיון עו״ד–לקוח והצפנה מקצה לקצה (E2EE)
             </h2>
             <p>
               שיחות הווידאו והקול במערכת עשויות להיות מוגנות בהצפנה מקצה לקצה
               (E2EE), בהתאם לתצורת המוצר והספקים הטכנולוגיים.{" "}
-              <strong className="text-slate-200">
+              <strong className="text-primary">
                 VETO אינה צופה, אינה מאזינה ואינה מנתחת את תוכן השיחות המוגנות
                 בחיסיון עו״ד–לקוח
               </strong>{" "}
@@ -107,13 +107,13 @@ export default function PrivacyPage() {
           </section>
 
           <section className="space-y-3 leading-relaxed">
-            <h2 className="text-lg font-bold text-white md:text-xl">
+            <h2 className="text-lg font-bold text-primary md:text-xl">
               5. הקלטות, תמלולים וכספת (Vault)
             </h2>
             <p>
               אם המשתמש בחר במפורש בהקלטה או בתיעוד, והרשאות המערכת מאפשרות זאת,
               הקבצים עשויים להישמר בכספת מאובטחת (Vault) או באחסון מוצפן,{" "}
-              <strong className="text-slate-200">
+              <strong className="text-primary">
                 בנגישות מוגבלת למשתמש ולעורך הדין המטפל באירוע — בכפוף להרשאות,
                 להסכמות ולדין
               </strong>
@@ -123,11 +123,11 @@ export default function PrivacyPage() {
           </section>
 
           <section className="space-y-3 leading-relaxed">
-            <h2 className="text-lg font-bold text-white md:text-xl">
+            <h2 className="text-lg font-bold text-primary md:text-xl">
               6. שיתוף מידע וצדדים שלישיים
             </h2>
             <p>
-              <strong className="text-slate-200">
+              <strong className="text-primary">
                 המידע לא יימכר ולא יועבר לצד ג&apos; למטרות שיווקיות של צדדים
                 חיצוניים.
               </strong>{" "}
@@ -139,7 +139,7 @@ export default function PrivacyPage() {
           </section>
 
           <section className="space-y-3 leading-relaxed">
-            <h2 className="text-lg font-bold text-white md:text-xl">
+            <h2 className="text-lg font-bold text-primary md:text-xl">
               7. אבטחה ושמירת מידע
             </h2>
             <p>
@@ -150,7 +150,7 @@ export default function PrivacyPage() {
           </section>
 
           <section className="space-y-3 leading-relaxed">
-            <h2 className="text-lg font-bold text-white md:text-xl">
+            <h2 className="text-lg font-bold text-primary md:text-xl">
               8. זכויות נושאי מידע
             </h2>
             <p>
@@ -162,7 +162,7 @@ export default function PrivacyPage() {
           </section>
 
           <section className="space-y-3 leading-relaxed">
-            <h2 className="text-lg font-bold text-white md:text-xl">
+            <h2 className="text-lg font-bold text-primary md:text-xl">
               9. העברה בינלאומית וספקי שירות
             </h2>
             <p>
@@ -173,7 +173,7 @@ export default function PrivacyPage() {
           </section>
 
           <section className="space-y-3 leading-relaxed">
-            <h2 className="text-lg font-bold text-white md:text-xl">
+            <h2 className="text-lg font-bold text-primary md:text-xl">
               10. שינויים במדיניות ויצירת קשר
             </h2>
             <p>
@@ -183,7 +183,7 @@ export default function PrivacyPage() {
             </p>
           </section>
 
-          <p className="border-t border-white/10 pt-6 text-xs leading-relaxed text-slate-500">
+          <p className="border-t border-subtle pt-6 text-xs leading-relaxed text-muted">
             מסמך זה נועד לשקיפות מוצרית. אין במסמך משום ייעוץ משפטי אישי; לשאלות
             ספציפיות על זכויותיכם מול VETO מומלץ לפנות לייעוץ משפטי עצמאי.
           </p>

@@ -30,6 +30,166 @@
   --veto-gold-deep: #6f5528;
   --veto-ink: #0f172a;
   --veto-canvas: #eef1f5;
+
+  /*
+   * Semantic design tokens (Phase 1 of the UI overhaul).
+   * Every token below is defined once per mode (:root = light,
+   * html.veto-dark/body.veto-dark = dark) under the SAME variable
+   * name, so any class built from these tokens (bg-surface-raised,
+   * text-primary, border-subtle, ...) is dual-mode by construction
+   * and never needs a `dark:` companion class.
+   */
+
+  /* surface */
+  --surface-canvas: #eef1f5;
+  --surface-raised: rgba(255, 255, 255, 0.85);
+  --surface-raised-2: rgba(255, 255, 255, 0.92);
+  --surface-sunken: rgba(15, 23, 42, 0.04);
+  --surface-overlay: rgba(255, 255, 255, 0.97);
+  --surface-scrim: rgba(15, 23, 42, 0.5);
+  --surface-inverse: #0f172a;
+  --surface-stage: #05080f;
+
+  /* text */
+  --text-primary: #0f172a;
+  --text-secondary: #334155;
+  --text-muted: #64748b;
+  --text-disabled: #94a3b8;
+  --text-inverse: #f8fafc;
+  --text-on-brand: #0f172a;
+  --text-on-stage: #f1f5f9;
+  --text-link: #9b7430;
+
+  /* border */
+  --border-subtle: rgba(15, 23, 42, 0.08);
+  --border-default: rgba(15, 23, 42, 0.14);
+  --border-strong: rgba(15, 23, 42, 0.24);
+  --border-brand: rgba(197, 160, 89, 0.45);
+  --border-focus: var(--veto-gold);
+
+  /* brand ramp (absorbs the 6 untokenized gold shades seen in the wild) */
+  --brand-50: #faf5ea;
+  --brand-100: #f0e2c4; /* was #e8c987 */
+  --brand-200: #e0c98f; /* was #d8b867 / #d4b06a */
+  --brand-600: #b08d4a;
+  --brand-strong: #9b7430;
+  --brand-700: #8a6d35; /* also covers #8a6d3d */
+  --brand-deep: #6f5528; /* also covers #75551f */
+  --brand-fg: #0f172a;
+  --brand-soft: rgba(197, 160, 89, 0.15);
+  --brand-soft-hover: rgba(197, 160, 89, 0.25);
+
+  /* state (base / fg / soft / border) */
+  /* Base tuned so `-fg` (white) reaches 4.5:1 WCAG AA against it — see
+   * scripts/check-contrast.mjs. #16a34a-family greens/ambers at full
+   * saturation only clear ~3.2:1 with white text. */
+  --success: #12863d;
+  --success-fg: #ffffff;
+  --success-soft: rgba(18, 134, 61, 0.12);
+  --success-border: rgba(18, 134, 61, 0.35);
+  --warning: #b26205;
+  --warning-fg: #ffffff;
+  --warning-soft: rgba(178, 98, 5, 0.14);
+  --warning-border: rgba(178, 98, 5, 0.35);
+  --danger: #dc2626;
+  --danger-fg: #ffffff;
+  --danger-soft: rgba(220, 38, 38, 0.12);
+  --danger-border: rgba(220, 38, 38, 0.35);
+  --info: #2563eb;
+  --info-fg: #eff6ff;
+  --info-soft: rgba(37, 99, 235, 0.12);
+  --info-border: rgba(37, 99, 235, 0.35);
+  --sos: #b91c1c;
+  --sos-fg: #fef2f2;
+  --sos-soft: rgba(185, 28, 28, 0.14);
+  --sos-border: rgba(185, 28, 28, 0.4);
+
+  /* interaction */
+  --focus-ring: var(--veto-gold);
+  --focus-ring-offset: var(--surface-canvas);
+  --hover-overlay: rgba(15, 23, 42, 0.04);
+  --active-overlay: rgba(15, 23, 42, 0.08);
+  --disabled-opacity: 0.5;
+
+  /* shape / motion (fixes 28px / 2xl / 2rem / 2.4rem drift) */
+  --radius-xs: 0.375rem;
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-panel: 1.75rem; /* 28px */
+  --radius-pill: 9999px;
+  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.06);
+  --shadow-card: 0 10px 32px -26px rgba(15, 23, 42, 0.25);
+  --shadow-panel: 0 18px 50px -30px rgba(15, 23, 42, 0.25);
+  --shadow-modal: 0 24px 64px -20px rgba(15, 23, 42, 0.35);
+  --shadow-brand-glow: 0 8px 32px -8px rgba(197, 160, 89, 0.5);
+  --dur-fast: 120ms;
+  --dur-base: 200ms;
+  --ease-out: cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+html.veto-dark,
+body.veto-dark {
+  --background: #0f172a;
+  --foreground: #e2e8f0;
+
+  --surface-canvas: #0b1220;
+  --surface-raised: rgba(30, 41, 59, 0.88);
+  --surface-raised-2: rgba(30, 41, 59, 0.94);
+  --surface-sunken: rgba(0, 0, 0, 0.25);
+  --surface-overlay: rgba(15, 23, 42, 0.97);
+  --surface-scrim: rgba(0, 0, 0, 0.55);
+  --surface-inverse: #f8fafc;
+  --surface-stage: #05080f;
+
+  --text-primary: #f1f5f9;
+  --text-secondary: #cbd5e1;
+  --text-muted: #94a3b8;
+  --text-disabled: #64748b;
+  --text-inverse: #0f172a;
+  --text-on-brand: #0f172a;
+  --text-on-stage: #f1f5f9;
+  --text-link: #e0c98f;
+
+  --border-subtle: rgba(255, 255, 255, 0.1);
+  --border-default: rgba(255, 255, 255, 0.14);
+  --border-strong: rgba(255, 255, 255, 0.22);
+  --border-brand: rgba(197, 160, 89, 0.4);
+
+  --brand-fg: #0f172a;
+  --brand-soft: rgba(197, 160, 89, 0.16);
+  --brand-soft-hover: rgba(197, 160, 89, 0.26);
+
+  --success-soft: rgba(18, 134, 61, 0.18);
+  --warning-soft: rgba(178, 98, 5, 0.18);
+  --danger-soft: rgba(220, 38, 38, 0.18);
+  --info-soft: rgba(37, 99, 235, 0.18);
+  --sos-soft: rgba(185, 28, 28, 0.22);
+
+  --hover-overlay: rgba(255, 255, 255, 0.06);
+  --active-overlay: rgba(255, 255, 255, 0.1);
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-card: 0 16px 48px -24px rgba(0, 0, 0, 0.55);
+  --shadow-panel: 0 24px 64px -28px rgba(0, 0, 0, 0.65);
+  --shadow-modal: 0 28px 72px -16px rgba(0, 0, 0, 0.7);
+}
+
+/* Call stage / permanently-dark surfaces: bind the semantic set to dark
+ * values regardless of site theme. Replaces `.veto-call-keep-dark`
+ * opt-outs with a scoped token remap (see call UI migration, Phase 3). */
+[data-surface="stage"],
+[data-surface="ink"] {
+  --surface-canvas: var(--surface-stage);
+  --surface-raised: rgba(255, 255, 255, 0.06);
+  --surface-raised-2: rgba(255, 255, 255, 0.1);
+  --surface-overlay: rgba(15, 23, 42, 0.9);
+  --text-primary: var(--text-on-stage);
+  --text-secondary: #cbd5e1;
+  --text-muted: #94a3b8;
+  --border-subtle: rgba(255, 255, 255, 0.1);
+  --border-default: rgba(255, 255, 255, 0.14);
+  --focus-ring-offset: var(--surface-stage);
 }
 
 @theme inline {
@@ -41,6 +201,76 @@
   --color-veto-gold-deep: var(--veto-gold-deep);
   --color-veto-ink: var(--veto-ink);
   --color-veto-canvas: var(--veto-canvas);
+
+  --color-surface-canvas: var(--surface-canvas);
+  --color-surface-raised: var(--surface-raised);
+  --color-surface-raised-2: var(--surface-raised-2);
+  --color-surface-sunken: var(--surface-sunken);
+  --color-surface-overlay: var(--surface-overlay);
+  --color-surface-scrim: var(--surface-scrim);
+  --color-surface-inverse: var(--surface-inverse);
+  --color-surface-stage: var(--surface-stage);
+
+  --color-primary: var(--text-primary);
+  --color-secondary: var(--text-secondary);
+  --color-muted: var(--text-muted);
+  --color-disabled: var(--text-disabled);
+  --color-inverse: var(--text-inverse);
+  --color-on-brand: var(--text-on-brand);
+  --color-on-stage: var(--text-on-stage);
+  --color-link: var(--text-link);
+
+  --color-subtle: var(--border-subtle);
+  --color-default: var(--border-default);
+  --color-strong: var(--border-strong);
+  --color-brand: var(--border-brand);
+  --color-focus: var(--border-focus);
+
+  --color-brand-50: var(--brand-50);
+  --color-brand-100: var(--brand-100);
+  --color-brand-200: var(--brand-200);
+  --color-brand-600: var(--brand-600);
+  --color-brand-strong: var(--brand-strong);
+  --color-brand-700: var(--brand-700);
+  --color-brand-deep: var(--brand-deep);
+  --color-brand-fg: var(--brand-fg);
+  --color-brand-soft: var(--brand-soft);
+  --color-brand-soft-hover: var(--brand-soft-hover);
+
+  --color-success: var(--success);
+  --color-success-fg: var(--success-fg);
+  --color-success-soft: var(--success-soft);
+  --color-success-border: var(--success-border);
+  --color-warning: var(--warning);
+  --color-warning-fg: var(--warning-fg);
+  --color-warning-soft: var(--warning-soft);
+  --color-warning-border: var(--warning-border);
+  --color-danger: var(--danger);
+  --color-danger-fg: var(--danger-fg);
+  --color-danger-soft: var(--danger-soft);
+  --color-danger-border: var(--danger-border);
+  --color-info: var(--info);
+  --color-info-fg: var(--info-fg);
+  --color-info-soft: var(--info-soft);
+  --color-info-border: var(--info-border);
+  --color-sos: var(--sos);
+  --color-sos-fg: var(--sos-fg);
+  --color-sos-soft: var(--sos-soft);
+  --color-sos-border: var(--sos-border);
+
+  --radius-xs: var(--radius-xs);
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius-md);
+  --radius-lg: var(--radius-lg);
+  --radius-panel: var(--radius-panel);
+  --radius-pill: var(--radius-pill);
+
+  --shadow-sm: var(--shadow-sm);
+  --shadow-card: var(--shadow-card);
+  --shadow-panel: var(--shadow-panel);
+  --shadow-modal: var(--shadow-modal);
+  --shadow-brand-glow: var(--shadow-brand-glow);
+
   --font-sans: var(--font-heebo), ui-sans-serif, system-ui, sans-serif;
   --font-mono: ui-monospace, monospace;
 }
@@ -53,6 +283,7 @@
   font-family: var(--font-frank), "Frank Ruhl Libre", ui-serif, Georgia, serif;
 }
 
+/* @deprecated alias of font-frank — new code should use font-frank directly. */
 @utility font-display {
   font-family: var(--font-frank), "Frank Ruhl Libre", ui-serif, Georgia, serif;
 }
@@ -76,27 +307,39 @@
           mask-image: radial-gradient(ellipse at center, black 40%, transparent 80%);
 }
 
-.veto-light [class*="text-slate-100"],
-.veto-light [class*="text-slate-200"] {
+/*
+ * `:not(:is([data-surface="stage"], [data-surface="ink"], [data-surface="stage"] *, [data-surface="ink"] *))`
+ * excludes an element that EITHER carries `data-surface="stage"/"ink"`
+ * itself OR is a descendant of one (call stage, admin console,
+ * login/register/pricing hero — see the token remap earlier in this
+ * file). The descendant half matters: a same-element-only
+ * `:not([data-surface="stage"])` guard misses a plain
+ * `<article className="bg-white/[0.04]">` nested inside
+ * `<main data-surface="ink">` — that article still got force-lightened
+ * by the `bg-white/` rule below, because the exclusion never matched
+ * anything but the `<main>` itself.
+ */
+.veto-light [class*="text-slate-100"]:not(:is([data-surface="stage"], [data-surface="ink"], [data-surface="stage"] *, [data-surface="ink"] *)),
+.veto-light [class*="text-slate-200"]:not(:is([data-surface="stage"], [data-surface="ink"], [data-surface="stage"] *, [data-surface="ink"] *)) {
   color: #0f172a;
 }
 
-.veto-light [class*="text-slate-300"],
-.veto-light [class*="text-slate-400"],
-.veto-light [class*="text-slate-500"] {
+.veto-light [class*="text-slate-300"]:not(:is([data-surface="stage"], [data-surface="ink"], [data-surface="stage"] *, [data-surface="ink"] *)),
+.veto-light [class*="text-slate-400"]:not(:is([data-surface="stage"], [data-surface="ink"], [data-surface="stage"] *, [data-surface="ink"] *)),
+.veto-light [class*="text-slate-500"]:not(:is([data-surface="stage"], [data-surface="ink"], [data-surface="stage"] *, [data-surface="ink"] *)) {
   color: #475569;
 }
 
-.veto-light [class*="border-white/"] {
+.veto-light [class*="border-white/"]:not(:is([data-surface="stage"], [data-surface="ink"], [data-surface="stage"] *, [data-surface="ink"] *)) {
   border-color: rgba(203, 213, 225, 0.9);
 }
 
-.veto-light [class*="bg-slate-950"]:not(.veto-call-keep-dark),
-.veto-light [class*="bg-slate-900"]:not(.veto-call-keep-dark) {
+.veto-light [class*="bg-slate-950"]:not(:is([data-surface="stage"], [data-surface="ink"], [data-surface="stage"] *, [data-surface="ink"] *)),
+.veto-light [class*="bg-slate-900"]:not(:is([data-surface="stage"], [data-surface="ink"], [data-surface="stage"] *, [data-surface="ink"] *)) {
   background-color: rgba(255, 255, 255, 0.88);
 }
 
-.veto-light [class*="bg-white/"] {
+.veto-light [class*="bg-white/"]:not(:is([data-surface="stage"], [data-surface="ink"], [data-surface="stage"] *, [data-surface="ink"] *)) {
   background-color: rgba(255, 255, 255, 0.82);
 }
 
@@ -109,30 +352,6 @@
 .veto-light ::placeholder {
   color: #64748b;
   opacity: 1;
-}
-
-/*
- * Admin console under `.veto-light`: undo broad slate/text/border overrides
- * so the dark control room stays readable (see `.veto-light` rules above).
- */
-.veto-light .veto-admin-keep-dark [class*="text-slate-100"] {
-  color: #f1f5f9;
-}
-.veto-light .veto-admin-keep-dark [class*="text-slate-200"] {
-  color: #e2e8f0;
-}
-.veto-light .veto-admin-keep-dark [class*="text-slate-300"] {
-  color: #cbd5e1;
-}
-.veto-light .veto-admin-keep-dark [class*="text-slate-400"] {
-  color: #94a3b8;
-}
-.veto-light .veto-admin-keep-dark [class*="text-slate-500"] {
-  color: #64748b;
-}
-
-.veto-light .veto-admin-keep-dark [class*="border-white/"] {
-  border-color: rgba(255, 255, 255, 0.12);
 }
 
 /*
@@ -178,7 +397,7 @@
  * `useViewTransitionRouter()` from `@/lib/viewTransitions`.
  * Browsers without View Transitions ignore this entirely.
  *
- * The call surface (.veto-call-keep-dark) opts out so that
+ * The call surface (`[data-surface="stage"]`) opts out so that
  * starting / leaving a video call doesn't get a jarring fade
  * over the live remote video.
  */
@@ -247,5 +466,51 @@
     outline: 2px solid var(--veto-gold);
     outline-offset: 3px;
     border-radius: 0.25rem;
+  }
+}
+
+/*
+ * Print stylesheet (Phase 6).
+ * Mark app chrome to hide with `data-print="hide"` and the printable
+ * root (e.g. the document generator <article>) with `data-print="root"`.
+ * This governs the local `window.print()` path only — the authoritative
+ * export is the server-rendered PDF (Phase 5).
+ */
+@media print {
+  [data-print="hide"] {
+    display: none !important;
+  }
+
+  [data-print="root"] {
+    position: static !important;
+    inset: auto !important;
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    border: none !important;
+    background: #fff !important;
+    color: #0f172a !important;
+  }
+
+  html,
+  body {
+    background: #fff !important;
+  }
+
+  a[href]::after {
+    content: "" !important;
+  }
+
+  .clause,
+  tr,
+  li {
+    break-inside: avoid;
+  }
+
+  @page {
+    size: A4 portrait;
+    margin: 18mm 16mm;
   }
 }

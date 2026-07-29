@@ -11,7 +11,7 @@ export default function AdminDashboardLoading() {
       <Skeleton width={240} height={28} className="mb-4" />
       <section className={`${glassPanel} grid gap-3 p-4 md:grid-cols-4`}>
         {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="rounded-xl border border-slate-200/80 bg-white/85 p-3">
+          <div key={i} className="rounded-xl border border-subtle bg-surface-raised p-3">
             <Skeleton width={80} height={12} className="mb-2" />
             <Skeleton width={120} height={28} />
           </div>

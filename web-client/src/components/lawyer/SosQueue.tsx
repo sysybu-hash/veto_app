@@ -343,17 +343,17 @@ export function SosQueue() {
     >
       <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="text-start">
-          <h2 className="font-frank text-lg font-black text-slate-900 md:text-xl dark:text-slate-100">
+          <h2 className="font-frank text-lg font-black text-primary md:text-xl dark:text-primary">
             {t("sosQueue.title")}
           </h2>
-          <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">{t("sosQueue.subtitle")}</p>
+          <p className="mt-1 text-sm text-secondary">{t("sosQueue.subtitle")}</p>
         </div>
-        <label className="flex cursor-pointer items-center gap-2 text-sm text-slate-700 dark:text-slate-300">
+        <label className="flex cursor-pointer items-center gap-2 text-sm text-secondary dark:text-secondary">
           <input
             type="checkbox"
             checked={showStress}
             onChange={(e) => setShowStress(e.target.checked)}
-            className="rounded border-slate-300 dark:border-white/10"
+            className="rounded border-default"
           />
           {t("sosQueue.showStress")}
         </label>
@@ -361,7 +361,7 @@ export function SosQueue() {
 
       {sorted.length === 0 ? (
         <div
-          className={`rounded-2xl border border-dashed border-slate-300 px-6 py-12 text-center text-slate-600 dark:border-white/10 dark:text-slate-400 ${glassPanelNested}`}
+          className={`rounded-2xl border border-dashed border-default px-6 py-12 text-center text-secondary   ${glassPanelNested}`}
         >
           {t("sosQueue.empty")}
         </div>
@@ -379,25 +379,23 @@ export function SosQueue() {
                   <span
                     className={`rounded-lg px-2 py-0.5 text-xs font-black ${
                       it.urgency === "SOS"
-                        ? "bg-red-600/90 text-white"
-                        : "bg-amber-200/90 text-slate-900 dark:text-slate-100"
-                    }`}
+                        ? "bg-red-600/90 text-inverse" : "bg-amber-200/90 text-primary dark:text-primary"}`}
                   >
                     {it.urgency}
                   </span>
                   {it.stressTest ? (
-                    <span className="rounded-lg bg-slate-800/80 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-200">
+                    <span className="rounded-lg bg-zinc-800/80 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-200">
                       {t("sosQueue.stressQa")}
                     </span>
                   ) : null}
                 </div>
-                <p className="mt-2 font-mono text-xs text-slate-600 dark:text-slate-300">
+                <p className="mt-2 font-mono text-xs text-secondary dark:text-secondary">
                   {t("sosQueue.eventPrefix")} {it.eventId.slice(0, 13)}…
                 </p>
-                <p className="text-sm text-slate-800 dark:text-slate-200">
+                <p className="text-sm text-primary dark:text-primary">
                   {t("sosQueue.callerLabel")} · {it.citizenId.slice(0, 12)}…
                 </p>
-                <p className="text-xs text-slate-600 dark:text-slate-400">
+                <p className="text-xs text-secondary">
                   {it.lat != null && it.lng != null
                     ? `${t("sosQueue.locationPrefix")} ${it.lat.toFixed(4)}, ${it.lng.toFixed(4)}`
                     : t("sosQueue.noPreciseLocation")}

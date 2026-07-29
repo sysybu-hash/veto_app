@@ -24,7 +24,10 @@ export function CitizenBottomNav({ active }: { active: CitizenNavActive }) {
   const { t } = useTranslation();
 
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white/86 px-1 pb-[calc(0.5rem+env(safe-area-inset-bottom))] pt-2 shadow-[0_-16px_40px_-30px_rgba(15,23,42,0.45)] backdrop-blur-xl supports-[backdrop-filter]:bg-white/80 dark:border-white/10 dark:bg-slate-950/92 dark:shadow-[0_-16px_48px_-24px_rgba(0,0,0,0.75)] dark:supports-[backdrop-filter]:bg-slate-950/88 sm:px-3 sm:pb-[calc(0.75rem+env(safe-area-inset-bottom))] sm:pt-3">
+    <nav
+      data-print="hide"
+      className="fixed inset-x-0 bottom-0 z-40 border-t border-subtle bg-surface-raised px-1 pb-[calc(0.5rem+env(safe-area-inset-bottom))] pt-2 shadow-[0_-16px_40px_-30px_rgba(15,23,42,0.45)] backdrop-blur-xl supports-[backdrop-filter]:bg-surface-raised-2 dark:shadow-[0_-16px_48px_-24px_rgba(0,0,0,0.75)] sm:px-3 sm:pb-[calc(0.75rem+env(safe-area-inset-bottom))] sm:pt-3"
+    >
       <div className="mx-auto flex max-w-lg justify-between gap-0.5 sm:gap-2">
         <Link
           href="/hub"
@@ -33,9 +36,7 @@ export function CitizenBottomNav({ active }: { active: CitizenNavActive }) {
           <svg
             className={`mx-auto h-5 w-5 stroke-[1.75] sm:h-6 sm:w-6 ${
               active === "hub"
-                ? "text-[#8a6d35] dark:text-veto-gold"
-                : "text-slate-600 dark:text-slate-400"
-            }`}
+                ? "text-brand-700 dark:text-veto-gold" : "text-secondary "}`}
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -45,7 +46,7 @@ export function CitizenBottomNav({ active }: { active: CitizenNavActive }) {
           </svg>
           <span className="truncate">{t("navCitizen.home")}</span>
           {active === "hub" && (
-            <span className="absolute -top-0.5 end-0 rounded-full bg-[#C5A059] px-1 text-[8px] font-bold text-slate-950 sm:end-0.5 sm:text-[9px]">
+            <span className="absolute -top-0.5 end-0 rounded-full bg-veto-gold px-1 text-[8px] font-bold text-primary sm:end-0.5 sm:text-[9px]">
               {t("navCitizen.sosBadge")}
             </span>
           )}
@@ -60,9 +61,7 @@ export function CitizenBottomNav({ active }: { active: CitizenNavActive }) {
           <svg
             className={`mx-auto h-5 w-5 stroke-[1.75] sm:h-6 sm:w-6 ${
               active === "chat"
-                ? "text-[#8a6d35] dark:text-veto-gold"
-                : "text-slate-600 dark:text-slate-400"
-            }`}
+                ? "text-brand-700 dark:text-veto-gold" : "text-secondary "}`}
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -82,9 +81,7 @@ export function CitizenBottomNav({ active }: { active: CitizenNavActive }) {
           <svg
             className={`mx-auto h-5 w-5 stroke-[1.75] sm:h-6 sm:w-6 ${
               active === "vault"
-                ? "text-[#8a6d35] dark:text-veto-gold"
-                : "text-slate-600 dark:text-slate-400"
-            }`}
+                ? "text-brand-700 dark:text-veto-gold" : "text-secondary "}`}
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -104,9 +101,7 @@ export function CitizenBottomNav({ active }: { active: CitizenNavActive }) {
           <svg
             className={`mx-auto h-5 w-5 stroke-[1.75] sm:h-6 sm:w-6 ${
               active === "calendar"
-                ? "text-[#8a6d35] dark:text-veto-gold"
-                : "text-slate-600 dark:text-slate-400"
-            }`}
+                ? "text-brand-700 dark:text-veto-gold" : "text-secondary "}`}
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -126,9 +121,7 @@ export function CitizenBottomNav({ active }: { active: CitizenNavActive }) {
           <svg
             className={`mx-auto h-5 w-5 stroke-[1.75] sm:h-6 sm:w-6 ${
               active === "settings"
-                ? "text-[#8a6d35] dark:text-veto-gold"
-                : "text-slate-600 dark:text-slate-400"
-            }`}
+                ? "text-brand-700 dark:text-veto-gold" : "text-secondary "}`}
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"

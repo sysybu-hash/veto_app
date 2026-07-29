@@ -95,7 +95,7 @@ export function ThemeToggle({
       onClick={toggle}
       aria-label={label}
       title={label}
-      className={`inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-300/70 bg-white/80 text-slate-900 shadow-sm transition hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-veto-gold/60 dark:border-white/20 dark:bg-white/10 dark:text-white dark:hover:bg-white/15 ${className}`}
+      className={`inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-300/70 bg-surface-raised text-primary shadow-sm transition hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-veto-gold/60  dark:bg-white/10  dark:hover:bg-white/15 ${className}`}
     >
       {isDark ? (
         // Sun icon — currently dark, click to go light

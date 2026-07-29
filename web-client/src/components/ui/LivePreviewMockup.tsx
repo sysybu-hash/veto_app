@@ -31,20 +31,21 @@ export function LivePreviewMockup() {
       aria-label="תצוגה מקדימה: שיחת חירום פעילה עם הצפנה"
     >
       <motion.div
+        data-surface="stage"
         initial={{ opacity: 0, y: 16 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: "-40px" }}
         transition={{ duration: 0.5, ease: "easeOut" }}
-        className="relative rounded-[2.4rem] border border-white/15 bg-gradient-to-b from-slate-900/95 to-black p-2 shadow-[0_24px_80px_-20px_rgba(197,160,89,0.35)]"
+        className="relative rounded-panel border border-subtle bg-gradient-to-b from-slate-900/95 to-black p-2 shadow-[0_24px_80px_-20px_rgba(197,160,89,0.35)]"
       >
         <div className="flex justify-center pt-1">
-          <div className="h-1.5 w-16 rounded-full bg-slate-700" aria-hidden />
+          <div className="h-1.5 w-16 rounded-full bg-white/20" aria-hidden />
         </div>
 
-        <div className="overflow-hidden rounded-[2rem] border border-white/10 bg-slate-950">
+        <div className="overflow-hidden rounded-panel border border-subtle bg-surface-canvas">
           {/* Status bar */}
           <div className="flex items-center justify-between border-b border-white/5 px-4 pb-2 pt-7">
-            <span className="text-[10px] font-bold tabular-nums text-slate-500">
+            <span className="text-[10px] font-bold tabular-nums text-muted">
               09:41
             </span>
             <div className="flex items-center gap-1.5">
@@ -71,7 +72,7 @@ export function LivePreviewMockup() {
             {/* Lawyer placeholder */}
             <div className="flex flex-col items-center text-center">
               <motion.div
-                className="relative flex h-28 w-28 items-center justify-center rounded-full bg-gradient-to-br from-veto-gold/50 via-slate-600 to-slate-900 text-xl font-black text-white shadow-inner ring-2 ring-veto-gold/30"
+                className="relative flex h-28 w-28 items-center justify-center rounded-full bg-gradient-to-br from-veto-gold/50 via-slate-600 to-slate-900 text-xl font-black text-primary shadow-inner ring-2 ring-veto-gold/30"
                 animate={{ boxShadow: ["0 0 0 0 rgba(197,160,89,0.35)", "0 0 0 12px rgba(197,160,89,0)", "0 0 0 0 rgba(197,160,89,0)"] }}
                 transition={{ duration: 2.2, repeat: Infinity, ease: "easeOut" }}
               >
@@ -80,17 +81,17 @@ export function LivePreviewMockup() {
                   E2EE
                 </span>
               </motion.div>
-              <p className="mt-4 text-sm font-bold text-white">עו״ד בשיחה</p>
-              <p className="mt-1 text-[11px] text-slate-400">וידאו מוצפן · חיבור יציב</p>
+              <p className="mt-4 text-sm font-bold text-primary">עו״ד בשיחה</p>
+              <p className="mt-1 text-[11px] text-muted">וידאו מוצפן · חיבור יציב</p>
             </div>
 
             {/* Badges row */}
             <div className="flex flex-wrap items-center justify-center gap-2">
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-[10px] font-semibold text-veto-gold backdrop-blur-sm">
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-subtle bg-white/5 px-3 py-1.5 text-[10px] font-semibold text-veto-gold backdrop-blur-sm">
                 <Shield className="h-3.5 w-3.5" aria-hidden />
                 מפתחות מקומיים
               </span>
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-[10px] font-semibold text-slate-200 backdrop-blur-sm">
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-subtle bg-white/5 px-3 py-1.5 text-[10px] font-semibold text-primary backdrop-blur-sm">
                 <Lock className="h-3.5 w-3.5 text-veto-gold" aria-hidden />
                 סוף לסוף
               </span>
@@ -98,11 +99,11 @@ export function LivePreviewMockup() {
 
             {/* PiP citizen */}
             <div className="flex justify-end">
-              <div className="flex items-center gap-2 rounded-2xl border border-white/10 bg-slate-900/80 p-2 pe-3 backdrop-blur-md">
+              <div className="flex items-center gap-2 rounded-2xl border border-subtle bg-surface-raised p-2 pe-3 backdrop-blur-md">
                 <div className="h-11 w-11 rounded-xl bg-gradient-to-br from-slate-700 to-slate-900 ring-1 ring-white/10" />
                 <div className="text-start">
-                  <p className="text-[10px] font-bold text-slate-300">אתה</p>
-                  <p className="text-[9px] text-slate-500">מצלמה כבויה</p>
+                  <p className="text-[10px] font-bold text-secondary">אתה</p>
+                  <p className="text-[9px] text-muted">מצלמה כבויה</p>
                 </div>
               </div>
             </div>

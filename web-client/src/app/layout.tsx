@@ -123,7 +123,7 @@ export default async function RootLayout({
       </head>
       <body
         suppressHydrationWarning
-        className={`${themeClass} relative min-h-screen bg-[#eef1f5] font-heebo text-slate-950 antialiased dark:bg-[#0f172a] dark:text-slate-100`}
+        className={`${themeClass} relative min-h-screen bg-[#eef1f5] font-heebo text-primary antialiased dark:bg-[#0f172a] dark:text-slate-100`}
       >
         <ThemeProvider>
           <LocaleProvider>
@@ -135,7 +135,7 @@ export default async function RootLayout({
               dangerouslySetInnerHTML={{ __html: JSON.stringify(orgJsonLd) }}
             />
             <div className="fixed inset-0 -z-50 overflow-hidden" aria-hidden>
-              <div className="veto-page-underlay absolute inset-0 bg-[#eef1f5] dark:bg-[#0f172a]" />
+              <div className="veto-page-underlay absolute inset-0 bg-surface-canvas" />
               <div className="veto-bg-glow absolute inset-0" />
               <div className="veto-bg-grid absolute inset-0" />
             </div>

@@ -92,15 +92,15 @@ export default function FamilyPage() {
       dir="rtl"
       className={`mx-auto flex w-full max-w-2xl flex-col gap-6 px-4 py-8 ${citizenBottomSafe}`}
     >
-      <header className="text-right">
-        <h1 className="font-frank text-2xl font-bold text-slate-100">מנוי משפחתי</h1>
-        <p className="mt-1 text-sm text-slate-400">
+      <header className="text-end">
+        <h1 className="font-frank text-2xl font-bold text-primary">מנוי משפחתי</h1>
+        <p className="mt-1 text-sm text-muted">
           הוספת בני משפחה למנוי הקיים שלך (עד {state?.seats ?? 4} משתמשים).
         </p>
       </header>
 
       {!state && (
-        <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-6 text-sm text-slate-300">
+        <div className="rounded-2xl border border-subtle bg-white/[0.04] p-6 text-sm text-secondary">
           טוען נתונים…
         </div>
       )}
@@ -116,16 +116,16 @@ export default function FamilyPage() {
       )}
 
       {state?.owner && (
-        <section className="rounded-2xl border border-[#C5A059]/35 bg-[#C5A059]/10 p-5 text-right">
-          <p className="text-sm font-bold text-slate-100">
+        <section className="rounded-2xl border border-veto-gold/35 bg-veto-gold/10 p-5 text-end">
+          <p className="text-sm font-bold text-primary">
             בעל המנוי: {state.owner.name || state.owner.phone}
           </p>
           {state.owner.expiry && (
-            <p className="mt-1 text-xs text-slate-400">
+            <p className="mt-1 text-xs text-muted">
               תוקף עד {new Date(state.owner.expiry).toLocaleDateString("he-IL")}
             </p>
           )}
-          <p className="mt-2 text-xs text-slate-300">
+          <p className="mt-2 text-xs text-secondary">
             {state.isOwner ? "אתה בעל המנוי." : "אתה חבר במנוי."}
           </p>
         </section>
@@ -145,10 +145,10 @@ export default function FamilyPage() {
       {state?.isOwner && (
         <form
           onSubmit={(e) => void invite(e)}
-          className="rounded-2xl border border-white/10 bg-white/[0.03] p-5"
+          className="rounded-2xl border border-subtle bg-white/[0.03] p-5"
         >
-          <label className="block text-sm font-medium text-slate-200">הוספת חבר משפחה</label>
-          <p className="mt-1 text-xs text-slate-500">
+          <label className="block text-sm font-medium text-primary">הוספת חבר משפחה</label>
+          <p className="mt-1 text-xs text-muted">
             יש להזין מספר טלפון של משתמש שכבר נרשם במערכת (פורמט +972…).
           </p>
           <div className="mt-3 flex flex-wrap gap-2">
@@ -157,7 +157,7 @@ export default function FamilyPage() {
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               placeholder="+972…"
-              className="min-w-0 flex-1 rounded-lg border border-white/10 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:ring-2 focus:ring-[#C5A059]"
+              className="min-w-0 flex-1 rounded-lg border border-subtle bg-surface-overlay px-3 py-2 text-sm text-primary outline-none focus:ring-2 focus:ring-veto-gold"
             />
             <button
               type="submit"
@@ -172,16 +172,16 @@ export default function FamilyPage() {
 
       {state?.owner && state.members.length > 0 && (
         <section>
-          <h2 className="mb-2 text-sm font-bold text-slate-200">חברי המשפחה ({state.members.length}/{state.seats - 1})</h2>
+          <h2 className="mb-2 text-sm font-bold text-primary">חברי המשפחה ({state.members.length}/{state.seats - 1})</h2>
           <ul className="space-y-2">
             {state.members.map((m) => (
               <li
                 key={m.id}
-                className="flex items-center justify-between rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 text-sm"
+                className="flex items-center justify-between rounded-xl border border-subtle bg-white/[0.03] px-4 py-3 text-sm"
               >
                 <div>
-                  <p className="font-bold text-slate-100">{m.name || "—"}</p>
-                  <p className="text-xs text-slate-400">{m.phone}</p>
+                  <p className="font-bold text-primary">{m.name || "—"}</p>
+                  <p className="text-xs text-muted">{m.phone}</p>
                 </div>
                 {state.isOwner && (
                   <button

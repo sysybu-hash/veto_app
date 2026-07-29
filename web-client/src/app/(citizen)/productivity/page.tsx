@@ -157,11 +157,11 @@ function statusStyles(status: ContractStatus): string {
     case "active":
       return "bg-emerald-500/15 text-emerald-200 ring-emerald-500/30";
     case "expired":
-      return "bg-white/[0.04] text-slate-300 ring-white/50";
+      return "bg-white/[0.04] text-secondary ring-white/50";
     case "at_risk":
       return "bg-orange-500/15 text-orange-200 ring-orange-500/30";
     default:
-      return "bg-white/[0.03] text-slate-200 ring-white/45";
+      return "bg-white/[0.03] text-primary ring-white/45";
   }
 }
 
@@ -172,9 +172,9 @@ function priorityStyles(p: TaskPriority): string {
     case "medium":
       return "bg-amber-500/15 text-amber-200 ring-amber-500/30";
     case "low":
-      return "bg-white/[0.04] text-slate-300 ring-white/50";
+      return "bg-white/[0.04] text-secondary ring-white/50";
     default:
-      return "bg-white/[0.03] text-slate-200 ring-white/45";
+      return "bg-white/[0.03] text-primary ring-white/45";
   }
 }
 
@@ -261,14 +261,14 @@ function CreateContractModal({
         aria-labelledby="contract-modal-title"
         onMouseDown={(e) => e.stopPropagation()}
       >
-        <div className="border-b border-white/10 px-5 py-4 backdrop-blur-sm">
+        <div className="border-b border-subtle px-5 py-4 backdrop-blur-sm">
           <h2
             id="contract-modal-title"
-            className="font-frank text-lg font-bold text-slate-100"
+            className="font-frank text-lg font-bold text-primary"
           >
             {t("productivity.modalContractTitle")}
           </h2>
-          <p className="mt-0.5 text-sm text-slate-400">
+          <p className="mt-0.5 text-sm text-muted">
             {t("productivity.modalContractSubtitle")}
           </p>
         </div>
@@ -276,7 +276,7 @@ function CreateContractModal({
           <div>
             <label
               htmlFor="c-title"
-              className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-400"
+              className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-muted"
             >
               {t("productivity.contractTitleField")}
             </label>
@@ -292,7 +292,7 @@ function CreateContractModal({
           <div>
             <label
               htmlFor="c-party"
-              className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-400"
+              className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-muted"
             >
               {t("productivity.partyNameField")}
             </label>
@@ -308,7 +308,7 @@ function CreateContractModal({
           <div>
             <label
               htmlFor="c-status"
-              className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-400"
+              className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-muted"
             >
               {t("productivity.contractStatusField")}
             </label>
@@ -336,7 +336,7 @@ function CreateContractModal({
             </p>
           )}
         </div>
-        <div className="flex gap-3 border-t border-white/10 px-5 py-4">
+        <div className="flex gap-3 border-t border-subtle px-5 py-4">
           <button
             type="button"
             onClick={() => !saving && onClose()}
@@ -395,19 +395,19 @@ function ContractViewModal({
       >
         <h2
           id="view-contract-title"
-          className="font-frank text-lg font-bold text-slate-100"
+          className="font-frank text-lg font-bold text-primary"
         >
           {contract.title}
         </h2>
-        <div className={`mt-4 rounded-xl border border-white/10 p-4 ${glassPanelNested}`}>
-          <p className="text-sm text-slate-300">
+        <div className={`mt-4 rounded-xl border border-subtle p-4 ${glassPanelNested}`}>
+          <p className="text-sm text-secondary">
             {t("productivity.labelParty")}: {contract.partyName}
           </p>
-          <p className="mt-2 text-sm text-slate-300">
+          <p className="mt-2 text-sm text-secondary">
             {t("productivity.labelStatus")}:{" "}
             {contractStatusLabel(contract.status, t)}
           </p>
-          <p className="mt-2 text-xs text-slate-400">
+          <p className="mt-2 text-xs text-muted">
             {t("productivity.viewLastUpdated")} {contract.updatedAt}
           </p>
         </div>
@@ -435,7 +435,7 @@ function ProductivityLoadingSkeleton() {
         {[1, 2, 3, 4].map((i) => (
           <div
             key={i}
-            className="h-36 rounded-xl border border-white/10 bg-white/[0.03] backdrop-blur-md"
+            className="h-36 rounded-xl border border-subtle bg-white/[0.03] backdrop-blur-md"
           />
         ))}
       </div>
@@ -588,15 +588,15 @@ export default function ProductivityPage() {
   return (
     <div className={`mx-auto min-h-0 w-full max-w-4xl flex-1 px-4 pt-6 md:px-6 ${citizenBottomSafe}`}>
       <div className={`overflow-hidden ${glassPanel}`}>
-        <div className="border-b border-white/10 bg-white/[0.03] px-4 py-4 backdrop-blur-md sm:flex sm:items-center sm:justify-between sm:px-6">
+        <div className="border-b border-subtle bg-white/[0.03] px-4 py-4 backdrop-blur-md sm:flex sm:items-center sm:justify-between sm:px-6">
           <div className="mb-4 sm:mb-0">
-            <p className="text-xs font-semibold uppercase tracking-wider text-[#e8c987]">
+            <p className="text-xs font-semibold uppercase tracking-wider text-brand-100">
               {t("productivity.heroEyebrow")}
             </p>
-            <h1 className="font-frank mt-1 text-xl font-bold tracking-tight text-slate-100 sm:text-2xl">
+            <h1 className="font-frank mt-1 text-xl font-bold tracking-tight text-primary sm:text-2xl">
               {t("productivity.heroTitle")}
             </h1>
-            <p className="mt-1 text-sm text-slate-400">
+            <p className="mt-1 text-sm text-muted">
               {t("productivity.heroSubtitle")}
             </p>
           </div>
@@ -612,16 +612,14 @@ export default function ProductivityPage() {
           </button>
         </div>
 
-        <div className="border-b border-white/10 px-4 sm:px-6">
+        <div className="border-b border-subtle px-4 sm:px-6">
           <div className="flex gap-0">
             <button
               type="button"
               onClick={() => setTab("contracts")}
               className={`relative flex-1 border-b-2 py-3 text-sm font-semibold transition sm:flex-none sm:px-6 ${
                 tab === "contracts"
-                  ? "border-[#C5A059] text-slate-100 shadow-[0_2px_12px_rgba(197,160,89,0.25)]"
-                  : "border-transparent text-slate-400 hover:text-slate-100"
-              }`}
+                  ? "border-veto-gold text-primary shadow-[0_2px_12px_rgba(197,160,89,0.25)]" : "border-transparent text-muted hover:text-primary"}`}
             >
               {t("productivity.tabContracts")}
             </button>
@@ -630,9 +628,7 @@ export default function ProductivityPage() {
               onClick={() => setTab("tasks")}
               className={`relative flex-1 border-b-2 py-3 text-sm font-semibold transition sm:flex-none sm:px-6 ${
                 tab === "tasks"
-                  ? "border-[#C5A059] text-slate-100 shadow-[0_2px_12px_rgba(197,160,89,0.25)]"
-                  : "border-transparent text-slate-400 hover:text-slate-100"
-              }`}
+                  ? "border-veto-gold text-primary shadow-[0_2px_12px_rgba(197,160,89,0.25)]" : "border-transparent text-muted hover:text-primary"}`}
             >
               {t("productivity.tabTasks")}
             </button>
@@ -650,7 +646,7 @@ export default function ProductivityPage() {
             <button
               type="button"
               onClick={() => void loadData()}
-              className="shrink-0 rounded-lg bg-red-800 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700"
+              className="shrink-0 rounded-lg bg-red-800 px-4 py-2 text-sm font-semibold text-inverse hover:bg-red-700"
             >
               {t("common.retry")}
             </button>
@@ -670,19 +666,19 @@ export default function ProductivityPage() {
             {tab === "contracts" && (
               <div className="grid gap-4 sm:grid-cols-2">
                 {sortedContracts.length === 0 && (
-                  <p className="col-span-full py-10 text-center text-sm text-slate-400">
+                  <p className="col-span-full py-10 text-center text-sm text-muted">
                     {t("productivity.contractEmpty")}
                   </p>
                 )}
                 {sortedContracts.map((c) => (
                   <article
                     key={c.id}
-                    className={`flex flex-col rounded-xl border border-white/10 p-4 shadow-sm backdrop-blur-xl transition hover:border-white hover:shadow-md ${glassPanelNested}`}
+                    className={`flex flex-col rounded-xl border border-subtle p-4 shadow-sm backdrop-blur-xl transition hover:border-white hover:shadow-md ${glassPanelNested}`}
                   >
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0">
-                        <h3 className="font-frank font-bold text-slate-100">{c.title}</h3>
-                        <p className="mt-1 text-sm text-slate-400">{c.partyName}</p>
+                        <h3 className="font-frank font-bold text-primary">{c.title}</h3>
+                        <p className="mt-1 text-sm text-muted">{c.partyName}</p>
                       </div>
                       <span
                         className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset backdrop-blur-sm ${statusStyles(c.status)}`}
@@ -690,7 +686,7 @@ export default function ProductivityPage() {
                         {contractStatusLabel(c.status, t)}
                       </span>
                     </div>
-                    <p className="mt-3 text-xs text-slate-500">
+                    <p className="mt-3 text-xs text-muted">
                       {t("productivity.updatedPrefix")} {c.updatedAt}
                     </p>
                     <div
@@ -717,10 +713,10 @@ export default function ProductivityPage() {
                         </svg>
                       </button>
                       {menuOpenId === c.id && (
-                        <div className="absolute inset-x-0 z-10 mt-1 overflow-hidden rounded-xl border border-white/10 bg-slate-900/80 py-1 shadow-lg backdrop-blur-xl">
+                        <div className="absolute inset-x-0 z-10 mt-1 overflow-hidden rounded-xl border border-subtle bg-surface-overlay py-1 shadow-lg backdrop-blur-xl">
                           <button
                             type="button"
-                            className="block w-full px-4 py-2.5 text-start text-sm text-slate-200 hover:bg-white/[0.06]"
+                            className="block w-full px-4 py-2.5 text-start text-sm text-primary hover:bg-white/[0.06]"
                             onClick={() => {
                               setViewContract(c);
                               setMenuOpenId(null);
@@ -730,7 +726,7 @@ export default function ProductivityPage() {
                           </button>
                           <button
                             type="button"
-                            className="block w-full px-4 py-2.5 text-start text-sm font-semibold text-[#e8c987] hover:bg-[#C5A059]/15 disabled:cursor-not-allowed disabled:opacity-40"
+                            className="block w-full px-4 py-2.5 text-start text-sm font-semibold text-brand-100 hover:bg-veto-gold/15 disabled:cursor-not-allowed disabled:opacity-40"
                             disabled={
                               c.status !== "pending_signature" ||
                               signingContractId === c.id
@@ -750,9 +746,9 @@ export default function ProductivityPage() {
             )}
 
             {tab === "tasks" && (
-              <ul className="divide-y divide-white/[0.06] overflow-hidden rounded-2xl border border-white/10 bg-white/[0.04] backdrop-blur-xl">
+              <ul className="divide-y divide-white/[0.06] overflow-hidden rounded-2xl border border-subtle bg-white/[0.04] backdrop-blur-xl">
                 {sortedTasks.length === 0 && (
-                  <li className="px-4 py-10 text-center text-sm text-slate-400">
+                  <li className="px-4 py-10 text-center text-sm text-muted">
                     {t("productivity.tasksEmpty")}
                   </li>
                 )}
@@ -769,18 +765,17 @@ export default function ProductivityPage() {
                         checked={task.done}
                         disabled={updatingTaskId === task.id}
                         onChange={() => void toggleTaskDone(task.id)}
-                        className="mt-1 h-4 w-4 shrink-0 rounded border-slate-400 text-[#C5A059] focus:ring-[#C5A059]/40 disabled:cursor-wait disabled:opacity-50"
+                        className="mt-1 h-4 w-4 shrink-0 rounded border-strong text-veto-gold focus:ring-veto-gold/40 disabled:cursor-wait disabled:opacity-50"
                       />
                       <span className="min-w-0">
                         <span
-                          className={`block font-medium text-slate-100 ${
-                            task.done ? "text-slate-500 line-through" : ""
-                          }`}
+                          className={`block font-medium text-primary ${
+                            task.done ? "text-muted line-through" : ""}`}
                         >
                           {task.title}
                         </span>
                         {task.description && (
-                          <span className="mt-0.5 block text-sm text-slate-400">
+                          <span className="mt-0.5 block text-sm text-muted">
                             {task.description}
                           </span>
                         )}
@@ -792,7 +787,7 @@ export default function ProductivityPage() {
                       >
                         {taskPriorityLabel(task.priority, t)}
                       </span>
-                      <span className="text-xs font-medium text-slate-400">
+                      <span className="text-xs font-medium text-muted">
                         {t("productivity.duePrefix")}{" "}
                         {task.dueDate || "—"}
                       </span>
@@ -805,9 +800,9 @@ export default function ProductivityPage() {
         )}
       </div>
 
-      <p className="mt-4 text-center text-xs text-slate-400">
+      <p className="mt-4 text-center text-xs text-muted">
         {t("productivity.vaultHint")}{" "}
-        <Link href="/vault" className="font-semibold text-[#e8c987] hover:text-slate-100">
+        <Link href="/vault" className="font-semibold text-brand-100 hover:text-primary">
           {t("productivity.vaultLink")}
         </Link>
       </p>

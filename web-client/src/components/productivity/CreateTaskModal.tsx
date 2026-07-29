@@ -110,15 +110,15 @@ export function CreateTaskModal({
         aria-labelledby="task-modal-title"
         onMouseDown={(e) => e.stopPropagation()}
       >
-        <div className="flex items-start justify-between border-b border-slate-200 px-5 py-4 dark:border-white/10">
+        <div className="flex items-start justify-between border-b border-subtle px-5 py-4">
           <div>
             <h2
               id="task-modal-title"
-              className="font-frank text-lg font-bold text-slate-900 dark:text-slate-50"
+              className="font-frank text-lg font-bold text-primary"
             >
               {t("productivity.taskModalTitle")}
             </h2>
-            <p className="mt-0.5 text-sm text-slate-600 dark:text-slate-400">
+            <p className="mt-0.5 text-sm text-secondary">
               {t("productivity.taskModalSubtitle")}
             </p>
           </div>
@@ -126,7 +126,7 @@ export function CreateTaskModal({
             type="button"
             onClick={handleClose}
             disabled={isSubmitting}
-            className={`rounded-lg p-2 text-slate-500 hover:bg-slate-100 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-40 dark:text-slate-400 dark:hover:bg-white/10 dark:hover:text-slate-100 ${focusRing}`}
+            className={`rounded-lg p-2 text-muted hover:bg-slate-100 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-40  dark:hover:bg-white/10 dark:hover:text-slate-100 ${focusRing}`}
             aria-label={t("common.close")}
           >
             <svg
@@ -145,7 +145,7 @@ export function CreateTaskModal({
           <div>
             <label
               htmlFor="task-title"
-              className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-400"
+              className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-secondary"
             >
               {t("productivity.taskFieldTitle")}
             </label>
@@ -162,7 +162,7 @@ export function CreateTaskModal({
           <div>
             <label
               htmlFor="task-desc"
-              className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-400"
+              className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-secondary"
             >
               {t("productivity.taskFieldDescription")}
             </label>
@@ -182,7 +182,7 @@ export function CreateTaskModal({
             <div>
               <label
                 htmlFor="task-due"
-                className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-400"
+                className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-secondary"
               >
                 {t("productivity.taskFieldDue")}
               </label>
@@ -200,7 +200,7 @@ export function CreateTaskModal({
             <div>
               <label
                 htmlFor="task-priority"
-                className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-400"
+                className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-secondary"
               >
                 {t("productivity.taskFieldPriority")}
               </label>
@@ -232,7 +232,7 @@ export function CreateTaskModal({
           )}
         </div>
 
-        <div className="flex gap-3 border-t border-slate-200 px-5 py-4 dark:border-white/10">
+        <div className="flex gap-3 border-t border-subtle px-5 py-4">
           <button
             type="button"
             onClick={handleClose}

@@ -1,10 +1,11 @@
 import { Skeleton } from "@/components/ui/Skeleton";
 
-/** Call UI is always dark (`veto-call-keep-dark`); match shell so transition is not a flash of light. */
+/** Call UI is always dark (`data-surface="stage"`); match shell so transition is not a flash of light. */
 export default function CallChannelLoading() {
   return (
     <div
-      className="veto-call-keep-dark flex min-h-[100dvh] w-full flex-col bg-gradient-to-b from-zinc-950 via-black to-zinc-950 px-4 py-8"
+      data-surface="stage"
+      className="flex min-h-[100dvh] w-full flex-col bg-gradient-to-b from-zinc-950 via-black to-zinc-950 px-4 py-8"
       aria-busy="true"
       aria-label="טוען שיחה"
     >

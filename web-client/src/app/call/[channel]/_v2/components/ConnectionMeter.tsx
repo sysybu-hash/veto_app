@@ -9,7 +9,7 @@ const COLORS: Record<QualityReadout["label"], string> = {
   ok: "bg-amber-300",
   poor: "bg-amber-500",
   bad: "bg-red-500",
-  unknown: "bg-slate-500",
+  unknown: "bg-zinc-500",
 };
 
 const FILLED_BARS: Record<QualityReadout["label"], number> = {
@@ -28,7 +28,7 @@ export function ConnectionMeter({ quality }: { quality: QualityReadout }) {
 
   return (
     <div
-      className="flex items-center gap-1.5 rounded-full border border-white/10 bg-black/60 px-2 py-1 text-[11px] font-semibold text-slate-200 backdrop-blur"
+      className="flex items-center gap-1.5 rounded-full border border-subtle bg-black/60 px-2 py-1 text-[11px] font-semibold text-primary backdrop-blur"
       title={`${labelText} (${quality.uplink}↑/${quality.downlink}↓)`}
       aria-label={t("call.v2.network.aria", "Network quality") + `: ${labelText}`}
     >

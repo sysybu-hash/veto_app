@@ -157,7 +157,7 @@ function CalendarMonthGrid({ events }: { events: ApiCalendarEvent[] }) {
         >
           ‹
         </button>
-        <h2 className="font-frank text-center text-sm font-bold text-slate-100">
+        <h2 className="font-frank text-center text-sm font-bold text-primary">
           {monthLabel}
         </h2>
         <button
@@ -169,7 +169,7 @@ function CalendarMonthGrid({ events }: { events: ApiCalendarEvent[] }) {
           ›
         </button>
       </div>
-      <div className="mb-1 grid grid-cols-7 gap-1 text-center text-[10px] font-semibold uppercase tracking-wide text-slate-400">
+      <div className="mb-1 grid grid-cols-7 gap-1 text-center text-[10px] font-semibold uppercase tracking-wide text-muted">
         {weekdayLabels.map((d) => (
           <div key={d}>{d}</div>
         ))}
@@ -185,16 +185,14 @@ function CalendarMonthGrid({ events }: { events: ApiCalendarEvent[] }) {
               onClick={() => setSelectedDay(day)}
               className={`flex aspect-square flex-col items-center justify-center rounded-lg border text-sm font-semibold transition ${
                 selectedDay === day
-                  ? "border-[#C5A059] bg-[#C5A059]/25 text-slate-100 shadow-[0_0_16px_rgba(197,160,89,0.45)]"
+                  ? "border-veto-gold bg-veto-gold/25 text-primary shadow-[0_0_16px_rgba(197,160,89,0.45)]"
                   : eventDays.has(day)
-                    ? "border-[#C5A059]/40 bg-transparent text-slate-100 hover:bg-white/[0.04]"
-                    : "border-white/10 bg-transparent text-slate-300 hover:bg-white/[0.06]"
-              } ${isToday(day) ? "ring-2 ring-[#C5A059]/60" : ""}`}
+                    ? "border-veto-gold/40 bg-transparent text-primary hover:bg-white/[0.04]" : "border-subtle bg-transparent text-secondary hover:bg-white/[0.06]"} ${isToday(day) ? "ring-2 ring-veto-gold/60" : ""}`}
             >
               <span>{day}</span>
               {eventDays.has(day) ? (
                 <span
-                  className="mt-0.5 h-1 w-1 shrink-0 rounded-full bg-[#C5A059] shadow-[0_0_8px_rgba(197,160,89,0.9)]"
+                  className="mt-0.5 h-1 w-1 shrink-0 rounded-full bg-veto-gold shadow-[0_0_8px_rgba(197,160,89,0.9)]"
                   aria-hidden
                 />
               ) : (
@@ -275,10 +273,10 @@ export default function CitizenCalendarPage() {
         className={`mx-auto flex w-full max-w-lg flex-1 flex-col gap-6 px-4 py-8 ${citizenBottomSafe}`}
       >
         <div>
-          <h1 className="font-frank text-2xl font-bold tracking-tight text-slate-100">
+          <h1 className="font-frank text-2xl font-bold tracking-tight text-primary">
             {t("calendar.heroTitle")}
           </h1>
-          <p className="mt-1 text-sm text-slate-400">
+          <p className="mt-1 text-sm text-muted">
             {t("calendar.heroSubtitle")}
           </p>
         </div>
@@ -329,7 +327,7 @@ export default function CitizenCalendarPage() {
         <CalendarMonthGrid events={sortedDisplay} />
 
         <section className={`${glassPanel} p-4`}>
-          <h2 className="mb-3 font-frank text-xs font-bold uppercase tracking-wider text-slate-100">
+          <h2 className="mb-3 font-frank text-xs font-bold uppercase tracking-wider text-primary">
             {t("calendar.upcoming")}
           </h2>
           {loading ? (
@@ -342,7 +340,7 @@ export default function CitizenCalendarPage() {
               ))}
             </ul>
           ) : sortedDisplay.length === 0 ? (
-            <p className="py-8 text-center text-sm text-slate-400">
+            <p className="py-8 text-center text-sm text-muted">
               {t("calendar.noUpcoming")}
             </p>
           ) : (
@@ -352,19 +350,19 @@ export default function CitizenCalendarPage() {
                 return (
                   <li
                     key={ev._id}
-                    className="rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3 backdrop-blur-md"
+                    className="rounded-xl border border-subtle bg-white/[0.04] px-4 py-3 backdrop-blur-md"
                   >
                     <div className="flex flex-wrap items-baseline justify-between gap-2">
-                      <span className="text-xs font-semibold text-[#e8c987] drop-shadow-sm">
+                      <span className="text-xs font-semibold text-brand-100 drop-shadow-sm">
                         {dateLine}
                       </span>
-                      <span className="text-xs text-slate-400">{timeLine}</span>
+                      <span className="text-xs text-muted">{timeLine}</span>
                     </div>
-                    <h3 className="mt-1 font-frank text-base font-bold text-slate-100">
+                    <h3 className="mt-1 font-frank text-base font-bold text-primary">
                       {ev.title}
                     </h3>
                     {ev.notes ? (
-                      <p className="mt-1 line-clamp-2 text-sm text-slate-400">
+                      <p className="mt-1 line-clamp-2 text-sm text-muted">
                         {ev.notes}
                       </p>
                     ) : null}

@@ -262,17 +262,17 @@ export default function VetoMasterDashboard() {
   if (loading && !data) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-veto-ink">
-        <RefreshCw className="h-8 w-8 animate-spin text-[#C5A059]" aria-hidden />
+        <RefreshCw className="h-8 w-8 animate-spin text-veto-gold" aria-hidden />
       </div>
     );
   }
 
   return (
     <div className="flex min-h-screen flex-col md:flex-row" dir="rtl">
-      <aside className="flex w-full flex-col gap-8 border-l border-white/10 bg-veto-ink/75 p-6 backdrop-blur-xl print:hidden md:w-64">
+      <aside className="flex w-full flex-col gap-8 border-l border-subtle bg-veto-ink/75 p-6 backdrop-blur-xl print:hidden md:w-64">
         <div className="space-y-2">
           <VetoBrandLogo className="h-9 w-auto" />
-          <p className="font-serif text-sm font-bold tracking-tight text-slate-400">ממשק מנהל</p>
+          <p className="font-serif text-sm font-bold tracking-tight text-muted">ממשק מנהל</p>
         </div>
         <nav className="flex flex-col gap-2">
           <MenuLink href="/admin/dashboard" icon={<LayoutDashboard size={18} aria-hidden />} label="מרכז שליטה" active />
@@ -285,22 +285,22 @@ export default function VetoMasterDashboard() {
 
       <main className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-10">
         <section
-          className="mb-10 rounded-2xl border border-white/10 bg-veto-ink p-6 text-white shadow-xl md:p-8"
+          className="mb-10 rounded-2xl border border-subtle bg-veto-ink p-6 text-inverse shadow-xl md:p-8"
           dir="rtl"
           aria-label="חדר בקרה"
         >
-          <header className="mb-8 flex flex-col gap-4 border-b border-white/10 pb-4 sm:flex-row sm:items-center sm:justify-between">
+          <header className="mb-8 flex flex-col gap-4 border-b border-subtle pb-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h2 className="text-2xl font-bold md:text-3xl">
                 חדר בקרה <span className="text-veto-gold">VETO</span>
               </h2>
-              <p className="mt-1 text-sm text-gray-400">מבט על בזמן אמת · רענון כל 15 שניות</p>
+              <p className="mt-1 text-sm text-muted">מבט על בזמן אמת · רענון כל 15 שניות</p>
             </div>
             <div className="flex flex-wrap items-center gap-2">
               <button
                 type="button"
                 onClick={() => void refreshCommandCenter()}
-                className="rounded-full border border-white/10 bg-[rgba(255,255,255,0.06)] px-3 py-2 text-xs text-slate-200 transition hover:bg-[rgba(255,255,255,0.1)]"
+                className="rounded-full border border-subtle bg-[rgba(255,255,255,0.06)] px-3 py-2 text-xs text-primary transition hover:bg-[rgba(255,255,255,0.1)]"
               >
                 רענון מיידי
               </button>
@@ -355,15 +355,15 @@ export default function VetoMasterDashboard() {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: idx * 0.08 }}
-                    className="rounded-2xl border border-white/10 bg-[rgba(255,255,255,0.06)] p-6 backdrop-blur-md"
+                    className="rounded-2xl border border-subtle bg-[rgba(255,255,255,0.06)] p-6 backdrop-blur-md"
                   >
                     <div className="mb-4 flex items-start justify-between">
-                      <h3 className="font-medium text-gray-400">{stat.title}</h3>
+                      <h3 className="font-medium text-muted">{stat.title}</h3>
                       <stat.icon className={stat.color} size={24} aria-hidden />
                     </div>
                     <p className="text-4xl font-bold">{stat.value}</p>
                     {"sub" in stat && stat.sub ? (
-                      <p className="mt-1 text-sm text-gray-500">{stat.sub}</p>
+                      <p className="mt-1 text-sm text-muted">{stat.sub}</p>
                     ) : null}
                   </motion.div>
                 ))}
@@ -373,9 +373,9 @@ export default function VetoMasterDashboard() {
                 <Clock className="text-veto-gold" aria-hidden />
                 אירועים חיים
               </h3>
-              <div className="overflow-hidden rounded-2xl border border-white/10 bg-[rgba(255,255,255,0.06)] backdrop-blur-md">
-                <table className="w-full text-right text-sm">
-                  <thead className="bg-[rgba(255,255,255,0.06)] text-gray-400">
+              <div className="overflow-hidden rounded-2xl border border-subtle bg-[rgba(255,255,255,0.06)] backdrop-blur-md">
+                <table className="w-full text-end text-sm">
+                  <thead className="bg-[rgba(255,255,255,0.06)] text-muted">
                     <tr>
                       <th className="p-4 font-medium">מזהה אירוע</th>
                       <th className="p-4 font-medium">שפה</th>
@@ -386,7 +386,7 @@ export default function VetoMasterDashboard() {
                   <tbody className="divide-y divide-white/10">
                     {!commandCenter?.activeEvents?.length ? (
                       <tr>
-                        <td colSpan={4} className="p-8 text-center text-gray-500">
+                        <td colSpan={4} className="p-8 text-center text-muted">
                           אין אירועי חירום פעילים כרגע.
                         </td>
                       </tr>
@@ -403,7 +403,7 @@ export default function VetoMasterDashboard() {
                                 {ev.status ?? "—"}
                               </span>
                             </td>
-                            <td className="p-4 text-gray-400">
+                            <td className="p-4 text-muted">
                               {t ? new Date(t).toLocaleTimeString("he-IL") : "—"}
                             </td>
                           </tr>
@@ -419,13 +419,13 @@ export default function VetoMasterDashboard() {
 
         <header className="mb-8 flex items-center justify-between">
           <div>
-            <h1 className="font-serif text-3xl font-bold text-slate-100">ניהול מערכת VETO</h1>
-            <p className="text-sm text-slate-500">סטטוס שרתים ומנויים בזמן אמת</p>
+            <h1 className="font-serif text-3xl font-bold text-primary">ניהול מערכת VETO</h1>
+            <p className="text-sm text-muted">סטטוס שרתים ומנויים בזמן אמת</p>
           </div>
           <button
             type="button"
             onClick={() => void refresh()}
-            className="rounded-full border border-white/10 bg-[rgba(255,255,255,0.04)] p-2 text-slate-200 transition hover:bg-[rgba(255,255,255,0.08)]"
+            className="rounded-full border border-subtle bg-[rgba(255,255,255,0.04)] p-2 text-primary transition hover:bg-[rgba(255,255,255,0.08)]"
             aria-label="רענון נתונים"
           >
             <RefreshCw className={`h-5 w-5 ${loading ? "animate-spin" : ""}`} aria-hidden />
@@ -449,19 +449,19 @@ export default function VetoMasterDashboard() {
           <div className="flex items-center justify-center gap-3 rounded-xl border border-orange-500/30 bg-orange-500/10 p-4 font-bold text-orange-300">
             <ShieldCheck size={20} aria-hidden /> אבטחת JWT: תקינה
           </div>
-          <div className="flex items-center justify-center gap-3 rounded-xl border border-white/10 bg-[rgba(255,255,255,0.04)] p-4 font-bold backdrop-blur-xl">
+          <div className="flex items-center justify-center gap-3 rounded-xl border border-subtle bg-[rgba(255,255,255,0.04)] p-4 font-bold backdrop-blur-xl">
             סה&quot;כ משתמשים: {data?.stats.users ?? 0}
           </div>
         </div>
 
-        <div className="mb-6 grid grid-cols-1 gap-3 text-sm text-slate-400 md:grid-cols-3">
-          <div className="rounded-lg border border-white/10 bg-[rgba(255,255,255,0.04)] px-4 py-3 backdrop-blur-xl">
-            <span className="font-bold text-slate-100">{data?.stats.lawyers ?? 0}</span> עורכי דין
+        <div className="mb-6 grid grid-cols-1 gap-3 text-sm text-muted md:grid-cols-3">
+          <div className="rounded-lg border border-subtle bg-[rgba(255,255,255,0.04)] px-4 py-3 backdrop-blur-xl">
+            <span className="font-bold text-primary">{data?.stats.lawyers ?? 0}</span> עורכי דין
           </div>
-          <div className="rounded-lg border border-white/10 bg-[rgba(255,255,255,0.04)] px-4 py-3 backdrop-blur-xl">
-            <span className="font-bold text-slate-100">{data?.stats.sos ?? 0}</span> אירועי SOS ב־24 שעות
+          <div className="rounded-lg border border-subtle bg-[rgba(255,255,255,0.04)] px-4 py-3 backdrop-blur-xl">
+            <span className="font-bold text-primary">{data?.stats.sos ?? 0}</span> אירועי SOS ב־24 שעות
           </div>
-          <div className="rounded-lg border border-white/10 bg-[rgba(255,255,255,0.04)] px-4 py-3 backdrop-blur-xl">
+          <div className="rounded-lg border border-subtle bg-[rgba(255,255,255,0.04)] px-4 py-3 backdrop-blur-xl">
             עודכן:{" "}
             {data?.health.timestamp ? new Date(data.health.timestamp).toLocaleString("he-IL") : "—"}
           </div>
@@ -478,16 +478,16 @@ export default function VetoMasterDashboard() {
           </div>
         )}
 
-        <section className="overflow-hidden rounded-2xl border border-white/10 bg-[rgba(255,255,255,0.04)] backdrop-blur-xl">
-          <div className="flex flex-col items-stretch justify-between gap-4 border-b border-white/10 p-6 md:flex-row md:items-center">
-            <h3 className="font-serif text-xl font-bold text-slate-100">ניהול מנויים ומשתמשים</h3>
+        <section className="overflow-hidden rounded-2xl border border-subtle bg-[rgba(255,255,255,0.04)] backdrop-blur-xl">
+          <div className="flex flex-col items-stretch justify-between gap-4 border-b border-subtle p-6 md:flex-row md:items-center">
+            <h3 className="font-serif text-xl font-bold text-primary">ניהול מנויים ומשתמשים</h3>
             <div className="flex flex-1 items-center justify-end gap-3">
               <div className="relative w-full md:w-80">
-                <Search className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                <Search className="pointer-events-none absolute end-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
                 <input
                   type="search"
                   placeholder="חיפוש לפי שם, אימייל או טלפון..."
-                  className="w-full rounded-lg border border-white/10 bg-veto-ink py-2 pl-4 pr-10 text-sm text-slate-100 outline-none focus:ring-2 focus:ring-[#C5A059]"
+                  className="w-full rounded-lg border border-subtle bg-veto-ink py-2 ps-4 pe-10 text-sm text-primary outline-none focus:ring-2 focus:ring-veto-gold"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   aria-label="חיפוש משתמש"
@@ -496,7 +496,7 @@ export default function VetoMasterDashboard() {
               <button
                 type="button"
                 onClick={() => setShowCreate((v) => !v)}
-                className="inline-flex items-center gap-2 rounded-lg bg-[#C5A059] px-4 py-2 text-sm font-bold text-black transition hover:bg-[#b08d4a]"
+                className="inline-flex items-center gap-2 rounded-lg bg-veto-gold px-4 py-2 text-sm font-bold text-black transition hover:bg-brand-600"
               >
                 <Plus size={16} aria-hidden /> הוספת משתמש
               </button>
@@ -516,9 +516,9 @@ export default function VetoMasterDashboard() {
           )}
 
           <div className="overflow-x-auto">
-            <table className="w-full text-right">
+            <table className="w-full text-end">
               <thead>
-                <tr className="border-b border-white/10 bg-veto-ink text-xs uppercase tracking-wider text-slate-500">
+                <tr className="border-b border-subtle bg-veto-ink text-xs uppercase tracking-wider text-muted">
                   <th className="p-4 font-bold">שם / טלפון / אימייל</th>
                   <th className="p-4 text-center font-bold">תפקיד</th>
                   <th className="p-4 text-center font-bold">סטטוס</th>
@@ -536,8 +536,8 @@ export default function VetoMasterDashboard() {
                   return (
                     <tr key={user.id} className="transition hover:bg-[rgba(255,255,255,0.04)]">
                       <td className="p-4">
-                        <div className="font-bold text-slate-100">{user.name || "—"}</div>
-                        <div className="text-xs text-slate-500">
+                        <div className="font-bold text-primary">{user.name || "—"}</div>
+                        <div className="text-xs text-muted">
                           {user.phone || user.email || "—"}
                         </div>
                       </td>
@@ -551,7 +551,7 @@ export default function VetoMasterDashboard() {
                               e.target.value as "user" | "admin",
                             )
                           }
-                          className="rounded-lg border border-white/10 bg-veto-ink px-2 py-1 text-xs text-slate-200"
+                          className="rounded-lg border border-subtle bg-veto-ink px-2 py-1 text-xs text-primary"
                         >
                           <option value="user">אזרח</option>
                           <option value="admin">מנהל</option>
@@ -572,23 +572,23 @@ export default function VetoMasterDashboard() {
                         </button>
                       </td>
                       <td className="p-4 text-center">
-                        <label className="inline-flex cursor-pointer items-center gap-2 text-xs text-slate-300">
+                        <label className="inline-flex cursor-pointer items-center gap-2 text-xs text-secondary">
                           <input
                             type="checkbox"
                             disabled={isBusy}
                             checked={user.paymentExempt}
                             onChange={() => void toggleExempt(user)}
-                            className="h-4 w-4 cursor-pointer accent-[#C5A059]"
+                            className="h-4 w-4 cursor-pointer accent-veto-gold"
                           />
                           פטור
                         </label>
                       </td>
-                      <td className="p-4 text-center text-xs text-slate-400">{expiry}</td>
+                      <td className="p-4 text-center text-xs text-muted">{expiry}</td>
                       <td className="p-4 text-center">
                         <div className="inline-flex items-center gap-2">
                           <Link
                             href={`/admin/users/${user.id}`}
-                            className="text-xs font-bold text-[#C5A059] hover:underline"
+                            className="text-xs font-bold text-veto-gold hover:underline"
                           >
                             ערוך
                           </Link>
@@ -610,7 +610,7 @@ export default function VetoMasterDashboard() {
             </table>
           </div>
           {filteredUsers.length === 0 && (
-            <p className="p-8 text-center text-slate-500">
+            <p className="p-8 text-center text-muted">
               {searchTerm.trim() ? "לא נמצאו תוצאות לחיפוש." : "אין משתמשים להצגה."}
             </p>
           )}
@@ -658,44 +658,44 @@ function CreateUserForm({
   return (
     <form
       onSubmit={(e) => void submit(e)}
-      className="grid grid-cols-1 gap-3 border-b border-white/10 bg-veto-ink/50 p-6 md:grid-cols-5"
+      className="grid grid-cols-1 gap-3 border-b border-subtle bg-veto-ink/50 p-6 md:grid-cols-5"
     >
       <input
         required
         value={name}
         onChange={(e) => setName(e.target.value)}
         placeholder="שם מלא"
-        className="rounded-lg border border-white/10 bg-veto-ink px-3 py-2 text-sm text-slate-100 outline-none focus:ring-2 focus:ring-[#C5A059]"
+        className="rounded-lg border border-subtle bg-veto-ink px-3 py-2 text-sm text-primary outline-none focus:ring-2 focus:ring-veto-gold"
       />
       <input
         required
         value={phone}
         onChange={(e) => setPhone(e.target.value)}
         placeholder="טלפון (+972...)"
-        className="rounded-lg border border-white/10 bg-veto-ink px-3 py-2 text-sm text-slate-100 outline-none focus:ring-2 focus:ring-[#C5A059]"
+        className="rounded-lg border border-subtle bg-veto-ink px-3 py-2 text-sm text-primary outline-none focus:ring-2 focus:ring-veto-gold"
       />
       <input
         value={email}
         onChange={(e) => setEmail(e.target.value)}
         placeholder="אימייל (אופציונלי)"
         type="email"
-        className="rounded-lg border border-white/10 bg-veto-ink px-3 py-2 text-sm text-slate-100 outline-none focus:ring-2 focus:ring-[#C5A059]"
+        className="rounded-lg border border-subtle bg-veto-ink px-3 py-2 text-sm text-primary outline-none focus:ring-2 focus:ring-veto-gold"
       />
       <select
         value={role}
         onChange={(e) => setRole(e.target.value as typeof role)}
-        className="rounded-lg border border-white/10 bg-veto-ink px-3 py-2 text-sm text-slate-100 outline-none focus:ring-2 focus:ring-[#C5A059]"
+        className="rounded-lg border border-subtle bg-veto-ink px-3 py-2 text-sm text-primary outline-none focus:ring-2 focus:ring-veto-gold"
       >
         <option value="user">אזרח</option>
         <option value="admin">מנהל</option>
       </select>
       <div className="flex items-center justify-between gap-2">
-        <label className="inline-flex cursor-pointer items-center gap-2 text-xs text-slate-300">
+        <label className="inline-flex cursor-pointer items-center gap-2 text-xs text-secondary">
           <input
             type="checkbox"
             checked={exempt}
             onChange={(e) => setExempt(e.target.checked)}
-            className="h-4 w-4 cursor-pointer accent-[#C5A059]"
+            className="h-4 w-4 cursor-pointer accent-veto-gold"
           />
           פטור מתשלום
         </label>
@@ -703,14 +703,14 @@ function CreateUserForm({
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg border border-white/10 bg-[rgba(255,255,255,0.04)] px-3 py-2 text-xs text-slate-300"
+            className="rounded-lg border border-subtle bg-[rgba(255,255,255,0.04)] px-3 py-2 text-xs text-secondary"
           >
             ביטול
           </button>
           <button
             type="submit"
             disabled={busy}
-            className="rounded-lg bg-[#C5A059] px-3 py-2 text-xs font-bold text-black disabled:opacity-60"
+            className="rounded-lg bg-veto-gold px-3 py-2 text-xs font-bold text-black disabled:opacity-60"
           >
             {busy ? "יוצר…" : "צור"}
           </button>
@@ -736,9 +736,7 @@ function MenuLink({
       href={href}
       className={`flex items-center gap-3 rounded-lg p-3 text-sm font-medium transition ${
         active
-          ? "bg-[#C5A059]/10 text-[#C5A059]"
-          : "text-slate-400 hover:bg-[rgba(255,255,255,0.04)]"
-      }`}
+          ? "bg-veto-gold/10 text-veto-gold" : "text-muted hover:bg-[rgba(255,255,255,0.04)]"}`}
     >
       {icon}
       {label}

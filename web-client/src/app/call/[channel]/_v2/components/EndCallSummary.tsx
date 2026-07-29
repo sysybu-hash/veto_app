@@ -70,7 +70,7 @@ export function EndCallSummary({
   return (
     <div className="absolute inset-0 z-50 flex items-end justify-center bg-black/80 p-0 backdrop-blur-md @md:items-center @md:p-6">
       <div
-        className="flex max-h-[min(92dvh,900px)] w-full max-w-lg flex-col overflow-hidden rounded-t-3xl border border-white/[0.1] bg-gradient-to-b from-zinc-900/98 to-black/98 shadow-[0_-12px_60px_rgba(0,0,0,0.55)] @md:max-h-[85vh] @md:rounded-3xl @md:border-[#C5A059]/20 @md:shadow-2xl"
+        className="flex max-h-[min(92dvh,900px)] w-full max-w-lg flex-col overflow-hidden rounded-t-3xl border border-white/[0.1] bg-gradient-to-b from-zinc-900/98 to-black/98 shadow-[0_-12px_60px_rgba(0,0,0,0.55)] @md:max-h-[85vh] @md:rounded-3xl @md:border-veto-gold/20 @md:shadow-2xl"
         role="dialog"
         aria-modal="true"
         aria-labelledby="call-summary-title"
@@ -84,11 +84,11 @@ export function EndCallSummary({
           <div className="flex items-start justify-between gap-3">
             <h3
               id="call-summary-title"
-              className="font-frank text-xl font-bold tracking-tight text-white @md:text-2xl"
+              className="font-frank text-xl font-bold tracking-tight text-inverse @md:text-2xl"
             >
               {t("call.v2.summary.title", "Call summary")}
             </h3>
-            <span className="shrink-0 rounded-full border border-[#C5A059]/35 bg-[#C5A059]/10 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#C5A059]">
+            <span className="shrink-0 rounded-full border border-veto-gold/35 bg-veto-gold/10 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-veto-gold">
               VETO
             </span>
           </div>
@@ -106,11 +106,11 @@ export function EndCallSummary({
               label={t("call.v2.summary.overtime", "Overtime")}
               value={`₪${summary.overtime.toFixed(2)}`}
             />
-            <div className="mt-1 flex items-center justify-between border-t border-white/10 pt-3">
-              <span className="text-sm font-semibold text-slate-300">
+            <div className="mt-1 flex items-center justify-between border-t border-subtle pt-3">
+              <span className="text-sm font-semibold text-secondary">
                 {t("call.v2.summary.total", "Total to bill")}
               </span>
-              <span className="text-lg font-bold tabular-nums text-[#C5A059]">
+              <span className="text-lg font-bold tabular-nums text-veto-gold">
                 ₪{summary.total.toFixed(2)}
               </span>
             </div>
@@ -118,14 +118,14 @@ export function EndCallSummary({
 
           {!!transcriptSegments?.length && (
             <section className="mt-5 rounded-2xl border border-white/[0.06] bg-white/[0.03] p-4">
-              <p className="text-sm font-bold text-slate-200">
+              <p className="text-sm font-bold text-primary">
                 {t("call.v2.summary.transcriptTitle", "Transcript (this session)")}
               </p>
-              <div className="mt-2 max-h-44 overflow-y-auto rounded-xl border border-white/[0.06] bg-black/25 p-3 text-xs leading-relaxed text-slate-200">
+              <div className="mt-2 max-h-44 overflow-y-auto rounded-xl border border-white/[0.06] bg-black/25 p-3 text-xs leading-relaxed text-primary">
                 {transcriptSegments.map((s) => (
                   <p
                     key={s.segmentId}
-                    className={`mb-1.5 ${s.isFinal ? "text-slate-100" : "text-slate-500 italic"}`}
+                    className={`mb-1.5 ${s.isFinal ? "text-primary" : "text-muted italic"}`}
                   >
                     {s.speaker ? (
                       <span className="me-1 font-semibold text-amber-300/90">
@@ -140,11 +140,11 @@ export function EndCallSummary({
           )}
 
           {actionPlan && (
-            <section className="mt-5 rounded-2xl border border-[#C5A059]/20 bg-[#C5A059]/[0.06] p-4">
-              <p className="text-sm font-bold text-[#C5A059]">
+            <section className="mt-5 rounded-2xl border border-veto-gold/20 bg-veto-gold/[0.06] p-4">
+              <p className="text-sm font-bold text-veto-gold">
                 {t("call.v2.summary.planTitle", "Legal action plan")}
               </p>
-              <p className="mt-2 text-xs leading-relaxed text-slate-300">
+              <p className="mt-2 text-xs leading-relaxed text-secondary">
                 {actionPlan.ai.disclosure}
               </p>
               <ol className="mt-4 space-y-2">
@@ -153,14 +153,14 @@ export function EndCallSummary({
                     key={step.key}
                     className="flex gap-3 rounded-xl border border-white/[0.06] bg-black/30 px-3 py-2.5"
                   >
-                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[#C5A059]/20 text-xs font-bold text-[#C5A059]">
+                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-veto-gold/20 text-xs font-bold text-veto-gold">
                       {i + 1}
                     </span>
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium leading-snug text-white">
+                      <p className="text-sm font-medium leading-snug text-inverse">
                         {step.title}
                       </p>
-                      <p className="mt-0.5 text-[11px] text-slate-500">
+                      <p className="mt-0.5 text-[11px] text-muted">
                         {stepKindLabel(step.action, t)}
                       </p>
                     </div>
@@ -217,7 +217,7 @@ export function EndCallSummary({
             <button
               type="button"
               onClick={onClose}
-              className="min-h-[44px] rounded-xl border border-white/15 bg-white/[0.05] px-5 text-sm font-semibold text-slate-100 transition hover:bg-white/10"
+              className="min-h-[44px] rounded-xl border border-subtle bg-white/[0.05] px-5 text-sm font-semibold text-primary transition hover:bg-white/10"
             >
               {t("call.v2.summary.close", "Close")}
             </button>
@@ -235,7 +235,7 @@ export function EndCallSummary({
                     onClose();
                   }
                 }}
-                className="min-h-[44px] rounded-xl bg-[#C5A059] px-5 text-sm font-bold text-black shadow-md transition hover:brightness-110"
+                className="min-h-[44px] rounded-xl bg-veto-gold px-5 text-sm font-bold text-black shadow-md transition hover:brightness-110"
               >
                 {t("call.v2.summary.payCta", "Confirm & pay")} ₪
                 {summary.overtime.toFixed(2)}
@@ -251,8 +251,8 @@ export function EndCallSummary({
 function Row({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-center justify-between gap-3 text-sm">
-      <span className="text-slate-400">{label}</span>
-      <span className="tabular-nums text-slate-100">{value}</span>
+      <span className="text-muted">{label}</span>
+      <span className="tabular-nums text-primary">{value}</span>
     </div>
   );
 }

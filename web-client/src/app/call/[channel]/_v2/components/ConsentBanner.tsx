@@ -39,7 +39,7 @@ export function ConsentBanner({
             recOn
               ? "border-red-500/50 bg-red-950/70 text-red-100"
               : consent.citizen
-                ? "border-slate-500/40 bg-slate-900/75 text-slate-200"
+                ? "border-strong/40 bg-surface-raised/75 text-primary"
                 : "border-amber-500/40 bg-amber-950/60 text-amber-100"
           }`}
         >
@@ -84,12 +84,12 @@ export function ConsentBanner({
     <div
       role="alertdialog"
       aria-modal="false"
-      className="absolute inset-x-2 top-2 z-30 rounded-2xl border border-amber-500/40 bg-slate-950/90 p-4 text-sm text-slate-100 shadow-xl backdrop-blur md:inset-x-auto md:left-1/2 md:max-w-lg md:-translate-x-1/2"
+      className="absolute inset-x-2 top-2 z-30 rounded-2xl border border-amber-500/40 bg-surface-canvas/90 p-4 text-sm text-primary shadow-xl backdrop-blur md:inset-x-auto md:left-1/2 md:max-w-lg md:-translate-x-1/2"
     >
       <p className="font-semibold text-amber-200">
         {t("call.v2.consent.title", "Cloud recording consent (GDPR)")}
       </p>
-      <p className="mt-1 text-xs leading-5 text-slate-300">
+      <p className="mt-1 text-xs leading-5 text-secondary">
         {t(
           "call.v2.consent.bodyCitizen",
           "Recording is encrypted and stored only in your private vault. You decide whether to record; the lawyer only sees a status indicator, not your vault.",
@@ -99,14 +99,14 @@ export function ConsentBanner({
         <button
           type="button"
           onClick={() => onChoose(false)}
-          className="rounded-lg border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs font-semibold text-slate-200 hover:bg-white/[0.08]"
+          className="rounded-lg border border-subtle bg-white/[0.04] px-3 py-1.5 text-xs font-semibold text-primary hover:bg-white/[0.08]"
         >
           {t("call.v2.consent.decline", "Decline")}
         </button>
         <button
           type="button"
           onClick={() => onChoose(true)}
-          className="rounded-lg bg-[#C5A059] px-3 py-1.5 text-xs font-bold text-black hover:bg-[#D8B867]"
+          className="rounded-lg bg-veto-gold px-3 py-1.5 text-xs font-bold text-black hover:bg-veto-gold-light"
         >
           {t("call.v2.consent.accept", "I consent to recording")}
         </button>

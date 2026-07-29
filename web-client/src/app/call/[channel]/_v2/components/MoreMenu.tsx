@@ -67,7 +67,7 @@ export function MoreMenu(p: MoreMenuProps) {
         role="group"
         aria-label={t("call.v2.controls.moreAria", "More call controls")}
         onClick={(e) => e.stopPropagation()}
-        className="pointer-events-auto absolute inset-x-2 bottom-[76px] mx-auto max-w-sm rounded-2xl border border-[#C5A059]/20 bg-zinc-950/90 p-3 shadow-[0_12px_40px_rgba(0,0,0,0.55)] backdrop-blur-xl @md:px-4"
+        className="pointer-events-auto absolute inset-x-2 bottom-[76px] mx-auto max-w-sm rounded-2xl border border-veto-gold/20 bg-zinc-950/90 p-3 shadow-[0_12px_40px_rgba(0,0,0,0.55)] backdrop-blur-xl @md:px-4"
       >
       <div className="grid grid-cols-4 gap-2">
         {showRecord && (
@@ -171,7 +171,7 @@ export function MoreMenu(p: MoreMenuProps) {
         )}
         {p.pipSlot && (
           <div className="flex flex-col items-center gap-1.5">
-            <div className="flex h-[46px] w-[46px] items-center justify-center rounded-2xl bg-white/[0.08] text-white">
+            <div className="flex h-[46px] w-[46px] items-center justify-center rounded-2xl bg-white/[0.08] text-inverse">
               <Disc3 className="h-[19px] w-[19px]" aria-hidden />
             </div>
             {p.pipSlot}
@@ -208,7 +208,7 @@ function TrayBtn({
       aria-pressed={active}
       aria-label={label}
       title={title ?? label}
-      className="flex flex-col items-center gap-1.5 rounded-2xl p-1 outline-none transition focus-visible:ring-2 focus-visible:ring-[#C5A059] disabled:cursor-not-allowed disabled:opacity-50"
+      className="flex flex-col items-center gap-1.5 rounded-2xl p-1 outline-none transition focus-visible:ring-2 focus-visible:ring-veto-gold disabled:cursor-not-allowed disabled:opacity-50"
     >
       <span
         className={`flex h-[46px] w-[46px] items-center justify-center rounded-2xl border text-[19px] transition ${
@@ -219,7 +219,7 @@ function TrayBtn({
       >
         {icon}
       </span>
-      <span className="max-w-[64px] truncate text-[10px] font-medium text-slate-300">
+      <span className="max-w-[64px] truncate text-[10px] font-medium text-secondary">
         {label}
       </span>
     </button>

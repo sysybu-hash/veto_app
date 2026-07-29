@@ -37,9 +37,9 @@ export function SidePanel(props: {
     <aside
       role="complementary"
       aria-label={t("call.v2.side.aria", "Conversation tools")}
-      className="@container/side absolute inset-y-0 end-0 z-30 flex h-full w-full max-w-full flex-col border-s border-white/10 bg-slate-950/95 backdrop-blur @lg/shell:max-w-sm"
+      className="@container/side absolute inset-y-0 end-0 z-30 flex h-full w-full max-w-full flex-col border-s border-subtle bg-surface-canvas/95 backdrop-blur @lg/shell:max-w-sm"
     >
-      <header className="flex items-center justify-between border-b border-white/10 px-3 py-2 text-xs font-semibold text-slate-300">
+      <header className="flex items-center justify-between border-b border-subtle px-3 py-2 text-xs font-semibold text-secondary">
         <div className="flex gap-1.5" role="tablist">
           <TabBtn id="chat" current={tab} onSelect={setTab}>
             {t("call.v2.side.chat", "Chat")}
@@ -101,8 +101,7 @@ function TabBtn({
       aria-selected={active}
       onClick={() => onSelect(id)}
       className={`rounded-full px-3 py-1 text-xs font-semibold ${
-        active ? "bg-[#C5A059] text-black" : "bg-white/10 text-slate-200"
-      }`}
+        active ? "bg-veto-gold text-black" : "bg-white/10 text-primary"}`}
     >
       {children}
     </button>
@@ -137,7 +136,7 @@ function ChatTab({
     <>
       <div ref={scrollRef} className="flex-1 space-y-2 overflow-y-auto p-3">
         {messages.length === 0 ? (
-          <p className="mt-10 text-center text-xs text-slate-500">
+          <p className="mt-10 text-center text-xs text-muted">
             {t("call.chatEmpty", "No messages yet — say hello.")}
           </p>
         ) : (
@@ -149,9 +148,7 @@ function ChatTab({
               <p
                 className={`max-w-[82%] whitespace-pre-wrap break-words rounded-2xl px-3 py-2 text-sm ${
                   m.authorIsMe
-                    ? "bg-[#C5A059] text-black"
-                    : "bg-white/10 text-white"
-                }`}
+                    ? "bg-veto-gold text-black" : "bg-white/10 text-inverse"}`}
               >
                 {m.text}
               </p>
@@ -159,18 +156,18 @@ function ChatTab({
           ))
         )}
       </div>
-      <form className="border-t border-white/10 p-2" onSubmit={submit}>
+      <form className="border-t border-subtle p-2" onSubmit={submit}>
         <div className="flex gap-2">
           <input
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
             placeholder={t("call.chatPlaceholder", "Type a message…")}
-            className="min-w-0 flex-1 rounded-xl border border-white/10 bg-white/10 px-3 py-2 text-sm text-white outline-none placeholder:text-slate-500 focus:ring-2 focus:ring-[#C5A059]"
+            className="min-w-0 flex-1 rounded-xl border border-subtle bg-white/10 px-3 py-2 text-sm text-inverse outline-none placeholder:text-muted focus:ring-2 focus:ring-veto-gold"
           />
           <button
             type="submit"
             disabled={!draft.trim()}
-            className="rounded-xl bg-[#C5A059] px-3 py-2 text-sm font-bold text-black disabled:opacity-50"
+            className="rounded-xl bg-veto-gold px-3 py-2 text-sm font-bold text-black disabled:opacity-50"
           >
             {t("chat.send", "Send")}
           </button>
@@ -190,16 +187,16 @@ function TranscriptTab({ segments }: { segments: TranscriptSegment[] }) {
   }, [segments.length]);
 
   return (
-    <div ref={scrollRef} className="flex-1 overflow-y-auto p-3 text-sm leading-6 text-slate-200">
+    <div ref={scrollRef} className="flex-1 overflow-y-auto p-3 text-sm leading-6 text-primary">
       {segments.length === 0 ? (
-        <p className="mt-10 text-center text-xs text-slate-500">
+        <p className="mt-10 text-center text-xs text-muted">
           {t("call.v2.side.transcriptEmpty", "Transcript will appear here once enabled.")}
         </p>
       ) : (
         segments.map((s) => (
           <p
             key={s.segmentId}
-            className={`mb-1 ${s.isFinal ? "text-slate-100" : "text-slate-400 italic"}`}
+            className={`mb-1 ${s.isFinal ? "text-primary" : "text-muted italic"}`}
           >
             {s.speaker && (
               <span className="me-1 text-[11px] text-amber-300">{s.speaker}:</span>
@@ -248,7 +245,7 @@ function FilesTab({
   return (
     <div className="flex-1 overflow-y-auto p-3">
       <label
-        className={`block cursor-pointer rounded-2xl border-2 border-dashed border-white/20 bg-white/5 p-4 text-center text-sm text-slate-300 hover:border-[#C5A059] hover:bg-white/[0.08] ${busy ? "opacity-60" : ""}`}
+        className={`block cursor-pointer rounded-2xl border-2 border-dashed border-default bg-white/5 p-4 text-center text-sm text-secondary hover:border-veto-gold hover:bg-white/[0.08] ${busy ? "opacity-60" : ""}`}
       >
         <input
           type="file"
@@ -272,23 +269,23 @@ function FilesTab({
         {sharedFiles.map((f, i) => (
           <li
             key={`${f.cloud_url}-${i}`}
-            className="flex items-center justify-between rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-xs"
+            className="flex items-center justify-between rounded-xl border border-subtle bg-white/[0.04] px-3 py-2 text-xs"
           >
-            <span className="truncate text-slate-200">
+            <span className="truncate text-primary">
               {f.original_name || f.cloud_url.split("/").pop()}
             </span>
             <a
               href={f.cloud_url}
               target="_blank"
               rel="noreferrer"
-              className="ms-2 rounded-md bg-[#C5A059] px-2 py-1 text-[11px] font-bold text-black"
+              className="ms-2 rounded-md bg-veto-gold px-2 py-1 text-[11px] font-bold text-black"
             >
               {t("call.v2.side.fileOpen", "Open")}
             </a>
           </li>
         ))}
         {sharedFiles.length === 0 && (
-          <li className="text-center text-xs text-slate-500">
+          <li className="text-center text-xs text-muted">
             {t("call.v2.side.filesEmpty", "No files shared yet.")}
           </li>
         )}
@@ -306,22 +303,22 @@ function InfoTab({
 }) {
   const t = useTrWithFallback();
   return (
-    <dl className="flex-1 space-y-3 p-4 text-xs text-slate-300">
+    <dl className="flex-1 space-y-3 p-4 text-xs text-secondary">
       <div>
-        <dt className="text-[11px] font-semibold uppercase text-slate-500">
+        <dt className="text-[11px] font-semibold uppercase text-muted">
           {t("call.v2.side.partner", "Speaking with")}
         </dt>
-        <dd className="text-sm text-slate-100">
+        <dd className="text-sm text-primary">
           {partnerName ?? t("call.v2.side.partnerUnknown", "—")}
         </dd>
       </div>
       <div>
-        <dt className="text-[11px] font-semibold uppercase text-slate-500">
+        <dt className="text-[11px] font-semibold uppercase text-muted">
           {t("call.v2.side.type", "Call type")}
         </dt>
-        <dd className="text-sm text-slate-100">{callType}</dd>
+        <dd className="text-sm text-primary">{callType}</dd>
       </div>
-      <p className="rounded-xl bg-white/[0.04] p-3 text-[11px] leading-5 text-slate-400">
+      <p className="rounded-xl bg-white/[0.04] p-3 text-[11px] leading-5 text-muted">
         {t(
           "call.v2.side.privacyNote",
           "Audio and video are end-to-end encrypted between you and the lawyer. Cloud recording is controlled and approved only by the citizen; the lawyer sees recording status only.",

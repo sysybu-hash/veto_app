@@ -24,14 +24,11 @@ export function GoldSwitch({
       onClick={() => onChange(!checked)}
       className={`relative h-8 w-[3.25rem] shrink-0 rounded-full transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#C5A059] ${
         checked
-          ? "bg-[#C5A059] shadow-[0_0_18px_rgba(197,160,89,0.55)] ring-2 ring-[#C5A059]/35"
-          : "border border-white/10 bg-white/[0.04] shadow-inner backdrop-blur-sm"
-      }`}
+          ? "bg-veto-gold shadow-[0_0_18px_rgba(197,160,89,0.55)] ring-2 ring-veto-gold/35" : "border border-subtle bg-white/[0.04] shadow-inner backdrop-blur-sm"}`}
     >
       <span
-        className={`absolute top-1 h-6 w-6 rounded-full bg-white shadow-md transition-all duration-200 ${
-          checked ? "end-1" : "start-1"
-        }`}
+        className={`absolute top-1 h-6 w-6 rounded-full bg-surface-overlay shadow-md transition-all duration-200 ${
+          checked ? "end-1" : "start-1"}`}
       />
     </button>
   );

@@ -54,7 +54,7 @@ export default function PricingPage() {
   };
 
   return (
-    <main className="min-h-screen bg-slate-950 px-5 py-16 text-slate-100" dir="rtl">
+    <main data-surface="ink" className="min-h-screen bg-surface-canvas px-5 py-16 text-secondary" dir="rtl">
       <script
         type="application/ld+json"
         suppressHydrationWarning
@@ -63,12 +63,12 @@ export default function PricingPage() {
       <section className="mx-auto max-w-7xl">
         <div className="flex flex-wrap items-end gap-4">
           <VetoBrandLogo className="h-8 w-auto opacity-95 sm:h-9" />
-          <p className="pb-1 text-xs font-black tracking-[0.24em] text-[#D8B867]">PRICING</p>
+          <p className="pb-1 text-xs font-black tracking-[0.24em] text-veto-gold-light">PRICING</p>
         </div>
-        <h1 className="mt-4 max-w-3xl font-frank text-5xl font-black leading-tight text-white">
+        <h1 className="mt-4 max-w-3xl font-frank text-5xl font-black leading-tight text-primary">
           מנוי משפטי ברור, עם PayPal Subscription אמיתי
         </h1>
-        <p className="mt-5 max-w-2xl text-base leading-8 text-slate-400">
+        <p className="mt-5 max-w-2xl text-base leading-8 text-muted">
           בחרו מסלול, אשרו תשלום ב-PayPal, והמערכת תעדכן את סטטוס המנוי לפי subscription/webhook.
         </p>
 

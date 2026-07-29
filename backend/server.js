@@ -366,6 +366,7 @@ mountRoute('/api/calls', './src/routes/call.routes', sentryTracing('calls'));
 mountRoute('/api/legal-assistant', './src/routes/legalAssistant.routes');
 mountRoute('/api/legal-documents', './src/routes/legalDocuments.routes');
 mountRoute('/api/documents', './src/routes/document.routes');
+mountRoute('/api/doc-export', './src/routes/documentRender.routes');
 mountRoute('/api/config', './src/routes/config.routes');
 
 app.get('/', (_, res) =>

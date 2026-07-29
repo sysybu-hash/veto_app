@@ -172,12 +172,12 @@ export default function AdminLawyersPage() {
         <div>
           <Link
             href="/admin/dashboard"
-            className="mb-2 inline-flex items-center gap-1 text-xs text-slate-400 hover:text-slate-200"
+            className="mb-2 inline-flex items-center gap-1 text-xs text-muted hover:text-primary"
           >
             <ChevronLeft size={14} aria-hidden /> חזרה למרכז שליטה
           </Link>
-          <h1 className="font-serif text-3xl font-bold text-slate-100">ניהול עורכי דין</h1>
-          <p className="text-sm text-slate-500">
+          <h1 className="font-serif text-3xl font-bold text-primary">ניהול עורכי דין</h1>
+          <p className="text-sm text-muted">
             הוספה, אישור, עריכה ומחיקה של עורכי דין במערכת.
           </p>
         </div>
@@ -185,7 +185,7 @@ export default function AdminLawyersPage() {
           type="button"
           onClick={() => void refresh()}
           aria-label="רענון"
-          className="rounded-full border border-white/10 bg-[rgba(255,255,255,0.04)] p-2 text-slate-200 hover:bg-[rgba(255,255,255,0.08)]"
+          className="rounded-full border border-subtle bg-[rgba(255,255,255,0.04)] p-2 text-primary hover:bg-[rgba(255,255,255,0.08)]"
         >
           <RefreshCw className={`h-5 w-5 ${loading ? "animate-spin" : ""}`} aria-hidden />
         </button>
@@ -194,19 +194,19 @@ export default function AdminLawyersPage() {
       <div className="mx-auto max-w-6xl space-y-4">
         <div className="flex flex-wrap items-center gap-3">
           <div className="relative flex-1 min-w-[240px]">
-            <Search className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <Search className="pointer-events-none absolute end-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
             <input
               type="search"
               placeholder="חיפוש שם, טלפון, מספר רישיון…"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full rounded-lg border border-white/10 bg-veto-ink py-2 pl-4 pr-10 text-sm text-slate-100 outline-none focus:ring-2 focus:ring-[#C5A059]"
+              className="w-full rounded-lg border border-subtle bg-veto-ink py-2 ps-4 pe-10 text-sm text-primary outline-none focus:ring-2 focus:ring-veto-gold"
             />
           </div>
           <select
             value={filter}
             onChange={(e) => setFilter(e.target.value as typeof filter)}
-            className="rounded-lg border border-white/10 bg-veto-ink px-3 py-2 text-sm text-slate-100"
+            className="rounded-lg border border-subtle bg-veto-ink px-3 py-2 text-sm text-primary"
           >
             <option value="all">הכל</option>
             <option value="pending">ממתינים לאישור</option>
@@ -215,7 +215,7 @@ export default function AdminLawyersPage() {
           <button
             type="button"
             onClick={() => setShowCreate((v) => !v)}
-            className="inline-flex items-center gap-2 rounded-lg bg-[#C5A059] px-4 py-2 text-sm font-bold text-black hover:bg-[#b08d4a]"
+            className="inline-flex items-center gap-2 rounded-lg bg-veto-gold px-4 py-2 text-sm font-bold text-black hover:bg-brand-600"
           >
             <Plus size={16} aria-hidden /> הוספת עורך דין
           </button>
@@ -244,11 +244,11 @@ export default function AdminLawyersPage() {
           />
         )}
 
-        <div className="overflow-hidden rounded-2xl border border-white/10 bg-[rgba(255,255,255,0.04)]">
+        <div className="overflow-hidden rounded-2xl border border-subtle bg-[rgba(255,255,255,0.04)]">
           <div className="overflow-x-auto">
-            <table className="w-full text-right">
+            <table className="w-full text-end">
               <thead>
-                <tr className="border-b border-white/10 bg-veto-ink text-xs uppercase tracking-wider text-slate-500">
+                <tr className="border-b border-subtle bg-veto-ink text-xs uppercase tracking-wider text-muted">
                   <th className="p-4 font-bold">שם / טלפון</th>
                   <th className="p-4 text-center font-bold">תחומי התמחות</th>
                   <th className="p-4 text-center font-bold">רישיון / ותק</th>
@@ -262,17 +262,17 @@ export default function AdminLawyersPage() {
                   return (
                     <tr key={l._id} className="hover:bg-[rgba(255,255,255,0.04)]">
                       <td className="p-4">
-                        <div className="font-bold text-slate-100">{l.full_name || "—"}</div>
-                        <div className="text-xs text-slate-500">{l.phone || l.email || "—"}</div>
+                        <div className="font-bold text-primary">{l.full_name || "—"}</div>
+                        <div className="text-xs text-muted">{l.phone || l.email || "—"}</div>
                       </td>
-                      <td className="p-4 text-center text-xs text-slate-300">
+                      <td className="p-4 text-center text-xs text-secondary">
                         {(l.specializations || []).length === 0
                           ? "—"
                           : l.specializations!
                               .map((s) => SPEC_LABEL[s] || s)
                               .join(", ")}
                       </td>
-                      <td className="p-4 text-center text-xs text-slate-400">
+                      <td className="p-4 text-center text-xs text-muted">
                         {l.license_number || "—"}
                         <br />
                         <span className="text-[10px]">
@@ -303,7 +303,7 @@ export default function AdminLawyersPage() {
                             className={`rounded px-2 py-0.5 font-bold ${
                               l.is_available
                                 ? "bg-blue-500/15 text-blue-300"
-                                : "bg-slate-500/20 text-slate-300"
+                                : "bg-surface-sunken text-secondary"
                             }`}
                           >
                             {l.is_available ? "זמין" : "לא זמין"}
@@ -345,7 +345,7 @@ export default function AdminLawyersPage() {
             </table>
           </div>
           {filtered.length === 0 && (
-            <p className="p-8 text-center text-slate-500">
+            <p className="p-8 text-center text-muted">
               {loading ? "טוען…" : search || filter !== "all" ? "לא נמצאו תוצאות." : "אין עורכי דין להצגה."}
             </p>
           )}
@@ -398,34 +398,34 @@ function CreateLawyerForm({
   return (
     <form
       onSubmit={(e) => void submit(e)}
-      className="grid grid-cols-1 gap-3 rounded-2xl border border-white/10 bg-veto-ink/40 p-5 md:grid-cols-2"
+      className="grid grid-cols-1 gap-3 rounded-2xl border border-subtle bg-veto-ink/40 p-5 md:grid-cols-2"
     >
       <input
         required
         value={name}
         onChange={(e) => setName(e.target.value)}
         placeholder="שם מלא"
-        className="rounded-lg border border-white/10 bg-veto-ink px-3 py-2 text-sm text-slate-100 outline-none focus:ring-2 focus:ring-[#C5A059]"
+        className="rounded-lg border border-subtle bg-veto-ink px-3 py-2 text-sm text-primary outline-none focus:ring-2 focus:ring-veto-gold"
       />
       <input
         required
         value={phone}
         onChange={(e) => setPhone(e.target.value)}
         placeholder="טלפון (+972…)"
-        className="rounded-lg border border-white/10 bg-veto-ink px-3 py-2 text-sm text-slate-100 outline-none focus:ring-2 focus:ring-[#C5A059]"
+        className="rounded-lg border border-subtle bg-veto-ink px-3 py-2 text-sm text-primary outline-none focus:ring-2 focus:ring-veto-gold"
       />
       <input
         value={email}
         onChange={(e) => setEmail(e.target.value)}
         placeholder="אימייל (אופציונלי)"
         type="email"
-        className="rounded-lg border border-white/10 bg-veto-ink px-3 py-2 text-sm text-slate-100 outline-none focus:ring-2 focus:ring-[#C5A059]"
+        className="rounded-lg border border-subtle bg-veto-ink px-3 py-2 text-sm text-primary outline-none focus:ring-2 focus:ring-veto-gold"
       />
       <input
         value={license}
         onChange={(e) => setLicense(e.target.value)}
         placeholder="מספר רישיון לשכת עוה״ד"
-        className="rounded-lg border border-white/10 bg-veto-ink px-3 py-2 text-sm text-slate-100 outline-none focus:ring-2 focus:ring-[#C5A059]"
+        className="rounded-lg border border-subtle bg-veto-ink px-3 py-2 text-sm text-primary outline-none focus:ring-2 focus:ring-veto-gold"
       />
       <input
         type="number"
@@ -434,10 +434,10 @@ function CreateLawyerForm({
         value={years}
         onChange={(e) => setYears(Math.max(0, Number(e.target.value) || 0))}
         placeholder="שנות ותק"
-        className="rounded-lg border border-white/10 bg-veto-ink px-3 py-2 text-sm text-slate-100 outline-none focus:ring-2 focus:ring-[#C5A059]"
+        className="rounded-lg border border-subtle bg-veto-ink px-3 py-2 text-sm text-primary outline-none focus:ring-2 focus:ring-veto-gold"
       />
       <div className="md:col-span-2">
-        <p className="mb-2 text-xs font-bold text-slate-300">תחומי התמחות</p>
+        <p className="mb-2 text-xs font-bold text-secondary">תחומי התמחות</p>
         <div className="flex flex-wrap gap-2">
           {SPECIALIZATION_OPTIONS.map((s) => {
             const on = specs.includes(s);
@@ -448,9 +448,7 @@ function CreateLawyerForm({
                 onClick={() => toggle(s)}
                 className={`rounded-full px-3 py-1 text-xs font-semibold transition ${
                   on
-                    ? "border border-[#C5A059] bg-[#C5A059]/15 text-[#C5A059]"
-                    : "border border-white/10 bg-[rgba(255,255,255,0.03)] text-slate-400 hover:bg-[rgba(255,255,255,0.06)]"
-                }`}
+                    ? "border border-veto-gold bg-veto-gold/15 text-veto-gold" : "border border-subtle bg-[rgba(255,255,255,0.03)] text-muted hover:bg-[rgba(255,255,255,0.06)]"}`}
               >
                 {SPEC_LABEL[s]}
               </button>
@@ -459,20 +457,20 @@ function CreateLawyerForm({
         </div>
       </div>
       <div className="md:col-span-2 flex items-center justify-end gap-2">
-        <p className="me-auto text-xs text-slate-500">
+        <p className="me-auto text-xs text-muted">
           עורכי דין שנוצרים ע״י מנהל מאושרים אוטומטית.
         </p>
         <button
           type="button"
           onClick={onClose}
-          className="rounded-lg border border-white/10 bg-[rgba(255,255,255,0.04)] px-3 py-2 text-xs text-slate-300"
+          className="rounded-lg border border-subtle bg-[rgba(255,255,255,0.04)] px-3 py-2 text-xs text-secondary"
         >
           ביטול
         </button>
         <button
           type="submit"
           disabled={busy}
-          className="inline-flex items-center gap-1 rounded-lg bg-[#C5A059] px-4 py-2 text-xs font-bold text-black disabled:opacity-60"
+          className="inline-flex items-center gap-1 rounded-lg bg-veto-gold px-4 py-2 text-xs font-bold text-black disabled:opacity-60"
         >
           {busy ? "יוצר…" : (
             <>

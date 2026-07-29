@@ -45,26 +45,27 @@ export function SpecializationDialog({
 
   return (
     <div
-      className="fixed inset-0 z-[90] flex items-center justify-center bg-slate-900/40 p-4 backdrop-blur-sm dark:bg-black/50"
+      className="fixed inset-0 z-[90] flex items-center justify-center bg-surface-scrim p-4 backdrop-blur-sm"
       role="presentation"
       onClick={onClose}
     >
       <div
+        data-surface="stage"
         role="dialog"
         aria-modal="true"
         aria-labelledby="spec-dialog-title"
-        className="w-full max-w-md overflow-hidden rounded-xl border border-white/10 bg-slate-900/95 shadow-2xl backdrop-blur-xl animate-in fade-in zoom-in-95 duration-200"
+        className="w-full max-w-md overflow-hidden rounded-xl border border-subtle bg-surface-canvas shadow-2xl backdrop-blur-xl animate-in fade-in zoom-in-95 duration-200"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between border-b border-white/10 p-6">
-          <h2 id="spec-dialog-title" className="text-xl font-bold text-slate-100">
+        <div className="flex items-center justify-between border-b border-subtle p-6">
+          <h2 id="spec-dialog-title" className="text-xl font-bold text-primary">
             {t("dialog.chooseSpecialization")}
           </h2>
           <button
             type="button"
             onClick={onClose}
             aria-label={t("common.close")}
-            className={`rounded-lg p-2 text-slate-400 transition hover:bg-white/10 hover:text-white ${focusRing} focus-visible:ring-offset-slate-900`}
+            className={`rounded-lg p-2 text-muted transition hover:bg-white/10 hover:text-white ${focusRing} focus-visible:ring-offset-slate-900`}
           >
             ✕
           </button>
@@ -78,9 +79,7 @@ export function SpecializationDialog({
               onClick={() => setSelected(spec.id)}
               className={`flex flex-col items-center gap-2 rounded-lg border p-4 text-sm font-medium transition ${focusRing} focus-visible:ring-offset-slate-900 ${
                 selected === spec.id
-                  ? "border-[#C5A059] bg-[#C5A059]/15 text-[#e8c987] shadow-[0_0_16px_rgba(197,160,89,0.25)]"
-                  : "border-white/10 bg-white/[0.04] text-slate-200 hover:border-white/20 hover:bg-white/[0.08]"
-              }`}
+                  ? "border-veto-gold bg-veto-gold/15 text-brand-100 shadow-[0_0_16px_rgba(197,160,89,0.25)]" : "border-subtle bg-white/[0.04] text-secondary hover:border-white/20 hover:bg-white/[0.08]"}`}
             >
               <span className="text-2xl">{spec.icon}</span>
               <span>{t(spec.labelKey)}</span>
@@ -88,7 +87,7 @@ export function SpecializationDialog({
           ))}
         </div>
 
-        <div className="flex justify-end gap-3 border-t border-white/10 bg-slate-950/60 p-6">
+        <div className="flex justify-end gap-3 border-t border-subtle bg-surface-raised p-6">
           <button
             type="button"
             onClick={onClose}
@@ -102,9 +101,7 @@ export function SpecializationDialog({
             onClick={() => selected && onSelect(selected)}
             className={`rounded-md px-6 py-2 text-sm font-bold transition ${focusRing} focus-visible:ring-offset-slate-900 ${
               selected
-                ? "bg-[#C5A059] text-slate-950 shadow-[0_8px_24px_-8px_rgba(197,160,89,0.5)] hover:bg-[#d4b06a]"
-                : "cursor-not-allowed bg-white/[0.06] text-slate-500"
-            }`}
+                ? "bg-veto-gold text-on-brand shadow-[0_8px_24px_-8px_rgba(197,160,89,0.5)] hover:bg-veto-gold-light" : "cursor-not-allowed bg-white/[0.06] text-muted"}`}
           >
             {t("common.continue")}
           </button>

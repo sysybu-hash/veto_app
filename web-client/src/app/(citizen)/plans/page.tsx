@@ -103,9 +103,9 @@ export default function PlansPage() {
       dir="rtl"
       className={`mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-8 ${citizenBottomSafe}`}
     >
-      <header className="text-right">
-        <h1 className="font-frank text-2xl font-bold text-slate-100">מנויים</h1>
-        <p className="mt-2 text-sm text-slate-400">
+      <header className="text-end">
+        <h1 className="font-frank text-2xl font-bold text-primary">מנויים</h1>
+        <p className="mt-2 text-sm text-muted">
           בחרו את המסלול המתאים לכם. המעבר לתשלום מתבצע באמצעות PayPal.
         </p>
       </header>
@@ -113,16 +113,16 @@ export default function PlansPage() {
       {me && me.planId === "family" && (
         <a
           href="/family"
-          className="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-4 text-right text-sm text-emerald-200 transition hover:border-emerald-400/60"
+          className="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-4 text-end text-sm text-emerald-200 transition hover:border-emerald-400/60"
         >
           ניהול בני המשפחה במנוי שלך → /family
         </a>
       )}
 
       {me && (
-        <div className="rounded-2xl border border-[#C5A059]/35 bg-[#C5A059]/10 p-4 text-right text-sm">
-          <p className="font-bold text-slate-100">המצב שלך</p>
-          <p className="mt-1 text-slate-300">
+        <div className="rounded-2xl border border-veto-gold/35 bg-veto-gold/10 p-4 text-end text-sm">
+          <p className="font-bold text-primary">המצב שלך</p>
+          <p className="mt-1 text-secondary">
             {me.paymentExempt
               ? "חשבון פטור מתשלום (שיוך ע״י מנהל)."
               : me.planId
@@ -130,7 +130,7 @@ export default function PlansPage() {
                 : "אין מסלול פעיל."}
           </p>
           {(me.consultationsIncluded > 0 || me.consultationsUsed > 0) && (
-            <p className="mt-1 text-xs text-slate-400">
+            <p className="mt-1 text-xs text-muted">
               שיחות כלולות בחודש: {me.consultationsUsed}/{me.consultationsIncluded} (נותרו {me.consultationsRemaining}).
             </p>
           )}
@@ -157,13 +157,11 @@ export default function PlansPage() {
               key={p.id}
               className={`flex flex-col rounded-2xl border p-5 backdrop-blur-xl ${
                 p.highlight
-                  ? "border-[#C5A059]/60 bg-[#C5A059]/10"
-                  : "border-white/10 bg-white/[0.03]"
-              }`}
+                  ? "border-veto-gold/60 bg-veto-gold/10" : "border-subtle bg-white/[0.03]"}`}
             >
-              <h2 className="font-frank text-lg font-bold text-slate-100">{p.title}</h2>
+              <h2 className="font-frank text-lg font-bold text-primary">{p.title}</h2>
               <p className="mt-1 text-sm font-semibold text-amber-200">{p.priceLine}</p>
-              <ul className="mt-3 flex-1 space-y-2 text-sm text-slate-300">
+              <ul className="mt-3 flex-1 space-y-2 text-sm text-secondary">
                 {p.bullets.map((b, i) => (
                   <li key={i} className="flex items-start gap-2">
                     <span aria-hidden className="mt-1.5 inline-block h-1.5 w-1.5 shrink-0 rounded-full bg-amber-300" />
@@ -190,7 +188,7 @@ export default function PlansPage() {
         })}
       </div>
 
-      <p className="text-center text-xs text-slate-500">
+      <p className="text-center text-xs text-muted">
         כל שיחה ארוכה מ-{PRICING.freeCallMinutes} דקות מחויבת ב-₪{PRICING.overtimeIlsPerMin.toFixed(2)} לכל דקה נוספת.
         בסיום השיחה יוצג סיכום עלויות מלא.
       </p>

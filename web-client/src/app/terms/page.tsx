@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 
 export default function TermsPage() {
   return (
-    <div className="min-h-screen bg-veto-ink text-slate-100">
+    <div data-surface="ink" className="min-h-screen bg-veto-ink text-primary">
       <main
         className="mx-auto w-full max-w-3xl px-4 py-8 md:px-6 md:py-12"
         dir="rtl"
@@ -28,20 +28,20 @@ export default function TermsPage() {
           <div className="mb-4 flex justify-center md:justify-end">
             <VetoBrandLogo className="h-9 w-auto sm:h-10" />
           </div>
-          <h1 className="font-display text-3xl font-bold text-white md:text-4xl">
+          <h1 className="font-display text-3xl font-bold text-primary md:text-4xl">
             תקנון ותנאי שימוש
           </h1>
-          <p className="mt-3 text-sm text-slate-400">
+          <p className="mt-3 text-sm text-muted">
             עדכון אחרון לצורכי תיעוד מוצרי — יש לקבל אישור משפטי לפני פרסום
             מסחרי סופי.
           </p>
         </header>
 
         <article
-          className={`space-y-10 p-6 text-sm text-slate-300 md:p-8 md:text-base ${authGlassPanel}`}
+          className={`space-y-10 p-6 text-sm text-secondary md:p-8 md:text-base ${authGlassPanel}`}
         >
           <section className="space-y-3 leading-relaxed">
-            <h2 className="text-lg font-bold text-white md:text-xl">1. מבוא והסכמה</h2>
+            <h2 className="text-lg font-bold text-primary md:text-xl">1. מבוא והסכמה</h2>
             <p>
               ברוכים הבאים ל־VETO Legal (&quot;המערכת&quot;, &quot;השירות&quot;,
               &quot;אנחנו&quot;). השימוש באתר, ביישומון ובשירותים הנלווים כפוף
@@ -51,14 +51,14 @@ export default function TermsPage() {
           </section>
 
           <section className="space-y-3 leading-relaxed">
-            <h2 className="text-lg font-bold text-white md:text-xl">
+            <h2 className="text-lg font-bold text-primary md:text-xl">
               2. מהות השירות — פלטפורמה טכנולוגית בלבד
             </h2>
             <p>
-              VETO היא <strong className="text-slate-200">פלטפורמה טכנולוגית</strong>{" "}
+              VETO היא <strong className="text-primary">פלטפורמה טכנולוגית</strong>{" "}
               המאפשרת קישור בין משתמשים לבין עורכי דין רשומים, לרבות תיאום שיחות
               וידאו/קול, ניהול מסמכים וכלים משלימים.{" "}
-              <strong className="text-slate-200">
+              <strong className="text-primary">
                 VETO אינה משרד עורכי דין, אינה מחזיקה ברישיון לשכה ואינה מעניקה
                 ייעוץ משפטי מטעמה.
               </strong>{" "}
@@ -68,11 +68,11 @@ export default function TermsPage() {
           </section>
 
           <section className="space-y-3 leading-relaxed">
-            <h2 className="text-lg font-bold text-white md:text-xl">
+            <h2 className="text-lg font-bold text-primary md:text-xl">
               3. אחריות משפטית ויחסי עו״ד–לקוח
             </h2>
             <p>
-              <strong className="text-slate-200">
+              <strong className="text-primary">
                 האחריות הבלעדית לייעוץ המשפטי, לדיוק המידע ולשיקול הדעת המקצועי
                 חלה על עורך הדין המייעץ בשיחה או בערוץ התקשורת במערכת.
               </strong>{" "}
@@ -84,13 +84,13 @@ export default function TermsPage() {
           </section>
 
           <section className="space-y-3 leading-relaxed">
-            <h2 className="text-lg font-bold text-white md:text-xl">
+            <h2 className="text-lg font-bold text-primary md:text-xl">
               4. מצבי חירום וסכנת חיים
             </h2>
             <p>
               המערכת נועדה לסיוע משפטי ראשוני ולתיאום עם עורכי דין, ואינה מהווה
               קו חירום רפואי, ביטחוני או משטרתי.{" "}
-              <strong className="text-slate-200">
+              <strong className="text-primary">
                 במקרה של סכנת חיים, אלימות מיידית או איום בטיחותי — יש לפנות תחילה
                 לכוחות הביטחון, להצלה או למוקדי חירום הרלוונטיים (למשל משטרה,
                 מגן דוד אדום)
@@ -100,7 +100,7 @@ export default function TermsPage() {
           </section>
 
           <section className="space-y-3 leading-relaxed">
-            <h2 className="text-lg font-bold text-white md:text-xl">
+            <h2 className="text-lg font-bold text-primary md:text-xl">
               5. חובות המשתמש והתנהגות מקובלת
             </h2>
             <p>
@@ -112,14 +112,14 @@ export default function TermsPage() {
           </section>
 
           <section className="space-y-3 leading-relaxed">
-            <h2 className="text-lg font-bold text-white md:text-xl">
+            <h2 className="text-lg font-bold text-primary md:text-xl">
               6. תשלומים, מנויים וביטול עסקה
             </h2>
             <p>
               השימוש במערכת עשוי להיות כרוך בתשלום בהתאם למסלול, לחבילה או לשירות
               שנרכשו, כפי שמוצג בעת הרכישה. עיבוד תשלומים עשוי להתבצע באמצעות ספקי
               סליקה חיצוניים, והתנאים המסחריים שלהם חלים בנוסף לתנאים אלה.{" "}
-              <strong className="text-slate-200">
+              <strong className="text-primary">
                 ביטול עסקה, זיכויים והחזרים יתבצעו בהתאם להוראות חוק הגנת הצרכן,
                 התשמ&quot;א–1981, ולמדיניות הביטולים המפורסמת בממשק הרכישה
               </strong>
@@ -128,7 +128,7 @@ export default function TermsPage() {
           </section>
 
           <section className="space-y-3 leading-relaxed">
-            <h2 className="text-lg font-bold text-white md:text-xl">
+            <h2 className="text-lg font-bold text-primary md:text-xl">
               7. קניין רוחני
             </h2>
             <p>
@@ -139,7 +139,7 @@ export default function TermsPage() {
           </section>
 
           <section className="space-y-3 leading-relaxed">
-            <h2 className="text-lg font-bold text-white md:text-xl">
+            <h2 className="text-lg font-bold text-primary md:text-xl">
               8. הגבלת אחריות
             </h2>
             <p>
@@ -152,7 +152,7 @@ export default function TermsPage() {
           </section>
 
           <section className="space-y-3 leading-relaxed">
-            <h2 className="text-lg font-bold text-white md:text-xl">
+            <h2 className="text-lg font-bold text-primary md:text-xl">
               9. שינויים בתנאים וסיום שירות
             </h2>
             <p>
@@ -164,7 +164,7 @@ export default function TermsPage() {
           </section>
 
           <section className="space-y-3 leading-relaxed">
-            <h2 className="text-lg font-bold text-white md:text-xl">10. יצירת קשר</h2>
+            <h2 className="text-lg font-bold text-primary md:text-xl">10. יצירת קשר</h2>
             <p>
               לשאלות בנוגע לתנאי השימוש ניתן לפנות דרך ערוצי התמיכה המפורסמים
               באתר או ביישומון. לעניינים משפטיים רשמיים יש לפנות לכתובת שתפורסם
@@ -172,7 +172,7 @@ export default function TermsPage() {
             </p>
           </section>
 
-          <p className="border-t border-white/10 pt-6 text-xs leading-relaxed text-slate-500">
+          <p className="border-t border-subtle pt-6 text-xs leading-relaxed text-muted">
             מסמך זה מהווה מסגרת מוצרית. אין במסמך זה כדי ליצור יחסי עו״ד–לקוח עם
             VETO, ואין להסתמך עליו כייעוץ משפטי אישי. יש להתייעץ עם עורך דין לפני
             קבלת החלטות משפטיות.

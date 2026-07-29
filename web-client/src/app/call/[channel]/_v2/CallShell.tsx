@@ -644,12 +644,12 @@ export function CallShell({ channel }: { channel: string }) {
   // ── Renders ──
   if (!hasActiveSession) {
     return (
-      <div className="veto-call-keep-dark fixed inset-0 z-[70] flex h-[100dvh] w-screen flex-col items-center justify-center gap-3 bg-black px-6 text-center text-slate-200">
-        <p className="font-bold">{t("call.noSession", "No active session")}</p>
+      <div data-surface="stage" className="fixed inset-0 z-[70] flex h-[100dvh] w-screen flex-col items-center justify-center gap-3 bg-surface-canvas px-6 text-center text-secondary">
+        <p className="font-bold text-primary">{t("call.noSession", "No active session")}</p>
         <button
           type="button"
           onClick={() => router.replace(postCallHome)}
-          className="rounded-xl bg-[#C5A059] px-4 py-2 text-sm font-bold text-black"
+          className="rounded-xl bg-veto-gold px-4 py-2 text-sm font-bold text-black"
         >
           {t("call.backHub", "Back to hub")}
         </button>
@@ -664,9 +664,9 @@ export function CallShell({ channel }: { channel: string }) {
     // second screen the user has to act on.
     if (preCallPermissionStatus === "pending") {
       return (
-        <div className="veto-call-keep-dark fixed inset-0 z-[70] flex h-[100dvh] w-screen flex-col items-center justify-center gap-3 bg-black px-6 text-center text-slate-200">
-          <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#C5A059]/30 border-t-[#C5A059]" />
-          <p className="text-sm text-slate-400">
+        <div data-surface="stage" className="fixed inset-0 z-[70] flex h-[100dvh] w-screen flex-col items-center justify-center gap-3 bg-surface-canvas px-6 text-center text-secondary">
+          <div className="h-8 w-8 animate-spin rounded-full border-2 border-veto-gold/30 border-t-veto-gold" />
+          <p className="text-sm text-muted">
             {t("call.v2.preparing", "Setting up your camera & mic…")}
           </p>
         </div>
@@ -676,7 +676,7 @@ export function CallShell({ channel }: { channel: string }) {
     // without going through the new buttons — defensive fallback) both fall
     // back to the full manual picker, unchanged.
     return (
-      <div className="veto-call-keep-dark fixed inset-0 z-[70] h-[100dvh] w-screen bg-black">
+      <div data-surface="stage" className="fixed inset-0 z-[70] h-[100dvh] w-screen bg-surface-canvas">
         <PreCallCheck
           mode={callType}
           onReady={(r) => {
@@ -689,7 +689,7 @@ export function CallShell({ channel }: { channel: string }) {
   }
 
   return (
-    <div className="@container/shell veto-call-keep-dark fixed inset-0 z-[70] flex h-[100dvh] w-screen flex-col overflow-hidden bg-gradient-to-b from-zinc-950 via-black to-zinc-950 text-white">
+    <div data-surface="stage" className="@container/shell fixed inset-0 z-[70] flex h-[100dvh] w-screen flex-col overflow-hidden bg-gradient-to-b from-zinc-950 via-black to-zinc-950 text-primary">
       <div
         className="pointer-events-none absolute inset-0 opacity-[0.12]"
         style={{
@@ -701,12 +701,12 @@ export function CallShell({ channel }: { channel: string }) {
 
       {/* Top header strip */}
       <div className="absolute inset-x-0 top-0 z-20 flex items-start justify-between gap-2 px-3 pt-3">
-        <div className="flex items-center gap-2 rounded-2xl border border-[#C5A059]/25 bg-black/55 px-3 py-1.5 text-xs text-slate-100 shadow-lg backdrop-blur-md">
-          <span className="font-mono tabular-nums tracking-tight text-[#C5A059]">
+        <div className="flex items-center gap-2 rounded-2xl border border-veto-gold/25 bg-black/55 px-3 py-1.5 text-xs text-primary shadow-lg backdrop-blur-md">
+          <span className="font-mono tabular-nums tracking-tight text-veto-gold">
             {timerLabel}
           </span>
           {overSec > 0 && (
-            <span className="border-s border-white/15 ps-2 text-amber-200/95">
+            <span className="border-s border-subtle ps-2 text-amber-200/95">
               +₪{overtimePreviewIls.toFixed(2)}
             </span>
           )}
@@ -716,7 +716,7 @@ export function CallShell({ channel }: { channel: string }) {
 
       {/* Main video stage */}
       <div className="relative flex-1 overflow-hidden px-2 pb-2 pt-14 @md:px-4 @md:pb-3 @md:pt-16">
-        <div className="relative h-full min-h-0 overflow-hidden rounded-3xl border border-white/[0.08] bg-zinc-950/80 shadow-[0_0_0_1px_rgba(197,160,89,0.06),0_24px_80px_rgba(0,0,0,0.65)] ring-1 ring-[#C5A059]/10">
+        <div className="relative h-full min-h-0 overflow-hidden rounded-3xl border border-white/[0.08] bg-zinc-950/80 shadow-[0_0_0_1px_rgba(197,160,89,0.06),0_24px_80px_rgba(0,0,0,0.65)] ring-1 ring-veto-gold/10">
         <CallStage
           localCameraTrack={cameraTrack as ILocalVideoTrack | null}
           remoteUsers={remoteUsers}
@@ -818,7 +818,7 @@ export function CallShell({ channel }: { channel: string }) {
       {/* Inline status when joined but no remote yet — covered by stage's
           own waiting copy, but keep this as a sanity assert on connection. */}
       {!joined && !joinError && !isChatOnly && (
-        <div className="pointer-events-none absolute inset-x-0 top-1/2 z-10 -translate-y-1/2 text-center text-xs text-slate-400">
+        <div className="pointer-events-none absolute inset-x-0 top-1/2 z-10 -translate-y-1/2 text-center text-xs text-muted">
           {t("call.connecting", "Connecting…")}
         </div>
       )}

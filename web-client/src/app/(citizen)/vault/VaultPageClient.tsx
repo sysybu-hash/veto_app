@@ -155,7 +155,7 @@ function FileTypeIcon({ type }: { type: VaultFileEntry["type"] }) {
   }
   return (
     <svg
-      className={`${base} text-slate-400`}
+      className={`${base} text-muted`}
       viewBox="0 0 24 24"
       fill="currentColor"
       aria-hidden
@@ -366,19 +366,19 @@ export function VaultPageClient({
       {adminContext ? (
         <Link
           href="/admin/dashboard"
-          className="mb-4 inline-block text-sm font-semibold text-[#C5A059] hover:underline"
+          className="mb-4 inline-block text-sm font-semibold text-veto-gold hover:underline"
         >
           ← מרכז שליטה
         </Link>
       ) : null}
       <header className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="font-frank text-2xl font-bold tracking-tight text-slate-100 md:text-3xl">
+          <h1 className="font-frank text-2xl font-bold tracking-tight text-primary md:text-3xl">
             {t("vault.title")}
           </h1>
-          <p className="mt-1 text-sm text-slate-400">{t("vault.subtitle")}</p>
+          <p className="mt-1 text-sm text-muted">{t("vault.subtitle")}</p>
           {syncMsg && (
-            <p className="mt-2 text-xs text-slate-400" role="status">
+            <p className="mt-2 text-xs text-muted" role="status">
               {syncMsg}
             </p>
           )}
@@ -395,7 +395,7 @@ export function VaultPageClient({
           <div className="flex w-full flex-col gap-2 sm:flex-row sm:flex-wrap sm:justify-end">
             <Link
               href="/vault/generator"
-              className="inline-flex min-h-[3.25rem] flex-1 items-center justify-center gap-2.5 rounded-2xl bg-gradient-to-br from-slate-900 via-slate-800 to-[#3d3428] px-6 py-4 text-base font-semibold text-white shadow-[0_14px_44px_rgba(15,23,42,0.38)] ring-2 ring-[#C5A059]/40 transition hover:from-slate-800 hover:to-[#4a3f30] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#C5A059] sm:flex-initial sm:min-w-[260px]"
+              className="inline-flex min-h-[3.25rem] flex-1 items-center justify-center gap-2.5 rounded-2xl bg-gradient-to-br from-slate-900 via-slate-800 to-brand-deep px-6 py-4 text-base font-semibold text-inverse shadow-[0_14px_44px_rgba(15,23,42,0.38)] ring-2 ring-veto-gold/40 transition hover:from-slate-800 hover:to-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-veto-gold sm:flex-initial sm:min-w-[260px]"
             >
               <Wand2 className="h-6 w-6 shrink-0" aria-hidden />
               יצירת מסמך חכם (AI)
@@ -454,11 +454,11 @@ export function VaultPageClient({
           )}
 
           {timeline.length > 0 && (
-            <section className="mb-10 rounded-3xl border border-white/10 bg-white/[0.04] p-4 backdrop-blur-xl">
+            <section className="mb-10 rounded-3xl border border-subtle bg-white/[0.04] p-4 backdrop-blur-xl">
               <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
                 <div>
-                  <h2 className="font-frank text-xl font-black text-slate-100">ציר זמן ראיות</h2>
-                  <p className="text-sm text-slate-400">SOS, מסמכים, תמלולים ושיתוף עם עורך דין במקום אחד.</p>
+                  <h2 className="font-frank text-xl font-black text-primary">ציר זמן ראיות</h2>
+                  <p className="text-sm text-muted">SOS, מסמכים, תמלולים ושיתוף עם עורך דין במקום אחד.</p>
                 </div>
                 <button
                   type="button"
@@ -475,19 +475,19 @@ export function VaultPageClient({
                       ? findTranscriptEvidence(evidenceRows, item)
                       : undefined;
                   return (
-                  <article key={`${item.type}-${item.id}`} className="rounded-2xl border border-white/10 bg-slate-950/40 p-4">
+                  <article key={`${item.type}-${item.id}`} className="rounded-2xl border border-subtle bg-surface-sunken p-4">
                     <div className="flex items-start justify-between gap-3">
                       <div>
-                        <p className="text-sm font-black text-slate-100">{item.title}</p>
-                        <p className="mt-1 text-xs text-slate-400">
+                        <p className="text-sm font-black text-primary">{item.title}</p>
+                        <p className="mt-1 text-xs text-muted">
                           {item.at ? new Intl.DateTimeFormat("he-IL", { dateStyle: "short", timeStyle: "short" }).format(new Date(item.at)) : ""}
                         </p>
                       </div>
-                      <span className="rounded-full bg-[#C5A059]/15 px-2 py-1 text-xs font-bold text-[#D8B867]">
+                      <span className="rounded-full bg-veto-gold/15 px-2 py-1 text-xs font-bold text-veto-gold-light">
                         {item.type === "sos" ? "SOS" : "מסמך"}
                       </span>
                     </div>
-                    <div className="mt-3 flex flex-wrap gap-2 text-xs text-slate-300">
+                    <div className="mt-3 flex flex-wrap gap-2 text-xs text-secondary">
                       {item.status && <span className="rounded-full bg-white/10 px-2 py-1">{item.status}</span>}
                       {item.hasRecording && <span className="rounded-full bg-white/10 px-2 py-1">הקלטה</span>}
                       {item.hasTranscript && <span className="rounded-full bg-white/10 px-2 py-1">תמלול</span>}
@@ -518,7 +518,7 @@ export function VaultPageClient({
                                 });
                               }
                             }}
-                            className={`text-xs font-bold ${btnSecondaryGlass} border-[#C5A059]/35 text-[#e8c987]`}
+                            className={`text-xs font-bold ${btnSecondaryGlass} border-veto-gold/35 text-brand-100`}
                           >
                             צפייה בתמלול
                           </button>
@@ -528,7 +528,7 @@ export function VaultPageClient({
                             href={item.recordingUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className={`text-xs font-bold ${btnSecondaryGlass} border-[#C5A059]/35 text-[#e8c987]`}
+                            className={`text-xs font-bold ${btnSecondaryGlass} border-veto-gold/35 text-brand-100`}
                           >
                             צפייה בהקלטה
                           </a>
@@ -538,7 +538,7 @@ export function VaultPageClient({
                             href={item.screenRecordingUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className={`text-xs font-bold ${btnSecondaryGlass} border-[#C5A059]/35 text-[#e8c987]`}
+                            className={`text-xs font-bold ${btnSecondaryGlass} border-veto-gold/35 text-brand-100`}
                           >
                             צפייה בהקלטת מסך
                           </a>
@@ -548,7 +548,7 @@ export function VaultPageClient({
                             href={item.fileUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className={`text-xs font-bold ${btnSecondaryGlass} border-[#C5A059]/35 text-[#e8c987]`}
+                            className={`text-xs font-bold ${btnSecondaryGlass} border-veto-gold/35 text-brand-100`}
                           >
                             פתיחת קובץ
                           </a>
@@ -564,7 +564,7 @@ export function VaultPageClient({
 
           <section className="mb-10">
             <div className="mb-3 flex items-center justify-between">
-              <h2 className="font-frank text-sm font-bold uppercase tracking-wide text-slate-400">
+              <h2 className="font-frank text-sm font-bold uppercase tracking-wide text-muted">
                 {t("vault.categories")}
               </h2>
               {selectedFolderId && (
@@ -591,28 +591,26 @@ export function VaultPageClient({
                     }
                     className={`flex flex-col p-5 text-start transition ${glassCard} ${
                       active
-                        ? "shadow-[0_0_28px_rgba(197,160,89,0.35)] ring-2 ring-[#C5A059]/50"
+                        ? "shadow-[0_0_28px_rgba(197,160,89,0.35)] ring-2 ring-veto-gold/50"
                         : "hover:bg-white/[0.06]"
                     }`}
                   >
                     <div className="mb-3 flex items-center gap-3">
                       <div
-                        className={`flex h-12 w-12 items-center justify-center rounded-xl border border-white/10 ${
+                        className={`flex h-12 w-12 items-center justify-center rounded-xl border border-subtle ${
                           active
-                            ? "bg-[#C5A059]/25 text-[#C5A059]"
-                            : "bg-white/[0.04] text-slate-300"
-                        }`}
+                            ? "bg-veto-gold/25 text-veto-gold" : "bg-white/[0.04] text-secondary"}`}
                       >
                         <FolderIcon className="h-7 w-7 drop-shadow-sm" />
                       </div>
                       <div className="min-w-0 flex-1">
-                        <p className="font-semibold text-slate-100">{folder.name}</p>
-                        <p className="truncate text-xs text-slate-400">
+                        <p className="font-semibold text-primary">{folder.name}</p>
+                        <p className="truncate text-xs text-muted">
                           {folder.description}
                         </p>
                       </div>
                     </div>
-                    <p className="text-xs font-medium text-slate-400">
+                    <p className="text-xs font-medium text-muted">
                       {folder.fileCount}{" "}
                       {folder.fileCount === 1 ? t("vault.fileOne") : t("vault.files")}
                     </p>
@@ -621,14 +619,14 @@ export function VaultPageClient({
               })}
             </div>
             {folders.length === 0 && (
-              <p className="mt-3 text-sm text-slate-500">
+              <p className="mt-3 text-sm text-muted">
                 {t("vault.emptyFoldersHint")}
               </p>
             )}
           </section>
 
           <section>
-            <h2 className="mb-3 font-frank text-sm font-bold uppercase tracking-wide text-slate-400">
+            <h2 className="mb-3 font-frank text-sm font-bold uppercase tracking-wide text-muted">
               {selectedFolderId
                 ? t("vault.filesInFolder").replace(
                     "{name}",
@@ -639,7 +637,7 @@ export function VaultPageClient({
             </h2>
             <ul className={glassList}>
               {recentFiles.length === 0 && (
-                <li className="px-4 py-12 text-center text-sm text-slate-400">
+                <li className="px-4 py-12 text-center text-sm text-muted">
                   {t("vault.emptyFilesList")}
                 </li>
               )}
@@ -648,24 +646,24 @@ export function VaultPageClient({
                   key={file.id}
                   className="flex items-center gap-4 px-4 py-4 transition hover:bg-white/[0.04]"
                 >
-                  <div className="rounded-xl border border-white/10 bg-white/[0.04] p-2 backdrop-blur-md">
+                  <div className="rounded-xl border border-subtle bg-white/[0.04] p-2 backdrop-blur-md">
                     <FileTypeIcon type={file.type} />
                   </div>
-                  <div className="min-w-0 flex-1 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 backdrop-blur-md">
+                  <div className="min-w-0 flex-1 rounded-xl border border-subtle bg-white/[0.03] px-3 py-2 backdrop-blur-md">
                     <div className="flex flex-wrap items-center gap-2">
-                      <p className="truncate font-medium text-slate-100">
+                      <p className="truncate font-medium text-primary">
                         {file.name}
                       </p>
                       {file.isVerified ? (
                         <span
-                          className="shrink-0 rounded-md border border-[#C5A059]/40 bg-[#C5A059]/15 px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-[#e8c987] shadow-[0_0_12px_rgba(197,160,89,0.35)]"
+                          className="shrink-0 rounded-md border border-veto-gold/40 bg-veto-gold/15 px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-brand-100 shadow-[0_0_12px_rgba(197,160,89,0.35)]"
                           title={t("vault.sealTitle")}
                         >
                           {t("vault.sealedBadge")}
                         </span>
                       ) : null}
                     </div>
-                    <p className="text-xs text-slate-400">
+                    <p className="text-xs text-muted">
                       {folders.find((f) => f.id === file.folderId)?.name ??
                         file.folderId}{" "}
                       · {file.sizeLabel} · {file.updatedAt}
@@ -682,7 +680,7 @@ export function VaultPageClient({
                           "לא ניתן לפענח את התמלול.";
                         setTranscriptViewer({ title: ev.title, body });
                       }}
-                      className="shrink-0 rounded-lg px-2 py-1 text-xs font-semibold text-[#e8c987] hover:bg-white/[0.06]"
+                      className="shrink-0 rounded-lg px-2 py-1 text-xs font-semibold text-brand-100 hover:bg-white/[0.06]"
                     >
                       צפייה בתמלול
                     </button>
@@ -691,7 +689,7 @@ export function VaultPageClient({
                       href={evidenceRows.find((e) => e.id === file.id)?.fileUrl}
                       target="_blank"
                       rel="noreferrer"
-                      className="shrink-0 rounded-lg px-2 py-1 text-xs font-semibold text-[#e8c987] hover:bg-white/[0.06]"
+                      className="shrink-0 rounded-lg px-2 py-1 text-xs font-semibold text-brand-100 hover:bg-white/[0.06]"
                     >
                       {t("vault.open")}
                     </a>
@@ -734,11 +732,11 @@ export function VaultPageClient({
             aria-label={t("common.close")}
             onClick={() => setTranscriptViewer(null)}
           />
-          <div className="relative z-[81] flex max-h-[min(88dvh,720px)] w-full max-w-lg flex-col overflow-hidden rounded-t-2xl border border-white/15 bg-slate-950 shadow-2xl sm:rounded-2xl">
-            <div className="flex items-center justify-between gap-3 border-b border-white/10 px-4 py-3">
+          <div className="relative z-[81] flex max-h-[min(88dvh,720px)] w-full max-w-lg flex-col overflow-hidden rounded-t-2xl border border-subtle bg-surface-raised shadow-2xl sm:rounded-2xl">
+            <div className="flex items-center justify-between gap-3 border-b border-subtle px-4 py-3">
               <h2
                 id="vault-transcript-title"
-                className="min-w-0 truncate font-frank text-base font-bold text-slate-100"
+                className="min-w-0 truncate font-frank text-base font-bold text-primary"
               >
                 {transcriptViewer.title}
               </h2>
@@ -751,7 +749,7 @@ export function VaultPageClient({
               </button>
             </div>
             <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4">
-              <pre className="whitespace-pre-wrap break-words font-sans text-sm leading-relaxed text-slate-200">
+              <pre className="whitespace-pre-wrap break-words font-sans text-sm leading-relaxed text-primary">
                 {transcriptViewer.body}
               </pre>
             </div>

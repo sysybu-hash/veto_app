@@ -107,7 +107,7 @@ export default function PayPalCheckout({
 
   return (
     <div
-      className="relative z-0 mx-auto w-full max-w-sm rounded-2xl border border-white/10 bg-white/5 p-4 shadow-[0_12px_40px_-20px_rgba(0,0,0,0.5)] backdrop-blur-xl"
+      className="relative z-0 mx-auto w-full max-w-sm rounded-2xl border border-subtle bg-white/5 p-4 shadow-[0_12px_40px_-20px_rgba(0,0,0,0.5)] backdrop-blur-xl"
       dir="rtl"
     >
       <PayPalScriptProvider

@@ -128,8 +128,7 @@ export function DocumentPipToggle({
       aria-pressed={active}
       title={t("call.v2.pip.toggle", "Picture-in-picture")}
       className={`rounded-full px-3 py-2 text-xs font-medium ${
-        active ? "bg-amber-600 text-white" : "bg-white/15 text-white hover:bg-white/20"
-      }`}
+        active ? "bg-amber-600 text-inverse" : "bg-white/15 text-inverse hover:bg-white/20"}`}
     >
       {active
         ? t("call.v2.pip.exit", "Exit PiP")

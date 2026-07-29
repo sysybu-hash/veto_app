@@ -561,10 +561,10 @@ export default function ChatPage() {
         <section className={`${glassPanel} flex min-h-[260px] flex-col p-4`}>
           <div className="mb-4 flex items-start justify-between gap-3">
             <div>
-              <h1 className="font-frank text-2xl font-black text-slate-900">
+              <h1 className="font-frank text-2xl font-black text-primary">
                 {t("chat.title")}
               </h1>
-              <p className="mt-1 text-sm text-slate-600">{t("chat.subtitle")}</p>
+              <p className="mt-1 text-sm text-secondary">{t("chat.subtitle")}</p>
             </div>
             <button
               type="button"
@@ -579,19 +579,19 @@ export default function ChatPage() {
           <button
             type="button"
             onClick={() => setAiOpen(true)}
-            className="mb-3 rounded-2xl border border-[#C5A059]/45 bg-slate-950 px-4 py-3 text-start text-white shadow-[0_0_22px_rgba(15,23,42,0.18)] transition hover:bg-slate-900"
+            className="mb-3 rounded-2xl border border-veto-gold/45 bg-surface-inverse px-4 py-3 text-start text-inverse shadow-[0_0_22px_rgba(15,23,42,0.18)] transition hover:brightness-110"
           >
             <span className="flex items-center gap-2 text-sm font-black">
-              <Sparkles className="h-5 w-5 text-[#C5A059]" aria-hidden />
+              <Sparkles className="h-5 w-5 text-veto-gold" aria-hidden />
               AI עצמאי בתוך הצ׳אט
             </span>
-            <span className="mt-2 block text-xs font-semibold text-slate-200">
+            <span className="mt-2 block text-xs font-semibold text-secondary">
               שיחה, שמירה, עריכה, מחיקה ופעולות באתר.
             </span>
           </button>
 
           <label className="relative mb-3 block">
-            <Search className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
+            <Search className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
@@ -606,7 +606,7 @@ export default function ChatPage() {
                 <div key={i} className="h-20 animate-pulse rounded-2xl bg-white/35" />
               ))
             ) : filteredThreads.length === 0 ? (
-              <div className={`${glassPanelNested} p-4 text-sm text-slate-700`}>
+              <div className={`${glassPanelNested} p-4 text-sm text-secondary`}>
                 {t("chat.emptyThreads")}
               </div>
             ) : (
@@ -615,26 +615,24 @@ export default function ChatPage() {
                   key={thread.id}
                   className={`w-full rounded-2xl border px-3 py-3 text-start transition ${
                     active?.id === thread.id
-                      ? "border-[#C5A059] bg-[#C5A059]/20"
-                      : "border-white/35 bg-white/35 hover:bg-white/50"
-                  }`}
+                      ? "border-veto-gold bg-veto-gold/20" : "border-white/35 bg-white/35 hover:bg-white/50"}`}
                 >
                   <div className="flex items-start gap-2">
                     <button type="button" onClick={() => setActive(thread)} className="min-w-0 flex-1 text-start">
                       <div className="flex items-center justify-between gap-3">
-                        <span className="truncate text-sm font-black text-slate-900">
+                        <span className="truncate text-sm font-black text-primary">
                           {thread.name}
                         </span>
                         {!!thread.unread && (
-                          <span className="rounded-full bg-[#C5A059] px-2 py-0.5 text-[10px] font-bold text-black">
+                          <span className="rounded-full bg-veto-gold px-2 py-0.5 text-[10px] font-bold text-black">
                             {thread.unread}
                           </span>
                         )}
                       </div>
-                      <p className="mt-1 truncate text-xs text-slate-600">
+                      <p className="mt-1 truncate text-xs text-secondary">
                         {thread.last || t("chat.noMessages")}
                       </p>
-                      <p className="mt-1 text-[10px] font-semibold text-slate-500">
+                      <p className="mt-1 text-[10px] font-semibold text-muted">
                         {thread.role === "lawyer" ? t("chat.lawyer") : t("chat.member")}
                       </p>
                     </button>
@@ -660,14 +658,14 @@ export default function ChatPage() {
             <>
               <header className="flex items-center justify-between gap-3 border-b border-white/35 px-5 py-4">
                 <div className="flex min-w-0 items-center gap-3">
-                  <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-slate-950 text-white">
+                  <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-surface-inverse text-inverse">
                     <UserRound className="h-5 w-5" aria-hidden />
                   </div>
                   <div className="min-w-0">
-                    <h2 className="truncate font-frank text-xl font-black text-slate-900">
+                    <h2 className="truncate font-frank text-xl font-black text-primary">
                       {active.name}
                     </h2>
-                    <p className="text-xs font-semibold text-slate-600">
+                    <p className="text-xs font-semibold text-secondary">
                       {active.role === "lawyer" ? t("chat.lawyer") : t("chat.member")} · {messages.length} הודעות
                     </p>
                   </div>
@@ -676,7 +674,7 @@ export default function ChatPage() {
                   <button
                     type="button"
                     onClick={() => setAiOpen(true)}
-                    className="grid h-10 w-10 place-items-center rounded-xl border border-[#C5A059]/50 bg-slate-950 text-[#C5A059]"
+                    className="grid h-10 w-10 place-items-center rounded-xl border border-veto-gold/50 bg-surface-inverse text-veto-gold"
                     aria-label={t("chatPage.openAiPane")}
                     title={t("chatPage.openAiPane")}
                   >
@@ -702,10 +700,10 @@ export default function ChatPage() {
 
               <div className="flex-1 space-y-3 overflow-y-auto px-4 py-5">
                 {loadingMessages ? (
-                  <p className="text-center text-sm text-slate-600">{t("common.loading")}</p>
+                  <p className="text-center text-sm text-secondary">{t("common.loading")}</p>
                 ) : messages.length === 0 ? (
-                  <div className={`${glassPanelNested} mx-auto grid max-w-md place-items-center gap-3 p-7 text-center text-sm text-slate-700`}>
-                    <MessageCircle className="h-8 w-8 text-[#9b7430]" aria-hidden />
+                  <div className={`${glassPanelNested} mx-auto grid max-w-md place-items-center gap-3 p-7 text-center text-sm text-secondary`}>
+                    <MessageCircle className="h-8 w-8 text-veto-gold-dark" aria-hidden />
                     {t("chat.emptyMessages")}
                   </div>
                 ) : (
@@ -715,11 +713,9 @@ export default function ChatPage() {
                       <div key={message._id} className={`flex ${mine ? "justify-end" : "justify-start"}`}>
                         <div className={`max-w-[82%] rounded-2xl border px-4 py-2.5 shadow-sm ${
                           mine
-                            ? "border-[#C5A059]/40 bg-[#C5A059]/20 text-slate-950"
-                            : "border-white/45 bg-white/60 text-slate-900"
-                        }`}>
+                            ? "border-veto-gold/40 bg-veto-gold/20 text-primary" : "border-white/45 bg-white/60 text-primary"}`}>
                           <p className="whitespace-pre-wrap break-words text-sm leading-relaxed">{message.text}</p>
-                          <div className="mt-1 flex items-center justify-between gap-3 text-[10px] text-slate-500">
+                          <div className="mt-1 flex items-center justify-between gap-3 text-[10px] text-muted">
                             <span>{formatTime(message.createdAt)}</span>
                             {mine && (
                               <button type="button" onClick={() => void removeMessage(message._id)} className="font-semibold text-red-700">
@@ -750,7 +746,7 @@ export default function ChatPage() {
               </form>
             </>
           ) : (
-            <div className="flex flex-1 items-center justify-center p-6 text-center text-sm text-slate-600">
+            <div className="flex flex-1 items-center justify-center p-6 text-center text-sm text-secondary">
               {loadingThreads ? t("common.loading") : t("chat.pickThread")}
             </div>
           )}
@@ -759,14 +755,14 @@ export default function ChatPage() {
         <section className={`${glassPanel} flex min-h-[560px] flex-col overflow-hidden`}>
           <header className="flex items-start justify-between gap-3 border-b border-white/35 px-4 py-4">
             <div>
-              <p className="flex items-center gap-2 text-xs font-black uppercase tracking-wide text-[#9b7430]">
+              <p className="flex items-center gap-2 text-xs font-black uppercase tracking-wide text-veto-gold-dark">
                 <Sparkles className="h-4 w-4" aria-hidden />
                 AI עצמאי
               </p>
-              <h2 className="mt-1 font-frank text-xl font-black text-slate-900">
+              <h2 className="mt-1 font-frank text-xl font-black text-primary">
                 עוזר משפטי בצ׳אט
               </h2>
-              <p className="mt-1 text-xs text-slate-600">
+              <p className="mt-1 text-xs text-secondary">
                 נפרד מהבועה, עם שמירה ופעולות באתר.
               </p>
             </div>
@@ -810,7 +806,7 @@ export default function ChatPage() {
                   <div key={message.id} className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}>
                     <div className={`max-w-[92%] rounded-2xl border px-3 py-2 shadow-sm ${
                       message.role === "user"
-                        ? "border-[#C5A059]/50 bg-[#C5A059]/20"
+                        ? "border-veto-gold/50 bg-veto-gold/20"
                         : "border-white/45 bg-white/65"
                     }`}>
                       {editingAiId === message.id ? (
@@ -822,7 +818,7 @@ export default function ChatPage() {
                             className={`${glassInput} min-h-28 resize-none text-sm`}
                           />
                           <div className="flex gap-2">
-                            <button type="button" onClick={commitAiEdit} className="rounded-xl bg-slate-950 px-3 py-2 text-xs font-bold text-white">
+                            <button type="button" onClick={commitAiEdit} className="rounded-xl bg-surface-inverse px-3 py-2 text-xs font-bold text-inverse">
                               <Check className="h-4 w-4" aria-hidden />
                             </button>
                             <button type="button" onClick={() => setEditingAiId(null)} className={btnSecondaryGlass}>
@@ -832,11 +828,11 @@ export default function ChatPage() {
                         </div>
                       ) : (
                         <>
-                          <p className="whitespace-pre-wrap break-words text-sm leading-relaxed text-slate-900">
+                          <p className="whitespace-pre-wrap break-words text-sm leading-relaxed text-primary">
                             {message.content}
                           </p>
                           <div className="mt-2 flex flex-wrap gap-1.5 text-[11px] font-bold">
-                            <button type="button" onClick={() => startEditingAi(message)} className="rounded-lg border border-white/50 bg-white/45 px-2 py-1 text-slate-700">
+                            <button type="button" onClick={() => startEditingAi(message)} className="rounded-lg border border-white/50 bg-white/45 px-2 py-1 text-secondary">
                               <Edit3 className="h-3.5 w-3.5" aria-hidden />
                             </button>
                             <button type="button" onClick={() => deleteAiMessage(message.id)} className="rounded-lg border border-red-200 bg-red-50 px-2 py-1 text-red-700">
@@ -844,11 +840,11 @@ export default function ChatPage() {
                             </button>
                             {message.role === "assistant" && (
                               <>
-                                <button type="button" onClick={() => setDraft(message.content)} className="rounded-lg border border-white/50 bg-white/45 px-2 py-1 text-slate-700">
+                                <button type="button" onClick={() => setDraft(message.content)} className="rounded-lg border border-white/50 bg-white/45 px-2 py-1 text-secondary">
                                   <Copy className="h-3.5 w-3.5" aria-hidden />
                                   לשיחה
                                 </button>
-                                <button type="button" onClick={() => void saveAiMessage(message)} disabled={savingAiId === message.id} className="rounded-lg border border-[#C5A059]/40 bg-[#C5A059]/15 px-2 py-1 text-[#75551f] disabled:opacity-60">
+                                <button type="button" onClick={() => void saveAiMessage(message)} disabled={savingAiId === message.id} className="rounded-lg border border-veto-gold/40 bg-veto-gold/15 px-2 py-1 text-brand-deep disabled:opacity-60">
                                   {message.saved ? t("chatPage.aiSaved") : savingAiId === message.id ? t("chatPage.aiSaving") : t("chatPage.aiSaveToVault")}
                                 </button>
                               </>
@@ -860,7 +856,7 @@ export default function ChatPage() {
                   </div>
                 ))}
                 {aiBusy && (
-                  <div className="rounded-2xl border border-white/45 bg-white/65 px-3 py-2 text-sm text-slate-600">
+                  <div className="rounded-2xl border border-white/45 bg-white/65 px-3 py-2 text-sm text-secondary">
                     חושב ומנסח...
                   </div>
                 )}
@@ -897,8 +893,8 @@ export default function ChatPage() {
             </>
           ) : (
             <div className="flex flex-1 flex-col items-center justify-center gap-3 p-6 text-center">
-              <Bot className="h-10 w-10 text-[#9b7430]" aria-hidden />
-              <p className="text-sm font-bold text-slate-800">חלון ה-AI סגור.</p>
+              <Bot className="h-10 w-10 text-veto-gold-dark" aria-hidden />
+              <p className="text-sm font-bold text-primary">חלון ה-AI סגור.</p>
               <button type="button" onClick={() => setAiOpen(true)} className={btnPrimaryDark}>
                 פתח AI בצ׳אט
               </button>

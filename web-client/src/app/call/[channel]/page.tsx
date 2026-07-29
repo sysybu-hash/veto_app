@@ -23,9 +23,9 @@ export default async function CallPage({
 
   if (disabled) {
     return (
-      <div className="veto-call-keep-dark fixed inset-0 z-[70] flex h-[100dvh] w-screen flex-col items-center justify-center gap-3 bg-black px-6 text-center text-slate-200">
-        <p className="text-base font-bold">Video calls are temporarily disabled.</p>
-        <p className="max-w-md text-xs text-slate-400">
+      <div data-surface="stage" className="fixed inset-0 z-[70] flex h-[100dvh] w-screen flex-col items-center justify-center gap-3 bg-surface-canvas px-6 text-center text-secondary">
+        <p className="text-base font-bold text-primary">Video calls are temporarily disabled.</p>
+        <p className="max-w-md text-xs text-muted">
           Operators have set NEXT_PUBLIC_CALL_V2=0. Re-enable the call surface
           by clearing the flag and redeploying.
         </p>

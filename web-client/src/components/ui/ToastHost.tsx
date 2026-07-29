@@ -20,6 +20,7 @@ export function ToastHost() {
 
   return (
     <div
+      data-print="hide"
       className="pointer-events-none fixed start-4 end-4 top-20 z-[100] flex flex-col items-center gap-2 sm:items-stretch sm:ps-[min(24rem,calc(100%-2rem))]"
       dir="rtl"
     >

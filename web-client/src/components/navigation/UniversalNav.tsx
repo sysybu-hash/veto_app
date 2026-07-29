@@ -122,14 +122,14 @@ export function UniversalNav() {
   };
 
   const navBarClass =
-    "sticky top-0 z-40 border-b border-slate-200/80 bg-white/82 px-3 py-2.5 shadow-sm shadow-slate-900/5 backdrop-blur-xl supports-[backdrop-filter]:bg-white/78 dark:border-white/10 dark:bg-slate-950/90 dark:shadow-black/30 dark:supports-[backdrop-filter]:bg-slate-950/85";
+    "sticky top-0 z-40 border-b border-subtle bg-surface-overlay px-3 py-2.5 shadow-sm backdrop-blur-xl";
 
   const desktopLinkClass = (active: boolean) =>
-    `transition-colors ${active ? "text-[#9b7430] dark:text-veto-gold" : "text-slate-800 hover:text-[#9b7430] dark:text-slate-200 dark:hover:text-veto-gold"}`;
+    `transition-colors ${active ? "text-veto-gold-dark dark:text-veto-gold" : "text-primary hover:text-veto-gold-dark"}`;
 
   return (
     <>
-      <nav className={navBarClass} aria-label="ניווט ראשי">
+      <nav data-print="hide" className={navBarClass} aria-label="ניווט ראשי">
         <div className="mx-auto flex min-h-12 max-w-7xl items-center justify-between gap-2 px-2 sm:min-h-0 sm:gap-4 sm:px-3">
           <Link href={homeHref(role, hasToken)} className="flex min-w-0 shrink-0 items-center" aria-label="VETO">
             <VetoBrandLogo priority className="h-11 w-auto" />
@@ -137,7 +137,7 @@ export function UniversalNav() {
 
           {showDesktopLinkRow ? (
             <div
-              className="hidden min-w-0 flex-1 items-center justify-center gap-8 text-sm font-bold text-slate-800 dark:text-slate-100 md:flex"
+              className="hidden min-w-0 flex-1 items-center justify-center gap-8 text-sm font-bold text-primary md:flex"
             >
               {items.slice(0, hasToken ? items.length : 3).map((item) => {
                 const active = item.match?.(pathname) ?? pathname === item.href;
@@ -157,13 +157,13 @@ export function UniversalNav() {
                 <LanguageSwitcher className="hidden sm:block" />
                 <Link
                   href="/register/lawyer"
-                  className="hidden rounded-xl px-3 py-2 text-sm font-bold text-slate-800 transition-colors hover:text-[#9b7430] dark:text-slate-200 dark:hover:text-veto-gold sm:inline-flex"
+                  className="hidden rounded-xl px-3 py-2 text-sm font-bold text-primary transition-colors hover:text-veto-gold-dark sm:inline-flex"
                 >
                   הצטרפות עורכי דין
                 </Link>
                 <Link
                   href="/login"
-                  className="whitespace-nowrap rounded-xl border border-[#C5A059]/50 bg-[#C5A059] px-3 py-2 text-xs font-black text-slate-950 shadow-[0_0_24px_-8px_rgba(197,160,89,0.8)] transition hover:bg-[#d8b867] sm:px-4 sm:py-2.5 sm:text-sm"
+                  className="whitespace-nowrap rounded-xl border border-veto-gold/50 bg-veto-gold px-3 py-2 text-xs font-black text-primary shadow-[0_0_24px_-8px_rgba(197,160,89,0.8)] transition hover:bg-veto-gold-light sm:px-4 sm:py-2.5 sm:text-sm"
                 >
                   אזור אישי
                 </Link>
@@ -175,7 +175,7 @@ export function UniversalNav() {
               aria-label="פתיחת תפריט"
               aria-expanded={open}
               aria-controls="universal-nav-drawer"
-              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-slate-300 bg-white/90 text-slate-900 shadow-sm transition hover:bg-white hover:text-[#9b7430] dark:border-white/15 dark:bg-white/10 dark:text-white dark:hover:bg-white/15 dark:hover:text-veto-gold"
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-default bg-surface-raised-2 text-primary shadow-sm transition hover:bg-white hover:text-veto-gold-dark dark:bg-white/10 dark:hover:bg-white/15"
             >
               <Menu className="h-5 w-5" aria-hidden />
             </button>
@@ -186,7 +186,7 @@ export function UniversalNav() {
       {open ? (
         <>
           <div
-            className="fixed inset-0 z-50 bg-slate-900/35 backdrop-blur-sm dark:bg-black/55"
+            className="fixed inset-0 z-50 bg-surface-scrim backdrop-blur-sm"
             onClick={() => setOpen(false)}
             aria-hidden
           />
@@ -195,10 +195,10 @@ export function UniversalNav() {
             role="dialog"
             aria-modal="true"
             aria-label="תפריט ראשי"
-            className="fixed inset-y-0 start-0 z-50 flex w-80 max-w-[88vw] flex-col border-e border-slate-200 bg-white/95 text-slate-950 shadow-2xl backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/96 dark:text-slate-100"
+            className="fixed inset-y-0 start-0 z-50 flex w-80 max-w-[88vw] flex-col border-e border-subtle bg-surface-raised-2 text-primary shadow-2xl backdrop-blur-xl"
           >
             <div
-              className="flex items-center justify-between border-b border-slate-200 px-4 py-3 dark:border-white/10"
+              className="flex items-center justify-between border-b border-subtle px-4 py-3"
             >
               <Link href={homeHref(role, hasToken)} className="flex items-center" onClick={() => setOpen(false)} aria-label="VETO">
                 <VetoBrandLogo className="h-11 w-auto" />
@@ -207,14 +207,14 @@ export function UniversalNav() {
                 type="button"
                 onClick={() => setOpen(false)}
                 aria-label="סגירת תפריט"
-                className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-300 bg-white text-slate-900 transition hover:bg-slate-100 dark:border-white/15 dark:bg-white/10 dark:text-white dark:hover:bg-white/15"
+                className="flex h-9 w-9 items-center justify-center rounded-xl border border-default bg-surface-overlay text-primary transition hover:bg-hover-overlay"
               >
                 <X className="h-5 w-5" aria-hidden />
               </button>
             </div>
 
             <div
-              className="border-b border-slate-200 px-4 py-3 text-xs font-bold text-slate-600 dark:border-white/10 dark:text-slate-400"
+              className="border-b border-subtle px-4 py-3 text-xs font-bold text-secondary"
             >
               {roleLabel(role, hasToken)}
             </div>
@@ -230,9 +230,7 @@ export function UniversalNav() {
                       onClick={() => setOpen(false)}
                       className={`flex items-center gap-3 rounded-2xl px-3 py-3 text-sm font-bold transition ${
                         active
-                          ? "bg-[#C5A059]/15 text-[#8a6d35] dark:bg-veto-gold/15 dark:text-veto-gold"
-                          : "text-slate-800 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-white/5"
-                      }`}
+                          ? "bg-veto-gold/15 text-brand-700" : "text-primary hover:bg-hover-overlay"}`}
                     >
                       <Icon className="h-5 w-5" aria-hidden />
                       {item.label}
@@ -242,7 +240,7 @@ export function UniversalNav() {
               })}
             </ul>
 
-            <div className="border-t border-slate-200 p-3 dark:border-white/10">
+            <div className="border-t border-subtle p-3">
               {hasToken ? (
                 <button
                   type="button"
@@ -256,7 +254,7 @@ export function UniversalNav() {
                 <Link
                   href="/register"
                   onClick={() => setOpen(false)}
-                  className="flex items-center gap-3 rounded-2xl px-3 py-3 text-sm font-bold text-slate-800 transition hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-white/5"
+                  className="flex items-center gap-3 rounded-2xl px-3 py-3 text-sm font-bold text-primary transition hover:bg-hover-overlay"
                 >
                   <UserPlus className="h-5 w-5" aria-hidden />
                   הרשמת אזרח

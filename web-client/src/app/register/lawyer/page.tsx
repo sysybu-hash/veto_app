@@ -89,10 +89,10 @@ export default function LawyerRegisterPage() {
         <div className="mb-3 flex justify-start">
           <VetoBrandLogo className="h-9 w-auto sm:h-10" />
         </div>
-        <h1 className="font-frank text-3xl font-black text-slate-100">
+        <h1 className="font-frank text-3xl font-black text-primary">
           הצטרפות עורכי דין
         </h1>
-        <p className="mt-2 text-sm leading-6 text-slate-400">
+        <p className="mt-2 text-sm leading-6 text-muted">
           מלאו פרטים מקצועיים. לאחר ההרשמה הבקשה תועבר לאישור מנהל לפני קבלת קריאות.
         </p>
 
@@ -105,7 +105,7 @@ export default function LawyerRegisterPage() {
         </div>
 
         <div className="mt-5">
-          <p className="text-xs font-medium text-slate-300">תחומי התמחות</p>
+          <p className="text-xs font-medium text-secondary">תחומי התמחות</p>
           <div className="mt-2 flex flex-wrap gap-2">
             {SPECIALIZATIONS.map((spec) => {
               const active = selected.includes(spec.id);
@@ -116,9 +116,7 @@ export default function LawyerRegisterPage() {
                   onClick={() => toggleSpec(spec.id)}
                   className={`rounded-full border px-4 py-2 text-sm font-bold transition ${
                     active
-                      ? "border-[#C5A059] bg-[#C5A059] text-slate-950"
-                      : "border-white/10 bg-white/[0.03] text-slate-300 hover:border-[#C5A059]/60"
-                  }`}
+                      ? "border-veto-gold bg-veto-gold text-primary" : "border-subtle bg-white/[0.03] text-secondary hover:border-veto-gold/60"}`}
                 >
                   {spec.label}
                 </button>
@@ -138,13 +136,13 @@ export default function LawyerRegisterPage() {
             type="button"
             disabled={busy}
             onClick={() => void onSubmit()}
-            className="rounded-xl bg-[#C5A059] px-5 py-3 text-sm font-black text-slate-950 transition hover:bg-[#d8b867] disabled:opacity-50"
+            className="rounded-xl bg-veto-gold px-5 py-3 text-sm font-black text-primary transition hover:bg-veto-gold-light disabled:opacity-50"
           >
             {busy ? "שולח..." : "שליחת בקשת הצטרפות"}
           </button>
           <Link
             href="/login"
-            className="rounded-xl border border-white/10 px-5 py-3 text-center text-sm font-bold text-slate-200 transition hover:bg-white/[0.06]"
+            className="rounded-xl border border-subtle px-5 py-3 text-center text-sm font-bold text-secondary transition hover:bg-white/[0.06]"
           >
             כבר רשום? כניסה
           </Link>
@@ -169,7 +167,7 @@ function Field({
 }) {
   return (
     <label className="block">
-      <span className="text-xs font-medium text-slate-300">{label}</span>
+      <span className="text-xs font-medium text-secondary">{label}</span>
       <input
         type={type}
         value={value}

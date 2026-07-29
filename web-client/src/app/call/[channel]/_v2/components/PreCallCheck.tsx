@@ -75,17 +75,17 @@ export function PreCallCheck({
   if (mode === "chat") return null;
 
   return (
-    <div className="veto-call-keep-dark fixed inset-0 z-[80] flex items-center justify-center bg-gradient-to-b from-black via-zinc-950 to-black px-4 py-8 backdrop-blur-md">
+    <div data-surface="stage" className="fixed inset-0 z-[80] flex items-center justify-center bg-gradient-to-b from-black via-zinc-950 to-black px-4 py-8 backdrop-blur-md">
       <div
         role="dialog"
         aria-modal="true"
         aria-labelledby="pre-call-title"
-        className="w-full max-w-md rounded-3xl border border-[#C5A059]/25 bg-zinc-900/90 p-6 text-slate-100 shadow-[0_24px_80px_rgba(0,0,0,0.65)]"
+        className="w-full max-w-md rounded-3xl border border-veto-gold/25 bg-zinc-900/90 p-6 text-primary shadow-[0_24px_80px_rgba(0,0,0,0.65)]"
       >
         <h2 id="pre-call-title" className="font-frank text-xl font-bold">
           {t("call.v2.preCheck.title", "Ready your call")}
         </h2>
-        <p className="mt-1 text-xs text-slate-400">
+        <p className="mt-1 text-xs text-muted">
           {t(
             "call.v2.preCheck.subtitle",
             "Pick the right mic, camera, and speaker before connecting.",
@@ -98,7 +98,7 @@ export function PreCallCheck({
             onClick={() =>
               void requestPermission({ mic: needsMic, camera: needsCamera })
             }
-            className="mt-4 w-full rounded-xl bg-[#C5A059] px-4 py-2 text-sm font-bold text-black hover:bg-[#D8B867]"
+            className="mt-4 w-full rounded-xl bg-veto-gold px-4 py-2 text-sm font-bold text-black hover:bg-veto-gold-light"
           >
             {t("call.v2.preCheck.grant", "Allow microphone & camera")}
           </button>
@@ -138,12 +138,12 @@ export function PreCallCheck({
           />
         )}
 
-        <div className="mt-4 flex items-center justify-between rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2">
-          <div className="text-xs text-slate-300">
+        <div className="mt-4 flex items-center justify-between rounded-xl border border-subtle bg-white/[0.04] px-3 py-2">
+          <div className="text-xs text-secondary">
             <p className="font-semibold">
               {t("call.v2.preCheck.network", "Network")}
             </p>
-            <p className="text-[11px] text-slate-500">
+            <p className="text-[11px] text-muted">
               {latencyMs == null
                 ? t(
                     "call.v2.preCheck.networkUnknown",
@@ -156,7 +156,7 @@ export function PreCallCheck({
             type="button"
             onClick={() => void checkNetwork()}
             disabled={latencyChecking}
-            className="rounded-lg bg-white/10 px-3 py-1 text-xs font-semibold text-slate-100 hover:bg-white/15 disabled:opacity-50"
+            className="rounded-lg bg-white/10 px-3 py-1 text-xs font-semibold text-primary hover:bg-white/15 disabled:opacity-50"
           >
             {latencyChecking
               ? t("call.v2.preCheck.testing", "Testing…")
@@ -175,7 +175,7 @@ export function PreCallCheck({
               ready: true,
             })
           }
-          className="mt-5 w-full rounded-xl bg-[#C5A059] px-4 py-3 text-sm font-black text-black hover:bg-[#D8B867] disabled:opacity-40"
+          className="mt-5 w-full rounded-xl bg-veto-gold px-4 py-3 text-sm font-black text-black hover:bg-veto-gold-light disabled:opacity-40"
         >
           {t("call.v2.preCheck.start", "Start the call")}
         </button>
@@ -197,11 +197,11 @@ function DeviceSelect({
 }) {
   return (
     <label className="mt-3 block text-xs">
-      <span className="mb-1 block font-semibold text-slate-300">{label}</span>
+      <span className="mb-1 block font-semibold text-secondary">{label}</span>
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full rounded-lg border border-white/10 bg-white/10 px-2 py-2 text-sm text-slate-100 outline-none focus:ring-2 focus:ring-[#C5A059]"
+        className="w-full rounded-lg border border-subtle bg-white/10 px-2 py-2 text-sm text-primary outline-none focus:ring-2 focus:ring-veto-gold"
       >
         <option value="">— Default —</option>
         {options.map((d) => (

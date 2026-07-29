@@ -122,9 +122,7 @@ function ModeToggleButton({
       title={label}
       className={`rounded-lg p-2 transition-all ${
         active
-          ? "bg-[#C5A059]/15 text-[#8a6d35] shadow-sm ring-1 ring-[#C5A059]/40 backdrop-blur-sm dark:text-veto-gold dark:ring-veto-gold/35"
-          : "text-slate-600 hover:bg-slate-100 hover:text-slate-950 dark:text-slate-400 dark:hover:bg-white/8 dark:hover:text-slate-100"
-      }`}
+          ? "bg-brand-soft text-brand-700 shadow-sm ring-1 ring-veto-gold/40 backdrop-blur-sm dark:text-veto-gold dark:ring-veto-gold/35" : "text-secondary hover:bg-hover-overlay hover:text-primary"}`}
     >
       {children}
     </button>
@@ -521,7 +519,7 @@ export function GlobalAiOverlay() {
 
   const statusDot =
     mode === "text"
-      ? "bg-[#C5A059] shadow-[0_0_8px_rgba(197,160,89,0.5)]"
+      ? "bg-veto-gold shadow-[0_0_8px_rgba(197,160,89,0.5)]"
       : "animate-pulse bg-red-500/100 shadow-[0_0_10px_rgba(239,68,68,0.55)]";
 
   const modeHint =
@@ -536,7 +534,7 @@ export function GlobalAiOverlay() {
   }
 
   return (
-    <div className="pointer-events-none fixed inset-0 z-50">
+    <div data-print="hide" className="pointer-events-none fixed inset-0 z-50">
       <AnimatePresence>
         {!isOpen && (
           <motion.button
@@ -548,12 +546,12 @@ export function GlobalAiOverlay() {
             whileHover={{ scale: 1.08 }}
             whileTap={{ scale: 0.92 }}
             onClick={handleToggleChat}
-            className="pointer-events-auto fixed bottom-32 end-8 flex h-16 w-16 items-center justify-center rounded-full border-2 border-[#C5A059]/80 bg-white text-[#8a6d35] shadow-[0_10px_34px_-18px_rgba(15,23,42,0.45)] focus:outline-none focus-visible:ring-4 focus-visible:ring-[#C5A059]/35 dark:bg-slate-900 dark:text-veto-gold dark:shadow-[0_12px_40px_-12px_rgba(0,0,0,0.65)] sm:bottom-8"
+            className="pointer-events-auto fixed bottom-32 end-8 flex h-16 w-16 items-center justify-center rounded-full border-2 border-veto-gold/80 bg-surface-overlay text-brand-700 shadow-[0_10px_34px_-18px_rgba(15,23,42,0.45)] focus:outline-none focus-visible:ring-4 focus-visible:ring-veto-gold/35 dark:text-veto-gold dark:shadow-[0_12px_40px_-12px_rgba(0,0,0,0.65)] sm:bottom-8"
             aria-label={t("ai.openAssistant")}
           >
             <motion.span
               aria-hidden
-              className="pointer-events-none absolute inset-0 rounded-full bg-[#C5A059] opacity-20"
+              className="pointer-events-none absolute inset-0 rounded-full bg-veto-gold opacity-20"
               animate={
                 isAssistantActive
                   ? { scale: [1, 1.22, 1], opacity: [0.2, 0.38, 0.2] }
@@ -618,22 +616,22 @@ export function GlobalAiOverlay() {
             }}
             className={`pointer-events-auto fixed bottom-28 flex max-h-[calc(100dvh-6rem)] w-[min(calc(100%-2rem),450px)] max-w-[450px] flex-col overflow-hidden max-sm:inset-x-4 sm:end-8 sm:start-auto ${glassPanel} shadow-2xl`}
           >
-            <header className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-b border-slate-200 bg-white/80 px-3 py-3 backdrop-blur-md dark:border-white/10 dark:bg-slate-900/75 sm:gap-3 sm:px-4">
+            <header className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-b border-subtle bg-surface-raised px-3 py-3 backdrop-blur-md sm:gap-3 sm:px-4">
               <div className="flex min-w-0 flex-1 items-center gap-2 sm:flex-initial sm:gap-3">
                 <span
                   className={`h-2.5 w-2.5 shrink-0 rounded-full ${statusDot}`}
                   aria-hidden
                 />
                 <div className="min-w-0">
-                  <h2 className="font-frank text-sm font-black tracking-tight text-slate-950 dark:text-slate-50 sm:text-base">
+                  <h2 className="font-frank text-sm font-black tracking-tight text-primary sm:text-base">
                     {t("ai.title")}
                   </h2>
-                  <p className="truncate text-xs font-semibold text-slate-600 dark:text-slate-400">{modeHint}</p>
+                  <p className="truncate text-xs font-semibold text-secondary">{modeHint}</p>
                 </div>
               </div>
 
               <div
-                className="flex items-center gap-1 rounded-xl border border-slate-200 bg-slate-50/80 p-1 backdrop-blur-md dark:border-white/10 dark:bg-slate-800/80"
+                className="flex items-center gap-1 rounded-xl border border-subtle bg-surface-sunken p-1 backdrop-blur-md"
                 role="group"
                 aria-label={t("ai.modePickerAria")}
               >
@@ -673,7 +671,7 @@ export function GlobalAiOverlay() {
                 <button
                   type="button"
                   onClick={handleToggleChat}
-                  className={`rounded-full p-2 text-slate-700 dark:text-slate-200 ${btnSecondaryGlass} border-transparent`}
+                  className={`rounded-full p-2 text-secondary ${btnSecondaryGlass} border-transparent`}
                   aria-label={t("ai.close")}
                 >
                   <X className="h-5 w-5" aria-hidden />
@@ -688,7 +686,7 @@ export function GlobalAiOverlay() {
             )}
 
             {isGuestMode && mode === "text" && (
-              <div className="shrink-0 border-b border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold leading-5 text-slate-700 dark:border-white/10 dark:bg-slate-800/70 dark:text-slate-200">
+              <div className="shrink-0 border-b border-subtle bg-surface-sunken px-3 py-2 text-xs font-semibold leading-5 text-secondary">
                 מצב אורח: אפשר לקבל מידע כללי על VETO, תחומי משפט ומסמכים. התחברות פותחת SOS, כספת, קול, מצלמה ושמירת מסמכים.
               </div>
             )}
@@ -706,7 +704,7 @@ export function GlobalAiOverlay() {
                   >
                     <div
                       ref={scrollRef}
-                      className="min-h-0 flex-1 space-y-3 overflow-y-auto scroll-smooth bg-slate-50/70 px-3 py-3 backdrop-blur-sm dark:bg-slate-950/50"
+                      className="min-h-0 flex-1 space-y-3 overflow-y-auto scroll-smooth bg-surface-sunken px-3 py-3 backdrop-blur-sm"
                     >
                       {messages.length === 0 && !isLoading && (
                         <p
@@ -740,9 +738,9 @@ export function GlobalAiOverlay() {
                             aria-live="polite"
                           >
                             <span className="sr-only">{t("ai.srTyping")}</span>
-                            <span className="h-2 w-2 animate-bounce rounded-full bg-slate-500 [animation-delay:-0.2s]" />
-                            <span className="h-2 w-2 animate-bounce rounded-full bg-slate-500 [animation-delay:-0.1s]" />
-                            <span className="h-2 w-2 animate-bounce rounded-full bg-slate-500" />
+                            <span className="h-2 w-2 animate-bounce rounded-full bg-zinc-500 [animation-delay:-0.2s]" />
+                            <span className="h-2 w-2 animate-bounce rounded-full bg-zinc-500 [animation-delay:-0.1s]" />
+                            <span className="h-2 w-2 animate-bounce rounded-full bg-zinc-500" />
                           </div>
                         </div>
                       )}
@@ -757,7 +755,7 @@ export function GlobalAiOverlay() {
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -10 }}
                     transition={{ duration: 0.2 }}
-                    className="absolute inset-0 flex min-h-0 flex-col items-center justify-center gap-10 bg-slate-50/70 px-4 text-center backdrop-blur-sm dark:bg-slate-950/50"
+                    className="absolute inset-0 flex min-h-0 flex-col items-center justify-center gap-10 bg-surface-sunken px-4 text-center backdrop-blur-sm"
                   >
                     <div
                       className="flex h-28 items-end justify-center gap-1.5"
@@ -773,20 +771,20 @@ export function GlobalAiOverlay() {
                             delay: i * 0.05,
                             ease: "easeInOut",
                           }}
-                          className="w-2.5 rounded-full bg-[#C5A059] shadow-[0_0_20px_rgba(197,160,89,0.35)]"
+                          className="w-2.5 rounded-full bg-veto-gold shadow-[0_0_20px_rgba(197,160,89,0.35)]"
                         />
                       ))}
                     </div>
                     <div className="max-w-xs">
-                      <p className="font-frank text-3xl font-black text-slate-950 dark:text-slate-50">
+                      <p className="font-frank text-3xl font-black text-primary">
                         {t("ai.geminiLive")}
                       </p>
-                      <p className="mt-2 text-sm font-bold italic text-slate-600 dark:text-slate-400">
+                      <p className="mt-2 text-sm font-bold italic text-secondary">
                         {isLiveListening
                           ? t("ai.liveListening")
                           : t("ai.liveAnalyzing")}
                       </p>
-                      <p className="mt-2 truncate text-xs font-semibold text-slate-600 dark:text-slate-400">
+                      <p className="mt-2 truncate text-xs font-semibold text-secondary">
                         {liveTranscript || t("ai.liveTranscriptPlaceholder")}
                       </p>
                     </div>
@@ -810,7 +808,7 @@ export function GlobalAiOverlay() {
                     className="absolute inset-0 flex min-h-0 flex-col gap-3 overflow-hidden p-3"
                   >
                     <div
-                      className="relative w-full overflow-hidden rounded-3xl border-2 border-[#C5A059]/50 bg-black/80 shadow-[0_0_24px_rgba(197,160,89,0.2)]"
+                      className="relative w-full overflow-hidden rounded-3xl border-2 border-veto-gold/50 bg-black/80 shadow-[0_0_24px_rgba(197,160,89,0.2)]"
                       style={{ aspectRatio: "16 / 9" }}
                     >
                       <video
@@ -822,7 +820,7 @@ export function GlobalAiOverlay() {
                       />
 
                       {visionError && (
-                        <div className="absolute inset-0 flex items-center justify-center bg-black/70 p-4 text-center text-sm text-white">
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/70 p-4 text-center text-sm text-inverse">
                           {visionError}
                         </div>
                       )}
@@ -843,12 +841,12 @@ export function GlobalAiOverlay() {
                               duration: 3,
                               ease: "linear",
                             }}
-                            className="pointer-events-none absolute inset-x-0 z-10 h-px bg-linear-to-r from-transparent via-[#C5A059] to-transparent shadow-[0_0_15px_#C5A059]"
+                            className="pointer-events-none absolute inset-x-0 z-10 h-px bg-linear-to-r from-transparent via-veto-gold to-transparent shadow-[0_0_15px_rgba(197,160,89,0.9)]"
                           />
 
                           <div className="absolute bottom-3 end-3 flex items-center gap-2">
                             <span className="h-2.5 w-2.5 shrink-0 animate-pulse rounded-full bg-red-500/100" />
-                            <span className="text-[10px] font-black tracking-widest text-white">
+                            <span className="text-[10px] font-black tracking-widest text-inverse">
                               {t("ai.visionAnalyzing")}
                             </span>
                           </div>
@@ -856,7 +854,7 @@ export function GlobalAiOverlay() {
                       )}
                     </div>
 
-                    <p className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-center text-xs font-bold text-slate-700 backdrop-blur-md dark:border-white/10 dark:bg-slate-800/80 dark:text-slate-200">
+                    <p className="rounded-xl border border-subtle bg-surface-sunken px-3 py-2 text-center text-xs font-bold text-secondary backdrop-blur-md">
                       {t("ai.visionHint")}
                     </p>
                     <button
@@ -893,7 +891,7 @@ export function GlobalAiOverlay() {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: 8 }}
                   transition={{ duration: 0.2 }}
-                  className="shrink-0 border-t border-slate-200 bg-white/80 p-3 backdrop-blur-md dark:border-white/10 dark:bg-slate-900/80"
+                  className="shrink-0 border-t border-subtle bg-surface-raised p-3 backdrop-blur-md"
                 >
                   <div className="flex gap-2">
                     <textarea

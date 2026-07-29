@@ -88,7 +88,7 @@ export function ControlBar(p: ControlBarProps) {
       />
 
       <div
-        className="pointer-events-auto mx-auto flex max-w-md items-center justify-center gap-3 rounded-full border border-[#C5A059]/20 bg-zinc-950/80 px-3 py-2.5 shadow-[0_12px_40px_rgba(0,0,0,0.55)] backdrop-blur-xl"
+        className="pointer-events-auto mx-auto flex max-w-md items-center justify-center gap-3 rounded-full border border-veto-gold/20 bg-zinc-950/80 px-3 py-2.5 shadow-[0_12px_40px_rgba(0,0,0,0.55)] backdrop-blur-xl"
         role="toolbar"
         aria-label={t("call.v2.controls.aria", "Call controls")}
       >
@@ -120,7 +120,7 @@ export function ControlBar(p: ControlBarProps) {
           onClick={p.onEndCall}
           aria-label={t("call.end", "End call")}
           title={t("call.end", "End call")}
-          className="flex h-[62px] w-[62px] items-center justify-center rounded-full bg-red-600 text-white shadow-lg shadow-red-900/40 outline-none transition hover:bg-red-500 focus-visible:ring-2 focus-visible:ring-red-300"
+          className="flex h-[62px] w-[62px] items-center justify-center rounded-full bg-red-600 text-inverse shadow-lg shadow-red-900/40 outline-none transition hover:bg-red-500 focus-visible:ring-2 focus-visible:ring-red-300"
         >
           <PhoneOff className="h-[26px] w-[26px]" aria-hidden />
         </button>
@@ -173,7 +173,7 @@ function IconBtn({
       aria-pressed={active}
       aria-label={label}
       title={shortcut ? `${label} (${shortcut})` : label}
-      className={`relative flex h-[52px] w-[52px] items-center justify-center rounded-full text-[22px] outline-none transition focus-visible:ring-2 focus-visible:ring-[#C5A059] disabled:cursor-not-allowed disabled:opacity-50 ${
+      className={`relative flex h-[52px] w-[52px] items-center justify-center rounded-full text-[22px] outline-none transition focus-visible:ring-2 focus-visible:ring-veto-gold disabled:cursor-not-allowed disabled:opacity-50 ${
         active ? activeClass : "bg-white/12 text-white hover:bg-white/18"
       }`}
     >
@@ -181,7 +181,7 @@ function IconBtn({
       {badge && (
         <span
           aria-hidden
-          className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-[#C5A059]"
+          className="absolute end-1.5 top-1.5 h-2 w-2 rounded-full bg-veto-gold"
         />
       )}
     </button>

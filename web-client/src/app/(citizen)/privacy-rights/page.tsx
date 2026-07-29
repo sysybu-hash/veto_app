@@ -52,20 +52,20 @@ export default function PrivacyRightsPage() {
   return (
     <>
     <main
-      className={`mx-auto w-full max-w-5xl px-4 py-10 text-right ${citizenBottomSafe}`}
+      className={`mx-auto w-full max-w-5xl px-4 py-10 text-end ${citizenBottomSafe}`}
       dir="rtl"
     >
       <section className={`${glassPanel} p-6`}>
-        <p className="text-sm font-black text-[#C5A059]">EU Compliance Mode</p>
-        <h1 className="mt-2 font-frank text-3xl font-black text-slate-950">זכויות פרטיות</h1>
-        <p className="mt-2 max-w-3xl text-sm leading-7 text-slate-600">
+        <p className="text-sm font-black text-veto-gold">EU Compliance Mode</p>
+        <h1 className="mt-2 font-frank text-3xl font-black text-primary">זכויות פרטיות</h1>
+        <p className="mt-2 max-w-3xl text-sm leading-7 text-secondary">
           ניתן לשלוח בקשות ייצוא, מחיקה או תיקון מידע. הבקשות ייבדקו מול חובות שמירת ראיות, תשלומים ואבטחת מידע.
         </p>
         <textarea
           value={note}
           onChange={(e) => setNote(e.target.value)}
           placeholder="הערה אופציונלית לבקשה"
-          className="mt-5 min-h-28 w-full rounded-2xl border border-slate-200 bg-white/80 p-4 text-sm text-slate-900 outline-none focus:ring-2 focus:ring-[#C5A059]"
+          className="mt-5 min-h-28 w-full rounded-2xl border border-subtle bg-surface-raised p-4 text-sm text-primary outline-none focus:ring-2 focus:ring-veto-gold"
         />
         <div className="mt-4 grid gap-3 md:grid-cols-3">
           {actions.map((action) => {
@@ -76,13 +76,13 @@ export default function PrivacyRightsPage() {
                 type="button"
                 onClick={() => void submit(action.type)}
                 disabled={busy !== null}
-                className={`${btnSecondaryGlass} p-4 text-right disabled:opacity-50`}
+                className={`${btnSecondaryGlass} p-4 text-end disabled:opacity-50`}
               >
-                <Icon className="h-5 w-5 text-[#C5A059]" aria-hidden />
-                <span className="mt-3 block font-black text-slate-900 dark:text-slate-100">
+                <Icon className="h-5 w-5 text-veto-gold" aria-hidden />
+                <span className="mt-3 block font-black text-primary dark:text-primary">
                   {action.title}
                 </span>
-                <span className="mt-1 block text-sm leading-6 text-slate-600 dark:text-slate-400">
+                <span className="mt-1 block text-sm leading-6 text-secondary">
                   {action.body}
                 </span>
               </button>
@@ -90,32 +90,32 @@ export default function PrivacyRightsPage() {
           })}
         </div>
         {message && (
-          <p className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800 dark:border-white/10 dark:bg-white/10 dark:text-slate-200">
+          <p className="mt-4 rounded-2xl border border-subtle bg-surface-sunken px-4 py-3 text-sm text-primary dark:bg-white/10 dark:text-primary">
             {message}
           </p>
         )}
 
         <div className={`${glassPanelNested} mt-6 p-4`}>
-          <h2 className="text-lg font-black text-slate-900 dark:text-slate-100">בקשות אחרונות</h2>
+          <h2 className="text-lg font-black text-primary dark:text-primary">בקשות אחרונות</h2>
           <div className="mt-4 space-y-3">
             {requests.length === 0 && (
-              <p className="text-sm text-slate-600 dark:text-slate-400">אין בקשות פתוחות.</p>
+              <p className="text-sm text-secondary">אין בקשות פתוחות.</p>
             )}
             {requests.map((request) => (
               <div
                 key={request._id}
-                className="flex items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white/80 p-4 dark:border-white/10 dark:bg-white/[0.03]"
+                className="flex items-center justify-between gap-3 rounded-2xl border border-subtle bg-surface-raised p-4 dark:bg-white/[0.03]"
               >
                 <div>
-                  <p className="font-black text-slate-900 dark:text-slate-100">{request.type}</p>
-                  <p className="text-xs text-slate-600 dark:text-slate-400">
+                  <p className="font-black text-primary dark:text-primary">{request.type}</p>
+                  <p className="text-xs text-secondary">
                     {new Intl.DateTimeFormat("he-IL", {
                       dateStyle: "short",
                       timeStyle: "short",
                     }).format(new Date(request.createdAt))}
                   </p>
                 </div>
-                <span className="rounded-full bg-[#C5A059]/15 px-3 py-1 text-xs font-bold text-[#D8B867]">{request.status}</span>
+                <span className="rounded-full bg-veto-gold/15 px-3 py-1 text-xs font-bold text-veto-gold-light">{request.status}</span>
               </div>
             ))}
           </div>

@@ -7,7 +7,7 @@ const CallShell = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="veto-call-keep-dark fixed inset-0 z-[70] flex h-[100dvh] w-screen items-center justify-center bg-black px-6 text-center text-sm font-bold text-slate-200">
+      <div data-surface="stage" className="fixed inset-0 z-[70] flex h-[100dvh] w-screen items-center justify-center bg-surface-canvas px-6 text-center text-sm font-bold text-secondary">
         Preparing call room…
       </div>
     ),

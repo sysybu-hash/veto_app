@@ -70,7 +70,7 @@ export function CreateEventModal({ open, onClose, onSubmit }: Props) {
         <div className="mb-4 flex items-start justify-between gap-3">
           <h2
             id="create-event-title"
-            className="font-frank text-lg font-bold tracking-tight text-slate-900 dark:text-slate-50"
+            className="font-frank text-lg font-bold tracking-tight text-primary"
           >
             {t("calendar.modalTitle")}
           </h2>
@@ -78,7 +78,7 @@ export function CreateEventModal({ open, onClose, onSubmit }: Props) {
             type="button"
             onClick={handleClose}
             disabled={submitting}
-            className={`rounded-lg p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 disabled:opacity-50 dark:text-slate-400 dark:hover:bg-white/10 dark:hover:text-slate-100 ${focusRing}`}
+            className={`rounded-lg p-2 text-muted transition hover:bg-slate-100 hover:text-slate-900 disabled:opacity-50  dark:hover:bg-white/10 dark:hover:text-slate-100 ${focusRing}`}
             aria-label={t("common.close")}
           >
             <svg
@@ -122,7 +122,7 @@ export function CreateEventModal({ open, onClose, onSubmit }: Props) {
           }}
         >
           <div>
-            <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400">
+            <label className="mb-1 block text-xs font-medium text-secondary">
               {t("calendar.fieldTitle")}
             </label>
             <input
@@ -135,7 +135,7 @@ export function CreateEventModal({ open, onClose, onSubmit }: Props) {
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400">
+              <label className="mb-1 block text-xs font-medium text-secondary">
                 {t("calendar.fieldDate")}
               </label>
               <input
@@ -146,7 +146,7 @@ export function CreateEventModal({ open, onClose, onSubmit }: Props) {
               />
             </div>
             <div>
-              <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400">
+              <label className="mb-1 block text-xs font-medium text-secondary">
                 {t("calendar.fieldTime")}
               </label>
               <input
@@ -158,7 +158,7 @@ export function CreateEventModal({ open, onClose, onSubmit }: Props) {
             </div>
           </div>
           <div>
-            <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400">
+            <label className="mb-1 block text-xs font-medium text-secondary">
               {t("calendar.fieldNotes")}
             </label>
             <textarea

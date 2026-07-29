@@ -107,12 +107,12 @@ function PaymentReturnInner() {
       dir={locale === "he" ? "rtl" : "ltr"}
     >
       <main className={`w-full max-w-md p-6 md:p-8 ${glassPanelNested}`}>
-        <h1 className="font-frank text-xl font-bold text-slate-900 dark:text-slate-50">
+        <h1 className="font-frank text-xl font-bold text-primary">
           {t("payments.returnTitle")}
         </h1>
 
         {status === "working" && (
-          <p className="mt-4 text-sm text-slate-600 dark:text-slate-400">
+          <p className="mt-4 text-sm text-secondary">
             {t("payments.returnWorking")}
           </p>
         )}
@@ -122,7 +122,7 @@ function PaymentReturnInner() {
           </p>
         )}
         {status === "cancel" && (
-          <p className="mt-4 text-sm text-slate-700 dark:text-slate-300">
+          <p className="mt-4 text-sm text-secondary">
             {t("payments.returnCancelled")}
           </p>
         )}
@@ -162,7 +162,7 @@ export default function PaymentReturnPage() {
   return (
     <Suspense
       fallback={
-        <div className="flex min-h-screen items-center justify-center p-8 text-slate-600 dark:text-slate-400">
+        <div className="flex min-h-screen items-center justify-center p-8 text-secondary">
           {t("payments.returnWorking")}
         </div>
       }

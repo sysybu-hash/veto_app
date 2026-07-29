@@ -31,10 +31,10 @@ export default function AppError({
         <div className="flex justify-center">
           <VetoBrandLogo className="h-9 w-auto" />
         </div>
-        <h1 className="font-frank text-xl font-black text-slate-100">
+        <h1 className="font-frank text-xl font-black text-primary">
           {t("errorPage.title")}
         </h1>
-        <p className="text-sm leading-relaxed text-slate-300">
+        <p className="text-sm leading-relaxed text-secondary">
           {t("errorPage.body")}
         </p>
         {process.env.NODE_ENV === "development" && error.message ? (

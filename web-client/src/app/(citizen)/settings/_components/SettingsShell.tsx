@@ -68,23 +68,23 @@ function SettingsChrome({
         {variant === "admin" && (
           <Link
             href="/admin/dashboard"
-            className="text-sm font-semibold text-[#C5A059] hover:underline"
+            className="text-sm font-semibold text-veto-gold hover:underline"
           >
             ← מרכז שליטה
           </Link>
         )}
 
         <div>
-          <h1 className="font-frank text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-50">
+          <h1 className="font-frank text-2xl font-bold tracking-tight text-primary">
             {tr("settings.title")}
           </h1>
-          <p className="font-heebo mt-1 text-sm text-slate-600 dark:text-slate-400">
+          <p className="font-heebo mt-1 text-sm text-secondary">
             {tr("settings.shellSubtitle")}
           </p>
         </div>
 
         <nav
-          className="flex flex-wrap gap-2 rounded-2xl border border-slate-200 bg-slate-50/90 p-2 backdrop-blur-md dark:border-white/10 dark:bg-white/[0.03]"
+          className="flex flex-wrap gap-2 rounded-2xl border border-subtle bg-surface-sunken p-2 backdrop-blur-md"
           aria-label="Settings sections"
         >
           {TABS.map((tab) => {
@@ -95,7 +95,7 @@ function SettingsChrome({
                 href={`${settingsBase}?tab=${tab.tab}`}
                 className={`rounded-xl px-3 py-2 text-center text-xs font-semibold sm:flex-1 sm:px-4 sm:text-sm ${
                   active
-                    ? "border border-[#C5A059]/50 bg-[#C5A059]/25 text-slate-900 shadow-[0_0_14px_rgba(197,160,89,0.3)] dark:text-slate-50"
+                    ? "border border-veto-gold/50 bg-veto-gold/25 text-primary shadow-[0_0_14px_rgba(197,160,89,0.3)]"
                     : `${btnSecondaryGlass} border-transparent bg-transparent dark:bg-white/[0.03]`
                 }`}
               >
@@ -106,13 +106,13 @@ function SettingsChrome({
         </nav>
 
         {loading ? (
-          <div className="h-64 animate-pulse rounded-2xl border border-slate-200 bg-slate-100/80 backdrop-blur-md dark:border-white/10 dark:bg-white/[0.03]" />
+          <div className="h-64 animate-pulse rounded-2xl border border-subtle bg-surface-sunken backdrop-blur-md" />
         ) : (
           children
         )}
 
         {!loading && (
-          <div className="mt-2 flex flex-col gap-3 border-t border-slate-200 pt-6 dark:border-white/10">
+          <div className="mt-2 flex flex-col gap-3 border-t border-subtle pt-6">
             {error && (
               <p
                 className="font-heebo rounded-xl border border-red-500/30 bg-red-500/15 px-3 py-2 text-sm text-red-800 backdrop-blur-md dark:text-red-200"

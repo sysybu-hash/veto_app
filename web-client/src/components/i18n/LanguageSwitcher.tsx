@@ -51,7 +51,7 @@ export function LanguageSwitcher({ className = "" }: { className?: string }) {
         aria-expanded={open}
         aria-haspopup="menu"
         aria-label={t("language.label")}
-        className={`${glassPanelNested} flex min-w-[108px] items-center justify-between gap-2 px-3 py-2 text-xs font-semibold text-slate-900 shadow-lg transition hover:bg-slate-50/90 dark:text-slate-100 dark:hover:bg-white/8`}
+        className={`${glassPanelNested} flex min-w-[108px] items-center justify-between gap-2 px-3 py-2 text-xs font-semibold text-primary shadow-lg transition hover:bg-slate-50/90 dark:text-slate-100 dark:hover:bg-white/8`}
       >
         <span className="truncate">{currentLabel}</span>
         <svg
@@ -74,7 +74,7 @@ export function LanguageSwitcher({ className = "" }: { className?: string }) {
         <div
           role="menu"
           aria-label={t("language.label")}
-          className={`${glassPanelNested} absolute right-0 mt-2 flex min-w-[140px] flex-col gap-1 p-1 shadow-lg`}
+          className={`${glassPanelNested} absolute end-0 mt-2 flex min-w-[140px] flex-col gap-1 p-1 shadow-lg`}
         >
           {ORDER.map((code) => {
             const active = locale === code;
@@ -96,8 +96,8 @@ export function LanguageSwitcher({ className = "" }: { className?: string }) {
                 }}
                 className={
                   active
-                    ? "rounded-2xl bg-[#C5A059] px-3 py-2 text-start text-xs font-black text-black shadow-sm dark:text-slate-950"
-                    : "rounded-2xl px-3 py-2 text-start text-xs font-semibold text-slate-700 transition hover:bg-slate-100/90 dark:text-slate-300 dark:hover:bg-white/6"
+                    ? "rounded-2xl bg-veto-gold px-3 py-2 text-start text-xs font-black text-on-brand shadow-sm"
+                    : "rounded-2xl px-3 py-2 text-start text-xs font-semibold text-secondary transition hover:bg-hover-overlay"
                 }
               >
                 {label}

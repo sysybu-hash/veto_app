@@ -76,7 +76,7 @@ export default function Home() {
   return (
     <main
       dir="rtl"
-      className="min-h-screen overflow-hidden bg-veto-canvas text-slate-900 selection:bg-veto-gold/35 selection:text-veto-ink dark:bg-veto-ink dark:text-white dark:selection:bg-veto-gold dark:selection:text-veto-ink"
+      className="min-h-screen overflow-hidden bg-veto-canvas text-primary selection:bg-veto-gold/35 selection:text-veto-ink dark:bg-veto-ink dark:selection:bg-veto-gold dark:selection:text-veto-ink"
     >
       {/* JSON-LD SEO Script */}
       <script
@@ -134,7 +134,7 @@ export default function Home() {
 
           <motion.p
             variants={fadeUp}
-            className="mb-10 max-w-2xl text-lg leading-relaxed text-slate-600 dark:text-gray-400 md:text-xl"
+            className="mb-10 max-w-2xl text-lg leading-relaxed text-secondary md:text-xl"
           >
             הפלטפורמה המתקדמת בישראל לחיבור מיידי בווידאו בין אזרחים בחירום
             לבין עורכי דין מומחים. מוצפן, מהיר ומתועד.
@@ -161,10 +161,10 @@ export default function Home() {
       </section>
 
       {/* --- FEATURES SECTION --- */}
-      <section className="relative w-full bg-gradient-to-b from-veto-canvas via-white to-slate-100 px-6 py-24 dark:from-veto-ink dark:via-veto-ink dark:to-[#0a0a0f]">
+      <section className="relative w-full bg-gradient-to-b from-veto-canvas via-white to-slate-100 px-6 py-24 dark:from-veto-ink dark:via-veto-ink dark:to-veto-ink">
         <div className="mx-auto max-w-6xl">
           <div className="mb-16 text-center">
-            <h2 className="mb-4 text-3xl font-bold text-slate-900 dark:text-white md:text-4xl">
+            <h2 className="mb-4 text-3xl font-bold text-primary md:text-4xl">
               טכנולוגיה שמשנה את כללי המשחק
             </h2>
             <div className="mx-auto h-1 w-20 rounded-full bg-veto-gold" />
@@ -183,15 +183,15 @@ export default function Home() {
                 <motion.div
                   key={feat.title}
                   variants={fadeUp}
-                  className="group flex flex-col rounded-3xl border border-slate-200/90 bg-white/75 p-8 shadow-sm backdrop-blur-xl transition-colors hover:bg-white dark:border-white/10 dark:bg-white/5 dark:shadow-none dark:hover:bg-white/10"
+                  className="group flex flex-col rounded-3xl border border-subtle bg-surface-raised p-8 shadow-sm backdrop-blur-xl transition-colors hover:bg-surface-overlay"
                 >
                   <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-2xl bg-veto-gold/20 text-veto-gold transition-transform group-hover:scale-110">
                     <Icon size={28} />
                   </div>
-                  <h3 className="mb-3 text-xl font-bold text-slate-900 dark:text-white">
+                  <h3 className="mb-3 text-xl font-bold text-primary">
                     {feat.title}
                   </h3>
-                  <p className="leading-relaxed text-slate-600 dark:text-gray-400">{feat.desc}</p>
+                  <p className="leading-relaxed text-secondary">{feat.desc}</p>
                 </motion.div>
               );
             })}
@@ -200,7 +200,7 @@ export default function Home() {
       </section>
 
       {/* --- THE EXPERIENCE — interactive preview --- */}
-      <section className="bg-slate-100 px-6 py-24 dark:bg-black">
+      <section className="bg-surface-sunken px-6 py-24">
         <div className="mx-auto grid max-w-6xl grid-cols-1 items-center gap-12 md:grid-cols-2">
           <motion.div
             initial={{ opacity: 0, x: -50 }}
@@ -211,10 +211,10 @@ export default function Home() {
             <p className="mb-2 text-xs font-black tracking-[0.22em] text-veto-gold">
               החוויה
             </p>
-            <h2 className="mb-6 text-4xl font-bold text-slate-900 dark:text-white">
+            <h2 className="mb-6 text-4xl font-bold text-primary">
               העוצמה שביד שלך
             </h2>
-            <p className="mb-6 text-lg leading-relaxed text-slate-600 dark:text-gray-400">
+            <p className="mb-6 text-lg leading-relaxed text-secondary">
               כשכל שנייה קובעת, הממשק של VETO הופך את הטלפון שלך לכלי הגנה משפטי
               עוצמתי. חיבור מיידי, הצפנה מלאה וגיבוי אוטומטי.
             </p>
@@ -237,13 +237,13 @@ export default function Home() {
       </section>
 
       {/* --- PRICING TEASER --- */}
-      <section className="border-t border-slate-200/90 px-6 py-24 dark:border-white/5">
+      <section className="border-t border-subtle px-6 py-24">
         <div className="mx-auto max-w-4xl text-center">
           <Scale size={48} className="mx-auto mb-6 text-veto-gold opacity-80" />
-          <h2 className="mb-6 text-3xl font-bold text-slate-900 dark:text-white md:text-4xl">
+          <h2 className="mb-6 text-3xl font-bold text-primary md:text-4xl">
             הגנה משפטית שקופה ונגישה
           </h2>
-          <p className="mb-8 text-lg text-slate-600 dark:text-gray-400">
+          <p className="mb-8 text-lg text-secondary">
             בחר את המסלול המתאים לך וקבל שקט נפשי. ללא אותיות קטנות.
           </p>
           <Link
@@ -256,24 +256,24 @@ export default function Home() {
       </section>
 
       {/* --- FAQ SECTION --- */}
-      <section className="bg-slate-200/40 px-6 py-24 dark:bg-black/30">
+      <section className="bg-surface-sunken px-6 py-24">
         <div className="mx-auto max-w-3xl">
           <div className="mb-12 text-center">
-            <h2 className="mb-4 text-3xl font-bold text-slate-900 dark:text-white">שאלות נפוצות</h2>
+            <h2 className="mb-4 text-3xl font-bold text-primary">שאלות נפוצות</h2>
           </div>
           <div className="space-y-4">
             {faqs.map((faq) => (
               <details
                 key={faq.q}
-                className="group cursor-pointer rounded-2xl border border-slate-200/90 bg-white/80 p-6 transition-colors hover:bg-white dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10"
+                className="group cursor-pointer rounded-2xl border border-subtle bg-surface-raised p-6 transition-colors hover:bg-surface-overlay"
               >
-                <summary className="flex list-none items-center justify-between text-lg font-medium text-slate-900 dark:text-white">
+                <summary className="flex list-none items-center justify-between text-lg font-medium text-primary">
                   {faq.q}
                   <span className="transition group-open:rotate-180">
                     <ChevronDown size={20} className="text-veto-gold" />
                   </span>
                 </summary>
-                <div className="mt-4 border-r-2 border-veto-gold/30 pr-2 leading-relaxed text-slate-600 dark:text-gray-400">
+                <div className="mt-4 border-r-2 border-veto-gold/30 pe-2 leading-relaxed text-secondary">
                   {faq.a}
                 </div>
               </details>
