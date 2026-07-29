@@ -285,9 +285,10 @@ export default function VetoMasterDashboard() {
 
       <main className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-10">
         <section
-          className="mb-10 rounded-2xl border border-subtle bg-veto-ink p-6 text-inverse shadow-xl md:p-8"
+          className="mb-10 rounded-2xl border border-subtle bg-veto-ink p-6 text-primary shadow-xl md:p-8"
           dir="rtl"
           aria-label="חדר בקרה"
+          data-surface="ink"
         >
           <header className="mb-8 flex flex-col gap-4 border-b border-subtle pb-4 sm:flex-row sm:items-center sm:justify-between">
             <div>

@@ -124,4 +124,65 @@ function renderDocumentHtml(doc, opts = {}) {
 </html>`;
 }
 
-module.exports = { renderDocumentHtml, escapeHtml, FOOTER_STAMP };
+/**
+ * Renders the simple `{title, body}` draft shape used by the legacy
+ * `legalDocumentEngine.service.js` (Flutter client, `POST
+ * /api/legal-documents/export`) — distinct from `SerializedLegalDocument`
+ * above. `body` is free text with `\n\n`-separated blocks and `### `
+ * sub-heading markers (see `legalDocumentEngine.service.js`'s own
+ * `toDocxBuffer` for the same splitting convention).
+ *
+ * @param {{ title: string, body: string, lang?: 'he'|'en'|'ru' }} draft
+ * @param {{ hasHeebo: boolean, heeboFontDataUris?: { regular: string, bold: string } }} opts
+ */
+function renderLegacyDraftHtml(draft, opts = {}) {
+  const lang = ['he', 'en', 'ru'].includes(draft.lang) ? draft.lang : 'he';
+  const isRtl = lang === 'he';
+  const hasHeebo = !!opts.hasHeebo;
+
+  const blocks = String(draft.body || '').split('\n\n');
+  const bodyHtml = blocks
+    .map((block) => {
+      const trimmed = block.trim();
+      if (!trimmed) return '';
+      if (trimmed.startsWith('### ')) {
+        return `<h2 class="section-title">${escapeHtml(trimmed.slice(4))}</h2>`;
+      }
+      const lines = trimmed.split('\n').map((line) => escapeHtml(line || ' '));
+      return `<p class="preamble">${lines.join('<br/>')}</p>`;
+    })
+    .join('\n');
+
+  const heebbFontFace = hasHeebo
+    ? `@font-face {
+        font-family: 'Heebo';
+        src: url('${opts.heeboFontDataUris.regular}') format('truetype');
+        font-weight: 400;
+      }
+      @font-face {
+        font-family: 'Heebo';
+        src: url('${opts.heeboFontDataUris.bold}') format('truetype');
+        font-weight: 700 900;
+      }`
+    : '';
+
+  return `<!doctype html>
+<html lang="${lang}" dir="${isRtl ? 'rtl' : 'ltr'}">
+<head>
+<meta charset="utf-8" />
+<title>${escapeHtml(draft.title)}</title>
+<style>
+  ${heebbFontFace}
+  ${documentCss({ isRtl, hasHeebo })}
+</style>
+</head>
+<body>
+  <div class="doc-frame">
+    <h1 class="doc-title">${escapeHtml(draft.title)}</h1>
+    ${bodyHtml}
+  </div>
+</body>
+</html>`;
+}
+
+module.exports = { renderDocumentHtml, renderLegacyDraftHtml, escapeHtml, FOOTER_STAMP };

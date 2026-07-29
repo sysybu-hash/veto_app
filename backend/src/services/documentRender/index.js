@@ -9,27 +9,20 @@
 // ============================================================
 
 const { withBrowser, heeboFontDataUris, closeBrowser } = require('./browser');
-const { renderDocumentHtml, FOOTER_STAMP } = require('./template');
+const { renderDocumentHtml, renderLegacyDraftHtml, FOOTER_STAMP } = require('./template');
 const { toDocxBuffer } = require('./docx');
 
-/** @param {import('./template').SerializedLegalDocument} doc */
-async function renderPdf(doc, opts = {}) {
-  const lang = ['he', 'en', 'ru'].includes(opts.lang) ? opts.lang : 'he';
-  const isRtl = lang === 'he';
-  const fonts = heeboFontDataUris();
-  const hasHeebo = !!fonts.regular;
-
-  const html = renderDocumentHtml(doc, { lang, hasHeebo, heeboFontDataUris: fonts });
-
+/** Prints an already-built HTML string to a PDF buffer with the shared
+ * A4 layout, running header/footer, and Hebrew-safe header/footer font
+ * (Chromium does not inherit page `<style>` into header/footer
+ * templates, so they need their own inline `@font-face`). */
+async function printHtmlToPdf(html, { isRtl, hasHeebo, fonts }) {
   return withBrowser(async (browser) => {
     const page = await browser.newPage();
     try {
       await page.setContent(html, { waitUntil: 'networkidle0' });
       await page.evaluateHandle('document.fonts.ready');
 
-      // Chromium does NOT inherit page <style> into header/footer
-      // templates — they need their own inline @font-face or Hebrew
-      // page numbers silently fall back to a non-Hebrew system font.
       const fontFace = hasHeebo
         ? `@font-face { font-family: 'Heebo'; src: url('${fonts.regular}') format('truetype'); font-weight: 400; }`
         : '';
@@ -67,4 +60,33 @@ async function renderPdf(doc, opts = {}) {
   });
 }
 
-module.exports = { renderPdf, toDocxBuffer, FOOTER_STAMP, closeBrowser };
+/** @param {import('./template').SerializedLegalDocument} doc */
+async function renderPdf(doc, opts = {}) {
+  const lang = ['he', 'en', 'ru'].includes(opts.lang) ? opts.lang : 'he';
+  const isRtl = lang === 'he';
+  const fonts = heeboFontDataUris();
+  const hasHeebo = !!fonts.regular;
+  const html = renderDocumentHtml(doc, { lang, hasHeebo, heeboFontDataUris: fonts });
+  return printHtmlToPdf(html, { isRtl, hasHeebo, fonts });
+}
+
+/**
+ * PDF export for the legacy `{title, body}` draft shape (Flutter client,
+ * `legalDocumentEngine.service.js` / `POST /api/legal-documents/export`).
+ * Replaces the old PDFKit + `reverseHebrewLine` path, which reversed
+ * Hebrew character order to fake RTL and broke on any line mixing
+ * Hebrew with digits/Latin (ID numbers, dates, sums) — Chromium's real
+ * bidi/HarfBuzz engine (same pipeline as `renderPdf` above) needs no
+ * such hack.
+ * @param {{ title: string, body: string, lang?: 'he'|'en'|'ru' }} draft
+ */
+async function renderLegacyDraftPdf(draft) {
+  const lang = ['he', 'en', 'ru'].includes(draft.lang) ? draft.lang : 'he';
+  const isRtl = lang === 'he';
+  const fonts = heeboFontDataUris();
+  const hasHeebo = !!fonts.regular;
+  const html = renderLegacyDraftHtml(draft, { hasHeebo, heeboFontDataUris: fonts });
+  return printHtmlToPdf(html, { isRtl, hasHeebo, fonts });
+}
+
+module.exports = { renderPdf, renderLegacyDraftPdf, toDocxBuffer, FOOTER_STAMP, closeBrowser };

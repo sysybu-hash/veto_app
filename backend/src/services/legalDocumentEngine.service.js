@@ -1,16 +1,13 @@
 // ============================================================
 //  legalDocumentEngine.service.js — Hebrew-aware PDF + DOCX export
 //
-//  - PDF: PDFKit + Heebo Hebrew TTF (registered at startup, falls
-//    back to Helvetica if the font file is missing).
+//  - PDF: delegates to the Puppeteer-based renderer in documentRender/
+//    (real Chromium bidi/HarfBuzz shaping — see `toPdfBuffer` below).
 //  - DOCX: docx with bidirectional + rightToLeft + Heebo font on
 //    every paragraph + footer for proper Hebrew rendering.
 //  - Mandatory footer stamp on every export.
 // ============================================================
 
-const fs = require('fs');
-const path = require('path');
-const PDFDocument = require('pdfkit');
 const {
   Document,
   Packer,
@@ -23,8 +20,6 @@ const {
 
 const FOOTER_STAMP = 'מסמך זה נוצר על ידי VETO LEGAL בפענוח AI';
 const HEBREW_FONT_NAME = 'Heebo';
-const FONT_PATH = path.join(__dirname, '..', 'assets', 'fonts', 'Heebo-Variable.ttf');
-const HAS_HEBREW_FONT = fs.existsSync(FONT_PATH);
 
 // ────────────────────────────────────────────────────────────
 //  Templates: per intent + domain.
@@ -245,91 +240,21 @@ async function toDocxBuffer(draft) {
 }
 
 // ────────────────────────────────────────────────────────────
-//  PDF builder — Hebrew font + reverse-shaping for RTL.
-//  PDFKit does not implement bidi; we reverse Hebrew lines so
-//  the rendered output reads correctly from right to left.
+//  PDF builder — delegates to the Puppeteer-based renderer in
+//  documentRender/ (real Chromium bidi/HarfBuzz shaping) instead of
+//  PDFKit + a manual Hebrew-line-reversal hack. The old hack faked RTL
+//  by reversing character runs, which broke on any line mixing Hebrew
+//  with digits/Latin (ID numbers, dates, sums, currency) — i.e. most
+//  real legal documents. See documentRender/{index,template}.js.
 // ────────────────────────────────────────────────────────────
-function reverseHebrewLine(line) {
-  if (!line) return '';
-  // Reverse runs but keep numbers/Latin token order inside the run.
-  const tokens = line.match(/[A-Za-z0-9_./@:?\-]+|[\u0590-\u05FF]+|[\s.,;:!?'"()\[\]{}]+|.{1}/g);
-  if (!tokens) return line.split('').reverse().join('');
-  return tokens.reverse().join('');
-}
-
-function shapeForPdf(line, lang) {
-  if (lang !== 'he') return line;
-  return reverseHebrewLine(line);
-}
-
 async function toPdfBuffer(draft) {
-  return new Promise((resolve, reject) => {
-    try {
-      const doc = new PDFDocument({ margin: 56, size: 'A4', bufferPages: true });
-      const chunks = [];
-      doc.on('data', (c) => chunks.push(c));
-      doc.on('end', () => resolve(Buffer.concat(chunks)));
-      doc.on('error', reject);
-
-      if (HAS_HEBREW_FONT) {
-        doc.registerFont(HEBREW_FONT_NAME, FONT_PATH);
-        doc.font(HEBREW_FONT_NAME);
-      }
-
-      const align = draft.lang === 'he' ? 'right' : 'left';
-
-      doc
-        .fontSize(20)
-        .text(shapeForPdf(draft.title, draft.lang), { align });
-      doc.moveDown(1);
-      doc.fontSize(12);
-
-      for (const block of draft.body.split('\n\n')) {
-        const trimmed = block.trim();
-        if (!trimmed) {
-          doc.moveDown(0.5);
-          continue;
-        }
-        if (trimmed.startsWith('### ')) {
-          doc.moveDown(0.5);
-          doc
-            .fontSize(14)
-            .text(shapeForPdf(trimmed.slice(4), draft.lang), { align });
-          doc.fontSize(12);
-          doc.moveDown(0.3);
-          continue;
-        }
-        for (const line of trimmed.split('\n')) {
-          doc.text(shapeForPdf(line || ' ', draft.lang), { align });
-        }
-        doc.moveDown(0.5);
-      }
-
-      // Footer stamp on every page.
-      const range = doc.bufferedPageRange();
-      for (let i = range.start; i < range.start + range.count; i++) {
-        doc.switchToPage(i);
-        const stamp = shapeForPdf(FOOTER_STAMP, draft.lang);
-        doc
-          .fontSize(9)
-          .fillColor('#6B7280')
-          .text(stamp, 0, doc.page.height - 40, {
-            width: doc.page.width,
-            align: 'center',
-          });
-      }
-
-      doc.end();
-    } catch (err) {
-      reject(err);
-    }
-  });
+  const { renderLegacyDraftPdf } = require('./documentRender');
+  return renderLegacyDraftPdf(draft);
 }
 
 module.exports = {
   FOOTER_STAMP,
   HEBREW_FONT_NAME,
-  HAS_HEBREW_FONT,
   TEMPLATES,
   createDraft,
   toDocxBuffer,
