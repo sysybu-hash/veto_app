@@ -120,6 +120,22 @@ RETURN_OTP_IN_JSON = 1
 תגובת `/api/auth/request-otp` תכלול את ה-OTP בשדה `otp`.  
 **הסר בפרודקשן** כשמחברים ספק SMS.
 
+### ⚠️ אבטחה — `ALLOW_DEV_LOGIN` חייב להיות כבוי בפרודקשן
+
+**נמצא ב-2026-07-29:** משתנה הסביבה `ALLOW_DEV_LOGIN=1` מוגדר כרגע גם על שרת ה-Render
+של הפרודקשן החי. זה הופך את `POST /api/auth/dev-login`
+(`backend/src/controllers/auth.controller.js`) לפעיל שם — כל מי שיודע את שם
+המשתמש/סיסמה הקבועים בברירת המחדל (`***REDACTED***` / `***REDACTED***`, וגם ניתנים
+לדריסה ע"י `DEV_LOGIN_USERNAME`/`DEV_LOGIN_PASSWORD`) יכול לקבל טוקן JWT תקף לכל
+תפקיד (`admin`/`lawyer`/`user`) **בלי שום אימות אמיתי**. השם/הסיסמה הקבועים גם
+מופיעים כברירת מחדל בקוד (`auth.controller.js`) ובקובץ ה-E2E fixture
+(`web-client/e2e/fixtures/auth.ts`) — שניהם ב-git history הציבורי.
+
+**פעולה נדרשת (טרם בוצעה — הוחלט להשאיר לטיפול נפרד):** להסיר את `ALLOW_DEV_LOGIN`
+מ-Render Environment בפרודקשן (Dashboard → Environment), ולשקול להחליף את
+`DEV_LOGIN_USERNAME`/`DEV_LOGIN_PASSWORD` בברירת מחדל אקראית/סוד ייעודי כדי
+שהערך שכבר דלף ב-git history לא יישאר שמיש גם בסביבות עתידיות שיפעילו את הדגל בטעות.
+
 ### Free Tier — שינה אחרי חוסר שימוש
 
 Render Free נכנס לשינה אחרי ~15 דקות. הבקשה הראשונה לוקחת 30–60 שניות.  
