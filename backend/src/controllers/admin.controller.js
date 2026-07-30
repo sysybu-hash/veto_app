@@ -446,6 +446,7 @@ const getAuditLogs = async (req, res, next) => {
     const query = {};
     if (req.query.action) query.action = String(req.query.action);
     if (req.query.targetType) query.target_type = String(req.query.targetType);
+    if (req.query.targetId) query.target_id = String(req.query.targetId);
 
     const [logs, total] = await Promise.all([
       AdminAuditLog.find(query)

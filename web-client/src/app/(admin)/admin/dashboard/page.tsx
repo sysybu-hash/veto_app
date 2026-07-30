@@ -551,6 +551,7 @@ export default function VetoMasterDashboard() {
                               e.target.value as "user" | "admin",
                             )
                           }
+                          aria-label={`תפקיד עבור ${user.name || user.phone || user.email || "משתמש"}`}
                           className="rounded-lg border border-subtle bg-veto-ink px-2 py-1 text-xs text-primary"
                         >
                           <option value="user">אזרח</option>
@@ -685,6 +686,7 @@ function CreateUserForm({
       <select
         value={role}
         onChange={(e) => setRole(e.target.value as typeof role)}
+        aria-label="תפקיד המשתמש החדש"
         className="rounded-lg border border-subtle bg-veto-ink px-3 py-2 text-sm text-primary outline-none focus:ring-2 focus:ring-veto-gold"
       >
         <option value="user">אזרח</option>

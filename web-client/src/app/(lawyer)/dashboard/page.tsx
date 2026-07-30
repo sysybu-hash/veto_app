@@ -385,6 +385,7 @@ export default function LawyerDashboardPage() {
                 type="button"
                 role="switch"
                 aria-checked={isAvailable}
+                aria-label={isAvailable ? "מחוברים וזמינים" : "לא מחוברים"}
                 onClick={() => handleAvailabilityChange(!isAvailable)}
                 className={`relative h-10 w-[4.5rem] rounded-full transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#C5A059] ${
                   isAvailable ? "bg-emerald-600" : "bg-zinc-300"
@@ -949,6 +950,7 @@ function ToggleLine({
         type="button"
         role="switch"
         aria-checked={checked}
+        aria-label={title}
         onClick={() => onChange(!checked)}
         className={`relative h-8 w-14 shrink-0 rounded-full transition ${checked ? "bg-veto-gold" : "bg-zinc-300"}`}
       >

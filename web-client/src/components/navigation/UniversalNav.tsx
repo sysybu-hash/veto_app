@@ -20,8 +20,18 @@ import {
 import { VetoBrandLogo } from "@/components/brand/VetoBrandLogo";
 import { LanguageSwitcher } from "@/components/i18n/LanguageSwitcher";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
-import { clearJwt, getJwt, getRoleFromJwt, isOwnerFromJwt, viewAs } from "@/lib/authToken";
+import {
+  clearJwt,
+  getJwt,
+  getRoleFromJwt,
+  isOwnerFromJwt,
+  isViewingAsFromJwt,
+  returnToOwnerView,
+  viewAs,
+} from "@/lib/authToken";
 import { disconnectSocket } from "@/lib/socketClient";
+import { Button } from "@/components/ui/primitives/Button";
+import { IconButton } from "@/components/ui/primitives/IconButton";
 
 const VIEW_AS_OPTIONS: { role: "citizen" | "lawyer" | "admin"; label: string; home: string }[] = [
   { role: "citizen", label: "אזרח", home: "/hub" },
@@ -88,15 +98,22 @@ function roleLabel(role: string | null, hasToken: boolean): string {
 
 export function UniversalNav() {
   const pathname = usePathname();
-  const [session, setSession] = useState<{ hasToken: boolean; role: string | null; isOwner: boolean }>({
+  const [session, setSession] = useState<{
+    hasToken: boolean;
+    role: string | null;
+    isOwner: boolean;
+    viewingAs: boolean;
+  }>({
     hasToken: false,
     role: null,
     isOwner: false,
+    viewingAs: false,
   });
   const [open, setOpen] = useState(false);
   const [switchingRole, setSwitchingRole] = useState<string | null>(null);
   const [switchError, setSwitchError] = useState<string | null>(null);
-  const { hasToken, role, isOwner } = session;
+  const [returning, setReturning] = useState(false);
+  const { hasToken, role, isOwner, viewingAs } = session;
   const items = useMemo(() => resolveItems(role, hasToken), [hasToken, role]);
   /** אזרחים: קישורים כבר במגירה וב־CitizenBottomNav — בלי כפילות בשורה העליונה */
   const showDesktopLinkRow =
@@ -104,7 +121,12 @@ export function UniversalNav() {
 
   useEffect(() => {
     queueMicrotask(() => {
-      setSession({ hasToken: !!getJwt(), role: getRoleFromJwt(), isOwner: isOwnerFromJwt() });
+      setSession({
+        hasToken: !!getJwt(),
+        role: getRoleFromJwt(),
+        isOwner: isOwnerFromJwt(),
+        viewingAs: isViewingAsFromJwt(),
+      });
       setOpen(false);
     });
   }, [pathname]);
@@ -118,6 +140,17 @@ export function UniversalNav() {
     } catch (err) {
       setSwitchError(err instanceof Error ? err.message : "שגיאה במעבר תצוגה.");
       setSwitchingRole(null);
+    }
+  };
+
+  const handleReturnToOwnerView = async () => {
+    setReturning(true);
+    try {
+      await returnToOwnerView();
+      window.location.assign(homeHref(getRoleFromJwt(), true));
+    } catch (err) {
+      setSwitchError(err instanceof Error ? err.message : "לא ניתן לחזור לתצוגה שלך.");
+      setReturning(false);
     }
   };
 
@@ -137,7 +170,7 @@ export function UniversalNav() {
   const logout = () => {
     disconnectSocket();
     clearJwt();
-    setSession({ hasToken: false, role: null, isOwner: false });
+    setSession({ hasToken: false, role: null, isOwner: false, viewingAs: false });
     setOpen(false);
     window.location.assign("/login");
   };
@@ -190,18 +223,35 @@ export function UniversalNav() {
                 </Link>
               </>
             ) : null}
-            <button
-              type="button"
+            <IconButton
+              variant="secondary"
+              size="lg"
               onClick={() => setOpen(true)}
-              aria-label="פתיחת תפריט"
+              label="פתיחת תפריט"
               aria-expanded={open}
               aria-controls="universal-nav-drawer"
-              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-default bg-surface-raised-2 text-primary shadow-sm transition hover:bg-white hover:text-veto-gold-dark dark:bg-white/10 dark:hover:bg-white/15"
-            >
-              <Menu className="h-5 w-5" aria-hidden />
-            </button>
+              icon={<Menu className="h-5 w-5" aria-hidden />}
+            />
           </div>
         </div>
+
+        {viewingAs ? (
+          <div className="mx-auto flex max-w-7xl items-center justify-between gap-2 px-2 pb-1.5 pt-1 text-xs font-bold sm:px-3">
+            <span className="rounded-full bg-veto-gold/15 px-3 py-1 text-brand-700 dark:text-veto-gold">
+              צופה כ-{roleLabel(role, hasToken)}
+            </span>
+            <Button
+              variant="link"
+              size="sm"
+              className="h-auto p-0"
+              disabled={returning}
+              loading={returning}
+              onClick={() => void handleReturnToOwnerView()}
+            >
+              חזרה לתצוגה שלי
+            </Button>
+          </div>
+        ) : null}
       </nav>
 
       {open ? (
@@ -224,14 +274,13 @@ export function UniversalNav() {
               <Link href={homeHref(role, hasToken)} className="flex items-center" onClick={() => setOpen(false)} aria-label="VETO">
                 <VetoBrandLogo className="h-11 w-auto" />
               </Link>
-              <button
-                type="button"
+              <IconButton
+                variant="secondary"
+                size="md"
                 onClick={() => setOpen(false)}
-                aria-label="סגירת תפריט"
-                className="flex h-9 w-9 items-center justify-center rounded-xl border border-default bg-surface-overlay text-primary transition hover:bg-hover-overlay"
-              >
-                <X className="h-5 w-5" aria-hidden />
-              </button>
+                label="סגירת תפריט"
+                icon={<X className="h-5 w-5" aria-hidden />}
+              />
             </div>
 
             <div
@@ -290,14 +339,15 @@ export function UniversalNav() {
 
             <div className="border-t border-subtle p-3">
               {hasToken ? (
-                <button
-                  type="button"
+                <Button
+                  variant="ghost"
+                  fullWidth
+                  className="justify-start text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/40"
                   onClick={logout}
-                  className="flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-sm font-bold text-red-700 transition hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/40"
+                  iconStart={<LogOut className="h-5 w-5" aria-hidden />}
                 >
-                  <LogOut className="h-5 w-5" aria-hidden />
                   יציאה
-                </button>
+                </Button>
               ) : (
                 <Link
                   href="/register"

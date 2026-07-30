@@ -726,6 +726,7 @@ const viewAs = async (req, res) => {
       full_name: fullName,
       preferred_language: doc.preferred_language || 'he',
       isOwner: true,
+      viewingAs: true,
     });
 
     return res.status(200).json({

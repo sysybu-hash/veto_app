@@ -168,10 +168,11 @@ function RegisterInner() {
 
         <div className="mt-6 flex flex-col gap-4">
           <div>
-            <label className="text-xs font-medium text-secondary">
+            <label htmlFor="register-full-name" className="text-xs font-medium text-secondary">
               {t("register.fullName")}
             </label>
             <input
+              id="register-full-name"
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
               className={`mt-1 ${authGlassInput}`}
@@ -179,10 +180,11 @@ function RegisterInner() {
             />
           </div>
           <div>
-            <label className="text-xs font-medium text-secondary">
+            <label htmlFor="register-phone" className="text-xs font-medium text-secondary">
               {t("register.phone")}
             </label>
             <input
+              id="register-phone"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               className={`mt-1 ${authGlassInput}`}
@@ -194,10 +196,11 @@ function RegisterInner() {
           {mode === "lawyer" && (
             <>
               <div>
-                <label className="text-xs font-medium text-secondary">
+                <label htmlFor="register-email" className="text-xs font-medium text-secondary">
                   אימייל מקצועי
                 </label>
                 <input
+                  id="register-email"
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -207,20 +210,22 @@ function RegisterInner() {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs font-medium text-secondary">
+                  <label htmlFor="register-license" className="text-xs font-medium text-secondary">
                     מספר רישיון לשכת עוה״ד
                   </label>
                   <input
+                    id="register-license"
                     value={licenseNumber}
                     onChange={(e) => setLicenseNumber(e.target.value)}
                     className={`mt-1 ${authGlassInput}`}
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-medium text-secondary">
+                  <label htmlFor="register-years" className="text-xs font-medium text-secondary">
                     שנות ותק
                   </label>
                   <input
+                    id="register-years"
                     type="number"
                     min={0}
                     max={70}

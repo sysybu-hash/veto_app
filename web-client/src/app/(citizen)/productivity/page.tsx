@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { FileText, ListChecks } from "lucide-react";
 import {
   createContract,
   fetchContracts,
@@ -660,9 +661,10 @@ export default function ProductivityPage() {
             {tab === "contracts" && (
               <div className="grid gap-4 sm:grid-cols-2">
                 {sortedContracts.length === 0 && (
-                  <p className="col-span-full py-10 text-center text-sm text-muted">
-                    {t("productivity.contractEmpty")}
-                  </p>
+                  <div className="col-span-full flex flex-col items-center gap-3 py-10 text-center text-sm text-muted">
+                    <FileText className="h-8 w-8 opacity-50" aria-hidden />
+                    <p>{t("productivity.contractEmpty")}</p>
+                  </div>
                 )}
                 {sortedContracts.map((c) => (
                   <article
@@ -738,8 +740,9 @@ export default function ProductivityPage() {
             {tab === "tasks" && (
               <ul className="divide-y divide-white/[0.06] overflow-hidden rounded-2xl border border-subtle bg-white/[0.04] backdrop-blur-xl">
                 {sortedTasks.length === 0 && (
-                  <li className="px-4 py-10 text-center text-sm text-muted">
-                    {t("productivity.tasksEmpty")}
+                  <li className="flex flex-col items-center gap-3 px-4 py-10 text-center text-sm text-muted">
+                    <ListChecks className="h-8 w-8 opacity-50" aria-hidden />
+                    <span>{t("productivity.tasksEmpty")}</span>
                   </li>
                 )}
                 {sortedTasks.map((task) => (

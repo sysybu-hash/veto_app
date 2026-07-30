@@ -126,6 +126,16 @@ export function isOwnerFromJwt(): boolean {
   return decodeJwtField<boolean>("isOwner") === true;
 }
 
+/**
+ * True only for a JWT issued by `/api/auth/view-as` (the owner is currently
+ * looking at a switched-to role), as opposed to the owner's own real login
+ * session. Used to show a persistent "viewing as X" indicator so the owner
+ * never loses track of which identity is active.
+ */
+export function isViewingAsFromJwt(): boolean {
+  return decodeJwtField<boolean>("viewingAs") === true;
+}
+
 /** Best-effort decode of the user id (`userId` or `id` or `sub`). */
 export function getUserIdFromJwt(): string | null {
   const direct =
@@ -134,6 +144,11 @@ export function getUserIdFromJwt(): string | null {
     decodeJwtField<string>("sub");
   return direct ? String(direct) : null;
 }
+
+/** sessionStorage key for the owner's real (non-view-as) JWT, stashed the
+ * first time they switch views so "return to my view" can restore it
+ * without a fresh Google login. Cleared once they're back on it. */
+const OWNER_SESSION_KEY = "veto_owner_session_jwt";
 
 /**
  * Owner-only role switch — calls `POST /api/auth/view-as` with the current
@@ -159,7 +174,47 @@ export async function viewAs(role: "citizen" | "lawyer" | "admin"): Promise<void
   }
   const json = (await res.json()) as { token?: string };
   if (!json.token) throw new Error("No token in view-as response");
+
+  // Stash the real owner session before switching away from it for the
+  // first time, so "return to my view" can restore it without re-login.
+  if (!isViewingAsFromJwt() && typeof window !== "undefined") {
+    try {
+      window.sessionStorage.setItem(OWNER_SESSION_KEY, current);
+    } catch {
+      /* ignore */
+    }
+  }
+
   await prepareLoginSession(json.token);
+}
+
+/** True if a stashed owner session is available to return to. */
+export function hasOwnerSessionToReturnTo(): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    return !!window.sessionStorage.getItem(OWNER_SESSION_KEY);
+  } catch {
+    return false;
+  }
+}
+
+/** Restores the owner's real session stashed before their first view-as
+ * switch, so they can leave a switched view without logging in again. */
+export async function returnToOwnerView(): Promise<void> {
+  if (typeof window === "undefined") return;
+  let stashed: string | null = null;
+  try {
+    stashed = window.sessionStorage.getItem(OWNER_SESSION_KEY);
+  } catch {
+    /* ignore */
+  }
+  if (!stashed) throw new Error("No owner session to return to.");
+  await prepareLoginSession(stashed);
+  try {
+    window.sessionStorage.removeItem(OWNER_SESSION_KEY);
+  } catch {
+    /* ignore */
+  }
 }
 
 function decodeJwtField<T>(field: string): T | null {

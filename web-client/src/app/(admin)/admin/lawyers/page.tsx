@@ -208,6 +208,7 @@ export default function AdminLawyersPage() {
           <select
             value={filter}
             onChange={(e) => setFilter(e.target.value as typeof filter)}
+            aria-label="סינון לפי סטטוס אישור"
             className="rounded-lg border border-subtle bg-veto-ink px-3 py-2 text-sm text-primary"
           >
             <option value="all">הכל</option>
