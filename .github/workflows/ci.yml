@@ -135,8 +135,8 @@ jobs:
           JWT_SECRET: ci-test-secret-not-for-production
           RETURN_OTP_IN_JSON: '1'
           DEV_LOGIN_ENABLED: '1'
-          DEV_LOGIN_USERNAME: ***REDACTED***
-          DEV_LOGIN_PASSWORD: '***REDACTED***'
+          DEV_LOGIN_USERNAME: 'ci-e2e@example.com'
+          DEV_LOGIN_PASSWORD: 'ci-e2e-test-password'
         run: |
           nohup node server.js > backend.log 2>&1 &
           timeout 30 bash -c 'until curl -sf http://localhost:5001/health; do sleep 1; done'
