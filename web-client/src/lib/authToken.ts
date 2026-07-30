@@ -1,3 +1,5 @@
+import { apiUrl } from "@/lib/env";
+
 /**
  * Web JWT storage for VETO (parity with Flutter secure storage key `jwt`).
  * Dev: paste token in /login; production flows should use OTP here too.
@@ -114,6 +116,16 @@ export function getRoleFromJwt(): string | null {
   return decodeJwtField<string>("role");
 }
 
+/**
+ * True only for the one real, Google-verified owner identity (see
+ * `OWNER_EMAIL` in `backend/src/controllers/auth.controller.js`). Every JWT
+ * issued via `/api/auth/view-as` also carries this so the switcher stays
+ * available after switching views.
+ */
+export function isOwnerFromJwt(): boolean {
+  return decodeJwtField<boolean>("isOwner") === true;
+}
+
 /** Best-effort decode of the user id (`userId` or `id` or `sub`). */
 export function getUserIdFromJwt(): string | null {
   const direct =
@@ -121,6 +133,33 @@ export function getUserIdFromJwt(): string | null {
     decodeJwtField<string>("id") ??
     decodeJwtField<string>("sub");
   return direct ? String(direct) : null;
+}
+
+/**
+ * Owner-only role switch — calls `POST /api/auth/view-as` with the current
+ * JWT and swaps in the returned token for the requested role, without a
+ * logout/login round trip. Throws on non-owner/network failure so the
+ * caller (the nav switcher) can surface an error instead of silently
+ * failing to switch.
+ */
+export async function viewAs(role: "citizen" | "lawyer" | "admin"): Promise<void> {
+  const current = getJwt();
+  if (!current) throw new Error("Not logged in.");
+  const res = await fetch(apiUrl("/api/auth/view-as"), {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${current}`,
+    },
+    body: JSON.stringify({ role }),
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}) as { error?: string });
+    throw new Error(body.error || `view-as failed (${res.status})`);
+  }
+  const json = (await res.json()) as { token?: string };
+  if (!json.token) throw new Error("No token in view-as response");
+  await prepareLoginSession(json.token);
 }
 
 function decodeJwtField<T>(field: string): T | null {

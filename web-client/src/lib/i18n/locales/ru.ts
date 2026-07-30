@@ -505,6 +505,7 @@ export const ru: Dict = {
     sealedBadge: "VETO SEALED",
     delete: "Удалить",
     deleting: "Удаление…",
+    uploadFileButton: "Загрузить файл",
     uploadModalTitle: "Загрузка в сейф",
     uploadModalSubtitle:
       "Добавьте документы или фото в выбранную папку.",

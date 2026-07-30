@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useTrWithFallback } from "../lib/trWithFallback";
 import { useAgoraDevices } from "../hooks/useAgoraDevices";
 import type { PreCallReadiness } from "@/store/useEmergencyStore";
+import { Button } from "@/components/ui/primitives/Button";
 
 type Mode = "video" | "audio" | "chat";
 
@@ -93,15 +94,16 @@ export function PreCallCheck({
         </p>
 
         {permission !== "granted" && (
-          <button
-            type="button"
+          <Button
+            variant="primary"
+            fullWidth
+            className="mt-4"
             onClick={() =>
               void requestPermission({ mic: needsMic, camera: needsCamera })
             }
-            className="mt-4 w-full rounded-xl bg-veto-gold px-4 py-2 text-sm font-bold text-black hover:bg-veto-gold-light"
           >
             {t("call.v2.preCheck.grant", "Allow microphone & camera")}
-          </button>
+          </Button>
         )}
 
         {permission === "denied" && (
@@ -152,20 +154,18 @@ export function PreCallCheck({
                 : `${latencyMs} ms`}
             </p>
           </div>
-          <button
-            type="button"
-            onClick={() => void checkNetwork()}
-            disabled={latencyChecking}
-            className="rounded-lg bg-white/10 px-3 py-1 text-xs font-semibold text-primary hover:bg-white/15 disabled:opacity-50"
-          >
+          <Button variant="secondary" size="sm" onClick={() => void checkNetwork()} disabled={latencyChecking} loading={latencyChecking}>
             {latencyChecking
               ? t("call.v2.preCheck.testing", "Testing…")
               : t("call.v2.preCheck.test", "Test")}
-          </button>
+          </Button>
         </div>
 
-        <button
-          type="button"
+        <Button
+          variant="primary"
+          size="lg"
+          fullWidth
+          className="mt-5"
           disabled={!canStart}
           onClick={() =>
             onReady({
@@ -175,10 +175,9 @@ export function PreCallCheck({
               ready: true,
             })
           }
-          className="mt-5 w-full rounded-xl bg-veto-gold px-4 py-3 text-sm font-black text-black hover:bg-veto-gold-light disabled:opacity-40"
         >
           {t("call.v2.preCheck.start", "Start the call")}
-        </button>
+        </Button>
       </div>
     </div>
   );

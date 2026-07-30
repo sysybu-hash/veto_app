@@ -19,15 +19,13 @@ import { useTranslation } from "@/lib/i18n/LocaleProvider";
 import { CitizenBottomNav } from "@/components/citizen/CitizenBottomNav";
 import { CreateTaskModal } from "@/components/productivity/CreateTaskModal";
 import {
-  btnPrimaryDark,
-  btnPrimaryGold,
-  btnSecondaryGlass,
   citizenBottomSafe,
   glassInput,
   glassPanel,
   glassPanelNested,
   modalBackdrop,
 } from "@/lib/vetoGlass";
+import { Button } from "@/components/ui/primitives/Button";
 
 /** UI contract status — maps to backend `CitizenContract.status`. */
 type ContractStatus = "pending_signature" | "active" | "expired" | "at_risk";
@@ -337,22 +335,25 @@ function CreateContractModal({
           )}
         </div>
         <div className="flex gap-3 border-t border-subtle px-5 py-4">
-          <button
-            type="button"
+          <Button
+            variant="secondary"
+            size="lg"
+            className="flex-1 min-h-[44px]"
             onClick={() => !saving && onClose()}
             disabled={saving}
-            className={`flex-1 min-h-[44px] py-3 text-sm ${btnSecondaryGlass} disabled:cursor-not-allowed disabled:opacity-50`}
           >
             {t("common.cancel")}
-          </button>
-          <button
-            type="button"
+          </Button>
+          <Button
+            variant="primary"
+            size="lg"
+            className="flex-1 min-h-[44px]"
             onClick={() => void save()}
             disabled={!title.trim() || !partyName.trim() || saving}
-            className={`flex-1 min-h-[44px] py-3 text-sm ${btnPrimaryGold} disabled:cursor-not-allowed disabled:opacity-50`}
+            loading={saving}
           >
             {saving ? t("settings.saving") : t("productivity.saveContract")}
-          </button>
+          </Button>
         </div>
       </div>
     </div>
@@ -411,13 +412,9 @@ function ContractViewModal({
             {t("productivity.viewLastUpdated")} {contract.updatedAt}
           </p>
         </div>
-        <button
-          type="button"
-          onClick={onClose}
-          className={`mt-6 w-full min-h-[44px] py-3 text-sm ${btnPrimaryDark}`}
-        >
+        <Button variant="primary" size="lg" fullWidth className="mt-6 min-h-[44px]" onClick={onClose}>
           {t("common.close")}
-        </button>
+        </Button>
       </div>
     </div>
   );
@@ -600,16 +597,17 @@ export default function ProductivityPage() {
               {t("productivity.heroSubtitle")}
             </p>
           </div>
-          <button
-            type="button"
+          <Button
+            variant="primary"
+            fullWidth
+            className="sm:w-auto"
             onClick={handleNewClick}
             disabled={isLoading || !!loadError}
-            className={`w-full px-4 py-3 text-sm disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto ${btnPrimaryGold}`}
           >
             {tab === "contracts"
               ? t("productivity.newContract")
               : t("productivity.newTask")}
-          </button>
+          </Button>
         </div>
 
         <div className="border-b border-subtle px-4 sm:px-6">
@@ -643,13 +641,9 @@ export default function ProductivityPage() {
             role="alert"
           >
             <p>{loadError}</p>
-            <button
-              type="button"
-              onClick={() => void loadData()}
-              className="shrink-0 rounded-lg bg-red-800 px-4 py-2 text-sm font-semibold text-inverse hover:bg-red-700"
-            >
+            <Button variant="danger" size="sm" className="shrink-0" onClick={() => void loadData()}>
               {t("common.retry")}
-            </button>
+            </Button>
           </div>
         )}
 
@@ -693,25 +687,21 @@ export default function ProductivityPage() {
                       className="relative mt-4"
                       ref={menuOpenId === c.id ? menuRef : undefined}
                     >
-                      <button
-                        type="button"
+                      <Button
+                        variant="secondary"
+                        fullWidth
                         onClick={(e) => {
                           e.stopPropagation();
                           setMenuOpenId((id) => (id === c.id ? null : c.id));
                         }}
-                        className={`flex w-full items-center justify-center gap-2 py-2 text-sm font-medium ${btnSecondaryGlass}`}
+                        iconEnd={
+                          <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                            <path d="M19 9l-7 7-7-7" />
+                          </svg>
+                        }
                       >
                         {t("productivity.actions")}
-                        <svg
-                          className="h-4 w-4"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth={2}
-                          viewBox="0 0 24 24"
-                        >
-                          <path d="M19 9l-7 7-7-7" />
-                        </svg>
-                      </button>
+                      </Button>
                       {menuOpenId === c.id && (
                         <div className="absolute inset-x-0 z-10 mt-1 overflow-hidden rounded-xl border border-subtle bg-surface-overlay py-1 shadow-lg backdrop-blur-xl">
                           <button

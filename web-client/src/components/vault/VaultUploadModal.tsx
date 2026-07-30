@@ -4,15 +4,14 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { saveEvidence } from "@/app/actions/vault";
 import { uploadFile } from "@/api/vaultApi";
 import {
-  btnPrimaryGold,
-  btnSecondaryGlass,
   glassInput,
   glassPanel,
   modalBackdrop,
-  focusRing,
 } from "@/lib/vetoGlass";
 import { useToastStore } from "@/store/useToastStore";
 import { useTranslation } from "@/lib/i18n/LocaleProvider";
+import { Button } from "@/components/ui/primitives/Button";
+import { IconButton } from "@/components/ui/primitives/IconButton";
 
 export type VaultFolderOption = { id: string; name: string };
 
@@ -165,23 +164,18 @@ export function VaultUploadModal({
               {t("vault.uploadModalSubtitle")}
             </p>
           </div>
-          <button
-            type="button"
+          <IconButton
+            variant="ghost"
+            size="sm"
             onClick={handleClose}
             disabled={isUploading}
-            className={`rounded-lg p-2 text-muted hover:bg-slate-100 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-40  dark:hover:bg-white/10 dark:hover:text-primary ${focusRing}`}
-            aria-label={t("vault.uploadCloseAria")}
-          >
-            <svg
-              className="h-5 w-5"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth={2}
-              viewBox="0 0 24 24"
-            >
-              <path d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
+            label={t("vault.uploadCloseAria")}
+            icon={
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                <path d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            }
+          />
         </div>
 
         <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-5 py-4">
@@ -253,16 +247,17 @@ export function VaultUploadModal({
                   className="flex items-center justify-between gap-2 rounded-lg border border-subtle bg-surface-overlay px-3 py-2 text-sm text-primary backdrop-blur-sm dark:bg-white/[0.04] dark:text-primary"
                 >
                   <span className="truncate font-medium">{f.name}</span>
-                  <button
-                    type="button"
+                  <Button
+                    variant="link"
+                    size="sm"
                     disabled={isUploading}
-                    className={`shrink-0 min-h-[44px] rounded-lg px-2 text-xs font-semibold text-red-600 hover:underline disabled:cursor-not-allowed disabled:opacity-40 dark:text-red-400 ${focusRing}`}
+                    className="shrink-0 min-h-[44px] text-red-600 dark:text-red-400"
                     onClick={() =>
                       setPicked((prev) => prev.filter((_, idx) => idx !== i))
                     }
                   >
                     {t("vault.uploadRemoveSelected")}
-                  </button>
+                  </Button>
                 </li>
               ))}
             </ul>
@@ -279,37 +274,23 @@ export function VaultUploadModal({
         </div>
 
         <div className="flex gap-3 border-t border-subtle px-5 py-4">
-          <button
-            type="button"
-            onClick={handleClose}
-            disabled={isUploading}
-            className={`flex-1 py-3 text-sm ${btnSecondaryGlass} disabled:cursor-not-allowed disabled:opacity-50`}
-          >
+          <Button variant="secondary" size="lg" className="flex-1" onClick={handleClose} disabled={isUploading}>
             {t("common.cancel")}
-          </button>
-          <button
-            type="button"
+          </Button>
+          <Button
+            variant="primary"
+            size="lg"
+            className="flex-1"
             disabled={picked.length === 0 || isUploading}
+            loading={isUploading}
             onClick={() => void submit()}
-            className={`relative flex-1 overflow-hidden py-3 text-sm ${btnPrimaryGold} disabled:cursor-not-allowed disabled:opacity-50`}
           >
-            {isUploading ? (
-              <span className="flex items-center justify-center gap-2">
-                <span
-                  className="h-4 w-4 animate-pulse rounded-full bg-zinc-950/30 ring-2 ring-zinc-950/20"
-                  aria-hidden
-                />
-                <span className="animate-pulse">{t("vault.uploadingVault")}</span>
-              </span>
-            ) : picked.length > 0 ? (
-              t("vault.uploadAddCount").replace(
-                "{count}",
-                String(picked.length),
-              )
-            ) : (
-              t("vault.uploadAddFilesPlain")
-            )}
-          </button>
+            {isUploading
+              ? t("vault.uploadingVault")
+              : picked.length > 0
+                ? t("vault.uploadAddCount").replace("{count}", String(picked.length))
+                : t("vault.uploadAddFilesPlain")}
+          </Button>
         </div>
       </div>
     </div>

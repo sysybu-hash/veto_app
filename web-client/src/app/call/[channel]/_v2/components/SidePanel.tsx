@@ -5,6 +5,8 @@ import { apiUrl, authMultipartFetch } from "@/api/apiClient";
 import { useTrWithFallback } from "../lib/trWithFallback";
 import type { ChatMessage } from "../hooks/useCallChat";
 import type { TranscriptSegment } from "../hooks/useRealtimeTranscription";
+import { Button } from "@/components/ui/primitives/Button";
+import { IconButton } from "@/components/ui/primitives/IconButton";
 
 type Tab = "chat" | "transcript" | "files" | "info";
 
@@ -54,14 +56,14 @@ export function SidePanel(props: {
             {t("call.v2.side.info", "Info")}
           </TabBtn>
         </div>
-        <button
-          type="button"
+        <IconButton
+          variant="ghost"
+          size="sm"
+          className="rounded-full bg-white/10 hover:bg-white/15"
           onClick={props.onClose}
-          aria-label={t("call.v2.side.close", "Close panel")}
-          className="rounded-full bg-white/10 px-2 py-1 text-xs hover:bg-white/15"
-        >
-          ✕
-        </button>
+          label={t("call.v2.side.close", "Close panel")}
+          icon={<span aria-hidden>✕</span>}
+        />
       </header>
 
       {tab === "chat" && (
@@ -164,13 +166,9 @@ function ChatTab({
             placeholder={t("call.chatPlaceholder", "Type a message…")}
             className="min-w-0 flex-1 rounded-xl border border-subtle bg-white/10 px-3 py-2 text-sm text-inverse outline-none placeholder:text-muted focus:ring-2 focus:ring-veto-gold"
           />
-          <button
-            type="submit"
-            disabled={!draft.trim()}
-            className="rounded-xl bg-veto-gold px-3 py-2 text-sm font-bold text-black disabled:opacity-50"
-          >
+          <Button variant="primary" size="sm" type="submit" disabled={!draft.trim()}>
             {t("chat.send", "Send")}
-          </button>
+          </Button>
         </div>
       </form>
     </>

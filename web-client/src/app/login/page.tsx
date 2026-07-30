@@ -14,16 +14,9 @@ import { useTranslation } from "@/lib/i18n/LocaleProvider";
 import { normalizePhoneForVeto } from "@/lib/phone";
 import { loginWithPasskey, passkeysSupported } from "@/api/passkeyApi";
 import { OtpInput } from "@/components/auth/OtpInput";
-import {
-  authBtnPasskey,
-  authBtnSecondary,
-  authGlassInput,
-  authGlassPanel,
-  btnPrimaryDark,
-} from "@/lib/vetoGlass";
+import { authGlassInput, authGlassPanel } from "@/lib/vetoGlass";
 import { Fingerprint } from "lucide-react";
-
-type LoginRole = "admin" | "citizen" | "lawyer";
+import { Button } from "@/components/ui/primitives/Button";
 
 function routeByRole(router: ReturnType<typeof useRouter>, role: string | null) {
   if (role === "admin") {
@@ -168,10 +161,6 @@ function LoginPageInner() {
   const [message, setMessage] = useState<string | null>(null);
   const [devOtp, setDevOtp] = useState<string | null>(null);
   const [otpCopied, setOtpCopied] = useState(false);
-  const [devUsername, setDevUsername] = useState("");
-  const [devPassword, setDevPassword] = useState("");
-  const [devRole, setDevRole] = useState<LoginRole>("admin");
-  const [adminLoginOpen, setAdminLoginOpen] = useState(false);
   const [autoOtpPhone, setAutoOtpPhone] = useState<string | null>(null);
   const autoOtpConsumedRef = useRef<string | null>(null);
   const [resendCooldown, setResendCooldown] = useState(0);
@@ -470,34 +459,6 @@ function LoginPageInner() {
     };
   }, [autoOtpPhone, router, t]);
 
-  const handleTestCredentialsLogin = () => {
-    void (async () => {
-      setBusy(true);
-      setMessage(null);
-      try {
-        const data = await postJson("/api/auth/dev-login", {
-          username: devUsername.trim(),
-          password: devPassword.trim(),
-          role: devRole,
-        });
-        const token = typeof data.token === "string" ? data.token : null;
-        if (!token) throw new Error("No token in response");
-        await prepareLoginSession(token);
-        setSocketAuthToken(token);
-        routeAfterAuth(router, data);
-      } catch (e) {
-        setMessage(formatLoginError(e, t));
-      } finally {
-        setBusy(false);
-      }
-    })();
-  };
-
-  const openAdminLogin = () => {
-    setAdminLoginOpen(true);
-    setMessage(null);
-  };
-
   const canRequestOtp = !busy;
   const otpDigits = otp.replace(/\D/g, "");
   const canVerifyOtp = otpDigits.length === 6 && !busy;
@@ -510,15 +471,6 @@ function LoginPageInner() {
         dir={locale === "he" ? "rtl" : "ltr"}
       >
         <div className="text-center">
-          <div className="mb-4">
-            <button
-              type="button"
-              onClick={openAdminLogin}
-              className={`px-4 py-2 text-sm font-bold ${btnPrimaryDark}`}
-            >
-              כניסת מנהל
-            </button>
-          </div>
           {!isApiOriginConfigured() && (
             <div
               className="mb-4 rounded-xl border border-amber-600/80 bg-amber-500/15 px-3 py-2.5 text-xs font-semibold leading-snug text-amber-200 shadow-sm"
@@ -533,12 +485,7 @@ function LoginPageInner() {
         </div>
 
         <div className="mt-8 flex flex-col gap-4">
-          <button
-            type="button"
-            onClick={handleGoogle}
-            disabled={busy}
-            className={`flex w-full items-center justify-center gap-3 px-4 py-3 text-sm font-semibold shadow-sm transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-veto-gold disabled:opacity-50 ${authBtnSecondary}`}
-          >
+          <Button variant="secondary" size="lg" fullWidth onClick={handleGoogle} disabled={busy}>
             <svg className="h-5 w-5 shrink-0" viewBox="0 0 24 24" aria-hidden>
               <path
                 fill="#4285F4"
@@ -558,7 +505,7 @@ function LoginPageInner() {
               />
             </svg>
             {t("login.google")}
-          </button>
+          </Button>
 
           <div className="relative py-2">
             <div
@@ -576,15 +523,16 @@ function LoginPageInner() {
         </div>
 
         <div className="mt-4">
-          <button
-            type="button"
+          <Button
+            variant="secondary"
+            size="lg"
+            fullWidth
             disabled={busy || !phone.trim() || !passkeysSupported()}
             onClick={() => void handlePasskeyLogin()}
-            className={`flex w-full items-center justify-center gap-3 px-4 py-4 text-base transition disabled:opacity-50 ${authBtnPasskey}`}
+            iconStart={<Fingerprint className="h-6 w-6 shrink-0" aria-hidden />}
           >
-            <Fingerprint className="h-6 w-6 shrink-0" aria-hidden />
             כניסה מהירה עם Passkey (טביעת אצבע / פנים)
-          </button>
+          </Button>
           {!passkeysSupported() && (
             <p className="mt-2 text-center text-xs text-muted">
               הדפדפן אינו תומך ב-Passkeys. השתמשו בקוד SMS.
@@ -632,14 +580,9 @@ function LoginPageInner() {
             </p>
           </div>
 
-          <button
-            type="button"
-            disabled={!canRequestOtp}
-            onClick={() => void handleOtpLogin()}
-            className={`w-full px-4 py-3 text-sm font-semibold shadow-md ${btnPrimaryDark} disabled:opacity-50`}
-          >
+          <Button variant="primary" size="lg" fullWidth disabled={!canRequestOtp} onClick={() => void handleOtpLogin()}>
             {t("login.sendOtp")}
-          </button>
+          </Button>
 
           {devOtp && (
             <div
@@ -657,13 +600,13 @@ function LoginPageInner() {
                 >
                   {devOtp}
                 </code>
-                <button
-                  type="button"
+                <Button
+                  variant="primary"
                   onClick={() => void copyDevOtp()}
-                  className="rounded-xl bg-amber-600 px-4 py-2.5 text-sm font-bold text-inverse shadow transition hover:bg-amber-700"
+                  className="bg-amber-600 hover:bg-amber-700"
                 >
                   {otpCopied ? t("common.copied") : t("common.copy")}
-                </button>
+                </Button>
               </div>
             </div>
           )}
@@ -682,14 +625,15 @@ function LoginPageInner() {
                 allowOtpResend ? () => void handleOtpLogin() : undefined
               }
             />
-            <button
-              type="button"
+            <Button
+              variant="primary"
+              fullWidth
+              className="mt-1 bg-emerald-700 text-inverse hover:bg-emerald-600"
               disabled={!canVerifyOtp}
               onClick={() => void handleVerify()}
-              className="mt-1 rounded-xl bg-emerald-700 px-4 py-2.5 text-sm font-semibold text-inverse shadow-md transition hover:bg-emerald-600 disabled:opacity-50"
             >
               {t("login.verify")}
-            </button>
+            </Button>
           </div>
 
           {message && (
@@ -699,82 +643,6 @@ function LoginPageInner() {
           )}
         </div>
       </main>
-
-      {adminLoginOpen && (
-        <div
-          className="fixed inset-0 z-[120] flex items-center justify-center bg-surface-scrim p-4"
-          role="presentation"
-          onMouseDown={(e) => {
-            if (e.target === e.currentTarget) setAdminLoginOpen(false);
-          }}
-        >
-          <div
-            data-surface="ink"
-            className={`w-full max-w-sm p-5 md:p-6 ${authGlassPanel}`}
-            dir={locale === "he" ? "rtl" : "ltr"}
-            role="dialog"
-            aria-modal="true"
-            aria-label="כניסת מנהל"
-            onMouseDown={(e) => e.stopPropagation()}
-          >
-            <h3 className="text-lg font-bold text-primary">כניסת מנהל</h3>
-            <p className="mt-1 text-xs text-muted">
-              התחברות בדיקות עם שם משתמש וסיסמה ובחירת תפקיד.
-            </p>
-
-            <div className="mt-4 flex flex-col gap-2">
-              <label className="text-xs font-medium text-secondary">שם משתמש</label>
-              <input
-                value={devUsername}
-                onChange={(e) => setDevUsername(e.target.value)}
-                className={authGlassInput}
-                autoComplete="username"
-              />
-            </div>
-
-            <div className="mt-3 flex flex-col gap-2">
-              <label className="text-xs font-medium text-secondary">סיסמה</label>
-              <input
-                type="password"
-                value={devPassword}
-                onChange={(e) => setDevPassword(e.target.value)}
-                className={authGlassInput}
-                autoComplete="current-password"
-              />
-            </div>
-
-            <div className="mt-3 flex flex-col gap-2">
-              <label className="text-xs font-medium text-secondary">כניסה כ</label>
-              <select
-                value={devRole}
-                onChange={(e) => setDevRole(e.target.value as LoginRole)}
-                className={authGlassInput}
-              >
-                <option value="admin">אדמין</option>
-                <option value="citizen">אזרח</option>
-                <option value="lawyer">עורך דין</option>
-              </select>
-            </div>
-
-            <div className="mt-4 flex gap-2">
-              <button
-                type="button"
-                onClick={() => setAdminLoginOpen(false)}
-                className={`flex-1 px-4 py-2.5 text-sm ${authBtnSecondary}`}
-              >
-                ביטול
-              </button>
-              <button
-                type="button"
-                onClick={handleTestCredentialsLogin}
-                className={`flex-1 px-4 py-2.5 text-sm font-bold ${btnPrimaryDark}`}
-              >
-                התחבר
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
     </>
   );

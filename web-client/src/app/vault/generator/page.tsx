@@ -5,7 +5,6 @@ import {
   ArrowRight,
   Download,
   FileText,
-  Loader2,
   Mic,
   Printer,
   Save,
@@ -20,8 +19,10 @@ import { renderDocumentExport } from "@/api/documentRenderApi";
 import { VetoBrandLogo } from "@/components/brand/VetoBrandLogo";
 import { CitizenBottomNav } from "@/components/citizen/CitizenBottomNav";
 import { serializeDocumentFromDom } from "@/lib/documentSerialize";
-import { btnPrimaryDark, btnPrimaryGold, btnSecondaryGlass, glassInput, glassPanel, glassPanelNested } from "@/lib/vetoGlass";
+import { glassInput, glassPanel, glassPanelNested } from "@/lib/vetoGlass";
 import { useToastStore } from "@/store/useToastStore";
+import { Button } from "@/components/ui/primitives/Button";
+import { IconButton } from "@/components/ui/primitives/IconButton";
 import { emptyParties, getDocumentFieldsConfig, type PartyRow } from "./documentFields";
 
 type LegalDocument = {
@@ -380,14 +381,13 @@ export default function DocumentGeneratorPage() {
             <label className="block">
               <span className="mb-1 flex items-center justify-between gap-3 text-xs font-black text-secondary">
                 פרטי המקרה
-                <button
-                  type="button"
+                <IconButton
+                  variant={isRecording ? "danger" : "secondary"}
+                  size="sm"
                   onClick={handleVoiceRecord}
-                  className={`rounded-xl p-2 transition ${isRecording ? "bg-red-100 text-red-700" : "bg-white/50 text-secondary hover:bg-white/80"}`}
-                  title="הכתבה קולית"
-                >
-                  <Mic className="h-4 w-4" aria-hidden />
-                </button>
+                  label="הכתבה קולית"
+                  icon={<Mic className="h-4 w-4" aria-hidden />}
+                />
               </span>
               <textarea
                 value={details}
@@ -405,15 +405,17 @@ export default function DocumentGeneratorPage() {
             </div>
           ) : null}
 
-          <button
-            type="button"
+          <Button
+            variant="primary"
+            fullWidth
+            className="mt-5"
             onClick={() => void generateDocument()}
             disabled={isGenerating}
-            className={`mt-5 flex w-full items-center justify-center gap-2 px-4 py-3 text-sm ${btnPrimaryGold} disabled:cursor-not-allowed disabled:opacity-60`}
+            loading={isGenerating}
+            iconStart={<Wand2 className="h-5 w-5" aria-hidden />}
           >
-            {isGenerating ? <Loader2 className="h-5 w-5 animate-spin" aria-hidden /> : <Wand2 className="h-5 w-5" aria-hidden />}
             {isGenerating ? "מנסח מסמך..." : "נסח מסמך AI"}
-          </button>
+          </Button>
 
           {document ? (
             <div className={`${glassPanelNested} mt-5 p-4`}>
@@ -424,35 +426,44 @@ export default function DocumentGeneratorPage() {
               ) : null}
               <p className="text-sm font-black text-primary">פעולות למסמך</p>
               <div className="mt-3 grid gap-2">
-                <button type="button" disabled={isSaving} onClick={() => void handleSaveToVault()} className={`flex items-center justify-center gap-2 px-4 py-3 text-sm ${btnPrimaryDark} disabled:opacity-60`}>
-                  {isSaving ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : <Save className="h-4 w-4" aria-hidden />}
+                <Button
+                  variant="primary"
+                  disabled={isSaving}
+                  loading={isSaving}
+                  onClick={() => void handleSaveToVault()}
+                  iconStart={<Save className="h-4 w-4" aria-hidden />}
+                >
                   {isSaving ? "שומר..." : "שמור לכספת"}
-                </button>
+                </Button>
                 <div className="grid grid-cols-3 gap-2">
-                  <button
-                    type="button"
+                  <Button
+                    variant="secondary"
+                    size="sm"
                     disabled={isExportingPdf}
-                    aria-busy={isExportingPdf}
+                    loading={isExportingPdf}
                     onClick={() => void handleExportPDF()}
-                    className={`flex items-center justify-center gap-1 px-3 py-2 text-xs font-bold ${btnSecondaryGlass} disabled:opacity-60`}
+                    iconStart={<FileText className="h-4 w-4" aria-hidden />}
                   >
-                    {isExportingPdf ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : <FileText className="h-4 w-4" aria-hidden />}
                     PDF
-                  </button>
-                  <button
-                    type="button"
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    size="sm"
                     disabled={isExportingDocx}
-                    aria-busy={isExportingDocx}
+                    loading={isExportingDocx}
                     onClick={() => void handleExportDOCX()}
-                    className={`flex items-center justify-center gap-1 px-3 py-2 text-xs font-bold ${btnSecondaryGlass} disabled:opacity-60`}
+                    iconStart={<Download className="h-4 w-4" aria-hidden />}
                   >
-                    {isExportingDocx ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : <Download className="h-4 w-4" aria-hidden />}
                     Word
-                  </button>
-                  <button type="button" onClick={() => window.print()} className={`flex items-center justify-center gap-1 px-3 py-2 text-xs font-bold ${btnSecondaryGlass}`}>
-                    <Printer className="h-4 w-4" aria-hidden />
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => window.print()}
+                    iconStart={<Printer className="h-4 w-4" aria-hidden />}
+                  >
                     הדפס
-                  </button>
+                  </Button>
                 </div>
               </div>
             </div>

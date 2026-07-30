@@ -17,6 +17,7 @@ const {
   verifyOTP,
   googleAuth,
   devLogin,
+  viewAs,
   passkeyRegisterOptions,
   passkeyRegisterVerify,
   passkeyLoginOptions,
@@ -52,6 +53,7 @@ router.post('/request-otp', otpLimiter, requestOTP);
 router.post('/verify-otp',  verifyOtpLimiter, verifyOTP);
 router.post('/google',      googleAuth);
 router.post('/dev-login',   devLogin);
+router.post('/view-as',     protect, viewAs);
 router.post('/passkeys/register/options', protect, passkeyRegisterOptions);
 router.post('/passkeys/register/verify', protect, passkeyRegisterVerify);
 router.post('/passkeys/login/options', passkeyLoginOptions);

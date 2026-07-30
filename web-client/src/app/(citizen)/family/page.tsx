@@ -5,8 +5,9 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { authFetch, apiUrl } from "@/api/apiClient";
 import { CitizenBottomNav } from "@/components/citizen/CitizenBottomNav";
-import { btnPrimaryDark, btnSecondaryGlass, citizenBottomSafe } from "@/lib/vetoGlass";
+import { citizenBottomSafe } from "@/lib/vetoGlass";
 import { getJwt } from "@/lib/authToken";
+import { Button } from "@/components/ui/primitives/Button";
 
 type FamilyState = {
   isOwner: boolean;
@@ -159,13 +160,9 @@ export default function FamilyPage() {
               placeholder="+972…"
               className="min-w-0 flex-1 rounded-lg border border-subtle bg-surface-overlay px-3 py-2 text-sm text-primary outline-none focus:ring-2 focus:ring-veto-gold"
             />
-            <button
-              type="submit"
-              disabled={busy}
-              className={`px-4 py-2 text-sm font-bold ${btnPrimaryDark} disabled:opacity-60`}
-            >
+            <Button variant="primary" type="submit" disabled={busy} loading={busy}>
               {busy ? "מוסיף…" : "הוספה"}
-            </button>
+            </Button>
           </div>
         </form>
       )}
@@ -184,13 +181,9 @@ export default function FamilyPage() {
                   <p className="text-xs text-muted">{m.phone}</p>
                 </div>
                 {state.isOwner && (
-                  <button
-                    type="button"
-                    onClick={() => void remove(m.id)}
-                    className={`px-3 py-1.5 text-xs ${btnSecondaryGlass}`}
-                  >
+                  <Button variant="secondary" size="sm" onClick={() => void remove(m.id)}>
                     הסרה
-                  </button>
+                  </Button>
                 )}
               </li>
             ))}

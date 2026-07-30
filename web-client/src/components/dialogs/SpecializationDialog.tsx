@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "@/lib/i18n/LocaleProvider";
 import { focusRing } from "@/lib/vetoGlass";
 import type { SpecializationId } from "@/lib/specializations";
+import { Button } from "@/components/ui/primitives/Button";
+import { IconButton } from "@/components/ui/primitives/IconButton";
 
 type SpecializationDialogProps = {
   isOpen: boolean;
@@ -61,14 +63,13 @@ export function SpecializationDialog({
           <h2 id="spec-dialog-title" className="text-xl font-bold text-primary">
             {t("dialog.chooseSpecialization")}
           </h2>
-          <button
-            type="button"
+          <IconButton
+            variant="ghost"
+            size="sm"
             onClick={onClose}
-            aria-label={t("common.close")}
-            className={`rounded-lg p-2 text-muted transition hover:bg-white/10 hover:text-white ${focusRing} focus-visible:ring-offset-slate-900`}
-          >
-            ✕
-          </button>
+            label={t("common.close")}
+            icon={<span aria-hidden>✕</span>}
+          />
         </div>
 
         <div className="grid grid-cols-2 gap-3 p-6">
@@ -88,23 +89,12 @@ export function SpecializationDialog({
         </div>
 
         <div className="flex justify-end gap-3 border-t border-subtle bg-surface-raised p-6">
-          <button
-            type="button"
-            onClick={onClose}
-            className={`rounded-md px-4 py-2 text-sm font-medium text-slate-300 transition hover:bg-white/[0.08] hover:text-white ${focusRing} focus-visible:ring-offset-slate-900`}
-          >
+          <Button variant="ghost" onClick={onClose}>
             {t("common.cancel")}
-          </button>
-          <button
-            type="button"
-            disabled={!selected}
-            onClick={() => selected && onSelect(selected)}
-            className={`rounded-md px-6 py-2 text-sm font-bold transition ${focusRing} focus-visible:ring-offset-slate-900 ${
-              selected
-                ? "bg-veto-gold text-on-brand shadow-[0_8px_24px_-8px_rgba(197,160,89,0.5)] hover:bg-veto-gold-light" : "cursor-not-allowed bg-white/[0.06] text-muted"}`}
-          >
+          </Button>
+          <Button variant="primary" disabled={!selected} onClick={() => selected && onSelect(selected)}>
             {t("common.continue")}
-          </button>
+          </Button>
         </div>
       </div>
     </div>

@@ -8,12 +8,8 @@ import { fetchProfile, type UserProfile } from "@/api/userApi";
 import { fetchEntitlement, type Entitlement } from "@/api/advancedApi";
 import { CitizenBottomNav } from "@/components/citizen/CitizenBottomNav";
 import { SpecializationDialog } from "@/components/dialogs/SpecializationDialog";
-import {
-  btnPrimaryDark,
-  btnSecondaryGlass,
-  citizenBottomSafe,
-  glassPanelNested,
-} from "@/lib/vetoGlass";
+import { btnSecondaryGlass, citizenBottomSafe, glassPanelNested } from "@/lib/vetoGlass";
+import { Button } from "@/components/ui/primitives/Button";
 import { getJwt } from "@/lib/authToken";
 import { useTranslation } from "@/lib/i18n/LocaleProvider";
 import { type SpecializationId } from "@/lib/specializations";
@@ -433,13 +429,9 @@ export default function CitizenHubPage() {
           >
             {statusMessage}
             <div className="mt-3">
-              <button
-                type="button"
-                onClick={() => reset()}
-                className={`${btnSecondaryGlass} px-3 py-1.5 text-xs`}
-              >
+              <Button variant="secondary" size="sm" onClick={() => reset()}>
                 {t("hub.dismiss")}
-              </button>
+              </Button>
             </div>
           </div>
         )}
@@ -485,20 +477,12 @@ export default function CitizenHubPage() {
               {t("hub.dialogBody")}
             </p>
             <div className="mt-6 flex flex-wrap justify-end gap-2">
-              <button
-                type="button"
-                onClick={() => setSosDialogOpen(false)}
-                className={`px-4 py-2.5 text-sm font-semibold ${btnSecondaryGlass}`}
-              >
+              <Button variant="secondary" onClick={() => setSosDialogOpen(false)}>
                 {t("hub.dialogCancel")}
-              </button>
-              <button
-                type="button"
-                onClick={() => void confirmSos()}
-                className={`px-4 py-2.5 text-sm font-bold text-inverse ${btnPrimaryDark}`}
-              >
+              </Button>
+              <Button variant="danger" onClick={() => void confirmSos()}>
                 {t("hub.dialogConfirm")}
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -535,27 +519,15 @@ export default function CitizenHubPage() {
             </p>
 
             <div className="mt-5 grid gap-2">
-              <button
-                type="button"
-                onClick={() => chooseCallTypeWithPermission("video")}
-                className={`px-4 py-2.5 text-sm font-semibold ${btnSecondaryGlass}`}
-              >
+              <Button variant="secondary" onClick={() => chooseCallTypeWithPermission("video")}>
                 {t("hub.callTypeVideo")}
-              </button>
-              <button
-                type="button"
-                onClick={() => chooseCallTypeWithPermission("audio")}
-                className={`px-4 py-2.5 text-sm font-semibold ${btnSecondaryGlass}`}
-              >
+              </Button>
+              <Button variant="secondary" onClick={() => chooseCallTypeWithPermission("audio")}>
                 {t("hub.callTypeAudio")}
-              </button>
-              <button
-                type="button"
-                onClick={() => chooseCallType("chat")}
-                className={`px-4 py-2.5 text-sm font-semibold ${btnSecondaryGlass}`}
-              >
+              </Button>
+              <Button variant="secondary" onClick={() => chooseCallType("chat")}>
                 {t("hub.callTypeChat")}
-              </button>
+              </Button>
             </div>
           </div>
         </div>

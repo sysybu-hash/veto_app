@@ -4,7 +4,8 @@ import * as Sentry from "@sentry/nextjs";
 import { useEffect } from "react";
 import { VetoBrandLogo } from "@/components/brand/VetoBrandLogo";
 import { useTranslation } from "@/lib/i18n/LocaleProvider";
-import { btnSecondaryGlass, glassPanel } from "@/lib/vetoGlass";
+import { glassPanel } from "@/lib/vetoGlass";
+import { Button } from "@/components/ui";
 
 export default function AppError({
   error,
@@ -42,13 +43,9 @@ export default function AppError({
             {error.message}
           </pre>
         ) : null}
-        <button
-          type="button"
-          onClick={reset}
-          className={`font-frank w-full py-3 text-sm font-bold ${btnSecondaryGlass}`}
-        >
+        <Button variant="secondary" size="lg" fullWidth onClick={reset} className="font-frank">
           {t("errorPage.retry")}
-        </button>
+        </Button>
       </div>
     </div>
   );

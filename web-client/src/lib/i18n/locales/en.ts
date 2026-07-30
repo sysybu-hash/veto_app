@@ -505,6 +505,7 @@ export const en: Dict = {
     sealedBadge: "VETO SEALED",
     delete: "Delete",
     deleting: "Deleting…",
+    uploadFileButton: "Upload file",
     uploadModalTitle: "Upload to vault",
     uploadModalSubtitle:
       "Add documents or photos to your chosen folder.",

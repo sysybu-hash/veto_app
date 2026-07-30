@@ -10,8 +10,9 @@ import {
   type PlanId,
 } from "@/api/paymentApi";
 import { CitizenBottomNav } from "@/components/citizen/CitizenBottomNav";
-import { btnPrimaryDark, btnSecondaryGlass, citizenBottomSafe } from "@/lib/vetoGlass";
+import { citizenBottomSafe } from "@/lib/vetoGlass";
 import { getJwt } from "@/lib/authToken";
+import { Button } from "@/components/ui/primitives/Button";
 
 const PLAN_CARDS: Array<{
   id: PlanId;
@@ -169,11 +170,14 @@ export default function PlansPage() {
                   </li>
                 ))}
               </ul>
-              <button
-                type="button"
+              <Button
+                variant={p.highlight ? "primary" : "secondary"}
+                size="md"
+                fullWidth
+                className="mt-5"
                 disabled={busyPlan !== null || isCurrent || (p.id === "demo" && !!demoUsed)}
+                loading={busyPlan === p.id}
                 onClick={() => void subscribe(p.id)}
-                className={`mt-5 w-full px-4 py-2.5 text-sm font-bold ${p.highlight ? btnPrimaryDark : btnSecondaryGlass} disabled:opacity-60`}
               >
                 {isCurrent
                   ? "מסלול פעיל"
@@ -182,7 +186,7 @@ export default function PlansPage() {
                     : busyPlan === p.id
                       ? "מעבר לתשלום…"
                       : p.cta}
-              </button>
+              </Button>
             </article>
           );
         })}

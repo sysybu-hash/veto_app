@@ -502,6 +502,7 @@ export const he: Dict = {
     sealedBadge: "VETO SEALED",
     delete: "מחק",
     deleting: "מוחק…",
+    uploadFileButton: "העלאת קובץ",
     uploadModalTitle: "העלאה לכספת",
     uploadModalSubtitle: "הוסיפו מסמכים או תמונות לתיקייה שבחרתם.",
     destinationFolder: "תיקיית יעד",

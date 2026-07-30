@@ -6,7 +6,8 @@ import { CitizenBottomNav } from "@/components/citizen/CitizenBottomNav";
 import { clearJwt } from "@/lib/authToken";
 import { useTranslation } from "@/lib/i18n/LocaleProvider";
 import { disconnectSocket } from "@/lib/socketClient";
-import { btnPrimaryGold, btnSecondaryGlass } from "@/lib/vetoGlass";
+import { btnSecondaryGlass } from "@/lib/vetoGlass";
+import { Button } from "@/components/ui";
 import { SettingsProvider, useSettings } from "./settings-context";
 
 const TABS = [
@@ -129,23 +130,27 @@ function SettingsChrome({
             )}
 
             {showSave ? (
-              <button
-                type="button"
+              <Button
+                variant="primary"
+                size="lg"
+                fullWidth
                 onClick={() => void save()}
-                disabled={saving}
-                className={`font-heebo w-full py-3.5 text-sm ${btnPrimaryGold} disabled:opacity-60`}
+                loading={saving}
+                className="font-heebo"
               >
                 {saving ? tr("settings.saving") : tr("settings.saveChanges")}
-              </button>
+              </Button>
             ) : null}
 
-            <button
-              type="button"
+            <Button
+              variant="ghost"
+              size="lg"
+              fullWidth
               onClick={handleLogout}
-              className="font-heebo min-h-[44px] w-full rounded-lg py-3 text-center text-sm font-semibold text-red-700 transition hover:text-red-800 dark:text-red-300 dark:hover:text-red-200"
+              className="font-heebo min-h-[44px] text-red-700 hover:bg-transparent hover:text-red-800 dark:text-red-300 dark:hover:text-red-200"
             >
               {tr("settings.logout")}
-            </button>
+            </Button>
           </div>
         )}
       </main>

@@ -1,8 +1,9 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import { btnSecondaryGlass, glassPanelNested } from "@/lib/vetoGlass";
+import { glassPanelNested } from "@/lib/vetoGlass";
 import { useToastStore } from "@/store/useToastStore";
+import { Button } from "@/components/ui/primitives/Button";
 
 const variantStyles: Record<string, string> = {
   success:
@@ -57,13 +58,9 @@ export function ToastHost() {
           >
             <div className="flex items-start gap-3">
               <p className="min-w-0 flex-1 leading-snug">{t.message}</p>
-              <button
-                type="button"
-                onClick={() => dismiss(t.id)}
-                className={`shrink-0 rounded-lg px-2 py-1 text-xs ${btnSecondaryGlass}`}
-              >
+              <Button variant="secondary" size="sm" onClick={() => dismiss(t.id)} className="shrink-0">
                 סגור
-              </button>
+              </Button>
             </div>
           </motion.div>
         ))}

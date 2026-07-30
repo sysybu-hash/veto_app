@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState, useSyncExternalStore } from "react";
 import { VetoBrandLogo } from "@/components/brand/VetoBrandLogo";
+import { Button } from "@/components/ui";
 
 const STORAGE_KEY = "veto_cookie_consent_v1";
 const CHANGE_EVENT = "veto-cookie-consent-change";
@@ -76,27 +77,15 @@ export function CookieConsent() {
         </div>
 
         <div className="flex flex-wrap gap-2 md:justify-end">
-          <button
-            type="button"
-            onClick={() => accept({ analytics: false, marketing: false })}
-            className="rounded-xl border border-subtle px-4 py-2 text-sm font-semibold text-secondary hover:bg-hover-overlay"
-          >
+          <Button variant="secondary" size="md" onClick={() => accept({ analytics: false, marketing: false })}>
             חיוניות בלבד
-          </button>
-          <button
-            type="button"
-            onClick={() => setExpanded((v) => !v)}
-            className="rounded-xl border border-subtle px-4 py-2 text-sm font-semibold text-secondary hover:bg-hover-overlay"
-          >
+          </Button>
+          <Button variant="secondary" size="md" onClick={() => setExpanded((v) => !v)}>
             התאמה אישית
-          </button>
-          <button
-            type="button"
-            onClick={() => accept({ analytics: true, marketing: true })}
-            className="rounded-xl bg-veto-gold px-4 py-2 text-sm font-bold text-on-brand hover:bg-veto-gold-light"
-          >
+          </Button>
+          <Button variant="primary" size="md" onClick={() => accept({ analytics: true, marketing: true })}>
             אישור הכל
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -126,13 +115,9 @@ export function CookieConsent() {
               <span className="text-xs leading-5 text-muted">מיועד לקמפיינים עתידיים, רק בהסכמה.</span>
             </span>
           </label>
-          <button
-            type="button"
-            onClick={() => accept({ analytics, marketing })}
-            className="rounded-xl bg-veto-gold px-4 py-2 text-sm font-bold text-on-brand sm:col-span-2"
-          >
+          <Button variant="primary" size="md" onClick={() => accept({ analytics, marketing })} className="sm:col-span-2">
             שמירת העדפות
-          </button>
+          </Button>
         </div>
       )}
     </section>

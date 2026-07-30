@@ -8,13 +8,8 @@ import { getJwt } from "@/lib/authToken";
 import { useTranslation } from "@/lib/i18n/LocaleProvider";
 import type { Locale } from "@/lib/i18n/types";
 import { LOCALES } from "@/lib/i18n/types";
-import {
-  btnPrimaryDark,
-  btnSecondaryGlass,
-  citizenBottomSafe,
-  glassPanel,
-  glassPanelNested,
-} from "@/lib/vetoGlass";
+import { citizenBottomSafe, glassPanel, glassPanelNested } from "@/lib/vetoGlass";
+import { Button } from "@/components/ui/primitives/Button";
 
 const languageNames: Record<Locale, string> = {
   he: "עברית",
@@ -211,21 +206,12 @@ export default function OnboardingPage() {
           )}
 
           <div className="mt-7 grid gap-3 sm:grid-cols-[1fr_auto]">
-            <button
-              type="button"
-              disabled={busy}
-              onClick={() => finish()}
-              className={`px-6 py-4 text-base font-black ${btnPrimaryDark} disabled:cursor-not-allowed disabled:opacity-50`}
-            >
-              {busy ? "..." : t("onboarding.done")}
-            </button>
-            <button
-              type="button"
-              onClick={() => router.push("/settings?tab=profile")}
-              className={`px-5 py-4 text-sm font-semibold ${btnSecondaryGlass}`}
-            >
+            <Button variant="primary" size="lg" disabled={busy} loading={busy} onClick={() => finish()}>
+              {t("onboarding.done")}
+            </Button>
+            <Button variant="secondary" size="lg" onClick={() => router.push("/settings?tab=profile")}>
               {t("settings.title")}
-            </button>
+            </Button>
           </div>
         </section>
       </main>

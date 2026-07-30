@@ -5,6 +5,7 @@ import { useTrWithFallback } from "../lib/trWithFallback";
 import type { ActionPlan } from "@/api/advancedApi";
 import { createOvertimeOrder } from "@/api/paymentApi";
 import type { TranscriptSegment } from "../hooks/useRealtimeTranscription";
+import { Button } from "@/components/ui/primitives/Button";
 
 export type SummaryShape = {
   minutes: number;
@@ -182,14 +183,15 @@ export function EndCallSummary({
                 )}
               </p>
               <div className="mt-4 flex flex-col gap-2 @sm:flex-row @sm:items-center @sm:justify-between">
-                <button
-                  type="button"
+                <Button
+                  variant="primary"
+                  className="min-h-[44px] bg-emerald-500 text-emerald-950 shadow-emerald-900/30 hover:bg-emerald-400"
                   onClick={onSaveToVault}
                   disabled={saveStatus === "saving" || saveStatus === "saved"}
-                  className="inline-flex min-h-[44px] items-center justify-center rounded-xl bg-emerald-500 px-4 text-sm font-bold text-emerald-950 shadow-lg shadow-emerald-900/30 transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-50"
+                  loading={saveStatus === "saving"}
                 >
                   {vaultButtonLabel}
-                </button>
+                </Button>
                 {saveStatus === "error" && saveError && (
                   <p className="text-xs leading-snug text-red-300 @sm:max-w-[55%] @sm:text-end">
                     {saveError}
@@ -214,16 +216,13 @@ export function EndCallSummary({
           )}
 
           <div className="mt-6 flex flex-col-reverse gap-2 @sm:flex-row @sm:justify-end @sm:gap-3">
-            <button
-              type="button"
-              onClick={onClose}
-              className="min-h-[44px] rounded-xl border border-subtle bg-white/[0.05] px-5 text-sm font-semibold text-primary transition hover:bg-white/10"
-            >
+            <Button variant="secondary" className="min-h-[44px]" onClick={onClose}>
               {t("call.v2.summary.close", "Close")}
-            </button>
+            </Button>
             {summary.overtime > 0 && (
-              <button
-                type="button"
+              <Button
+                variant="primary"
+                className="min-h-[44px]"
                 onClick={async () => {
                   try {
                     const r = await createOvertimeOrder(
@@ -235,11 +234,10 @@ export function EndCallSummary({
                     onClose();
                   }
                 }}
-                className="min-h-[44px] rounded-xl bg-veto-gold px-5 text-sm font-bold text-black shadow-md transition hover:brightness-110"
               >
                 {t("call.v2.summary.payCta", "Confirm & pay")} ₪
                 {summary.overtime.toFixed(2)}
-              </button>
+              </Button>
             )}
           </div>
         </div>

@@ -6,14 +6,13 @@ import {
   priorityRelatedType,
 } from "@/api/productivityApi";
 import {
-  btnPrimaryGold,
-  btnSecondaryGlass,
   glassInput,
   glassPanel,
   modalBackdrop,
-  focusRing,
 } from "@/lib/vetoGlass";
 import { useTranslation } from "@/lib/i18n/LocaleProvider";
+import { Button } from "@/components/ui/primitives/Button";
+import { IconButton } from "@/components/ui/primitives/IconButton";
 
 export type NewTaskPayload = {
   title: string;
@@ -122,23 +121,18 @@ export function CreateTaskModal({
               {t("productivity.taskModalSubtitle")}
             </p>
           </div>
-          <button
-            type="button"
+          <IconButton
+            variant="ghost"
+            size="sm"
             onClick={handleClose}
             disabled={isSubmitting}
-            className={`rounded-lg p-2 text-muted hover:bg-slate-100 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-40  dark:hover:bg-white/10 dark:hover:text-slate-100 ${focusRing}`}
-            aria-label={t("common.close")}
-          >
-            <svg
-              className="h-5 w-5"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth={2}
-              viewBox="0 0 24 24"
-            >
-              <path d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
+            label={t("common.close")}
+            icon={
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                <path d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            }
+          />
         </div>
 
         <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-5 py-4">
@@ -233,22 +227,19 @@ export function CreateTaskModal({
         </div>
 
         <div className="flex gap-3 border-t border-subtle px-5 py-4">
-          <button
-            type="button"
-            onClick={handleClose}
-            disabled={isSubmitting}
-            className={`flex-1 py-3 text-sm ${btnSecondaryGlass} disabled:cursor-not-allowed disabled:opacity-50`}
-          >
+          <Button variant="secondary" size="lg" className="flex-1" onClick={handleClose} disabled={isSubmitting}>
             {t("common.cancel")}
-          </button>
-          <button
-            type="button"
+          </Button>
+          <Button
+            variant="primary"
+            size="lg"
+            className="flex-1"
             onClick={() => void submit()}
             disabled={!form.title.trim() || isSubmitting}
-            className={`flex-1 py-3 text-sm ${btnPrimaryGold} disabled:cursor-not-allowed disabled:opacity-50`}
+            loading={isSubmitting}
           >
             {isSubmitting ? t("settings.saving") : t("productivity.saveTask")}
-          </button>
+          </Button>
         </div>
       </div>
     </div>

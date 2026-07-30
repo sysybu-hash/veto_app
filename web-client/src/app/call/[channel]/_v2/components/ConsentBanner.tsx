@@ -2,6 +2,7 @@
 
 import { useTrWithFallback } from "../lib/trWithFallback";
 import type { ConsentSnapshot, RecordingStatus } from "../hooks/useCloudRecording";
+import { Button } from "@/components/ui/primitives/Button";
 
 /**
  * GDPR / privacy strip for cloud recording.
@@ -96,20 +97,12 @@ export function ConsentBanner({
         )}
       </p>
       <div className="mt-3 flex flex-wrap justify-end gap-2">
-        <button
-          type="button"
-          onClick={() => onChoose(false)}
-          className="rounded-lg border border-subtle bg-white/[0.04] px-3 py-1.5 text-xs font-semibold text-primary hover:bg-white/[0.08]"
-        >
+        <Button variant="secondary" size="sm" onClick={() => onChoose(false)}>
           {t("call.v2.consent.decline", "Decline")}
-        </button>
-        <button
-          type="button"
-          onClick={() => onChoose(true)}
-          className="rounded-lg bg-veto-gold px-3 py-1.5 text-xs font-bold text-black hover:bg-veto-gold-light"
-        >
+        </Button>
+        <Button variant="primary" size="sm" onClick={() => onChoose(true)}>
           {t("call.v2.consent.accept", "I consent to recording")}
-        </button>
+        </Button>
       </div>
     </div>
   );

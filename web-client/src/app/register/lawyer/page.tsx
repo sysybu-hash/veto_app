@@ -7,6 +7,7 @@ import { apiUrl, isApiOriginConfigured, tunnelBypassHeaders } from "@/lib/env";
 import { normalizePhoneForVeto } from "@/lib/phone";
 import { VetoBrandLogo } from "@/components/brand/VetoBrandLogo";
 import { glassInput, glassPanelNested } from "@/lib/vetoGlass";
+import { Button } from "@/components/ui/primitives/Button";
 
 const SPECIALIZATIONS = [
   { id: "criminal", label: "פלילי" },
@@ -132,14 +133,9 @@ export default function LawyerRegisterPage() {
         ) : null}
 
         <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-          <button
-            type="button"
-            disabled={busy}
-            onClick={() => void onSubmit()}
-            className="rounded-xl bg-veto-gold px-5 py-3 text-sm font-black text-primary transition hover:bg-veto-gold-light disabled:opacity-50"
-          >
+          <Button variant="primary" size="lg" disabled={busy} loading={busy} onClick={() => void onSubmit()}>
             {busy ? "שולח..." : "שליחת בקשת הצטרפות"}
-          </button>
+          </Button>
           <Link
             href="/login"
             className="rounded-xl border border-subtle px-5 py-3 text-center text-sm font-bold text-secondary transition hover:bg-white/[0.06]"

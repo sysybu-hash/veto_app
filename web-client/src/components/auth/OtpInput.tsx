@@ -2,6 +2,7 @@
 
 import { useRef, type ClipboardEvent, type KeyboardEvent } from "react";
 import { authGlassInput } from "@/lib/vetoGlass";
+import { Button } from "@/components/ui";
 
 const OTP_LEN = 6;
 
@@ -97,16 +98,18 @@ export function OtpInput({
       </div>
       {onResend && (
         <div className="flex justify-center">
-          <button
-            type="button"
+          <Button
+            variant="link"
+            size="sm"
             disabled={resendCooldown > 0 || resendBusy || disabled}
+            loading={resendBusy}
             onClick={() => void onResend()}
-            className="min-h-[44px] rounded-lg px-2 text-sm font-semibold text-veto-gold underline-offset-2 outline-none hover:underline focus-visible:ring-2 focus-visible:ring-veto-gold/50 disabled:cursor-not-allowed disabled:opacity-40 disabled:no-underline"
+            className="min-h-[44px] text-veto-gold"
           >
             {resendCooldown > 0
               ? `שלח שוב בעוד ${resendCooldown} ש׳`
               : "שלח שוב קוד"}
-          </button>
+          </Button>
         </div>
       )}
     </div>

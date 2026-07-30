@@ -38,7 +38,6 @@ import { getJwt } from "@/lib/authToken";
 import { apiUrl, tunnelBypassHeaders } from "@/lib/env";
 import { useTranslation } from "@/lib/i18n/LocaleProvider";
 import {
-  btnPrimaryDark,
   btnSecondaryGlass,
   citizenBottomSafe,
   glassInput,
@@ -46,6 +45,8 @@ import {
   glassPanelNested,
 } from "@/lib/vetoGlass";
 import { useToastStore } from "@/store/useToastStore";
+import { Button } from "@/components/ui/primitives/Button";
+import { IconButton } from "@/components/ui/primitives/IconButton";
 
 type Thread = {
   id: string;
@@ -566,14 +567,13 @@ export default function ChatPage() {
               </h1>
               <p className="mt-1 text-sm text-secondary">{t("chat.subtitle")}</p>
             </div>
-            <button
-              type="button"
+            <IconButton
+              variant="secondary"
+              size="md"
               onClick={() => void loadThreads()}
-              className={`grid h-10 w-10 place-items-center ${btnSecondaryGlass}`}
-              aria-label={t("common.retry")}
-            >
-              <RefreshCcw className="h-4 w-4" aria-hidden />
-            </button>
+              label={t("common.retry")}
+              icon={<RefreshCcw className="h-4 w-4" aria-hidden />}
+            />
           </div>
 
           <button
@@ -636,16 +636,15 @@ export default function ChatPage() {
                         {thread.role === "lawyer" ? t("chat.lawyer") : t("chat.member")}
                       </p>
                     </button>
-                    <button
-                      type="button"
+                    <IconButton
+                      variant="danger"
+                      size="sm"
+                      className="shrink-0"
                       onClick={() => void removeThread(thread)}
                       disabled={busy}
-                      className="grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-red-200 bg-red-50/80 text-red-700 transition hover:bg-red-100 disabled:opacity-50"
-                      aria-label={`${t("chatPage.deleteConversation")} · ${thread.name}`}
-                      title={t("chatPage.deleteConversation")}
-                    >
-                      <Trash2 className="h-4 w-4" aria-hidden />
-                    </button>
+                      label={`${t("chatPage.deleteConversation")} · ${thread.name}`}
+                      icon={<Trash2 className="h-4 w-4" aria-hidden />}
+                    />
                   </div>
                 </div>
               ))
@@ -671,24 +670,21 @@ export default function ChatPage() {
                   </div>
                 </div>
                 <div className="flex shrink-0 gap-2">
-                  <button
-                    type="button"
+                  <IconButton
+                    variant="secondary"
+                    size="md"
                     onClick={() => setAiOpen(true)}
-                    className="grid h-10 w-10 place-items-center rounded-xl border border-veto-gold/50 bg-surface-inverse text-veto-gold"
-                    aria-label={t("chatPage.openAiPane")}
-                    title={t("chatPage.openAiPane")}
-                  >
-                    <Sparkles className="h-4 w-4" aria-hidden />
-                  </button>
-                  <button
-                    type="button"
+                    label={t("chatPage.openAiPane")}
+                    icon={<Sparkles className="h-4 w-4" aria-hidden />}
+                  />
+                  <IconButton
+                    variant="danger"
+                    size="md"
                     onClick={() => void removeThread()}
                     disabled={busy}
-                    className="grid h-10 w-10 place-items-center rounded-xl border border-red-200 bg-red-50/70 text-red-700 disabled:opacity-50"
-                    aria-label={t("chatPage.deleteConversation")}
-                  >
-                    <Trash2 className="h-4 w-4" aria-hidden />
-                  </button>
+                    label={t("chatPage.deleteConversation")}
+                    icon={<Trash2 className="h-4 w-4" aria-hidden />}
+                  />
                 </div>
               </header>
 
@@ -718,9 +714,14 @@ export default function ChatPage() {
                           <div className="mt-1 flex items-center justify-between gap-3 text-[10px] text-muted">
                             <span>{formatTime(message.createdAt)}</span>
                             {mine && (
-                              <button type="button" onClick={() => void removeMessage(message._id)} className="font-semibold text-red-700">
+                              <Button
+                                variant="link"
+                                size="sm"
+                                className="h-auto p-0 text-red-700"
+                                onClick={() => void removeMessage(message._id)}
+                              >
                                 {t("common.delete")}
-                              </button>
+                              </Button>
                             )}
                           </div>
                         </div>
@@ -739,9 +740,15 @@ export default function ChatPage() {
                     rows={2}
                     className={`${glassInput} min-h-12 resize-none`}
                   />
-                  <button type="submit" disabled={busy || draft.trim().length === 0} className={`grid h-12 w-12 shrink-0 place-items-center self-end ${btnPrimaryDark} disabled:opacity-50`} aria-label={t("chat.send")}>
-                    <Send className="h-4 w-4" aria-hidden />
-                  </button>
+                  <IconButton
+                    variant="primary"
+                    size="lg"
+                    type="submit"
+                    className="shrink-0 self-end"
+                    disabled={busy || draft.trim().length === 0}
+                    label={t("chat.send")}
+                    icon={<Send className="h-4 w-4" aria-hidden />}
+                  />
                 </div>
               </form>
             </>
@@ -766,33 +773,40 @@ export default function ChatPage() {
                 נפרד מהבועה, עם שמירה ופעולות באתר.
               </p>
             </div>
-            <button
-              type="button"
+            <IconButton
+              variant="secondary"
+              size="md"
               onClick={() => setAiOpen((v) => !v)}
-              className={`grid h-10 w-10 place-items-center ${btnSecondaryGlass}`}
-              aria-label={aiOpen ? t("chatPage.closeAiPane") : t("chatPage.openAiPaneAlt")}
-            >
-              {aiOpen ? <X className="h-4 w-4" aria-hidden /> : <Bot className="h-4 w-4" aria-hidden />}
-            </button>
+              label={aiOpen ? t("chatPage.closeAiPane") : t("chatPage.openAiPaneAlt")}
+              icon={aiOpen ? <X className="h-4 w-4" aria-hidden /> : <Bot className="h-4 w-4" aria-hidden />}
+            />
           </header>
 
           {aiOpen ? (
             <>
               <div className="grid grid-cols-2 gap-2 border-b border-white/35 p-3 text-xs font-bold sm:grid-cols-4 lg:grid-cols-2">
-                <button type="button" onClick={summarizeConversation} className={btnSecondaryGlass}>
+                <Button variant="secondary" size="sm" onClick={summarizeConversation}>
                   סכם שיחה
-                </button>
-                <button type="button" onClick={() => void sendEmbeddedAi(t("chatPage.aiDraftPrompt"))} className={btnSecondaryGlass}>
+                </Button>
+                <Button variant="secondary" size="sm" onClick={() => void sendEmbeddedAi(t("chatPage.aiDraftPrompt"))}>
                   נסח תשובה
-                </button>
-                <button type="button" onClick={() => { appendAiAssistant(t("chatPage.aiOpenedDocs")); router.push("/vault/generator"); }} className={btnSecondaryGlass}>
-                  <FileText className="h-4 w-4" aria-hidden />
+                </Button>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  iconStart={<FileText className="h-4 w-4" aria-hidden />}
+                  onClick={() => { appendAiAssistant(t("chatPage.aiOpenedDocs")); router.push("/vault/generator"); }}
+                >
                   מחולל
-                </button>
-                <button type="button" onClick={() => { appendAiAssistant(t("chatPage.aiOpenedVault")); router.push("/vault"); }} className={btnSecondaryGlass}>
-                  <FolderLock className="h-4 w-4" aria-hidden />
+                </Button>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  iconStart={<FolderLock className="h-4 w-4" aria-hidden />}
+                  onClick={() => { appendAiAssistant(t("chatPage.aiOpenedVault")); router.push("/vault"); }}
+                >
                   כספת
-                </button>
+                </Button>
               </div>
 
               {aiError && (
@@ -818,12 +832,16 @@ export default function ChatPage() {
                             className={`${glassInput} min-h-28 resize-none text-sm`}
                           />
                           <div className="flex gap-2">
-                            <button type="button" onClick={commitAiEdit} className="rounded-xl bg-surface-inverse px-3 py-2 text-xs font-bold text-inverse">
-                              <Check className="h-4 w-4" aria-hidden />
-                            </button>
-                            <button type="button" onClick={() => setEditingAiId(null)} className={btnSecondaryGlass}>
+                            <IconButton
+                              variant="primary"
+                              size="sm"
+                              onClick={commitAiEdit}
+                              label="שמור"
+                              icon={<Check className="h-4 w-4" aria-hidden />}
+                            />
+                            <Button variant="secondary" size="sm" onClick={() => setEditingAiId(null)}>
                               ביטול
-                            </button>
+                            </Button>
                           </div>
                         </div>
                       ) : (
@@ -832,21 +850,42 @@ export default function ChatPage() {
                             {message.content}
                           </p>
                           <div className="mt-2 flex flex-wrap gap-1.5 text-[11px] font-bold">
-                            <button type="button" onClick={() => startEditingAi(message)} className="rounded-lg border border-white/50 bg-white/45 px-2 py-1 text-secondary">
-                              <Edit3 className="h-3.5 w-3.5" aria-hidden />
-                            </button>
-                            <button type="button" onClick={() => deleteAiMessage(message.id)} className="rounded-lg border border-red-200 bg-red-50 px-2 py-1 text-red-700">
-                              <Trash2 className="h-3.5 w-3.5" aria-hidden />
-                            </button>
+                            <IconButton
+                              variant="secondary"
+                              size="sm"
+                              className="h-auto w-auto rounded-lg px-2 py-1"
+                              onClick={() => startEditingAi(message)}
+                              label="עריכה"
+                              icon={<Edit3 className="h-3.5 w-3.5" aria-hidden />}
+                            />
+                            <IconButton
+                              variant="danger"
+                              size="sm"
+                              className="h-auto w-auto rounded-lg px-2 py-1"
+                              onClick={() => deleteAiMessage(message.id)}
+                              label={t("common.delete")}
+                              icon={<Trash2 className="h-3.5 w-3.5" aria-hidden />}
+                            />
                             {message.role === "assistant" && (
                               <>
-                                <button type="button" onClick={() => setDraft(message.content)} className="rounded-lg border border-white/50 bg-white/45 px-2 py-1 text-secondary">
-                                  <Copy className="h-3.5 w-3.5" aria-hidden />
+                                <Button
+                                  variant="secondary"
+                                  size="sm"
+                                  className="h-auto rounded-lg px-2 py-1"
+                                  iconStart={<Copy className="h-3.5 w-3.5" aria-hidden />}
+                                  onClick={() => setDraft(message.content)}
+                                >
                                   לשיחה
-                                </button>
-                                <button type="button" onClick={() => void saveAiMessage(message)} disabled={savingAiId === message.id} className="rounded-lg border border-veto-gold/40 bg-veto-gold/15 px-2 py-1 text-brand-deep disabled:opacity-60">
+                                </Button>
+                                <Button
+                                  variant="brandSoft"
+                                  size="sm"
+                                  className="h-auto rounded-lg px-2 py-1"
+                                  disabled={savingAiId === message.id}
+                                  onClick={() => void saveAiMessage(message)}
+                                >
                                   {message.saved ? t("chatPage.aiSaved") : savingAiId === message.id ? t("chatPage.aiSaving") : t("chatPage.aiSaveToVault")}
-                                </button>
+                                </Button>
                               </>
                             )}
                           </div>
@@ -864,18 +903,26 @@ export default function ChatPage() {
 
               <div className="border-t border-white/35 p-3">
                 <div className="mb-2 flex flex-wrap gap-2 text-xs font-bold">
-                  <button type="button" onClick={() => { appendAiAssistant(t("chatPage.aiOpenedSettings")); router.push("/settings"); }} className={btnSecondaryGlass}>
-                    <Settings className="h-4 w-4" aria-hidden />
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    iconStart={<Settings className="h-4 w-4" aria-hidden />}
+                    onClick={() => { appendAiAssistant(t("chatPage.aiOpenedSettings")); router.push("/settings"); }}
+                  >
                     הגדרות
-                  </button>
+                  </Button>
                   <Link href="/vault/generator" className={btnSecondaryGlass}>
                     <FileText className="h-4 w-4" aria-hidden />
                     מסמך חדש
                   </Link>
-                  <button type="button" onClick={isRecording ? stopDictation : startDictation} className={btnSecondaryGlass}>
-                    <Mic className="h-4 w-4" aria-hidden />
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    iconStart={<Mic className="h-4 w-4" aria-hidden />}
+                    onClick={isRecording ? stopDictation : startDictation}
+                  >
                     {isRecording ? t("chatPage.recordStop") : t("chatPage.recordStart")}
-                  </button>
+                  </Button>
                 </div>
                 <form onSubmit={(e) => { e.preventDefault(); void sendEmbeddedAi(); }} className="flex gap-2">
                   <textarea
@@ -885,9 +932,15 @@ export default function ChatPage() {
                     rows={2}
                     className={`${glassInput} min-h-12 resize-none`}
                   />
-                  <button type="submit" disabled={aiBusy || aiDraft.trim().length === 0} className={`grid h-12 w-12 shrink-0 place-items-center self-end ${btnPrimaryDark} disabled:opacity-50`} aria-label={t("chatPage.aiSend")}>
-                    <Send className="h-4 w-4" aria-hidden />
-                  </button>
+                  <IconButton
+                    variant="primary"
+                    size="lg"
+                    type="submit"
+                    className="shrink-0 self-end"
+                    disabled={aiBusy || aiDraft.trim().length === 0}
+                    label={t("chatPage.aiSend")}
+                    icon={<Send className="h-4 w-4" aria-hidden />}
+                  />
                 </form>
               </div>
             </>
@@ -895,9 +948,9 @@ export default function ChatPage() {
             <div className="flex flex-1 flex-col items-center justify-center gap-3 p-6 text-center">
               <Bot className="h-10 w-10 text-veto-gold-dark" aria-hidden />
               <p className="text-sm font-bold text-primary">חלון ה-AI סגור.</p>
-              <button type="button" onClick={() => setAiOpen(true)} className={btnPrimaryDark}>
+              <Button variant="primary" onClick={() => setAiOpen(true)}>
                 פתח AI בצ׳אט
-              </button>
+              </Button>
             </div>
           )}
         </section>

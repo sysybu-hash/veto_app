@@ -134,7 +134,7 @@ jobs:
           MONGO_URI: mongodb://localhost:27017/veto_ci
           JWT_SECRET: ci-test-secret-not-for-production
           RETURN_OTP_IN_JSON: '1'
-          ALLOW_DEV_LOGIN: '1'
+          DEV_LOGIN_ENABLED: '1'
           DEV_LOGIN_USERNAME: ***REDACTED***
           DEV_LOGIN_PASSWORD: '***REDACTED***'
         run: |

@@ -11,12 +11,8 @@ import {
 } from "@/lib/env";
 import { normalizePhoneForVeto } from "@/lib/phone";
 import { useTranslation } from "@/lib/i18n/LocaleProvider";
-import {
-  authBtnSecondary,
-  authGlassInput,
-  authGlassPanel,
-  btnPrimaryDark,
-} from "@/lib/vetoGlass";
+import { authBtnSecondary, authGlassInput, authGlassPanel } from "@/lib/vetoGlass";
+import { Button } from "@/components/ui/primitives/Button";
 
 type Mode = "user" | "lawyer";
 
@@ -293,18 +289,20 @@ function RegisterInner() {
             ולנסיבות העניין.
           </p>
 
-          <button
-            type="button"
+          <Button
+            variant="primary"
+            size="lg"
+            fullWidth
             disabled={busy || !acceptedTerms}
+            loading={busy}
             onClick={() => onSubmit()}
-            className={`w-full px-4 py-3 text-sm font-semibold ${btnPrimaryDark} disabled:opacity-50`}
           >
             {busy
               ? t("register.busy")
               : mode === "lawyer"
                 ? "שליחת בקשה לאישור"
                 : t("register.submit")}
-          </button>
+          </Button>
 
           <div
             className="flex flex-wrap items-center justify-center gap-3 border-t border-subtle pt-4 text-xs text-muted"

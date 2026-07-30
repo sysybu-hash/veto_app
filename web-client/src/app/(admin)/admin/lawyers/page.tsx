@@ -12,6 +12,8 @@ import {
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { getJwt } from "@/lib/authToken";
+import { Button } from "@/components/ui/primitives/Button";
+import { IconButton } from "@/components/ui/primitives/IconButton";
 
 type Lawyer = {
   _id: string;
@@ -181,14 +183,14 @@ export default function AdminLawyersPage() {
             הוספה, אישור, עריכה ומחיקה של עורכי דין במערכת.
           </p>
         </div>
-        <button
-          type="button"
+        <IconButton
+          variant="secondary"
+          size="md"
+          className="rounded-full"
           onClick={() => void refresh()}
-          aria-label="רענון"
-          className="rounded-full border border-subtle bg-[rgba(255,255,255,0.04)] p-2 text-primary hover:bg-[rgba(255,255,255,0.08)]"
-        >
-          <RefreshCw className={`h-5 w-5 ${loading ? "animate-spin" : ""}`} aria-hidden />
-        </button>
+          label="רענון"
+          icon={<RefreshCw className={`h-5 w-5 ${loading ? "animate-spin" : ""}`} aria-hidden />}
+        />
       </header>
 
       <div className="mx-auto max-w-6xl space-y-4">
@@ -212,13 +214,9 @@ export default function AdminLawyersPage() {
             <option value="pending">ממתינים לאישור</option>
             <option value="approved">מאושרים</option>
           </select>
-          <button
-            type="button"
-            onClick={() => setShowCreate((v) => !v)}
-            className="inline-flex items-center gap-2 rounded-lg bg-veto-gold px-4 py-2 text-sm font-bold text-black hover:bg-brand-600"
-          >
-            <Plus size={16} aria-hidden /> הוספת עורך דין
-          </button>
+          <Button variant="primary" size="sm" onClick={() => setShowCreate((v) => !v)} iconStart={<Plus size={16} aria-hidden />}>
+            הוספת עורך דין
+          </Button>
         </div>
 
         {okMsg && (
@@ -290,8 +288,10 @@ export default function AdminLawyersPage() {
                           >
                             {l.is_approved ? "מאושר" : "ממתין"}
                           </span>
-                          <button
-                            type="button"
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className={l.is_available ? "bg-blue-500/15 text-blue-300 hover:bg-blue-500/25" : "bg-surface-sunken text-secondary"}
                             disabled={isBusy}
                             onClick={() =>
                               void run(
@@ -300,42 +300,39 @@ export default function AdminLawyersPage() {
                                 l.is_available ? "סומן כלא זמין" : "סומן כזמין",
                               )
                             }
-                            className={`rounded px-2 py-0.5 font-bold ${
-                              l.is_available
-                                ? "bg-blue-500/15 text-blue-300"
-                                : "bg-surface-sunken text-secondary"
-                            }`}
                           >
                             {l.is_available ? "זמין" : "לא זמין"}
-                          </button>
+                          </Button>
                         </div>
                       </td>
                       <td className="p-4">
                         <div className="flex items-center justify-center gap-2">
                           {!l.is_approved && (
-                            <button
-                              type="button"
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="bg-emerald-500/15 text-emerald-300 hover:bg-emerald-500/25"
                               disabled={isBusy}
+                              iconStart={<CheckCircle2 size={14} aria-hidden />}
                               onClick={() =>
                                 void run(l._id, () => approveLawyer(l._id), "עורך הדין אושר")
                               }
-                              className="inline-flex items-center gap-1 rounded bg-emerald-500/15 px-2 py-1 text-xs font-bold text-emerald-300 hover:bg-emerald-500/25"
                             >
-                              <CheckCircle2 size={14} aria-hidden /> אישור
-                            </button>
+                              אישור
+                            </Button>
                           )}
-                          <button
-                            type="button"
+                          <IconButton
+                            variant="ghost"
+                            size="sm"
+                            className="text-red-400 hover:bg-red-500/10"
                             disabled={isBusy}
                             onClick={() => {
                               if (!confirm(`למחוק את ${l.full_name}?`)) return;
                               void run(l._id, () => deleteLawyer(l._id), "עורך הדין נמחק");
                             }}
-                            aria-label="מחק"
-                            className="rounded p-1 text-red-400 hover:bg-red-500/10"
-                          >
-                            <Trash2 size={16} aria-hidden />
-                          </button>
+                            label="מחק"
+                            icon={<Trash2 size={16} aria-hidden />}
+                          />
                         </div>
                       </td>
                     </tr>
@@ -460,24 +457,12 @@ function CreateLawyerForm({
         <p className="me-auto text-xs text-muted">
           עורכי דין שנוצרים ע״י מנהל מאושרים אוטומטית.
         </p>
-        <button
-          type="button"
-          onClick={onClose}
-          className="rounded-lg border border-subtle bg-[rgba(255,255,255,0.04)] px-3 py-2 text-xs text-secondary"
-        >
+        <Button variant="secondary" size="sm" onClick={onClose}>
           ביטול
-        </button>
-        <button
-          type="submit"
-          disabled={busy}
-          className="inline-flex items-center gap-1 rounded-lg bg-veto-gold px-4 py-2 text-xs font-bold text-black disabled:opacity-60"
-        >
-          {busy ? "יוצר…" : (
-            <>
-              <CheckCircle2 size={14} aria-hidden /> צור עורך דין
-            </>
-          )}
-        </button>
+        </Button>
+        <Button variant="primary" size="sm" type="submit" disabled={busy} loading={busy} iconStart={<CheckCircle2 size={14} aria-hidden />}>
+          {busy ? "יוצר…" : "צור עורך דין"}
+        </Button>
       </div>
       {!busy && specs.length === 0 && (
         <p className="md:col-span-2 inline-flex items-center gap-1 text-xs text-amber-300">

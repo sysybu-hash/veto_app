@@ -21,8 +21,6 @@ import {
 import { createSubscriptionOrder } from "@/api/paymentApi";
 import { registerPasskey, passkeysSupported } from "@/api/passkeyApi";
 import {
-  btnPrimaryDark,
-  btnPrimaryGold,
   btnSecondaryGlass,
   glassInput,
   glassPanel,
@@ -31,6 +29,7 @@ import {
 import { GoldSwitch } from "./_components/GoldSwitch";
 import { useTranslation } from "@/lib/i18n/LocaleProvider";
 import { useSettings } from "./_components/settings-context";
+import { Button } from "@/components/ui/primitives/Button";
 
 type SettingsTab = "profile" | "notifications" | "security" | "billing";
 type SessionPreference = "video" | "audio" | "chat";
@@ -174,14 +173,14 @@ export default function SettingsIndexPage() {
                     </p>
                   </div>
                 </div>
-                <button
-                  type="button"
+                <Button
+                  variant="primary"
                   onClick={() => void enablePasskey()}
                   disabled={passkeyBusy || !passkeysSupported()}
-                  className={`px-4 py-3 text-sm font-black ${btnPrimaryDark} disabled:opacity-50`}
+                  loading={passkeyBusy}
                 >
                   {passkeyBusy ? "מפעיל..." : "הפעל Passkey"}
-                </button>
+                </Button>
               </div>
             </div>
             <ToggleCard
@@ -253,14 +252,19 @@ export default function SettingsIndexPage() {
             <Link href="/chat" className={`px-4 py-3 text-center text-sm font-bold ${btnSecondaryGlass}`}>
               צ׳אט
             </Link>
-            <button type="button" onClick={saveSecurity} className={`px-4 py-3 text-sm font-black ${btnPrimaryDark}`}>
+            <Button variant="primary" onClick={saveSecurity}>
               שמור אבטחה
-            </button>
+            </Button>
           </div>
-          <button type="button" onClick={() => setSecurityNote("נשלחה בקשה לאיפוס סיסמה למייל המחובר, אם השרת תומך בכך.")} className={`mt-3 flex w-full items-center justify-center gap-2 px-4 py-3 text-sm font-semibold ${btnSecondaryGlass}`}>
-            <KeyRound className="h-4 w-4" aria-hidden />
+          <Button
+            variant="secondary"
+            fullWidth
+            className="mt-3"
+            iconStart={<KeyRound className="h-4 w-4" aria-hidden />}
+            onClick={() => setSecurityNote("נשלחה בקשה לאיפוס סיסמה למייל המחובר, אם השרת תומך בכך.")}
+          >
             {t("settings.changePassword")}
-          </button>
+          </Button>
         </>
       )}
     </section>
@@ -308,18 +312,16 @@ function BillingPanel({
         {t("settings.billingConsultHint")}
       </div>
       <div className="mt-5 grid gap-2 sm:grid-cols-2">
-        <button
-          type="button"
-          disabled={payBusy || active}
-          onClick={onSubscribe}
-          className={`px-4 py-3 text-sm font-black ${btnPrimaryGold} disabled:cursor-not-allowed disabled:opacity-50`}
-        >
+        <Button variant="primary" disabled={payBusy || active} loading={payBusy} onClick={onSubscribe}>
           {payBusy ? "פותח תשלום..." : t("settings.billingSubscribeCta")}
-        </button>
-        <button type="button" onClick={() => void onRefresh()} className={`flex items-center justify-center gap-2 px-4 py-3 text-sm font-semibold ${btnSecondaryGlass}`}>
-          <RefreshCw className="h-4 w-4" aria-hidden />
+        </Button>
+        <Button
+          variant="secondary"
+          iconStart={<RefreshCw className="h-4 w-4" aria-hidden />}
+          onClick={() => void onRefresh()}
+        >
           {t("settings.billingRefresh")}
-        </button>
+        </Button>
       </div>
     </>
   );
@@ -381,13 +383,12 @@ function ToggleCard({
 function ActionRow({ onSave, onRefresh, saving }: { onSave: () => Promise<void>; onRefresh: () => Promise<void>; saving: boolean }) {
   return (
     <div className="mt-5 grid gap-2 sm:grid-cols-2">
-      <button type="button" disabled={saving} onClick={() => void onSave()} className={`px-4 py-3 text-sm font-black ${btnPrimaryDark} disabled:cursor-not-allowed disabled:opacity-60`}>
+      <Button variant="primary" disabled={saving} loading={saving} onClick={() => void onSave()}>
         {saving ? "שומר..." : "שמור שינויים"}
-      </button>
-      <button type="button" onClick={() => void onRefresh()} className={`flex items-center justify-center gap-2 px-4 py-3 text-sm font-semibold ${btnSecondaryGlass}`}>
-        <RefreshCw className="h-4 w-4" aria-hidden />
+      </Button>
+      <Button variant="secondary" iconStart={<RefreshCw className="h-4 w-4" aria-hidden />} onClick={() => void onRefresh()}>
         רענן נתונים
-      </button>
+      </Button>
     </div>
   );
 }

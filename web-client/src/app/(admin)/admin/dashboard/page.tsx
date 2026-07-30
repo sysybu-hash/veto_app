@@ -29,6 +29,8 @@ import {
 import { VetoBrandLogo } from "@/components/brand/VetoBrandLogo";
 import { authFetch } from "@/api/apiClient";
 import { getJwt } from "@/lib/authToken";
+import { Button } from "@/components/ui/primitives/Button";
+import { IconButton } from "@/components/ui/primitives/IconButton";
 
 type AdminRole = "USER" | "ADMIN";
 
@@ -298,13 +300,9 @@ export default function VetoMasterDashboard() {
               <p className="mt-1 text-sm text-muted">מבט על בזמן אמת · רענון כל 15 שניות</p>
             </div>
             <div className="flex flex-wrap items-center gap-2">
-              <button
-                type="button"
-                onClick={() => void refreshCommandCenter()}
-                className="rounded-full border border-subtle bg-[rgba(255,255,255,0.06)] px-3 py-2 text-xs text-primary transition hover:bg-[rgba(255,255,255,0.1)]"
-              >
+              <Button variant="secondary" size="sm" className="rounded-full" onClick={() => void refreshCommandCenter()}>
                 רענון מיידי
-              </button>
+              </Button>
               <div className="flex items-center gap-2 rounded-full border border-green-500/20 bg-green-500/10 px-4 py-2 text-sm text-green-400">
                 <span className="relative flex h-2 w-2">
                   <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75" />
@@ -423,14 +421,14 @@ export default function VetoMasterDashboard() {
             <h1 className="font-serif text-3xl font-bold text-primary">ניהול מערכת VETO</h1>
             <p className="text-sm text-muted">סטטוס שרתים ומנויים בזמן אמת</p>
           </div>
-          <button
-            type="button"
+          <IconButton
+            variant="secondary"
+            size="md"
+            className="rounded-full"
             onClick={() => void refresh()}
-            className="rounded-full border border-subtle bg-[rgba(255,255,255,0.04)] p-2 text-primary transition hover:bg-[rgba(255,255,255,0.08)]"
-            aria-label="רענון נתונים"
-          >
-            <RefreshCw className={`h-5 w-5 ${loading ? "animate-spin" : ""}`} aria-hidden />
-          </button>
+            label="רענון נתונים"
+            icon={<RefreshCw className={`h-5 w-5 ${loading ? "animate-spin" : ""}`} aria-hidden />}
+          />
         </header>
 
         <div className="mb-8 grid grid-cols-1 gap-4 text-center md:grid-cols-4">
@@ -494,13 +492,14 @@ export default function VetoMasterDashboard() {
                   aria-label="חיפוש משתמש"
                 />
               </div>
-              <button
-                type="button"
+              <Button
+                variant="primary"
+                size="sm"
                 onClick={() => setShowCreate((v) => !v)}
-                className="inline-flex items-center gap-2 rounded-lg bg-veto-gold px-4 py-2 text-sm font-bold text-black transition hover:bg-brand-600"
+                iconStart={<Plus size={16} aria-hidden />}
               >
-                <Plus size={16} aria-hidden /> הוספת משתמש
-              </button>
+                הוספת משתמש
+              </Button>
             </div>
           </div>
 
@@ -559,18 +558,19 @@ export default function VetoMasterDashboard() {
                         </select>
                       </td>
                       <td className="p-4 text-center text-xs">
-                        <button
-                          type="button"
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className={
+                            user.isActive
+                              ? "bg-emerald-500/15 text-emerald-300 hover:bg-emerald-500/25"
+                              : "bg-amber-500/15 text-amber-300 hover:bg-amber-500/25"
+                          }
                           disabled={isBusy}
                           onClick={() => void toggleActive(user)}
-                          className={`rounded px-2 py-1 font-bold ${
-                            user.isActive
-                              ? "bg-emerald-500/15 text-emerald-300"
-                              : "bg-amber-500/15 text-amber-300"
-                          }`}
                         >
                           {user.isActive ? "פעיל" : "מושעה"}
-                        </button>
+                        </Button>
                       </td>
                       <td className="p-4 text-center">
                         <label className="inline-flex cursor-pointer items-center gap-2 text-xs text-secondary">
@@ -593,15 +593,15 @@ export default function VetoMasterDashboard() {
                           >
                             ערוך
                           </Link>
-                          <button
-                            type="button"
+                          <IconButton
+                            variant="ghost"
+                            size="sm"
+                            className="text-red-400 hover:bg-red-500/10"
                             disabled={isBusy}
                             onClick={() => removeUser(user)}
-                            className="rounded p-1 text-red-400 hover:bg-red-500/10"
-                            aria-label="מחק משתמש"
-                          >
-                            <Trash2 size={16} aria-hidden />
-                          </button>
+                            label="מחק משתמש"
+                            icon={<Trash2 size={16} aria-hidden />}
+                          />
                         </div>
                       </td>
                     </tr>
@@ -701,20 +701,12 @@ function CreateUserForm({
           פטור מתשלום
         </label>
         <div className="flex gap-2">
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-lg border border-subtle bg-[rgba(255,255,255,0.04)] px-3 py-2 text-xs text-secondary"
-          >
+          <Button variant="secondary" size="sm" onClick={onClose}>
             ביטול
-          </button>
-          <button
-            type="submit"
-            disabled={busy}
-            className="rounded-lg bg-veto-gold px-3 py-2 text-xs font-bold text-black disabled:opacity-60"
-          >
+          </Button>
+          <Button variant="primary" size="sm" type="submit" disabled={busy} loading={busy}>
             {busy ? "יוצר…" : "צור"}
-          </button>
+          </Button>
         </div>
       </div>
     </form>

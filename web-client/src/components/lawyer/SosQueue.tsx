@@ -17,9 +17,10 @@ import {
 } from "@/lib/ably";
 import { getJwt, getRoleFromJwt } from "@/lib/authToken";
 import { useTranslation } from "@/lib/i18n/LocaleProvider";
-import { btnPrimaryGold, glassPanel, glassPanelNested } from "@/lib/vetoGlass";
+import { glassPanel, glassPanelNested } from "@/lib/vetoGlass";
 import { connectSocket, getSocket } from "@/lib/socketClient";
 import { useToastStore } from "@/store/useToastStore";
+import { Button } from "@/components/ui/primitives/Button";
 
 type AblyAuthProceed = (
   error: ErrorInfo | string | null,
@@ -406,14 +407,16 @@ export function SosQueue() {
                   )}
                 </p>
               </div>
-              <button
-                type="button"
+              <Button
+                variant="primary"
+                size="lg"
+                className="shrink-0"
                 disabled={claimingId !== null}
+                loading={claimingId === it.eventId}
                 onClick={() => void onClaim(it.eventId)}
-                className={`shrink-0 px-5 py-3 text-sm ${btnPrimaryGold} disabled:cursor-not-allowed disabled:opacity-50`}
               >
                 {claimingId === it.eventId ? t("sosQueue.claiming") : t("sosQueue.claim")}
-              </button>
+              </Button>
             </li>
           ))}
         </ul>

@@ -13,12 +13,9 @@ import { CreateEventModal } from "@/components/calendar/CreateEventModal";
 import { getJwt } from "@/lib/authToken";
 import type { Locale } from "@/lib/i18n/types";
 import { useTranslation } from "@/lib/i18n/LocaleProvider";
-import {
-  btnPrimaryGold,
-  btnSecondaryGlass,
-  citizenBottomSafe,
-  glassPanel,
-} from "@/lib/vetoGlass";
+import { citizenBottomSafe, glassPanel } from "@/lib/vetoGlass";
+import { Button } from "@/components/ui/primitives/Button";
+import { IconButton } from "@/components/ui/primitives/IconButton";
 
 function combineDateTimeToIsoRange(dateStr: string, timeStr: string): {
   start: string;
@@ -149,25 +146,23 @@ function CalendarMonthGrid({ events }: { events: ApiCalendarEvent[] }) {
   return (
     <section className={`${glassPanel} p-4`}>
       <div className="mb-3 flex items-center justify-between gap-2">
-        <button
-          type="button"
+        <IconButton
+          variant="secondary"
+          size="sm"
           onClick={() => shiftMonth(-1)}
-          className={`${btnSecondaryGlass} px-3 py-1.5 text-xs`}
-          aria-label={t("calendar.prevMonthAria")}
-        >
-          ‹
-        </button>
+          label={t("calendar.prevMonthAria")}
+          icon={<span aria-hidden>‹</span>}
+        />
         <h2 className="font-frank text-center text-sm font-bold text-primary">
           {monthLabel}
         </h2>
-        <button
-          type="button"
+        <IconButton
+          variant="secondary"
+          size="sm"
           onClick={() => shiftMonth(1)}
-          className={`${btnSecondaryGlass} px-3 py-1.5 text-xs`}
-          aria-label={t("calendar.nextMonthAria")}
-        >
-          ›
-        </button>
+          label={t("calendar.nextMonthAria")}
+          icon={<span aria-hidden>›</span>}
+        />
       </div>
       <div className="mb-1 grid grid-cols-7 gap-1 text-center text-[10px] font-semibold uppercase tracking-wide text-muted">
         {weekdayLabels.map((d) => (
@@ -282,31 +277,25 @@ export default function CitizenCalendarPage() {
         </div>
 
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-          <button
-            type="button"
+          <Button
+            variant="secondary"
+            size="lg"
+            fullWidth
+            className="sm:w-auto sm:flex-1"
             onClick={() => void handleGoogleSync()}
             disabled={syncBusy}
-            className={`inline-flex w-full items-center justify-center gap-2 px-4 py-3.5 text-sm sm:flex-1 ${btnSecondaryGlass} disabled:opacity-60`}
+            loading={syncBusy}
+            iconStart={
+              <svg className="h-5 w-5" viewBox="0 0 24 24" aria-hidden>
+                <path fill="currentColor" d="M19.5 12h-15v-3h15v3zm0 4.5h-15v-3h15v3zm0-9h-15V4.5h15V7.5z" />
+              </svg>
+            }
           >
-            <svg
-              className="h-5 w-5"
-              viewBox="0 0 24 24"
-              aria-hidden
-            >
-              <path
-                fill="currentColor"
-                d="M19.5 12h-15v-3h15v3zm0 4.5h-15v-3h15v3zm0-9h-15V4.5h15V7.5z"
-              />
-            </svg>
             {syncBusy ? t("calendar.openingGoogle") : t("calendar.syncGoogle")}
-          </button>
-          <button
-            type="button"
-            onClick={() => setModalOpen(true)}
-            className={`inline-flex w-full items-center justify-center px-4 py-3.5 text-sm sm:w-auto sm:shrink-0 ${btnPrimaryGold}`}
-          >
+          </Button>
+          <Button variant="primary" size="lg" fullWidth className="sm:w-auto" onClick={() => setModalOpen(true)}>
             {t("calendar.newEvent")}
-          </button>
+          </Button>
         </div>
         {syncError && (
           <p className="rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-200 backdrop-blur-xl">

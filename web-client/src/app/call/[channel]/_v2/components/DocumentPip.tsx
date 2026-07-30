@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useTrWithFallback } from "../lib/trWithFallback";
+import { Button } from "@/components/ui/primitives/Button";
 
 type DocPipWindow = Window & {
   document: Document;
@@ -122,17 +123,17 @@ export function DocumentPipToggle({
   if (!supported) return null;
 
   return (
-    <button
-      type="button"
+    <Button
+      variant="ghost"
+      size="sm"
+      className={active ? "rounded-full bg-amber-600 text-inverse hover:bg-amber-600" : "rounded-full bg-white/15 text-inverse hover:bg-white/20"}
       onClick={() => (active ? close() : void open())}
       aria-pressed={active}
       title={t("call.v2.pip.toggle", "Picture-in-picture")}
-      className={`rounded-full px-3 py-2 text-xs font-medium ${
-        active ? "bg-amber-600 text-inverse" : "bg-white/15 text-inverse hover:bg-white/20"}`}
     >
       {active
         ? t("call.v2.pip.exit", "Exit PiP")
         : t("call.v2.pip.enter", "PiP")}
-    </button>
+    </Button>
   );
 }

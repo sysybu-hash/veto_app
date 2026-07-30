@@ -27,13 +27,8 @@ import { useTranslation } from "@/lib/i18n/LocaleProvider";
 import { clearJwt, getJwt, getRoleFromJwt } from "@/lib/authToken";
 import { useWebPush } from "@/hooks/useWebPush";
 import { connectSocket, disconnectSocket, getSocket } from "@/lib/socketClient";
-import {
-  btnPrimaryDark,
-  btnPrimaryGold,
-  btnSecondaryGlass,
-  glassPanel,
-  glassPanelNested,
-} from "@/lib/vetoGlass";
+import { Button } from "@/components/ui/primitives/Button";
+import { btnPrimaryDark, btnSecondaryGlass, glassPanel, glassPanelNested } from "@/lib/vetoGlass";
 import {
   useEmergencyStore,
   type SessionCallType,
@@ -398,14 +393,13 @@ export default function LawyerDashboardPage() {
                 <span className={`absolute top-1 h-8 w-8 rounded-full bg-surface-overlay shadow transition ${isAvailable ? "end-1" : "start-1"}`} />
               </button>
             </div>
-            <button
-              type="button"
+            <Button
+              variant="secondary"
               onClick={handleLogout}
-              className={`flex items-center justify-center gap-2 px-4 py-3 text-sm font-black ${btnSecondaryGlass}`}
+              iconStart={<LogOut className="h-4 w-4" aria-hidden />}
             >
-              <LogOut className="h-4 w-4" aria-hidden />
               התנתקות
-            </button>
+            </Button>
           </div>
         </div>
       </header>
@@ -414,9 +408,9 @@ export default function LawyerDashboardPage() {
         {lastError && (
           <div className="mb-4 rounded-2xl border border-amber-200 bg-amber-50/90 px-4 py-3 text-sm font-semibold text-amber-950" role="alert">
             {lastError}
-            <button type="button" onClick={() => setLastError(null)} className="ms-3 underline">
+            <Button variant="link" size="sm" className="ms-3 h-auto p-0" onClick={() => setLastError(null)}>
               {t("lawyerDashboard.closeError")}
-            </button>
+            </Button>
           </div>
         )}
 
@@ -556,9 +550,9 @@ function OverviewPanel({
           <Link href="/vault" className={`px-4 py-3 text-center text-sm font-bold ${btnSecondaryGlass}`}>
             {t("lawyerDashboard.quickOpenVault")}
           </Link>
-          <button type="button" onClick={onOpenSchedule} className={`px-4 py-3 text-sm font-bold ${btnSecondaryGlass}`}>
+          <Button variant="secondary" onClick={onOpenSchedule}>
             {t("lawyerDashboard.quickEditSchedule")}
-          </button>
+          </Button>
         </div>
       </div>
     </section>
@@ -733,20 +727,12 @@ function SchedulePanel({
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <h3 className="text-sm font-black text-primary">שעות זמינות ביממה (00–23)</h3>
           <div className="flex flex-wrap gap-2">
-            <button
-              type="button"
-              onClick={() => applyPreset("business")}
-              className={`rounded-lg px-3 py-1.5 text-xs font-bold ${btnSecondaryGlass}`}
-            >
+            <Button variant="secondary" size="sm" onClick={() => applyPreset("business")}>
               09:00–17:00
-            </button>
-            <button
-              type="button"
-              onClick={() => applyPreset("clear")}
-              className={`rounded-lg px-3 py-1.5 text-xs font-bold ${btnSecondaryGlass}`}
-            >
+            </Button>
+            <Button variant="secondary" size="sm" onClick={() => applyPreset("clear")}>
               נקה הכל
-            </button>
+            </Button>
           </div>
         </div>
         <p className="mt-1 text-xs text-muted">
@@ -803,13 +789,9 @@ function ProfilePanel({
             <MiniRow icon={ShieldCheck} title="הרשאה" value="עורך דין" />
           </div>
           {notifPermission !== "unsupported" && notifPermission !== "granted" ? (
-            <button
-              type="button"
-              onClick={onEnablePushNotifications}
-              className={`mt-4 w-full px-4 py-3 text-sm font-black ${btnPrimaryGold}`}
-            >
+            <Button variant="primary" fullWidth className="mt-4" onClick={onEnablePushNotifications}>
               הפעלת התראות דחיפה (SOS)
-            </button>
+            </Button>
           ) : null}
         </div>
       </div>
@@ -869,9 +851,9 @@ function CaseDetails({
         <p className="text-xs font-bold text-muted">מזהה אירוע</p>
         <p className="mt-1 break-all font-mono text-xs text-primary">{alert.eventId}</p>
       </div>
-      <button type="button" disabled={isAccepting} onClick={onAccept} className={`mt-4 w-full px-5 py-4 text-base font-black ${btnPrimaryGold} disabled:cursor-not-allowed disabled:opacity-60`}>
+      <Button variant="primary" size="lg" fullWidth className="mt-4" disabled={isAccepting} loading={isAccepting} onClick={onAccept}>
         {isAccepting ? "מקבל את הקריאה..." : "קבל קריאה ופתח שיחה"}
-      </button>
+      </Button>
       {!compact && (
         <p className="mt-3 text-center text-xs text-muted">
           לאחר הקבלה האזרח יבחר וידאו, אודיו או צ׳אט. בלחיצה על הכפתור תתבקשו לאשר גישה למצלמה ולמיקרופון.

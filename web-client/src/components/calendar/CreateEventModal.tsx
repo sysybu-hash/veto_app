@@ -2,14 +2,13 @@
 
 import { useCallback, useState } from "react";
 import {
-  btnPrimaryGold,
-  btnSecondaryGlass,
   glassInput,
   glassPanelNested,
   modalBackdrop,
-  focusRing,
 } from "@/lib/vetoGlass";
 import { useTranslation } from "@/lib/i18n/LocaleProvider";
+import { Button } from "@/components/ui/primitives/Button";
+import { IconButton } from "@/components/ui/primitives/IconButton";
 
 export type CreateEventModalSubmit = {
   title: string;
@@ -74,23 +73,18 @@ export function CreateEventModal({ open, onClose, onSubmit }: Props) {
           >
             {t("calendar.modalTitle")}
           </h2>
-          <button
-            type="button"
+          <IconButton
+            variant="ghost"
+            size="sm"
             onClick={handleClose}
             disabled={submitting}
-            className={`rounded-lg p-2 text-muted transition hover:bg-slate-100 hover:text-slate-900 disabled:opacity-50  dark:hover:bg-white/10 dark:hover:text-slate-100 ${focusRing}`}
-            aria-label={t("common.close")}
-          >
-            <svg
-              className="h-5 w-5"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth={1.75}
-              viewBox="0 0 24 24"
-            >
-              <path d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
+            label={t("common.close")}
+            icon={
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.75} viewBox="0 0 24 24">
+                <path d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            }
+          />
         </div>
 
         <form
@@ -177,21 +171,12 @@ export function CreateEventModal({ open, onClose, onSubmit }: Props) {
           )}
 
           <div className="flex gap-3 pt-2">
-            <button
-              type="button"
-              onClick={handleClose}
-              disabled={submitting}
-              className={`flex-1 py-3 text-sm ${btnSecondaryGlass} disabled:opacity-50`}
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={submitting}
-              className={`flex-1 py-3 text-sm ${btnPrimaryGold} disabled:opacity-60`}
-            >
+            <Button variant="secondary" size="lg" className="flex-1" onClick={handleClose} disabled={submitting}>
+              {t("common.cancel")}
+            </Button>
+            <Button variant="primary" size="lg" className="flex-1" type="submit" loading={submitting}>
               {submitting ? t("settings.saving") : t("calendar.saveEvent")}
-            </button>
+            </Button>
           </div>
         </form>
       </div>

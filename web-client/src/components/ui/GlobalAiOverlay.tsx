@@ -19,8 +19,6 @@ import {
 import { saveAiAnalysisAsFile } from "@/app/actions/ai-to-vault";
 import { analyzeLegalDocument } from "@/app/actions/ai-vision";
 import {
-  btnPrimaryGold,
-  btnSecondaryGlass,
   glassBubbleAssistant,
   glassBubbleUser,
   glassInput,
@@ -28,6 +26,8 @@ import {
 } from "@/lib/vetoGlass";
 import { useTranslation } from "@/lib/i18n/LocaleProvider";
 import { useToastStore } from "@/store/useToastStore";
+import { Button } from "@/components/ui/primitives/Button";
+import { IconButton } from "@/components/ui/primitives/IconButton";
 
 type AiChatApiResponse = {
   classified?: boolean;
@@ -660,22 +660,18 @@ export function GlobalAiOverlay() {
 
               <div className="flex shrink-0 items-center gap-1">
                 {mode === "text" && messages.length > 0 && (
-                  <button
-                    type="button"
-                    onClick={clearChat}
-                    className={`rounded-lg px-2 py-1 text-xs font-medium ${btnSecondaryGlass}`}
-                  >
+                  <Button variant="secondary" size="sm" onClick={clearChat}>
                     {t("ai.clear")}
-                  </button>
+                  </Button>
                 )}
-                <button
-                  type="button"
+                <IconButton
+                  variant="secondary"
+                  size="sm"
                   onClick={handleToggleChat}
-                  className={`rounded-full p-2 text-secondary ${btnSecondaryGlass} border-transparent`}
-                  aria-label={t("ai.close")}
-                >
-                  <X className="h-5 w-5" aria-hidden />
-                </button>
+                  label={t("ai.close")}
+                  icon={<X className="h-5 w-5" aria-hidden />}
+                  className="rounded-full border-transparent"
+                />
               </div>
             </header>
 
@@ -788,13 +784,9 @@ export function GlobalAiOverlay() {
                         {liveTranscript || t("ai.liveTranscriptPlaceholder")}
                       </p>
                     </div>
-                    <button
-                      type="button"
-                      onClick={isLiveListening ? stopLiveListening : startLiveListening}
-                      className={`px-4 py-2 text-sm font-bold ${btnPrimaryGold}`}
-                    >
+                    <Button variant="primary" onClick={isLiveListening ? stopLiveListening : startLiveListening}>
                       {isLiveListening ? t("ai.liveStop") : t("ai.liveStart")}
-                    </button>
+                    </Button>
                   </motion.div>
                 )}
 
@@ -857,26 +849,28 @@ export function GlobalAiOverlay() {
                     <p className="rounded-xl border border-subtle bg-surface-sunken px-3 py-2 text-center text-xs font-bold text-secondary backdrop-blur-md">
                       {t("ai.visionHint")}
                     </p>
-                    <button
-                      type="button"
-                      disabled={
-                        !!visionError || visionBusy || !getJwt()
-                      }
+                    <Button
+                      variant="primary"
+                      size="lg"
+                      fullWidth
+                      disabled={!!visionError || visionBusy || !getJwt()}
+                      loading={visionBusy}
                       onClick={() => void captureAndAnalyze()}
-                      className={`flex w-full items-center justify-center gap-2 py-3 text-sm font-bold ${btnPrimaryGold} disabled:cursor-not-allowed disabled:opacity-50 ${visionBusy ? "animate-pulse" : ""}`}
+                      iconStart={<ScanLine className="h-5 w-5 shrink-0" aria-hidden />}
                     >
-                      <ScanLine className="h-5 w-5 shrink-0" aria-hidden />
                       {visionBusy ? t("ai.analyzingFrame") : t("ai.captureAnalyze")}
-                    </button>
+                    </Button>
                     {lastVisionAnalysis?.trim() ? (
-                      <button
-                        type="button"
+                      <Button
+                        variant="secondary"
+                        size="lg"
+                        fullWidth
                         disabled={vaultSaveBusy}
+                        loading={vaultSaveBusy}
                         onClick={() => void saveVisionToVault()}
-                        className={`flex w-full items-center justify-center gap-2 py-3 text-sm font-bold ${btnSecondaryGlass} disabled:cursor-not-allowed disabled:opacity-50`}
                       >
                         {vaultSaveBusy ? t("ai.savingVault") : t("ai.saveVault")}
-                      </button>
+                      </Button>
                     ) : null}
                   </motion.div>
                 )}
@@ -904,15 +898,14 @@ export function GlobalAiOverlay() {
                       disabled={isLoading}
                       className={`max-h-32 min-h-[44px] flex-1 resize-none ${glassInput} disabled:opacity-60`}
                     />
-                    <button
-                      type="button"
+                    <IconButton
+                      variant="primary"
+                      size="lg"
                       onClick={() => void send()}
                       disabled={isLoading || !draft.trim()}
-                      className={`flex h-12 w-12 shrink-0 items-center justify-center ${btnPrimaryGold} disabled:cursor-not-allowed disabled:opacity-50`}
-                      aria-label={t("ai.send")}
-                    >
-                      <Send className="h-[18px] w-[18px]" aria-hidden />
-                    </button>
+                      label={t("ai.send")}
+                      icon={<Send className="h-[18px] w-[18px]" aria-hidden />}
+                    />
                   </div>
                 </motion.footer>
               )}

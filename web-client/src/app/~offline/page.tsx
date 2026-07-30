@@ -1,7 +1,7 @@
 "use client";
 
 import { WifiOff } from "lucide-react";
-import { btnPrimaryGold } from "@/lib/vetoGlass";
+import { Button } from "@/components/ui";
 
 export default function OfflinePage() {
   return (
@@ -16,13 +16,9 @@ export default function OfflinePage() {
         המכשיר שלך כרגע לא מחובר לרשת. אנא ודא שהאינטרנט הסלולרי או ה-Wi-Fi
         פועלים כדי שנוכל לחבר אותך לעורך דין בזמן אמת.
       </p>
-      <button
-        type="button"
-        onClick={() => window.location.reload()}
-        className={`min-h-[48px] px-10 py-3 text-base ${btnPrimaryGold}`}
-      >
+      <Button variant="primary" size="lg" onClick={() => window.location.reload()} className="min-h-[48px] px-10">
         נסה שוב
-      </button>
+      </Button>
     </div>
   );
 }

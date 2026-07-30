@@ -517,11 +517,19 @@ const googleAuth = async (req, res, next) => {
     }
 
     const userRole = doc.role === 'admin' ? 'admin' : 'user';
+    // Owner flag: lets one specific, real Google-verified identity switch
+    // between citizen/lawyer/admin views via POST /auth/view-as, replacing
+    // the old shared-password dev-login bypass (see viewAs below).
+    const ownerEmail = process.env.OWNER_EMAIL;
+    const isOwner = Boolean(
+      ownerEmail && doc.email && doc.email.toLowerCase() === ownerEmail.toLowerCase(),
+    );
     const token    = signToken({
       userId:             doc._id.toString(),
       role:               userRole,
       full_name:          doc.full_name,
       preferred_language: doc.preferred_language,
+      isOwner,
     });
 
     const isPaymentExempt = userRole === 'admin' || userRole === 'lawyer' || doc.manually_added === true;
@@ -545,6 +553,7 @@ const googleAuth = async (req, res, next) => {
         manually_added:      doc.manually_added   ?? false,
         is_payment_exempt:   isPaymentExempt,
         onboarding_completed: onboarding_completed,
+        is_owner:            isOwner,
       },
     });
   } catch (err) {
@@ -557,10 +566,12 @@ const googleAuth = async (req, res, next) => {
 //  Body: { username, password, role }
 //  Development-only login for local QA role switching.
 /**
- * Shadow accounts for dev-login — real Mongo ids so /api/users/me and PUT work.
- * Override phones via env if +1000… conflicts with your data.
+ * Shadow accounts for role-switching — real Mongo ids so /api/users/me and
+ * PUT work. Used both by dev-login (local/CI only) and by the owner-only
+ * /auth/view-as endpoint below. Override phones via env if +1000… conflicts
+ * with your data.
  */
-async function getOrCreateDevAccount(appRole) {
+async function getOrCreateShadowAccount(appRole) {
   const shadowPhoneUser =
     process.env.DEV_LOGIN_USER_PHONE?.trim() || '+10000000001';
   const shadowPhoneAdmin =
@@ -603,21 +614,26 @@ async function getOrCreateDevAccount(appRole) {
 }
 
 // ============================================================
+//  Gate is deliberately default-closed and has NO production override:
+//  unlike the old `ALLOW_DEV_LOGIN` flag (which could — and on 2026-07-29,
+//  did — leave this reachable on live production via a misconfigured env
+//  var), this can NEVER run when NODE_ENV==='production', regardless of
+//  any other env var. Real production role-switching goes through the
+//  Google-authenticated /auth/view-as endpoint below instead.
 const devLogin = async (req, res) => {
-  const allowInProd =
-    process.env.ALLOW_DEV_LOGIN === '1' ||
-    process.env.ALLOW_DEV_LOGIN === 'true';
   const devLoginAllowed =
-    process.env.NODE_ENV !== 'production' || allowInProd;
+    process.env.NODE_ENV !== 'production' && process.env.DEV_LOGIN_ENABLED === '1';
 
   if (!devLoginAllowed) {
-    return res.status(403).json({ error: 'Dev login is disabled in production.' });
+    return res.status(403).json({ error: 'Dev login is disabled.' });
   }
 
-  if (process.env.NODE_ENV === 'production' && allowInProd) {
-    logger.warn(
-      '[AUTH] ALLOW_DEV_LOGIN is set: POST /auth/dev-login is enabled on production. Remove for real production.',
-    );
+  const expectedUsername = process.env.DEV_LOGIN_USERNAME?.trim().toUpperCase();
+  const expectedPassword = process.env.DEV_LOGIN_PASSWORD?.trim();
+  if (!expectedUsername || !expectedPassword) {
+    return res.status(503).json({
+      error: 'Dev login is enabled but DEV_LOGIN_USERNAME/DEV_LOGIN_PASSWORD are not set.',
+    });
   }
 
   const {
@@ -626,8 +642,6 @@ const devLogin = async (req, res) => {
     role = 'admin',
   } = req.body || {};
 
-  const expectedUsername = (process.env.DEV_LOGIN_USERNAME || '***REDACTED***').toUpperCase();
-  const expectedPassword = process.env.DEV_LOGIN_PASSWORD || '***REDACTED***';
   const normalizedUsername = String(username).trim().toUpperCase();
 
   if (normalizedUsername !== expectedUsername || String(password).trim() !== expectedPassword) {
@@ -640,7 +654,7 @@ const devLogin = async (req, res) => {
   const appRole = normalizedRole === 'citizen' ? 'user' : normalizedRole;
 
   try {
-    const { doc, jwtRole } = await getOrCreateDevAccount(appRole);
+    const { doc, jwtRole } = await getOrCreateShadowAccount(appRole);
     const fullName =
       doc.full_name ||
       (jwtRole === 'lawyer' ? 'Dev Lawyer' : jwtRole === 'admin' ? 'Dev Admin' : 'Dev User');
@@ -672,9 +686,57 @@ const devLogin = async (req, res) => {
       },
     });
   } catch (err) {
-    logger.error({ err }, '[AUTH] dev-login getOrCreateDevAccount failed');
+    logger.error({ err }, '[AUTH] dev-login getOrCreateShadowAccount failed');
     return res.status(500).json({
       error: 'Could not prepare dev session. Check MongoDB and shadow phone uniqueness.',
+    });
+  }
+};
+
+// ============================================================
+//  POST /auth/view-as
+//  Body: { role: 'citizen' | 'lawyer' | 'admin' }
+//  Owner-only role switcher: replaces the old dev-login bypass for real
+//  production use. Requires a real, Google-verified `isOwner` JWT (see
+//  googleAuth above, gated by the OWNER_EMAIL env var) — not a shared
+//  password. Issues a new JWT for the requested role, itself still carrying
+//  `isOwner: true`, so the owner can keep switching from any view without
+//  returning to the original token.
+// ============================================================
+const viewAs = async (req, res) => {
+  if (!req.user?.isOwner) {
+    return res.status(403).json({ error: 'Only the owner account can switch views.' });
+  }
+
+  const { role = 'citizen' } = req.body || {};
+  const normalizedRole = ['admin', 'lawyer', 'user', 'citizen'].includes(String(role))
+    ? String(role)
+    : 'citizen';
+  const appRole = normalizedRole === 'citizen' ? 'user' : normalizedRole;
+
+  try {
+    const { doc, jwtRole } = await getOrCreateShadowAccount(appRole);
+    const fullName =
+      doc.full_name ||
+      (jwtRole === 'lawyer' ? 'Dev Lawyer' : jwtRole === 'admin' ? 'Dev Admin' : 'Dev User');
+
+    const token = signToken({
+      userId: doc._id.toString(),
+      role: jwtRole,
+      full_name: fullName,
+      preferred_language: doc.preferred_language || 'he',
+      isOwner: true,
+    });
+
+    return res.status(200).json({
+      message: 'Viewing as ' + jwtRole + '.',
+      token,
+      role: jwtRole,
+    });
+  } catch (err) {
+    logger.error({ err }, '[AUTH] view-as getOrCreateShadowAccount failed');
+    return res.status(500).json({
+      error: 'Could not prepare view-as session.',
     });
   }
 };
@@ -685,6 +747,7 @@ module.exports = {
   verifyOTP,
   googleAuth,
   devLogin,
+  viewAs,
   passkeyRegisterOptions,
   passkeyRegisterVerify,
   passkeyLoginOptions,

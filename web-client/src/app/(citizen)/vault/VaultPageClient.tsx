@@ -14,13 +14,13 @@ import {
 } from "@/components/vault/VaultUploadModal";
 import { CitizenBottomNav } from "@/components/citizen/CitizenBottomNav";
 import {
-  btnPrimaryGold,
   btnSecondaryGlass,
   citizenBottomSafe,
   glassCard,
   glassList,
 } from "@/lib/vetoGlass";
 import { Wand2 } from "lucide-react";
+import { Button } from "@/components/ui/primitives/Button";
 
 type VaultFolder = VaultFolderOption & {
   description: string;
@@ -384,14 +384,9 @@ export function VaultPageClient({
           )}
         </div>
         <div className="flex w-full flex-col gap-3 sm:w-auto sm:items-end">
-          <button
-            type="button"
-            disabled={syncBusy || !!loadError}
-            onClick={() => void runSosSync()}
-            className={`inline-flex items-center justify-center gap-2 px-5 py-3 text-sm ${btnSecondaryGlass} disabled:cursor-not-allowed disabled:opacity-50`}
-          >
+          <Button variant="secondary" disabled={syncBusy || !!loadError} loading={syncBusy} onClick={() => void runSosSync()}>
             {syncBusy ? t("vault.syncSosBusy") : t("vault.syncSos")}
-          </button>
+          </Button>
           <div className="flex w-full flex-col gap-2 sm:flex-row sm:flex-wrap sm:justify-end">
             <Link
               href="/vault/generator"
@@ -400,28 +395,25 @@ export function VaultPageClient({
               <Wand2 className="h-6 w-6 shrink-0" aria-hidden />
               יצירת מסמך חכם (AI)
             </Link>
-            <button
-              type="button"
+            <Button
+              variant="primary"
+              size="lg"
+              fullWidth
+              className="min-h-[3.25rem] sm:flex-initial sm:w-auto"
               disabled={!!loadError}
               onClick={() => setUploadOpen(true)}
-              className={`inline-flex min-h-[3.25rem] flex-1 items-center justify-center gap-2 px-6 py-4 text-base font-semibold ${btnPrimaryGold} disabled:cursor-not-allowed disabled:opacity-50 sm:flex-initial`}
+              iconStart={
+                <svg className="h-6 w-6 shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
+                  <path
+                    d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5-5 5 5M12 5v12"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              }
             >
-              <svg
-                className="h-6 w-6 shrink-0"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth={2}
-                viewBox="0 0 24 24"
-                aria-hidden
-              >
-                <path
-                  d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5-5 5 5M12 5v12"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-              Upload file
-            </button>
+              {t("vault.uploadFileButton")}
+            </Button>
           </div>
         </div>
       </header>
@@ -432,13 +424,14 @@ export function VaultPageClient({
           role="alert"
         >
           <p>{loadError}</p>
-          <button
-            type="button"
+          <Button
+            variant="secondary"
+            size="sm"
+            className="shrink-0 border-red-500/30 text-red-200"
             onClick={() => void refreshVault()}
-            className={`shrink-0 px-4 py-2 text-sm ${btnSecondaryGlass} border-red-500/30 text-red-200`}
           >
             {t("common.retry")}
-          </button>
+          </Button>
         </div>
       )}
 
@@ -460,13 +453,9 @@ export function VaultPageClient({
                   <h2 className="font-frank text-xl font-black text-primary">ציר זמן ראיות</h2>
                   <p className="text-sm text-muted">SOS, מסמכים, תמלולים ושיתוף עם עורך דין במקום אחד.</p>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => window.print()}
-                  className={`px-4 py-2 text-sm font-bold ${btnSecondaryGlass}`}
-                >
+                <Button variant="secondary" size="sm" onClick={() => window.print()}>
                   ייצוא תיק
-                </button>
+                </Button>
               </div>
               <div className="grid gap-3 md:grid-cols-2">
                 {timeline.map((item) => {
@@ -499,8 +488,10 @@ export function VaultPageClient({
                     (item.type === "document" && item.fileUrl) ? (
                       <div className="mt-3 flex flex-wrap gap-2">
                         {item.type === "sos" && item.hasTranscript && (
-                          <button
-                            type="button"
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            className="border-veto-gold/35 text-brand-100"
                             onClick={() => {
                               if (transcriptEv) {
                                 const body =
@@ -518,10 +509,9 @@ export function VaultPageClient({
                                 });
                               }
                             }}
-                            className={`text-xs font-bold ${btnSecondaryGlass} border-veto-gold/35 text-brand-100`}
                           >
                             צפייה בתמלול
-                          </button>
+                          </Button>
                         )}
                         {item.recordingUrl && (
                           <a
@@ -568,13 +558,9 @@ export function VaultPageClient({
                 {t("vault.categories")}
               </h2>
               {selectedFolderId && (
-                <button
-                  type="button"
-                  onClick={() => setSelectedFolderId(null)}
-                  className={`text-xs ${btnSecondaryGlass} px-3 py-1.5`}
-                >
+                <Button variant="secondary" size="sm" onClick={() => setSelectedFolderId(null)}>
                   {t("vault.showAllFiles")}
-                </button>
+                </Button>
               )}
             </div>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -670,8 +656,10 @@ export function VaultPageClient({
                     </p>
                   </div>
                   {file.folderId === "sos_transcript" ? (
-                    <button
-                      type="button"
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="shrink-0 text-brand-100"
                       onClick={() => {
                         const ev = evidenceRows.find((e) => e.id === file.id);
                         if (!ev) return;
@@ -680,10 +668,9 @@ export function VaultPageClient({
                           "לא ניתן לפענח את התמלול.";
                         setTranscriptViewer({ title: ev.title, body });
                       }}
-                      className="shrink-0 rounded-lg px-2 py-1 text-xs font-semibold text-brand-100 hover:bg-white/[0.06]"
                     >
                       צפייה בתמלול
-                    </button>
+                    </Button>
                   ) : (
                     <a
                       href={evidenceRows.find((e) => e.id === file.id)?.fileUrl}
@@ -694,14 +681,16 @@ export function VaultPageClient({
                       {t("vault.open")}
                     </a>
                   )}
-                  <button
-                    type="button"
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="shrink-0 text-red-300 hover:bg-red-500/15"
                     disabled={deletingId === file.id}
+                    loading={deletingId === file.id}
                     onClick={() => void removeFile(file.id)}
-                    className="shrink-0 rounded-lg px-2 py-1 text-xs font-semibold text-red-300 hover:bg-red-500/15 disabled:opacity-50"
                   >
                     {deletingId === file.id ? t("vault.removing") : t("vault.remove")}
-                  </button>
+                  </Button>
                 </li>
               ))}
             </ul>
@@ -740,13 +729,9 @@ export function VaultPageClient({
               >
                 {transcriptViewer.title}
               </h2>
-              <button
-                type="button"
-                onClick={() => setTranscriptViewer(null)}
-                className={`shrink-0 rounded-lg px-3 py-1.5 text-xs font-bold ${btnSecondaryGlass}`}
-              >
+              <Button variant="secondary" size="sm" className="shrink-0" onClick={() => setTranscriptViewer(null)}>
                 {t("common.close")}
-              </button>
+              </Button>
             </div>
             <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4">
               <pre className="whitespace-pre-wrap break-words font-sans text-sm leading-relaxed text-primary">

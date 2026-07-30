@@ -17,6 +17,7 @@ import { useEmergencyStore, type PreCallReadiness } from "@/store/useEmergencySt
 import { getPublicAgoraAppId } from "@/lib/env";
 import { useTranslation } from "@/lib/i18n/LocaleProvider";
 import { useTrWithFallback } from "./lib/trWithFallback";
+import { Button } from "@/components/ui/primitives/Button";
 
 import { useAgoraClient } from "./hooks/useAgoraClient";
 import { useAgoraDevices } from "./hooks/useAgoraDevices";
@@ -646,13 +647,9 @@ export function CallShell({ channel }: { channel: string }) {
     return (
       <div data-surface="stage" className="fixed inset-0 z-[70] flex h-[100dvh] w-screen flex-col items-center justify-center gap-3 bg-surface-canvas px-6 text-center text-secondary">
         <p className="font-bold text-primary">{t("call.noSession", "No active session")}</p>
-        <button
-          type="button"
-          onClick={() => router.replace(postCallHome)}
-          className="rounded-xl bg-veto-gold px-4 py-2 text-sm font-bold text-black"
-        >
+        <Button variant="primary" onClick={() => router.replace(postCallHome)}>
           {t("call.backHub", "Back to hub")}
-        </button>
+        </Button>
       </div>
     );
   }

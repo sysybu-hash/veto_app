@@ -95,33 +95,41 @@ export async function loginAsCitizenViaOtp(
  * Logs the page in as `admin`/`lawyer`/`citizen` using the dev-only
  * `POST /api/auth/dev-login` shortcut (`backend/src/controllers/auth.controller.js`,
  * `devLogin`). Backend must be running with `NODE_ENV !== 'production'`
- * (default outside real production) or `ALLOW_DEV_LOGIN=1`.
+ * AND `DEV_LOGIN_ENABLED=1` — there is no production override; the
+ * endpoint cannot run at all when `NODE_ENV==='production'`.
+ *
+ * Requires `DEV_LOGIN_USERNAME`/`DEV_LOGIN_PASSWORD` to be set in the test
+ * environment (local `.env` or CI) — no hardcoded fallback here, since a
+ * previously-hardcoded default credential ended up leaked into git
+ * history. Pick any local-only value; it has no bearing on production.
  *
  * Unlike `loginAsCitizenViaOtp`, this needs no phone/SMS round trip —
  * it's what makes admin/lawyer-dashboard specs possible without real
  * credentials.
- */
-/**
- * Fetches a role JWT via `/api/auth/dev-login` without touching a page —
- * intended to be called ONCE (e.g. in `test.beforeAll`) and reused across
- * many tests via `injectJwt`. `/api/auth/*` shares a mount-level
- * `authLimiter` (20 req/15min/IP), which a per-test dev-login call burns
- * through quickly across a multi-route, multi-theme spec.
+ *
+ * Fetches a role JWT without touching a page — intended to be called ONCE
+ * (e.g. in `test.beforeAll`) and reused across many tests via `injectJwt`.
+ * `/api/auth/*` shares a mount-level `authLimiter` (20 req/15min/IP), which
+ * a per-test dev-login call burns through quickly across a multi-route,
+ * multi-theme spec.
  */
 export async function fetchDevLoginJwt(
   request: APIRequestContext,
   { role }: { role: "admin" | "lawyer" | "citizen" },
 ): Promise<string> {
+  const username = process.env.DEV_LOGIN_USERNAME;
+  const password = process.env.DEV_LOGIN_PASSWORD;
+  if (!username || !password) {
+    throw new Error(
+      "DEV_LOGIN_USERNAME/DEV_LOGIN_PASSWORD are not set — set them in backend/.env (local) or CI env.",
+    );
+  }
   const res = await request.post(`${API_BASE}/api/auth/dev-login`, {
-    data: {
-      username: process.env.DEV_LOGIN_USERNAME ?? "***REDACTED***",
-      password: process.env.DEV_LOGIN_PASSWORD ?? "***REDACTED***",
-      role,
-    },
+    data: { username, password, role },
   });
   if (!res.ok()) {
     throw new Error(
-      `dev-login failed (${res.status()}) — is the backend running with NODE_ENV!=='production' or ALLOW_DEV_LOGIN=1?`,
+      `dev-login failed (${res.status()}) — is the backend running with NODE_ENV!=='production' and DEV_LOGIN_ENABLED=1?`,
     );
   }
   const json = (await res.json()) as { token?: string };

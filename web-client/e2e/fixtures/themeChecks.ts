@@ -88,6 +88,20 @@ export async function assertNoInvisibleText(page: Page) {
   expect(offenders, `text near-invisible against its background: ${offenders.join("; ")}`).toEqual([]);
 }
 
+/**
+ * Full-page screenshot for manual visual review, saved under
+ * `e2e/screenshots/<name>/<theme>.png`. Purely additive — never asserts,
+ * so a screenshot failure never blocks the suite; it's an artifact for a
+ * human (or Claude) to scan for issues the automated checks can't catch
+ * (overlap, RTL misalignment, spacing, cut-off icons).
+ */
+export async function captureScreenshot(page: Page, name: string, theme: "light" | "dark") {
+  await page.screenshot({
+    path: `e2e/screenshots/${name}/${theme}.png`,
+    fullPage: true,
+  });
+}
+
 /** Informational-only count of `.veto-light [class*="..."]` substring
  * overrides still loaded (see globals.css) — the Phase 3/7 migration
  * target. Reports progress via a test annotation without blocking. */
