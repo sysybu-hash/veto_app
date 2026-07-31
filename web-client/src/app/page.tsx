@@ -172,8 +172,7 @@ export default function Home() {
 
           <motion.div
             initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: "-100px" }}
+            animate="visible"
             variants={staggerContainer}
             className="grid grid-cols-1 gap-6 md:grid-cols-3"
           >
@@ -204,8 +203,7 @@ export default function Home() {
         <div className="mx-auto grid max-w-6xl grid-cols-1 items-center gap-12 md:grid-cols-2">
           <motion.div
             initial={{ opacity: 0, x: -50 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
+            animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.55, ease: "easeOut" }}
           >
             <p className="mb-2 text-xs font-black tracking-[0.22em] text-veto-gold">

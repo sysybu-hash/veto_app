@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -38,7 +37,6 @@ import { getJwt } from "@/lib/authToken";
 import { apiUrl, tunnelBypassHeaders } from "@/lib/env";
 import { useTranslation } from "@/lib/i18n/LocaleProvider";
 import {
-  btnSecondaryGlass,
   citizenBottomSafe,
   glassInput,
   glassPanel,
@@ -603,7 +601,7 @@ export default function ChatPage() {
           <div className="min-h-0 flex-1 space-y-2 overflow-y-auto">
             {loadingThreads ? (
               [1, 2, 3].map((i) => (
-                <div key={i} className="h-20 animate-pulse rounded-2xl bg-white/35" />
+                <div key={i} className="h-20 animate-pulse rounded-2xl bg-surface-raised" />
               ))
             ) : filteredThreads.length === 0 ? (
               <div className={`${glassPanelNested} p-4 text-sm text-secondary`}>
@@ -615,7 +613,7 @@ export default function ChatPage() {
                   key={thread.id}
                   className={`w-full rounded-2xl border px-3 py-3 text-start transition ${
                     active?.id === thread.id
-                      ? "border-veto-gold bg-veto-gold/20" : "border-white/35 bg-white/35 hover:bg-white/50"}`}
+                      ? "border-veto-gold bg-veto-gold/20" : "border-subtle bg-surface-raised hover:bg-surface-overlay"}`}
                 >
                   <div className="flex items-start gap-2">
                     <button type="button" onClick={() => setActive(thread)} className="min-w-0 flex-1 text-start">
@@ -911,10 +909,14 @@ export default function ChatPage() {
                   >
                     הגדרות
                   </Button>
-                  <Link href="/vault/generator" className={btnSecondaryGlass}>
-                    <FileText className="h-4 w-4" aria-hidden />
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    iconStart={<FileText className="h-4 w-4" aria-hidden />}
+                    onClick={() => router.push("/vault/generator")}
+                  >
                     מסמך חדש
-                  </Link>
+                  </Button>
                   <Button
                     variant="secondary"
                     size="sm"

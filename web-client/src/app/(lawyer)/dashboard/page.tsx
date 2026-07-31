@@ -892,7 +892,7 @@ function MiniRow({
   icon: ComponentType<{ className?: string; "aria-hidden"?: boolean }>;
 }) {
   return (
-    <div className="rounded-2xl border border-white/35 bg-white/35 p-4">
+    <div className="rounded-2xl border border-subtle bg-surface-raised p-4">
       <div className="flex items-start gap-3">
         <Icon className="mt-0.5 h-5 w-5 shrink-0 text-veto-gold-dark" aria-hidden />
         <div className="min-w-0">

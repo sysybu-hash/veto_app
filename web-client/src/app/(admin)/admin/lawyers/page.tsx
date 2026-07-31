@@ -169,7 +169,7 @@ export default function AdminLawyersPage() {
   };
 
   return (
-    <div className="min-h-screen bg-veto-ink p-4 sm:p-6 md:p-10" dir="rtl">
+    <div className="min-h-screen bg-surface-canvas p-4 sm:p-6 md:p-10" dir="rtl">
       <header className="mx-auto mb-6 flex max-w-6xl items-center justify-between">
         <div>
           <Link
@@ -202,14 +202,14 @@ export default function AdminLawyersPage() {
               placeholder="חיפוש שם, טלפון, מספר רישיון…"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full rounded-lg border border-subtle bg-veto-ink py-2 ps-4 pe-10 text-sm text-primary outline-none focus:ring-2 focus:ring-veto-gold"
+              className="w-full rounded-lg border border-subtle bg-surface-overlay py-2 ps-4 pe-10 text-sm text-primary outline-none focus:ring-2 focus:ring-veto-gold"
             />
           </div>
           <select
             value={filter}
             onChange={(e) => setFilter(e.target.value as typeof filter)}
             aria-label="סינון לפי סטטוס אישור"
-            className="rounded-lg border border-subtle bg-veto-ink px-3 py-2 text-sm text-primary"
+            className="rounded-lg border border-subtle bg-surface-overlay px-3 py-2 text-sm text-primary"
           >
             <option value="all">הכל</option>
             <option value="pending">ממתינים לאישור</option>
@@ -247,7 +247,7 @@ export default function AdminLawyersPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-end">
               <thead>
-                <tr className="border-b border-subtle bg-veto-ink text-xs uppercase tracking-wider text-muted">
+                <tr className="border-b border-subtle bg-surface-raised text-xs uppercase tracking-wider text-muted">
                   <th className="p-4 font-bold">שם / טלפון</th>
                   <th className="p-4 text-center font-bold">תחומי התמחות</th>
                   <th className="p-4 text-center font-bold">רישיון / ותק</th>
@@ -396,34 +396,34 @@ function CreateLawyerForm({
   return (
     <form
       onSubmit={(e) => void submit(e)}
-      className="grid grid-cols-1 gap-3 rounded-2xl border border-subtle bg-veto-ink/40 p-5 md:grid-cols-2"
+      className="grid grid-cols-1 gap-3 rounded-2xl border border-subtle bg-surface-raised/40 p-5 md:grid-cols-2"
     >
       <input
         required
         value={name}
         onChange={(e) => setName(e.target.value)}
         placeholder="שם מלא"
-        className="rounded-lg border border-subtle bg-veto-ink px-3 py-2 text-sm text-primary outline-none focus:ring-2 focus:ring-veto-gold"
+        className="rounded-lg border border-subtle bg-surface-overlay px-3 py-2 text-sm text-primary outline-none focus:ring-2 focus:ring-veto-gold"
       />
       <input
         required
         value={phone}
         onChange={(e) => setPhone(e.target.value)}
         placeholder="טלפון (+972…)"
-        className="rounded-lg border border-subtle bg-veto-ink px-3 py-2 text-sm text-primary outline-none focus:ring-2 focus:ring-veto-gold"
+        className="rounded-lg border border-subtle bg-surface-overlay px-3 py-2 text-sm text-primary outline-none focus:ring-2 focus:ring-veto-gold"
       />
       <input
         value={email}
         onChange={(e) => setEmail(e.target.value)}
         placeholder="אימייל (אופציונלי)"
         type="email"
-        className="rounded-lg border border-subtle bg-veto-ink px-3 py-2 text-sm text-primary outline-none focus:ring-2 focus:ring-veto-gold"
+        className="rounded-lg border border-subtle bg-surface-overlay px-3 py-2 text-sm text-primary outline-none focus:ring-2 focus:ring-veto-gold"
       />
       <input
         value={license}
         onChange={(e) => setLicense(e.target.value)}
         placeholder="מספר רישיון לשכת עוה״ד"
-        className="rounded-lg border border-subtle bg-veto-ink px-3 py-2 text-sm text-primary outline-none focus:ring-2 focus:ring-veto-gold"
+        className="rounded-lg border border-subtle bg-surface-overlay px-3 py-2 text-sm text-primary outline-none focus:ring-2 focus:ring-veto-gold"
       />
       <input
         type="number"
@@ -432,7 +432,7 @@ function CreateLawyerForm({
         value={years}
         onChange={(e) => setYears(Math.max(0, Number(e.target.value) || 0))}
         placeholder="שנות ותק"
-        className="rounded-lg border border-subtle bg-veto-ink px-3 py-2 text-sm text-primary outline-none focus:ring-2 focus:ring-veto-gold"
+        className="rounded-lg border border-subtle bg-surface-overlay px-3 py-2 text-sm text-primary outline-none focus:ring-2 focus:ring-veto-gold"
       />
       <div className="md:col-span-2">
         <p className="mb-2 text-xs font-bold text-secondary">תחומי התמחות</p>

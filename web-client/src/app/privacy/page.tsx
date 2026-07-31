@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { VetoBrandLogo } from "@/components/brand/VetoBrandLogo";
-import { authGlassPanel, btnPrimaryDark } from "@/lib/vetoGlass";
 
 export const metadata: Metadata = {
   title: "מדיניות פרטיות | VETO Legal",
@@ -10,7 +9,7 @@ export const metadata: Metadata = {
 
 export default function PrivacyPage() {
   return (
-    <div data-surface="ink" className="min-h-screen bg-veto-ink text-primary">
+    <div className="min-h-screen text-primary">
       <main
         className="mx-auto w-full max-w-3xl px-4 py-8 md:px-6 md:py-12"
         dir="rtl"
@@ -18,7 +17,7 @@ export default function PrivacyPage() {
         <div className="mb-8">
           <Link
             href="/"
-            className={`inline-flex items-center justify-center rounded-xl px-5 py-2.5 text-sm font-bold transition hover:opacity-90 ${btnPrimaryDark}`}
+            className="inline-flex items-center justify-center rounded-xl bg-veto-gold px-5 py-2.5 text-sm font-bold text-primary transition hover:opacity-90"
           >
             חזרה לדף הבית
           </Link>
@@ -37,9 +36,7 @@ export default function PrivacyPage() {
           </p>
         </header>
 
-        <article
-          className={`space-y-10 p-6 text-sm text-slate-300 md:p-8 md:text-base ${authGlassPanel}`}
-        >
+        <article className="space-y-10 rounded-2xl border border-subtle bg-surface-raised-2 p-6 text-sm text-secondary shadow-sm md:p-8 md:text-base">
           <section className="space-y-3 leading-relaxed">
             <h2 className="text-lg font-bold text-primary md:text-xl">1. מבוא</h2>
             <p>

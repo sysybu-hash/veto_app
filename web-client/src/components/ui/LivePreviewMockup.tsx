@@ -33,8 +33,7 @@ export function LivePreviewMockup() {
       <motion.div
         data-surface="stage"
         initial={{ opacity: 0, y: 16 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: "-40px" }}
+        animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease: "easeOut" }}
         className="relative rounded-panel border border-subtle bg-gradient-to-b from-slate-900/95 to-black p-2 shadow-[0_24px_80px_-20px_rgba(197,160,89,0.35)]"
       >

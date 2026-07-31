@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FileText, ListChecks } from "lucide-react";
@@ -451,6 +452,7 @@ export default function ProductivityPage() {
   const [taskModalOpen, setTaskModalOpen] = useState(false);
   const [viewContract, setViewContract] = useState<Contract | null>(null);
   const [menuOpenId, setMenuOpenId] = useState<string | null>(null);
+  const [menuRect, setMenuRect] = useState<{ top: number; left: number; width: number } | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
   const [isLoading, setIsLoading] = useState(true);
@@ -503,6 +505,7 @@ export default function ProductivityPage() {
     const onDoc = (e: MouseEvent) => {
       if (!menuRef.current?.contains(e.target as Node)) {
         setMenuOpenId(null);
+        setMenuRect(null);
       }
     };
     document.addEventListener("click", onDoc);
@@ -552,6 +555,7 @@ export default function ProductivityPage() {
       await requestSignContract(id);
       await loadData();
       setMenuOpenId(null);
+      setMenuRect(null);
     } catch (e) {
       setActionError(
         e instanceof Error ? e.message : t("productivity.signFailed"),
@@ -685,16 +689,20 @@ export default function ProductivityPage() {
                     <p className="mt-3 text-xs text-muted">
                       {t("productivity.updatedPrefix")} {c.updatedAt}
                     </p>
-                    <div
-                      className="relative mt-4"
-                      ref={menuOpenId === c.id ? menuRef : undefined}
-                    >
+                    <div className="relative mt-4">
                       <Button
                         variant="secondary"
                         fullWidth
                         onClick={(e) => {
                           e.stopPropagation();
-                          setMenuOpenId((id) => (id === c.id ? null : c.id));
+                          if (menuOpenId === c.id) {
+                            setMenuOpenId(null);
+                            setMenuRect(null);
+                            return;
+                          }
+                          const rect = e.currentTarget.getBoundingClientRect();
+                          setMenuRect({ top: rect.bottom + 4, left: rect.left, width: rect.width });
+                          setMenuOpenId(c.id);
                         }}
                         iconEnd={
                           <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
@@ -704,33 +712,40 @@ export default function ProductivityPage() {
                       >
                         {t("productivity.actions")}
                       </Button>
-                      {menuOpenId === c.id && (
-                        <div className="absolute inset-x-0 z-10 mt-1 overflow-hidden rounded-xl border border-subtle bg-surface-overlay py-1 shadow-lg backdrop-blur-xl">
-                          <button
-                            type="button"
-                            className="block w-full px-4 py-2.5 text-start text-sm text-primary hover:bg-white/[0.06]"
-                            onClick={() => {
-                              setViewContract(c);
-                              setMenuOpenId(null);
-                            }}
+                      {menuOpenId === c.id && menuRect &&
+                        createPortal(
+                          <div
+                            ref={menuRef}
+                            style={{ position: "fixed", top: menuRect.top, left: menuRect.left, width: menuRect.width }}
+                            className="z-50 overflow-hidden rounded-xl border border-subtle bg-surface-overlay py-1 shadow-lg backdrop-blur-xl"
                           >
-                            {t("productivity.view")}
-                          </button>
-                          <button
-                            type="button"
-                            className="block w-full px-4 py-2.5 text-start text-sm font-semibold text-brand-100 hover:bg-veto-gold/15 disabled:cursor-not-allowed disabled:opacity-40"
-                            disabled={
-                              c.status !== "pending_signature" ||
-                              signingContractId === c.id
-                            }
-                            onClick={() => void signContract(c.id)}
-                          >
-                            {signingContractId === c.id
-                              ? t("productivity.signing")
-                              : t("productivity.sign")}
-                          </button>
-                        </div>
-                      )}
+                            <button
+                              type="button"
+                              className="block w-full px-4 py-2.5 text-start text-sm text-primary hover:bg-white/[0.06]"
+                              onClick={() => {
+                                setViewContract(c);
+                                setMenuOpenId(null);
+                                setMenuRect(null);
+                              }}
+                            >
+                              {t("productivity.view")}
+                            </button>
+                            <button
+                              type="button"
+                              className="block w-full px-4 py-2.5 text-start text-sm font-semibold text-brand-100 hover:bg-veto-gold/15 disabled:cursor-not-allowed disabled:opacity-40"
+                              disabled={
+                                c.status !== "pending_signature" ||
+                                signingContractId === c.id
+                              }
+                              onClick={() => void signContract(c.id)}
+                            >
+                              {signingContractId === c.id
+                                ? t("productivity.signing")
+                                : t("productivity.sign")}
+                            </button>
+                          </div>,
+                          document.body,
+                        )}
                     </div>
                   </article>
                 ))}

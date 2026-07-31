@@ -142,7 +142,7 @@ export function AdminUserDetailClient({ id }: { id: string }) {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-veto-ink p-4 sm:p-8" dir="rtl">
+      <div className="min-h-screen bg-surface-canvas p-4 sm:p-8" dir="rtl">
         <p className="text-muted">טוען…</p>
       </div>
     );
@@ -150,7 +150,7 @@ export function AdminUserDetailClient({ id }: { id: string }) {
 
   if (notFound || !user) {
     return (
-      <div className="min-h-screen bg-veto-ink p-4 sm:p-8" dir="rtl">
+      <div className="min-h-screen bg-surface-canvas p-4 sm:p-8" dir="rtl">
         <div className="mx-auto max-w-lg rounded-2xl border border-subtle bg-[rgba(255,255,255,0.04)] p-8 backdrop-blur-xl">
           <h1 className="font-serif text-2xl font-bold text-primary">משתמש לא נמצא</h1>
           <p className="mt-2 text-sm text-muted">
@@ -165,7 +165,7 @@ export function AdminUserDetailClient({ id }: { id: string }) {
   }
 
   return (
-    <div className="min-h-screen bg-veto-ink p-4 sm:p-8" dir="rtl">
+    <div className="min-h-screen bg-surface-canvas p-4 sm:p-8" dir="rtl">
       <div className="mx-auto max-w-2xl space-y-4">
         <Link href="/admin/dashboard" className="inline-block text-sm font-bold text-veto-gold hover:underline">
           ← חזרה למרכז שליטה
@@ -294,7 +294,7 @@ export function AdminUserDetailClient({ id }: { id: string }) {
               min={1}
               value={extendDays}
               onChange={(e) => setExtendDays(e.target.value)}
-              className="w-20 rounded-lg border border-subtle bg-veto-ink px-2 py-1.5 text-sm text-primary"
+              className="w-20 rounded-lg border border-subtle bg-surface-overlay px-2 py-1.5 text-sm text-primary"
             />
             <Button
               variant="primary"

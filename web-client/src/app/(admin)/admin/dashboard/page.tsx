@@ -263,7 +263,7 @@ export default function VetoMasterDashboard() {
 
   if (loading && !data) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-veto-ink">
+      <div className="flex min-h-screen items-center justify-center bg-surface-canvas">
         <RefreshCw className="h-8 w-8 animate-spin text-veto-gold" aria-hidden />
       </div>
     );
@@ -271,7 +271,7 @@ export default function VetoMasterDashboard() {
 
   return (
     <div className="flex min-h-screen flex-col md:flex-row" dir="rtl">
-      <aside className="flex w-full flex-col gap-8 border-l border-subtle bg-veto-ink/75 p-6 backdrop-blur-xl print:hidden md:w-64">
+      <aside className="flex w-full flex-col gap-8 border-l border-subtle bg-surface-raised/90 p-6 backdrop-blur-xl print:hidden md:w-64">
         <div className="space-y-2">
           <VetoBrandLogo className="h-9 w-auto" />
           <p className="font-serif text-sm font-bold tracking-tight text-muted">ממשק מנהל</p>
@@ -486,7 +486,7 @@ export default function VetoMasterDashboard() {
                 <input
                   type="search"
                   placeholder="חיפוש לפי שם, אימייל או טלפון..."
-                  className="w-full rounded-lg border border-subtle bg-veto-ink py-2 ps-4 pe-10 text-sm text-primary outline-none focus:ring-2 focus:ring-veto-gold"
+                  className="w-full rounded-lg border border-subtle bg-surface-overlay py-2 ps-4 pe-10 text-sm text-primary outline-none focus:ring-2 focus:ring-veto-gold"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   aria-label="חיפוש משתמש"
@@ -518,7 +518,7 @@ export default function VetoMasterDashboard() {
           <div className="overflow-x-auto">
             <table className="w-full text-end">
               <thead>
-                <tr className="border-b border-subtle bg-veto-ink text-xs uppercase tracking-wider text-muted">
+                <tr className="border-b border-subtle bg-surface-raised text-xs uppercase tracking-wider text-muted">
                   <th className="p-4 font-bold">שם / טלפון / אימייל</th>
                   <th className="p-4 text-center font-bold">תפקיד</th>
                   <th className="p-4 text-center font-bold">סטטוס</th>
@@ -552,7 +552,7 @@ export default function VetoMasterDashboard() {
                             )
                           }
                           aria-label={`תפקיד עבור ${user.name || user.phone || user.email || "משתמש"}`}
-                          className="rounded-lg border border-subtle bg-veto-ink px-2 py-1 text-xs text-primary"
+                          className="rounded-lg border border-subtle bg-surface-overlay px-2 py-1 text-xs text-primary"
                         >
                           <option value="user">אזרח</option>
                           <option value="admin">מנהל</option>
@@ -660,34 +660,34 @@ function CreateUserForm({
   return (
     <form
       onSubmit={(e) => void submit(e)}
-      className="grid grid-cols-1 gap-3 border-b border-subtle bg-veto-ink/50 p-6 md:grid-cols-5"
+      className="grid grid-cols-1 gap-3 border-b border-subtle bg-surface-raised/50 p-6 md:grid-cols-5"
     >
       <input
         required
         value={name}
         onChange={(e) => setName(e.target.value)}
         placeholder="שם מלא"
-        className="rounded-lg border border-subtle bg-veto-ink px-3 py-2 text-sm text-primary outline-none focus:ring-2 focus:ring-veto-gold"
+        className="rounded-lg border border-subtle bg-surface-overlay px-3 py-2 text-sm text-primary outline-none focus:ring-2 focus:ring-veto-gold"
       />
       <input
         required
         value={phone}
         onChange={(e) => setPhone(e.target.value)}
         placeholder="טלפון (+972...)"
-        className="rounded-lg border border-subtle bg-veto-ink px-3 py-2 text-sm text-primary outline-none focus:ring-2 focus:ring-veto-gold"
+        className="rounded-lg border border-subtle bg-surface-overlay px-3 py-2 text-sm text-primary outline-none focus:ring-2 focus:ring-veto-gold"
       />
       <input
         value={email}
         onChange={(e) => setEmail(e.target.value)}
         placeholder="אימייל (אופציונלי)"
         type="email"
-        className="rounded-lg border border-subtle bg-veto-ink px-3 py-2 text-sm text-primary outline-none focus:ring-2 focus:ring-veto-gold"
+        className="rounded-lg border border-subtle bg-surface-overlay px-3 py-2 text-sm text-primary outline-none focus:ring-2 focus:ring-veto-gold"
       />
       <select
         value={role}
         onChange={(e) => setRole(e.target.value as typeof role)}
         aria-label="תפקיד המשתמש החדש"
-        className="rounded-lg border border-subtle bg-veto-ink px-3 py-2 text-sm text-primary outline-none focus:ring-2 focus:ring-veto-gold"
+        className="rounded-lg border border-subtle bg-surface-overlay px-3 py-2 text-sm text-primary outline-none focus:ring-2 focus:ring-veto-gold"
       >
         <option value="user">אזרח</option>
         <option value="admin">מנהל</option>
