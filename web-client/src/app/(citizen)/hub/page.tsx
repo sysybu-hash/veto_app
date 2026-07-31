@@ -7,6 +7,7 @@ import { triggerSosAlert } from "@/app/actions/sos";
 import { fetchProfile, type UserProfile } from "@/api/userApi";
 import { fetchEntitlement, type Entitlement } from "@/api/advancedApi";
 import { CitizenBottomNav } from "@/components/citizen/CitizenBottomNav";
+import { useCookieConsentPending } from "@/components/privacy/CookieConsent";
 import { SpecializationDialog } from "@/components/dialogs/SpecializationDialog";
 import { btnSecondaryGlass, citizenBottomSafe, glassPanelNested } from "@/lib/vetoGlass";
 import { Button } from "@/components/ui/primitives/Button";
@@ -66,6 +67,7 @@ function readSessionPayload(data: unknown): SessionReadyState | null {
 export default function CitizenHubPage() {
   const router = useRouter();
   const { t, locale } = useTranslation();
+  const cookieConsentPending = useCookieConsentPending();
   const [sosDialogOpen, setSosDialogOpen] = useState(false);
   const [specializationDialogOpen, setSpecializationDialogOpen] = useState(false);
   const [callTypeDialogOpen, setCallTypeDialogOpen] = useState(false);
@@ -363,7 +365,11 @@ export default function CitizenHubPage() {
   return (
     <>
       <main
-        className={`mx-auto flex w-full max-w-lg flex-1 flex-col items-center justify-center gap-8 px-6 py-12 ${citizenBottomSafe}`}
+        className={`mx-auto flex w-full max-w-lg flex-1 flex-col items-center justify-center gap-8 px-6 py-12 ${
+          cookieConsentPending
+            ? "pb-[calc(20rem+env(safe-area-inset-bottom))]"
+            : citizenBottomSafe
+        }`}
       >
         <div className="w-full rounded-2xl border border-subtle bg-surface-raised px-5 py-6 text-center shadow-sm backdrop-blur-xl">
           <h1 className="font-frank text-2xl font-bold text-primary">

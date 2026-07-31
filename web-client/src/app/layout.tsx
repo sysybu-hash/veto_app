@@ -143,11 +143,16 @@ export default async function RootLayout({
             <div className="relative z-10 flex min-h-screen flex-col">
               <UniversalNav />
               <div className="flex min-h-0 flex-1 flex-col">{children}</div>
+              {/* Rendered inside this stacking context (not as a body-level
+                  sibling) so its z-[70] is compared against in-page dialogs'
+                  actual z-index (80/95/etc.) instead of this wrapper's z-10 —
+                  otherwise the banner visually/interactively sits above every
+                  modal regardless of the modal's own stacking value. */}
+              <CookieConsent />
             </div>
             <AiOverlayErrorBoundary>
               <GlobalAiOverlay />
             </AiOverlayErrorBoundary>
-            <CookieConsent />
           </LocaleProvider>
         </ThemeProvider>
       </body>

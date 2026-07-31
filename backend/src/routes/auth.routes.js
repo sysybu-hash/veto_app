@@ -24,9 +24,12 @@ const {
   passkeyLoginVerify,
 } = require('../controllers/auth.controller');
 
+// Dev / CI: the Playwright E2E suite calls request-otp once per citizen-role
+// test (not cached across specs), easily exceeding 5/10min from one CI IP —
+// same dev/prod split as authLimiter/apiLimiter in server.js.
 const otpLimiter = rateLimit({
   windowMs: 10 * 60 * 1000,
-  max: 5,
+  max: process.env.NODE_ENV === 'production' ? 5 : 300,
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: 'Too many OTP requests. Please wait 10 minutes.' },
@@ -38,7 +41,7 @@ const otpLimiter = rateLimit({
 // and blow past a pure-IP limiter, while still bounding a single IP hammering many phones.
 const verifyOtpLimiter = rateLimit({
   windowMs: 10 * 60 * 1000,
-  max: 8,
+  max: process.env.NODE_ENV === 'production' ? 8 : 300,
   standardHeaders: true,
   legacyHeaders: false,
   keyGenerator: (req) => String(req.body?.phone || req.body?.phoneNumber || req.ip || 'unknown'),

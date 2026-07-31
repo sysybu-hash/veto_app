@@ -57,11 +57,22 @@ jobs:
       - name: npm audit (runtime deps, blocking)
         run: npm audit --omit=dev --audit-level=high
 
+  # Runs the full Playwright suite (not just a11y.spec.ts — see web-client-a11y
+  # below) against a REAL local backend + Mongo, mirroring web-client-a11y's
+  # setup. Previously this job built the frontend against the live production
+  # API origin and never started any backend at all, so every auth-dependent
+  # spec failed immediately (ECONNREFUSED / missing DEV_LOGIN_* env) and was
+  # silently swallowed by continue-on-error — the suite was never actually
+  # exercised in CI. Fixed 2026-07: same local-backend pattern as the a11y job.
   web-client-e2e:
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: web-client
+    services:
+      mongo:
+        image: mongo:7
+        ports: ['27017:27017']
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-node@v6
@@ -72,11 +83,10 @@ jobs:
       - run: npm ci
       # Still report-only, deliberately: unlike backend, web-client's runtime
       # tree is NOT clean yet — `npm audit --omit=dev` reports ~9 high-severity
-      # findings, all transitive through `workbox-build` (pulled in at build
-      # time by `@ducanh2912/next-pwa` to generate /sw.js — see DEPLOY.md's
-      # PWA notes). No fix is available without a breaking next-pwa major
-      # bump (10.2.9 → 10.2.6 per prior audit notes is actually a *downgrade*
-      # of the pinned range — needs its own dedicated, tested upgrade task).
+      # findings, all transitive through `minimatch`'s `brace-expansion` in the
+      # eslint toolchain (dev-only, lint-time; see package.json overrides
+      # comment). No fix is available without a breaking eslint major bump
+      # incompatible with the pinned eslint-config-next peer range.
       # Flip to blocking once that upgrade lands and this is verified clean.
       - name: npm audit (runtime deps, report only)
         continue-on-error: true
@@ -84,13 +94,50 @@ jobs:
       - run: npx playwright install --with-deps chromium webkit
       - run: npm run build
         env:
-          NEXT_PUBLIC_API_ORIGIN: ${{ env.VETO_API_BASE }}
+          NEXT_PUBLIC_API_ORIGIN: http://localhost:5001
           NEXT_PUBLIC_CALL_V2: '1'
+      - name: Install backend deps
+        working-directory: backend
+        run: npm ci
+      - name: Start backend (dev-mode auth bypasses enabled)
+        working-directory: backend
+        env:
+          NODE_ENV: development
+          PORT: '5001'
+          MONGO_URI: mongodb://localhost:27017/veto_ci_e2e
+          JWT_SECRET: ci-test-secret-not-for-production
+          RETURN_OTP_IN_JSON: '1'
+          DEV_LOGIN_ENABLED: '1'
+          DEV_LOGIN_USERNAME: 'ci-e2e@example.com'
+          DEV_LOGIN_PASSWORD: 'ci-e2e-test-password'
+        run: |
+          nohup node server.js > backend.log 2>&1 &
+          timeout 30 bash -c 'until curl -sf http://localhost:5001/health; do sleep 1; done'
+      - name: Start web-client
+        env:
+          NEXT_PUBLIC_API_ORIGIN: http://localhost:5001
+        run: |
+          nohup npm run start -- -p 3000 > web-client.log 2>&1 &
+          timeout 30 bash -c 'until curl -sf http://localhost:3000 >/dev/null; do sleep 1; done'
       # Real E2E findings can be flaky against third-party services (Agora/Ably) in CI;
       # keep this non-blocking until the suite is proven stable, but always run + report.
       - name: Playwright E2E (report only)
         continue-on-error: true
+        env:
+          E2E_BASE_URL: http://localhost:3000
+          NEXT_PUBLIC_API_BASE: http://localhost:5001
+          DEV_LOGIN_USERNAME: 'ci-e2e@example.com'
+          DEV_LOGIN_PASSWORD: 'ci-e2e-test-password'
         run: npm run test:e2e
+      - name: Upload backend/web-client logs on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: server-logs
+          path: |
+            backend/backend.log
+            web-client/web-client.log
+          retention-days: 14
       - uses: actions/upload-artifact@v4
         if: always()
         with:

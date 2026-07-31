@@ -170,9 +170,13 @@ app.use(helmet({
 }));
 
 // ── Rate limiting on auth routes ──────────────────────────────
+// Dev / CI: the Playwright E2E suite alone makes 90+ auth-mount requests
+// (register/otp/dev-login/view-as) from a single IP in one run — a flat 20
+// exhausts mid-suite and produces false-negative test failures, not a real
+// security signal. Same dev/prod split already used by apiLimiter below.
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 20,                    // max 20 auth attempts per IP per window
+  max: process.env.NODE_ENV === 'production' ? 20 : 300,
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: 'Too many requests from this IP. Please wait 15 minutes.' },

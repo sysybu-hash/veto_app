@@ -44,7 +44,10 @@ test.describe("owner view-as switcher", () => {
 
   for (const target of [
     { role: "citizen", homeRoute: "/hub", expectedText: /SOS|חירום/ },
-    { role: "lawyer", homeRoute: "/dashboard", expectedText: /דשבורד|עורך דין/ },
+    // Not `/דשבורד|עורך דין/` — "דשבורד" is also the (mobile-hidden) nav link
+    // label, which sits earlier in DOM order and shadows `.first()` on a
+    // mobile viewport project. Target the page's own static heading instead.
+    { role: "lawyer", homeRoute: "/dashboard", expectedText: /לוח עורך דין/ },
     { role: "admin", homeRoute: "/admin/dashboard", expectedText: /ניהול|VETO/ },
   ] as const) {
     test(`owner can view-as ${target.role} and reach ${target.homeRoute}`, async ({ page, request }) => {

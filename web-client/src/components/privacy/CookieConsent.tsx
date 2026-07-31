@@ -36,6 +36,17 @@ function saveConsent(consent: Consent) {
   window.dispatchEvent(new CustomEvent(CHANGE_EVENT, { detail: consent }));
 }
 
+/**
+ * True while the cookie banner is still showing (no consent decision saved
+ * yet). Routes with a fixed-position CTA near the bottom of the viewport
+ * (e.g. the hub's SOS button) can use this to reserve extra clearance so
+ * the banner never overlaps a safety-critical control on mobile.
+ */
+export function useCookieConsentPending(): boolean {
+  const stored = useSyncExternalStore(subscribe, readConsent, () => "server");
+  return !stored;
+}
+
 export function CookieConsent() {
   const stored = useSyncExternalStore(subscribe, readConsent, () => "server");
   const [expanded, setExpanded] = useState(false);

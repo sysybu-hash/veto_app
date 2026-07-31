@@ -24,7 +24,9 @@ test.describe("SOS citizen happy path", () => {
     // Specialization picker is the first interactive surface for a
     // brand-new SOS — exact label is locale-dependent so we just check
     // the wrapper exists.
-    await expect(page.getByRole("dialog").or(page.getByText(/SOS|חירום/))).toBeVisible({
+    await expect(
+      page.getByRole("dialog").or(page.getByText(/SOS|חירום/)).first(),
+    ).toBeVisible({
       timeout: 5_000,
     });
   });
