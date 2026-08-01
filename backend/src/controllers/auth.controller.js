@@ -106,11 +106,22 @@ const register = async (req, res, next) => {
   }
 };
 
+// Never true in production, regardless of any env var — closed by construction
+// after the 2026-08-01 finding that RETURN_OTP_IN_JSON (meant for local/CI use,
+// since SMS delivery isn't implemented at all) was leaking live OTP codes back
+// to any caller in production. Only non-production environments (local dev,
+// CI, the E2E suite) see the OTP in the response.
+function otpVisibleInResponse() {
+  return process.env.NODE_ENV !== 'production';
+}
+
 // ============================================================
 //  POST /auth/request-otp
 //  Admin phones → fixed OTP 123456 in DB
 //  Others → random 6-digit in DB; SMS via Twilio when TWILIO_* env is set.
-//  If Twilio is not configured, OTP is also returned in JSON so the app can show it (until SMS is live).
+//  In production, the OTP is never returned in the response — see
+//  otpVisibleInResponse() above. Without Twilio configured, phone/OTP login
+//  has no way to deliver the code to the user until SMS is wired up.
 // ============================================================
 const requestOTP = async (req, res, next) => {
   try {
@@ -147,33 +158,15 @@ const requestOTP = async (req, res, next) => {
       process.env.TWILIO_ACCOUNT_SID &&
       process.env.TWILIO_AUTH_TOKEN
     );
-    const returnOtpInJson =
-      process.env.RETURN_OTP_IN_JSON === '1' ||
-      process.env.RETURN_OTP_IN_JSON === 'true';
+    const includeOtpInResponse = otpVisibleInResponse();
 
-    // Dev: always include OTP in JSON (unchanged).
-    // Prod without Twilio: include OTP in JSON so hosted stacks (e.g. Render) work without SMS.
-    // Prod with Twilio: omit OTP from JSON unless RETURN_OTP_IN_JSON is set (e.g. QA).
-    const includeOtpInResponse =
-      !isProd || !twilioConfigured || returnOtpInJson;
-
-    // Only ever write the OTP value itself to logs on the same paths where it's also
-    // returned in the JSON response (dev / no-Twilio hosts / explicit QA opt-in). When
-    // Twilio is the real delivery channel, the OTP must stay out of both the response
-    // AND the logs — previously this line logged it unconditionally in every case.
     if (includeOtpInResponse) {
-      logger.debug({ phone: normalizedPhone, otp }, '[AUTH] OTP value (dev/no-SMS path only)');
+      logger.debug({ phone: normalizedPhone, otp }, '[AUTH] OTP value (non-production only)');
     }
 
     if (isProd && !twilioConfigured) {
       logger.warn(
-        '[AUTH] Twilio not configured in production — OTP is returned in JSON for login. Add Twilio when ready for SMS-only delivery.',
-      );
-    }
-
-    if (isProd && twilioConfigured && returnOtpInJson) {
-      logger.warn(
-        '[AUTH] RETURN_OTP_IN_JSON is set while Twilio is configured — OTP is still included in JSON. Unset RETURN_OTP_IN_JSON when SMS-only is desired.',
+        '[AUTH] Twilio not configured in production — OTP cannot be delivered to the user at all until SMS is wired up. Phone/OTP login is effectively unusable in production until then.',
       );
     }
 
@@ -745,6 +738,7 @@ const viewAs = async (req, res) => {
 module.exports = {
   register,
   requestOTP,
+  otpVisibleInResponse,
   verifyOTP,
   googleAuth,
   devLogin,
