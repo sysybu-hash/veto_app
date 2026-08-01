@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { fetchCitizenJwt, injectJwt } from "../fixtures/auth";
-import { setTheme, assertNoInvisibleText } from "../fixtures/themeChecks";
+import { setTheme, assertNoInvisibleText, captureScreenshot } from "../fixtures/themeChecks";
 
 /**
  * Phase B verification — the call UI (`CallShell` and its `_v2/components/*`)
@@ -39,6 +39,7 @@ test.describe("call UI — pre-call/no-session states", () => {
       await page.goto("/call/e2e-no-session-channel");
       await expect(page.getByText(/אין סשן|No active session/i)).toBeVisible({ timeout: 10_000 });
       await assertNoInvisibleText(page);
+      await captureScreenshot(page, "_call_no_session", theme);
     });
   }
 });

@@ -1,5 +1,10 @@
 import { test } from "@playwright/test";
-import { setTheme, assertNoInvisibleText, countSubstringOverrides } from "../fixtures/themeChecks";
+import {
+  setTheme,
+  assertNoInvisibleText,
+  countSubstringOverrides,
+  captureScreenshot,
+} from "../fixtures/themeChecks";
 
 /**
  * Phase 8 verification — theme correctness across public routes that
@@ -33,6 +38,7 @@ for (const theme of ["light", "dark"] as const) {
         await page.goto(route);
         await page.waitForLoadState("networkidle");
         await assertNoInvisibleText(page);
+        await captureScreenshot(page, route.replace(/\//g, "_") || "_root", theme);
       });
 
       // Informational only: see countSubstringOverrides doc comment.

@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { fetchDevLoginJwt, injectJwt } from "../fixtures/auth";
-import { setTheme, assertNoInvisibleText } from "../fixtures/themeChecks";
+import { setTheme, assertNoInvisibleText, captureScreenshot } from "../fixtures/themeChecks";
 
 /**
  * Phase B verification — the admin console was migrated to semantic
@@ -35,6 +35,7 @@ test.describe("admin console", () => {
         await page.waitForLoadState("networkidle");
         await expect(page).not.toHaveURL(/\/login/);
         await assertNoInvisibleText(page);
+        await captureScreenshot(page, route.replace(/\//g, "_"), theme);
       });
     }
   }

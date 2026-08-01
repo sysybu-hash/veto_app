@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { fetchCitizenJwt, injectJwt } from "../fixtures/auth";
-import { setTheme, assertNoInvisibleText } from "../fixtures/themeChecks";
+import { setTheme, assertNoInvisibleText, captureScreenshot } from "../fixtures/themeChecks";
 
 /**
  * Phase B verification — citizen routes beyond the SOS happy path
@@ -46,6 +46,7 @@ test.describe("citizen authenticated routes", () => {
         await page.waitForLoadState("networkidle");
         await expect(page).not.toHaveURL(/\/login/);
         await assertNoInvisibleText(page);
+        await captureScreenshot(page, route.replace(/\//g, "_"), theme);
       });
     }
   }
