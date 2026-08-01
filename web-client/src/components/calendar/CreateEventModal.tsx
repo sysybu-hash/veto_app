@@ -51,7 +51,7 @@ export function CreateEventModal({ open, onClose, onSubmit }: Props) {
 
   return (
     <div
-      className={`fixed inset-0 z-50 flex items-end justify-center p-0 sm:items-center sm:p-4 ${modalBackdrop}`}
+      className={`fixed inset-0 z-[90] flex items-end justify-center p-0 sm:items-center sm:p-4 ${modalBackdrop}`}
       role="dialog"
       aria-modal="true"
       aria-labelledby="create-event-title"
