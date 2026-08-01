@@ -1,5 +1,12 @@
-import { redirect } from "next/navigation";
+"use client";
+
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 export default function SettingsBillingPage() {
-  redirect("/settings?tab=billing");
+  const router = useRouter();
+  useEffect(() => {
+    router.replace("/settings?tab=billing");
+  }, [router]);
+  return null;
 }

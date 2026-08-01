@@ -1,10 +1,12 @@
-import { redirect } from "next/navigation";
+"use client";
 
-
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 export default function SettingsSecurityLegacyPage() {
-
-  redirect("/settings?tab=security");
-
+  const router = useRouter();
+  useEffect(() => {
+    router.replace("/settings?tab=security");
+  }, [router]);
+  return null;
 }
-

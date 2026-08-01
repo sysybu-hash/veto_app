@@ -1,5 +1,10 @@
-import { redirect } from "next/navigation";
+"use client";
+
+import { useEffect } from "react";
 
 export default function SettingsProfilePage() {
-  redirect("/settings?tab=profile");
+  useEffect(() => {
+    window.location.replace("/settings?tab=profile");
+  }, []);
+  return null;
 }
