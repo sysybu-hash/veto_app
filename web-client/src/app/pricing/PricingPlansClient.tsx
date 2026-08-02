@@ -37,7 +37,7 @@ export function PricingPlansClient({ plans }: Props) {
       {successMsg ? (
         <div
           role="status"
-          className="mb-6 rounded-xl border border-emerald-500/40 bg-emerald-500/10 px-4 py-3 text-center text-sm font-medium text-emerald-100"
+          className="mb-6 rounded-xl border border-emerald-500/40 bg-emerald-500/10 px-4 py-3 text-center text-sm font-medium text-emerald-900 dark:text-emerald-100"
         >
           {successMsg}
         </div>
@@ -49,7 +49,7 @@ export function PricingPlansClient({ plans }: Props) {
             key={plan.id}
             className={`rounded-lg border p-6 ${
               plan.featured
-                ? "border-veto-gold/70 bg-veto-gold/10 shadow-[0_22px_80px_-45px_rgba(216,184,103,0.9)]" : "border-subtle bg-white/[0.04]"}`}
+                ? "border-veto-gold/70 bg-veto-gold/10 shadow-[0_22px_80px_-45px_rgba(216,184,103,0.9)]" : "border-subtle bg-surface-raised-2"}`}
           >
             <div className="flex items-center justify-between gap-3">
               <h2 className="font-frank text-2xl font-black text-primary">
@@ -88,7 +88,7 @@ export function PricingPlansClient({ plans }: Props) {
             ) : (
               <Link
                 href={plan.href}
-                className="mt-7 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-subtle px-5 py-3 text-sm font-black text-primary transition hover:bg-white/[0.07]"
+                className="mt-7 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-subtle px-5 py-3 text-sm font-black text-primary transition hover:bg-surface-overlay"
               >
                 התחלת מנוי
                 <ArrowLeft className="h-4 w-4" aria-hidden />

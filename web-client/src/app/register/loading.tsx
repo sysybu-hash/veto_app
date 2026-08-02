@@ -5,8 +5,7 @@ import { authGlassPanel } from "@/lib/vetoGlass";
 export default function RegisterLoading() {
   return (
     <div
-      data-surface="ink"
-      className="flex min-h-screen w-full items-center justify-center bg-veto-ink px-4 py-12"
+      className="flex min-h-screen w-full items-center justify-center bg-surface-canvas px-4 py-12"
       aria-busy="true"
       aria-label="טוען הרשמה"
     >

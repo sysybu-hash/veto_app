@@ -465,7 +465,7 @@ function LoginPageInner() {
 
   return (
     <>
-      <div data-surface="ink" className="flex min-h-screen w-full items-center justify-center bg-veto-ink px-4 py-12 md:px-6 md:py-16">
+      <div className="flex min-h-screen w-full items-center justify-center bg-surface-canvas px-4 py-12 md:px-6 md:py-16">
       <main
         className={`w-full max-w-md p-6 md:p-8 ${authGlassPanel}`}
         dir={locale === "he" ? "rtl" : "ltr"}

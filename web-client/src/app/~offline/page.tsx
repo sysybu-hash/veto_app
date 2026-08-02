@@ -6,8 +6,7 @@ import { Button } from "@/components/ui";
 export default function OfflinePage() {
   return (
     <div
-      data-surface="ink"
-      className="flex min-h-screen flex-col items-center justify-center bg-veto-ink p-6 text-center text-primary"
+      className="flex min-h-screen flex-col items-center justify-center bg-surface-canvas p-6 text-center text-primary"
       dir="rtl"
     >
       <WifiOff size={64} className="mb-6 text-veto-gold opacity-80" aria-hidden />

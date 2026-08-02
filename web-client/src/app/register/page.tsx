@@ -122,7 +122,7 @@ function RegisterInner() {
   };
 
   return (
-    <div data-surface="ink" className="flex min-h-screen w-full items-center justify-center bg-veto-ink px-4 py-12">
+    <div className="flex min-h-screen w-full items-center justify-center bg-surface-canvas px-4 py-12">
       <main
         className={`w-full max-w-lg p-6 md:p-8 ${authGlassPanel}`}
         dir={locale === "he" ? "rtl" : "ltr"}
@@ -346,7 +346,7 @@ function RegisterInner() {
 
 export default function RegisterPage() {
   return (
-    <Suspense fallback={<div data-surface="ink" className="min-h-screen bg-veto-ink" />}>
+    <Suspense fallback={<div className="min-h-screen bg-surface-canvas" />}>
       <RegisterInner />
     </Suspense>
   );

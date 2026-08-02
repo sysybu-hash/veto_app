@@ -54,7 +54,7 @@ export default function PricingPage() {
   };
 
   return (
-    <main data-surface="ink" className="min-h-screen bg-surface-canvas px-5 py-16 text-secondary" dir="rtl">
+    <main className="min-h-screen bg-surface-canvas px-5 py-16 text-secondary" dir="rtl">
       <script
         type="application/ld+json"
         suppressHydrationWarning
