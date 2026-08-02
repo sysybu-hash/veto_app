@@ -14,7 +14,7 @@ import {
 } from "@/components/vault/VaultUploadModal";
 import { CitizenBottomNav } from "@/components/citizen/CitizenBottomNav";
 import { citizenBottomSafe, glassCard, glassList } from "@/lib/vetoGlass";
-import { Wand2 } from "lucide-react";
+import { Loader2, Wand2 } from "lucide-react";
 import { Button } from "@/components/ui/primitives/Button";
 import { LinkButton } from "@/components/ui/primitives/LinkButton";
 import { TRANSCRIPT_DOCUMENT_STORAGE_KEY } from "./transcript/page";
@@ -123,6 +123,20 @@ function findTranscriptEvidence(
     }
   }
   return best && bestDelta < 6 * 60 * 60 * 1000 ? best : undefined;
+}
+
+/** How long we keep auto-polling a single recent SOS call for its recording/transcript. */
+const SOS_ARTIFACT_POLL_WINDOW_MS = 3 * 60 * 1000;
+/** Only auto-poll for calls that just happened — an old call missing artifacts is a real gap, not "still processing". */
+const SOS_ARTIFACT_RECENT_WINDOW_MS = 10 * 60 * 1000;
+
+/** True for an SOS call recent enough that its recording/transcript are plausibly still being processed server-side. */
+function isPendingSosArtifact(item: TimelineItem): boolean {
+  if (item.type !== "sos" || item.hasRecording || item.hasTranscript || !item.at) {
+    return false;
+  }
+  const age = Date.now() - new Date(item.at).getTime();
+  return age >= 0 && age < SOS_ARTIFACT_RECENT_WINDOW_MS;
 }
 
 function FolderIcon({ className }: { className?: string }) {
@@ -316,27 +330,33 @@ export function VaultPageClient({
     router.refresh();
   }, [router]);
 
-  const runSosSync = useCallback(async () => {
-    setSyncBusy(true);
-    setSyncMsg(null);
-    try {
-      const r = await syncSosArtifactsToVault();
-      if (!r.success) {
-        setSyncMsg(r.error);
-        return;
+  const runSosSync = useCallback(
+    async (opts?: { silent?: boolean }) => {
+      const silent = opts?.silent ?? false;
+      if (!silent) {
+        setSyncBusy(true);
+        setSyncMsg(null);
       }
-      if (r.added > 0) {
-        setSyncMsg(t("vault.syncSosOk").replace("{n}", String(r.added)));
-        refreshVault();
-      } else {
-        setSyncMsg(t("vault.syncSosNone"));
+      try {
+        const r = await syncSosArtifactsToVault();
+        if (!r.success) {
+          if (!silent) setSyncMsg(r.error);
+          return;
+        }
+        if (r.added > 0) {
+          if (!silent) setSyncMsg(t("vault.syncSosOk").replace("{n}", String(r.added)));
+          refreshVault();
+        } else if (!silent) {
+          setSyncMsg(t("vault.syncSosNone"));
+        }
+      } catch (e) {
+        if (!silent) setSyncMsg(e instanceof Error ? e.message : t("vault.syncSosErr"));
+      } finally {
+        if (!silent) setSyncBusy(false);
       }
-    } catch (e) {
-      setSyncMsg(e instanceof Error ? e.message : t("vault.syncSosErr"));
-    } finally {
-      setSyncBusy(false);
-    }
-  }, [refreshVault, t]);
+    },
+    [refreshVault, t],
+  );
 
   useEffect(() => {
     if (!getJwt() || syncOnce.current) return;
@@ -345,6 +365,37 @@ export function VaultPageClient({
       void runSosSync();
     });
   }, [runSosSync]);
+
+  const oldestPendingSosAt = useMemo(() => {
+    const pending = timeline.filter(isPendingSosArtifact);
+    if (pending.length === 0) return null;
+    return pending.reduce(
+      (oldest, item) =>
+        new Date(item.at as string).getTime() < new Date(oldest).getTime()
+          ? (item.at as string)
+          : oldest,
+      pending[0].at as string,
+    );
+  }, [timeline]);
+
+  // A just-finished SOS call's recording/transcript are processed
+  // server-side and take a little while to land in the vault. Instead of
+  // requiring a manual "סנכרון מקליטות SOS" click to notice they're ready,
+  // poll quietly in the background for a few minutes while there's a
+  // recent call still missing its artifacts.
+  useEffect(() => {
+    if (!oldestPendingSosAt) return;
+    const startedAt = oldestPendingSosAt;
+    const id = window.setInterval(() => {
+      const elapsed = Date.now() - new Date(startedAt).getTime();
+      if (elapsed > SOS_ARTIFACT_POLL_WINDOW_MS) {
+        window.clearInterval(id);
+        return;
+      }
+      void runSosSync({ silent: true });
+    }, 8000);
+    return () => window.clearInterval(id);
+  }, [oldestPendingSosAt, runSosSync]);
 
   const removeFile = async (id: string) => {
     setActionError(null);
@@ -501,6 +552,17 @@ export function VaultPageClient({
                       {item.hasTranscript && <span className="rounded-full bg-white/10 px-2 py-1">תמלול</span>}
                       {item.sharedWithLawyer && <span className="rounded-full bg-white/10 px-2 py-1">שותף</span>}
                     </div>
+                    {isPendingSosArtifact(item) && (
+                      <div className="mt-3 rounded-lg border border-veto-gold/30 bg-veto-gold/10 px-3 py-2">
+                        <div className="flex items-center gap-2 text-xs font-semibold text-veto-gold-dark">
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden />
+                          מעבד הקלטה ותמלול בשרת… זה עשוי לקחת מספר דקות.
+                        </div>
+                        <div className="mt-2 h-1 w-full overflow-hidden rounded-full bg-veto-gold/20">
+                          <div className="h-full w-1/3 animate-pulse rounded-full bg-veto-gold" />
+                        </div>
+                      </div>
+                    )}
                     {(item.type === "sos" && item.hasTranscript) ||
                     item.recordingUrl ||
                     item.screenRecordingUrl ||
