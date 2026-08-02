@@ -202,13 +202,16 @@ exports.transcribeRecording = async (req, res, next) => {
     if (hasInlineAudio) {
       // Inline audio transcription (base64)
       const prompt = `
-You are a verbatim speech-to-text transcription engine.
-Transcribe the audio recording in ${lang} as plain text only.
+You are a verbatim speech-to-text transcription engine with speaker diarization.
+Transcribe the audio recording in ${lang}.
 
 Rules:
-- Output ONLY the transcript text. No JSON, no markdown, no headings.
+- Separate each speaker's turn onto its own line, prefixed with a speaker label and a colon (e.g. "דובר 1: ...", "דובר 2: ...").
+- If context makes it clear who is the citizen/caller and who is the lawyer, use "אזרח:" and "עורך דין:" instead of generic numbers.
+- Use the same label consistently for the same speaker throughout.
+- Output ONLY the transcript text with these labels, one turn per line. No JSON, no markdown, no headings, no extra commentary.
 - Do NOT add emojis and do NOT describe emojis (no "smiley", no "emoji", no "(laughs)", no "[applause]").
-- Do NOT add speaker labels ("Client:", "Lawyer:") and do NOT add timestamps.
+- Do NOT add timestamps.
 - If something is unclear, leave it out rather than describing non-speech sounds.
       `.trim();
 
@@ -252,13 +255,16 @@ Rules:
         ct && (ct.startsWith('audio/') || ct.startsWith('video/')) ? ct : mimeFromUrl;
 
       const prompt = `
-You are a verbatim speech-to-text transcription engine.
-Transcribe the audio recording in ${lang} as plain text only.
+You are a verbatim speech-to-text transcription engine with speaker diarization.
+Transcribe the audio recording in ${lang}.
 
 Rules:
-- Output ONLY the transcript text. No JSON, no markdown, no headings.
+- Separate each speaker's turn onto its own line, prefixed with a speaker label and a colon (e.g. "דובר 1: ...", "דובר 2: ...").
+- If context makes it clear who is the citizen/caller and who is the lawyer, use "אזרח:" and "עורך דין:" instead of generic numbers.
+- Use the same label consistently for the same speaker throughout.
+- Output ONLY the transcript text with these labels, one turn per line. No JSON, no markdown, no headings, no extra commentary.
 - Do NOT add emojis and do NOT describe emojis (no "smiley", no "emoji", no "(laughs)", no "[applause]").
-- Do NOT add speaker labels ("Client:", "Lawyer:") and do NOT add timestamps.
+- Do NOT add timestamps.
 - If something is unclear, leave it out rather than describing non-speech sounds.
       `.trim();
 
@@ -329,12 +335,15 @@ async function transcribeEventRecording({ eventId, language }) {
     const langMap = { he: 'עברית', ar: 'Arabic', ru: 'Russian', en: 'English' };
     const lang = langMap[language || event.language] || 'the call language';
     const prompt = `
-You are a verbatim speech-to-text transcription engine.
-Transcribe the call recording in ${lang} as plain text only.
+You are a verbatim speech-to-text transcription engine with speaker diarization.
+Transcribe the call recording in ${lang}.
 
 Rules:
-- Output ONLY the transcript text. No JSON, no markdown, no headings.
-- Do NOT add emojis, sound descriptions, speaker labels, or timestamps.
+- Separate each speaker's turn onto its own line, prefixed with a speaker label and a colon (e.g. "דובר 1: ...", "דובר 2: ...").
+- If context makes it clear who is the citizen/caller and who is the lawyer, use "אזרח:" and "עורך דין:" instead of generic numbers.
+- Use the same label consistently for the same speaker throughout.
+- Output ONLY the transcript text with these labels, one turn per line. No JSON, no markdown, no headings, no extra commentary.
+- Do NOT add emojis, sound descriptions, or timestamps.
 - If something is unclear, leave it out rather than inventing speech.
     `.trim();
     const ai = getGoogleAIClient();

@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Printer } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Download, Printer } from "lucide-react";
 import { VetoBrandLogo } from "@/components/brand/VetoBrandLogo";
 import { Button } from "@/components/ui/primitives/Button";
 
@@ -15,6 +15,68 @@ type TranscriptDocument = {
   fileHash?: string | null;
   digitalSeal?: string | null;
 };
+
+type TranscriptTurn = { speaker: string | null; text: string };
+
+/**
+ * Splits a transcript body into per-speaker turns. The backend prompt
+ * (`call.controller.js`) asks Gemini for lines like "דובר 1: ..." /
+ * "אזרח: ..." / "עורך דין: ...", but older transcripts (or an unexpected
+ * model response) may have none — those fall back to a single unlabeled
+ * turn rather than breaking.
+ */
+function parseTranscriptTurns(body: string): TranscriptTurn[] {
+  const lines = body
+    .split(/\n+/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+  const speakerPattern = /^([\p{L}\p{N} ]{1,24}):\s*(.*)$/u;
+  const turns: TranscriptTurn[] = [];
+  for (const line of lines) {
+    const match = line.match(speakerPattern);
+    if (match) {
+      turns.push({ speaker: match[1].trim(), text: match[2].trim() });
+    } else if (turns.length > 0) {
+      turns[turns.length - 1].text += ` ${line}`;
+    } else {
+      turns.push({ speaker: null, text: line });
+    }
+  }
+  return turns;
+}
+
+function formatEventDate(at?: string): string | null {
+  if (!at) return null;
+  return new Intl.DateTimeFormat("he-IL", {
+    dateStyle: "long",
+    timeStyle: "short",
+  }).format(new Date(at));
+}
+
+/** Downloads the transcript as a real .txt file — not just the print dialog. */
+function downloadTranscriptFile(doc: TranscriptDocument) {
+  const eventDate = formatEventDate(doc.at);
+  const lines = [
+    "VETO Legal — תמלול רשמי",
+    doc.title,
+    eventDate ? `מועד האירוע: ${eventDate}` : "",
+    "",
+    doc.body,
+    "",
+    doc.fileHash ? `חתימת קובץ (hash): ${doc.fileHash}` : "",
+    doc.digitalSeal ? `חותם דיגיטלי: ${doc.digitalSeal}` : "",
+  ].filter(Boolean);
+
+  const blob = new Blob([lines.join("\n")], { type: "text/plain;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `${doc.title.replace(/[\\/:*?"<>|]/g, "_")}.txt`;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+}
 
 /**
  * A real, printable document view for an SOS transcript — replaces the
@@ -54,12 +116,28 @@ export default function TranscriptDocumentPage() {
 
   if (!doc) return null;
 
+  return <TranscriptDocument doc={doc} />;
+}
+
+function TranscriptDocument({ doc }: { doc: TranscriptDocument }) {
+  const turns = useMemo(() => parseTranscriptTurns(doc.body), [doc.body]);
+  const hasSpeakers = turns.some((turn) => turn.speaker);
+  const eventDate = formatEventDate(doc.at);
+
   return (
     <div className="min-h-screen bg-surface-canvas px-4 py-10">
       <div
         data-print="hide"
-        className="mx-auto mb-6 flex max-w-[210mm] justify-end"
+        className="mx-auto mb-6 flex max-w-[210mm] flex-wrap justify-end gap-3"
       >
+        <Button
+          variant="secondary"
+          size="sm"
+          onClick={() => downloadTranscriptFile(doc)}
+          iconStart={<Download className="h-4 w-4" aria-hidden />}
+        >
+          הורדת קובץ טקסט
+        </Button>
         <Button
           variant="secondary"
           size="sm"
@@ -85,20 +163,33 @@ export default function TranscriptDocumentPage() {
           {doc.title}
         </h1>
 
-        {doc.at && (
+        {eventDate && (
           <p className="mb-6 text-center text-sm text-muted">
-            מועד האירוע:{" "}
-            {new Intl.DateTimeFormat("he-IL", {
-              dateStyle: "long",
-              timeStyle: "short",
-            }).format(new Date(doc.at))}
+            מועד האירוע: {eventDate}
           </p>
         )}
 
         <section className="rounded-sm border border-subtle bg-surface-sunken p-6">
-          <p className="whitespace-pre-wrap break-words text-base leading-8">
-            {doc.body}
-          </p>
+          {hasSpeakers ? (
+            <div className="space-y-4">
+              {turns.map((turn, i) => (
+                <p key={i} className="text-base leading-8">
+                  {turn.speaker && (
+                    <span className="font-bold text-veto-gold-dark">
+                      {turn.speaker}:{" "}
+                    </span>
+                  )}
+                  <span className="whitespace-pre-wrap break-words">
+                    {turn.text}
+                  </span>
+                </p>
+              ))}
+            </div>
+          ) : (
+            <p className="whitespace-pre-wrap break-words text-base leading-8">
+              {doc.body}
+            </p>
+          )}
         </section>
 
         <footer className="mt-10 border-t border-subtle pt-4 text-xs text-muted">
