@@ -4,9 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Download, Printer } from "lucide-react";
 import { VetoBrandLogo } from "@/components/brand/VetoBrandLogo";
 import { Button } from "@/components/ui/primitives/Button";
-
-/** Matches the payload written by `openTranscriptDocument` in VaultPageClient. */
-export const TRANSCRIPT_DOCUMENT_STORAGE_KEY = "veto_transcript_document";
+import { TRANSCRIPT_DOCUMENT_STORAGE_KEY } from "./constants";
 
 type TranscriptDocument = {
   title: string;

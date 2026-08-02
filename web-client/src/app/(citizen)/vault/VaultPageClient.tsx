@@ -17,7 +17,7 @@ import { citizenBottomSafe, glassCard, glassList } from "@/lib/vetoGlass";
 import { Loader2, Wand2 } from "lucide-react";
 import { Button } from "@/components/ui/primitives/Button";
 import { LinkButton } from "@/components/ui/primitives/LinkButton";
-import { TRANSCRIPT_DOCUMENT_STORAGE_KEY } from "./transcript/page";
+import { TRANSCRIPT_DOCUMENT_STORAGE_KEY } from "./transcript/constants";
 
 /**
  * Opens the transcript as a real printable document (a new tab, not a
