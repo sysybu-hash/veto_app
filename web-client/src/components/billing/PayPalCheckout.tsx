@@ -1,89 +1,40 @@
 "use client";
 
-import { PayPalButtons, PayPalScriptProvider } from "@paypal/react-paypal-js";
-import { useCallback, useState } from "react";
-import { apiUrl, authFetch } from "@/api/apiClient";
+import { apiUrl } from "@/api/apiClient";
 
 type PayPalCheckoutProps = {
   amount?: string;
-  onSuccess?: () => void;
 };
 
-async function readError(res: Response): Promise<string> {
-  try {
-    const data = (await res.json()) as { error?: string; message?: string };
-    return data.error || data.message || `HTTP ${res.status}`;
-  } catch {
-    return `HTTP ${res.status}`;
-  }
-}
+const CONTAINER_ID = "veto-paypal-button-container";
+const ERROR_ID = "veto-paypal-button-error";
+const SUCCESS_ID = "veto-paypal-button-success";
 
-export default function PayPalCheckout({
-  amount = "99.00",
-  onSuccess,
-}: PayPalCheckoutProps) {
-  const [error, setError] = useState("");
-
-  const createOrder = useCallback(async () => {
-    setError("");
-    const res = await authFetch(apiUrl("/api/billing/create-order"), {
-      method: "POST",
-      body: JSON.stringify({ amount }),
-    });
-    if (!res.ok) {
-      const msg = await readError(res);
-      setError(msg || "שגיאה ביצירת התשלום");
-      throw new Error(msg);
-    }
-    const data = (await res.json()) as { id?: string };
-    if (!data?.id) {
-      setError("לא התקבל מזהה הזמנה מ-PayPal");
-      throw new Error("Missing PayPal order id");
-    }
-    return data.id;
-  }, [amount]);
-
-  const onApprove = useCallback(
-    async (data: { orderID?: string }) => {
-      setError("");
-      const orderID = data.orderID;
-      if (!orderID) {
-        setError("חסר מזהה הזמנה");
-        return;
-      }
-      try {
-        const res = await authFetch(apiUrl("/api/billing/capture-order"), {
-          method: "POST",
-          body: JSON.stringify({ orderID }),
-        });
-        const cap = (await res.json().catch(() => ({}))) as {
-          status?: string;
-          message?: string;
-          error?: string;
-        };
-        if (!res.ok) {
-          setError(
-            (typeof cap.error === "string" && cap.error) ||
-              (typeof cap.message === "string" && cap.message) ||
-              "שגיאה באימות התשלום",
-          );
-          return;
-        }
-        if (cap.status === "COMPLETED") {
-          onSuccess?.();
-        } else {
-          setError("התשלום לא הושלם במלואו");
-        }
-      } catch (e) {
-        console.error(e);
-        setError("שגיאה באימות התשלום");
-      }
-    },
-    [onSuccess],
-  );
-
-  const clientId =
-    process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID?.trim() || "";
+/**
+ * Renders the PayPal buttons via plain inline `<script>` tags instead of
+ * `@paypal/react-paypal-js` (or even `next/script`). Extensive A/B testing
+ * against real production and local production builds found that on a hard
+ * page load (F5, direct link, first visit — as opposed to an already-
+ * hydrated SPA transition) the client-side effect responsible for loading
+ * the PayPal SDK intermittently never runs at all — no console error,
+ * roughly 50% of loads, reproduced with three different implementations
+ * (the library's own script loader, a manual "mounted" useEffect flag, and
+ * next/script's own onReady effect). The common failure mode across all
+ * three: whatever mechanism depends on a React effect firing for this leaf
+ * sometimes just doesn't, in this Next.js version.
+ *
+ * An inline `<script>` written directly into the server-rendered HTML has
+ * no such dependency — the browser executes it while parsing the HTML
+ * document itself, before hydration even starts, exactly like any other
+ * static `<script>` tag on a plain page. It self-polls for `window.paypal`
+ * via `setInterval` (a native timer, not tied to React's effect scheduler
+ * at all) rather than relying on the SDK script's load event. On payment
+ * success it updates the DOM directly and navigates via
+ * `window.location.href` — the whole flow ends in a full navigation away
+ * from this page anyway, so there's no need to round-trip back into React.
+ */
+export default function PayPalCheckout({ amount = "99.00" }: PayPalCheckoutProps) {
+  const clientId = process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID?.trim() || "";
 
   if (!clientId) {
     return (
@@ -105,34 +56,123 @@ export default function PayPalCheckout({
     );
   }
 
+  const createOrderUrl = apiUrl("/api/billing/create-order");
+  const captureOrderUrl = apiUrl("/api/billing/capture-order");
+  const successText =
+    "המנוי הופעל בהצלחה! מעביר אותך למחולל המסמכים של VETO...";
+
   return (
     <div
       className="relative z-0 mx-auto w-full max-w-sm rounded-2xl border border-subtle bg-surface-raised-2 p-4 shadow-[0_12px_40px_-20px_rgba(0,0,0,0.5)] backdrop-blur-xl"
       dir="rtl"
     >
-      <PayPalScriptProvider
-        options={{
-          clientId,
-          currency: "ILS",
-          intent: "capture",
+      <p
+        id={SUCCESS_ID}
+        className="mb-3 hidden rounded-xl border border-emerald-500/40 bg-emerald-500/10 px-4 py-3 text-center text-sm font-medium text-emerald-900 dark:text-emerald-100"
+        role="status"
+      />
+      <div id={CONTAINER_ID} />
+      <p
+        id={ERROR_ID}
+        className="mt-3 hidden text-center text-sm text-red-300"
+        role="alert"
+      />
+      <script
+        async
+        src={`https://www.paypal.com/sdk/js?client-id=${encodeURIComponent(clientId)}&currency=ILS&intent=capture`}
+      />
+      <script
+        dangerouslySetInnerHTML={{
+          __html: `
+(function () {
+  var createOrderUrl = ${JSON.stringify(createOrderUrl)};
+  var captureOrderUrl = ${JSON.stringify(captureOrderUrl)};
+  var amount = ${JSON.stringify(amount)};
+  var successText = ${JSON.stringify(successText)};
+  var containerId = ${JSON.stringify(CONTAINER_ID)};
+  var errorId = ${JSON.stringify(ERROR_ID)};
+  var successId = ${JSON.stringify(SUCCESS_ID)};
+
+  function authHeaders() {
+    var token = window.localStorage.getItem("veto_jwt") || "";
+    return { "Content-Type": "application/json", Authorization: "Bearer " + token };
+  }
+  function showError(msg) {
+    var el = document.getElementById(errorId);
+    if (!el) return;
+    el.textContent = msg;
+    if (msg) el.classList.remove("hidden"); else el.classList.add("hidden");
+  }
+  function showSuccess() {
+    var el = document.getElementById(successId);
+    if (!el) return;
+    el.textContent = successText;
+    el.classList.remove("hidden");
+    window.setTimeout(function () {
+      window.location.href = "/vault/generator";
+    }, 2500);
+  }
+
+  function render() {
+    var container = document.getElementById(containerId);
+    if (!container || !window.paypal || container.dataset.vetoRendered === "1") return;
+    container.dataset.vetoRendered = "1";
+    window.paypal.Buttons({
+      style: { layout: "vertical", shape: "pill", color: "gold", label: "pay" },
+      createOrder: function () {
+        showError("");
+        return fetch(createOrderUrl, {
+          method: "POST",
+          headers: authHeaders(),
+          body: JSON.stringify({ amount: amount }),
+        }).then(function (res) {
+          return res.json().then(function (data) {
+            if (!res.ok) throw new Error(data.error || data.message || ("HTTP " + res.status));
+            if (!data.id) throw new Error("לא התקבל מזהה הזמנה מ-PayPal");
+            return data.id;
+          });
+        }).catch(function (e) {
+          showError(e.message || "שגיאה ביצירת התשלום");
+          throw e;
+        });
+      },
+      onApprove: function (data) {
+        return fetch(captureOrderUrl, {
+          method: "POST",
+          headers: authHeaders(),
+          body: JSON.stringify({ orderID: data.orderID }),
+        }).then(function (res) {
+          return res.json().catch(function () { return {}; }).then(function (cap) {
+            if (!res.ok) throw new Error(cap.error || cap.message || "שגיאה באימות התשלום");
+            if (cap.status !== "COMPLETED") throw new Error("התשלום לא הושלם במלואו");
+            showSuccess();
+          });
+        }).catch(function (e) {
+          showError(e.message || "שגיאה באימות התשלום");
+        });
+      },
+    }).render(container);
+  }
+
+  if (window.paypal) {
+    render();
+  } else {
+    var attempts = 0;
+    var poll = window.setInterval(function () {
+      attempts += 1;
+      if (window.paypal) {
+        window.clearInterval(poll);
+        render();
+      } else if (attempts > 200) {
+        window.clearInterval(poll);
+        showError("שגיאה בטעינת PayPal — נסו לרענן את הדף");
+      }
+    }, 100);
+  }
+})();
+          `,
         }}
-      >
-        <PayPalButtons
-          createOrder={createOrder}
-          onApprove={onApprove}
-          style={{
-            layout: "vertical",
-            shape: "pill",
-            color: "gold",
-            label: "pay",
-          }}
-        />
-      </PayPalScriptProvider>
-      {error ? (
-        <p className="mt-3 text-center text-sm text-red-300" role="alert">
-          {error}
-        </p>
-      ) : null}
+      />
     </div>
   );
 }
