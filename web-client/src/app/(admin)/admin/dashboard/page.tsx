@@ -6,27 +6,16 @@ import {
   Clock,
   Database,
   DollarSign,
-  FileText,
-  LayoutDashboard,
   Plus,
   RefreshCw,
-  Scale,
   Search,
-  Settings,
   ShieldCheck,
   Trash2,
   Users,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import Link from "next/link";
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-  type ReactNode,
-} from "react";
-import { VetoBrandLogo } from "@/components/brand/VetoBrandLogo";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { authFetch } from "@/api/apiClient";
 import { getJwt } from "@/lib/authToken";
 import { Button } from "@/components/ui/primitives/Button";
@@ -270,23 +259,8 @@ export default function VetoMasterDashboard() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col md:flex-row" dir="rtl">
-      <aside className="flex w-full flex-col gap-8 border-l border-subtle bg-surface-raised/90 p-6 backdrop-blur-xl print:hidden md:w-64">
-        <div className="space-y-2">
-          <VetoBrandLogo className="h-9 w-auto" />
-          <p className="font-serif text-sm font-bold tracking-tight text-muted">ממשק מנהל</p>
-        </div>
-        <nav className="flex flex-col gap-2">
-          <MenuLink href="/admin/dashboard" icon={<LayoutDashboard size={18} aria-hidden />} label="מרכז שליטה" active />
-          <MenuLink href="/admin/lawyers" icon={<Scale size={18} aria-hidden />} label="ניהול עורכי דין" />
-          <MenuLink href="/admin/vault" icon={<Database size={18} aria-hidden />} label="ניהול כספת" />
-          <MenuLink href="/vault/generator" icon={<FileText size={18} aria-hidden />} label="מחולל מסמכים AI" />
-          <MenuLink href="/admin/settings" icon={<Settings size={18} aria-hidden />} label="הגדרות מערכת" />
-        </nav>
-      </aside>
-
-      <main className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-10">
-        <section
+    <div className="p-4 sm:p-6 md:p-10" dir="rtl">
+      <section
           className="mb-10 rounded-2xl border border-subtle bg-veto-ink p-6 text-primary shadow-xl md:p-8"
           dir="rtl"
           aria-label="חדר בקרה"
@@ -432,52 +406,52 @@ export default function VetoMasterDashboard() {
         </header>
 
         <div className="mb-8 grid grid-cols-1 gap-4 text-center md:grid-cols-4">
-          <div className="flex items-center justify-center gap-3 rounded-xl border border-green-500/30 bg-green-500/10 p-4 font-bold text-green-300">
+          <div className="flex items-center justify-center gap-3 rounded-xl border border-green-500/30 bg-green-500/10 p-4 font-bold text-green-700 dark:text-green-300">
             <Activity size={20} aria-hidden /> שרת API: פועל
           </div>
           <div
             className={`flex items-center justify-center gap-3 rounded-xl border p-4 font-bold ${
               data?.health.database === "OK"
-                ? "border-blue-500/30 bg-blue-500/10 text-blue-300"
-                : "border-red-500/30 bg-red-500/10 text-red-300"
+                ? "border-blue-500/30 bg-blue-500/10 text-blue-700 dark:text-blue-300"
+                : "border-red-500/30 bg-red-500/10 text-red-700 dark:text-red-300"
             }`}
           >
             <Database size={20} aria-hidden /> מסד נתונים:{" "}
             {data?.health.database === "OK" ? "מחובר" : "בעיה"}
           </div>
-          <div className="flex items-center justify-center gap-3 rounded-xl border border-orange-500/30 bg-orange-500/10 p-4 font-bold text-orange-300">
+          <div className="flex items-center justify-center gap-3 rounded-xl border border-orange-500/30 bg-orange-500/10 p-4 font-bold text-orange-700 dark:text-orange-300">
             <ShieldCheck size={20} aria-hidden /> אבטחת JWT: תקינה
           </div>
-          <div className="flex items-center justify-center gap-3 rounded-xl border border-subtle bg-[rgba(255,255,255,0.04)] p-4 font-bold backdrop-blur-xl">
+          <div className="flex items-center justify-center gap-3 rounded-xl border border-subtle bg-surface-raised-2 p-4 font-bold backdrop-blur-xl">
             סה&quot;כ משתמשים: {data?.stats.users ?? 0}
           </div>
         </div>
 
         <div className="mb-6 grid grid-cols-1 gap-3 text-sm text-muted md:grid-cols-3">
-          <div className="rounded-lg border border-subtle bg-[rgba(255,255,255,0.04)] px-4 py-3 backdrop-blur-xl">
+          <div className="rounded-lg border border-subtle bg-surface-raised-2 px-4 py-3 backdrop-blur-xl">
             <span className="font-bold text-primary">{data?.stats.lawyers ?? 0}</span> עורכי דין
           </div>
-          <div className="rounded-lg border border-subtle bg-[rgba(255,255,255,0.04)] px-4 py-3 backdrop-blur-xl">
+          <div className="rounded-lg border border-subtle bg-surface-raised-2 px-4 py-3 backdrop-blur-xl">
             <span className="font-bold text-primary">{data?.stats.sos ?? 0}</span> אירועי SOS ב־24 שעות
           </div>
-          <div className="rounded-lg border border-subtle bg-[rgba(255,255,255,0.04)] px-4 py-3 backdrop-blur-xl">
+          <div className="rounded-lg border border-subtle bg-surface-raised-2 px-4 py-3 backdrop-blur-xl">
             עודכן:{" "}
             {data?.health.timestamp ? new Date(data.health.timestamp).toLocaleString("he-IL") : "—"}
           </div>
         </div>
 
         {actionMsg && (
-          <div role="status" className="mb-4 rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-3 text-sm text-emerald-200">
+          <div role="status" className="mb-4 rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-3 text-sm text-emerald-900 dark:text-emerald-200">
             {actionMsg}
           </div>
         )}
         {actionErr && (
-          <div role="alert" className="mb-4 rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-200">
+          <div role="alert" className="mb-4 rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-900 dark:text-red-200">
             {actionErr}
           </div>
         )}
 
-        <section className="overflow-hidden rounded-2xl border border-subtle bg-[rgba(255,255,255,0.04)] backdrop-blur-xl">
+        <section className="overflow-hidden rounded-2xl border border-subtle bg-surface-raised-2 backdrop-blur-xl">
           <div className="flex flex-col items-stretch justify-between gap-4 border-b border-subtle p-6 md:flex-row md:items-center">
             <h3 className="font-serif text-xl font-bold text-primary">ניהול מנויים ומשתמשים</h3>
             <div className="flex flex-1 items-center justify-end gap-3">
@@ -527,14 +501,14 @@ export default function VetoMasterDashboard() {
                   <th className="p-4 text-center font-bold">פעולות</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-white/5">
+              <tbody className="divide-y divide-subtle">
                 {filteredUsers.map((user) => {
                   const expiry = user.subscriptionExpiry
                     ? new Date(user.subscriptionExpiry).toLocaleDateString("he-IL")
                     : "—";
                   const isBusy = busyId === user.id;
                   return (
-                    <tr key={user.id} className="transition hover:bg-[rgba(255,255,255,0.04)]">
+                    <tr key={user.id} className="transition hover:bg-surface-overlay">
                       <td className="p-4">
                         <div className="font-bold text-primary">{user.name || "—"}</div>
                         <div className="text-xs text-muted">
@@ -617,7 +591,6 @@ export default function VetoMasterDashboard() {
             </p>
           )}
         </section>
-      </main>
     </div>
   );
 }
@@ -712,29 +685,5 @@ function CreateUserForm({
         </div>
       </div>
     </form>
-  );
-}
-
-function MenuLink({
-  href,
-  icon,
-  label,
-  active = false,
-}: {
-  href: string;
-  icon: ReactNode;
-  label: string;
-  active?: boolean;
-}) {
-  return (
-    <Link
-      href={href}
-      className={`flex items-center gap-3 rounded-lg p-3 text-sm font-medium transition ${
-        active
-          ? "bg-veto-gold/10 text-veto-gold" : "text-muted hover:bg-[rgba(255,255,255,0.04)]"}`}
-    >
-      {icon}
-      {label}
-    </Link>
   );
 }
