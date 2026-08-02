@@ -5,6 +5,7 @@
 
 // Phase 2 primitives
 export { Button, type ButtonProps } from "./primitives/Button";
+export { LinkButton, type LinkButtonProps } from "./primitives/LinkButton";
 export { IconButton, type IconButtonProps } from "./primitives/IconButton";
 export { Input, Textarea, Select, type InputProps, type TextareaProps, type SelectProps } from "./primitives/Input";
 export { Field, type FieldProps } from "./primitives/Field";

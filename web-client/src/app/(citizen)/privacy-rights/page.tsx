@@ -9,12 +9,12 @@ import {
 } from "@/api/advancedApi";
 import { CitizenBottomNav } from "@/components/citizen/CitizenBottomNav";
 import {
-  btnPrimaryDark,
   btnSecondaryGlass,
   citizenBottomSafe,
   glassPanel,
   glassPanelNested,
 } from "@/lib/vetoGlass";
+import { LinkButton } from "@/components/ui/primitives/LinkButton";
 
 const actions = [
   { type: "export", title: "ייצוא מידע", body: "בקשה לקבלת עותק מהמידע האישי.", icon: Download },
@@ -120,9 +120,9 @@ export default function PrivacyRightsPage() {
             ))}
           </div>
         </div>
-        <a href="/transparency" className={`mt-5 inline-flex px-5 py-3 text-sm font-black ${btnPrimaryDark}`}>
+        <LinkButton href="/transparency" variant="primary" size="md" className="mt-5">
           מרכז שקיפות AI
-        </a>
+        </LinkButton>
       </section>
     </main>
     <CitizenBottomNav active="settings" />

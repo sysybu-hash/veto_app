@@ -13,14 +13,10 @@ import {
   type VaultFolderOption,
 } from "@/components/vault/VaultUploadModal";
 import { CitizenBottomNav } from "@/components/citizen/CitizenBottomNav";
-import {
-  btnSecondaryGlass,
-  citizenBottomSafe,
-  glassCard,
-  glassList,
-} from "@/lib/vetoGlass";
+import { citizenBottomSafe, glassCard, glassList } from "@/lib/vetoGlass";
 import { Wand2 } from "lucide-react";
 import { Button } from "@/components/ui/primitives/Button";
+import { LinkButton } from "@/components/ui/primitives/LinkButton";
 
 type VaultFolder = VaultFolderOption & {
   description: string;
@@ -514,34 +510,40 @@ export function VaultPageClient({
                           </Button>
                         )}
                         {item.recordingUrl && (
-                          <a
+                          <LinkButton
                             href={item.recordingUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className={`text-xs font-bold ${btnSecondaryGlass} border-veto-gold/35 text-brand-100`}
+                            variant="secondary"
+                            size="sm"
+                            className="border-veto-gold/35 text-brand-100"
                           >
                             צפייה בהקלטה
-                          </a>
+                          </LinkButton>
                         )}
                         {item.screenRecordingUrl && (
-                          <a
+                          <LinkButton
                             href={item.screenRecordingUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className={`text-xs font-bold ${btnSecondaryGlass} border-veto-gold/35 text-brand-100`}
+                            variant="secondary"
+                            size="sm"
+                            className="border-veto-gold/35 text-brand-100"
                           >
                             צפייה בהקלטת מסך
-                          </a>
+                          </LinkButton>
                         )}
                         {item.type === "document" && item.fileUrl && (
-                          <a
+                          <LinkButton
                             href={item.fileUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className={`text-xs font-bold ${btnSecondaryGlass} border-veto-gold/35 text-brand-100`}
+                            variant="secondary"
+                            size="sm"
+                            className="border-veto-gold/35 text-brand-100"
                           >
                             פתיחת קובץ
-                          </a>
+                          </LinkButton>
                         )}
                       </div>
                     ) : null}
@@ -672,14 +674,16 @@ export function VaultPageClient({
                       צפייה בתמלול
                     </Button>
                   ) : (
-                    <a
+                    <LinkButton
                       href={evidenceRows.find((e) => e.id === file.id)?.fileUrl}
                       target="_blank"
                       rel="noreferrer"
-                      className="shrink-0 rounded-lg px-2 py-1 text-xs font-semibold text-brand-100 hover:bg-white/[0.06]"
+                      variant="ghost"
+                      size="sm"
+                      className="shrink-0 text-brand-100"
                     >
                       {t("vault.open")}
-                    </a>
+                    </LinkButton>
                   )}
                   <Button
                     variant="ghost"
