@@ -21,7 +21,7 @@
     "cron:gcal-sync": "node scripts/gcal-sync-worker.js",
     "load-test": "node scripts/load_test.js",
     "lint": "eslint src scripts server.js",
-    "test": "node --test ./test/crypto_otp.test.js ./test/ai_routes_mount.test.js ./test/agora_token_uid.test.js ./test/agora_cloud_recording_config.test.js ./test/gcal_token_crypto.test.js ./test/legal_assistant_routes_mount.test.js ./test/legal_documents_routes_mount.test.js ./test/legal_document_engine.test.js ./test/document_render.test.js ./test/pricing.test.js ./test/phone_normalize.test.js ./test/transcript_sanitize.test.js ./test/ice_servers.test.js ./test/e2ee_key_derivation.test.js ./test/access_service.test.js ./test/auth_devlogin_security.test.js"
+    "test": "node --test ./test/crypto_otp.test.js ./test/ai_routes_mount.test.js ./test/agora_token_uid.test.js ./test/agora_cloud_recording_config.test.js ./test/gcal_token_crypto.test.js ./test/legal_assistant_routes_mount.test.js ./test/legal_documents_routes_mount.test.js ./test/legal_document_engine.test.js ./test/document_render.test.js ./test/pricing.test.js ./test/phone_normalize.test.js ./test/transcript_sanitize.test.js ./test/ice_servers.test.js ./test/e2ee_key_derivation.test.js ./test/access_service.test.js ./test/auth_devlogin_security.test.js ./test/auth_otp_json_security.test.js ./test/sms_service.test.js"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1042.0",
@@ -55,6 +55,7 @@
     "rate-limiter-flexible": "^11.1.0",
     "redis": "^5.12.1",
     "socket.io": "^4.7.5",
+    "twilio": "^6.0.2",
     "web-push": "^3.6.7",
     "yargs": "^18.0.0",
     "yargs-parser": "^22.0.0"

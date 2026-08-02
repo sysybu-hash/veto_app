@@ -207,7 +207,8 @@
 - PayPal: [developer.paypal.com](https://developer.paypal.com/)
 - Sentry: [sentry.io](https://sentry.io/) — DSN ל־Node
 - TURN / ICE: `WEBRTC_ICE_SERVERS_JSON` או `TURN_*` (ראו `call.controller.js`)
-- OTP ב־JSON: רק בפיתוח/CI (`RETURN_OTP_IN_JSON=1`) — לעולם לא בפרודקשן, ללא קשר להגדרות Twilio (ראו `auth.controller.js`). בפרודקשן בלי Twilio מוגדר, התחברות דרך טלפון/OTP לא זמינה בפועל עד שה-SMS יחובר.
+- OTP ב־JSON: רק בפיתוח/CI (`RETURN_OTP_IN_JSON=1`) — לעולם לא בפרודקשן, ללא קשר להגדרות Twilio (ראו `auth.controller.js`).
+- Twilio (שליחת OTP ב-SMS): [twilio.com/console](https://www.twilio.com/console) → Account SID + Auth Token. דרוש גם `TWILIO_MESSAGING_SERVICE_SID` (מומלץ) או `TWILIO_FROM_NUMBER`. בלי זה, התחברות דרך טלפון/OTP לא זמינה בפועל בפרודקשן.
 
 ---
 

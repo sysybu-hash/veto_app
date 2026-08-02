@@ -23,6 +23,7 @@ const {
   isAdminPhone,
 } = require('../services/auth/phone.service');
 const { generateOTP, otpExpiry } = require('../services/auth/otp.service');
+const { twilioConfigured, sendOtpSms } = require('../services/auth/sms.service');
 const {
   findByPhone,
   modelFor,
@@ -154,17 +155,27 @@ const requestOTP = async (req, res, next) => {
     logEvent({ phone: normalizedPhone, role, event: 'otp_request', success: true, user_id: doc._id, ip: req.ip, user_agent: req.headers['user-agent'] });
 
     const isProd = process.env.NODE_ENV === 'production';
-    const twilioConfigured = !!(
-      process.env.TWILIO_ACCOUNT_SID &&
-      process.env.TWILIO_AUTH_TOKEN
-    );
     const includeOtpInResponse = otpVisibleInResponse();
 
     if (includeOtpInResponse) {
       logger.debug({ phone: normalizedPhone, otp }, '[AUTH] OTP value (non-production only)');
     }
 
-    if (isProd && !twilioConfigured) {
+    if (twilioConfigured()) {
+      try {
+        await sendOtpSms(normalizedPhone, otp);
+      } catch (smsErr) {
+        logger.error({ err: smsErr, phone: normalizedPhone }, '[AUTH] Failed to send OTP via SMS');
+        // Without SMS, there's no other delivery channel for this code —
+        // surface a real error instead of silently succeeding with a code
+        // the user has no way to receive (see the 2026-08-01 finding above).
+        if (!includeOtpInResponse) {
+          return res.status(502).json({
+            error: 'Could not send the verification code. Please try again shortly.',
+          });
+        }
+      }
+    } else if (isProd) {
       logger.warn(
         '[AUTH] Twilio not configured in production — OTP cannot be delivered to the user at all until SMS is wired up. Phone/OTP login is effectively unusable in production until then.',
       );
