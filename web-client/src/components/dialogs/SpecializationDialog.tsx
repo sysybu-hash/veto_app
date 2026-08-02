@@ -52,7 +52,6 @@ export function SpecializationDialog({
       onClick={onClose}
     >
       <div
-        data-surface="stage"
         role="dialog"
         aria-modal="true"
         aria-labelledby="spec-dialog-title"
@@ -78,9 +77,9 @@ export function SpecializationDialog({
               key={spec.id}
               type="button"
               onClick={() => setSelected(spec.id)}
-              className={`flex flex-col items-center gap-2 rounded-lg border p-4 text-sm font-medium transition ${focusRing} focus-visible:ring-offset-slate-900 ${
+              className={`flex flex-col items-center gap-2 rounded-lg border p-4 text-sm font-medium transition ${focusRing} focus-visible:ring-offset-surface-canvas ${
                 selected === spec.id
-                  ? "border-veto-gold bg-veto-gold/15 text-brand-100 shadow-[0_0_16px_rgba(197,160,89,0.25)]" : "border-subtle bg-white/[0.04] text-secondary hover:border-white/20 hover:bg-white/[0.08]"}`}
+                  ? "border-veto-gold bg-veto-gold/15 text-brand-100 shadow-[0_0_16px_rgba(197,160,89,0.25)]" : "border-subtle bg-surface-raised-2 text-secondary hover:border-strong hover:bg-surface-overlay"}`}
             >
               <span className="text-2xl">{spec.icon}</span>
               <span>{t(spec.labelKey)}</span>
