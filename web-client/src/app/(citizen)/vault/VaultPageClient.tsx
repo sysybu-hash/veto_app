@@ -17,6 +17,33 @@ import { citizenBottomSafe, glassCard, glassList } from "@/lib/vetoGlass";
 import { Wand2 } from "lucide-react";
 import { Button } from "@/components/ui/primitives/Button";
 import { LinkButton } from "@/components/ui/primitives/LinkButton";
+import { TRANSCRIPT_DOCUMENT_STORAGE_KEY } from "./transcript/page";
+
+/**
+ * Opens the transcript as a real printable document (a new tab, not a
+ * modal) — per direct feedback that "צפייה בתמלול" should behave like
+ * every other vault artifact (recording/document links already open in a
+ * new tab) instead of popping a dialog over the page. There's no
+ * dedicated single-evidence endpoint, so the already-decoded text is
+ * handed off via sessionStorage rather than a route param.
+ */
+function openTranscriptDocument(payload: {
+  title: string;
+  body: string;
+  at?: string;
+  fileHash?: string | null;
+  digitalSeal?: string | null;
+}) {
+  try {
+    sessionStorage.setItem(TRANSCRIPT_DOCUMENT_STORAGE_KEY, JSON.stringify(payload));
+  } catch {
+    /* ignore — worst case the document page shows "not found" */
+  }
+  // No `noopener` here: this is an internal, same-origin document page (not
+  // an external link), and sessionStorage is only copied to a new tab when
+  // it isn't fully detached from the opener's browsing context.
+  window.open("/vault/transcript", "_blank");
+}
 
 type VaultFolder = VaultFolderOption & {
   description: string;
@@ -207,10 +234,6 @@ export function VaultPageClient({
   const [syncBusy, setSyncBusy] = useState(false);
   const [syncMsg, setSyncMsg] = useState<string | null>(null);
   const [timeline, setTimeline] = useState<TimelineItem[]>([]);
-  const [transcriptViewer, setTranscriptViewer] = useState<{
-    title: string;
-    body: string;
-  } | null>(null);
   const syncOnce = useRef(false);
 
   useEffect(() => {
@@ -493,15 +516,19 @@ export function VaultPageClient({
                                 const body =
                                   decodePlainDataUrl(transcriptEv.fileUrl) ??
                                   "לא ניתן לפענח את התמלול.";
-                                setTranscriptViewer({
+                                openTranscriptDocument({
                                   title: transcriptEv.title,
                                   body,
+                                  at: item.at,
+                                  fileHash: transcriptEv.fileHash,
+                                  digitalSeal: transcriptEv.digitalSeal,
                                 });
                               } else {
-                                setTranscriptViewer({
+                                openTranscriptDocument({
                                   title: item.title,
                                   body:
                                     "התמלול מסומן בשירות אך עדיין לא הועתק לכספת (Neon). לחצו ״סנכרן SOS״ למעלה או רעננו את הדף בעוד רגע.",
+                                  at: item.at,
                                 });
                               }
                             }}
@@ -668,7 +695,13 @@ export function VaultPageClient({
                         const body =
                           decodePlainDataUrl(ev.fileUrl) ??
                           "לא ניתן לפענח את התמלול.";
-                        setTranscriptViewer({ title: ev.title, body });
+                        openTranscriptDocument({
+                          title: ev.title,
+                          body,
+                          at: ev.createdAt,
+                          fileHash: ev.fileHash,
+                          digitalSeal: ev.digitalSeal,
+                        });
                       }}
                     >
                       צפייה בתמלול
@@ -711,40 +744,6 @@ export function VaultPageClient({
           refreshVault();
         }}
       />
-
-      {transcriptViewer ? (
-        <div
-          className="fixed inset-0 z-[80] flex items-end justify-center bg-black/70 p-0 backdrop-blur-sm sm:items-center sm:p-6"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="vault-transcript-title"
-        >
-          <button
-            type="button"
-            className="absolute inset-0 cursor-default"
-            aria-label={t("common.close")}
-            onClick={() => setTranscriptViewer(null)}
-          />
-          <div className="relative z-[81] flex max-h-[min(88dvh,720px)] w-full max-w-lg flex-col overflow-hidden rounded-t-2xl border border-subtle bg-surface-raised shadow-2xl sm:rounded-2xl">
-            <div className="flex items-center justify-between gap-3 border-b border-subtle px-4 py-3">
-              <h2
-                id="vault-transcript-title"
-                className="min-w-0 truncate font-frank text-base font-bold text-primary"
-              >
-                {transcriptViewer.title}
-              </h2>
-              <Button variant="secondary" size="sm" className="shrink-0" onClick={() => setTranscriptViewer(null)}>
-                {t("common.close")}
-              </Button>
-            </div>
-            <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4">
-              <pre className="whitespace-pre-wrap break-words font-sans text-sm leading-relaxed text-primary">
-                {transcriptViewer.body}
-              </pre>
-            </div>
-          </div>
-        </div>
-      ) : null}
 
       {!adminContext ? <CitizenBottomNav active="vault" /> : null}
     </div>
