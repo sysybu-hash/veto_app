@@ -570,6 +570,8 @@ export const ru: Dict = {
     sign: "Подписать",
     signing: "Подписание…",
     updatedPrefix: "Обновлено",
+    contractExpiresPrefix: "Действителен до",
+    contractAttachments: "прикреплённых файлов",
     labelParty: "Сторона",
     labelStatus: "Статус",
     viewLastUpdated: "Последнее обновление",

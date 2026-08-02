@@ -564,6 +564,8 @@ export const he: Dict = {
     sign: "חתימה",
     signing: "חותם…",
     updatedPrefix: "עודכן",
+    contractExpiresPrefix: "בתוקף עד",
+    contractAttachments: "קבצים מצורפים",
     labelParty: "צד",
     labelStatus: "סטטוס",
     viewLastUpdated: "עודכן לאחרונה",

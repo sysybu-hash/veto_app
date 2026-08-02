@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { FileText, ListChecks } from "lucide-react";
+import { CalendarClock, FileText, ListChecks, Paperclip } from "lucide-react";
 import {
   createContract,
   fetchContracts,
@@ -38,6 +38,8 @@ type Contract = {
   partyName: string;
   status: ContractStatus;
   updatedAt: string;
+  endDate?: string;
+  attachmentsCount: number;
 };
 
 type TaskPriority = "high" | "medium" | "low";
@@ -129,6 +131,8 @@ function mapApiContract(row: ApiCitizenContract): Contract {
     partyName: row.counterparty ?? "",
     status: apiStatusToUi(row.status),
     updatedAt: formatApiDate(row.updatedAt),
+    endDate: row.endDate ? formatApiDate(row.endDate) : undefined,
+    attachmentsCount: row.vaultFileIds?.length ?? 0,
   };
 }
 
@@ -153,28 +157,28 @@ function mapApiTask(row: ApiCitizenTask): Task {
 function statusStyles(status: ContractStatus): string {
   switch (status) {
     case "pending_signature":
-      return "bg-amber-500/15 text-amber-200 ring-amber-500/30";
+      return "bg-amber-500/15 text-amber-800 dark:text-amber-200 ring-amber-500/30";
     case "active":
-      return "bg-emerald-500/15 text-emerald-200 ring-emerald-500/30";
+      return "bg-emerald-500/15 text-emerald-800 dark:text-emerald-200 ring-emerald-500/30";
     case "expired":
-      return "bg-white/[0.04] text-secondary ring-white/50";
+      return "bg-surface-raised-2 text-secondary ring-subtle";
     case "at_risk":
-      return "bg-orange-500/15 text-orange-200 ring-orange-500/30";
+      return "bg-orange-500/15 text-orange-800 dark:text-orange-200 ring-orange-500/30";
     default:
-      return "bg-white/[0.03] text-primary ring-white/45";
+      return "bg-surface-raised-2 text-primary ring-subtle";
   }
 }
 
 function priorityStyles(p: TaskPriority): string {
   switch (p) {
     case "high":
-      return "bg-red-500/15 text-red-200 ring-red-500/30";
+      return "bg-red-500/15 text-red-800 dark:text-red-200 ring-red-500/30";
     case "medium":
-      return "bg-amber-500/15 text-amber-200 ring-amber-500/30";
+      return "bg-amber-500/15 text-amber-800 dark:text-amber-200 ring-amber-500/30";
     case "low":
-      return "bg-white/[0.04] text-secondary ring-white/50";
+      return "bg-surface-raised-2 text-secondary ring-subtle";
     default:
-      return "bg-white/[0.03] text-primary ring-white/45";
+      return "bg-surface-raised-2 text-primary ring-subtle";
   }
 }
 
@@ -413,6 +417,16 @@ function ContractViewModal({
           <p className="mt-2 text-xs text-muted">
             {t("productivity.viewLastUpdated")} {contract.updatedAt}
           </p>
+          {contract.endDate && (
+            <p className="mt-2 text-xs text-muted">
+              {t("productivity.contractExpiresPrefix")} {contract.endDate}
+            </p>
+          )}
+          {contract.attachmentsCount > 0 && (
+            <p className="mt-2 text-xs text-muted">
+              {contract.attachmentsCount} {t("productivity.contractAttachments")}
+            </p>
+          )}
         </div>
         <Button variant="primary" size="lg" fullWidth className="mt-6 min-h-[44px]" onClick={onClose}>
           {t("common.close")}
@@ -502,15 +516,22 @@ export default function ProductivityPage() {
   }, [router, loadData]);
 
   useEffect(() => {
+    if (!menuOpenId) return;
     const onDoc = (e: MouseEvent) => {
       if (!menuRef.current?.contains(e.target as Node)) {
         setMenuOpenId(null);
         setMenuRect(null);
       }
     };
-    document.addEventListener("click", onDoc);
-    return () => document.removeEventListener("click", onDoc);
-  }, []);
+    // Deferred so the same click that opened the menu (which reaches this
+    // document-level listener too, since Next.js hydrates onto `document`
+    // itself) doesn't immediately close it again before the portal mounts.
+    const id = window.setTimeout(() => document.addEventListener("click", onDoc), 0);
+    return () => {
+      window.clearTimeout(id);
+      document.removeEventListener("click", onDoc);
+    };
+  }, [menuOpenId]);
 
   const sortedContracts = useMemo(
     () =>
@@ -676,9 +697,14 @@ export default function ProductivityPage() {
                     className={`flex flex-col rounded-xl border border-subtle p-4 shadow-sm backdrop-blur-xl transition hover:border-white hover:shadow-md ${glassPanelNested}`}
                   >
                     <div className="flex items-start justify-between gap-2">
-                      <div className="min-w-0">
-                        <h3 className="font-frank font-bold text-primary">{c.title}</h3>
-                        <p className="mt-1 text-sm text-muted">{c.partyName}</p>
+                      <div className="flex min-w-0 items-start gap-3">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-veto-gold/10 text-veto-gold-dark">
+                          <FileText className="h-5 w-5" aria-hidden />
+                        </div>
+                        <div className="min-w-0">
+                          <h3 className="truncate font-frank font-bold text-primary">{c.title}</h3>
+                          <p className="mt-1 truncate text-sm text-muted">{c.partyName}</p>
+                        </div>
                       </div>
                       <span
                         className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset backdrop-blur-sm ${statusStyles(c.status)}`}
@@ -686,9 +712,26 @@ export default function ProductivityPage() {
                         {contractStatusLabel(c.status, t)}
                       </span>
                     </div>
-                    <p className="mt-3 text-xs text-muted">
-                      {t("productivity.updatedPrefix")} {c.updatedAt}
-                    </p>
+                    <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted">
+                      <span>
+                        {t("productivity.updatedPrefix")} {c.updatedAt}
+                      </span>
+                      {c.endDate && (
+                        <span className="inline-flex items-center gap-1">
+                          <CalendarClock className="h-3.5 w-3.5" aria-hidden />
+                          {t("productivity.contractExpiresPrefix")} {c.endDate}
+                        </span>
+                      )}
+                      {c.attachmentsCount > 0 && (
+                        <span
+                          className="inline-flex items-center gap-1"
+                          title={t("productivity.contractAttachments")}
+                        >
+                          <Paperclip className="h-3.5 w-3.5" aria-hidden />
+                          {c.attachmentsCount}
+                        </span>
+                      )}
+                    </div>
                     <div className="relative mt-4">
                       <Button
                         variant="secondary"

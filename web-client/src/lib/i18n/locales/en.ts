@@ -569,6 +569,8 @@ export const en: Dict = {
     sign: "Sign",
     signing: "Signing…",
     updatedPrefix: "Updated",
+    contractExpiresPrefix: "Valid until",
+    contractAttachments: "attached files",
     labelParty: "Party",
     labelStatus: "Status",
     viewLastUpdated: "Last updated",
