@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { ArrowLeft, CheckCircle2, Users } from "lucide-react";
 import PayPalCheckout from "@/components/billing/PayPalCheckout";
 
@@ -22,6 +22,16 @@ type Props = {
 export function PricingPlansClient({ plans }: Props) {
   const router = useRouter();
   const [successMsg, setSuccessMsg] = useState("");
+  // The PayPal SDK mounts a real iframe via a client-only effect. On a hard
+  // page load (F5, direct link, first visit) this Next.js version leaves it
+  // permanently stuck as an empty placeholder — it only ever worked when
+  // navigating here via client-side SPA transition. Deferring the mount to
+  // after the first client render (rather than relying on SSR/hydration for
+  // this subtree at all) makes every visit behave like the working path.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    queueMicrotask(() => setMounted(true));
+  }, []);
 
   const handlePaymentSuccess = useCallback(() => {
     setSuccessMsg(
@@ -80,10 +90,14 @@ export function PricingPlansClient({ plans }: Props) {
 
             {plan.featured ? (
               <div className="mt-7">
-                <PayPalCheckout
-                  amount="99.00"
-                  onSuccess={handlePaymentSuccess}
-                />
+                {mounted ? (
+                  <PayPalCheckout
+                    amount="99.00"
+                    onSuccess={handlePaymentSuccess}
+                  />
+                ) : (
+                  <div className="mx-auto h-[168px] w-full max-w-sm animate-pulse rounded-2xl border border-subtle bg-surface-raised-2" />
+                )}
               </div>
             ) : (
               <Link
