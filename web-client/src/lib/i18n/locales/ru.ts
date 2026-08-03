@@ -142,6 +142,8 @@ export const ru: Dict = {
     title: "Вход в VETO",
     google: "Продолжить с Google",
     orPhone: "Или по телефону",
+    passkeyCta: "Быстрый вход с Passkey (отпечаток / лицо)",
+    passkeyUnsupported: "Браузер не поддерживает Passkeys. Используйте SMS-код.",
     phone: "Телефон",
     phonePlaceholder: "+972501111111 или 0501111111",
     errInvalidPhone:

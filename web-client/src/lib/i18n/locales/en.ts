@@ -142,6 +142,8 @@ export const en: Dict = {
     title: "Sign in to VETO",
     google: "Continue with Google",
     orPhone: "Or with phone",
+    passkeyCta: "Quick login with Passkey (fingerprint / face)",
+    passkeyUnsupported: "This browser does not support Passkeys. Use an SMS code.",
     phone: "Phone",
     phonePlaceholder: "+972501111111 or 0501111111",
     errInvalidPhone:
