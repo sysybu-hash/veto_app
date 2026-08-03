@@ -100,7 +100,9 @@ export default function PrivacyRightsPage() {
   }, []);
 
   useEffect(() => {
-    refresh();
+    queueMicrotask(() => {
+      refresh();
+    });
   }, [refresh]);
 
   const submit = async (type: PrivacyRequest["type"]) => {
