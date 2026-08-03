@@ -7,13 +7,13 @@ type Props = {
   supportEmail: string;
 };
 
-const SUBJECT_IDS = ["support", "billing", "privacy", "lawyer", "other"] as const;
+type SubjectId = "support" | "billing" | "privacy" | "lawyer" | "other";
 
 export function ContactForm({ supportEmail }: Props) {
   const { t } = useTranslation();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [subjectId, setSubjectId] = useState<(typeof SUBJECT_IDS)[number]>("support");
+  const [subjectId, setSubjectId] = useState<SubjectId>("support");
   const [message, setMessage] = useState("");
   const [status, setStatus] = useState<string | null>(null);
 
@@ -106,7 +106,7 @@ export function ContactForm({ supportEmail }: Props) {
         <span className="mb-1 block font-semibold text-secondary">{t("contactPage.subject")}</span>
         <select
           value={subjectId}
-          onChange={(e) => setSubjectId(e.target.value as (typeof SUBJECT_IDS)[number])}
+          onChange={(e) => setSubjectId(e.target.value as SubjectId)}
           className="w-full rounded-xl border border-subtle bg-surface-sunken px-3 py-2.5 text-primary outline-none focus:ring-2 focus:ring-veto-gold"
         >
           {subjects.map((s) => (
