@@ -1,17 +1,21 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { VetoBrandLogo } from "@/components/brand/VetoBrandLogo";
+import { ContactForm } from "@/components/contact/ContactForm";
 import { getSupportEmail, getSupportWhatsapp } from "@/lib/env";
+import { isLegalCommerciallyApproved } from "@/lib/legalMode";
 
 export const metadata: Metadata = {
   title: "צור קשר | VETO Legal",
-  description: "ערוצי תמיכה ויצירת קשר עם VETO Legal.",
+  description:
+    "תמיכה, פרטיות, מנויים והצטרפות עורכי דין — ערוצי יצירת קשר עם VETO Legal.",
 };
 
 export default function ContactPage() {
   const email = getSupportEmail();
   const waDigits = getSupportWhatsapp();
   const waHref = waDigits ? `https://wa.me/${waDigits}` : "";
+  const approved = isLegalCommerciallyApproved();
 
   return (
     <div className="min-h-screen text-primary">
@@ -35,26 +39,42 @@ export default function ContactPage() {
           <h1 className="font-display text-3xl font-bold text-primary md:text-4xl">
             צור קשר
           </h1>
+          {!approved && (
+            <p className="mt-3 rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-900 dark:text-amber-100">
+              <strong>טיוטת מוצר</strong> — ערוצי התמיכה והנוסחים המשפטיים
+              ממתינים להשלמה ואישור סופי.
+            </p>
+          )}
           <p className="mt-3 text-sm leading-7 text-secondary md:text-base">
-            לשאלות על השירות, תמיכה טכנית או בקשות פרטיות — השתמשו בערוצים למטה.
-            לפניות דחופות במצב חירום משפטי השתמשו בכפתור ה-SOS באפליקציה לאחר
-            התחברות.
+            לשאלות על השירות, תמיכה טכנית, מנויים או בקשות פרטיות — השתמשו
+            בטופס או בערוצים למטה.{" "}
+            <strong className="text-primary">
+              במצב חירום מסכן חיים חייגו 100.
+            </strong>{" "}
+            לליווי עו״ד דחוף — התחברו והפעילו SOS באפליקציה.
           </p>
         </header>
 
-        <div className="space-y-4 rounded-2xl border border-subtle bg-surface-raised-2 p-6 text-sm shadow-sm md:p-8 md:text-base">
+        <div className="mb-6 grid gap-3 sm:grid-cols-2">
           {email ? (
             <a
               href={`mailto:${email}`}
-              className="block rounded-xl border border-subtle bg-surface-sunken px-4 py-3 font-semibold text-primary transition hover:border-veto-gold"
+              className="rounded-2xl border border-subtle bg-surface-raised-2 px-4 py-4 text-sm font-semibold text-primary shadow-sm transition hover:border-veto-gold"
+              dir="ltr"
             >
-              אימייל תמיכה: {email}
+              <span className="mb-1 block text-xs font-bold text-muted" dir="rtl">
+                אימייל תמיכה
+              </span>
+              {email}
             </a>
           ) : (
-            <p className="rounded-xl border border-subtle bg-surface-sunken px-4 py-3 text-secondary">
-              כתובת התמיכה תפורסם בקרוב. בינתיים ניתן לעיין במדיניות הפרטיות
-              ובתנאי השימוש.
-            </p>
+            <div className="rounded-2xl border border-dashed border-subtle bg-surface-raised-2 px-4 py-4 text-sm text-secondary shadow-sm">
+              <span className="mb-1 block text-xs font-bold text-muted">
+                אימייל תמיכה
+              </span>
+              יפורסם לאחר הגדרת כתובת רשמית. ניתן לשלוח פנייה בטופס — ההודעה
+              תועתק לשליחה ידנית.
+            </div>
           )}
 
           {waHref ? (
@@ -62,19 +82,54 @@ export default function ContactPage() {
               href={waHref}
               target="_blank"
               rel="noopener noreferrer"
-              className="block rounded-xl border border-subtle bg-surface-sunken px-4 py-3 font-semibold text-primary transition hover:border-veto-gold"
+              className="rounded-2xl border border-subtle bg-surface-raised-2 px-4 py-4 text-sm font-semibold text-primary shadow-sm transition hover:border-veto-gold"
             >
-              WhatsApp לתמיכה
+              <span className="mb-1 block text-xs font-bold text-muted">
+                WhatsApp
+              </span>
+              פתיחת שיחה עם התמיכה
             </a>
-          ) : null}
+          ) : (
+            <div className="rounded-2xl border border-subtle bg-surface-raised-2 px-4 py-4 text-sm text-secondary shadow-sm">
+              <span className="mb-1 block text-xs font-bold text-muted">
+                זמני מענה
+              </span>
+              פניות תמיכה — בימי עסקים, לרוב תוך 1–2 ימי עסקים. בקשות פרטיות —
+              לפי מדיניות הפרטיות.
+            </div>
+          )}
+        </div>
 
-          <Link
-            href="/privacy-rights"
-            className="block rounded-xl border border-subtle bg-surface-sunken px-4 py-3 font-semibold text-primary transition hover:border-veto-gold"
-          >
-            בקשות זכויות פרטיות
-          </Link>
+        <ContactForm supportEmail={email} />
 
+        <div className="mt-6 space-y-3 rounded-2xl border border-subtle bg-surface-raised-2 p-6 text-sm shadow-sm md:p-8">
+          <h2 className="text-lg font-bold text-primary">קישורים שימושיים</h2>
+          <div className="grid gap-2 sm:grid-cols-2">
+            <Link
+              href="/privacy-rights"
+              className="rounded-xl border border-subtle bg-surface-sunken px-4 py-3 font-semibold text-primary transition hover:border-veto-gold"
+            >
+              בקשות זכויות פרטיות
+            </Link>
+            <Link
+              href="/playbooks"
+              className="rounded-xl border border-subtle bg-surface-sunken px-4 py-3 font-semibold text-primary transition hover:border-veto-gold"
+            >
+              מדריכי חירום
+            </Link>
+            <Link
+              href="/register/lawyer"
+              className="rounded-xl border border-subtle bg-surface-sunken px-4 py-3 font-semibold text-primary transition hover:border-veto-gold"
+            >
+              הצטרפות עורכי דין
+            </Link>
+            <Link
+              href="/pricing"
+              className="rounded-xl border border-subtle bg-surface-sunken px-4 py-3 font-semibold text-primary transition hover:border-veto-gold"
+            >
+              מחירים ומנויים
+            </Link>
+          </div>
           <div className="flex flex-wrap gap-4 border-t border-subtle pt-4 text-xs font-semibold text-muted md:text-sm">
             <Link href="/privacy" className="hover:text-primary">
               מדיניות פרטיות

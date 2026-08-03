@@ -285,6 +285,9 @@ export default function Home() {
           <Link href="/contact" className="hover:text-primary">
             צור קשר
           </Link>
+          <Link href="/playbooks" className="hover:text-primary">
+            מדריכי חירום
+          </Link>
           <Link href="/pricing" className="hover:text-primary">
             מחירים
           </Link>

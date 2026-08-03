@@ -14,6 +14,10 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "/terms",
     "/cookies",
     "/contact",
+    "/playbooks",
+    "/playbooks/police",
+    "/playbooks/traffic",
+    "/playbooks/family",
     "/transparency",
     "/privacy-rights",
   ].map((path) => ({

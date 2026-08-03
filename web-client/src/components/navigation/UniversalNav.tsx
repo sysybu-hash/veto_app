@@ -14,6 +14,7 @@ import {
   MessageCircle,
   Scale,
   Settings,
+  ShieldCheck,
   UserPlus,
   X,
 } from "lucide-react";
@@ -72,6 +73,7 @@ const guestItems: NavItem[] = [
   { href: "/", label: "בית", icon: Home, match: (p) => p === "/" },
   { href: "/pricing", label: "מחירים", icon: Scale, match: (p) => p === "/pricing" },
   { href: "/contact", label: "צור קשר", icon: MessageCircle, match: (p) => p === "/contact" },
+  { href: "/playbooks", label: "מדריכים", icon: ShieldCheck, match: (p) => p.startsWith("/playbooks") },
   { href: "/register/lawyer", label: "לעורכי דין", icon: UserPlus, match: (p) => p === "/register/lawyer" },
   { href: "/login", label: "כניסה", icon: LogIn, match: (p) => p === "/login" },
 ];
