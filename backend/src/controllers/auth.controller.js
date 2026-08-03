@@ -21,6 +21,7 @@ const {
   cleanPhone,
   normalizePhoneForVeto,
   isAdminPhone,
+  shouldUseFixedAdminOtp,
 } = require('../services/auth/phone.service');
 const { generateOTP, otpExpiry } = require('../services/auth/otp.service');
 const { twilioConfigured, sendOtpSms } = require('../services/auth/sms.service');
@@ -143,7 +144,8 @@ const requestOTP = async (req, res, next) => {
     }
 
     const { doc, role } = found;
-    const useFixed = isAdminPhone(normalizedPhone) || process.env.ENABLE_FIXED_OTP_FOR_ADMINS === 'true';
+    // Fixed admin OTP only outside production (never ENABLE_FIXED_OTP_FOR_ADMINS for all users).
+    const useFixed = shouldUseFixedAdminOtp(normalizedPhone);
 
     const otp = useFixed ? '123456' : generateOTP();
     doc.otp_code       = otp;
@@ -503,21 +505,70 @@ const googleAuth = async (req, res, next) => {
       name     = userInfo.name || '';
     }
 
+    const normalizedEmail = email
+      ? String(email).trim().toLowerCase()
+      : null;
+
     let doc;
     doc = await User.findOne({ google_id: googleId });
-    if (!doc && email) doc = await User.findOne({ email });
+    if (!doc && normalizedEmail) {
+      doc = await User.findOne({ email: normalizedEmail });
+    }
 
     if (doc) {
-      if (!doc.google_id) { doc.google_id = googleId; await doc.save(); }
+      let dirty = false;
+      if (!doc.google_id) {
+        doc.google_id = googleId;
+        dirty = true;
+      }
+      if (normalizedEmail && !doc.email) {
+        doc.email = normalizedEmail;
+        dirty = true;
+      }
+      if (dirty) await doc.save();
     } else {
-      doc = await User.create({
-        full_name:          name,
-        email:              email || undefined,
-        google_id:          googleId,
-        role:               'user',
-        preferred_language,
-        is_verified:        true,
-      });
+      try {
+        doc = await User.create({
+          full_name:          name || (normalizedEmail ? normalizedEmail.split('@')[0] : 'VETO User'),
+          email:              normalizedEmail || undefined,
+          google_id:          googleId,
+          role:               'user',
+          preferred_language,
+          is_verified:        true,
+        });
+      } catch (createErr) {
+        if (createErr && createErr.code === 11000) {
+          const field = Object.keys(createErr.keyValue || {})[0] || 'email';
+          // Race / case mismatch: another request created the same identity.
+          if (field === 'google_id') {
+            doc = await User.findOne({ google_id: googleId });
+          } else if (field === 'email' && normalizedEmail) {
+            doc = await User.findOne({ email: normalizedEmail });
+          }
+          if (doc) {
+            if (!doc.google_id) {
+              doc.google_id = googleId;
+              await doc.save();
+            }
+          } else if (field === 'phone') {
+            return res.status(409).json({
+              error: 'An account with this phone already exists.',
+              code: 'DUPLICATE_PHONE',
+            });
+          } else {
+            return res.status(409).json({
+              error: 'An account with this Google email already exists. Try signing in again.',
+              code: 'DUPLICATE_EMAIL',
+            });
+          }
+        } else {
+          throw createErr;
+        }
+      }
+    }
+
+    if (!doc) {
+      return res.status(500).json({ error: 'Could not create or load Google account.' });
     }
 
     const userRole = doc.role === 'admin' ? 'admin' : 'user';

@@ -16,7 +16,19 @@ const errorHandler = (err, req, res, next) => {
   // Mongoose duplicate key (unique index)
   if (err.code === 11000) {
     const field = Object.keys(err.keyValue || {})[0] || 'field';
-    return res.status(409).json({ error: `A record with this ${field} already exists.` });
+    const code =
+      field === 'phone'
+        ? 'DUPLICATE_PHONE'
+        : field === 'email'
+          ? 'DUPLICATE_EMAIL'
+          : field === 'google_id'
+            ? 'DUPLICATE_GOOGLE'
+            : 'DUPLICATE_KEY';
+    return res.status(409).json({
+      error: `A record with this ${field} already exists.`,
+      code,
+      field,
+    });
   }
   // Mongoose bad ObjectId
   if (err.name === 'CastError') {
