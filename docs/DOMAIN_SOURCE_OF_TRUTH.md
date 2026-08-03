@@ -28,7 +28,7 @@
 | הקלטה / תמלול שיחת חירום | **MongoDB `EmergencyEvent`** (`recording_url`, `call_transcript`, …) | מסונכרן לכספת כ·**Evidence** עם `sourceEmergencyEventId` למניעת כפילויות |
 | ACL קריאה/מחיקה בכספת | **בעלות Prisma** | מחיקה לטובת הבעלים בלבד (שכבת עו״ד משותפת — הרחבה עתידית) |
 
-**פער ידוע (זוהה 2026-07):** `deleteEvidence` (`web-client/src/app/actions/vault.ts`) מוחק קובץ מרוחק (Cloudinary/legacy storage) דרך `LEGACY_API_URL`/`LEGACY_API_TOKEN`. אם המשתנים לא מוגדרים, **רק שורת ה-Postgres נמחקת** — הקובץ עצמו נשאר יתום באחסון בלי שום עקבה. נוסף לוג אזהרה (`console.warn`) בקוד; יש להחליט: (א) לוודא `LEGACY_API_URL` מוגדר תמיד בפרוד, או (ב) להחליף למנגנון מחיקה ישיר מול Cloudinary API (ללא תלות בשירות legacy) — ר' `backend/ENV_GUIDE.md`.
+**מחיקת Evidence (עודכן 2026-08):** `deleteEvidence` קורא ל-`POST /api/vault/delete-remote` על ה-API (דרך `LEGACY_API_URL` או `NEXT_PUBLIC_API_ORIGIN`) עם JWT של המשתמש. ה-backend מוחק את נכס ה-Cloudinary (`cloudinaryDelete.service`) ואז ה-web-client מבצע **soft-delete** (`Evidence.deletedAt`). בפרודקשן — אם מחיקה מרוחקת נכשלת, שורת ה-DB **לא** נמחקת. Mongo `DELETE /api/vault/files/:id` עובר באותו helper.
 
 ## הצטרפות / Onboarding
 

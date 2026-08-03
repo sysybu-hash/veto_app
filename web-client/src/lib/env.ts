@@ -72,3 +72,39 @@ export function apiUrl(path: string): string {
   const p = path.startsWith("/") ? path : `/${path}`;
   return `${base}${p}`;
 }
+
+export function getSiteUrl(): string {
+  return process.env.NEXT_PUBLIC_SITE_URL?.trim().replace(/\/$/, "") ?? "";
+}
+
+export function getSupportEmail(): string {
+  return process.env.NEXT_PUBLIC_SUPPORT_EMAIL?.trim() ?? "";
+}
+
+export function getSupportWhatsapp(): string {
+  return process.env.NEXT_PUBLIC_SUPPORT_WHATSAPP?.trim().replace(/\D/g, "") ?? "";
+}
+
+export function getPostHogKey(): string {
+  return process.env.NEXT_PUBLIC_POSTHOG_KEY?.trim() ?? "";
+}
+
+export function getPostHogHost(): string {
+  return (
+    process.env.NEXT_PUBLIC_POSTHOG_HOST?.trim().replace(/\/$/, "") ||
+    "https://us.i.posthog.com"
+  );
+}
+
+/** Server-side checklist of marketing / vault env (does not throw). */
+export function listWebEnvGaps(): string[] {
+  const gaps: string[] = [];
+  const isProd = process.env.NODE_ENV === "production";
+  if (isProd && !getPublicApiOrigin()) gaps.push("NEXT_PUBLIC_API_ORIGIN");
+  if (isProd && !getSiteUrl()) gaps.push("NEXT_PUBLIC_SITE_URL");
+  if (!process.env.DATABASE_URL?.trim()) gaps.push("DATABASE_URL");
+  if (!process.env.ABLY_API_KEY?.trim()) gaps.push("ABLY_API_KEY");
+  if (!getSupportEmail()) gaps.push("NEXT_PUBLIC_SUPPORT_EMAIL");
+  if (!getPostHogKey()) gaps.push("NEXT_PUBLIC_POSTHOG_KEY (analytics deferred until set)");
+  return gaps;
+}

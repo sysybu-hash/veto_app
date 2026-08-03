@@ -30,9 +30,13 @@ export default function TermsPage() {
           <h1 className="font-display text-3xl font-bold text-primary md:text-4xl">
             תקנון ותנאי שימוש
           </h1>
-          <p className="mt-3 text-sm text-muted">
-            עדכון אחרון לצורכי תיעוד מוצרי — יש לקבל אישור משפטי לפני פרסום
-            מסחרי סופי.
+          <p className="mt-3 rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-900 dark:text-amber-100">
+            <strong>טיוטת מוצר — לא לפרסום מסחרי סופי.</strong> נוסח זה ממתין
+            לאישור עו״ד / ייעוץ משפטי. לפניות:{" "}
+            <Link href="/contact" className="font-bold underline">
+              צור קשר
+            </Link>
+            .
           </p>
         </header>
 
@@ -163,9 +167,12 @@ export default function TermsPage() {
           <section className="space-y-3 leading-relaxed">
             <h2 className="text-lg font-bold text-primary md:text-xl">10. יצירת קשר</h2>
             <p>
-              לשאלות בנוגע לתנאי השימוש ניתן לפנות דרך ערוצי התמיכה המפורסמים
-              באתר או ביישומון. לעניינים משפטיים רשמיים יש לפנות לכתובת שתפורסם
-              על ידי החברה.
+              לשאלות בנוגע לתנאי השימוש ניתן לפנות דרך{" "}
+              <Link href="/contact" className="font-semibold text-primary underline">
+                עמוד צור קשר
+              </Link>{" "}
+              או ערוצי התמיכה המפורסמים באתר. לעניינים משפטיים רשמיים יש לפנות
+              לכתובת החברה שתפורסם לאחר אישור משפטי סופי.
             </p>
           </section>
 

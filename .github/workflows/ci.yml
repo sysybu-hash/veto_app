@@ -119,10 +119,8 @@ jobs:
         run: |
           nohup npm run start -- -p 3000 > web-client.log 2>&1 &
           timeout 30 bash -c 'until curl -sf http://localhost:3000 >/dev/null; do sleep 1; done'
-      # Real E2E findings can be flaky against third-party services (Agora/Ably) in CI;
-      # keep this non-blocking until the suite is proven stable, but always run + report.
-      - name: Playwright E2E (report only)
-        continue-on-error: true
+      # Blocking merge gate — fix failures rather than re-adding continue-on-error.
+      - name: Playwright E2E
         env:
           E2E_BASE_URL: http://localhost:3000
           NEXT_PUBLIC_API_BASE: http://localhost:5001

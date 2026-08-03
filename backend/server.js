@@ -219,6 +219,8 @@ app.use(mongoSanitize());
   }
 })();
 
+require('./src/config/validateEnv').validateEnv();
+
 app.use('/api/', apiLimiter);
 
 // Browser / tools often open exactly http://localhost:5001/api — give JSON, not 404.

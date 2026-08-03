@@ -3,6 +3,28 @@
 
 ---
 
+## Operator checklist (2026-08)
+
+| פריט | סטטוס |
+|------|--------|
+| `MONGO_URI`, `JWT_SECRET`, Cloudinary, Agora, CORS allowlist | חובה — `validateEnv` מזהיר/נכשל ב-boot |
+| `DATABASE_URL` (Neon) + `npx prisma migrate deploy` ב-web-client | חובה לכספת Prisma |
+| `LEGACY_API_URL` או `NEXT_PUBLIC_API_ORIGIN` → `POST /api/vault/delete-remote` | חובה למחיקת Cloudinary בלי orphans |
+| `NEXT_PUBLIC_SITE_URL`, `NEXT_PUBLIC_SUPPORT_EMAIL` | שיווק / עמוד `/contact` |
+| `NEXT_PUBLIC_POSTHOG_KEY` (+ host) | Analytics מאחורי CookieConsent |
+| Ably, Sentry, VAPID | מומלץ ל-SOS / ניטור / push |
+| **TURN** (`WEBRTC_ICE_SERVERS_JSON` / `TURN_*`) | אחריות מפעיל — ר' ENV_GUIDE; בלי זה שיחות עלות ב-NAT קשה |
+| **Uptime חיצוני** על `GET /health` (UptimeRobot וכו') | מומלץ — בנוסף ל-keepalive ב-CI |
+| Twilio / SMS OTP | **נדחה** — מפעיל בהמשך |
+| PayPal Live + `PAYPAL_WEBHOOK_ID` | **נדחה** — מפעיל בהמשך |
+| שדרוג Render Free / Redis | **נדחה** — מפעיל בהמשך |
+| הקשחת Admin OTP קבוע | **נדחה** — מפעיל בהמשך |
+| אישור עו״ד על תנאים/פרטיות | חובה לפני הסרת באנר טיוטה — ר' LEGAL_REVIEW_PACKAGE |
+
+מקור אמת לקוח: **`web-client/`** (Next). `frontend/` (Flutter) קפוא; `mobile/` (Expo) WIP.
+
+---
+
 ## הכנה לפרודקשן — מה נוסף (2026-07)
 
 תוכנית מלאה נמצאת ב-[docs/](docs/) (ר' `SOS_MVP_DECISIONS.md`, `DOMAIN_SOURCE_OF_TRUTH.md`, `LEGAL_REVIEW_PACKAGE.md`). שינויים שכבר יושמו בקוד:
@@ -14,7 +36,7 @@
 - **OTP**: rate limiting ייעודי (keyed by phone) על `/api/auth/verify-otp`.
 - **Health check** (`GET /health`): פינג אמיתי ל-Mongo/Redis, לא רק `readyState`.
 - **SOS**: כשל Ably כבר לא מוחק את רשומת ה-`SosEvent` — מסומן `PENDING_DELIVERY` + Sentry alert.
-- **CI** (`.github/workflows/ci.yml`): נוספו jobs ל-secret scanning (gitleaks, כל היסטוריית git), `npm audit` (report-only כרגע — יש vulnerabilities קיימים שדורשים טיפול ייעודי), ו-Playwright E2E (report-only, artifact מועלה).
+- **CI** (`.github/workflows/ci.yml`): secret scanning (gitleaks), backend `npm audit` חוסם, Playwright E2E **חוסם** (merge gate), a11y + web-client audit עדיין report-only.
 - **Keepalive** (`.github/workflows/keepalive.yml`): פינג `/health` כל 14 דק' — אלטרנטיבה חינמית לשדרוג Render.
 - **Logging**: `pino` מובנה (`backend/src/lib/logger.js`) + `pino-http` ללוגים מובנים לכל בקשה; **כל** `console.log/error/warn` ב-`backend/src` הומר.
 - **404 גלובלי**: תגובת JSON אחידה לכל נתיב לא מוכר.

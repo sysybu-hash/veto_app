@@ -14,6 +14,8 @@ import { GlobalAiOverlay } from "@/components/ui/GlobalAiOverlay";
 import { ToastHost } from "@/components/ui/ToastHost";
 import { UniversalNav } from "@/components/navigation/UniversalNav";
 import { CookieConsent } from "@/components/privacy/CookieConsent";
+import { PostHogAnalytics } from "@/components/privacy/PostHogAnalytics";
+import { getPostHogHost, getPostHogKey } from "@/lib/env";
 import "./globals.css";
 
 const heebo = Heebo({
@@ -80,8 +82,6 @@ export const viewport: Viewport = {
   themeColor: "#0a0a0f",
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
   viewportFit: "cover",
 };
 
@@ -149,6 +149,10 @@ export default async function RootLayout({
                   otherwise the banner visually/interactively sits above every
                   modal regardless of the modal's own stacking value. */}
               <CookieConsent />
+              <PostHogAnalytics
+                apiKey={getPostHogKey()}
+                apiHost={getPostHogHost()}
+              />
             </div>
             <AiOverlayErrorBoundary>
               <GlobalAiOverlay />

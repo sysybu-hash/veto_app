@@ -279,6 +279,26 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      <footer className="border-t border-subtle px-6 py-10">
+        <div className="mx-auto flex max-w-4xl flex-wrap items-center justify-center gap-4 text-sm font-semibold text-muted">
+          <Link href="/contact" className="hover:text-primary">
+            צור קשר
+          </Link>
+          <Link href="/pricing" className="hover:text-primary">
+            מחירים
+          </Link>
+          <Link href="/terms" className="hover:text-primary">
+            תנאי שימוש
+          </Link>
+          <Link href="/privacy" className="hover:text-primary">
+            פרטיות
+          </Link>
+          <Link href="/cookies" className="hover:text-primary">
+            עוגיות
+          </Link>
+        </div>
+      </footer>
     </main>
   );
 }

@@ -5,10 +5,10 @@ import { useState, useSyncExternalStore } from "react";
 import { VetoBrandLogo } from "@/components/brand/VetoBrandLogo";
 import { Button } from "@/components/ui";
 
-const STORAGE_KEY = "veto_cookie_consent_v1";
-const CHANGE_EVENT = "veto-cookie-consent-change";
+export const CONSENT_STORAGE_KEY = "veto_cookie_consent_v1";
+export const CONSENT_CHANGE_EVENT = "veto-cookie-consent-change";
 
-type Consent = {
+export type CookieConsentV1 = {
   necessary: true;
   analytics: boolean;
   marketing: boolean;
@@ -17,23 +17,23 @@ type Consent = {
 
 function readConsent(): string | null {
   if (typeof window === "undefined") return null;
-  return window.localStorage.getItem(STORAGE_KEY);
+  return window.localStorage.getItem(CONSENT_STORAGE_KEY);
 }
 
 function subscribe(onStoreChange: () => void) {
   if (typeof window === "undefined") return () => {};
   const onChange = () => onStoreChange();
   window.addEventListener("storage", onChange);
-  window.addEventListener(CHANGE_EVENT, onChange);
+  window.addEventListener(CONSENT_CHANGE_EVENT, onChange);
   return () => {
     window.removeEventListener("storage", onChange);
-    window.removeEventListener(CHANGE_EVENT, onChange);
+    window.removeEventListener(CONSENT_CHANGE_EVENT, onChange);
   };
 }
 
-function saveConsent(consent: Consent) {
-  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(consent));
-  window.dispatchEvent(new CustomEvent(CHANGE_EVENT, { detail: consent }));
+function saveConsent(consent: CookieConsentV1) {
+  window.localStorage.setItem(CONSENT_STORAGE_KEY, JSON.stringify(consent));
+  window.dispatchEvent(new CustomEvent(CONSENT_CHANGE_EVENT, { detail: consent }));
 }
 
 /**
@@ -84,6 +84,7 @@ export function CookieConsent() {
             <Link href="/privacy" className="hover:text-primary">מדיניות פרטיות</Link>
             <Link href="/cookies" className="hover:text-primary">מדיניות עוגיות</Link>
             <Link href="/terms" className="hover:text-primary">תנאי שימוש</Link>
+            <Link href="/contact" className="hover:text-primary">צור קשר</Link>
           </div>
         </div>
 

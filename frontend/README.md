@@ -1,7 +1,10 @@
 # `frontend/` — VETO Flutter Client (LEGACY / FROZEN)
 
-> **Status: 🧊 frozen. Do not add new features here.**
-> The active web client lives in [`web-client/`](../web-client/) (Next.js 16). The active backend lives in [`backend/`](../backend/) (Node.js + Socket.io on Render).
+> **Status: frozen. Do not add new features here.**
+>
+> **Source of truth for the product UI is [`web-client/`](../web-client/) (Next.js on Vercel).**  
+> Active API: [`backend/`](../backend/) (Node.js + Socket.io on Render).  
+> See also [`PROJECT_STRUCTURE.md`](../PROJECT_STRUCTURE.md) and [`DEPLOY.md`](../DEPLOY.md).
 >
 > This Flutter app is preserved as the historical mobile reference (Cloudinary recording flow, Agora 6.6.x integration, Hebrew UI strings). Don't delete it without first porting any still-needed flow into [`mobile/`](../mobile/) (Expo) or `web-client`.
 >

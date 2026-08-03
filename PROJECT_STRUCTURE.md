@@ -19,7 +19,13 @@ veto_legal/
 למפת Next.js מלאה: `web-client/src/app/`.  
 למפת שרת: `backend/server.js` ו-`backend/src/`.
 
+**Source of truth:** כל פיתוח מוצר חדש ב-`web-client/` + `backend/` בלבד.  
+`frontend/` (Flutter) קפוא — ר' `frontend/README.md`.  
+`mobile/` (Expo) סקלט — לא לפרודקשן עד parity.
+
 ## קישורים
 
-- [DEPLOY.md](DEPLOY.md) — Render + Vercel + משתני סביבה  
-- [backend/ENV_GUIDE.md](backend/ENV_GUIDE.md)
+- [DEPLOY.md](DEPLOY.md) — Render + Vercel + operator checklist  
+- [backend/ENV_GUIDE.md](backend/ENV_GUIDE.md)  
+- [docs/DATA_RETENTION.md](docs/DATA_RETENTION.md) — soft-delete Evidence  
+- [docs/LEGAL_REVIEW_PACKAGE.md](docs/LEGAL_REVIEW_PACKAGE.md)

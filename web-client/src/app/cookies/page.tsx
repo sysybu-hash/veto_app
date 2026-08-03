@@ -3,47 +3,69 @@ import Link from "next/link";
 import { VetoBrandLogo } from "@/components/brand/VetoBrandLogo";
 
 export const metadata: Metadata = {
-  title: "מדיניות עוגיות",
+  title: "מדיניות עוגיות | VETO Legal",
   description: "מדיניות עוגיות בסיסית עבור VETO Legal.",
 };
 
 export default function CookiesPage() {
   return (
-    <main
-      className="mx-auto w-full max-w-4xl px-5 py-16 text-end text-primary"
-      dir="rtl"
-    >
-      <div className="flex justify-end">
-        <VetoBrandLogo className="h-9 w-auto sm:h-10" />
-      </div>
-      <h1 className="mt-3 font-frank text-4xl font-black">מדיניות עוגיות</h1>
-      <div className="mt-8 space-y-6 rounded-2xl border border-subtle bg-surface-raised-2 p-6 leading-8 text-secondary shadow-sm">
-        <section>
-          <h2 className="text-xl font-bold text-primary">עוגיות חיוניות</h2>
-          <p className="mt-2">
-            נדרשות להתחברות, אבטחה, שמירת העדפות שפה, תפעול תשלומים והגנה מפני שימוש לרעה. לא ניתן לכבות אותן בלי
-            לפגוע בשירות.
+    <div className="min-h-screen text-primary">
+      <main
+        className="mx-auto w-full max-w-3xl px-4 py-8 md:px-6 md:py-12"
+        dir="rtl"
+      >
+        <div className="mb-8">
+          <Link
+            href="/"
+            className="inline-flex items-center justify-center rounded-xl bg-veto-gold px-5 py-2.5 text-sm font-bold text-primary transition hover:opacity-90"
+          >
+            חזרה לדף הבית
+          </Link>
+        </div>
+
+        <header className="mb-8 text-center md:text-right">
+          <div className="mb-4 flex justify-center md:justify-end">
+            <VetoBrandLogo className="h-9 w-auto sm:h-10" />
+          </div>
+          <h1 className="font-display text-3xl font-bold text-primary md:text-4xl">
+            מדיניות עוגיות
+          </h1>
+          <p className="mt-3 text-sm text-muted">
+            ההעדפות נשמרות בדפדפן וניתנות לשינוי דרך באנר העוגיות או ניקוי
+            localStorage.{" "}
+            <Link href="/contact" className="font-semibold text-primary underline">
+              צור קשר
+            </Link>
           </p>
-        </section>
-        <section>
-          <h2 className="text-xl font-bold text-primary">מדידה ושיפור</h2>
-          <p className="mt-2">
-            יופעלו רק לאחר הסכמה. המטרה היא להבין ביצועים, תקלות וחוויית שימוש בלי למכור מידע אישי.
-          </p>
-        </section>
-        <section>
-          <h2 className="text-xl font-bold text-primary">שיווק</h2>
-          <p className="mt-2">
-            יופעל רק לאחר הסכמה מפורשת, אם וכאשר יתווספו קמפיינים שיווקיים או מדידת המרות.
-          </p>
-        </section>
-        <p className="text-sm text-secondary">
-          ניתן לנקות את העדפות העוגיות דרך הגדרות הדפדפן. בהמשך יתווסף מרכז העדפות מלא מתוך החשבון.
-        </p>
-      </div>
-      <Link href="/" className="mt-8 inline-flex rounded-xl bg-veto-gold px-5 py-3 text-sm font-bold text-primary">
-        חזרה לדף הבית
-      </Link>
-    </main>
+        </header>
+
+        <article className="space-y-8 rounded-2xl border border-subtle bg-surface-raised-2 p-6 text-sm leading-8 text-secondary shadow-sm md:p-8 md:text-base">
+          <section>
+            <h2 className="text-lg font-bold text-primary md:text-xl">עוגיות חיוניות</h2>
+            <p className="mt-2">
+              נדרשות להתחברות, אבטחה, שמירת העדפות שפה, תפעול תשלומים והגנה מפני
+              שימוש לרעה. לא ניתן לכבות אותן בלי לפגוע בשירות.
+            </p>
+          </section>
+          <section>
+            <h2 className="text-lg font-bold text-primary md:text-xl">מדידה ושיפור</h2>
+            <p className="mt-2">
+              יופעלו רק לאחר הסכמה מפורשת בקטגוריית &quot;מדידה ושיפור&quot;. כיום
+              משתמשים ב־
+              <strong className="text-primary"> PostHog</strong> לניתוח שימוש
+              וביצועים (pageviews, אירועי מוצר). אין טעינת PostHog לפני הסכמה;
+              בביטול הסכמה המדידה מופסקת.
+            </p>
+          </section>
+          <section>
+            <h2 className="text-lg font-bold text-primary md:text-xl">שיווק</h2>
+            <p className="mt-2">
+              יופעל רק לאחר הסכמה מפורשת, אם וכאשר יתווספו קמפיינים שיווקיים או
+              מדידת המרות.
+            </p>
+          </section>
+        </article>
+      </main>
+    </div>
   );
 }
