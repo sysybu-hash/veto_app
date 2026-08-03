@@ -18,19 +18,34 @@ import { authGlassInput, authGlassPanel } from "@/lib/vetoGlass";
 import { Fingerprint } from "lucide-react";
 import { Button } from "@/components/ui/primitives/Button";
 
-function routeByRole(router: ReturnType<typeof useRouter>, role: string | null) {
+/**
+ * Only a same-origin relative path is a safe redirect target — reject
+ * anything else (protocol-relative "//evil.com", absolute URLs) to avoid an
+ * open-redirect via the `next` query param.
+ */
+function safeNextPath(next: string | null): string | null {
+  if (!next || !next.startsWith("/") || next.startsWith("//")) return null;
+  return next;
+}
+
+function routeByRole(
+  router: ReturnType<typeof useRouter>,
+  role: string | null,
+  next?: string | null,
+) {
   if (role === "admin") {
     router.replace("/admin/dashboard");
   } else if (role === "lawyer") {
     router.replace("/dashboard");
   } else {
-    router.replace("/hub");
+    router.replace(next || "/hub");
   }
 }
 
 function routeAfterAuth(
   router: ReturnType<typeof useRouter>,
   data: Record<string, unknown>,
+  next?: string | null,
 ) {
   const role = getRoleFromJwt();
   const u = data.user as { onboarding_completed?: boolean } | undefined;
@@ -38,7 +53,7 @@ function routeAfterAuth(
     router.replace("/onboarding");
     return;
   }
-  routeByRole(router, role);
+  routeByRole(router, role, next);
 }
 
 async function postJson(path: string, body: object) {
@@ -154,6 +169,7 @@ export default function LoginPage() {
 function LoginPageInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const nextParam = safeNextPath(searchParams.get("next"));
   const { t, locale } = useTranslation();
   const [phone, setPhone] = useState("");
   const [otp, setOtp] = useState("");
@@ -217,7 +233,7 @@ function LoginPageInner() {
   }, [resendCooldown]);
 
   const completeGoogleLogin = useCallback(
-    async (accessToken: string) => {
+    async (accessToken: string, oauthNext?: string | null) => {
       setBusy(true);
       setMessage(null);
       try {
@@ -228,14 +244,14 @@ function LoginPageInner() {
         if (!token) throw new Error("No token in response");
         await prepareLoginSession(token);
         setSocketAuthToken(token);
-        routeAfterAuth(router, data);
+        routeAfterAuth(router, data, oauthNext ?? nextParam);
       } catch (e) {
         setMessage(formatLoginError(e, t));
       } finally {
         setBusy(false);
       }
     },
-    [router, t],
+    [router, t, nextParam],
   );
 
   useEffect(() => {
@@ -279,9 +295,21 @@ function LoginPageInner() {
     if (!accessToken) return;
 
     let expectedState: string | null = null;
+    let storedNext: string | null = null;
     try {
-      expectedState = sessionStorage.getItem(GOOGLE_OAUTH_STATE_KEY);
+      const raw = sessionStorage.getItem(GOOGLE_OAUTH_STATE_KEY);
       sessionStorage.removeItem(GOOGLE_OAUTH_STATE_KEY);
+      if (raw) {
+        try {
+          const parsed = JSON.parse(raw) as { state?: string; next?: string | null };
+          expectedState = parsed.state ?? null;
+          storedNext = safeNextPath(parsed.next ?? null);
+        } catch {
+          // Pre-existing sessionStorage entry from before `next` support was
+          // added — it's a bare state string, not JSON.
+          expectedState = raw;
+        }
+      }
     } catch {
       expectedState = null;
     }
@@ -296,7 +324,7 @@ function LoginPageInner() {
     }
 
     queueMicrotask(() => {
-      void completeGoogleLogin(accessToken);
+      void completeGoogleLogin(accessToken, storedNext);
     });
   }, [completeGoogleLogin, t]);
 
@@ -316,7 +344,10 @@ function LoginPageInner() {
         ? crypto.randomUUID()
         : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
     try {
-      sessionStorage.setItem(GOOGLE_OAUTH_STATE_KEY, state);
+      sessionStorage.setItem(
+        GOOGLE_OAUTH_STATE_KEY,
+        JSON.stringify({ state, next: nextParam }),
+      );
     } catch {
       setMessage(t("login.errGoogleOAuthStorage"));
       return;
@@ -339,13 +370,13 @@ function LoginPageInner() {
       const data = await loginWithPasskey(normalizedPhone);
       await prepareLoginSession(data.token);
       setSocketAuthToken(data.token);
-      routeAfterAuth(router, data as Record<string, unknown>);
+      routeAfterAuth(router, data as Record<string, unknown>, nextParam);
     } catch (e) {
       setMessage(e instanceof Error ? e.message : "לא ניתן להיכנס עם Passkey כרגע.");
     } finally {
       setBusy(false);
     }
-  }, [phone, router, t]);
+  }, [phone, router, t, nextParam]);
 
   const handleOtpLogin = async () => {
     const normalizedPhone = normalizePhoneForVeto(phone);
@@ -407,7 +438,7 @@ function LoginPageInner() {
       if (!token) throw new Error("No token in response");
       await prepareLoginSession(token);
       setSocketAuthToken(token);
-      routeAfterAuth(router, data);
+      routeAfterAuth(router, data, nextParam);
     } catch (e) {
       setMessage(formatLoginError(e, t));
     } finally {
@@ -447,7 +478,7 @@ function LoginPageInner() {
         if (!token) throw new Error("No token in response");
         await prepareLoginSession(token);
         setSocketAuthToken(token);
-        routeAfterAuth(router, verifyData);
+        routeAfterAuth(router, verifyData, nextParam);
       } catch (e) {
         if (!cancelled) setMessage(formatLoginError(e, t));
       } finally {
@@ -457,7 +488,7 @@ function LoginPageInner() {
     return () => {
       cancelled = true;
     };
-  }, [autoOtpPhone, router, t]);
+  }, [autoOtpPhone, router, t, nextParam]);
 
   const canRequestOtp = !busy;
   const otpDigits = otp.replace(/\D/g, "");

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { VetoBrandLogo } from "@/components/brand/VetoBrandLogo";
+import { getVetoJwtFromCookies } from "@/lib/jwtCookie";
 import { PricingPlansClient } from "./PricingPlansClient";
 
 export const metadata: Metadata = {
@@ -38,7 +39,8 @@ const plans = [
   },
 ];
 
-export default function PricingPage() {
+export default async function PricingPage() {
+  const isLoggedIn = (await getVetoJwtFromCookies()) !== null;
   const offersJsonLd = {
     "@context": "https://schema.org",
     "@type": "OfferCatalog",
@@ -72,7 +74,7 @@ export default function PricingPage() {
           בחרו מסלול, אשרו תשלום ב-PayPal, והמערכת תעדכן את סטטוס המנוי לפי subscription/webhook.
         </p>
 
-        <PricingPlansClient plans={plans} />
+        <PricingPlansClient plans={plans} isLoggedIn={isLoggedIn} />
       </section>
     </main>
   );

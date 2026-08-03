@@ -15,9 +15,10 @@ export type PricingPlan = {
 
 type Props = {
   plans: PricingPlan[];
+  isLoggedIn: boolean;
 };
 
-export function PricingPlansClient({ plans }: Props) {
+export function PricingPlansClient({ plans, isLoggedIn }: Props) {
   return (
     <div className="mt-10 grid gap-5 lg:grid-cols-3">
       {plans.map((plan) => (
@@ -56,7 +57,7 @@ export function PricingPlansClient({ plans }: Props) {
 
           {plan.featured ? (
             <div className="mt-7">
-              <PayPalCheckout amount="99.00" />
+              <PayPalCheckout amount="99.00" isLoggedIn={isLoggedIn} />
             </div>
           ) : (
             <Link

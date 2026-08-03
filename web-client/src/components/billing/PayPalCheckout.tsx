@@ -1,9 +1,12 @@
 "use client";
 
+import { LogIn } from "lucide-react";
 import { apiUrl } from "@/api/apiClient";
+import { LinkButton } from "@/components/ui/primitives/LinkButton";
 
 type PayPalCheckoutProps = {
   amount?: string;
+  isLoggedIn: boolean;
 };
 
 const CONTAINER_ID = "veto-paypal-button-container";
@@ -11,7 +14,7 @@ const ERROR_ID = "veto-paypal-button-error";
 const SUCCESS_ID = "veto-paypal-button-success";
 
 /**
- * Renders the PayPal buttons via plain inline `<script>` tags instead of
+ * Renders the PayPal buttons via a plain inline `<script>` instead of
  * `@paypal/react-paypal-js` (or even `next/script`). Extensive A/B testing
  * against real production and local production builds found that on a hard
  * page load (F5, direct link, first visit — as opposed to an already-
@@ -32,8 +35,24 @@ const SUCCESS_ID = "veto-paypal-button-success";
  * success it updates the DOM directly and navigates via
  * `window.location.href` — the whole flow ends in a full navigation away
  * from this page anyway, so there's no need to round-trip back into React.
+ *
+ * Checkout also requires an existing session (create-order needs a Bearer
+ * JWT to know which account to bill). Since /pricing is a public marketing
+ * page, most visitors clicking "Standard" won't be logged in yet.
+ * `isLoggedIn` comes from the server (PricingPage reads the `veto_jwt`
+ * cookie during SSR — see `getVetoJwtFromCookies`), so the choice between
+ * the login-gate and the real checkout is baked into the very first render
+ * and hydrates identically — no client-side toggle, no chance of React's
+ * hydration reverting a className it manages back to the SSR value (which
+ * is exactly what broke an earlier version of this gate that tried to
+ * flip a `classList` from inline JS). The gate's "continue" link carries
+ * `?next=/pricing` through login so the visitor lands back here, already
+ * authenticated, ready to pay.
  */
-export default function PayPalCheckout({ amount = "99.00" }: PayPalCheckoutProps) {
+export default function PayPalCheckout({
+  amount = "99.00",
+  isLoggedIn,
+}: PayPalCheckoutProps) {
   const clientId = process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID?.trim() || "";
 
   if (!clientId) {
@@ -52,6 +71,32 @@ export default function PayPalCheckout({ amount = "99.00" }: PayPalCheckoutProps
           </code>{" "}
           ב־Vercel / Render (או בקובץ env מקומי) והפעילו מחדש את הבנייה.
         </p>
+      </div>
+    );
+  }
+
+  if (!isLoggedIn) {
+    return (
+      <div
+        className="mx-auto w-full max-w-sm rounded-2xl border border-subtle bg-surface-raised-2 p-4 text-center shadow-[0_12px_40px_-20px_rgba(0,0,0,0.5)] backdrop-blur-xl"
+        dir="rtl"
+      >
+        <LogIn className="mx-auto h-6 w-6 text-veto-gold-light" aria-hidden />
+        <p className="mt-2 text-sm font-semibold text-primary">
+          כדי להשלים את התשלום צריך להתחבר או להירשם קודם
+        </p>
+        <p className="mt-1 text-xs text-muted">
+          זה לוקח פחות מדקה — אחרי ההתחברות תחזרו לכאן ותוכלו להמשיך בתשלום.
+        </p>
+        <LinkButton
+          href="/login?next=/pricing"
+          variant="primary"
+          size="sm"
+          fullWidth
+          className="mt-3"
+        >
+          התחברות / הרשמה
+        </LinkButton>
       </div>
     );
   }
