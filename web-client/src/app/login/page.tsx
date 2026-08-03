@@ -169,7 +169,13 @@ export default function LoginPage() {
 function LoginPageInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const nextParam = safeNextPath(searchParams.get("next"));
+  // "next" is set by explicit login links (e.g. the /pricing login gate);
+  // "redirect" is set automatically by middleware.ts for any protected route
+  // an anonymous visitor lands on directly. Honor whichever is present so a
+  // visitor's original destination survives login either way.
+  const nextParam = safeNextPath(
+    searchParams.get("next") ?? searchParams.get("redirect"),
+  );
   const { t, locale } = useTranslation();
   const [phone, setPhone] = useState("");
   const [otp, setOtp] = useState("");

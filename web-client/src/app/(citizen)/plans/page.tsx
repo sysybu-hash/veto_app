@@ -69,7 +69,7 @@ export default function PlansPage() {
 
   useEffect(() => {
     if (!getJwt()) {
-      router.replace("/login");
+      router.replace("/login?next=/plans");
       return;
     }
     void fetchMyPlan().then(setMe).catch(() => setMe(null));
