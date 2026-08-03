@@ -114,6 +114,16 @@ function formatLoginError(
   if (/invalid phone number/i.test(raw)) {
     return t("login.errInvalidPhone");
   }
+  if (
+    /no account found|please register first/i.test(raw)
+  ) {
+    return t("login.errNoAccount");
+  }
+  if (
+    /already exists|a record with this phone/i.test(raw)
+  ) {
+    return t("login.errPhoneExists");
+  }
   return raw;
 }
 
@@ -550,11 +560,11 @@ function LoginPageInner() {
               placeholder={t("login.phonePlaceholder")}
               autoComplete="tel"
             />
-            <p className="text-center text-xs text-muted">
+            <p className="text-center text-sm text-secondary">
               {t("login.needRegister")}{" "}
               <Link
                 href="/register"
-                className="font-bold text-brand-700 underline underline-offset-2"
+                className="font-semibold text-veto-gold underline underline-offset-2 hover:text-veto-gold/90"
               >
                 {t("login.registerLink")}
               </Link>

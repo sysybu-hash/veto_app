@@ -177,8 +177,12 @@ export const ru: Dict = {
     otpSent: "Код отправлен. Проверьте телефон или логи сервера в разработке.",
     copyFailed: "Копирование не удалось — выделите код вручную.",
     errGooglePrefix: "Google:",
-    needRegister: "Аккаунта с этим номером нет.",
-    registerLink: "Регистрация",
+    needRegister: "Впервые в VETO?",
+    registerLink: "Создайте аккаунт — это займёт минуту",
+    errNoAccount:
+      "Аккаунт с этим номером не найден. Зарегистрируйтесь ниже — это займёт минуту — затем войдите.",
+    errPhoneExists:
+      "Аккаунт с этим номером уже есть. Войдите здесь через Google или OTP.",
   },
   register: {
     title: "Регистрация в VETO",
@@ -190,6 +194,8 @@ export const ru: Dict = {
     success: "Аккаунт создан. Запросите OTP на экране входа.",
     backLogin: "Назад ко входу",
     errFullName: "Введите полное имя",
+    errPhoneExists:
+      "Аккаунт с этим номером уже есть. Перейдите ко входу — Google или OTP.",
   },
   onboarding: {
     title: "Первичная настройка",

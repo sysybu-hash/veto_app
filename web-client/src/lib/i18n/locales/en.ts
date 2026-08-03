@@ -177,8 +177,12 @@ export const en: Dict = {
     otpSent: "Code sent. Check your phone or server logs in development.",
     copyFailed: "Copy failed — select the code manually.",
     errGooglePrefix: "Google:",
-    needRegister: "No account with this phone yet.",
-    registerLink: "Sign up",
+    needRegister: "New to VETO?",
+    registerLink: "Create an account — it takes a minute",
+    errNoAccount:
+      "We couldn’t find an account for this number. Use Sign up below — it takes a minute — then come back to log in.",
+    errPhoneExists:
+      "An account with this number already exists. Sign in here with Google or an OTP code.",
   },
   register: {
     title: "Create your VETO account",
@@ -190,6 +194,8 @@ export const en: Dict = {
     success: "Account created. Request an OTP on the login step.",
     backLogin: "Back to sign in",
     errFullName: "Please enter your full name",
+    errPhoneExists:
+      "An account with this number already exists. Go to login — Google or OTP.",
   },
   onboarding: {
     title: "Get started",
