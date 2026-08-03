@@ -76,7 +76,8 @@ async function postJson(path: string, body: object) {
       typeof data?.error === "string"
         ? data.error
         : `Request failed (${res.status})`;
-    throw new Error(err);
+    const code = typeof data?.code === "string" ? data.code : "";
+    throw new Error(code ? `${code}: ${err}` : err);
   }
   return data as Record<string, unknown>;
 }
@@ -120,9 +121,21 @@ function formatLoginError(
     return t("login.errNoAccount");
   }
   if (
-    /already exists|a record with this phone/i.test(raw)
+    /DUPLICATE_EMAIL|google email already exists|with this email already exists/i.test(
+      raw,
+    )
+  ) {
+    return t("login.errEmailExists");
+  }
+  if (
+    /DUPLICATE_PHONE|with this phone already exists|account with this phone/i.test(
+      raw,
+    )
   ) {
     return t("login.errPhoneExists");
+  }
+  if (/already exists/i.test(raw)) {
+    return t("login.errAccountExists");
   }
   return raw;
 }

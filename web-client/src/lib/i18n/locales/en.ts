@@ -183,6 +183,10 @@ export const en: Dict = {
       "We couldn’t find an account for this number. Use Sign up below — it takes a minute — then come back to log in.",
     errPhoneExists:
       "An account with this number already exists. Sign in here with Google or an OTP code.",
+    errEmailExists:
+      "An account with this email already exists. Try Continue with Google again, or sign in with your registered phone.",
+    errAccountExists:
+      "A matching account already exists. Try Google again, or sign in with your registered phone.",
   },
   register: {
     title: "Create your VETO account",
