@@ -30,9 +30,13 @@ export default function PrivacyPage() {
           <h1 className="font-display text-3xl font-bold text-primary md:text-4xl">
             מדיניות פרטיות
           </h1>
-          <p className="mt-3 text-sm text-muted">
-            עדכון אחרון לצורכי תיעוד מוצרי — יש לקבל אישור משפטי ופרטיות (DPO)
-            לפני פרסום מסחרי סופי.
+          <p className="mt-3 rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-900 dark:text-amber-100">
+            <strong>טיוטת מוצר — לא לפרסום מסחרי סופי.</strong> נדרש אישור
+            משפטי ופרטיות (DPO) לפני פרסום מסחרי. לפניות:{" "}
+            <Link href="/contact" className="font-bold underline">
+              צור קשר
+            </Link>
+            .
           </p>
         </header>
 
@@ -175,8 +179,15 @@ export default function PrivacyPage() {
             </h2>
             <p>
               מדיניות זו עשויה להתעדכן. שינוי מהותי יפורסם בממשק השירות. לשאלות
-              בנוגע לפרטיות ניתן לפנות דרך ערוצי התמיכה המפורסמים באתר או
-              ביישומון.
+              בנוגע לפרטיות ניתן לפנות דרך{" "}
+              <Link href="/contact" className="font-semibold text-primary underline">
+                עמוד צור קשר
+              </Link>
+              ,{" "}
+              <Link href="/privacy-rights" className="font-semibold text-primary underline">
+                בקשות זכויות פרטיות
+              </Link>
+              , או ערוצי התמיכה המפורסמים באתר.
             </p>
           </section>
 

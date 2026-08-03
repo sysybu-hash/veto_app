@@ -57,7 +57,7 @@ export async function listEvidenceForSession(): Promise<EvidenceDTO[]> {
     if (!user) return [];
 
     const rows = await prisma.evidence.findMany({
-      where: { ownerId: user.id },
+      where: { ownerId: user.id, deletedAt: null },
       orderBy: { createdAt: "desc" },
     });
 
@@ -197,7 +197,7 @@ async function syncPrismaFromArtifactItems(
     if (hasRec) {
       const recId = mongoId;
       const existingRec = await prisma.evidence.findFirst({
-        where: { ownerId: user.id, sourceEmergencyEventId: recId },
+        where: { ownerId: user.id, sourceEmergencyEventId: recId, deletedAt: null },
       });
       if (!existingRec) {
         const url = String(row.recording_url);
@@ -221,7 +221,7 @@ async function syncPrismaFromArtifactItems(
     if (hasScreen) {
       const screenId = `${mongoId}:screen`;
       const existingScreen = await prisma.evidence.findFirst({
-        where: { ownerId: user.id, sourceEmergencyEventId: screenId },
+        where: { ownerId: user.id, sourceEmergencyEventId: screenId, deletedAt: null },
       });
       if (!existingScreen) {
         const url = String(row.screen_recording_url);
@@ -245,7 +245,7 @@ async function syncPrismaFromArtifactItems(
     if (hasTr) {
       const trId = `${mongoId}:transcript`;
       const existingTr = await prisma.evidence.findFirst({
-        where: { ownerId: user.id, sourceEmergencyEventId: trId },
+        where: { ownerId: user.id, sourceEmergencyEventId: trId, deletedAt: null },
       });
       if (!existingTr) {
         const text = String(row.call_transcript);
@@ -404,45 +404,70 @@ export async function deleteEvidence(
 
   try {
     const row = await prisma.evidence.findFirst({
-      where: { id: evidenceId, ownerId: user.id },
+      where: { id: evidenceId, ownerId: user.id, deletedAt: null },
     });
     if (!row) {
       return { success: false, error: "הפריט לא נמצא או שאינו שלך" };
     }
 
-    const legacyBase = process.env.LEGACY_API_URL?.replace(/\/$/, "") ?? "";
     const { fileUrl } = row;
     const isRemoteBinary =
       fileUrl.startsWith("http://") || fileUrl.startsWith("https://");
+    const isProd = process.env.NODE_ENV === "production";
 
-    if (!legacyBase && isRemoteBinary) {
-      // LEGACY_API_URL isn't set, so the remote file is never actually deleted — only
-      // the Postgres row is. This used to fail completely silently, leaving an orphaned
-      // file on whatever storage backs the legacy API with no trace anywhere.
-      console.warn("[vault] LEGACY_API_URL not configured — remote file not deleted, only DB row:", fileUrl);
-    }
+    if (isRemoteBinary) {
+      const apiBase = (
+        process.env.LEGACY_API_URL?.trim() ||
+        getPublicApiOrigin()
+      ).replace(/\/$/, "");
 
-    if (legacyBase && isRemoteBinary) {
-      const legacyToken = process.env.LEGACY_API_TOKEN ?? "";
-      const headers: Record<string, string> = {
-        "Content-Type": "application/json",
-      };
-      if (legacyToken) headers.Authorization = `Bearer ${legacyToken}`;
-      const res = await fetch(`${legacyBase}/delete-file`, {
-        method: "POST",
-        headers,
-        body: JSON.stringify({ fileUrl }),
-      });
-      if (!res.ok) {
-        const detail = await res.text().catch(() => "");
-        return {
-          success: false,
-          error: `מחיקה בשרת האחסון נכשלה (${res.status})${detail ? `: ${detail.slice(0, 160)}` : ""}`,
+      if (!apiBase) {
+        if (isProd) {
+          return {
+            success: false,
+            error:
+              "מחיקת קובץ מרוחק אינה מוגדרת (LEGACY_API_URL / NEXT_PUBLIC_API_ORIGIN). הפריט לא נמחק.",
+          };
+        }
+        console.warn(
+          "[vault] No API origin for remote delete — soft-deleting DB row only in non-production:",
+          fileUrl,
+        );
+      } else {
+        const jwt = await getVetoJwtFromCookies();
+        const legacyToken = process.env.LEGACY_API_TOKEN ?? "";
+        const headers: Record<string, string> = {
+          "Content-Type": "application/json",
+          ...tunnelBypassHeaders(),
         };
+        if (jwt) headers.Authorization = `Bearer ${jwt}`;
+        else if (legacyToken) headers.Authorization = `Bearer ${legacyToken}`;
+
+        const res = await fetch(`${apiBase}/api/vault/delete-remote`, {
+          method: "POST",
+          headers,
+          body: JSON.stringify({ fileUrl }),
+        });
+        if (!res.ok) {
+          const detail = await res.text().catch(() => "");
+          return {
+            success: false,
+            error: `מחיקה בשרת האחסון נכשלה (${res.status})${detail ? `: ${detail.slice(0, 160)}` : ""}`,
+          };
+        }
       }
     }
 
-    await prisma.evidence.delete({ where: { id: row.id } });
+    await prisma.evidence.update({
+      where: { id: row.id },
+      data: {
+        deletedAt: new Date(),
+        // Free @@unique([ownerId, sourceEmergencyEventId]) so SOS re-sync can recreate.
+        sourceEmergencyEventId: row.sourceEmergencyEventId
+          ? `${row.sourceEmergencyEventId}:deleted:${row.id}`
+          : null,
+      },
+    });
     revalidatePath("/vault");
     return { success: true };
   } catch (error) {

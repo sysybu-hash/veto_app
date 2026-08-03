@@ -38,9 +38,12 @@ model Evidence {
   ownerId     String
   owner       User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   createdAt   DateTime @default(now())
+  /// Soft-delete timestamp — vault lists hide rows with deletedAt set.
+  deletedAt   DateTime?
 
   @@unique([ownerId, sourceEmergencyEventId])
   @@index([ownerId])
+  @@index([ownerId, deletedAt])
 }
 
 /// Live SOS queue row — synced with Ably `sos-alerts` for lawyer dashboards.

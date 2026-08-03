@@ -33,15 +33,32 @@
 
 5. שמרו את הקובץ.
 
-6. בחלון PowerShell בתיקיית `veto_legal` הריצו פעם אחת:
+6. בחלון PowerShell בתיקיית `veto_legal` הריצו פעם אחת **אחת** מהאפשרויות:
+
+   **מומלץ לפרודקשן / CI** — migrations:
+
+   ```powershell
+   cd web-client
+   npx prisma migrate deploy
+   ```
+
+   (או מ־`web-client`: `npm run db:migrate`)
+
+   **פיתוח מהיר** — סנכרון schema בלי היסטוריית migration:
 
    ```powershell
    npm run db:push
    ```
 
-   (זה יוצר את הטבלאות במסד.)
-
    אם מופיע שגיאה על `localhost` במקום Neon — ייתכן שב‑Windows מוגדר משתנה סביבה `DATABASE_URL` ישן. הפרויקט כבר מריץ `db:push` דרך סקריפט שדורס זאת מקובץ `.env` — אם עדיין יש בעיה, מחקו `DATABASE_URL` מ"משתני סביבה" במחשב.
+
+   אם Neon כבר נוצר בעבר עם `db:push` ו-`migrate deploy` מתלונן על drift — סמנו את ה-migration כמיושם:
+
+   ```powershell
+   cd web-client
+   npx prisma migrate resolve --applied 20260803190000_init_evidence_soft_delete
+   npx prisma db push
+   ```
 
 7. להרצת האתר לפיתוח:
 

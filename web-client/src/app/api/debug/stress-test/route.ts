@@ -16,6 +16,12 @@ export const dynamic = "force-dynamic";
  * Protected by `STRESS_TEST_SECRET` header: `x-veto-stress-secret`.
  */
 export async function POST(request: Request) {
+  if (process.env.NODE_ENV === "production") {
+    return NextResponse.json({ success: false, error: "Not found" }, {
+      status: 404,
+    });
+  }
+
   const secret = process.env.STRESS_TEST_SECRET?.trim();
   const sent = request.headers.get("x-veto-stress-secret");
   if (!secret || sent !== secret) {

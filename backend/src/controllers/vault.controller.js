@@ -5,6 +5,10 @@ const VaultFolder = require('../models/VaultFolder');
 const EmergencyEvent = require('../models/EmergencyEvent');
 const AITransparencyLog = require('../models/AITransparencyLog');
 const { analyzeVaultFile } = require('../services/geminiLegal.service');
+const {
+  destroyCloudinaryAsset,
+  isOurCloudinaryUrl,
+} = require('../services/media/cloudinaryDelete.service');
 
 // ── Vault Controller ──────────────────────────────────────────
 // Ensures users can only access their OWN files.
@@ -207,9 +211,66 @@ exports.deleteFolder = async (req, res, next) => {
 
 exports.deleteFile = async (req, res, next) => {
   try {
-    const file = await VaultFile.findOneAndDelete({ _id: req.params.fileId, user_id: req.user.userId });
+    const file = await VaultFile.findOne({ _id: req.params.fileId, user_id: req.user.userId });
     if (!file) return res.status(404).json({ error: 'File not found or unauthorized' });
+
+    const url = String(file.url || '');
+    const isRemote = url.startsWith('http://') || url.startsWith('https://');
+    if (isRemote && isOurCloudinaryUrl(url)) {
+      const destroyed = await destroyCloudinaryAsset({ fileUrl: url });
+      if (!destroyed.ok && !destroyed.skipped) {
+        return res.status(502).json({
+          error: 'Cloudinary delete failed',
+          detail: destroyed.error || null,
+        });
+      }
+    }
+
+    await VaultFile.deleteOne({ _id: file._id, user_id: req.user.userId });
     res.json({ success: true, message: 'File deleted' });
+  } catch (err) { next(err); }
+};
+
+/**
+ * Authenticated remote-asset delete for Prisma Evidence (web-client) and other callers.
+ * Body: { fileUrl: string }
+ * Ownership of the Evidence row is enforced by the caller; here we only destroy
+ * assets that belong to our Cloudinary cloud (or skip data: URLs).
+ */
+exports.deleteRemoteFile = async (req, res, next) => {
+  try {
+    const fileUrl = typeof req.body?.fileUrl === 'string' ? req.body.fileUrl.trim() : '';
+    if (!fileUrl) {
+      return res.status(400).json({ error: 'fileUrl is required' });
+    }
+    if (fileUrl.startsWith('data:')) {
+      return res.json({ success: true, skipped: true });
+    }
+    if (!(fileUrl.startsWith('http://') || fileUrl.startsWith('https://'))) {
+      return res.status(400).json({ error: 'fileUrl must be http(s) or data:' });
+    }
+
+    // Prefer Mongo ownership when the URL is a VaultFile the user owns.
+    const owned = await VaultFile.findOne({ user_id: req.user.userId, url: fileUrl }).select('_id').lean();
+    if (!owned && !isOurCloudinaryUrl(fileUrl)) {
+      return res.status(400).json({
+        error: 'URL is not a VETO Cloudinary asset and is not in your vault',
+      });
+    }
+
+    if (isOurCloudinaryUrl(fileUrl)) {
+      const destroyed = await destroyCloudinaryAsset({ fileUrl });
+      if (!destroyed.ok && !destroyed.skipped) {
+        return res.status(502).json({
+          error: 'Cloudinary delete failed',
+          detail: destroyed.error || null,
+        });
+      }
+      return res.json({ success: true, skipped: !!destroyed.skipped });
+    }
+
+    // Owned VaultFile on non-Cloudinary storage (local /uploads) — nothing remote to destroy.
+    return res.json({ success: true, skipped: true });
   } catch (err) { next(err); }
 };
 

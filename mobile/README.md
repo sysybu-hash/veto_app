@@ -8,7 +8,16 @@ Replacement for [`frontend/`](../frontend/) (Flutter, frozen). Stack:
 
 ## Status
 
-Scaffold only. Do not point production users here. The web client is the canonical client until parity is reached.
+Scaffold only. **Do not point production users here.**
+
+Canonical clients today:
+
+| Surface | Path | Status |
+|---------|------|--------|
+| Web product | [`web-client/`](../web-client/) | **Source of truth** — ship here |
+| API | [`backend/`](../backend/) | Active |
+| Flutter legacy | [`frontend/`](../frontend/) | Frozen — do not extend |
+| This Expo app | `mobile/` | WIP until feature parity |
 
 ## Why two mobile trees exist
 

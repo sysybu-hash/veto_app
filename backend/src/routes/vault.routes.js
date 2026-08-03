@@ -3,7 +3,7 @@ const router = express.Router();
 const multer = require('multer');
 const { protect, authorize } = require('../middleware/auth.middleware');
 const {
-  getFiles, deleteFile, updateFileAccess, analyzeFile,
+  getFiles, deleteFile, deleteRemoteFile, updateFileAccess, analyzeFile,
   getCases, createCase, updateCase, deleteCase, updateFile, getSharedFiles,
   getFolders, createFolder, updateFolder, deleteFolder, getTimeline,
 } = require('../controllers/vault.controller');
@@ -17,6 +17,7 @@ router.get('/folders', getFolders);
 router.post('/folders', createFolder);
 router.patch('/folders/:folderId', updateFolder);
 router.delete('/folders/:folderId', deleteFolder);
+router.post('/delete-remote', deleteRemoteFile);
 router.delete('/files/:fileId', deleteFile);
 router.patch('/files/:fileId/access', updateFileAccess);
 router.patch('/files/:fileId', updateFile);

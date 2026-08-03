@@ -206,9 +206,11 @@
 
 - PayPal: [developer.paypal.com](https://developer.paypal.com/)
 - Sentry: [sentry.io](https://sentry.io/) — DSN ל־Node
-- TURN / ICE: `WEBRTC_ICE_SERVERS_JSON` או `TURN_*` (ראו `call.controller.js`)
+- TURN / ICE (אחריות מפעיל — מומלץ לפרודקשן): `WEBRTC_ICE_SERVERS_JSON` **או** `TURN_URL` + `TURN_USERNAME` + `TURN_CREDENTIAL`. נטען ב-`src/services/call/iceServers.service.js` ונמסר ללקוח דרך `/api/calls/.../ice-config`. בלי TURN, שיחות נכשלות לעיתים מאחורי NAT/firewall קשוח (ספקים נפוצים: Metered, Cloudflare Calls, Twilio STUN/TURN). ראו גם הערות ב-`.env.example`.
 - OTP ב־JSON: רק בפיתוח/CI (`RETURN_OTP_IN_JSON=1`) — לעולם לא בפרודקשן, ללא קשר להגדרות Twilio (ראו `auth.controller.js`).
-- Twilio (שליחת OTP ב-SMS): [twilio.com/console](https://www.twilio.com/console) → Account SID + Auth Token. דרוש גם `TWILIO_MESSAGING_SERVICE_SID` (מומלץ) או `TWILIO_FROM_NUMBER`. בלי זה, התחברות דרך טלפון/OTP לא זמינה בפועל בפרודקשן.
+- Twilio (שליחת OTP ב-SMS): **נדחה / אחריות מפעיל** — [twilio.com/console](https://www.twilio.com/console) → Account SID + Auth Token. דרוש גם `TWILIO_MESSAGING_SERVICE_SID` (מומלץ) או `TWILIO_FROM_NUMBER`. בלי זה, התחברות דרך טלפון/OTP לא זמינה בפועל בפרודקשן.
+- PayPal Live + webhook: **נדחה / אחריות מפעיל** — ר' `DEPLOY.md` operator checklist.
+- Uptime חיצוני: מומלץ לנטר `GET /health` (UptimeRobot וכו') בנוסף ל-`.github/workflows/keepalive.yml`.
 
 ---
 
