@@ -142,6 +142,8 @@ export const he: Dict = {
     title: "כניסה ל-VETO",
     google: "המשך עם Google",
     orPhone: "או עם טלפון",
+    passkeyCta: "כניסה מהירה עם Passkey (טביעת אצבע / פנים)",
+    passkeyUnsupported: "הדפדפן אינו תומך ב-Passkeys. השתמשו בקוד SMS.",
     phone: "טלפון",
     phonePlaceholder: "+972501111111 או 0501111111",
     errInvalidPhone: "מספר הטלפון לא תקין. השתמשו בפורמט בינלאומי (+972…) או ישראלי (05…).",

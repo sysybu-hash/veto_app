@@ -463,6 +463,11 @@ function LoginPageInner() {
     };
   }, [autoOtpPhone, router, t, nextParam]);
 
+  const [passkeysOk, setPasskeysOk] = useState(false);
+  useEffect(() => {
+    queueMicrotask(() => setPasskeysOk(passkeysSupported()));
+  }, []);
+
   const canRequestOtp = !busy;
   const otpDigits = otp.replace(/\D/g, "");
   const canVerifyOtp = otpDigits.length === 6 && !busy;
@@ -472,7 +477,6 @@ function LoginPageInner() {
       <div className="flex min-h-screen w-full items-center justify-center bg-surface-canvas px-4 py-12 md:px-6 md:py-16">
       <main
         className={`w-full max-w-md p-6 md:p-8 ${authGlassPanel}`}
-        dir={locale === "he" ? "rtl" : "ltr"}
       >
         <div className="text-center">
           {!isApiOriginConfigured() && (
@@ -531,15 +535,15 @@ function LoginPageInner() {
             variant="secondary"
             size="lg"
             fullWidth
-            disabled={busy || !phone.trim() || !passkeysSupported()}
+            disabled={busy || !phone.trim() || !passkeysOk}
             onClick={() => void handlePasskeyLogin()}
             iconStart={<Fingerprint className="h-6 w-6 shrink-0" aria-hidden />}
           >
-            כניסה מהירה עם Passkey (טביעת אצבע / פנים)
+            {t("login.passkeyCta")}
           </Button>
-          {!passkeysSupported() && (
+          {!passkeysOk && (
             <p className="mt-2 text-center text-xs text-muted">
-              הדפדפן אינו תומך ב-Passkeys. השתמשו בקוד SMS.
+              {t("login.passkeyUnsupported")}
             </p>
           )}
         </div>
