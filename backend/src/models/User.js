@@ -268,9 +268,9 @@ UserSchema.index({ last_location: '2dsphere' });
 // Google-only accounts without a phone number.
 UserSchema.pre('save', function unsetEmptyPhone(next) {
   if (this.phone === null || this.phone === '') {
-    this.phone = undefined;
-    if (typeof this.$unset === 'function') {
-      this.$unset('phone');
+    this.set('phone', undefined);
+    if (this._doc && Object.prototype.hasOwnProperty.call(this._doc, 'phone')) {
+      delete this._doc.phone;
     }
   }
   next();

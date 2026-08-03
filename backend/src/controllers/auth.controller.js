@@ -18,7 +18,6 @@ const {
 } = require('@simplewebauthn/server');
 
 const {
-  cleanPhone,
   normalizePhoneForVeto,
   isAdminPhone,
   shouldUseFixedAdminOtp,
