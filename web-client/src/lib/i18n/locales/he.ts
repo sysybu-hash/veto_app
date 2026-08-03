@@ -181,7 +181,7 @@ export const he: Dict = {
   },
   register: {
     title: "הרשמה ל-VETO",
-    subtitle: "יצירת חשבון אזרח — ואימות OTP בטלפון.",
+    subtitle: "יצירת חשבון אזרח עם Google, או עם אימות OTP בטלפון.",
     fullName: "שם מלא",
     phone: "טלפון",
     submit: "צור חשבון ושלח קוד",
