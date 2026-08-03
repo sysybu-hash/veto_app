@@ -17,7 +17,9 @@ const UserSchema = new mongoose.Schema(
     phone: {
       type: String,
       unique: true,
-      sparse: true, // Google-only users won't have a phone number
+      // Sparse skips *missing* fields. Do NOT store null/'' — Mongo indexes
+      // null and then only one Google-only user can exist (E11000 on phone).
+      sparse: true,
       trim: true,
       // E.164 format: +972501234567
       match: [/^\+[1-9]\d{7,14}$/, 'Please provide a valid phone number'],
@@ -261,5 +263,17 @@ const UserSchema = new mongoose.Schema(
 
 // ── Geo Index (for location-based queries) ─────────────────
 UserSchema.index({ last_location: '2dsphere' });
+
+// Keep phone absent (not null) so the sparse unique index allows many
+// Google-only accounts without a phone number.
+UserSchema.pre('save', function unsetEmptyPhone(next) {
+  if (this.phone === null || this.phone === '') {
+    this.phone = undefined;
+    if (typeof this.$unset === 'function') {
+      this.$unset('phone');
+    }
+  }
+  next();
+});
 
 module.exports = mongoose.model('User', UserSchema);

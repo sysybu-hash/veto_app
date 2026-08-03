@@ -527,24 +527,76 @@ const googleAuth = async (req, res, next) => {
       }
       if (dirty) await doc.save();
     } else {
-      try {
-        doc = await User.create({
-          full_name:          name || (normalizedEmail ? normalizedEmail.split('@')[0] : 'VETO User'),
-          email:              normalizedEmail || undefined,
-          google_id:          googleId,
-          role:               'user',
+      // Google-only users have no phone. Mongo unique+sparse indexes still
+      // collide when older docs stored `phone: null` (null is indexed; missing
+      // is not). Always omit the field, and repair null/empty phones on conflict.
+      const buildGoogleUser = () => {
+        const user = new User({
+          full_name:
+            name ||
+            (normalizedEmail ? normalizedEmail.split('@')[0] : 'VETO User'),
+          google_id: googleId,
+          role: 'user',
           preferred_language,
-          is_verified:        true,
+          is_verified: true,
         });
+        if (normalizedEmail) user.email = normalizedEmail;
+        user.set('phone', undefined);
+        if (typeof user.phone !== 'undefined') {
+          user.phone = undefined;
+        }
+        return user;
+      };
+
+      const unsetNullPhones = async () => {
+        const result = await User.updateMany(
+          { $or: [{ phone: null }, { phone: '' }] },
+          { $unset: { phone: '' } },
+        );
+        if (result.modifiedCount > 0) {
+          logger.warn(
+            { modifiedCount: result.modifiedCount },
+            '[AUTH] Unset null/empty phone fields to repair sparse unique index',
+          );
+        }
+      };
+
+      try {
+        doc = await buildGoogleUser().save();
       } catch (createErr) {
         if (createErr && createErr.code === 11000) {
           const field = Object.keys(createErr.keyValue || {})[0] || 'email';
-          // Race / case mismatch: another request created the same identity.
+          const dupVal = createErr.keyValue ? createErr.keyValue[field] : undefined;
+          logger.warn(
+            { field, dupVal, googleId, email: normalizedEmail },
+            '[AUTH] Google user create hit duplicate key',
+          );
+
           if (field === 'google_id') {
             doc = await User.findOne({ google_id: googleId });
           } else if (field === 'email' && normalizedEmail) {
             doc = await User.findOne({ email: normalizedEmail });
+          } else if (
+            field === 'phone' &&
+            (dupVal === null || dupVal === undefined || dupVal === '')
+          ) {
+            await unsetNullPhones();
+            try {
+              doc = await buildGoogleUser().save();
+            } catch (retryErr) {
+              if (retryErr && retryErr.code === 11000) {
+                const retryField = Object.keys(retryErr.keyValue || {})[0];
+                if (retryField === 'google_id') {
+                  doc = await User.findOne({ google_id: googleId });
+                } else if (retryField === 'email' && normalizedEmail) {
+                  doc = await User.findOne({ email: normalizedEmail });
+                }
+              } else {
+                throw retryErr;
+              }
+            }
           }
+
           if (doc) {
             if (!doc.google_id) {
               doc.google_id = googleId;
