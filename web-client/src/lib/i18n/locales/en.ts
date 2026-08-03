@@ -182,7 +182,7 @@ export const en: Dict = {
   },
   register: {
     title: "Create your VETO account",
-    subtitle: "Citizen signup — phone OTP verification next.",
+    subtitle: "Citizen signup with Google, or phone OTP verification.",
     fullName: "Full name",
     phone: "Phone",
     submit: "Create account & send code",

@@ -12,6 +12,10 @@ import {
 } from "@/lib/env";
 import { useTranslation } from "@/lib/i18n/LocaleProvider";
 import { normalizePhoneForVeto } from "@/lib/phone";
+import {
+  beginGoogleImplicitLogin,
+  GOOGLE_OAUTH_STATE_KEY,
+} from "@/lib/googleOAuth";
 import { loginWithPasskey, passkeysSupported } from "@/api/passkeyApi";
 import { OtpInput } from "@/components/auth/OtpInput";
 import { authGlassInput, authGlassPanel } from "@/lib/vetoGlass";
@@ -113,45 +117,6 @@ function formatLoginError(
   return raw;
 }
 
-const GOOGLE_OAUTH_STATE_KEY = "veto_google_oauth_state";
-
-/**
- * Must match exactly an entry under Google Cloud → OAuth → Authorized redirect URIs.
- * Always use the **current** browser origin + `/login` so Vercel previews / prod hosts match
- * (a stale `NEXT_PUBLIC_GOOGLE_OAUTH_REDIRECT_URI` for another domain causes redirect_uri_mismatch).
- */
-function googleOAuthRedirectUri(): string {
-  if (typeof window !== "undefined") {
-    return new URL("/login", window.location.origin).href;
-  }
-  const fromEnv = process.env.NEXT_PUBLIC_GOOGLE_OAUTH_REDIRECT_URI?.trim();
-  if (fromEnv) {
-    try {
-      return new URL("/login", new URL(fromEnv).origin).href;
-    } catch {
-      return fromEnv;
-    }
-  }
-  return "http://localhost:3000/login";
-}
-
-function buildGoogleImplicitAuthUrl(
-  clientId: string,
-  redirectUri: string,
-  state: string,
-): string {
-  const params = new URLSearchParams({
-    client_id: clientId,
-    redirect_uri: redirectUri,
-    response_type: "token",
-    scope: "openid email profile",
-    include_granted_scopes: "true",
-    prompt: "select_account",
-    state,
-  });
-  return `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
-}
-
 export default function LoginPage() {
   return (
     <Suspense
@@ -187,11 +152,6 @@ function LoginPageInner() {
   const autoOtpConsumedRef = useRef<string | null>(null);
   const [resendCooldown, setResendCooldown] = useState(0);
   const [allowOtpResend, setAllowOtpResend] = useState(false);
-
-  const googleClientId =
-    process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID?.trim() ?? "";
-  const legacyGoogleLoginUrl =
-    process.env.NEXT_PUBLIC_GOOGLE_LOGIN_URL?.trim() ?? "";
 
   useEffect(() => {
     queueMicrotask(() => {
@@ -336,32 +296,16 @@ function LoginPageInner() {
 
   const handleGoogle = () => {
     setMessage(null);
-    if (legacyGoogleLoginUrl) {
-      window.location.href = legacyGoogleLoginUrl;
+    const result = beginGoogleImplicitLogin({ next: nextParam });
+    if (result.ok || result.reason === "legacy_redirect") {
+      setBusy(true);
       return;
     }
-    if (!googleClientId) {
+    if (result.reason === "missing_client_id") {
       setMessage(t("login.errMissingGoogleClientId"));
       return;
     }
-    const redirectUri = googleOAuthRedirectUri();
-    const state =
-      typeof crypto !== "undefined" && "randomUUID" in crypto
-        ? crypto.randomUUID()
-        : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
-    try {
-      sessionStorage.setItem(
-        GOOGLE_OAUTH_STATE_KEY,
-        JSON.stringify({ state, next: nextParam }),
-      );
-    } catch {
-      setMessage(t("login.errGoogleOAuthStorage"));
-      return;
-    }
-    setBusy(true);
-    window.location.assign(
-      buildGoogleImplicitAuthUrl(googleClientId, redirectUri, state),
-    );
+    setMessage(t("login.errGoogleOAuthStorage"));
   };
 
   const handlePasskeyLogin = useCallback(async () => {

@@ -182,7 +182,7 @@ export const ru: Dict = {
   },
   register: {
     title: "Регистрация в VETO",
-    subtitle: "Аккаунт гражданина — затем OTP на телефон.",
+    subtitle: "Аккаунт гражданина через Google или OTP на телефон.",
     fullName: "Полное имя",
     phone: "Телефон",
     submit: "Создать аккаунт и отправить код",
