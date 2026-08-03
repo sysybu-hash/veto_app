@@ -72,8 +72,18 @@ function isAdminPhone(phone) {
   return clean === '972525640021' || clean === '972506400030';
 }
 
+/**
+ * Fixed OTP `123456` for known admin phones — development / local only.
+ * Never in production (regardless of ENABLE_FIXED_OTP_FOR_ADMINS).
+ */
+function shouldUseFixedAdminOtp(phone) {
+  if (process.env.NODE_ENV === 'production') return false;
+  return isAdminPhone(phone);
+}
+
 module.exports = {
   cleanPhone,
   normalizePhoneForVeto,
   isAdminPhone,
+  shouldUseFixedAdminOtp,
 };
