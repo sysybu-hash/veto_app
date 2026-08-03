@@ -6,10 +6,10 @@ import { apiUrl } from "@/lib/env";
  */
 const STORAGE_KEY = "veto_jwt";
 
-/** Primary cookie — must match `middleware.ts` and `jwtCookie.ts`. */
+/** Primary cookie — must match `proxy.ts` and `jwtCookie.ts`. */
 export const VETO_JWT_COOKIE_NAME = "veto_jwt";
 
-/** Fallback names read by `middleware.ts` for the same JWT value. */
+/** Fallback names read by `proxy.ts` for the same JWT value. */
 const LEGACY_SESSION_COOKIE_NAMES = ["veto_session", "jwt"] as const;
 
 const COOKIE_MAX_AGE_SEC = 60 * 60 * 24 * 7;
@@ -20,7 +20,7 @@ function cookieBaseAttrs(): string {
   return `Path=/; SameSite=Lax${isSecure ? "; Secure" : ""}`;
 }
 
-/** Writes JWT to all cookies the Edge middleware may read (same encoded value). */
+/** Writes JWT to all cookies the Edge proxy may read (same encoded value). */
 export function syncAllJwtCookies(token: string | null): void {
   if (typeof document === "undefined") return;
   const attrs = cookieBaseAttrs();
@@ -54,7 +54,7 @@ export function getJwt(): string | null {
 }
 
 /**
- * Persist JWT: cookies first (so middleware sees them), then localStorage.
+ * Persist JWT: cookies first (so proxy.ts sees them), then localStorage.
  * For navigation immediately after login, prefer `prepareLoginSession` so the
  * cookie round-trip completes before `router.push/replace`.
  */
@@ -91,7 +91,7 @@ export function syncJwtCookieFromStorage(): void {
 
 /**
  * Sets cookies + storage, then waits until the browser has applied cookie updates
- * before client navigation (avoids middleware redirect to /login race).
+ * before client navigation (avoids proxy.ts redirect to /login race).
  */
 export async function prepareLoginSession(token: string): Promise<void> {
   setJwt(token);

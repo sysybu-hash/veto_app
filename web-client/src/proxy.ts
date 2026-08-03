@@ -52,7 +52,7 @@ function homePathForRole(role: string | null): string {
   return "/hub";
 }
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const token = readSessionToken(request);
   const { pathname } = request.nextUrl;
 

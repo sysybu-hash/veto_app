@@ -170,7 +170,7 @@ function LoginPageInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
   // "next" is set by explicit login links (e.g. the /pricing login gate);
-  // "redirect" is set automatically by middleware.ts for any protected route
+  // "redirect" is set automatically by proxy.ts for any protected route
   // an anonymous visitor lands on directly. Honor whichever is present so a
   // visitor's original destination survives login either way.
   const nextParam = safeNextPath(
