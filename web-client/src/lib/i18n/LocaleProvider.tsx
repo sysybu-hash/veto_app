@@ -10,14 +10,10 @@ import {
   type ReactNode,
 } from "react";
 import { dictionaries } from "./dictionaries";
+import { LOCALE_COOKIE, parseLocale, writeLocaleCookie } from "./localeCookie";
 import type { Locale } from "./types";
 import { LOCALES, STORAGE_KEY } from "./types";
 import { translate } from "./translate";
-
-function parseLocale(raw: string | null): Locale {
-  if (raw === "en" || raw === "ru" || raw === "he") return raw;
-  return "he";
-}
 
 function applyDocumentLocale(locale: Locale) {
   if (typeof document === "undefined") return;
@@ -40,8 +36,16 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     queueMicrotask(() => {
       try {
-        const stored = parseLocale(localStorage.getItem(STORAGE_KEY));
+        let raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw && typeof document !== "undefined") {
+          const match = document.cookie
+            .split("; ")
+            .find((row) => row.startsWith(`${LOCALE_COOKIE}=`));
+          raw = match?.split("=")[1] ?? null;
+        }
+        const stored = parseLocale(raw);
         setLocaleState(stored);
+        writeLocaleCookie(stored);
         applyDocumentLocale(stored);
       } catch {
         applyDocumentLocale("he");
@@ -57,6 +61,7 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
     } catch {
       /* ignore */
     }
+    writeLocaleCookie(next);
     applyDocumentLocale(next);
   }, []);
 

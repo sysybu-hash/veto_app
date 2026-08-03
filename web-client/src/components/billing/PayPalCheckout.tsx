@@ -3,6 +3,7 @@
 import { LogIn } from "lucide-react";
 import { apiUrl } from "@/api/apiClient";
 import { LinkButton } from "@/components/ui/primitives/LinkButton";
+import { useTranslation } from "@/lib/i18n/LocaleProvider";
 
 type PayPalCheckoutProps = {
   amount?: string;
@@ -15,61 +16,21 @@ const SUCCESS_ID = "veto-paypal-button-success";
 
 /**
  * Renders the PayPal buttons via a plain inline `<script>` instead of
- * `@paypal/react-paypal-js` (or even `next/script`). Extensive A/B testing
- * against real production and local production builds found that on a hard
- * page load (F5, direct link, first visit — as opposed to an already-
- * hydrated SPA transition) the client-side effect responsible for loading
- * the PayPal SDK intermittently never runs at all — no console error,
- * roughly 50% of loads, reproduced with three different implementations
- * (the library's own script loader, a manual "mounted" useEffect flag, and
- * next/script's own onReady effect). The common failure mode across all
- * three: whatever mechanism depends on a React effect firing for this leaf
- * sometimes just doesn't, in this Next.js version.
- *
- * An inline `<script>` written directly into the server-rendered HTML has
- * no such dependency — the browser executes it while parsing the HTML
- * document itself, before hydration even starts, exactly like any other
- * static `<script>` tag on a plain page. It self-polls for `window.paypal`
- * via `setInterval` (a native timer, not tied to React's effect scheduler
- * at all) rather than relying on the SDK script's load event. On payment
- * success it updates the DOM directly and navigates via
- * `window.location.href` — the whole flow ends in a full navigation away
- * from this page anyway, so there's no need to round-trip back into React.
- *
- * Checkout also requires an existing session (create-order needs a Bearer
- * JWT to know which account to bill). Since /pricing is a public marketing
- * page, most visitors clicking "Standard" won't be logged in yet.
- * `isLoggedIn` comes from the server (PricingPage reads the `veto_jwt`
- * cookie during SSR — see `getVetoJwtFromCookies`), so the choice between
- * the login-gate and the real checkout is baked into the very first render
- * and hydrates identically — no client-side toggle, no chance of React's
- * hydration reverting a className it manages back to the SSR value (which
- * is exactly what broke an earlier version of this gate that tried to
- * flip a `classList` from inline JS). The gate's "continue" link carries
- * `?next=/pricing` through login so the visitor lands back here, already
- * authenticated, ready to pay.
+ * `@paypal/react-paypal-js` (see prior comments in git history).
  */
 export default function PayPalCheckout({
   amount = "99.00",
   isLoggedIn,
 }: PayPalCheckoutProps) {
+  const { t } = useTranslation();
   const clientId = process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID?.trim() || "";
 
   if (!clientId) {
     return (
-      <div
-        className="mx-auto w-full max-w-sm rounded-2xl border border-amber-500/40 bg-amber-500/10 px-4 py-4 text-center text-sm text-amber-950 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-100"
-        dir="rtl"
-      >
-        <p className="font-semibold leading-snug">
-          תשלום PayPal אינו זמין בסביבה זו — חסר מזהה לקוח בפריסה.
-        </p>
+      <div className="mx-auto w-full max-w-sm rounded-2xl border border-amber-500/40 bg-amber-500/10 px-4 py-4 text-center text-sm text-amber-950 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-100">
+        <p className="font-semibold leading-snug">{t("paypalUi.missingClientTitle")}</p>
         <p className="mt-2 text-xs leading-relaxed text-amber-900/80 dark:text-amber-200/85">
-          הוסיפו את משתנה הסביבה{" "}
-          <code className="rounded bg-black/10 px-1 py-0.5 font-mono text-[11px] dark:bg-black/25">
-            NEXT_PUBLIC_PAYPAL_CLIENT_ID
-          </code>{" "}
-          ב־Vercel / Render (או בקובץ env מקומי) והפעילו מחדש את הבנייה.
+          {t("paypalUi.missingClientBody")}
         </p>
       </div>
     );
@@ -77,17 +38,10 @@ export default function PayPalCheckout({
 
   if (!isLoggedIn) {
     return (
-      <div
-        className="mx-auto w-full max-w-sm rounded-2xl border border-subtle bg-surface-raised-2 p-4 text-center shadow-[0_12px_40px_-20px_rgba(0,0,0,0.5)] backdrop-blur-xl"
-        dir="rtl"
-      >
+      <div className="mx-auto w-full max-w-sm rounded-2xl border border-subtle bg-surface-raised-2 p-4 text-center shadow-[0_12px_40px_-20px_rgba(0,0,0,0.5)] backdrop-blur-xl">
         <LogIn className="mx-auto h-6 w-6 text-veto-gold-light" aria-hidden />
-        <p className="mt-2 text-sm font-semibold text-primary">
-          כדי להשלים את התשלום צריך להתחבר או להירשם קודם
-        </p>
-        <p className="mt-1 text-xs text-muted">
-          זה לוקח פחות מדקה — אחרי ההתחברות תחזרו לכאן ותוכלו להמשיך בתשלום.
-        </p>
+        <p className="mt-2 text-sm font-semibold text-primary">{t("paypalUi.needLoginTitle")}</p>
+        <p className="mt-1 text-xs text-muted">{t("paypalUi.needLoginBody")}</p>
         <LinkButton
           href="/login?next=/pricing"
           variant="primary"
@@ -95,7 +49,7 @@ export default function PayPalCheckout({
           fullWidth
           className="mt-3"
         >
-          התחברות / הרשמה
+          {t("paypalUi.loginCta")}
         </LinkButton>
       </div>
     );
@@ -103,14 +57,15 @@ export default function PayPalCheckout({
 
   const createOrderUrl = apiUrl("/api/billing/create-order");
   const captureOrderUrl = apiUrl("/api/billing/capture-order");
-  const successText =
-    "המנוי הופעל בהצלחה! מעביר אותך למחולל המסמכים של VETO...";
+  const successText = t("paypalUi.success");
+  const errNoOrderId = t("paypalUi.errNoOrderId");
+  const errCreate = t("paypalUi.errCreate");
+  const errCapture = t("paypalUi.errCapture");
+  const errIncomplete = t("paypalUi.errIncomplete");
+  const errSdk = t("paypalUi.errSdk");
 
   return (
-    <div
-      className="relative z-0 mx-auto w-full max-w-sm rounded-2xl border border-subtle bg-surface-raised-2 p-4 shadow-[0_12px_40px_-20px_rgba(0,0,0,0.5)] backdrop-blur-xl"
-      dir="rtl"
-    >
+    <div className="relative z-0 mx-auto w-full max-w-sm rounded-2xl border border-subtle bg-surface-raised-2 p-4 shadow-[0_12px_40px_-20px_rgba(0,0,0,0.5)] backdrop-blur-xl">
       <p
         id={SUCCESS_ID}
         className="mb-3 hidden rounded-xl border border-emerald-500/40 bg-emerald-500/10 px-4 py-3 text-center text-sm font-medium text-emerald-900 dark:text-emerald-100"
@@ -134,6 +89,11 @@ export default function PayPalCheckout({
   var captureOrderUrl = ${JSON.stringify(captureOrderUrl)};
   var amount = ${JSON.stringify(amount)};
   var successText = ${JSON.stringify(successText)};
+  var errNoOrderId = ${JSON.stringify(errNoOrderId)};
+  var errCreate = ${JSON.stringify(errCreate)};
+  var errCapture = ${JSON.stringify(errCapture)};
+  var errIncomplete = ${JSON.stringify(errIncomplete)};
+  var errSdk = ${JSON.stringify(errSdk)};
   var containerId = ${JSON.stringify(CONTAINER_ID)};
   var errorId = ${JSON.stringify(ERROR_ID)};
   var successId = ${JSON.stringify(SUCCESS_ID)};
@@ -173,11 +133,11 @@ export default function PayPalCheckout({
         }).then(function (res) {
           return res.json().then(function (data) {
             if (!res.ok) throw new Error(data.error || data.message || ("HTTP " + res.status));
-            if (!data.id) throw new Error("לא התקבל מזהה הזמנה מ-PayPal");
+            if (!data.id) throw new Error(errNoOrderId);
             return data.id;
           });
         }).catch(function (e) {
-          showError(e.message || "שגיאה ביצירת התשלום");
+          showError(e.message || errCreate);
           throw e;
         });
       },
@@ -188,12 +148,12 @@ export default function PayPalCheckout({
           body: JSON.stringify({ orderID: data.orderID }),
         }).then(function (res) {
           return res.json().catch(function () { return {}; }).then(function (cap) {
-            if (!res.ok) throw new Error(cap.error || cap.message || "שגיאה באימות התשלום");
-            if (cap.status !== "COMPLETED") throw new Error("התשלום לא הושלם במלואו");
+            if (!res.ok) throw new Error(cap.error || cap.message || errCapture);
+            if (cap.status !== "COMPLETED") throw new Error(errIncomplete);
             showSuccess();
           });
         }).catch(function (e) {
-          showError(e.message || "שגיאה באימות התשלום");
+          showError(e.message || errCapture);
         });
       },
     }).render(container);
@@ -210,7 +170,7 @@ export default function PayPalCheckout({
         render();
       } else if (attempts > 200) {
         window.clearInterval(poll);
-        showError("שגיאה בטעינת PayPal — נסו לרענן את הדף");
+        showError(errSdk);
       }
     }, 100);
   }

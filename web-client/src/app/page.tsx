@@ -1,8 +1,10 @@
 "use client";
 
 import Link from "next/link";
+import { useMemo } from "react";
 import { motion } from "framer-motion";
 import { LivePreviewMockup } from "@/components/ui/LivePreviewMockup";
+import { useTranslation } from "@/lib/i18n/LocaleProvider";
 import {
   Shield,
   Zap,
@@ -10,44 +12,10 @@ import {
   Clock,
   ChevronDown,
   ArrowLeft,
+  ArrowRight,
   type LucideIcon,
 } from "lucide-react";
 
-// --- Data ---
-const faqs = [
-  {
-    q: "איך המערכת עובדת בזמן אמת?",
-    a: "ברגע לחיצה על כפתור ה-SOS, המערכת מאתרת תוך שניות את עורך הדין הפנוי והמתאים ביותר באזורך, ומקימה חדר וידאו מאובטח ומוצפן.",
-  },
-  {
-    q: "האם השיחה חסויה?",
-    a: "לחלוטין. כל השיחות מוצפנות מקצה לקצה (E2EE) ואף גורם צד שלישי אינו יכול לגשת אליהן. החומרים נשמרים ב'כספת' אישית ופרטית.",
-  },
-  {
-    q: "מי עורכי הדין בפלטפורמה?",
-    a: "רק עורכי דין מוסמכים שעברו תהליך אימות קפדני מורשים לקבל קריאות חירום במערכת VETO.",
-  },
-];
-
-const features: { icon: LucideIcon; title: string; desc: string }[] = [
-  {
-    icon: Clock,
-    title: "תגובה בשניות",
-    desc: "אין זמן להמתנה. אלגוריתם ה-Race-to-accept שלנו מבטיח מענה מיידי.",
-  },
-  {
-    icon: Shield,
-    title: "הצפנה צבאית",
-    desc: "וידאו, אודיו וצ'אט מוצפנים מקצה לקצה (E2EE) לחיסיון עו״ד-לקוח מוחלט.",
-  },
-  {
-    icon: Zap,
-    title: "כספת ראיות ענן",
-    desc: "הקלטות ושיתוף קבצים מגובים בזמן אמת לכספת דיגיטלית בלתי ניתנת לשינוי.",
-  },
-];
-
-// --- Animation Variants ---
 const fadeUp = {
   hidden: { opacity: 0, y: 30 },
   visible: {
@@ -62,32 +30,63 @@ const staggerContainer = {
   visible: { opacity: 1, transition: { staggerChildren: 0.2 } },
 };
 
-const faqJsonLd = {
-  "@context": "https://schema.org",
-  "@type": "FAQPage",
-  mainEntity: faqs.map((f) => ({
-    "@type": "Question",
-    name: f.q,
-    acceptedAnswer: { "@type": "Answer", text: f.a },
-  })),
-};
-
 export default function Home() {
+  const { t, locale } = useTranslation();
+  const isRtl = locale === "he";
+  const CtaArrow = isRtl ? ArrowLeft : ArrowRight;
+
+  const features: { icon: LucideIcon; title: string; desc: string }[] = useMemo(
+    () => [
+      {
+        icon: Clock,
+        title: t("landing.featSpeedTitle"),
+        desc: t("landing.featSpeedDesc"),
+      },
+      {
+        icon: Shield,
+        title: t("landing.featEncryptTitle"),
+        desc: t("landing.featEncryptDesc"),
+      },
+      {
+        icon: Zap,
+        title: t("landing.featVaultTitle"),
+        desc: t("landing.featVaultDesc"),
+      },
+    ],
+    [t],
+  );
+
+  const faqs = useMemo(
+    () => [
+      { q: t("landing.faq1q"), a: t("landing.faq1a") },
+      { q: t("landing.faq2q"), a: t("landing.faq2a") },
+      { q: t("landing.faq3q"), a: t("landing.faq3a") },
+    ],
+    [t],
+  );
+
+  const faqJsonLd = useMemo(
+    () => ({
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      mainEntity: faqs.map((f) => ({
+        "@type": "Question",
+        name: f.q,
+        acceptedAnswer: { "@type": "Answer", text: f.a },
+      })),
+    }),
+    [faqs],
+  );
+
   return (
-    <main
-      dir="rtl"
-      className="min-h-screen overflow-hidden bg-veto-canvas text-primary selection:bg-veto-gold/35 selection:text-veto-ink dark:bg-veto-ink dark:selection:bg-veto-gold dark:selection:text-veto-ink"
-    >
-      {/* JSON-LD SEO Script */}
+    <main className="min-h-screen overflow-hidden bg-veto-canvas text-primary selection:bg-veto-gold/35 selection:text-veto-ink dark:bg-veto-ink dark:selection:bg-veto-gold dark:selection:text-veto-ink">
       <script
         type="application/ld+json"
         suppressHydrationWarning
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
       />
 
-      {/* --- HERO SECTION --- */}
       <section className="relative flex min-h-[90vh] w-full flex-col items-center justify-center px-6 pt-20">
-        {/* Background Radar Animation */}
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center opacity-[0.12] dark:opacity-20">
           <motion.div
             animate={{ scale: [1, 2, 3], opacity: [0.5, 0.1, 0] }}
@@ -120,24 +119,23 @@ export default function Home() {
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-veto-gold opacity-75" />
               <span className="relative inline-flex h-3 w-3 rounded-full bg-veto-gold" />
             </span>
-            מערכת החירום המשפטית זמינה
+            {t("landing.badge")}
           </motion.div>
 
           <motion.h1
             variants={fadeUp}
             className="mb-6 bg-gradient-to-br from-veto-ink via-slate-700 to-slate-500 bg-clip-text text-5xl font-bold tracking-tight text-transparent dark:from-white dark:via-gray-200 dark:to-gray-500 md:text-7xl"
           >
-            עורך דין לצידך,
+            {t("landing.heroLine1")}
             <br />
-            בדיוק בשנייה הקריטית.
+            {t("landing.heroLine2")}
           </motion.h1>
 
           <motion.p
             variants={fadeUp}
             className="mb-10 max-w-2xl text-lg leading-relaxed text-secondary md:text-xl"
           >
-            הפלטפורמה המתקדמת בישראל לחיבור מיידי בווידאו בין אזרחים בחירום
-            לבין עורכי דין מומחים. מוצפן, מהיר ומתועד.
+            {t("landing.heroSubtitle")}
           </motion.p>
 
           <motion.div
@@ -148,24 +146,23 @@ export default function Home() {
               href="/login"
               className="flex items-center justify-center gap-2 rounded-2xl bg-veto-gold px-8 py-4 text-lg font-bold text-veto-ink shadow-[0_0_20px_rgba(197,160,89,0.4)] transition-all hover:bg-veto-gold-light active:scale-95"
             >
-              כניסה לאזור האישי <ArrowLeft size={20} />
+              {t("landing.ctaPersonal")} <CtaArrow size={20} />
             </Link>
             <Link
               href="/register/lawyer"
               className="flex items-center justify-center rounded-2xl border border-veto-gold/45 bg-[rgba(197,160,89,0.14)] px-8 py-4 text-lg font-bold text-veto-gold shadow-[inset_0_1px_0_rgba(255,255,255,0.12)] backdrop-blur-md transition-all hover:border-veto-gold/70 hover:bg-[rgba(197,160,89,0.24)] hover:text-veto-gold-light active:scale-95"
             >
-              הצטרפות עורכי דין
+              {t("landing.ctaLawyer")}
             </Link>
           </motion.div>
         </motion.div>
       </section>
 
-      {/* --- FEATURES SECTION --- */}
       <section className="relative w-full bg-gradient-to-b from-veto-canvas via-white to-slate-100 px-6 py-24 dark:from-veto-ink dark:via-veto-ink dark:to-veto-ink">
         <div className="mx-auto max-w-6xl">
           <div className="mb-16 text-center">
             <h2 className="mb-4 text-3xl font-bold text-primary md:text-4xl">
-              טכנולוגיה שמשנה את כללי המשחק
+              {t("landing.featuresTitle")}
             </h2>
             <div className="mx-auto h-1 w-20 rounded-full bg-veto-gold" />
           </div>
@@ -187,9 +184,7 @@ export default function Home() {
                   <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-2xl bg-veto-gold/20 text-veto-gold transition-transform group-hover:scale-110">
                     <Icon size={28} />
                   </div>
-                  <h3 className="mb-3 text-xl font-bold text-primary">
-                    {feat.title}
-                  </h3>
+                  <h3 className="mb-3 text-xl font-bold text-primary">{feat.title}</h3>
                   <p className="leading-relaxed text-secondary">{feat.desc}</p>
                 </motion.div>
               );
@@ -198,32 +193,30 @@ export default function Home() {
         </div>
       </section>
 
-      {/* --- THE EXPERIENCE — interactive preview --- */}
       <section className="bg-surface-sunken px-6 py-24">
         <div className="mx-auto grid max-w-6xl grid-cols-1 items-center gap-12 md:grid-cols-2">
           <motion.div
-            initial={{ opacity: 0, x: -50 }}
+            initial={{ opacity: 0, x: isRtl ? 50 : -50 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.55, ease: "easeOut" }}
           >
             <p className="mb-2 text-xs font-black tracking-[0.22em] text-veto-gold">
-              החוויה
+              {t("landing.experienceEyebrow")}
             </p>
             <h2 className="mb-6 text-4xl font-bold text-primary">
-              העוצמה שביד שלך
+              {t("landing.experienceTitle")}
             </h2>
             <p className="mb-6 text-lg leading-relaxed text-secondary">
-              כשכל שנייה קובעת, הממשק של VETO הופך את הטלפון שלך לכלי הגנה משפטי
-              עוצמתי. חיבור מיידי, הצפנה מלאה וגיבוי אוטומטי.
+              {t("landing.experienceBody")}
             </p>
             <ul className="space-y-4">
               <li className="flex items-center gap-3 text-veto-gold">
                 <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-veto-gold" />
-                זיהוי ביומטרי מאובטח
+                {t("landing.experienceBullet1")}
               </li>
               <li className="flex items-center gap-3 text-veto-gold">
                 <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-veto-gold" />
-                תמלול מבוסס AI בזמן אמת
+                {t("landing.experienceBullet2")}
               </li>
             </ul>
           </motion.div>
@@ -234,30 +227,26 @@ export default function Home() {
         </div>
       </section>
 
-      {/* --- PRICING TEASER --- */}
       <section className="border-t border-subtle px-6 py-24">
         <div className="mx-auto max-w-4xl text-center">
           <Scale size={48} className="mx-auto mb-6 text-veto-gold opacity-80" />
           <h2 className="mb-6 text-3xl font-bold text-primary md:text-4xl">
-            הגנה משפטית שקופה ונגישה
+            {t("landing.pricingTitle")}
           </h2>
-          <p className="mb-8 text-lg text-secondary">
-            בחר את המסלול המתאים לך וקבל שקט נפשי. ללא אותיות קטנות.
-          </p>
+          <p className="mb-8 text-lg text-secondary">{t("landing.pricingBody")}</p>
           <Link
             href="/pricing"
             className="inline-flex rounded-full border border-veto-gold px-8 py-3 font-medium text-veto-gold transition-colors hover:bg-veto-gold/10"
           >
-            לכל המסלולים והמחירים
+            {t("landing.pricingCta")}
           </Link>
         </div>
       </section>
 
-      {/* --- FAQ SECTION --- */}
       <section className="bg-surface-sunken px-6 py-24">
         <div className="mx-auto max-w-3xl">
           <div className="mb-12 text-center">
-            <h2 className="mb-4 text-3xl font-bold text-primary">שאלות נפוצות</h2>
+            <h2 className="mb-4 text-3xl font-bold text-primary">{t("landing.faqTitle")}</h2>
           </div>
           <div className="space-y-4">
             {faqs.map((faq) => (
@@ -271,7 +260,7 @@ export default function Home() {
                     <ChevronDown size={20} className="text-veto-gold" />
                   </span>
                 </summary>
-                <div className="mt-4 border-r-2 border-veto-gold/30 pe-2 leading-relaxed text-secondary">
+                <div className="mt-4 border-s-2 border-veto-gold/30 ps-2 leading-relaxed text-secondary">
                   {faq.a}
                 </div>
               </details>
@@ -283,22 +272,22 @@ export default function Home() {
       <footer className="border-t border-subtle px-6 py-10">
         <div className="mx-auto flex max-w-4xl flex-wrap items-center justify-center gap-4 text-sm font-semibold text-muted">
           <Link href="/contact" className="hover:text-primary">
-            צור קשר
+            {t("footer.contact")}
           </Link>
           <Link href="/playbooks" className="hover:text-primary">
-            מדריכי חירום
+            {t("footer.playbooks")}
           </Link>
           <Link href="/pricing" className="hover:text-primary">
-            מחירים
+            {t("footer.pricing")}
           </Link>
           <Link href="/terms" className="hover:text-primary">
-            תנאי שימוש
+            {t("footer.terms")}
           </Link>
           <Link href="/privacy" className="hover:text-primary">
-            פרטיות
+            {t("footer.privacy")}
           </Link>
           <Link href="/cookies" className="hover:text-primary">
-            עוגיות
+            {t("footer.cookies")}
           </Link>
         </div>
       </footer>

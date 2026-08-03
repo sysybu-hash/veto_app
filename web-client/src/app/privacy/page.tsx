@@ -1,45 +1,17 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { VetoBrandLogo } from "@/components/brand/VetoBrandLogo";
+import { LegalPageShell } from "@/components/legal/LegalPageShell";
+import { isLegalCommerciallyApproved } from "@/lib/legalMode";
 
 export const metadata: Metadata = {
-  title: "מדיניות פרטיות | VETO Legal",
+  title: "מדיניות פרטיות | Privacy | Конфиденциальность | VETO Legal",
   description: "מדיניות הפרטיות של פלטפורמת VETO Legal.",
 };
 
 export default function PrivacyPage() {
+  const approved = isLegalCommerciallyApproved();
   return (
-    <div className="min-h-screen text-primary">
-      <main
-        className="mx-auto w-full max-w-3xl px-4 py-8 md:px-6 md:py-12"
-        dir="rtl"
-      >
-        <div className="mb-8">
-          <Link
-            href="/"
-            className="inline-flex items-center justify-center rounded-xl bg-veto-gold px-5 py-2.5 text-sm font-bold text-primary transition hover:opacity-90"
-          >
-            חזרה לדף הבית
-          </Link>
-        </div>
-
-        <header className="mb-8 text-center md:text-right">
-          <div className="mb-4 flex justify-center md:justify-end">
-            <VetoBrandLogo className="h-9 w-auto sm:h-10" />
-          </div>
-          <h1 className="font-display text-3xl font-bold text-primary md:text-4xl">
-            מדיניות פרטיות
-          </h1>
-          <p className="mt-3 rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-900 dark:text-amber-100">
-            <strong>טיוטת מוצר — לא לפרסום מסחרי סופי.</strong> נדרש אישור
-            משפטי ופרטיות (DPO) לפני פרסום מסחרי. לפניות:{" "}
-            <Link href="/contact" className="font-bold underline">
-              צור קשר
-            </Link>
-            .
-          </p>
-        </header>
-
+    <LegalPageShell titleKey="legalChrome.privacyTitle" approved={approved}>
         <article className="space-y-10 rounded-2xl border border-subtle bg-surface-raised-2 p-6 text-sm text-secondary shadow-sm md:p-8 md:text-base">
           <section className="space-y-3 leading-relaxed">
             <h2 className="text-lg font-bold text-primary md:text-xl">1. מבוא</h2>
@@ -196,7 +168,6 @@ export default function PrivacyPage() {
             ספציפיות על זכויותיכם מול VETO מומלץ לפנות לייעוץ משפטי עצמאי.
           </p>
         </article>
-      </main>
-    </div>
+    </LegalPageShell>
   );
 }
