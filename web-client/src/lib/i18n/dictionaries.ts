@@ -3,6 +3,7 @@ import type { Locale } from "./types";
 import { en } from "./locales/en";
 import { he } from "./locales/he";
 import { ru } from "./locales/ru";
+import { withPublicUi } from "./publicUi";
 
 const rescueCopy = {
   he: {
@@ -155,7 +156,7 @@ function withRescueCopy(base: Dict, locale: Locale): Dict {
 }
 
 export const dictionaries: Record<Locale, Dict> = {
-  he: withRescueCopy(he, "he"),
-  en: withRescueCopy(en, "en"),
-  ru: withRescueCopy(ru, "ru"),
+  he: withPublicUi(withRescueCopy(he, "he"), "he"),
+  en: withPublicUi(withRescueCopy(en, "en"), "en"),
+  ru: withPublicUi(withRescueCopy(ru, "ru"), "ru"),
 };

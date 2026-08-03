@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useState } from "react";
+import { Suspense, useMemo, useState } from "react";
 import { Database, Lock, ShieldCheck } from "lucide-react";
 import {
   apiUrl,
@@ -16,15 +16,6 @@ import { authBtnSecondary, authGlassInput, authGlassPanel } from "@/lib/vetoGlas
 import { Button } from "@/components/ui/primitives/Button";
 
 type Mode = "user" | "lawyer";
-
-const SPECIALIZATION_OPTIONS = [
-  { id: "criminal", label: "פלילי" },
-  { id: "family", label: "משפחה" },
-  { id: "real estate", label: "נדל״ן" },
-  { id: "labor", label: "עבודה" },
-  { id: "commercial", label: "מסחרי" },
-  { id: "traffic", label: "תעבורה" },
-] as const;
 
 function safeNextPath(next: string | null): string | null {
   if (!next || !next.startsWith("/") || next.startsWith("//")) return null;
@@ -97,6 +88,19 @@ function RegisterInner() {
   const [showLoginHint, setShowLoginHint] = useState(false);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
 
+  const specializationOptions = useMemo(
+    () =>
+      [
+        { id: "criminal", label: t("specialization.criminal") },
+        { id: "family", label: t("specialization.family") },
+        { id: "real estate", label: t("registerUi.specRealEstate") },
+        { id: "labor", label: t("specialization.labor") },
+        { id: "commercial", label: t("registerUi.specCommercial") },
+        { id: "traffic", label: t("specialization.traffic") },
+      ] as const,
+    [t],
+  );
+
   const toggleSpec = (id: string) =>
     setSpecs((prev) => (prev.includes(id) ? prev.filter((s) => s !== id) : [...prev, id]));
 
@@ -104,7 +108,7 @@ function RegisterInner() {
     setMessage(null);
     setShowLoginHint(false);
     if (!acceptedTerms) {
-      setMessage("יש לאשר את תנאי השימוש ומדיניות הפרטיות כדי להמשיך.");
+      setMessage(t("registerUi.errAcceptTerms"));
       return;
     }
     const result = beginGoogleImplicitLogin({ next: nextParam });
@@ -130,11 +134,11 @@ function RegisterInner() {
       return;
     }
     if (mode === "lawyer" && !licenseNumber.trim()) {
-      setMessage("נדרש מספר רישיון לשכת עוה״ד.");
+      setMessage(t("registerUi.errLicense"));
       return;
     }
     if (!acceptedTerms) {
-      setMessage("יש לאשר את תנאי השימוש ומדיניות הפרטיות כדי להמשיך.");
+      setMessage(t("registerUi.errAcceptTerms"));
       return;
     }
     void (async () => {
@@ -205,7 +209,7 @@ function RegisterInner() {
               mode === "user"
                 ? "bg-veto-gold text-primary" : "text-secondary hover:bg-white/[0.05]"}`}
           >
-            הרשמה כאזרח
+            {t("registerUi.asCitizen")}
           </button>
           <button
             type="button"
@@ -214,17 +218,15 @@ function RegisterInner() {
               mode === "lawyer"
                 ? "bg-veto-gold text-primary" : "text-secondary hover:bg-white/[0.05]"}`}
           >
-            הרשמה כעורך דין
+            {t("registerUi.asLawyer")}
           </button>
         </div>
 
         <h1 className="font-display text-2xl font-semibold text-primary">
-          {mode === "lawyer" ? "הצטרפות עורכי דין למערכת VETO" : t("register.title")}
+          {mode === "lawyer" ? t("registerUi.lawyerTitle") : t("register.title")}
         </h1>
         <p className="mt-2 text-sm text-muted">
-          {mode === "lawyer"
-            ? "יש למלא את הפרטים. הבקשה תועבר לאישור מנהל המערכת לפני הפעלת החשבון."
-            : t("register.subtitle")}
+          {mode === "lawyer" ? t("registerUi.lawyerSubtitle") : t("register.subtitle")}
         </p>
 
         <label className="mt-6 flex cursor-pointer items-start gap-3 rounded-xl border border-subtle bg-white/[0.04] p-4 text-sm text-primary">
@@ -236,21 +238,21 @@ function RegisterInner() {
             required
           />
           <span>
-            אני מסכים ל
+            {t("registerUi.agreePrefix")}{" "}
             <Link
               href="/terms"
               className="mx-1 font-bold text-veto-gold underline-offset-2 hover:underline"
             >
-              תנאי השימוש
-            </Link>
-            ול
+              {t("registerUi.terms")}
+            </Link>{" "}
+            {t("registerUi.agreeAnd")}{" "}
             <Link
               href="/privacy"
               className="mx-1 font-bold text-veto-gold underline-offset-2 hover:underline"
             >
-              מדיניות הפרטיות
+              {t("registerUi.privacy")}
             </Link>
-            של VETO.
+            .
           </span>
         </label>
 
@@ -310,7 +312,7 @@ function RegisterInner() {
             <>
               <div>
                 <label htmlFor="register-email" className="text-xs font-medium text-secondary">
-                  אימייל מקצועי
+                  {t("registerUi.proEmail")}
                 </label>
                 <input
                   id="register-email"
@@ -324,7 +326,7 @@ function RegisterInner() {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label htmlFor="register-license" className="text-xs font-medium text-secondary">
-                    מספר רישיון לשכת עוה״ד
+                    {t("registerUi.licenseNumber")}
                   </label>
                   <input
                     id="register-license"
@@ -335,7 +337,7 @@ function RegisterInner() {
                 </div>
                 <div>
                   <label htmlFor="register-years" className="text-xs font-medium text-secondary">
-                    שנות ותק
+                    {t("registerUi.years")}
                   </label>
                   <input
                     id="register-years"
@@ -352,10 +354,10 @@ function RegisterInner() {
               </div>
               <div>
                 <p className="mb-2 text-xs font-medium text-secondary">
-                  תחומי התמחות (בחר אחד או יותר)
+                  {t("registerUi.specs")}
                 </p>
                 <div className="flex flex-wrap gap-2">
-                  {SPECIALIZATION_OPTIONS.map((s) => {
+                  {specializationOptions.map((s) => {
                     const on = specs.includes(s.id);
                     return (
                       <button
@@ -376,8 +378,7 @@ function RegisterInner() {
           )}
 
           <p className="rounded-xl border border-veto-gold/20 bg-veto-gold/5 p-3 text-xs leading-relaxed text-secondary">
-            חיסיון עו״ד–לקוח חל על שיחות הווידאו המבוצעות במערכת, בכפוף לדין החל
-            ולנסיבות העניין.
+            {t("registerUi.privilegeNote")}
           </p>
 
           <Button
@@ -391,13 +392,13 @@ function RegisterInner() {
             {busy
               ? t("register.busy")
               : mode === "lawyer"
-                ? "שליחת בקשה לאישור"
+                ? t("registerUi.submitLawyer")
                 : t("register.submit")}
           </Button>
 
           <div
             className="flex flex-wrap items-center justify-center gap-3 border-t border-subtle pt-4 text-xs text-muted"
-            aria-label="אבטחה ותאימות"
+            aria-label={t("registerUi.securityAria")}
           >
             <span className="inline-flex items-center gap-1.5 rounded-full border border-subtle bg-white/[0.04] px-3 py-1.5">
               <ShieldCheck className="h-3.5 w-3.5 text-emerald-400" aria-hidden />

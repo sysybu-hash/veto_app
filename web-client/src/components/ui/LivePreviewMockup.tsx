@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { Lock, Shield } from "lucide-react";
+import { useTranslation } from "@/lib/i18n/LocaleProvider";
 
 const BAR_COUNT = 14;
 
@@ -25,10 +26,11 @@ function WaveformBar({ delay }: { delay: number }) {
 }
 
 export function LivePreviewMockup() {
+  const { t } = useTranslation();
   return (
     <figure
       className="relative mx-auto w-full max-w-[300px]"
-      aria-label="תצוגה מקדימה: שיחת חירום פעילה עם הצפנה"
+      aria-label={t("landing.mockAria")}
     >
       <motion.div
         data-surface="stage"
@@ -75,24 +77,24 @@ export function LivePreviewMockup() {
                 animate={{ boxShadow: ["0 0 0 0 rgba(197,160,89,0.35)", "0 0 0 12px rgba(197,160,89,0)", "0 0 0 0 rgba(197,160,89,0)"] }}
                 transition={{ duration: 2.2, repeat: Infinity, ease: "easeOut" }}
               >
-                עו״ד
+                {t("landing.mockLawyer")}
                 <span className="absolute -bottom-1 rounded-full border border-emerald-400/50 bg-emerald-500/20 px-2 py-0.5 text-[9px] font-bold text-emerald-300">
                   E2EE
                 </span>
               </motion.div>
-              <p className="mt-4 text-sm font-bold text-primary">עו״ד בשיחה</p>
-              <p className="mt-1 text-[11px] text-muted">וידאו מוצפן · חיבור יציב</p>
+              <p className="mt-4 text-sm font-bold text-primary">{t("landing.mockInCall")}</p>
+              <p className="mt-1 text-[11px] text-muted">{t("landing.mockEncrypted")}</p>
             </div>
 
             {/* Badges row */}
             <div className="flex flex-wrap items-center justify-center gap-2">
               <span className="inline-flex items-center gap-1.5 rounded-full border border-subtle bg-white/5 px-3 py-1.5 text-[10px] font-semibold text-veto-gold backdrop-blur-sm">
                 <Shield className="h-3.5 w-3.5" aria-hidden />
-                מפתחות מקומיים
+                {t("landing.mockLocalKeys")}
               </span>
               <span className="inline-flex items-center gap-1.5 rounded-full border border-subtle bg-white/5 px-3 py-1.5 text-[10px] font-semibold text-primary backdrop-blur-sm">
                 <Lock className="h-3.5 w-3.5 text-veto-gold" aria-hidden />
-                סוף לסוף
+                {t("landing.mockE2ee")}
               </span>
             </div>
 
@@ -101,8 +103,8 @@ export function LivePreviewMockup() {
               <div className="flex items-center gap-2 rounded-2xl border border-subtle bg-surface-raised p-2 pe-3 backdrop-blur-md">
                 <div className="h-11 w-11 rounded-xl bg-gradient-to-br from-slate-700 to-slate-900 ring-1 ring-white/10" />
                 <div className="text-start">
-                  <p className="text-[10px] font-bold text-secondary">אתה</p>
-                  <p className="text-[9px] text-muted">מצלמה כבויה</p>
+                  <p className="text-[10px] font-bold text-secondary">{t("landing.mockYou")}</p>
+                  <p className="text-[9px] text-muted">{t("landing.mockCamOff")}</p>
                 </div>
               </div>
             </div>

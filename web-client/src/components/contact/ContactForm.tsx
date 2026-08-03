@@ -1,72 +1,72 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useTranslation } from "@/lib/i18n/LocaleProvider";
 
 type Props = {
   supportEmail: string;
 };
 
-const SUBJECTS = [
-  { id: "support", label: "תמיכה טכנית" },
-  { id: "billing", label: "מנוי ותשלומים" },
-  { id: "privacy", label: "פרטיות ומידע אישי" },
-  { id: "lawyer", label: "הצטרפות עורכי דין" },
-  { id: "other", label: "נושא אחר" },
-] as const;
+const SUBJECT_IDS = ["support", "billing", "privacy", "lawyer", "other"] as const;
 
 export function ContactForm({ supportEmail }: Props) {
+  const { t } = useTranslation();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [subjectId, setSubjectId] = useState<(typeof SUBJECTS)[number]["id"]>(
-    "support",
-  );
+  const [subjectId, setSubjectId] = useState<(typeof SUBJECT_IDS)[number]>("support");
   const [message, setMessage] = useState("");
   const [status, setStatus] = useState<string | null>(null);
 
+  const subjects = useMemo(
+    () =>
+      [
+        { id: "support" as const, label: t("contactPage.subjectSupport") },
+        { id: "billing" as const, label: t("contactPage.subjectBilling") },
+        { id: "privacy" as const, label: t("contactPage.subjectPrivacy") },
+        { id: "lawyer" as const, label: t("contactPage.subjectLawyer") },
+        { id: "other" as const, label: t("contactPage.subjectOther") },
+      ] as const,
+    [t],
+  );
+
   const subjectLabel = useMemo(
-    () => SUBJECTS.find((s) => s.id === subjectId)?.label ?? "פנייה",
-    [subjectId],
+    () => subjects.find((s) => s.id === subjectId)?.label ?? t("contactPage.subjectFallback"),
+    [subjectId, subjects, t],
   );
 
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setStatus(null);
     if (!name.trim() || !email.trim() || !message.trim()) {
-      setStatus("נא למלא שם, אימייל והודעה.");
+      setStatus(t("contactPage.errRequired"));
       return;
     }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
-      setStatus("כתובת האימייל אינה תקינה.");
+      setStatus(t("contactPage.errEmail"));
       return;
     }
 
     const body = [
-      `שם: ${name.trim()}`,
-      `אימייל לחזרה: ${email.trim()}`,
-      `נושא: ${subjectLabel}`,
+      `${t("contactPage.bodyName")}: ${name.trim()}`,
+      `${t("contactPage.bodyReplyEmail")}: ${email.trim()}`,
+      `${t("contactPage.bodySubject")}: ${subjectLabel}`,
       "",
       message.trim(),
       "",
-      "— נשלח מטופס צור קשר באתר VETO —",
+      t("contactPage.bodyFooter"),
     ].join("\n");
 
     if (!supportEmail) {
       void navigator.clipboard?.writeText(body).then(
-        () =>
-          setStatus(
-            "ההודעה הועתקה ללוח. שלחו אותה לכתובת התמיכה שתפורסם, או פנו דרך בקשות זכויות פרטיות אם מדובר במידע אישי.",
-          ),
-        () =>
-          setStatus(
-            "אין כתובת תמיכה מוגדרת עדיין. העתיקו את ההודעה ידנית או השתמשו בבקשות זכויות פרטיות.",
-          ),
+        () => setStatus(t("contactPage.copiedNoEmail")),
+        () => setStatus(t("contactPage.noEmailManual")),
       );
       return;
     }
 
     const mailto = `mailto:${encodeURIComponent(supportEmail)}?subject=${encodeURIComponent(`[VETO] ${subjectLabel}`)}&body=${encodeURIComponent(body)}`;
     window.location.href = mailto;
-    setStatus("נפתח חלון המייל שלכם. אם זה לא קרה — שלחו ידנית אל " + supportEmail);
+    setStatus(t("contactPage.mailtoOpened") + supportEmail);
   };
 
   return (
@@ -74,14 +74,12 @@ export function ContactForm({ supportEmail }: Props) {
       onSubmit={onSubmit}
       className="space-y-4 rounded-2xl border border-subtle bg-surface-raised-2 p-6 shadow-sm md:p-8"
     >
-      <h2 className="text-lg font-bold text-primary">טופס פנייה</h2>
-      <p className="text-sm text-secondary">
-        לפניות שאינן חירום משפטי. במצב חירום — התחברו והפעילו SOS, או חייגו 100.
-      </p>
+      <h2 className="text-lg font-bold text-primary">{t("contactPage.formTitle")}</h2>
+      <p className="text-sm text-secondary">{t("contactPage.formHint")}</p>
 
       <div className="grid gap-4 md:grid-cols-2">
         <label className="block text-sm">
-          <span className="mb-1 block font-semibold text-secondary">שם מלא</span>
+          <span className="mb-1 block font-semibold text-secondary">{t("contactPage.name")}</span>
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
@@ -91,7 +89,7 @@ export function ContactForm({ supportEmail }: Props) {
           />
         </label>
         <label className="block text-sm">
-          <span className="mb-1 block font-semibold text-secondary">אימייל</span>
+          <span className="mb-1 block font-semibold text-secondary">{t("contactPage.email")}</span>
           <input
             type="email"
             value={email}
@@ -105,15 +103,13 @@ export function ContactForm({ supportEmail }: Props) {
       </div>
 
       <label className="block text-sm">
-        <span className="mb-1 block font-semibold text-secondary">נושא</span>
+        <span className="mb-1 block font-semibold text-secondary">{t("contactPage.subject")}</span>
         <select
           value={subjectId}
-          onChange={(e) =>
-            setSubjectId(e.target.value as (typeof SUBJECTS)[number]["id"])
-          }
+          onChange={(e) => setSubjectId(e.target.value as (typeof SUBJECT_IDS)[number])}
           className="w-full rounded-xl border border-subtle bg-surface-sunken px-3 py-2.5 text-primary outline-none focus:ring-2 focus:ring-veto-gold"
         >
-          {SUBJECTS.map((s) => (
+          {subjects.map((s) => (
             <option key={s.id} value={s.id}>
               {s.label}
             </option>
@@ -122,7 +118,7 @@ export function ContactForm({ supportEmail }: Props) {
       </label>
 
       <label className="block text-sm">
-        <span className="mb-1 block font-semibold text-secondary">הודעה</span>
+        <span className="mb-1 block font-semibold text-secondary">{t("contactPage.message")}</span>
         <textarea
           value={message}
           onChange={(e) => setMessage(e.target.value)}
@@ -136,7 +132,7 @@ export function ContactForm({ supportEmail }: Props) {
         type="submit"
         className="w-full rounded-xl bg-veto-gold px-4 py-3 text-sm font-bold text-primary transition hover:opacity-90 md:w-auto md:min-w-[12rem]"
       >
-        שליחת פנייה
+        {t("contactPage.formSubmit")}
       </button>
 
       {status && (
