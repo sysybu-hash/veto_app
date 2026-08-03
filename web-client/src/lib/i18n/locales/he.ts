@@ -176,8 +176,12 @@ export const he: Dict = {
     otpSent: "נשלח קוד. בדקו את הטלפון או לוג שרת בפיתוח.",
     copyFailed: "העתקה נכשלה — סמנו את הקוד ידנית.",
     errGooglePrefix: "Google:",
-    needRegister: "אין חשבון עם מספר זה. אפשר להירשם:",
-    registerLink: "הרשמה",
+    needRegister: "פעם ראשונה ב-VETO?",
+    registerLink: "צרו חשבון חדש — זה לוקח דקה",
+    errNoAccount:
+      "לא מצאנו חשבון למספר הזה. לחצו על ההרשמה למטה — זה לוקח דקה, ואז אפשר להתחבר.",
+    errPhoneExists:
+      "כבר יש חשבון עם המספר הזה. התחברו כאן עם Google או עם קוד OTP.",
   },
   register: {
     title: "הרשמה ל-VETO",
@@ -189,6 +193,8 @@ export const he: Dict = {
     success: "נוצר חשבון. שלחנו/תוכלו לבקש קוד OTP.",
     backLogin: "חזרה להתחברות",
     errFullName: "נא למלא שם מלא",
+    errPhoneExists:
+      "כבר יש חשבון עם המספר הזה. עברו להתחברות — Google או קוד OTP.",
   },
   onboarding: {
     title: "הגדרה ראשונה",

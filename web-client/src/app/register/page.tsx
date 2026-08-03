@@ -94,6 +94,7 @@ function RegisterInner() {
 
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [showLoginHint, setShowLoginHint] = useState(false);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
 
   const toggleSpec = (id: string) =>
@@ -101,6 +102,7 @@ function RegisterInner() {
 
   const handleGoogle = () => {
     setMessage(null);
+    setShowLoginHint(false);
     if (!acceptedTerms) {
       setMessage("יש לאשר את תנאי השימוש ומדיניות הפרטיות כדי להמשיך.");
       return;
@@ -138,6 +140,7 @@ function RegisterInner() {
     void (async () => {
       setBusy(true);
       setMessage(null);
+      setShowLoginHint(false);
       try {
         await postJson("/api/auth/register", {
           full_name: fullName.trim(),
@@ -164,7 +167,15 @@ function RegisterInner() {
           );
         }
       } catch (e) {
-        setMessage(e instanceof Error ? e.message : "Error");
+        const raw = e instanceof Error ? e.message : String(e);
+        if (/already exists|a record with this phone/i.test(raw)) {
+          setMessage(t("register.errPhoneExists"));
+          setShowLoginHint(true);
+        } else if (/invalid phone number/i.test(raw)) {
+          setMessage(t("login.errInvalidPhone"));
+        } else {
+          setMessage(raw || "Error");
+        }
       } finally {
         setBusy(false);
       }
@@ -406,6 +417,17 @@ function RegisterInner() {
         {message && (
           <p className="mt-4 text-center text-sm text-amber-200" role="status">
             {message}
+            {showLoginHint && (
+              <>
+                {" "}
+                <Link
+                  href={`/login${phone.trim() ? `?phone=${encodeURIComponent(phone.trim())}` : ""}`}
+                  className="font-semibold text-veto-gold underline underline-offset-2"
+                >
+                  {t("register.backLogin")}
+                </Link>
+              </>
+            )}
           </p>
         )}
 
