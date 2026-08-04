@@ -22,7 +22,7 @@ declare global {
   }
 }
 
-function subscribeJwt(_onStoreChange: () => void): () => void {
+function subscribeJwt(): () => void {
   // JWT changes via login navigation / full reload; no live subscription needed.
   return () => undefined;
 }
