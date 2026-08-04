@@ -380,7 +380,7 @@ export default function CitizenHubPage() {
 
         <div className="w-full rounded-2xl border border-veto-gold/35 bg-veto-gold/10 px-4 py-3 text-sm shadow-sm backdrop-blur-xl">
           <div className="flex items-center justify-between gap-3">
-            <div className="min-w-0">
+            <div className="min-w-0 text-start">
               <p className="font-bold text-primary">
                 {t("hub.subscriptionLabel")}
               </p>
@@ -400,11 +400,34 @@ export default function CitizenHubPage() {
                   : t("hub.statusInactive")}
             </span>
           </div>
-          {entitlement && (
-            <p className="mt-2 text-xs font-semibold text-secondary">
-              {entitlement.reason}
-            </p>
-          )}
+          <p className="mt-2 text-start text-xs leading-5 text-secondary">
+            {entitlement?.status === "exempt"
+              ? t("hub.entitlementExempt")
+              : entitlement?.status === "overtime_pending"
+                ? t("hub.entitlementOvertime")
+                : entitlement?.status === "consultation_paid"
+                  ? t("hub.entitlementConsultation")
+                  : entitlement?.status === "subscription_active" ||
+                      entitlement?.status === "family_active"
+                    ? t("hub.entitlementActive")
+                    : t("hub.entitlementNone")}
+          </p>
+          {entitlement?.status === "overtime_pending" ? (
+            <Link
+              href="/plans"
+              className="mt-3 inline-flex text-sm font-black text-veto-gold underline-offset-2 transition hover:underline"
+            >
+              {t("hub.payOvertimeCta")}
+            </Link>
+          ) : entitlement?.status === "payment_required" ||
+            (!profile?.is_payment_exempt && !profile?.is_subscribed) ? (
+            <Link
+              href="/plans"
+              className="mt-3 inline-flex text-sm font-black text-veto-gold underline-offset-2 transition hover:underline"
+            >
+              {t("hub.buyPlanCta")}
+            </Link>
+          ) : null}
         </div>
 
         <button

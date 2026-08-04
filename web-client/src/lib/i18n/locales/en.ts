@@ -232,11 +232,20 @@ export const en: Dict = {
     title: "Emergency legal help",
     subtitle:
       "Tap SOS to request a lawyer. Stay on this screen until the call opens.",
-    subscriptionLabel: "Active subscription",
+    subscriptionLabel: "Your plan",
     defaultUserName: "VETO user",
     statusExempt: "Counsel exempt",
     statusActive: "Active",
     statusInactive: "Inactive",
+    entitlementNone:
+      "You don’t have an active plan yet — that’s okay. Pick a plan now so SOS is ready when you need it.",
+    entitlementActive: "Your plan is active. Tap SOS whenever you need a lawyer.",
+    entitlementExempt: "Your account is payment-exempt and includes legal consultations.",
+    entitlementOvertime:
+      "A small overtime balance is still open from your last call. Clear it and you’re good to go.",
+    entitlementConsultation: "You have a one-time consultation that’s paid and ready.",
+    buyPlanCta: "Get a plan",
+    payOvertimeCta: "Complete payment",
     sos: "SOS",
     searching: "Searching for an available lawyer…",
     searchingTitle: "Looking for an available lawyer",
