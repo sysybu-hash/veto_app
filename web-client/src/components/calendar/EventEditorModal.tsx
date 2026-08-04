@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import type { ApiCalendarEvent, CalendarEventType } from "@/api/calendarApi";
 import { Button } from "@/components/ui/primitives/Button";
 import { IconButton } from "@/components/ui/primitives/IconButton";
@@ -34,6 +34,40 @@ type Props = {
 
 const REMINDER_OPTS = [0, 15, 60, 1440] as const;
 
+function formDefaults(initial?: ApiCalendarEvent | null, defaultDay?: Date | null) {
+  if (initial) {
+    const s = new Date(initial.start);
+    const e = new Date(initial.end);
+    return {
+      title: initial.title,
+      type: (initial.type || "other") as CalendarEventType,
+      date: toDateInputValue(s),
+      startTime: toTimeInputValue(s),
+      endTime: toTimeInputValue(e),
+      notes: initial.notes || "",
+      locationAddress: initial.locationAddress || "",
+      reminders: initial.reminderBeforeMinutes?.length
+        ? initial.reminderBeforeMinutes
+        : [15, 60],
+    };
+  }
+  const base = defaultDay || new Date();
+  return {
+    title: "",
+    type: "meeting" as CalendarEventType,
+    date: toDateInputValue(base),
+    startTime: "09:00",
+    endTime: "10:00",
+    notes: "",
+    locationAddress: "",
+    reminders: [15, 60],
+  };
+}
+
+/**
+ * Remount via `key` when open/edit target changes so form state is initialized
+ * without setState-in-effect (ESLint react-hooks/set-state-in-effect).
+ */
 export function EventEditorModal({
   open,
   mode,
@@ -43,47 +77,41 @@ export function EventEditorModal({
   onSave,
   onDelete,
 }: Props) {
+  if (!open) return null;
+  const editorKey = initial?._id ?? `new-${defaultDay?.toISOString() ?? "blank"}`;
+  return (
+    <EventEditorForm
+      key={editorKey}
+      mode={mode}
+      initial={initial}
+      defaultDay={defaultDay}
+      onClose={onClose}
+      onSave={onSave}
+      onDelete={onDelete}
+    />
+  );
+}
+
+function EventEditorForm({
+  mode,
+  initial,
+  defaultDay,
+  onClose,
+  onSave,
+  onDelete,
+}: Omit<Props, "open">) {
   const { t } = useTranslation();
-  const [title, setTitle] = useState("");
-  const [type, setType] = useState<CalendarEventType>("meeting");
-  const [date, setDate] = useState("");
-  const [startTime, setStartTime] = useState("09:00");
-  const [endTime, setEndTime] = useState("10:00");
-  const [notes, setNotes] = useState("");
-  const [locationAddress, setLocation] = useState("");
-  const [reminders, setReminders] = useState<number[]>([15, 60]);
+  const defaults = formDefaults(initial, defaultDay);
+  const [title, setTitle] = useState(defaults.title);
+  const [type, setType] = useState<CalendarEventType>(defaults.type);
+  const [date, setDate] = useState(defaults.date);
+  const [startTime, setStartTime] = useState(defaults.startTime);
+  const [endTime, setEndTime] = useState(defaults.endTime);
+  const [notes, setNotes] = useState(defaults.notes);
+  const [locationAddress, setLocation] = useState(defaults.locationAddress);
+  const [reminders, setReminders] = useState<number[]>(defaults.reminders);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!open) return;
-    if (initial) {
-      const s = new Date(initial.start);
-      const e = new Date(initial.end);
-      setTitle(initial.title);
-      setType(initial.type || "other");
-      setDate(toDateInputValue(s));
-      setStartTime(toTimeInputValue(s));
-      setEndTime(toTimeInputValue(e));
-      setNotes(initial.notes || "");
-      setLocation(initial.locationAddress || "");
-      setReminders(initial.reminderBeforeMinutes?.length ? initial.reminderBeforeMinutes : [15, 60]);
-    } else {
-      const base = defaultDay || new Date();
-      setTitle("");
-      setType("meeting");
-      setDate(toDateInputValue(base));
-      setStartTime("09:00");
-      setEndTime("10:00");
-      setNotes("");
-      setLocation("");
-      setReminders([15, 60]);
-    }
-    setError(null);
-    setBusy(false);
-  }, [open, initial, defaultDay]);
-
-  if (!open) return null;
 
   const toggleReminder = (n: number) => {
     setReminders((prev) =>

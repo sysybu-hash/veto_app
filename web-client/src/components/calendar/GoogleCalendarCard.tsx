@@ -28,7 +28,9 @@ export function GoogleCalendarCard() {
   }, [t]);
 
   useEffect(() => {
-    void refresh();
+    queueMicrotask(() => {
+      void refresh();
+    });
   }, [refresh]);
 
   const connect = async () => {
