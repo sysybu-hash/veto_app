@@ -66,17 +66,21 @@ export function CalendarShell() {
   }, [cursor, t]);
 
   useEffect(() => {
-    void load();
+    queueMicrotask(() => {
+      void load();
+    });
   }, [load]);
 
+  // Snapshot once per mount — avoids impure Date.now() during render/useMemo.
+  const [nowMs] = useState(() => Date.now());
   const upcomingSorted = useMemo(
     () =>
       events
-        .filter((ev) => new Date(ev.end).getTime() >= Date.now() - 60_000)
+        .filter((ev) => new Date(ev.end).getTime() >= nowMs - 60_000)
         .sort(
           (a, b) => new Date(a.start).getTime() - new Date(b.start).getTime(),
         ),
-    [events],
+    [events, nowMs],
   );
 
   const openCreate = () => {
