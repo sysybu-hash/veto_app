@@ -104,7 +104,14 @@ export function PricingPlansClient({ isLoggedIn }: Props) {
               </ul>
 
               {plan.featured ? (
-                <div className="mt-7">
+                <div className="mt-7 space-y-3">
+                  <Link
+                    href={isLoggedIn ? "/plans" : "/login?next=/plans"}
+                    className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-veto-gold/60 bg-veto-gold px-5 py-3 text-sm font-black text-primary shadow-[0_0_24px_-8px_rgba(197,160,89,0.8)] transition hover:bg-veto-gold-light"
+                  >
+                    {t("pricingPage.startPlan")}
+                    <CtaArrow className="h-4 w-4" aria-hidden />
+                  </Link>
                   <PayPalCheckout amount="99.00" isLoggedIn={isLoggedIn} />
                 </div>
               ) : (

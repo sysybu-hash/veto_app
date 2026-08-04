@@ -1,4 +1,7 @@
-# CI: secrets check, backend, deploy Next.js (web-client) to Vercel.
+# CI: secrets check, backend, and web-client build verification.
+# Production deploys are handled by the Vercel Git integration only — do NOT
+# also run `vercel deploy --prod` here or every push to main creates duplicate
+# Production deployments in the Vercel dashboard.
 name: CI
 
 on:
@@ -205,14 +208,14 @@ jobs:
           path: web-client/playwright-report/
           retention-days: 14
 
-  # Root Directory in Vercel project must stay `web-client`. Run `vercel deploy` from repo
-  # root — if cwd is already `web-client`, Vercel appends the setting → web-client/web-client.
-  deploy-vercel:
+  # Build-only gate on main. Live deploys come from Vercel ↔ GitHub (one Production
+  # per push). Keeping a second `vercel deploy --prod` here duplicated every release.
+  verify-web-build:
     runs-on: ubuntu-latest
     needs: [no-env-in-git, secret-scan, backend-ci]
     if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     concurrency:
-      group: vercel-deploy-${{ github.ref }}
+      group: verify-web-build-${{ github.ref }}
       cancel-in-progress: true
     steps:
       - uses: actions/checkout@v6
@@ -240,20 +243,3 @@ jobs:
         run: |
           set -e
           test -f public/sw.js || { echo "::error::public/sw.js was not generated — PWA/push notifications will be broken in production. Check next.config.mjs / package.json build script uses 'next build --webpack'."; exit 1; }
-
-      - name: Vercel CLI (auth check)
-        env:
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-        run: |
-          set -e
-          npx --yes vercel@latest --version
-          npx --yes vercel@latest whoami
-
-      - name: Deploy to Vercel
-        env:
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-        run: |
-          set -e
-          npx --yes vercel@latest deploy --prod --yes

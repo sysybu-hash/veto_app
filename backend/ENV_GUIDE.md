@@ -209,7 +209,7 @@
 - TURN / ICE (אחריות מפעיל — מומלץ לפרודקשן): `WEBRTC_ICE_SERVERS_JSON` **או** `TURN_URL` + `TURN_USERNAME` + `TURN_CREDENTIAL`. נטען ב-`src/services/call/iceServers.service.js` ונמסר ללקוח דרך `/api/calls/.../ice-config`. בלי TURN, שיחות נכשלות לעיתים מאחורי NAT/firewall קשוח (ספקים נפוצים: Metered, Cloudflare Calls, Twilio STUN/TURN). ראו גם הערות ב-`.env.example`.
 - OTP ב־JSON: רק בפיתוח/CI (`RETURN_OTP_IN_JSON=1`) — לעולם לא בפרודקשן, ללא קשר להגדרות Twilio (ראו `auth.controller.js`).
 - Twilio (שליחת OTP ב-SMS): **נדחה / אחריות מפעיל** — [twilio.com/console](https://www.twilio.com/console) → Account SID + Auth Token. דרוש גם `TWILIO_MESSAGING_SERVICE_SID` (מומלץ) או `TWILIO_FROM_NUMBER`. בלי זה, התחברות דרך טלפון/OTP לא זמינה בפועל בפרודקשן.
-- PayPal Live + webhook: **נדחה / אחריות מפעיל** — ר' `DEPLOY.md` operator checklist.
+- PayPal Live: הגדר `PAYPAL_ENV=live`, מפתחות Live, `PAYPAL_WEBHOOK_ID`, plan IDs Live, ו-`NEXT_PUBLIC_PAYPAL_CLIENT_ID` זהה (rebuild). Webhook URL: `POST https://<api>/api/payments/webhook/paypal`.
 - Uptime חיצוני: מומלץ לנטר `GET /health` (UptimeRobot וכו') בנוסף ל-`.github/workflows/keepalive.yml`.
 
 ---
@@ -247,7 +247,7 @@
 ### URL אחד, שירות אחד (פרודקשן)
 
 - **הדומיין הציבורי** של API מופיע ב־**Render → Web Service** תחת **Settings** (Default **onrender.com** hostname) או **Custom Domains**.  
-  ה־`PUBLIC_API_BASE` / `VETO_PUBLIC_BASE` (אם בשימוש), **GitHub Actions** `VETO_API_BASE` (ב־[`.github/workflows/ci.yml`](../.github/workflows/ci.yml) — job `deploy-vercel`), וה־`AppConfig` ב־[app_config.dart](../frontend/lib/config/app_config.dart) חייבים **לאותו origin** כמו **Public URL** ב־Render (למשל `https://veto-app-new.onrender.com` — בלי `/api`). שם השירות ב־Render (למשל `veto_legal`) **לא** תמיד שווה לתת־הדומיין ב־`onrender.com` — תמיד לבדוק ב־Dashboard.
+  ה־`PUBLIC_API_BASE` / `VETO_PUBLIC_BASE` (אם בשימוש), **GitHub Actions** `VETO_API_BASE` (ב־[`.github/workflows/ci.yml`](../.github/workflows/ci.yml) — job `verify-web-build`), וה־`AppConfig` ב־[app_config.dart](../frontend/lib/config/app_config.dart) חייבים **לאותו origin** כמו **Public URL** ב־Render (למשל `https://veto-app-new.onrender.com` — בלי `/api`). שם השירות ב־Render (למשל `veto_legal`) **לא** תמיד שווה לתת־הדומיין ב־`onrender.com` — תמיד לבדוק ב־Dashboard.
 - **ללא שני “Live”** לאותו מוצר: אם יש **שני** Web Services שמייצרים API (למשל שריט ישן + Blueprint מ־`render.yaml`), בחר אחד לפרוד, העתק env, וכבה/מחק את השני — אחרת לקוחות/בניית web עלולה לפנות ל־**URL הלא־נכון**.
 
 ---

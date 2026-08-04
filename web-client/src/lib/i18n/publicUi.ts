@@ -260,7 +260,8 @@ export const publicUi = {
       needLoginTitle: "כדי להשלים את התשלום צריך להתחבר או להירשם קודם",
       needLoginBody:
         "זה לוקח פחות מדקה — אחרי ההתחברות תחזרו לכאן ותוכלו להמשיך בתשלום.",
-      loginCta: "התחברות / הרשמה",
+      loginCta: "התחברות והמשך לתשלום ₪99",
+      loading: "טוען כפתור תשלום PayPal…",
       success: "המנוי הופעל בהצלחה! מעביר אותך למחולל המסמכים של VETO...",
       errNoOrderId: "לא התקבל מזהה הזמנה מ-PayPal",
       errCreate: "שגיאה ביצירת התשלום",
@@ -556,7 +557,8 @@ export const publicUi = {
       needLoginTitle: "Sign in or register before completing payment",
       needLoginBody:
         "It takes under a minute — after sign-in you return here and can continue checkout.",
-      loginCta: "Sign in / register",
+      loginCta: "Sign in and continue to ₪99 payment",
+      loading: "Loading PayPal checkout…",
       success: "Subscription activated! Redirecting you to VETO’s document generator...",
       errNoOrderId: "No PayPal order ID received",
       errCreate: "Could not create the payment",
@@ -852,7 +854,8 @@ export const publicUi = {
       needLoginTitle: "Чтобы завершить оплату, сначала войдите или зарегистрируйтесь",
       needLoginBody:
         "Это займёт меньше минуты — после входа вы вернётесь сюда и сможете продолжить оплату.",
-      loginCta: "Вход / регистрация",
+      loginCta: "Войти и продолжить к оплате ₪99",
+      loading: "Загрузка кнопки PayPal…",
       success: "Подписка активирована! Перенаправляем в генератор документов VETO...",
       errNoOrderId: "Не получен идентификатор заказа PayPal",
       errCreate: "Ошибка создания платежа",
