@@ -7,6 +7,7 @@ import { triggerSosAlert } from "@/app/actions/sos";
 import { fetchProfile, type UserProfile } from "@/api/userApi";
 import { fetchEntitlement, type Entitlement } from "@/api/advancedApi";
 import { CitizenBottomNav } from "@/components/citizen/CitizenBottomNav";
+import { SearchingLawyerOverlay } from "@/components/citizen/SearchingLawyerOverlay";
 import { useCookieConsentPending } from "@/components/privacy/CookieConsent";
 import { SpecializationDialog } from "@/components/dialogs/SpecializationDialog";
 import { btnSecondaryGlass, citizenBottomSafe, glassPanelNested } from "@/lib/vetoGlass";
@@ -315,6 +316,18 @@ export default function CitizenHubPage() {
     [handleSos],
   );
 
+  const cancelLawyerSearch = useCallback(() => {
+    const eventId = useEmergencyStore.getState().currentEventId;
+    try {
+      const sock = getSocket();
+      if (eventId) sock.emit("cancel_veto", { eventId });
+    } catch {
+      /* socket may not be ready — still clear local UI */
+    }
+    setCallTypeDialogOpen(false);
+    reset();
+  }, [reset]);
+
   const chooseCallType = useCallback((callType: SessionCallType) => {
     const eventId = useEmergencyStore.getState().currentEventId;
     if (!eventId) return;
@@ -439,32 +452,6 @@ export default function CitizenHubPage() {
           <span className="relative z-10">{t("hub.sos")}</span>
         </button>
 
-        {isSearching && !lawyerFound && (
-          <p className="text-center text-sm font-medium text-amber-800 dark:text-amber-200">
-            {t("hub.searching")}
-          </p>
-        )}
-
-        {lawyerFound && lawyerName && (
-          <p className="text-center text-sm font-medium text-emerald-800 dark:text-emerald-200">
-            {t("hub.lawyerAccepted").replace("{name}", lawyerName)}
-          </p>
-        )}
-
-        {statusMessage && (
-          <div
-            role="alert"
-            className="w-full rounded-xl border border-red-300/80 bg-red-50/90 px-4 py-3 text-center text-sm text-red-900 backdrop-blur-md dark:border-red-500/40 dark:bg-red-950/40 dark:text-red-100"
-          >
-            {statusMessage}
-            <div className="mt-3">
-              <Button variant="secondary" size="sm" onClick={() => reset()}>
-                {t("hub.dismiss")}
-              </Button>
-            </div>
-          </div>
-        )}
-
         <div className="grid w-full grid-cols-2 gap-3">
           <Link
             href="/vault/generator"
@@ -482,6 +469,44 @@ export default function CitizenHubPage() {
       </main>
 
       <CitizenBottomNav active="hub" />
+
+      {isSearching && !lawyerFound && !statusMessage ? (
+        <SearchingLawyerOverlay
+          phase="searching"
+          onCancel={cancelLawyerSearch}
+        />
+      ) : null}
+
+      {lawyerFound && !callTypeDialogOpen && !statusMessage ? (
+        <SearchingLawyerOverlay
+          phase="connecting"
+          lawyerName={lawyerName}
+        />
+      ) : null}
+
+      {statusMessage ? (
+        <div
+          className="fixed inset-0 z-[90] flex items-center justify-center bg-surface-scrim/90 p-4 backdrop-blur-md"
+          role="alertdialog"
+          aria-modal="true"
+          aria-labelledby="hub-status-title"
+        >
+          <div className="w-full max-w-md rounded-2xl border border-red-400/40 bg-surface-raised px-6 py-8 text-center shadow-2xl">
+            <h2
+              id="hub-status-title"
+              className="font-frank text-xl font-black text-primary"
+            >
+              {t("hub.statusAlertTitle")}
+            </h2>
+            <p className="mt-3 text-sm leading-6 text-secondary">{statusMessage}</p>
+            <div className="mt-6">
+              <Button variant="secondary" onClick={() => reset()}>
+                {t("hub.dismiss")}
+              </Button>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       {sosDialogOpen && (
         <div

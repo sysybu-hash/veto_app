@@ -247,6 +247,7 @@ export const he: Dict = {
     payOvertimeCta: "להשלמת תשלום",
     sos: "SOS",
     searching: "מחפשים עורך דין זמין…",
+    statusAlertTitle: "עדכון בקשת SOS",
     searchingTitle: "מחפשים עבורכם עורך דין זמין",
     searchingSubtitle: "ההתראה נשלחה. ברגע שעורך דין יקבל את הפנייה — תיפתח שיחה אוטומטית.",
     searchingStep1: "ההתראה נשלחה לעורכי הדין הזמינים",
