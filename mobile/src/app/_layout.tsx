@@ -10,6 +10,10 @@ import {
   ensureSocketForRole,
   setCallNavigateHandler,
 } from "@/services/socketManager";
+import {
+  attachPushResponseHandler,
+  registerForPushNotifications,
+} from "@/services/pushRegistration";
 import { useAuthStore } from "@/store/authStore";
 
 SplashScreen.preventAutoHideAsync();
@@ -40,6 +44,15 @@ export default function RootLayout() {
       if (!useAuthStore.getState().token) disconnectSocket();
     };
   }, [hydrated, user]);
+
+  useEffect(() => {
+    if (!hydrated || !token || !user) return;
+    void registerForPushNotifications();
+  }, [hydrated, token, user]);
+
+  useEffect(() => {
+    return attachPushResponseHandler(router);
+  }, [router]);
 
   useEffect(() => {
     if (!hydrated) return;

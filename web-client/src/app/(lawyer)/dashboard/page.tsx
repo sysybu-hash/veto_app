@@ -1,8 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useMemo, useState, type ComponentType } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import {
+  Suspense,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  type ComponentType,
+} from "react";
 import {
   Bell,
   BriefcaseBusiness,
@@ -21,7 +28,12 @@ import {
   Wifi,
   WifiOff,
 } from "lucide-react";
-import { fetchProfile, updateLawyerAvailability, type UserProfile } from "@/api/userApi";
+import {
+  fetchProfile,
+  updateLawyerAvailability,
+  updateLawyerLocation,
+  type UserProfile,
+} from "@/api/userApi";
 import { fetchLawyerCockpit, type LawyerCockpit } from "@/api/advancedApi";
 import { useTranslation } from "@/lib/i18n/LocaleProvider";
 import { clearJwt, getJwt, getRoleFromJwt } from "@/lib/authToken";
@@ -135,7 +147,22 @@ function getPersistedAvailabilityChoice(): boolean {
 }
 
 export default function LawyerDashboardPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center bg-surface-canvas text-muted">
+          …
+        </div>
+      }
+    >
+      <LawyerDashboardInner />
+    </Suspense>
+  );
+}
+
+function LawyerDashboardInner() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { t } = useTranslation();
   const { subscribe: subscribeWebPush } = useWebPush();
   const [activeTab, setActiveTab] = useState<DashboardTab>("overview");
@@ -167,6 +194,31 @@ export default function LawyerDashboardPage() {
     if (getRoleFromJwt() !== "lawyer") router.replace("/hub");
   }, [router]);
 
+  // Deep-link from SOS push / notification click:
+  // /dashboard?eventId=…&tab=calls&lat=…&lng=…
+  useEffect(() => {
+    const eventId = searchParams.get("eventId");
+    const tab = searchParams.get("tab");
+    if (tab === "calls" || eventId) setActiveTab("calls");
+    if (!eventId) return;
+
+    const lat = Number(searchParams.get("lat"));
+    const lng = Number(searchParams.get("lng"));
+    const existing = useLawyerStore.getState().activeAlert;
+    if (existing?.eventId === eventId) return;
+
+    if (Number.isFinite(lat) && Number.isFinite(lng)) {
+      setActiveAlert({
+        eventId,
+        userId: searchParams.get("userId"),
+        userName: searchParams.get("userName") || "",
+        location: { lat, lng },
+        language: searchParams.get("language") || "he",
+        timestamp: searchParams.get("ts") || new Date().toISOString(),
+      });
+    }
+  }, [searchParams, setActiveAlert]);
+
   useEffect(() => {
     if (!getJwt() || getRoleFromJwt() !== "lawyer") return;
     queueMicrotask(() => {
@@ -185,6 +237,26 @@ export default function LawyerDashboardPage() {
       .catch(() => setProfile(null))
       .finally(() => setAvailabilityLoaded(true));
   }, [setAvailable]);
+
+  // GPS heartbeat for SOS proximity sorting + last_seen
+  useEffect(() => {
+    if (!getJwt() || getRoleFromJwt() !== "lawyer") return;
+    if (typeof navigator === "undefined" || !navigator.geolocation) return;
+
+    const publish = () => {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          void updateLawyerLocation(pos.coords.latitude, pos.coords.longitude).catch(() => {});
+        },
+        () => {},
+        { enableHighAccuracy: false, maximumAge: 60_000, timeout: 15_000 },
+      );
+    };
+
+    publish();
+    const id = window.setInterval(publish, 3 * 60_000);
+    return () => window.clearInterval(id);
+  }, []);
 
   useEffect(() => {
     if (!getJwt() || getRoleFromJwt() !== "lawyer") return;
