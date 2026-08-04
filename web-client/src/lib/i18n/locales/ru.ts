@@ -248,6 +248,7 @@ export const ru: Dict = {
     payOvertimeCta: "Завершить оплату",
     sos: "SOS",
     searching: "Ищем доступного адвоката…",
+    statusAlertTitle: "Обновление запроса SOS",
     searchingTitle: "Ищем доступного адвоката",
     searchingSubtitle: "Запрос отправлен. Как только адвокат примет вызов, звонок откроется автоматически.",
     searchingStep1: "Уведомление отправлено доступным адвокатам",

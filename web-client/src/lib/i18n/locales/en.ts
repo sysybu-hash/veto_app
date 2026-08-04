@@ -248,6 +248,7 @@ export const en: Dict = {
     payOvertimeCta: "Complete payment",
     sos: "SOS",
     searching: "Searching for an available lawyer…",
+    statusAlertTitle: "SOS request update",
     searchingTitle: "Looking for an available lawyer",
     searchingSubtitle: "Your alert was sent. As soon as a lawyer accepts, the call will open automatically.",
     searchingStep1: "Alert delivered to available lawyers",
