@@ -1,14 +1,21 @@
-# הדרכת ENV ל-VETO (Render / מקומי) — **בלי Firebase / FCM**
+# הדרכת ENV ל-VETO (Render / מקומי) — מסלולי Push
 
 **סדר טעינה בשרת (Node):** `backend/.env` → `backend/.env.local` (אם קיים, דורס).  
 **לא** נטען: `.env` או `.env.local` **בשורש** הפרויקט (כאשר `backend/.env` קיים). הערכים ל-API ב־`backend/.env` בלבד.
 
 המקור בקוד: [`.env.example`](.env.example) + `render.yaml` (בשורש הפרויקט) + שימושי `process.env` ב־`src/`.
 
-**לא ממלאים במסלול "בלי Firebase"**
+## מסלולי התראות (מה חובה בפרודקשן)
 
-- `FIREBASE_SERVICE_ACCOUNT` — לא (שליחת FCM דרך `firebase-admin` לא מופעלת).
-- אין צורך ב־`flutterfire`, `google-services.json` או `GoogleService-Info.plist` **ל־FCM**.
+| ערוץ | למי | ENV חובה | הערות |
+|------|-----|----------|--------|
+| **Web Push (VAPID)** | עו״ד בדפדפן (`web-client`) | `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` | מסלול ברירת מחדל לפרודקשן web — **לא** Firebase |
+| **Expo Push** | אפליקציית `mobile/` (Expo) | אין Firebase — Expo push token נשלח ל-`POST /users/fcm-token` ומטופל ב-`expoPush.service` | מובייל עדיין WIP |
+| **FCM קלאסי** | לקוחות ישנים עם token שאינו Expo | `FIREBASE_SERVICE_ACCOUNT` (JSON) | **אופציונלי** — רק אם יש tokens שאינם `ExponentPushToken[...]` |
+
+**מסלול web-only (מומלץ עכשיו):** ממלאים VAPID; **לא** חובה Firebase.  
+**מסלול mobile Expo:** אין חובה ל-`FIREBASE_SERVICE_ACCOUNT` אם כל הטוקנים הם Expo.  
+**אין צורך** ב־`flutterfire` / `google-services.json` למסלול VAPID או Expo.
 
 ---
 
