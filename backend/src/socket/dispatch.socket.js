@@ -55,6 +55,7 @@ module.exports = function initDispatch(io) {
       Lawyer.findByIdAndUpdate(userId, {
         is_online:  true,
         socket_id:  socket.id,
+        last_seen:  new Date(),
       }).catch((err) => logger.error({ err, userId }, 'Failed to mark lawyer online'));
 
       socket.join(`lawyer:${userId}`);
@@ -206,13 +207,21 @@ module.exports = function initDispatch(io) {
           billing: { chargeIls: billingChargeIls, source: consumeCredit ? 'credit' : (consumeToken ? 'paid' : 'exempt') },
         });
 
-        // 2. Find available lawyers (online via socket OR have push subscription) ─
+        // 2. Find available lawyers (online via socket OR have push / FCM) ─
+        const staleCutoff = new Date(Date.now() - 12 * 60 * 1000);
         const lawyerQuery = {
           is_available: true,
           is_active:    true,
           $or: [
-            { is_online: true },
+            {
+              is_online: true,
+              $or: [
+                { last_seen: { $gte: staleCutoff } },
+                { last_seen: null },
+              ],
+            },
             { push_subscription: { $ne: null, $exists: true } },
+            { fcm_token: { $ne: null, $exists: true } },
           ],
         };
 
@@ -223,16 +232,26 @@ module.exports = function initDispatch(io) {
           };
         }
 
-        let availableLawyers = await Lawyer.find(lawyerQuery).select(
-          'full_name phone whatsapp_number telegram_username preferred_language socket_id push_subscription'
-        );
+        const lawyerSelect =
+          '+push_subscription +fcm_token full_name phone whatsapp_number telegram_username preferred_language socket_id last_location is_approved last_seen';
+
+        async function findLawyers(query) {
+          return Lawyer.find(query).select(lawyerSelect);
+        }
+
+        // Prefer admin-approved lawyers; fall back if none match.
+        let availableLawyers = await findLawyers({ ...lawyerQuery, is_approved: true });
+        if (availableLawyers.length === 0) {
+          availableLawyers = await findLawyers(lawyerQuery);
+        }
 
         // Fallback: if specialization filter yielded no lawyers, try all available
         if (specMatchTerms && availableLawyers.length === 0) {
           delete lawyerQuery.specializations;
-          availableLawyers = await Lawyer.find(lawyerQuery).select(
-            'full_name phone whatsapp_number telegram_username preferred_language socket_id push_subscription'
-          );
+          availableLawyers = await findLawyers({ ...lawyerQuery, is_approved: true });
+          if (availableLawyers.length === 0) {
+            availableLawyers = await findLawyers(lawyerQuery);
+          }
         }
 
         if (availableLawyers.length === 0) {
@@ -249,8 +268,29 @@ module.exports = function initDispatch(io) {
           return;
         }
 
-        // 3. Sort: preferred language first ──────────────────
-        const sorted = sortByLanguage(availableLawyers, preferredLanguage || 'en');
+        // 3. Sort: preferred language first, then proximity when GPS is known ──
+        let sorted = sortByLanguage(availableLawyers, preferredLanguage || 'en');
+        const citizenLat = Number(location?.lat);
+        const citizenLng = Number(location?.lng);
+        if (Number.isFinite(citizenLat) && Number.isFinite(citizenLng)) {
+          const dist = (lawyer) => {
+            const coords = lawyer.last_location?.coordinates;
+            if (!Array.isArray(coords) || coords.length < 2) return Number.POSITIVE_INFINITY;
+            const [lng, lat] = coords;
+            if (!Number.isFinite(lat) || !Number.isFinite(lng) || (lat === 0 && lng === 0)) {
+              return Number.POSITIVE_INFINITY;
+            }
+            const dLat = (lat - citizenLat) * Math.PI / 180;
+            const dLng = (lng - citizenLng) * Math.PI / 180;
+            const a =
+              Math.sin(dLat / 2) ** 2 +
+              Math.cos(citizenLat * Math.PI / 180) *
+                Math.cos(lat * Math.PI / 180) *
+                Math.sin(dLng / 2) ** 2;
+            return 2 * 6371 * Math.asin(Math.sqrt(a));
+          };
+          sorted = [...sorted].sort((a, b) => dist(a) - dist(b));
+        }
 
         // 4. Build dispatch log entries ───────────────────────
         const dispatchLog = sorted.map((l) => ({
@@ -292,8 +332,8 @@ module.exports = function initDispatch(io) {
             io.to(lawyer.socket_id).emit('new_emergency_alert', alertPayload);
             emittedCount++;
           }
-          // Always try push if lawyer has a subscription (catches offline lawyers)
-          if (lawyer.push_subscription) {
+          // Web Push and/or FCM for offline / background lawyers
+          if (lawyer.push_subscription || lawyer.fcm_token) {
             pushLawyers.push(lawyer);
           }
         }
@@ -304,6 +344,27 @@ module.exports = function initDispatch(io) {
           const pushBody  = `A client needs legal help urgently. Tap to respond.`;
           push.sendToMany(pushLawyers, { title: pushTitle, body: pushBody, data: alertPayload })
             .catch((e) => logger.error({ err: e }, '[PUSH] sendToMany error'));
+
+          const fcm = require('../services/fcm.service');
+          const { isExpoPushToken, sendExpoPush } = require('../services/expoPush.service');
+          for (const lawyer of pushLawyers) {
+            if (!lawyer.fcm_token) continue;
+            if (isExpoPushToken(lawyer.fcm_token)) {
+              sendExpoPush(lawyer.fcm_token, {
+                title: pushTitle,
+                body: pushBody,
+                data: alertPayload,
+              }).catch((e) => logger.error({ err: e, lawyerId: lawyer._id }, '[EXPO_PUSH] send error'));
+            } else if (fcm.isConfigured()) {
+              fcm
+                .sendToFcmToken(lawyer.fcm_token, {
+                  title: pushTitle,
+                  body: pushBody,
+                  data: alertPayload,
+                })
+                .catch((e) => logger.error({ err: e, lawyerId: lawyer._id }, '[FCM] send error'));
+            }
+          }
         }
 
         logger.info({ eventId, lawyersNotified: emittedCount }, '🚨 VETO dispatched');

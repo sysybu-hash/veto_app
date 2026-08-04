@@ -127,6 +127,7 @@ router.put('/location', async (req, res, next) => {
     }
     await Lawyer.findByIdAndUpdate(req.user.userId, {
       last_location: { type: 'Point', coordinates: [lng, lat] },
+      last_seen: new Date(),
     });
     res.json({ message: 'Location updated.' });
   } catch (err) { next(err); }

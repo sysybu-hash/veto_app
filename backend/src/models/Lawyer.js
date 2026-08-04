@@ -130,6 +130,13 @@ const LawyerSchema = new mongoose.Schema(
       default: null, // current Socket.io connection ID
     },
 
+    /** Updated on socket connect / location heartbeat — used to detect stale is_online. */
+    last_seen: {
+      type: Date,
+      default: null,
+      index: true,
+    },
+
     // ── Location ──────────────────────────────────────────────
     last_location: {
       type: {

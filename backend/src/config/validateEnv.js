@@ -55,7 +55,16 @@ function validateEnv(opts = {}) {
     warnings.push('TWILIO_* deferred — phone OTP SMS not configured');
   }
   if (!process.env.PAYPAL_CLIENT_ID) {
-    warnings.push('PAYPAL_* deferred — billing not configured');
+    warnings.push('PAYPAL_* — billing not configured (set PAYPAL_ENV=live + Live keys for production billing)');
+  } else if (isProd && process.env.PAYPAL_ENV !== 'live') {
+    warnings.push('PAYPAL_ENV is not live — sandbox credentials in production');
+  }
+
+  const turnReady =
+    (process.env.TURN_URL && process.env.TURN_USERNAME && process.env.TURN_CREDENTIAL) ||
+    (process.env.WEBRTC_ICE_SERVERS_JSON && /turns?:/i.test(process.env.WEBRTC_ICE_SERVERS_JSON));
+  if (!turnReady) {
+    warnings.push('TURN_* / WEBRTC_ICE_SERVERS_JSON — only public STUN; NAT-heavy networks may fail calls');
   }
 
   for (const w of warnings) {
