@@ -199,24 +199,29 @@ function LawyerDashboardInner() {
   useEffect(() => {
     const eventId = searchParams.get("eventId");
     const tab = searchParams.get("tab");
-    if (tab === "calls" || eventId) setActiveTab("calls");
-    if (!eventId) return;
-
     const lat = Number(searchParams.get("lat"));
     const lng = Number(searchParams.get("lng"));
-    const existing = useLawyerStore.getState().activeAlert;
-    if (existing?.eventId === eventId) return;
+    const userId = searchParams.get("userId");
+    const userName = searchParams.get("userName") || "";
+    const language = searchParams.get("language") || "he";
+    const timestamp = searchParams.get("ts") || new Date().toISOString();
 
-    if (Number.isFinite(lat) && Number.isFinite(lng)) {
-      setActiveAlert({
-        eventId,
-        userId: searchParams.get("userId"),
-        userName: searchParams.get("userName") || "",
-        location: { lat, lng },
-        language: searchParams.get("language") || "he",
-        timestamp: searchParams.get("ts") || new Date().toISOString(),
-      });
-    }
+    queueMicrotask(() => {
+      if (tab === "calls" || eventId) setActiveTab("calls");
+      if (!eventId) return;
+      const existing = useLawyerStore.getState().activeAlert;
+      if (existing?.eventId === eventId) return;
+      if (Number.isFinite(lat) && Number.isFinite(lng)) {
+        setActiveAlert({
+          eventId,
+          userId,
+          userName,
+          location: { lat, lng },
+          language,
+          timestamp,
+        });
+      }
+    });
   }, [searchParams, setActiveAlert]);
 
   useEffect(() => {
