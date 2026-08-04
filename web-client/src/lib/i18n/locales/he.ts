@@ -80,6 +80,7 @@ export const he: Dict = {
   },
   navCitizen: {
     home: "בית",
+    chat: "צ׳אט",
     vault: "כספת",
     work: "משימות",
     calendar: "יומן",
@@ -638,6 +639,7 @@ export const he: Dict = {
     newEvent: "אירוע חדש",
     editEvent: "עריכת אירוע",
     refresh: "רענון",
+    syncToggle: "סנכרון",
     syncGoogle: "חיבור Google Calendar",
     openingGoogle: "פותח Google…",
     gcalConnected: "מחובר ל-Google Calendar.",

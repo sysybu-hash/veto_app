@@ -15,7 +15,7 @@ export default function CitizenCalendarPage() {
 
   return (
     <>
-      <main className="min-h-[100dvh] bg-gradient-to-b from-zinc-950 via-surface-canvas to-zinc-950 pb-28">
+      <main className="min-h-[100dvh] bg-gradient-to-b from-zinc-950 via-surface-canvas to-zinc-950 pb-28 md:pb-6">
         <CalendarShell />
       </main>
       <CitizenBottomNav active="calendar" />

@@ -79,6 +79,7 @@ export const ru: Dict = {
   },
   navCitizen: {
     home: "Главная",
+    chat: "Чат",
     vault: "Сейф",
     work: "Задачи",
     calendar: "Календарь",
@@ -645,6 +646,7 @@ export const ru: Dict = {
     newEvent: "Новое событие",
     editEvent: "Редактировать",
     refresh: "Обновить",
+    syncToggle: "Синхронизация",
     syncGoogle: "Подключить Google Календарь",
     openingGoogle: "Открываем Google…",
     gcalConnected: "Подключено к Google Календарю.",
