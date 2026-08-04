@@ -15,6 +15,14 @@ export type SummaryShape = {
   status?: string;
 };
 
+export type SharedFileSummary = {
+  cloud_url: string;
+  mime: string | null;
+  by_role: "user" | "lawyer";
+  ts: string;
+  original_name: string | null;
+};
+
 function stepKindLabel(
   action: string,
   t: (k: string, fb: string) => string,
@@ -44,6 +52,8 @@ export function EndCallSummary({
   savedCount,
   onSaveToVault,
   transcriptSegments,
+  variant = "citizen",
+  sharedFiles,
 }: {
   summary: SummaryShape;
   actionPlan: ActionPlan | null;
@@ -56,8 +66,11 @@ export function EndCallSummary({
   onSaveToVault: () => void;
   /** Live RTT segments from this session (shown even before vault sync). */
   transcriptSegments?: TranscriptSegment[];
+  variant?: "citizen" | "lawyer";
+  sharedFiles?: SharedFileSummary[];
 }) {
   const t = useTrWithFallback();
+  const isLawyer = variant === "lawyer";
 
   const vaultButtonLabel =
     saveStatus === "saving"
@@ -87,34 +100,55 @@ export function EndCallSummary({
               id="call-summary-title"
               className="font-frank text-xl font-bold tracking-tight text-inverse @md:text-2xl"
             >
-              {t("call.v2.summary.title", "Call summary")}
+              {isLawyer
+                ? t("call.v2.summary.lawyerTitle", "Case call summary")
+                : t("call.v2.summary.title", "Call summary")}
             </h3>
             <span className="shrink-0 rounded-full border border-veto-gold/35 bg-veto-gold/10 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-veto-gold">
               VETO
             </span>
           </div>
 
+          {isLawyer ? (
+            <p className="mt-2 text-xs leading-relaxed text-secondary">
+              {t(
+                "call.v2.summary.lawyerBody",
+                "The session ended. Review duration, transcript, and shared files before returning to your dashboard.",
+              )}
+            </p>
+          ) : null}
+
           <div className="mt-5 grid gap-2 rounded-2xl border border-white/[0.06] bg-white/[0.03] p-4">
             <Row
               label={t("call.v2.summary.duration", "Duration")}
               value={`${summary.minutes} ${t("call.v2.summary.minutes", "min")}`}
             />
-            <Row
-              label={t("call.v2.summary.base", "Base rate")}
-              value={`₪${summary.base.toFixed(2)}`}
-            />
-            <Row
-              label={t("call.v2.summary.overtime", "Overtime")}
-              value={`₪${summary.overtime.toFixed(2)}`}
-            />
-            <div className="mt-1 flex items-center justify-between border-t border-subtle pt-3">
-              <span className="text-sm font-semibold text-secondary">
-                {t("call.v2.summary.total", "Total to bill")}
-              </span>
-              <span className="text-lg font-bold tabular-nums text-veto-gold">
-                ₪{summary.total.toFixed(2)}
-              </span>
-            </div>
+            {isLawyer && eventId ? (
+              <Row
+                label={t("call.v2.summary.eventId", "Event ID")}
+                value={eventId}
+              />
+            ) : null}
+            {!isLawyer ? (
+              <>
+                <Row
+                  label={t("call.v2.summary.base", "Base rate")}
+                  value={`₪${summary.base.toFixed(2)}`}
+                />
+                <Row
+                  label={t("call.v2.summary.overtime", "Overtime")}
+                  value={`₪${summary.overtime.toFixed(2)}`}
+                />
+                <div className="mt-1 flex items-center justify-between border-t border-subtle pt-3">
+                  <span className="text-sm font-semibold text-secondary">
+                    {t("call.v2.summary.total", "Total to bill")}
+                  </span>
+                  <span className="text-lg font-bold tabular-nums text-veto-gold">
+                    ₪{summary.total.toFixed(2)}
+                  </span>
+                </div>
+              </>
+            ) : null}
           </div>
 
           {!!transcriptSegments?.length && (
@@ -137,6 +171,28 @@ export function EndCallSummary({
                   </p>
                 ))}
               </div>
+            </section>
+          )}
+
+          {isLawyer && !!sharedFiles?.length && (
+            <section className="mt-5 rounded-2xl border border-white/[0.06] bg-white/[0.03] p-4">
+              <p className="text-sm font-bold text-primary">
+                {t("call.v2.summary.filesTitle", "Shared files")}
+              </p>
+              <ul className="mt-2 max-h-36 space-y-1.5 overflow-y-auto">
+                {sharedFiles.map((f, i) => (
+                  <li key={`${f.cloud_url}-${i}`}>
+                    <a
+                      href={f.cloud_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block truncate text-xs text-veto-gold underline-offset-2 hover:underline"
+                    >
+                      {f.original_name || f.cloud_url}
+                    </a>
+                  </li>
+                ))}
+              </ul>
             </section>
           )}
 
@@ -171,7 +227,7 @@ export function EndCallSummary({
             </section>
           )}
 
-          {showVault && (
+          {!isLawyer && showVault && (
             <section className="mt-5 rounded-2xl border border-emerald-500/25 bg-emerald-950/25 p-4">
               <p className="text-sm font-bold text-emerald-100">
                 {t("call.v2.summary.vaultTitle", "Save to my vault")}
@@ -217,9 +273,11 @@ export function EndCallSummary({
 
           <div className="mt-6 flex flex-col-reverse gap-2 @sm:flex-row @sm:justify-end @sm:gap-3">
             <Button variant="secondary" className="min-h-[44px]" onClick={onClose}>
-              {t("call.v2.summary.close", "Close")}
+              {isLawyer
+                ? t("call.v2.summary.backDashboard", "Back to dashboard")
+                : t("call.v2.summary.close", "Close")}
             </Button>
-            {summary.overtime > 0 && (
+            {!isLawyer && summary.overtime > 0 && (
               <Button
                 variant="primary"
                 className="min-h-[44px]"
@@ -249,8 +307,8 @@ export function EndCallSummary({
 function Row({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-center justify-between gap-3 text-sm">
-      <span className="text-muted">{label}</span>
-      <span className="tabular-nums text-primary">{value}</span>
+      <span className="shrink-0 text-muted">{label}</span>
+      <span className="truncate text-end tabular-nums text-primary">{value}</span>
     </div>
   );
 }

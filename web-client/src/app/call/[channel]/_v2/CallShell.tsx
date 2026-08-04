@@ -169,6 +169,8 @@ export function CallShell({ channel }: { channel: string }) {
   const [summary, setSummary] = useState<SummaryShape | null>(null);
   const [actionPlan, setActionPlan] = useState<ActionPlan | null>(null);
   const vault = useSaveToVault(eventId);
+  /** Prevents double end when local hangup and peer `call-ended` race. */
+  const endingRef = useRef(false);
 
   // Chat unread badge for the redesigned ControlBar — useCallChat itself has
   // no unread concept, so track "how many messages had the panel already
@@ -347,64 +349,6 @@ export function CallShell({ channel }: { channel: string }) {
     session?.eventId,
   ]);
 
-  // ── Effect: socket room (chat + token renewal). ──
-  useEffect(() => {
-    if (!session || session.channelId !== channel) return;
-    let sock;
-    try {
-      sock = connectSocket();
-    } catch {
-      return undefined;
-    }
-    const roomId = session.eventId || channel;
-    sock.emit("join-call-room", { roomId, callType: session.callType });
-
-    const onTimeout = () => setJoinError(t("call.peerTimeout", "Peer timed out"));
-    const onError = (raw: unknown) => {
-      const msg =
-        raw && typeof raw === "object" && "message" in raw &&
-        typeof (raw as { message?: unknown }).message === "string"
-          ? (raw as { message: string }).message
-          : t("call.callError", "Call error");
-      setJoinError(msg);
-    };
-    sock.on("call-timeout", onTimeout);
-    sock.on("call-error", onError);
-
-    const onTokenRenew = async (raw: unknown) => {
-      if (!client) return;
-      const p = raw as { roomId?: string; agoraToken?: string };
-      if (p.roomId !== channel || !p.agoraToken) return;
-      try {
-        await client.renewToken(p.agoraToken);
-      } catch {
-        /* ignore */
-      }
-    };
-    sock.on("call-token-renewed", onTokenRenew);
-
-    return () => {
-      sock.emit("leave-call-room", { roomId });
-      sock.off("call-timeout", onTimeout);
-      sock.off("call-error", onError);
-      sock.off("call-token-renewed", onTokenRenew);
-    };
-  }, [channel, client, session, t]);
-
-  // ── Effect: token-privilege-will-expire → ask backend for a new token. ──
-  useEffect(() => {
-    if (!client) return;
-    const onExpire = () => {
-      try {
-        getSocket().emit("call-renew-token", { roomId: channel });
-      } catch {
-        /* ignore */
-      }
-    };
-    client.on("token-privilege-will-expire", onExpire);
-    return () => client.off("token-privilege-will-expire", onExpire);
-  }, [client, channel]);
-
   // ── Effect: hydrate shared files once. ──
   useEffect(() => {
     queueMicrotask(() => {
@@ -510,7 +454,7 @@ export function CallShell({ channel }: { channel: string }) {
   }, [captionsOn, rtt]);
 
   // ── End-call flow ──
-  const finalize = useCallback(async () => {
+  const finalizeMedia = useCallback(async () => {
     try {
       cameraTrack?.close();
       micTrack?.close();
@@ -525,12 +469,31 @@ export function CallShell({ channel }: { channel: string }) {
     } catch {
       /* ignore */
     }
+  }, [cameraTrack, micTrack, screen.screenTrack, client]);
+
+  const notifyPeerCallEnded = useCallback(() => {
     try {
-      getSocket().emit("call-ended", { roomId: session?.eventId || channel });
+      getSocket().emit("call-ended", {
+        roomId: session?.eventId || channel,
+        duration: Math.max(1, Math.floor((Date.now() - callStartedAt) / 1000)),
+      });
     } catch {
       /* ignore */
     }
-  }, [cameraTrack, micTrack, screen.screenTrack, client, channel, session]);
+  }, [session, channel, callStartedAt]);
+
+  const localDurationSummary = useCallback((): SummaryShape => {
+    const minutes = Math.max(
+      1,
+      Math.ceil((Date.now() - callStartedAt) / 60_000),
+    );
+    return {
+      minutes,
+      base: 0,
+      overtime: 0,
+      total: 0,
+    };
+  }, [callStartedAt]);
 
   const finishBilling = useCallback(async (): Promise<SummaryShape> => {
     const minutes = Math.max(
@@ -581,56 +544,133 @@ export function CallShell({ channel }: { channel: string }) {
 
   const postCallHome = myRole === "lawyer" ? "/dashboard" : "/hub";
 
+  const runEndPipeline = useCallback(
+    async ({ notifyPeer }: { notifyPeer: boolean }) => {
+      if (endingRef.current) return;
+      endingRef.current = true;
+
+      if (
+        myRole === "user" &&
+        (recording.status === "recording" ||
+          recording.status === "starting" ||
+          recording.status === "stopping")
+      ) {
+        try {
+          await recording.stop();
+        } catch {
+          /* ignore */
+        }
+      }
+      if (rtt.status === "running") {
+        try {
+          await rtt.stop();
+        } catch {
+          /* ignore */
+        }
+      }
+
+      const next =
+        myRole === "lawyer" ? localDurationSummary() : await finishBilling();
+      setSummary(next);
+      if (eventId) {
+        void createActionPlan(eventId)
+          .then(setActionPlan)
+          .catch(() => setActionPlan(null));
+      }
+
+      await finalizeMedia();
+      if (notifyPeer) notifyPeerCallEnded();
+    },
+    [
+      myRole,
+      recording,
+      rtt,
+      localDurationSummary,
+      finishBilling,
+      eventId,
+      finalizeMedia,
+      notifyPeerCallEnded,
+    ],
+  );
+
   const endCall = useCallback(async () => {
-    if (isChatOnly) {
-      await finalize();
-      clearCallSession();
-      router.replace(postCallHome);
-      return;
-    }
-    // Cloud recording stop is citizen-only on the API; avoid 403 for lawyers.
-    if (
-      myRole === "user" &&
-      (recording.status === "recording" ||
-        recording.status === "starting" ||
-        recording.status === "stopping")
-    ) {
-      try {
-        await recording.stop();
-      } catch {
-        /* ignore */
-      }
-    }
-    if (rtt.status === "running") {
-      try {
-        await rtt.stop();
-      } catch {
-        /* ignore */
-      }
-    }
-    const next = await finishBilling();
-    setSummary(next);
-    if (eventId) {
-      void createActionPlan(eventId).then(setActionPlan).catch(() => setActionPlan(null));
-    }
-    await finalize();
-  }, [
-    isChatOnly,
-    finalize,
-    clearCallSession,
-    router,
-    recording,
-    rtt,
-    finishBilling,
-    eventId,
-    myRole,
-    postCallHome,
-  ]);
+    await runEndPipeline({ notifyPeer: true });
+  }, [runEndPipeline]);
 
   const closeSummary = useCallback(() => {
     clearCallSession();
     router.replace(postCallHome);
   }, [clearCallSession, router, postCallHome]);
+
+  // Keep a stable ref so the socket listener always calls the latest pipeline.
+  const runEndPipelineRef = useRef(runEndPipeline);
+  useEffect(() => {
+    runEndPipelineRef.current = runEndPipeline;
+  }, [runEndPipeline]);
+
+  // ── Effect: socket room (chat + token renewal + peer hangup). ──
+  useEffect(() => {
+    if (!session || session.channelId !== channel) return;
+    let sock;
+    try {
+      sock = connectSocket();
+    } catch {
+      return undefined;
+    }
+    const roomId = session.eventId || channel;
+    sock.emit("join-call-room", { roomId, callType: session.callType });
+
+    const onTimeout = () => setJoinError(t("call.peerTimeout", "Peer timed out"));
+    const onError = (raw: unknown) => {
+      const msg =
+        raw && typeof raw === "object" && "message" in raw &&
+        typeof (raw as { message?: unknown }).message === "string"
+          ? (raw as { message: string }).message
+          : t("call.callError", "Call error");
+      setJoinError(msg);
+    };
+    sock.on("call-timeout", onTimeout);
+    sock.on("call-error", onError);
+
+    const onTokenRenew = async (raw: unknown) => {
+      if (!client) return;
+      const p = raw as { roomId?: string; agoraToken?: string };
+      if (p.roomId !== channel || !p.agoraToken) return;
+      try {
+        await client.renewToken(p.agoraToken);
+      } catch {
+        /* ignore */
+      }
+    };
+    sock.on("call-token-renewed", onTokenRenew);
+
+    const onPeerCallEnded = () => {
+      void runEndPipelineRef.current({ notifyPeer: false });
+    };
+    sock.on("call-ended", onPeerCallEnded);
+
+    return () => {
+      sock.emit("leave-call-room", { roomId });
+      sock.off("call-timeout", onTimeout);
+      sock.off("call-error", onError);
+      sock.off("call-token-renewed", onTokenRenew);
+      sock.off("call-ended", onPeerCallEnded);
+    };
+  }, [channel, client, session, t]);
+
+  // ── Effect: token-privilege-will-expire → ask backend for a new token. ──
+  useEffect(() => {
+    if (!client) return;
+    const onExpire = () => {
+      try {
+        getSocket().emit("call-renew-token", { roomId: channel });
+      } catch {
+        /* ignore */
+      }
+    };
+    client.on("token-privilege-will-expire", onExpire);
+    return () => client.off("token-privilege-will-expire", onExpire);
+  }, [client, channel]);
 
   // Keyboard shortcuts.
   useKeyboardShortcuts({
@@ -803,12 +843,14 @@ export function CallShell({ channel }: { channel: string }) {
           actionPlan={actionPlan}
           eventId={eventId}
           onClose={closeSummary}
+          variant={myRole === "lawyer" ? "lawyer" : "citizen"}
           showVault={myRole === "user"}
           saveStatus={vault.status}
           saveError={vault.error}
           savedCount={vault.savedCount}
           onSaveToVault={vault.save}
           transcriptSegments={rtt.segments}
+          sharedFiles={sharedFiles}
         />
       )}
 
