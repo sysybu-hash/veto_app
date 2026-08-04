@@ -720,7 +720,9 @@ export const ru: Dict = {
     billingNotSubscribed: "Нет активной подписки",
     billingSubscribeCta: "Оформить подписку (PayPal)",
     billingRefresh: "Обновить статус",
-    billingConsultHint: "Платные консультации — отдельно, позже.",
+    billingConsultHint: "Можно купить разовую консультацию (₪79.90) или месячный план. Семейный тариф — на странице планов.",
+    billingConsultCta: "Оплатить разовую консультацию",
+    billingPlansLink: "К планам",
     errRateLimited:
       "Слишком много запросов. Подождите несколько секунд и повторите.",
   },

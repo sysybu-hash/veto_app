@@ -719,7 +719,9 @@ export const en: Dict = {
     billingNotSubscribed: "No active subscription",
     billingSubscribeCta: "Subscribe with PayPal",
     billingRefresh: "Refresh status",
-    billingConsultHint: "Paid consultations are launched separately (coming soon).",
+    billingConsultHint: "Buy a one-shot consultation (₪79.90) or a monthly plan. Family and subscriptions are also on the plans page.",
+    billingConsultCta: "Pay for one consultation",
+    billingPlansLink: "View plans",
     errRateLimited:
       "Too many requests in a short time. Wait a few seconds and try again.",
   },

@@ -713,7 +713,9 @@ export const he: Dict = {
     billingNotSubscribed: "אין מנוי פעיל",
     billingSubscribeCta: "רכישת מנוי (PayPal)",
     billingRefresh: "רענון מצב",
-    billingConsultHint: "ייעוצים בתשלום נפרד — יוזמו מהמוצר בהמשך.",
+    billingConsultHint: "אפשר לרכוש ייעוץ חד־פעמי (₪79.90) או מנוי חודשי. מנויים ומשפחה מנוהלים גם בעמוד התוכניות.",
+    billingConsultCta: "תשלום ייעוץ חד־פעמי",
+    billingPlansLink: "לעמוד התוכניות",
     errRateLimited:
       "יותר מדי בקשות לשרת בפרק זמן קצר. המתינו כמה שניות ונסו שוב.",
   },

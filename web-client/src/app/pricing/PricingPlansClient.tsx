@@ -116,10 +116,16 @@ export function PricingPlansClient({ isLoggedIn }: Props) {
                 </div>
               ) : (
                 <Link
-                  href={plan.href}
+                  href={
+                    isLoggedIn
+                      ? plan.href
+                      : `/login?next=${encodeURIComponent(plan.href)}`
+                  }
                   className="mt-7 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-subtle px-5 py-3 text-sm font-black text-primary transition hover:bg-surface-overlay"
                 >
-                  {t("pricingPage.startPlan")}
+                  {plan.id === "family"
+                    ? t("pricingPage.familyCta")
+                    : t("pricingPage.startPlan")}
                   <CtaArrow className="h-4 w-4" aria-hidden />
                 </Link>
               )}

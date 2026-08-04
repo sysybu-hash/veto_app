@@ -106,5 +106,17 @@ export function listWebEnvGaps(): string[] {
   if (!process.env.ABLY_API_KEY?.trim()) gaps.push("ABLY_API_KEY");
   if (!getSupportEmail()) gaps.push("NEXT_PUBLIC_SUPPORT_EMAIL");
   if (!getPostHogKey()) gaps.push("NEXT_PUBLIC_POSTHOG_KEY (analytics deferred until set)");
+  if (!process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID?.trim()) {
+    gaps.push("NEXT_PUBLIC_PAYPAL_CLIENT_ID");
+  }
+  if (!process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY?.trim()) {
+    gaps.push("NEXT_PUBLIC_VAPID_PUBLIC_KEY");
+  }
+  if (process.env.NEXT_PUBLIC_CALL_V2 === "0") {
+    gaps.push("NEXT_PUBLIC_CALL_V2=0 (video calls disabled)");
+  }
+  if (!process.env.CRON_SECRET?.trim()) {
+    gaps.push("CRON_SECRET (PENDING_DELIVERY retry unprotected)");
+  }
   return gaps;
 }

@@ -59,6 +59,15 @@ function validateEnv(opts = {}) {
   } else if (isProd && process.env.PAYPAL_ENV !== 'live') {
     warnings.push('PAYPAL_ENV is not live — sandbox credentials in production');
   }
+  if (process.env.PAYPAL_CLIENT_ID && !process.env.PAYPAL_WEBHOOK_ID) {
+    warnings.push('PAYPAL_WEBHOOK_ID missing — subscription webhooks will not sync');
+  }
+  if (
+    process.env.PAYPAL_CLIENT_ID &&
+    (!process.env.PAYPAL_STANDARD_PLAN_ID || !process.env.PAYPAL_FAMILY_PLAN_ID)
+  ) {
+    warnings.push('PAYPAL_STANDARD_PLAN_ID / PAYPAL_FAMILY_PLAN_ID — plan checkout incomplete');
+  }
 
   const turnReady =
     (process.env.TURN_URL && process.env.TURN_USERNAME && process.env.TURN_CREDENTIAL) ||

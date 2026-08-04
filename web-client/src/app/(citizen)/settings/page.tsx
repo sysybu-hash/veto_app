@@ -18,7 +18,10 @@ import {
   Video,
   type LucideIcon,
 } from "lucide-react";
-import { createSubscriptionOrder } from "@/api/paymentApi";
+import {
+  createConsultationOrder,
+  createSubscriptionOrder,
+} from "@/api/paymentApi";
 import { registerPasskey, passkeysSupported } from "@/api/passkeyApi";
 import {
   btnSecondaryGlass,
@@ -98,6 +101,24 @@ export default function SettingsIndexPage() {
     }
   }, []);
 
+  const startConsultation = useCallback(async () => {
+    setPayBusy(true);
+    setPayErr(null);
+    try {
+      const { approveUrl, exempt } = await createConsultationOrder();
+      if (exempt) {
+        await refresh();
+        setPayErr(null);
+        return;
+      }
+      window.location.href = approveUrl;
+    } catch (e) {
+      setPayErr(e instanceof Error ? e.message : "לא ניתן לפתוח תשלום ייעוץ כרגע");
+    } finally {
+      setPayBusy(false);
+    }
+  }, [refresh]);
+
   const saveSecurity = useCallback(() => {
     setSecurityNote("הגדרות האבטחה עודכנו במכשיר. הרשאות הדפדפן עצמן מנוהלות דרך Chrome.");
   }, []);
@@ -148,6 +169,7 @@ export default function SettingsIndexPage() {
           payBusy={payBusy}
           payErr={payErr}
           onSubscribe={startSubscribe}
+          onConsult={startConsultation}
           onRefresh={refresh}
         />
       )}
@@ -276,12 +298,14 @@ function BillingPanel({
   payBusy,
   payErr,
   onSubscribe,
+  onConsult,
   onRefresh,
 }: {
   profile: ReturnType<typeof useSettings>["profile"];
   payBusy: boolean;
   payErr: string | null;
   onSubscribe: () => void;
+  onConsult: () => void;
   onRefresh: () => Promise<void>;
 }) {
   const { t } = useTranslation();
@@ -315,6 +339,9 @@ function BillingPanel({
         <Button variant="primary" disabled={payBusy || active} loading={payBusy} onClick={onSubscribe}>
           {payBusy ? "פותח תשלום..." : t("settings.billingSubscribeCta")}
         </Button>
+        <Button variant="secondary" disabled={payBusy} onClick={onConsult}>
+          {t("settings.billingConsultCta")}
+        </Button>
         <Button
           variant="secondary"
           iconStart={<RefreshCw className="h-4 w-4" aria-hidden />}
@@ -322,6 +349,12 @@ function BillingPanel({
         >
           {t("settings.billingRefresh")}
         </Button>
+        <Link
+          href="/plans"
+          className={`inline-flex items-center justify-center px-4 py-2.5 text-sm font-bold ${btnSecondaryGlass}`}
+        >
+          {t("settings.billingPlansLink")}
+        </Link>
       </div>
     </>
   );

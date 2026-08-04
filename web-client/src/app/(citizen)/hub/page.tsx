@@ -225,7 +225,7 @@ export default function CitizenHubPage() {
     }
     if (entitlement && !entitlement.allowed) {
       if (entitlement.nextAction === "pricing" || entitlement.status === "payment_required") {
-        router.push("/pricing");
+        router.push("/plans");
       } else {
         setErrorMessage(entitlement.reason);
       }
