@@ -231,8 +231,9 @@ export default function CitizenHubPage() {
       return;
     }
 
+    // startSearch() already clears statusMessage — do not call
+    // setErrorMessage(null) here (that used to flip isSearching back off).
     startSearch();
-    setErrorMessage(null);
 
     const sock = (() => {
       try {
@@ -305,8 +306,10 @@ export default function CitizenHubPage() {
 
   const confirmSos = useCallback(() => {
     setSosDialogOpen(false);
+    // Show waiting UI immediately — specialization is chosen on top of it.
+    startSearch();
     setSpecializationDialogOpen(true);
-  }, []);
+  }, [startSearch]);
 
   const selectSpecialization = useCallback(
     (specializationId: SpecializationId) => {
@@ -544,7 +547,11 @@ export default function CitizenHubPage() {
 
       <SpecializationDialog
         isOpen={specializationDialogOpen}
-        onClose={() => setSpecializationDialogOpen(false)}
+        onClose={() => {
+          setSpecializationDialogOpen(false);
+          // User backed out before picking a specialty — stop the waiting UI.
+          if (!lawyerFound) reset();
+        }}
         onSelect={selectSpecialization}
       />
 

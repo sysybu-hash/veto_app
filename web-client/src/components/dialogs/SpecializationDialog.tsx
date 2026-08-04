@@ -47,7 +47,7 @@ export function SpecializationDialog({
 
   return (
     <div
-      className="fixed inset-0 z-[90] flex items-center justify-center bg-surface-scrim p-4 backdrop-blur-sm"
+      className="fixed inset-0 z-[110] flex items-center justify-center bg-surface-scrim p-4 backdrop-blur-sm"
       role="presentation"
       onClick={onClose}
     >
