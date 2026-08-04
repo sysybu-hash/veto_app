@@ -29,6 +29,29 @@ function configure() {
 }
 
 /**
+ * Deep-link so tapping a SOS notification opens the lawyer dashboard on that event
+ * (calls tab), not a blank overview.
+ * @param {Record<string, unknown>} data
+ */
+function lawyerSosDeepLink(data = {}) {
+  if (typeof data.url === 'string' && data.url.trim()) return data.url.trim();
+  const params = new URLSearchParams({ tab: 'calls' });
+  if (data.eventId) params.set('eventId', String(data.eventId));
+  if (data.userId != null) params.set('userId', String(data.userId));
+  if (data.userName) params.set('userName', String(data.userName));
+  if (data.language) params.set('language', String(data.language));
+  if (data.timestamp) params.set('ts', String(data.timestamp));
+  const loc = data.location;
+  if (loc && typeof loc === 'object') {
+    const lat = Number(loc.lat);
+    const lng = Number(loc.lng);
+    if (Number.isFinite(lat)) params.set('lat', String(lat));
+    if (Number.isFinite(lng)) params.set('lng', String(lng));
+  }
+  return `/dashboard?${params.toString()}`;
+}
+
+/**
  * Send a push notification to a single lawyer.
  * @param {Object} lawyer - Mongoose Lawyer document (must have push_subscription field)
  * @param {{ title: string, body: string, data?: object }} payload
@@ -37,10 +60,12 @@ async function sendToLawyer(lawyer, { title, body, data = {} }) {
   if (!configure())       return { sent: false, reason: 'VAPID not configured' };
   if (!lawyer.push_subscription) return { sent: false, reason: 'no subscription' };
 
+  const url = lawyerSosDeepLink(data);
+
   try {
     await webpush.sendNotification(
       lawyer.push_subscription,
-      JSON.stringify({ title, body, url: '/dashboard', data }),
+      JSON.stringify({ title, body, url, ...data, data }),
     );
     return { sent: true };
   } catch (err) {
@@ -74,10 +99,14 @@ async function sendToUser(user, { title, body, data = {} }) {
   if (!configure()) return { sent: false, reason: 'VAPID not configured' };
   if (!user || !user.push_subscription) return { sent: false, reason: 'no subscription' };
   const User = require('../models/User');
+  const url =
+    typeof data.url === 'string' && data.url.trim()
+      ? data.url.trim()
+      : '/hub';
   try {
     await webpush.sendNotification(
       user.push_subscription,
-      JSON.stringify({ title, body, url: '/dashboard', data }),
+      JSON.stringify({ title, body, url, ...data, data }),
     );
     return { sent: true };
   } catch (err) {
