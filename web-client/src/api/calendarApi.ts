@@ -2,8 +2,9 @@ import { apiUrl, authFetch } from "@/api/apiClient";
 
 /**
  * Calendar endpoints map to Express:
- * - List/create: `/api/calendar/events` (not a bare `/api/calendar` collection route).
- * - Google connect: `POST /api/integrations/gcal/connect` → `{ authUrl }` (server.js).
+ * - CRUD: `/api/calendar/events`
+ * - Feed: `/api/calendar/feed`
+ * - Google: `/api/integrations/gcal/*`
  */
 export type CalendarEventType = "hearing" | "meeting" | "other";
 
@@ -16,15 +17,32 @@ export type ApiCalendarEvent = {
   timezone?: string;
   notes?: string;
   locationAddress?: string;
+  reminderBeforeMinutes?: number[];
+  sourceCaseId?: string | null;
 };
 
-export type CreateCalendarEventPayload = {
+export type CalendarEventPayload = {
   title: string;
   start: string;
   end: string;
   timezone?: string;
   notes?: string;
   type?: CalendarEventType;
+  locationAddress?: string;
+  reminderBeforeMinutes?: number[];
+  sourceCaseId?: string | null;
+};
+
+export type GoogleCalendarStatus = {
+  enabled: boolean;
+  connected: boolean;
+  calendarId?: string | null;
+  lastSyncAt?: string | null;
+};
+
+export type CalendarFeedInfo = {
+  token: string;
+  webcalUrl: string;
 };
 
 async function parseJsonError(res: Response): Promise<string> {
@@ -81,9 +99,17 @@ export async function fetchUpcomingEvents(from: Date = new Date()): Promise<
     .sort((x, y) => new Date(x.start).getTime() - new Date(y.start).getTime());
 }
 
+export async function getEvent(id: string): Promise<ApiCalendarEvent> {
+  const res = await authFetch(apiUrl(`/api/calendar/events/${id}`), {
+    method: "GET",
+  });
+  if (!res.ok) throw new Error(await parseJsonError(res));
+  return (await res.json()) as ApiCalendarEvent;
+}
+
 /** POST `/api/calendar/events`. */
 export async function createEvent(
-  payload: CreateCalendarEventPayload,
+  payload: CalendarEventPayload,
 ): Promise<ApiCalendarEvent> {
   const res = await authFetch(apiUrl("/api/calendar/events"), {
     method: "POST",
@@ -96,6 +122,43 @@ export async function createEvent(
     throw new Error(await parseJsonError(res));
   }
   return (await res.json()) as ApiCalendarEvent;
+}
+
+export async function updateEvent(
+  id: string,
+  payload: Partial<CalendarEventPayload>,
+): Promise<ApiCalendarEvent> {
+  const res = await authFetch(apiUrl(`/api/calendar/events/${id}`), {
+    method: "PUT",
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) throw new Error(await parseJsonError(res));
+  return (await res.json()) as ApiCalendarEvent;
+}
+
+export async function deleteEvent(id: string): Promise<void> {
+  const res = await authFetch(apiUrl(`/api/calendar/events/${id}`), {
+    method: "DELETE",
+  });
+  if (!res.ok) throw new Error(await parseJsonError(res));
+}
+
+export async function getFeedInfo(): Promise<CalendarFeedInfo> {
+  const res = await authFetch(apiUrl("/api/calendar/feed"), { method: "GET" });
+  if (!res.ok) throw new Error(await parseJsonError(res));
+  const data = (await res.json()) as Partial<CalendarFeedInfo>;
+  if (!data.token || !data.webcalUrl) {
+    throw new Error("Invalid feed response");
+  }
+  return { token: data.token, webcalUrl: data.webcalUrl };
+}
+
+export async function getGoogleStatus(): Promise<GoogleCalendarStatus> {
+  const res = await authFetch(apiUrl("/api/integrations/gcal/status"), {
+    method: "GET",
+  });
+  if (!res.ok) throw new Error(await parseJsonError(res));
+  return (await res.json()) as GoogleCalendarStatus;
 }
 
 /**
@@ -116,3 +179,13 @@ export async function getGoogleAuthUrl(): Promise<{ url: string }> {
   }
   return { url };
 }
+
+export async function disconnectGoogle(): Promise<void> {
+  const res = await authFetch(apiUrl("/api/integrations/gcal/disconnect"), {
+    method: "POST",
+  });
+  if (!res.ok) throw new Error(await parseJsonError(res));
+}
+
+/** @deprecated Use CalendarEventPayload */
+export type CreateCalendarEventPayload = CalendarEventPayload;
