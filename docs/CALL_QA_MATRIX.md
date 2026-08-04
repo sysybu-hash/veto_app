@@ -30,10 +30,19 @@ Run after backend (Render) and web bundle (Vercel) updates that touch Agora or `
 
 Mark each cell **OK** or note the build / date and the failure symptom.
 
+## Hangup / summary sync (regression)
+
+| Check | Status |
+|-------|--------|
+| Citizen ends call → citizen summary (billing/vault) | Shipped `#53` |
+| Peer receives `call-ended` → shows role summary (not stuck in-call) | Shipped `#53` |
+| Lawyer summary has no pay/vault CTAs | Shipped `#53` |
+| Close summary → hub without “Connecting your call…” overlay | Shipped `#53` |
+| Chat-only also shows summary | Shipped `#53` |
+
 ## Manual test session — 2026-07-27 (Chrome desktop, citizen + lawyer, real 2-account call)
 
 - **Join + remote video: OK.** Both sides connected and saw each other's video.
-- **Bug found & fixed**: on call end, the **lawyer** was redirected to `/hub` (the citizen's screen) instead of `/dashboard`. Root cause: `CallShell.tsx`'s `endCall`/`closeSummary`/no-session-fallback all hardcoded `router.replace("/hub")` regardless of `myRole`. Fixed by routing to `myRole === "lawyer" ? "/dashboard" : "/hub"` in all three places (commit pending push).
-- **Additional bugs reported, not yet triaged**: user recorded a video of the session (lawyer side) showing further issues beyond the redirect — not yet itemized in this matrix. Follow up needed to extract concrete repro steps per issue.
-- **Call UI redesign requested**: user flagged the call screens as needing a visual redesign — tracked as a separate design task, not a QA regression.
-- **Still untested**: Edge, Firefox, Safari (macOS/iOS), Chrome (Android); Local PIP, Mic mute, Tab refresh mid-call, 30s background — none of these were covered by this session.
+- **Bug found & fixed**: on call end, the **lawyer** was redirected to `/hub` instead of `/dashboard` — fixed via `postCallHome` by role.
+- **2026-08-04 follow-up**: hangup sync + dual summaries shipped in `#53`. Re-verify on production after deploy.
+- **Still untested**: Edge, Firefox, Safari (macOS/iOS), Chrome (Android); Local PIP, Mic mute, Tab refresh mid-call, 30s background.

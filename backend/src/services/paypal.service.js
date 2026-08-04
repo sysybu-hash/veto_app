@@ -265,4 +265,10 @@ module.exports = {
   createBillingSubscription,
   getBillingSubscription,
   verifyWebhookSignature,
+  /** Test-only accessors for env trimming. */
+  _test: {
+    paypalEnv,
+    paypalClientId,
+    paypalClientSecret,
+  },
 };

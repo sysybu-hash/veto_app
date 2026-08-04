@@ -69,7 +69,7 @@ async function getSummary(req, res, next) {
   }
 }
 
-// ── Reports stub ────────────────────────────────────────────
+// ── Reports (counts-only summary; not a full analytics report) ─
 async function getReportsSummary(req, res, next) {
   try {
     const userId = uid(req);
@@ -80,6 +80,7 @@ async function getReportsSummary(req, res, next) {
     ]);
     res.json({
       period: 'all',
+      mode: 'counts_only',
       totals: { contracts, tasks, contacts },
       generatedAt: new Date().toISOString(),
     });

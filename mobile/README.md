@@ -6,6 +6,16 @@ Replacement for [`frontend/`](../frontend/) (Flutter, frozen). Stack:
 - NativeWind for styling (matches the web client's Tailwind tokens)
 - Same backend as [`web-client/`](../web-client/) — see [`backend/ENV_GUIDE.md`](../backend/ENV_GUIDE.md)
 
+## Internal only
+
+**Do not ship to end users** until feature parity with `web-client/` (plans, vault, calendar, family). Store listing / TestFlight require a real EAS project:
+
+```bash
+cd mobile
+npx eas-cli login
+npx eas init   # replaces extra.eas.projectId in app.json
+```
+
 ## Status
 
 **WIP — not for production users yet**, but SOS path is wired:

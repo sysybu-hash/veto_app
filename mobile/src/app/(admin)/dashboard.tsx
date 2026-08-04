@@ -9,7 +9,8 @@ export default function AdminDashboardScreen() {
     <ScreenWrapper>
       <Text className="text-2xl font-bold text-primary">לוח בקרה — מנהל</Text>
       <Text className="mt-2 text-legal-slate-muted">
-        מצב placeholder לבדיקת ניווט. משתמש: {user?.full_name ?? ""}
+        מסך פנימי בלבד (placeholder). ניהול מנהלים המלא הוא ב-web `/admin`. משתמש:{" "}
+        {user?.full_name ?? ""}
       </Text>
     </ScreenWrapper>
   );

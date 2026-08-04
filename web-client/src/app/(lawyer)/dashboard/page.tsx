@@ -171,7 +171,13 @@ function LawyerDashboardInner() {
   const searchParams = useSearchParams();
   const { t } = useTranslation();
   const { subscribe: subscribeWebPush } = useWebPush();
-  const [activeTab, setActiveTab] = useState<DashboardTab>("overview");
+  const [tabOverride, setTabOverride] = useState<DashboardTab | null>(null);
+  const deepLinkCalls =
+    searchParams.get("tab") === "calls" || !!searchParams.get("eventId");
+  const activeTab: DashboardTab = tabOverride ?? (deepLinkCalls ? "calls" : "overview");
+  const setActiveTab = useCallback((tab: DashboardTab) => {
+    setTabOverride(tab);
+  }, []);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [notifPermission, setNotifPermission] = useState<NotificationPermission | "unsupported">("unsupported");
   const [scheduleOpen, setScheduleOpen] = useState(true);
@@ -200,36 +206,25 @@ function LawyerDashboardInner() {
     if (getRoleFromJwt() !== "lawyer") router.replace("/hub");
   }, [router]);
 
-  // Deep-link from SOS push / notification click:
-  // /dashboard?eventId=…&tab=calls&lat=…&lng=…
+  // Hydrate SOS alert from push deep-link query (location optional).
+  const deepLinkKey = searchParams.toString();
   useEffect(() => {
     const eventId = searchParams.get("eventId");
-    const tab = searchParams.get("tab");
+    if (!eventId) return;
+    const existing = useLawyerStore.getState().activeAlert;
+    if (existing?.eventId === eventId) return;
     const lat = Number(searchParams.get("lat"));
     const lng = Number(searchParams.get("lng"));
-    const userId = searchParams.get("userId");
-    const userName = searchParams.get("userName") || "";
-    const language = searchParams.get("language") || "he";
-    const timestamp = searchParams.get("ts") || new Date().toISOString();
-
-    queueMicrotask(() => {
-      if (tab === "calls" || eventId) setActiveTab("calls");
-      if (!eventId) return;
-      const existing = useLawyerStore.getState().activeAlert;
-      if (existing?.eventId === eventId) return;
-      setActiveAlert({
-        eventId,
-        userId,
-        userName,
-        location:
-          Number.isFinite(lat) && Number.isFinite(lng)
-            ? { lat, lng }
-            : null,
-        language,
-        timestamp,
-      });
+    setActiveAlert({
+      eventId,
+      userId: searchParams.get("userId"),
+      userName: searchParams.get("userName") || "",
+      location:
+        Number.isFinite(lat) && Number.isFinite(lng) ? { lat, lng } : null,
+      language: searchParams.get("language") || "he",
+      timestamp: searchParams.get("ts") || new Date().toISOString(),
     });
-  }, [searchParams, setActiveAlert]);
+  }, [deepLinkKey, searchParams, setActiveAlert]);
 
   useEffect(() => {
     if (!getJwt() || getRoleFromJwt() !== "lawyer") return;
@@ -258,9 +253,15 @@ function LawyerDashboardInner() {
     const publish = () => {
       navigator.geolocation.getCurrentPosition(
         (pos) => {
-          void updateLawyerLocation(pos.coords.latitude, pos.coords.longitude).catch(() => {});
+          void updateLawyerLocation(pos.coords.latitude, pos.coords.longitude).catch(
+            (err) => {
+              console.warn("[lawyer] location heartbeat failed", err);
+            },
+          );
         },
-        () => {},
+        (err) => {
+          console.warn("[lawyer] geolocation denied/unavailable", err?.code);
+        },
         { enableHighAccuracy: false, maximumAge: 60_000, timeout: 15_000 },
       );
     };

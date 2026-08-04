@@ -2,78 +2,62 @@
 
 Use after stabilization changes or before tagging a release.
 
-**Also read:** [RELEASE_READINESS.md](RELEASE_READINESS.md) (URLs, risks, ops).  
-**After any Flutter/Dart change** that affects the web app: from repo root run `npm run ship:web` and commit updated `frontend/build/web` (Vercel serves prebuilt assets; see [DEPLOY.md](../DEPLOY.md)).
+**Also read:** [RELEASE_READINESS.md](RELEASE_READINESS.md) (URLs, risks, ops) · [CALL_QA_MATRIX.md](CALL_QA_MATRIX.md) · [LEGAL_REVIEW_PACKAGE.md](LEGAL_REVIEW_PACKAGE.md).
 
-## Stack boundaries (where each layer lives)
+## Stack boundaries (current SoT)
 
-| Area | Server (Node) | Client (Flutter/Dart) | Web-only JS (`frontend/web/`) |
-|------|---------------|------------------------|--------------------------------|
-| Auth, sessions, admin API | `backend` — JWT, `auth.middleware`, `/api/*` | Login, `AuthService`, admin screens | GIS token via `browser_bridge` (Flutter web) |
-| Real-time dispatch | `socket.io` in `server.js` + `dispatch.socket` | `socket_service` (`socket_io_client` only) | — |
-| Agora | Token + call routes in `backend` | `agora_rtc_engine` + `AgoraService` (public App ID only; token from API) | — |
-| Files / vault / upload | Express + models + storage | `upload_service`, vault UI | — |
-| AI (Gemini) | `POST /api/ai/chat`, `live-token` for browser session | `AiService` → `/ai/chat`; `AiChatDialog` | **Exception:** `gemini_live.mjs` + worklet: Multimodal Live in the browser; ephemeral token from `POST /api/ai/live-token` (no API key in the page). |
-| Push, calendar, payments | FCM, cron, PayPal, calendar routes | Firebase Messaging, UI | `push-sw.js` (push SW if used) |
-| PWA / static web | `backend` serves API; Render | Flutter build → `frontend/build/web` | `index.html`, `flutter_service_worker.js` (cache killer), TTS/bridge scripts as needed |
+| Area | Server (Node) | Web (`web-client/` Next.js) | Mobile (`mobile/` Expo) |
+|------|---------------|-----------------------------|-------------------------|
+| Auth / sessions | `backend` JWT + `/api/*` | `/login`, cookies, passkeys | OTP login (WIP) |
+| Real-time SOS | `socket.io` + `dispatch.socket` | Hub + lawyer dashboard | SOS + accept (WIP) |
+| Agora calls | Tokens + call routes | `CallShell` v2 | Agora path (WIP) |
+| Vault / files | Express + storage | `/vault`, generator | Not yet |
+| Calendar | CRUD + GCal + iCal + cron | `/calendar` (redesign) | Not yet |
+| Push | VAPID web-push; Expo push; optional FCM | Service worker + VAPID | `expo-notifications` |
+| Payments | PayPal orders/subscriptions/webhooks | `/plans`, `/pricing`, settings | Not yet |
+| AI | Gemini routes | Chat / docs | Not yet |
 
-**Alignment audit (2026-04):** Grep of `frontend/lib` found no hardcoded Google/Gemini API keys; `firebase_options.dart` uses `replace-me` until configured. REST chat paths use `AiService` only; Gemini Live is the documented client exception.
+**Legacy Flutter** (`frontend/`) is **frozen** — do not treat as release SoT.
 
-### P0 stability (code triage, 2026-04-28)
+### Release versions
 
-Use this when debugging **PWA + native** “freezes” or “crashes” (see plan: both platforms).
+| Part | Where |
+|------|--------|
+| Web | `web-client/package.json` |
+| API | `backend/package.json` |
+| Mobile | `mobile/app.json` / `package.json` |
 
-| Symptom | Suspected code path | What we changed |
-|--------|---------------------|-----------------|
-| Tab unresponsive after web login (Flows) | `login_screen` already uses 8s timeout on `flowsSetUser`; `veto_screen` had unbounded retry | `_retryWebFlows` now uses **8s timeout**; failures are non-fatal. |
-| “Frozen” right after opening `/veto_screen` | Subscription gate dialog + first socket frames | First **subscription** check delayed to **~650ms** after first frame (less contention with post-login paint). |
-| Web: audio level | PCM in `gemini_live.mjs` | **Master `GainNode`** + prefs `VetoLiveAudioPrefs` (voice + gain); live token supports **allowlisted** `voiceName` on the server. |
+## Citizen (web)
 
-**Manual follow-up (still required):** capture Chrome/Safari remote logs (PWA) and `logcat` / Xcode console (native) for OOM or Skia errors — not reproducible in CI.
+- [ ] Login (OTP / Google)
+- [ ] Hub SOS → searching overlay → lawyer found → call type → `/call/...`
+- [ ] Hangup → citizen summary → back to hub **without** connecting overlay
+- [ ] Vault upload / evidence list
+- [ ] Calendar create/edit/delete (no mock events)
+- [ ] Plans / consultation payment (PayPal)
+- [ ] Settings billing CTAs
 
-### Release versions (bump when you ship)
+## Lawyer (web)
 
-| Part | Version / command |
-|------|---------------------|
-| App (Flutter) | `1.1.0+2` in `frontend/pubspec.yaml` |
-| API (Node) | `1.1.0` in `backend/package.json` |
-| Record exact toolchains | `node -v`, `npm -v`, `flutter --version` (paste into release notes) |
-
-**Gemini Live voice:** `POST /api/ai/live-token` body may include `voiceName` (server allowlist: Kore, Puck, Charon, Fenrir, Zephyr, Aoede). Web `vetoGeminiLive.start` passes `(lang, jwt, baseUrl, voiceName, gain)`.
-
-## Citizen
-
-- [ ] Login / OTP (dev: OTP in backend terminal)
-- [ ] AI legal chat (authenticated); rate-limit friendly message if spamming
-- [ ] Dispatch from VETO screen → `emergency_created` → `veto_dispatched`
-- [ ] Lawyer accepts → `lawyer_found` → navigate to call with correct call type
-- [ ] Call connect (audio/video), mute/camera toggles
-- [ ] End call from **citizen** → lawyer returns to **available** in dashboard
-- [ ] Cancel veto before accept → lawyers dismissed
-
-## Lawyer
-
-- [ ] Dashboard online + availability toggle
-- [ ] Receive `new_emergency_alert` (socket + push if configured)
-- [ ] Accept race: second lawyer gets `case_already_taken`
-- [ ] Reject / ignore alert (dispatch log updated)
-- [ ] End call from **lawyer** → self available again
+- [ ] Dashboard availability + GPS heartbeat
+- [ ] Socket `new_emergency_alert` + web push deep-link (`eventId` with or without lat/lng)
+- [ ] Accept → session → call
+- [ ] Hangup → lawyer summary → `/dashboard`
+- [ ] Admin approval gate for new lawyers
 
 ## Admin
 
-- [ ] Admin login, emergency logs, user/lawyer lists (smoke)
+- [ ] Admin login, lawyers approve/reject, emergency logs smoke
 
 ## API / infra
 
-- [ ] `GET /health` → `mongo: connected` on deployed API
-- [ ] Recording upload then transcribe with **only** `recording_url` (server fetches audio)
-- [ ] CI: backend `npm run lint` + `npm test`; frontend `flutter test` + analyze gate
-- [ ] **Automated smoke (local/CI):** `cd frontend && flutter test` (includes route mount tests, including `/privacy` and `/terms`).
+- [ ] `GET /health` → mongo connected
+- [ ] CI: backend lint + test; web build verify
+- [ ] Cron: `GET /api/cron/retry-pending-sos` (with `CRON_SECRET`)
+- [ ] PayPal Live + webhook ID configured
 
-> Full **manual** exercises below require the **real production (or staging) web + API URL** — `flutter test` alone does not replace this.
+## Mobile (internal only until parity)
 
-## Analyzer
-
-Run locally: `flutter analyze`.
-
-CI now runs strict `flutter analyze`, so analyzer cleanliness is a hard release gate.
+- [ ] Expo login + SOS smoke
+- [ ] Push registration (Expo token; no Firebase required)
+- [ ] Documented as non-production in `mobile/README.md`

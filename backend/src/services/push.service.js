@@ -122,5 +122,6 @@ module.exports = {
   sendToLawyer,
   sendToMany,
   sendToUser,
+  lawyerSosDeepLink,
   VAPID_PUBLIC_KEY: () => process.env.VAPID_PUBLIC_KEY,
 };

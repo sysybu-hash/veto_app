@@ -208,6 +208,23 @@ jobs:
           path: web-client/playwright-report/
           retention-days: 14
 
+  mobile-ci:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mobile
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: mobile/package-lock.json
+      - run: npm ci
+      - name: Typecheck Expo app (internal WIP)
+        run: npx tsc --noEmit
+        continue-on-error: true
+
   # Build-only gate on main. Live deploys come from Vercel ↔ GitHub (one Production
   # per push). Keeping a second `vercel deploy --prod` here duplicated every release.
   verify-web-build:
