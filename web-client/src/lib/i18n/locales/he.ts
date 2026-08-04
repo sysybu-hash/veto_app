@@ -231,11 +231,20 @@ export const he: Dict = {
     title: "סיוע משפטי חירום",
     subtitle:
       "לחצו על SOS כדי לבקש עורך דין. הישארו במסך עד שנפתחת השיחה.",
-    subscriptionLabel: "המנוי המחובר",
+    subscriptionLabel: "המנוי שלך",
     defaultUserName: "משתמש VETO",
     statusExempt: "פטור כולל ייעוץ",
     statusActive: "פעיל",
     statusInactive: "לא פעיל",
+    entitlementNone:
+      "עדיין אין לכם מנוי פעיל — זה בסדר. אפשר לבחור מסלול עכשיו, כדי ש־SOS יהיה מוכן ברגע שתצטרכו.",
+    entitlementActive: "המנוי פעיל. אפשר לבקש עורך דין בלחיצה על SOS.",
+    entitlementExempt: "החשבון שלכם פטור מתשלום וכולל ייעוץ משפטי.",
+    entitlementOvertime:
+      "נשאר תשלום קטן על דקות נוספות מהשיחה הקודמת. אפשר להשלים אותו ואז להמשיך.",
+    entitlementConsultation: "יש לכם ייעוץ חד־פעמי ששולם ומוכן לשימוש.",
+    buyPlanCta: "לרכישת מנוי",
+    payOvertimeCta: "להשלמת תשלום",
     sos: "SOS",
     searching: "מחפשים עורך דין זמין…",
     searchingTitle: "מחפשים עבורכם עורך דין זמין",
