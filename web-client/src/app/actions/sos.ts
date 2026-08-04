@@ -36,6 +36,22 @@ export type TriggerSosResult =
   | { success: true; eventId: string }
   | { success: false; error: string; eventId?: string };
 
+type PublishPayload = {
+  eventId: string;
+  userId: string;
+  role: string;
+  timestamp: string;
+  stress_test: boolean;
+  urgency: string;
+  location: SosAlertLocation | null;
+};
+
+async function publishSosToAbly(payload: PublishPayload): Promise<void> {
+  const rest = getAblyRest();
+  const channel = rest.channels.get(SOS_ALERTS_CHANNEL);
+  await channel.publish(SOS_EVENT_NAME, payload);
+}
+
 /**
  * Create DB queue row + publish SOS metadata to Ably (lawyer dashboards).
  */
@@ -86,9 +102,7 @@ export async function triggerSosAlert(
     });
 
     try {
-      const rest = getAblyRest();
-      const channel = rest.channels.get(SOS_ALERTS_CHANNEL);
-      await channel.publish(SOS_EVENT_NAME, {
+      await publishSosToAbly({
         eventId,
         userId,
         role: role ?? "user",
@@ -105,12 +119,19 @@ export async function triggerSosAlert(
             : null,
       });
     } catch (pubErr) {
-      // Ably being down must NOT lose the SOS: keep the row (marked so a human/retry job
-      // can pick it up) instead of deleting it, and page via Sentry so someone notices.
-      // Previously this deleted the just-created row and returned nothing to fall back on.
-      await prisma.sosEvent
-        .update({ where: { eventId }, data: { status: "PENDING_DELIVERY" } })
-        .catch(() => {});
+      // Ably being down must NOT lose the SOS: keep the row for retry job.
+      try {
+        await prisma.sosEvent.update({
+          where: { eventId },
+          data: { status: "PENDING_DELIVERY" },
+        });
+      } catch (markErr) {
+        console.error("[SOS] failed to mark PENDING_DELIVERY:", eventId, markErr);
+        Sentry.captureException(markErr, {
+          tags: { area: "sos", stage: "mark_pending" },
+          extra: { eventId },
+        });
+      }
       Sentry.captureException(pubErr, {
         level: "fatal",
         tags: { area: "sos", stage: "ably_publish" },
@@ -129,4 +150,75 @@ export async function triggerSosAlert(
     Sentry.captureException(e, { level: "fatal", tags: { area: "sos", stage: "create" } });
     return { success: false, error: "פרסום התראת SOS נכשל" };
   }
+}
+
+export type RetryPendingSosResult = {
+  scanned: number;
+  delivered: number;
+  failed: number;
+  errors: string[];
+};
+
+/**
+ * Republish SosEvents stuck in PENDING_DELIVERY (Ably was down at create time).
+ * Intended for cron / ops — not a user-facing action.
+ */
+export async function retryPendingSosDeliveries(
+  limit = 50,
+): Promise<RetryPendingSosResult> {
+  const result: RetryPendingSosResult = {
+    scanned: 0,
+    delivered: 0,
+    failed: 0,
+    errors: [],
+  };
+
+  if (!isAblyConfigured()) {
+    result.errors.push("ABLY_API_KEY missing");
+    return result;
+  }
+
+  const pending = await prisma.sosEvent.findMany({
+    where: { status: "PENDING_DELIVERY" },
+    orderBy: { createdAt: "asc" },
+    take: Math.min(Math.max(limit, 1), 200),
+  });
+  result.scanned = pending.length;
+
+  for (const row of pending) {
+    try {
+      await publishSosToAbly({
+        eventId: row.eventId,
+        userId: row.citizenId,
+        role: "user",
+        timestamp: row.createdAt.toISOString(),
+        stress_test: row.stressTest,
+        urgency: row.urgency,
+        location:
+          row.lat != null && row.lng != null
+            ? {
+                lat: row.lat,
+                lng: row.lng,
+                ...(row.accuracy != null ? { accuracy: row.accuracy } : {}),
+              }
+            : null,
+      });
+      await prisma.sosEvent.update({
+        where: { eventId: row.eventId },
+        data: { status: "OPEN" },
+      });
+      result.delivered += 1;
+    } catch (err) {
+      result.failed += 1;
+      const msg = err instanceof Error ? err.message : String(err);
+      result.errors.push(`${row.eventId}: ${msg}`);
+      console.warn("[SOS] retry publish failed:", row.eventId, err);
+      Sentry.captureException(err, {
+        tags: { area: "sos", stage: "ably_retry" },
+        extra: { eventId: row.eventId },
+      });
+    }
+  }
+
+  return result;
 }

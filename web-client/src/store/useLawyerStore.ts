@@ -6,7 +6,8 @@ export interface LawyerActiveAlert {
   eventId: string;
   userId: string | null;
   userName: string;
-  location: { lat: number; lng: number };
+  /** Optional — push deep-links may arrive without GPS. */
+  location: { lat: number; lng: number } | null;
   language: string;
   timestamp: string;
 }

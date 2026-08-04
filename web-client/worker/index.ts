@@ -16,12 +16,29 @@ type PushPayload = {
 };
 
 function buildLawyerSosUrl(data: PushPayload): string {
-  if (typeof data.url === "string" && data.url.trim()) return data.url.trim();
   const nested = data.data && typeof data.data === "object" ? data.data : null;
   const eventId =
     (typeof data.eventId === "string" && data.eventId) ||
     (nested && typeof nested.eventId === "string" ? nested.eventId : "") ||
     "";
+
+  // Prefer a deep-link with eventId over a bare /dashboard URL from older payloads.
+  const rawUrl = typeof data.url === "string" ? data.url.trim() : "";
+  if (rawUrl && eventId) {
+    try {
+      const u = new URL(rawUrl, "https://veto.local");
+      if (u.pathname === "/dashboard" && !u.searchParams.get("eventId")) {
+        // fall through and rebuild
+      } else if (u.searchParams.get("eventId") || u.pathname !== "/dashboard") {
+        return rawUrl;
+      }
+    } catch {
+      if (rawUrl.includes("eventId=")) return rawUrl;
+    }
+  } else if (rawUrl && !eventId) {
+    return rawUrl;
+  }
+
   if (!eventId) return "/dashboard";
 
   const params = new URLSearchParams({ tab: "calls", eventId });

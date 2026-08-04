@@ -8,7 +8,15 @@ Replacement for [`frontend/`](../frontend/) (Flutter, frozen). Stack:
 
 ## Status
 
-Scaffold only. **Do not point production users here.**
+**WIP — not for production users yet**, but SOS path is wired:
+
+| Feature | Status |
+|---------|--------|
+| OTP login + roles | Working |
+| Citizen SOS over Socket.io | Working |
+| Lawyer queue + accept + Agora | Working |
+| Location heartbeat (lawyer) | Working (`PUT /lawyers/location`) |
+| Push registration | `expo-notifications` → `POST /users/fcm-token` → backend `expoPush.service` (**no Firebase required** for Expo tokens). Set `FIREBASE_SERVICE_ACCOUNT` only for legacy FCM tokens. |
 
 Canonical clients today:
 
@@ -17,7 +25,7 @@ Canonical clients today:
 | Web product | [`web-client/`](../web-client/) | **Source of truth** — ship here |
 | API | [`backend/`](../backend/) | Active |
 | Flutter legacy | [`frontend/`](../frontend/) | Frozen — do not extend |
-| This Expo app | `mobile/` | WIP until feature parity |
+| This Expo app | `mobile/` | SOS + push registration in progress |
 
 ## Why two mobile trees exist
 

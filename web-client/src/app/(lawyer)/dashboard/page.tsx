@@ -68,17 +68,23 @@ function parseEmergencyAlert(raw: unknown): LawyerActiveAlert | null {
   if (!raw || typeof raw !== "object") return null;
   const d = raw as Record<string, unknown>;
   const eventId = typeof d.eventId === "string" ? d.eventId : null;
+  if (!eventId) return null;
+
+  let location: { lat: number; lng: number } | null = null;
   const loc = d.location;
-  if (!eventId || !loc || typeof loc !== "object") return null;
-  const lat = Number((loc as Record<string, unknown>).lat);
-  const lng = Number((loc as Record<string, unknown>).lng);
-  if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+  if (loc && typeof loc === "object") {
+    const lat = Number((loc as Record<string, unknown>).lat);
+    const lng = Number((loc as Record<string, unknown>).lng);
+    if (Number.isFinite(lat) && Number.isFinite(lng)) {
+      location = { lat, lng };
+    }
+  }
 
   return {
     eventId,
     userId: typeof d.userId === "string" ? d.userId : d.userId != null ? String(d.userId) : null,
     userName: typeof d.userName === "string" ? d.userName : "",
-    location: { lat, lng },
+    location,
     language: typeof d.language === "string" ? d.language : "he",
     timestamp: typeof d.timestamp === "string" ? d.timestamp : new Date().toISOString(),
   };
@@ -211,16 +217,17 @@ function LawyerDashboardInner() {
       if (!eventId) return;
       const existing = useLawyerStore.getState().activeAlert;
       if (existing?.eventId === eventId) return;
-      if (Number.isFinite(lat) && Number.isFinite(lng)) {
-        setActiveAlert({
-          eventId,
-          userId,
-          userName,
-          location: { lat, lng },
-          language,
-          timestamp,
-        });
-      }
+      setActiveAlert({
+        eventId,
+        userId,
+        userName,
+        location:
+          Number.isFinite(lat) && Number.isFinite(lng)
+            ? { lat, lng }
+            : null,
+        language,
+        timestamp,
+      });
     });
   }, [searchParams, setActiveAlert]);
 
@@ -922,7 +929,15 @@ function CaseDetails({
       <div className="grid gap-3 sm:grid-cols-2">
         <MiniRow icon={UserRound} title="אזרח" value={alert.userName.trim() || "לא ידוע"} />
         <MiniRow icon={Clock3} title="זמן" value={formattedAlertTime || "עכשיו"} />
-        <MiniRow icon={MapPin} title="מיקום" value={`${alert.location.lat.toFixed(5)}, ${alert.location.lng.toFixed(5)}`} />
+        <MiniRow
+          icon={MapPin}
+          title="מיקום"
+          value={
+            alert.location
+              ? `${alert.location.lat.toFixed(5)}, ${alert.location.lng.toFixed(5)}`
+              : "לא זמין"
+          }
+        />
         <MiniRow icon={MessageCircle} title="שפה" value={alert.language} />
       </div>
       <div className={`${glassPanelNested} mt-4 p-4`}>
