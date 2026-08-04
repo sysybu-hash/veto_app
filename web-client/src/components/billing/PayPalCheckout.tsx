@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { LogIn } from "lucide-react";
 import { apiUrl } from "@/api/apiClient";
@@ -20,6 +20,15 @@ declare global {
   interface Window {
     paypal?: PaypalNamespace;
   }
+}
+
+function subscribeJwt(_onStoreChange: () => void): () => void {
+  // JWT changes via login navigation / full reload; no live subscription needed.
+  return () => undefined;
+}
+
+function readClientHasJwt(): boolean {
+  return !!getJwt();
 }
 
 function loadPaypalSdk(clientId: string): Promise<PaypalNamespace> {
@@ -76,14 +85,16 @@ export default function PayPalCheckout({
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
-  const [clientLoggedIn, setClientLoggedIn] = useState(isLoggedInProp);
+  const clientHasJwt = useSyncExternalStore(
+    subscribeJwt,
+    readClientHasJwt,
+    () => false,
+  );
+  const isLoggedIn = isLoggedInProp || clientHasJwt;
 
   useEffect(() => {
     syncJwtCookieFromStorage();
-    setClientLoggedIn(isLoggedInProp || !!getJwt());
-  }, [isLoggedInProp]);
-
-  const isLoggedIn = clientLoggedIn;
+  }, []);
 
   useEffect(() => {
     if (!isLoggedIn || !clientId) return;
