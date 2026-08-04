@@ -54,6 +54,13 @@
           "locationWhenInUsePermission": "VETO uses your location to dispatch emergency legal assistance.",
           "locationAlwaysAndWhenInUsePermission": "VETO uses your location to dispatch emergency legal assistance."
         }
+      ],
+      [
+        "expo-notifications",
+        {
+          "sounds": [],
+          "enableBackgroundRemoteNotifications": true
+        }
       ]
     ],
     "experiments": {
@@ -62,7 +69,11 @@
     "extra": {
       "apiBase": "http://localhost:5001",
       "socketUrl": "http://localhost:5001",
-      "agoraAppId": ""
-    }
+      "agoraAppId": "",
+      "eas": {
+        "projectId": "REPLACE_AFTER_EAS_INIT"
+      }
+    },
+    "owner": "veto-legal"
   }
 }

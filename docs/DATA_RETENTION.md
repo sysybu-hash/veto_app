@@ -20,7 +20,9 @@
 - בקשות מחיקה לפי חוק: זרימת `PrivacyRequest` באפליקציה (`/privacy-rights`).
 - גיבויי Neon / Atlas: לפי תוכנית הספק.
 
-## Hard purge (ידני)
+## Hard purge
+
+**סטטוס (2026-08-04):** אין job אוטומטי ב-repo. מפעיל מריץ SQL ידני (או cron חיצוני על Neon) אחת לחודש לפחות.
 
 ```sql
 -- דוגמה: מחיקה סופית של Evidence שנמחק לפני 90 יום
@@ -28,3 +30,5 @@ DELETE FROM "Evidence"
 WHERE "deletedAt" IS NOT NULL
   AND "deletedAt" < NOW() - INTERVAL '90 days';
 ```
+
+תיעוד זה סוגר את פריט ה-P2 “evidence hard-purge” כ־ops runbook עד שייבנה worker ייעודי.
