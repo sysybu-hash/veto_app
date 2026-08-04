@@ -16,10 +16,11 @@
 | **TURN** (`WEBRTC_ICE_SERVERS_JSON` / `TURN_*`) | אחריות מפעיל — ר' ENV_GUIDE; בלי זה שיחות עלות ב-NAT קשה |
 | **Uptime חיצוני** על `GET /health` (UptimeRobot וכו') | מומלץ — בנוסף ל-keepalive ב-CI |
 | Twilio / SMS OTP | **נדחה** — מפעיל בהמשך |
-| PayPal Live + `PAYPAL_WEBHOOK_ID` | **נדחה** — מפעיל בהמשך |
 | שדרוג Render Free / Redis | **נדחה** — מפעיל בהמשך |
-| הקשחת Admin OTP קבוע | **נדחה** — מפעיל בהמשך |
-| אישור עו״ד על תנאים/פרטיות | חובה לפני הסרת באנר טיוטה — ר' LEGAL_REVIEW_PACKAGE |
+| PayPal Live | הגדר `PAYPAL_ENV=live` + מפתחות Live + `PAYPAL_WEBHOOK_ID` + plan IDs Live + אותו Client ID ב-`NEXT_PUBLIC_PAYPAL_CLIENT_ID` (rebuild Vercel) |
+| Admin OTP קבוע | **חסום בפרודקשן** בקוד (`shouldUseFixedAdminOtp`) |
+| אישור עו״ד | אחרי חתימה: `NEXT_PUBLIC_LEGAL_APPROVED=true` — ר' LEGAL_REVIEW_PACKAGE |
+| TURN | הגדר `TURN_*` או `WEBRTC_ICE_SERVERS_JSON` (בלי זה נשאר STUN ציבורי בלבד) |
 
 מקור אמת לקוח: **`web-client/`** (Next). `frontend/` (Flutter) קפוא; `mobile/` (Expo) WIP.
 
@@ -197,14 +198,14 @@ Framework זוהה בדרך־כלל כ־**Next.js** אוטומטית. Build: `np
 - `NEXT_PUBLIC_VAPID_PUBLIC_KEY` — אם משתמשים ב־Web Push (חלק מזהות הזוג של `VAPID` בשרת).
 - `NEXT_PUBLIC_AGORA_APP_ID` — אם יש שיחות Agora מהדפדפן.
 
-#### GitHub Actions → Vercel
+#### GitHub Actions → build gate (לא deploy כפול)
 
-ב־`main`, אחרי `backend-ci`, job **`deploy-vercel`**:
+ב־`main`, אחרי `backend-ci`, job **`verify-web-build`**:
 1. בונה מקומית ב־**`web-client/`** (`npm ci`, `npm run build`) — לוודא שהקוד עובר build.
-2. מריץ **`vercel deploy --prod` משורש ה-repo** (לא מתוך `web-client/`). ב־Vercel מוגדר **Root Directory = `web-client`** — אם מריצים את ה-CLI מתוך `web-client`, Vercel מחבר פעמיים את הנתיב ומקבלים שגיאת `web-client/web-client`.  
-נדרשים Secrets ב-repo: `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`.
+2. בודק שנוצר `public/sw.js` (PWA).
 
-אם ב-Vercel מופעל גם **Deploy מחיבור Git** לאותו branch, ייתכן **שני** deploys לכל push — כדאי לבחור שיטה אחת או לכבות את הכפול.
+**פריסת Production** מתבצעת רק דרך **חיבור Git של Vercel** (push/merge ל־`main`).  
+אין יותר `vercel deploy --prod` ב־CI — זה גרם ל־**שני** Deployments לכל push לאותו commit.
 
 #### דוגמת משתנים מקומיים
 
