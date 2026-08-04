@@ -58,22 +58,20 @@ export function MonthView({
         <IconButton
           variant="ghost"
           size="sm"
-          aria-label={t("calendar.prevMonthAria")}
+          label={t("calendar.prevMonthAria")}
           onClick={() => onCursorChange(new Date(year, month - 1, 1))}
-        >
-          ‹
-        </IconButton>
+          icon={<span aria-hidden>‹</span>}
+        />
         <h3 className="font-frank text-base font-bold capitalize text-primary sm:text-lg">
           {monthLabel}
         </h3>
         <IconButton
           variant="ghost"
           size="sm"
-          aria-label={t("calendar.nextMonthAria")}
+          label={t("calendar.nextMonthAria")}
           onClick={() => onCursorChange(new Date(year, month + 1, 1))}
-        >
-          ›
-        </IconButton>
+          icon={<span aria-hidden>›</span>}
+        />
       </div>
 
       <div className="grid grid-cols-7 gap-1 text-center text-[10px] font-bold uppercase tracking-wide text-muted sm:text-xs">

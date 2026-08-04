@@ -42,11 +42,10 @@ export function WeekView({
         <IconButton
           variant="ghost"
           size="sm"
-          aria-label={t("calendar.prevWeekAria")}
+          label={t("calendar.prevWeekAria")}
           onClick={() => onCursorChange(addDays(cursor, -7))}
-        >
-          ‹
-        </IconButton>
+          icon={<span aria-hidden>‹</span>}
+        />
         <h3 className="font-frank text-sm font-bold text-primary sm:text-base">
           {weekStart.toLocaleDateString(tag, { day: "numeric", month: "short" })}
           {" – "}
@@ -59,11 +58,10 @@ export function WeekView({
         <IconButton
           variant="ghost"
           size="sm"
-          aria-label={t("calendar.nextWeekAria")}
+          label={t("calendar.nextWeekAria")}
           onClick={() => onCursorChange(addDays(cursor, 7))}
-        >
-          ›
-        </IconButton>
+          icon={<span aria-hidden>›</span>}
+        />
       </div>
 
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-7">

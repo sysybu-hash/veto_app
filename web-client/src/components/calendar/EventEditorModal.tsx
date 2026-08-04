@@ -165,9 +165,14 @@ function EventEditorForm({
           <h2 id="event-editor-title" className="font-frank text-lg font-bold text-primary">
             {mode === "edit" ? t("calendar.editEvent") : t("calendar.modalTitle")}
           </h2>
-          <IconButton variant="ghost" size="sm" onClick={onClose} disabled={busy} aria-label={t("calendar.close")}>
-            ✕
-          </IconButton>
+          <IconButton
+            variant="ghost"
+            size="sm"
+            onClick={onClose}
+            disabled={busy}
+            label={t("calendar.close")}
+            icon={<span aria-hidden>✕</span>}
+          />
         </div>
 
         <div className="space-y-3">
