@@ -48,6 +48,20 @@ export async function updateLawyerAvailability(
   }
 }
 
+/** Persist lawyer GPS for SOS proximity sorting. */
+export async function updateLawyerLocation(
+  lat: number,
+  lng: number,
+): Promise<void> {
+  const res = await authFetch(apiUrl("/api/lawyers/location"), {
+    method: "PUT",
+    body: JSON.stringify({ lat, lng }),
+  });
+  if (!res.ok) {
+    throw new Error(await parseJsonError(res));
+  }
+}
+
 export type UpdateProfilePayload = {
   full_name?: string;
   email?: string;
