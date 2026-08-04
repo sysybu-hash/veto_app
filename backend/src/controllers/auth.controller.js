@@ -526,27 +526,9 @@ const googleAuth = async (req, res, next) => {
       }
       if (dirty) await doc.save();
     } else {
-      // Google-only users have no phone. Mongo unique+sparse indexes still
-      // collide when older docs stored `phone: null` (null is indexed; missing
-      // is not). Always omit the field, and repair null/empty phones on conflict.
-      const buildGoogleUser = () => {
-        const user = new User({
-          full_name:
-            name ||
-            (normalizedEmail ? normalizedEmail.split('@')[0] : 'VETO User'),
-          google_id: googleId,
-          role: 'user',
-          preferred_language,
-          is_verified: true,
-        });
-        if (normalizedEmail) user.email = normalizedEmail;
-        user.set('phone', undefined);
-        if (typeof user.phone !== 'undefined') {
-          user.phone = undefined;
-        }
-        return user;
-      };
-
+      // Google-only users have no phone. Mongoose `save()` can still persist
+      // `phone: null`, which collides on the legacy sparse unique index. Insert
+      // via the native driver (omit phone entirely) and repair old null phones.
       const unsetNullPhones = async () => {
         const result = await User.updateMany(
           { $or: [{ phone: null }, { phone: '' }] },
@@ -558,57 +540,94 @@ const googleAuth = async (req, res, next) => {
             '[AUTH] Unset null/empty phone fields to repair sparse unique index',
           );
         }
+        return result.modifiedCount || 0;
       };
 
+      const insertGoogleOnlyUser = async () => {
+        const now = new Date();
+        const payload = {
+          full_name:
+            name ||
+            (normalizedEmail ? normalizedEmail.split('@')[0] : 'VETO User'),
+          google_id: googleId,
+          role: 'user',
+          preferred_language,
+          is_verified: true,
+          createdAt: now,
+          updatedAt: now,
+        };
+        if (normalizedEmail) payload.email = normalizedEmail;
+        // Do not set phone at all — missing ≠ null for unique indexes.
+        const inserted = await User.collection.insertOne(payload);
+        return User.findById(inserted.insertedId);
+      };
+
+      const resolveDup = async (err, depth = 0) => {
+        if (depth > 2) return null;
+        const field = Object.keys(err.keyValue || {})[0] || 'email';
+        const dupVal = err.keyValue ? err.keyValue[field] : undefined;
+        logger.warn(
+          { field, dupVal, googleId, email: normalizedEmail, depth },
+          '[AUTH] Google user create hit duplicate key',
+        );
+        if (field === 'google_id') {
+          return User.findOne({ google_id: googleId });
+        }
+        if (field === 'email' && normalizedEmail) {
+          return User.findOne({ email: normalizedEmail });
+        }
+        if (
+          field === 'phone' &&
+          (dupVal === null || dupVal === undefined || dupVal === '')
+        ) {
+          await unsetNullPhones();
+          try {
+            return await insertGoogleOnlyUser();
+          } catch (retryErr) {
+            if (retryErr && retryErr.code === 11000) {
+              return resolveDup(retryErr, depth + 1);
+            }
+            throw retryErr;
+          }
+        }
+        return null;
+      };
+
+      await unsetNullPhones();
       try {
-        doc = await buildGoogleUser().save();
+        doc = await insertGoogleOnlyUser();
       } catch (createErr) {
         if (createErr && createErr.code === 11000) {
-          const field = Object.keys(createErr.keyValue || {})[0] || 'email';
-          const dupVal = createErr.keyValue ? createErr.keyValue[field] : undefined;
-          logger.warn(
-            { field, dupVal, googleId, email: normalizedEmail },
-            '[AUTH] Google user create hit duplicate key',
-          );
-
-          if (field === 'google_id') {
-            doc = await User.findOne({ google_id: googleId });
-          } else if (field === 'email' && normalizedEmail) {
-            doc = await User.findOne({ email: normalizedEmail });
-          } else if (
-            field === 'phone' &&
-            (dupVal === null || dupVal === undefined || dupVal === '')
-          ) {
-            await unsetNullPhones();
-            try {
-              doc = await buildGoogleUser().save();
-            } catch (retryErr) {
-              if (retryErr && retryErr.code === 11000) {
-                const retryField = Object.keys(retryErr.keyValue || {})[0];
-                if (retryField === 'google_id') {
-                  doc = await User.findOne({ google_id: googleId });
-                } else if (retryField === 'email' && normalizedEmail) {
-                  doc = await User.findOne({ email: normalizedEmail });
-                }
-              } else {
-                throw retryErr;
-              }
-            }
-          }
-
+          doc = await resolveDup(createErr);
           if (doc) {
             if (!doc.google_id) {
               doc.google_id = googleId;
               await doc.save();
             }
-          } else if (field === 'phone') {
-            return res.status(409).json({
-              error: 'An account with this phone already exists.',
-              code: 'DUPLICATE_PHONE',
-            });
           } else {
+            const field = Object.keys(createErr.keyValue || {})[0] || 'email';
+            const dupVal = createErr.keyValue
+              ? createErr.keyValue[field]
+              : undefined;
+            if (
+              field === 'phone' &&
+              (dupVal === null || dupVal === undefined || dupVal === '')
+            ) {
+              return res.status(503).json({
+                error:
+                  'Account create is blocked by a phone-index repair. Please try Google sign-in again in a moment.',
+                code: 'PHONE_INDEX_REPAIR',
+              });
+            }
+            if (field === 'phone') {
+              return res.status(409).json({
+                error: 'An account with this phone already exists.',
+                code: 'DUPLICATE_PHONE',
+              });
+            }
             return res.status(409).json({
-              error: 'An account with this Google email already exists. Try signing in again.',
+              error:
+                'An account with this Google email already exists. Try signing in again.',
               code: 'DUPLICATE_EMAIL',
             });
           }

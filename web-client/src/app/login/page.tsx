@@ -128,6 +128,11 @@ function formatLoginError(
     return t("login.errEmailExists");
   }
   if (
+    /PHONE_INDEX_REPAIR|phone-index repair/i.test(raw)
+  ) {
+    return t("login.errPhoneIndexRepair");
+  }
+  if (
     /DUPLICATE_PHONE|with this phone already exists|account with this phone/i.test(
       raw,
     )
