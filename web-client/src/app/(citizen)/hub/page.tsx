@@ -79,6 +79,7 @@ export default function CitizenHubPage() {
   const lawyerFound = useEmergencyStore((s) => s.lawyerFound);
   const lawyerName = useEmergencyStore((s) => s.lawyerName);
   const currentEventId = useEmergencyStore((s) => s.currentEventId);
+  const sessionReady = useEmergencyStore((s) => s.sessionReady);
   const statusMessage = useEmergencyStore((s) => s.statusMessage);
   const { requestPermission } = useAgoraDevices();
 
@@ -480,7 +481,10 @@ export default function CitizenHubPage() {
         />
       ) : null}
 
-      {lawyerFound && !callTypeDialogOpen && !statusMessage ? (
+      {lawyerFound &&
+      !callTypeDialogOpen &&
+      !sessionReady &&
+      !statusMessage ? (
         <SearchingLawyerOverlay
           phase="connecting"
           lawyerName={lawyerName}

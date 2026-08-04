@@ -343,12 +343,18 @@ export const he: Dict = {
       },
       summary: {
         title: "סיכום שיחה",
+        lawyerTitle: "סיכום שיחת תיק",
+        lawyerBody:
+          "השיחה הסתיימה. בדקו משך, תמלול וקבצים ששותפו לפני החזרה לדשבורד.",
         duration: "משך",
         minutes: "דק׳",
+        eventId: "מזהה אירוע",
         base: "תעריף בסיס",
         overtime: "זמן נוסף",
         total: "סה״כ לחיוב",
         planTitle: "תוכנית פעולה משפטית",
+        transcriptTitle: "תמלול (בשיחה זו)",
+        filesTitle: "קבצים ששותפו",
         vaultTitle: "שמירה לכספת שלי",
         vaultSaving: "שומר…",
         vaultSaved: "נשמר",
@@ -360,6 +366,7 @@ export const he: Dict = {
         stepCalendar: "מעקב והמשך",
         stepOther: "צעד הבא",
         close: "סגירה",
+        backDashboard: "חזרה לדשבורד",
         payCta: "אישור ותשלום",
       },
       side: {

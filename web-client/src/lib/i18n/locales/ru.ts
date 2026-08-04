@@ -344,12 +344,18 @@ export const ru: Dict = {
       },
       summary: {
         title: "Итог звонка",
+        lawyerTitle: "Итог звонка по делу",
+        lawyerBody:
+          "Сессия завершена. Проверьте длительность, транскрипт и общие файлы перед возвратом на панель.",
         duration: "Длительность",
         minutes: "мин",
+        eventId: "ID события",
         base: "Базовый тариф",
         overtime: "Доп. время",
         total: "К оплате",
         planTitle: "Юридический план действий",
+        transcriptTitle: "Транскрипт (эта сессия)",
+        filesTitle: "Общие файлы",
         vaultTitle: "Сохранить в мой сейф",
         vaultSaving: "Сохраняем…",
         vaultSaved: "Сохранено",
@@ -361,6 +367,7 @@ export const ru: Dict = {
         stepCalendar: "Напоминания",
         stepOther: "Следующий шаг",
         close: "Закрыть",
+        backDashboard: "Назад на панель",
         payCta: "Подтвердить и оплатить",
       },
       side: {

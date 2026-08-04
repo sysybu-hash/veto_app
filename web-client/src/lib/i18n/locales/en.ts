@@ -344,12 +344,18 @@ export const en: Dict = {
       },
       summary: {
         title: "Call summary",
+        lawyerTitle: "Case call summary",
+        lawyerBody:
+          "The session ended. Review duration, transcript, and shared files before returning to your dashboard.",
         duration: "Duration",
         minutes: "min",
+        eventId: "Event ID",
         base: "Base rate",
         overtime: "Overtime",
         total: "Total to bill",
         planTitle: "Legal action plan",
+        transcriptTitle: "Transcript (this session)",
+        filesTitle: "Shared files",
         vaultTitle: "Save to my vault",
         vaultSaving: "Saving…",
         vaultSaved: "Saved",
@@ -361,6 +367,7 @@ export const en: Dict = {
         stepCalendar: "Follow-up",
         stepOther: "Next step",
         close: "Close",
+        backDashboard: "Back to dashboard",
         payCta: "Confirm & pay",
       },
       side: {

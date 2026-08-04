@@ -125,6 +125,13 @@ export const useEmergencyStore = create<EmergencyState>((set) => ({
       sessionReady: null,
       preCallReadiness: null,
       preCallPermissionStatus: "idle",
+      // Leaving a call must also clear SOS/connecting UI so hub does not
+      // re-show "Connecting your call…" after hangup.
+      lawyerFound: false,
+      lawyerName: null,
+      isSearching: false,
+      currentEventId: null,
+      currentRoomId: null,
     }),
 
   setPreCallReadiness: (r) => set({ preCallReadiness: r }),
