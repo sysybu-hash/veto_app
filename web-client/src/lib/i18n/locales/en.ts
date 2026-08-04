@@ -79,6 +79,7 @@ export const en: Dict = {
   },
   navCitizen: {
     home: "Home",
+    chat: "Chat",
     vault: "Vault",
     work: "Tasks",
     calendar: "Calendar",
@@ -644,6 +645,7 @@ export const en: Dict = {
     newEvent: "New Event",
     editEvent: "Edit event",
     refresh: "Refresh",
+    syncToggle: "Sync",
     syncGoogle: "Connect Google Calendar",
     openingGoogle: "Opening Google…",
     gcalConnected: "Connected to Google Calendar.",

@@ -31,6 +31,7 @@ export function CalendarShell() {
   const [error, setError] = useState<string | null>(null);
   const [editorOpen, setEditorOpen] = useState(false);
   const [editing, setEditing] = useState<ApiCalendarEvent | null>(null);
+  const [syncOpen, setSyncOpen] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -115,44 +116,47 @@ export function CalendarShell() {
   ];
 
   return (
-    <div className={`mx-auto w-full max-w-5xl px-4 pt-6 ${citizenBottomSafe}`}>
-      <header className="relative overflow-hidden rounded-3xl border border-veto-gold/20 bg-gradient-to-br from-zinc-950 via-zinc-900 to-amber-950/40 px-5 py-6 shadow-[0_24px_80px_-40px_rgba(0,0,0,0.8)]">
-        <div
-          className="pointer-events-none absolute inset-0 opacity-40"
-          style={{
-            backgroundImage:
-              "radial-gradient(ellipse 70% 60% at 80% 0%, rgba(197,160,89,0.35), transparent 55%)",
-          }}
-          aria-hidden
-        />
-        <div className="relative">
-          <p className="text-[11px] font-black uppercase tracking-[0.28em] text-veto-gold">
-            VETO
-          </p>
-          <h1 className="mt-2 font-frank text-3xl font-black tracking-tight text-primary sm:text-4xl">
+    <div
+      className={`mx-auto flex w-full max-w-6xl flex-col px-3 pt-3 sm:px-4 sm:pt-4 ${citizenBottomSafe}`}
+    >
+      <header className="flex flex-wrap items-center justify-between gap-2 border-b border-white/[0.06] pb-3">
+        <div className="min-w-0">
+          <h1 className="font-frank text-xl font-black tracking-tight text-primary sm:text-2xl">
             {t("calendar.heroTitle")}
           </h1>
-          <p className="mt-2 max-w-xl text-sm leading-6 text-secondary">
-            {t("calendar.heroSubtitle")}
-          </p>
-          <div className="mt-5 flex flex-wrap gap-2">
-            <Button variant="primary" onClick={openCreate}>
-              {t("calendar.newEvent")}
-            </Button>
-            <Button variant="secondary" onClick={() => void load()} disabled={loading}>
-              {t("calendar.refresh")}
-            </Button>
-          </div>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setSyncOpen((v) => !v)}
+            aria-expanded={syncOpen}
+          >
+            {t("calendar.syncToggle")}
+          </Button>
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => void load()}
+            disabled={loading}
+          >
+            {t("calendar.refresh")}
+          </Button>
+          <Button variant="primary" size="sm" onClick={openCreate}>
+            {t("calendar.newEvent")}
+          </Button>
         </div>
       </header>
 
-      <div className="mt-4 grid gap-3 sm:grid-cols-2">
-        <GoogleCalendarCard />
-        <IcalFeedButton />
-      </div>
+      {syncOpen ? (
+        <div className="mt-3 grid gap-2 sm:grid-cols-2">
+          <GoogleCalendarCard />
+          <IcalFeedButton />
+        </div>
+      ) : null}
 
       <div
-        className="mt-5 flex gap-1 rounded-2xl border border-white/[0.06] bg-black/30 p-1"
+        className="mt-3 flex gap-1 rounded-xl border border-white/[0.06] bg-black/30 p-0.5"
         role="tablist"
         aria-label={t("calendar.viewsAria")}
       >
@@ -163,7 +167,7 @@ export function CalendarShell() {
             role="tab"
             aria-selected={view === tab.id}
             onClick={() => setView(tab.id)}
-            className={`flex-1 rounded-xl px-3 py-2 text-sm font-bold transition ${
+            className={`flex-1 rounded-lg px-2 py-1.5 text-sm font-bold transition ${
               view === tab.id
                 ? "bg-veto-gold text-zinc-950 shadow"
                 : "text-secondary hover:bg-white/[0.04]"
@@ -175,14 +179,14 @@ export function CalendarShell() {
       </div>
 
       {error ? (
-        <p className="mt-3 rounded-xl border border-red-500/30 bg-red-950/40 px-3 py-2 text-sm text-red-100">
+        <p className="mt-2 rounded-xl border border-red-500/30 bg-red-950/40 px-3 py-2 text-sm text-red-100">
           {error}
         </p>
       ) : null}
 
-      <div className="mt-4 space-y-4">
+      <div className="mt-3 min-h-0 flex-1">
         {view === "month" ? (
-          <>
+          <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_280px] lg:items-start">
             <MonthView
               cursor={cursor}
               selectedDay={selectedDay}
@@ -200,7 +204,7 @@ export function CalendarShell() {
               onOpenEvent={openEdit}
               onCreate={openCreate}
             />
-          </>
+          </div>
         ) : null}
 
         {view === "week" ? (

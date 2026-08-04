@@ -26,7 +26,7 @@ export function CitizenBottomNav({ active }: { active: CitizenNavActive }) {
   return (
     <nav
       data-print="hide"
-      className="fixed inset-x-0 bottom-0 z-40 border-t border-subtle bg-surface-raised px-1 pb-[calc(0.5rem+env(safe-area-inset-bottom))] pt-2 shadow-[0_-16px_40px_-30px_rgba(15,23,42,0.45)] backdrop-blur-xl supports-[backdrop-filter]:bg-surface-raised-2 dark:shadow-[0_-16px_48px_-24px_rgba(0,0,0,0.75)] sm:px-3 sm:pb-[calc(0.75rem+env(safe-area-inset-bottom))] sm:pt-3"
+      className="fixed inset-x-0 bottom-0 z-40 border-t border-subtle bg-surface-raised px-1 pb-[calc(0.5rem+env(safe-area-inset-bottom))] pt-2 shadow-[0_-16px_40px_-30px_rgba(15,23,42,0.45)] backdrop-blur-xl supports-[backdrop-filter]:bg-surface-raised-2 dark:shadow-[0_-16px_48px_-24px_rgba(0,0,0,0.75)] sm:px-3 sm:pb-[calc(0.75rem+env(safe-area-inset-bottom))] sm:pt-3 md:hidden"
     >
       <div className="mx-auto flex max-w-lg justify-between gap-0.5 sm:gap-2">
         <Link

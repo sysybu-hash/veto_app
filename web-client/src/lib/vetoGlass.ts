@@ -22,9 +22,9 @@
 /** Standard modal scrim — pair with `glassPanel` / `glassPanelNested` content */
 export const modalBackdrop = "bg-surface-scrim backdrop-blur-sm";
 
-/** Extra bottom padding for routes with `CitizenBottomNav` + home indicator */
+/** Extra bottom padding for routes with `CitizenBottomNav` + home indicator (mobile only) */
 export const citizenBottomSafe =
-  "pb-[calc(7rem+env(safe-area-inset-bottom))]";
+  "pb-[calc(7rem+env(safe-area-inset-bottom))] md:pb-6";
 
 /** Visible keyboard focus — compose on custom icon buttons / chips */
 export const focusRing =
