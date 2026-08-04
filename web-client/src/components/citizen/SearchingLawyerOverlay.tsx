@@ -20,7 +20,7 @@ export function SearchingLawyerOverlay({ phase, lawyerName, onCancel }: Props) {
 
   return (
     <div
-      className="fixed inset-0 z-[90] flex items-center justify-center bg-surface-scrim/90 p-4 backdrop-blur-md"
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-surface-scrim/90 p-4 backdrop-blur-md"
       role="status"
       aria-live="polite"
       aria-busy="true"

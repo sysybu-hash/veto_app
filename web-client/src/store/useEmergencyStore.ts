@@ -106,11 +106,19 @@ export const useEmergencyStore = create<EmergencyState>((set) => ({
     }),
 
   setErrorMessage: (message) =>
-    set({
-      statusMessage: message,
-      isSearching: false,
-      lawyerFound: false,
-    }),
+    set(
+      message
+        ? {
+            statusMessage: message,
+            isSearching: false,
+            lawyerFound: false,
+          }
+        : {
+            // Clearing an error must NOT abort an in-flight SOS search.
+            // hub calls setErrorMessage(null) right after startSearch().
+            statusMessage: null,
+          },
+    ),
 
   clearCallSession: () =>
     set({
