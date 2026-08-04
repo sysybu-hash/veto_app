@@ -4,14 +4,27 @@
 //  ENV:  PAYPAL_CLIENT_ID | PAYPAL_CLIENT_SECRET | PAYPAL_ENV
 // ============================================================
 
-const PAYPAL_BASE =
-  process.env.PAYPAL_ENV === 'live'
+function paypalEnv() {
+  return (process.env.PAYPAL_ENV || 'sandbox').trim().toLowerCase();
+}
+
+function paypalClientId() {
+  return (process.env.PAYPAL_CLIENT_ID || '').trim();
+}
+
+function paypalClientSecret() {
+  return (process.env.PAYPAL_CLIENT_SECRET || '').trim();
+}
+
+function getPaypalBase() {
+  return paypalEnv() === 'live'
     ? 'https://api-m.paypal.com'
     : 'https://api-m.sandbox.paypal.com';
+}
 
 function assertPayPalConfigured() {
-  const id = process.env.PAYPAL_CLIENT_ID?.trim();
-  const secret = process.env.PAYPAL_CLIENT_SECRET?.trim();
+  const id = paypalClientId();
+  const secret = paypalClientSecret();
   if (!id || !secret) {
     const err = new Error('PayPal keys missing in server configuration');
     err.code = 'PAYPAL_CONFIG_MISSING';
@@ -22,11 +35,13 @@ function assertPayPalConfigured() {
 // ── Helper: get OAuth2 token ─────────────────────────────────
 async function _getToken() {
   assertPayPalConfigured();
+  // Always trim — Vercel/Render env values sometimes include a trailing newline
+  // from `echo | vercel env add`, which PayPal rejects as invalid_client.
   const creds = Buffer.from(
-    `${process.env.PAYPAL_CLIENT_ID}:${process.env.PAYPAL_CLIENT_SECRET}`,
+    `${paypalClientId()}:${paypalClientSecret()}`,
   ).toString('base64');
 
-  const res = await fetch(`${PAYPAL_BASE}/v1/oauth2/token`, {
+  const res = await fetch(`${getPaypalBase()}/v1/oauth2/token`, {
     method: 'POST',
     headers: {
       Authorization: `Basic ${creds}`,
@@ -55,7 +70,7 @@ async function _getToken() {
 async function createOrder(amount, currency, description, returnUrl, cancelUrl) {
   const token = await _getToken();
 
-  const res = await fetch(`${PAYPAL_BASE}/v2/checkout/orders`, {
+  const res = await fetch(`${getPaypalBase()}/v2/checkout/orders`, {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${token}`,
@@ -101,7 +116,7 @@ async function createJsSdkOrder(amount, currency = 'ILS') {
   const token = await _getToken();
   const value = typeof amount === 'string' ? amount : Number(amount).toFixed(2);
 
-  const res = await fetch(`${PAYPAL_BASE}/v2/checkout/orders`, {
+  const res = await fetch(`${getPaypalBase()}/v2/checkout/orders`, {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${token}`,
@@ -136,7 +151,7 @@ async function captureOrder(orderId) {
   const token = await _getToken();
 
   const res = await fetch(
-    `${PAYPAL_BASE}/v2/checkout/orders/${orderId}/capture`,
+    `${getPaypalBase()}/v2/checkout/orders/${orderId}/capture`,
     {
       method: 'POST',
       headers: {
@@ -165,7 +180,7 @@ async function captureOrder(orderId) {
 
 async function paypalJson(path, options = {}) {
   const token = await _getToken();
-  const res = await fetch(`${PAYPAL_BASE}${path}`, {
+  const res = await fetch(`${getPaypalBase()}${path}`, {
     ...options,
     headers: {
       Authorization: `Bearer ${token}`,

@@ -23,7 +23,7 @@ function withEnv(envPatch, fn) {
   }
 }
 
-test('iceServersFromEnv — empty env returns []', () => {
+test('iceServersFromEnv — empty env returns public STUN fallback', () => {
   withEnv(
     {
       WEBRTC_ICE_SERVERS_JSON: undefined,
@@ -32,12 +32,14 @@ test('iceServersFromEnv — empty env returns []', () => {
       TURN_CREDENTIAL: undefined,
     },
     ({ iceServersFromEnv }) => {
-      assert.deepEqual(iceServersFromEnv(), []);
+      const out = iceServersFromEnv();
+      assert.equal(out.length, 1);
+      assert.equal(out[0].urls, 'stun:stun.l.google.com:19302');
     },
   );
 });
 
-test('iceServersFromEnv — TURN_URL/USER/CREDENTIAL builds a single entry', () => {
+test('iceServersFromEnv — TURN_URL/USER/CREDENTIAL builds STUN + TURN', () => {
   withEnv(
     {
       WEBRTC_ICE_SERVERS_JSON: undefined,
@@ -47,6 +49,7 @@ test('iceServersFromEnv — TURN_URL/USER/CREDENTIAL builds a single entry', () 
     },
     ({ iceServersFromEnv }) => {
       assert.deepEqual(iceServersFromEnv(), [
+        { urls: 'stun:stun.l.google.com:19302' },
         { urls: 'turn:example.com:3478', username: 'user', credential: 'pass' },
       ]);
     },
@@ -81,8 +84,9 @@ test('iceServersFromEnv — malformed JSON falls back to TURN_* vars', () => {
     },
     ({ iceServersFromEnv }) => {
       const out = iceServersFromEnv();
-      assert.equal(out.length, 1);
-      assert.ok(out[0].urls.includes('fallback.example.com'));
+      assert.equal(out.length, 2);
+      assert.equal(out[0].urls, 'stun:stun.l.google.com:19302');
+      assert.ok(out[1].urls.includes('fallback.example.com'));
     },
   );
 });
