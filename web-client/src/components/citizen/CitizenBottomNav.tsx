@@ -18,7 +18,7 @@ const idle =
   "border-2 border-transparent text-slate-600 transition hover:bg-slate-100 hover:text-slate-950 dark:text-slate-400 dark:hover:bg-white/5 dark:hover:text-slate-100 sm:border-transparent";
 
 const activeStyle =
-  "relative border-2 border-[#C5A059] bg-[#C5A059]/16 text-[11px] font-black text-[#8a6d35] shadow-[0_0_18px_rgba(197,160,89,0.22)] dark:border-veto-gold/45 dark:bg-veto-gold/15 dark:text-veto-gold dark:shadow-[0_0_18px_rgba(197,160,89,0.12)] sm:text-xs";
+  "relative border-2 border-[#C5A059] bg-[#C5A059]/16 text-[11px] font-black text-[#8a6d35] shadow-[0_0_18px_rgba(197,160,89,0.22)] dark:border-veto-gold/45 dark:bg-veto-gold/15 dark:text-brand-text dark:shadow-[0_0_18px_rgba(197,160,89,0.12)] sm:text-xs";
 
 export function CitizenBottomNav({ active }: { active: CitizenNavActive }) {
   const { t } = useTranslation();
@@ -36,7 +36,7 @@ export function CitizenBottomNav({ active }: { active: CitizenNavActive }) {
           <svg
             className={`mx-auto h-5 w-5 stroke-[1.75] sm:h-6 sm:w-6 ${
               active === "hub"
-                ? "text-brand-700 dark:text-veto-gold" : "text-secondary "}`}
+                ? "text-brand-700 dark:text-brand-text" : "text-secondary "}`}
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -46,7 +46,7 @@ export function CitizenBottomNav({ active }: { active: CitizenNavActive }) {
           </svg>
           <span className="truncate">{t("navCitizen.home")}</span>
           {active === "hub" && (
-            <span className="absolute -top-0.5 end-0 rounded-full bg-veto-gold px-1 text-[8px] font-bold text-primary sm:end-0.5 sm:text-[9px]">
+            <span className="absolute -top-0.5 end-0 rounded-full bg-veto-gold px-1 text-[8px] font-bold text-brand-fg sm:end-0.5 sm:text-[9px]">
               {t("navCitizen.sosBadge")}
             </span>
           )}
@@ -61,7 +61,7 @@ export function CitizenBottomNav({ active }: { active: CitizenNavActive }) {
           <svg
             className={`mx-auto h-5 w-5 stroke-[1.75] sm:h-6 sm:w-6 ${
               active === "chat"
-                ? "text-brand-700 dark:text-veto-gold" : "text-secondary "}`}
+                ? "text-brand-700 dark:text-brand-text" : "text-secondary "}`}
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -81,7 +81,7 @@ export function CitizenBottomNav({ active }: { active: CitizenNavActive }) {
           <svg
             className={`mx-auto h-5 w-5 stroke-[1.75] sm:h-6 sm:w-6 ${
               active === "vault"
-                ? "text-brand-700 dark:text-veto-gold" : "text-secondary "}`}
+                ? "text-brand-700 dark:text-brand-text" : "text-secondary "}`}
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -101,7 +101,7 @@ export function CitizenBottomNav({ active }: { active: CitizenNavActive }) {
           <svg
             className={`mx-auto h-5 w-5 stroke-[1.75] sm:h-6 sm:w-6 ${
               active === "calendar"
-                ? "text-brand-700 dark:text-veto-gold" : "text-secondary "}`}
+                ? "text-brand-700 dark:text-brand-text" : "text-secondary "}`}
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -121,7 +121,7 @@ export function CitizenBottomNav({ active }: { active: CitizenNavActive }) {
           <svg
             className={`mx-auto h-5 w-5 stroke-[1.75] sm:h-6 sm:w-6 ${
               active === "settings"
-                ? "text-brand-700 dark:text-veto-gold" : "text-secondary "}`}
+                ? "text-brand-700 dark:text-brand-text" : "text-secondary "}`}
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"

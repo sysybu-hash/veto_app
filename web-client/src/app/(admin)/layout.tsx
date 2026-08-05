@@ -11,7 +11,11 @@ export default function AdminLayout({
       dir="rtl"
     >
       <AdminSidebar />
-      <div className="flex-1">{children}</div>
+      {/* `main` landmark for the whole admin group — no admin page renders its
+          own, so every route here gets exactly one. Without it axe's `region`
+          rule flags all page content as sitting outside a landmark, which is
+          what screen-reader users navigate by. */}
+      <main className="flex-1">{children}</main>
     </div>
   );
 }

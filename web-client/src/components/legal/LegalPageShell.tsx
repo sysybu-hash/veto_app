@@ -5,7 +5,11 @@ import type { ReactNode } from "react";
 import { VetoBrandLogo } from "@/components/brand/VetoBrandLogo";
 import { useTranslation } from "@/lib/i18n/LocaleProvider";
 
-type TitleKey = "legalChrome.termsTitle" | "legalChrome.privacyTitle" | "legalChrome.cookiesTitle";
+type TitleKey =
+  | "legalChrome.termsTitle"
+  | "legalChrome.privacyTitle"
+  | "legalChrome.cookiesTitle"
+  | "legalChrome.accessibilityTitle";
 
 type Props = {
   titleKey: TitleKey;
@@ -22,7 +26,7 @@ export function LegalPageShell({ titleKey, approved, children }: Props) {
         <div className="mb-8">
           <Link
             href="/"
-            className="inline-flex items-center justify-center rounded-xl bg-veto-gold px-5 py-2.5 text-sm font-bold text-primary transition hover:opacity-90"
+            className="inline-flex items-center justify-center rounded-xl bg-veto-gold px-5 py-2.5 text-sm font-bold text-brand-fg transition hover:opacity-90"
           >
             {t("legalChrome.backHome")}
           </Link>

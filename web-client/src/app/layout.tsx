@@ -11,6 +11,7 @@ import {
 import { LocaleProvider } from "@/lib/i18n/LocaleProvider";
 import { AiOverlayErrorBoundary } from "@/components/ui/AiOverlayErrorBoundary";
 import { GlobalAiOverlay } from "@/components/ui/GlobalAiOverlay";
+import { MotionPreferences } from "@/components/ui/MotionPreferences";
 import { ToastHost } from "@/components/ui/ToastHost";
 import { UniversalNav } from "@/components/navigation/UniversalNav";
 import { CookieConsent } from "@/components/privacy/CookieConsent";
@@ -126,6 +127,7 @@ export default async function RootLayout({
         className={`${themeClass} relative min-h-screen bg-[#eef1f5] font-heebo text-primary antialiased dark:bg-[#0f172a] dark:text-slate-100`}
       >
         <ThemeProvider>
+          <MotionPreferences>
           <LocaleProvider>
             <JwtCookieSync />
             <ToastHost />
@@ -158,6 +160,7 @@ export default async function RootLayout({
               <GlobalAiOverlay />
             </AiOverlayErrorBoundary>
           </LocaleProvider>
+          </MotionPreferences>
         </ThemeProvider>
       </body>
     </html>

@@ -63,13 +63,15 @@ function SettingsChrome({
 
   return (
     <>
-      <main
+      {/* Not <main> — this shell renders inside the citizen and admin group
+          layouts, which already own that landmark for every route. */}
+      <div
         className={`mx-auto flex w-full max-w-lg flex-1 flex-col gap-6 px-4 py-8 ${variant === "citizen" ? "pb-[calc(10rem+env(safe-area-inset-bottom))]" : "pb-12"}`}
       >
         {variant === "admin" && (
           <Link
             href="/admin/dashboard"
-            className="text-sm font-semibold text-veto-gold hover:underline"
+            className="text-sm font-semibold text-brand-text hover:underline"
           >
             ← מרכז שליטה
           </Link>
@@ -153,7 +155,7 @@ function SettingsChrome({
             </Button>
           </div>
         )}
-      </main>
+      </div>
 
       {variant === "citizen" ? (
         <CitizenBottomNav active="settings" />

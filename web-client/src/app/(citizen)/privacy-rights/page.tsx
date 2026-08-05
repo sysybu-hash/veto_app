@@ -130,9 +130,9 @@ export default function PrivacyRightsPage() {
 
   return (
     <>
-      <main className={`mx-auto w-full max-w-5xl px-4 py-10 text-end ${citizenBottomSafe}`}>
+      <div className={`mx-auto w-full max-w-5xl px-4 py-10 text-end ${citizenBottomSafe}`}>
         <section className={`${glassPanel} p-6 md:p-8`}>
-          <p className="text-sm font-bold text-veto-gold">{t("privacyRightsPage.eyebrow")}</p>
+          <p className="text-sm font-bold text-brand-text">{t("privacyRightsPage.eyebrow")}</p>
           <h1 className="mt-2 font-display text-3xl font-bold text-primary">
             {t("privacyRightsPage.title")}
           </h1>
@@ -141,11 +141,11 @@ export default function PrivacyRightsPage() {
           </p>
           <p className="mt-2 text-xs text-muted">
             {t("privacyRightsPage.moreInfo")}{" "}
-            <Link href="/privacy" className="font-semibold text-veto-gold underline">
+            <Link href="/privacy" className="font-semibold text-brand-text underline">
               {t("privacyRightsPage.privacyPolicy")}
             </Link>{" "}
             {t("privacyRightsPage.and")}{" "}
-            <Link href="/contact" className="font-semibold text-veto-gold underline">
+            <Link href="/contact" className="font-semibold text-brand-text underline">
               {t("privacyRightsPage.contactPage")}
             </Link>
             .
@@ -157,7 +157,7 @@ export default function PrivacyRightsPage() {
               <p className="mt-1 text-secondary">{t("privacyRightsPage.needLoginBody")}</p>
               <Link
                 href="/login?redirect=%2Fprivacy-rights"
-                className="mt-3 inline-flex items-center gap-2 rounded-xl bg-veto-gold px-4 py-2.5 text-sm font-bold text-primary"
+                className="mt-3 inline-flex items-center gap-2 rounded-xl bg-veto-gold px-4 py-2.5 text-sm font-bold text-brand-fg"
               >
                 <LogIn className="h-4 w-4" aria-hidden />
                 {t("privacyRightsPage.loginCta")}
@@ -184,7 +184,7 @@ export default function PrivacyRightsPage() {
                   disabled={busy !== null || authed === false}
                   className={`${btnSecondaryGlass} p-4 text-end disabled:opacity-50`}
                 >
-                  <Icon className="h-5 w-5 text-veto-gold" aria-hidden />
+                  <Icon className="h-5 w-5 text-brand-text" aria-hidden />
                   <span className="mt-3 block font-bold text-primary">{action.title}</span>
                   <span className="mt-1 block text-sm leading-6 text-secondary">
                     {action.body}
@@ -233,7 +233,7 @@ export default function PrivacyRightsPage() {
                       <p className="mt-1 text-xs text-muted">{request.note}</p>
                     ) : null}
                   </div>
-                  <span className="rounded-full bg-veto-gold/15 px-3 py-1 text-xs font-bold text-veto-gold">
+                  <span className="rounded-full bg-veto-gold/15 px-3 py-1 text-xs font-bold text-brand-text">
                     {statusLabel(request.status)}
                   </span>
                 </div>
@@ -250,7 +250,7 @@ export default function PrivacyRightsPage() {
             </LinkButton>
           </div>
         </section>
-      </main>
+      </div>
       <CitizenBottomNav active="settings" />
     </>
   );

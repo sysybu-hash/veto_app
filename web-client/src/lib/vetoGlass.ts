@@ -99,4 +99,4 @@ export const authBtnSecondary =
   "rounded-sm border border-subtle bg-surface-raised font-semibold text-primary shadow-sm transition hover:border-default hover:bg-surface-raised-2 disabled:opacity-50 outline-none focus-visible:ring-2 focus-visible:ring-veto-gold/50 focus-visible:ring-offset-2 focus-visible:ring-offset-surface-canvas";
 
 export const authBtnPasskey =
-  "rounded-md border border-veto-gold/40 bg-veto-gold/15 font-bold text-veto-gold shadow-brand-glow transition hover:border-veto-gold/60 hover:bg-veto-gold/25 disabled:opacity-50 outline-none focus-visible:ring-2 focus-visible:ring-veto-gold/60 focus-visible:ring-offset-2 focus-visible:ring-offset-surface-canvas";
+  "rounded-md border border-veto-gold/40 bg-veto-gold/15 font-bold text-brand-text shadow-brand-glow transition hover:border-veto-gold/60 hover:bg-veto-gold/25 disabled:opacity-50 outline-none focus-visible:ring-2 focus-visible:ring-veto-gold/60 focus-visible:ring-offset-2 focus-visible:ring-offset-surface-canvas";

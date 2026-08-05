@@ -1141,7 +1141,7 @@ export default function ProductivityPage() {
                         checked={task.done}
                         disabled={updatingTaskId === task.id}
                         onChange={() => void toggleTaskDone(task.id)}
-                        className="mt-1 h-4 w-4 shrink-0 rounded border-strong text-veto-gold focus:ring-veto-gold/40 disabled:cursor-wait disabled:opacity-50"
+                        className="mt-1 h-4 w-4 shrink-0 rounded border-strong text-brand-text focus:ring-veto-gold/40 disabled:cursor-wait disabled:opacity-50"
                       />
                       <span className="min-w-0">
                         <span

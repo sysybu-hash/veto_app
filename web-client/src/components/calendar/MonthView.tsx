@@ -62,9 +62,9 @@ export function MonthView({
           onClick={() => onCursorChange(new Date(year, month - 1, 1))}
           icon={<span aria-hidden>‹</span>}
         />
-        <h3 className="font-frank text-base font-bold capitalize text-primary sm:text-lg">
+        <h2 className="font-frank text-base font-bold capitalize text-primary sm:text-lg">
           {monthLabel}
-        </h3>
+        </h2>
         <IconButton
           variant="ghost"
           size="sm"

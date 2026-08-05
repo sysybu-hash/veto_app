@@ -30,8 +30,17 @@ export function Table({
     return empty ?? <EmptyState title="אין נתונים להצגה" />;
   }
 
+  // Focusable scroll region: a container that scrolls only by swipe or wheel is
+  // unreachable by keyboard (WCAG 2.1.1 / EN 301 549 9.2.1.1). axe only flags it
+  // once the content actually overflows, so this is easy to miss with small
+  // fixtures — keep the tabIndex regardless of data size.
   return (
-    <div className="overflow-x-auto rounded-lg border border-subtle">
+    <div
+      className="overflow-x-auto rounded-lg border border-subtle"
+      tabIndex={0}
+      role="region"
+      aria-label={caption ?? "טבלה"}
+    >
       <table
         className={cn("w-full border-collapse text-sm", dense ? "leading-tight" : "leading-normal", className)}
         {...props}

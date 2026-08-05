@@ -113,7 +113,7 @@ export default function Home() {
         >
           <motion.div
             variants={fadeUp}
-            className="mb-8 inline-flex items-center gap-2 rounded-full border border-veto-gold/30 bg-veto-gold/10 px-4 py-2 text-sm font-medium text-veto-gold backdrop-blur-md"
+            className="mb-8 inline-flex items-center gap-2 rounded-full border border-veto-gold/30 bg-veto-gold/10 px-4 py-2 text-sm font-medium text-brand-text backdrop-blur-md"
           >
             <span className="relative flex h-3 w-3">
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-veto-gold opacity-75" />
@@ -150,7 +150,7 @@ export default function Home() {
             </Link>
             <Link
               href="/register/lawyer"
-              className="flex items-center justify-center rounded-2xl border border-veto-gold/45 bg-[rgba(197,160,89,0.14)] px-8 py-4 text-lg font-bold text-veto-gold shadow-[inset_0_1px_0_rgba(255,255,255,0.12)] backdrop-blur-md transition-all hover:border-veto-gold/70 hover:bg-[rgba(197,160,89,0.24)] hover:text-veto-gold-light active:scale-95"
+              className="flex items-center justify-center rounded-2xl border border-veto-gold/45 bg-[rgba(197,160,89,0.14)] px-8 py-4 text-lg font-bold text-brand-text shadow-[inset_0_1px_0_rgba(255,255,255,0.12)] backdrop-blur-md transition-all hover:border-veto-gold/70 hover:bg-[rgba(197,160,89,0.24)] hover:text-veto-gold-light active:scale-95"
             >
               {t("landing.ctaLawyer")}
             </Link>
@@ -181,7 +181,7 @@ export default function Home() {
                   variants={fadeUp}
                   className="group flex flex-col rounded-3xl border border-subtle bg-surface-raised p-8 shadow-sm backdrop-blur-xl transition-colors hover:bg-surface-overlay"
                 >
-                  <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-2xl bg-veto-gold/20 text-veto-gold transition-transform group-hover:scale-110">
+                  <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-2xl bg-veto-gold/20 text-brand-text transition-transform group-hover:scale-110">
                     <Icon size={28} />
                   </div>
                   <h3 className="mb-3 text-xl font-bold text-primary">{feat.title}</h3>
@@ -200,7 +200,7 @@ export default function Home() {
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.55, ease: "easeOut" }}
           >
-            <p className="mb-2 text-xs font-black tracking-[0.22em] text-veto-gold">
+            <p className="mb-2 text-xs font-black tracking-[0.22em] text-brand-text">
               {t("landing.experienceEyebrow")}
             </p>
             <h2 className="mb-6 text-4xl font-bold text-primary">
@@ -210,11 +210,11 @@ export default function Home() {
               {t("landing.experienceBody")}
             </p>
             <ul className="space-y-4">
-              <li className="flex items-center gap-3 text-veto-gold">
+              <li className="flex items-center gap-3 text-brand-text">
                 <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-veto-gold" />
                 {t("landing.experienceBullet1")}
               </li>
-              <li className="flex items-center gap-3 text-veto-gold">
+              <li className="flex items-center gap-3 text-brand-text">
                 <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-veto-gold" />
                 {t("landing.experienceBullet2")}
               </li>
@@ -229,14 +229,14 @@ export default function Home() {
 
       <section className="border-t border-subtle px-6 py-24">
         <div className="mx-auto max-w-4xl text-center">
-          <Scale size={48} className="mx-auto mb-6 text-veto-gold opacity-80" />
+          <Scale size={48} className="mx-auto mb-6 text-brand-text opacity-80" />
           <h2 className="mb-6 text-3xl font-bold text-primary md:text-4xl">
             {t("landing.pricingTitle")}
           </h2>
           <p className="mb-8 text-lg text-secondary">{t("landing.pricingBody")}</p>
           <Link
             href="/pricing"
-            className="inline-flex rounded-full border border-veto-gold px-8 py-3 font-medium text-veto-gold transition-colors hover:bg-veto-gold/10"
+            className="inline-flex rounded-full border border-veto-gold px-8 py-3 font-medium text-brand-text transition-colors hover:bg-veto-gold/10"
           >
             {t("landing.pricingCta")}
           </Link>
@@ -257,7 +257,7 @@ export default function Home() {
                 <summary className="flex list-none items-center justify-between text-lg font-medium text-primary">
                   {faq.q}
                   <span className="transition group-open:rotate-180">
-                    <ChevronDown size={20} className="text-veto-gold" />
+                    <ChevronDown size={20} className="text-brand-text" />
                   </span>
                 </summary>
                 <div className="mt-4 border-s-2 border-veto-gold/30 ps-2 leading-relaxed text-secondary">
@@ -288,6 +288,9 @@ export default function Home() {
           </Link>
           <Link href="/cookies" className="hover:text-primary">
             {t("footer.cookies")}
+          </Link>
+          <Link href="/accessibility" className="hover:text-primary">
+            {t("footer.accessibility")}
           </Link>
         </div>
       </footer>

@@ -86,7 +86,11 @@ export function LivePreviewMockup() {
               <p className="mt-1 text-[11px] text-muted">{t("landing.mockEncrypted")}</p>
             </div>
 
-            {/* Badges row */}
+            {/* Badges row.
+                This device mockup renders a dark app screen in BOTH themes, so
+                gold text here keeps `text-veto-gold` (bright) rather than the
+                theme-aware `text-brand-text`, whose light-theme value is the
+                dark ramp step and would fail contrast on this dark surface. */}
             <div className="flex flex-wrap items-center justify-center gap-2">
               <span className="inline-flex items-center gap-1.5 rounded-full border border-subtle bg-white/5 px-3 py-1.5 text-[10px] font-semibold text-veto-gold backdrop-blur-sm">
                 <Shield className="h-3.5 w-3.5" aria-hidden />

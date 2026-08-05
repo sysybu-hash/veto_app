@@ -27,7 +27,7 @@ export function PlaybookDetailClient({ playbook, approved }: Props) {
           </Link>
           <Link
             href="/login?redirect=%2Fhub"
-            className="inline-flex rounded-xl bg-veto-gold px-4 py-2 text-sm font-bold text-primary"
+            className="inline-flex rounded-xl bg-veto-gold px-4 py-2 text-sm font-bold text-brand-fg"
           >
             {t("playbooksUi.loginSos")}
           </Link>

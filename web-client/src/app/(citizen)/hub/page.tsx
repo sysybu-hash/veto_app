@@ -381,7 +381,8 @@ export default function CitizenHubPage() {
 
   return (
     <>
-      <main
+      {/* Not <main> — the citizen layout already provides that landmark. */}
+      <div
         className={`mx-auto flex w-full max-w-lg flex-1 flex-col items-center justify-center gap-8 px-6 py-12 ${
           cookieConsentPending
             ? "pb-[calc(20rem+env(safe-area-inset-bottom))]"
@@ -432,7 +433,7 @@ export default function CitizenHubPage() {
           {entitlement?.status === "overtime_pending" ? (
             <Link
               href="/plans"
-              className="mt-3 inline-flex text-sm font-black text-veto-gold underline-offset-2 transition hover:underline"
+              className="mt-3 inline-flex text-sm font-black text-brand-text underline-offset-2 transition hover:underline"
             >
               {t("hub.payOvertimeCta")}
             </Link>
@@ -440,7 +441,7 @@ export default function CitizenHubPage() {
             (!profile?.is_payment_exempt && !profile?.is_subscribed) ? (
             <Link
               href="/plans"
-              className="mt-3 inline-flex text-sm font-black text-veto-gold underline-offset-2 transition hover:underline"
+              className="mt-3 inline-flex text-sm font-black text-brand-text underline-offset-2 transition hover:underline"
             >
               {t("hub.buyPlanCta")}
             </Link>
@@ -470,7 +471,7 @@ export default function CitizenHubPage() {
             {t("hub.quickProductivity")}
           </Link>
         </div>
-      </main>
+      </div>
 
       <CitizenBottomNav active="hub" />
 

@@ -29,7 +29,7 @@ export function IcalFeedButton() {
 
   return (
     <div className={`${glassPanelNested} p-4`}>
-      <p className="text-xs font-bold uppercase tracking-wide text-veto-gold">
+      <p className="text-xs font-bold uppercase tracking-wide text-brand-text">
         iCal
       </p>
       <p className="mt-1 text-sm text-secondary">{t("calendar.icalHint")}</p>

@@ -86,7 +86,7 @@ export default function OnboardingPage() {
 
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
-      <main
+      <div
         className={`mx-auto grid w-full max-w-6xl flex-1 items-center gap-8 px-5 py-8 md:grid-cols-[minmax(0,0.9fr)_minmax(420px,1fr)] md:px-8 lg:gap-12 ${citizenBottomSafe}`}
       >
         <section className="min-w-0 space-y-6">
@@ -214,7 +214,7 @@ export default function OnboardingPage() {
             </Button>
           </div>
         </section>
-      </main>
+      </div>
     </div>
   );
 }

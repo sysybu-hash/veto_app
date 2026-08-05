@@ -104,7 +104,7 @@ export function EndCallSummary({
                 ? t("call.v2.summary.lawyerTitle", "Case call summary")
                 : t("call.v2.summary.title", "Call summary")}
             </h3>
-            <span className="shrink-0 rounded-full border border-veto-gold/35 bg-veto-gold/10 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-veto-gold">
+            <span className="shrink-0 rounded-full border border-veto-gold/35 bg-veto-gold/10 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-brand-text">
               VETO
             </span>
           </div>
@@ -143,7 +143,7 @@ export function EndCallSummary({
                   <span className="text-sm font-semibold text-secondary">
                     {t("call.v2.summary.total", "Total to bill")}
                   </span>
-                  <span className="text-lg font-bold tabular-nums text-veto-gold">
+                  <span className="text-lg font-bold tabular-nums text-brand-text">
                     ₪{summary.total.toFixed(2)}
                   </span>
                 </div>
@@ -186,7 +186,7 @@ export function EndCallSummary({
                       href={f.cloud_url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="block truncate text-xs text-veto-gold underline-offset-2 hover:underline"
+                      className="block truncate text-xs text-brand-text underline-offset-2 hover:underline"
                     >
                       {f.original_name || f.cloud_url}
                     </a>
@@ -198,7 +198,7 @@ export function EndCallSummary({
 
           {actionPlan && (
             <section className="mt-5 rounded-2xl border border-veto-gold/20 bg-veto-gold/[0.06] p-4">
-              <p className="text-sm font-bold text-veto-gold">
+              <p className="text-sm font-bold text-brand-text">
                 {t("call.v2.summary.planTitle", "Legal action plan")}
               </p>
               <p className="mt-2 text-xs leading-relaxed text-secondary">
@@ -210,7 +210,7 @@ export function EndCallSummary({
                     key={step.key}
                     className="flex gap-3 rounded-xl border border-white/[0.06] bg-black/30 px-3 py-2.5"
                   >
-                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-veto-gold/20 text-xs font-bold text-veto-gold">
+                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-veto-gold/20 text-xs font-bold text-brand-text">
                       {i + 1}
                     </span>
                     <div className="min-w-0 flex-1">

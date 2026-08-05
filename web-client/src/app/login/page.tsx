@@ -169,7 +169,7 @@ function LoginPageInner() {
   const nextParam = safeNextPath(
     searchParams.get("next") ?? searchParams.get("redirect"),
   );
-  const { t, locale } = useTranslation();
+  const { t } = useTranslation();
   const [phone, setPhone] = useState("");
   const [otp, setOtp] = useState("");
   const [busy, setBusy] = useState(false);
@@ -586,7 +586,7 @@ function LoginPageInner() {
               {t("login.needRegister")}{" "}
               <Link
                 href="/register"
-                className="font-semibold text-veto-gold underline underline-offset-2 hover:text-veto-gold/90"
+                className="font-semibold text-brand-text underline underline-offset-2 hover:text-veto-gold/90"
               >
                 {t("login.registerLink")}
               </Link>
