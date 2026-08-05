@@ -75,16 +75,19 @@ export default function AccessibilityPage() {
           </p>
         </section>
 
-        {/* תקנה 35 לתקנות שוויון זכויות לאנשים עם מוגבלות מחייבת שם ופרטי
-            התקשרות של רכז נגישות. כתובת המייל למטה מספקת את ערוץ הפנייה;
-            הוסיפו כאן גם את שם הרכז ברגע שימונה. */}
+        {/* רכז הנגישות ופרטי ההתקשרות שלו נדרשים לפי תקנה 35 לתקנות שוויון
+            זכויות לאנשים עם מוגבלות. אם הרכז מתחלף — יש לעדכן כאן. */}
         <section>
           <h2 className="text-lg font-bold text-primary md:text-xl">
-            פניות בנושא נגישות
+            רכז נגישות ופניות
           </h2>
           <p className="mt-2">
-            נשמח לקבל דיווח על כל מכשול נגישות. ניתן לפנות אלינו במייל ישירות
-            לקבוצת הפיתוח בכתובת{" "}
+            רכז הנגישות של VETO Legal הוא{" "}
+            <strong className="text-primary">יוחנן בוקשפן</strong>.
+          </p>
+          <p className="mt-2">
+            נשמח לקבל דיווח על כל מכשול נגישות. ניתן לפנות אליו במייל ישירות
+            בכתובת{" "}
             <a
               className="font-bold text-brand-text underline underline-offset-2"
               href="mailto:YB@BSD-YBM.CO.IL"
