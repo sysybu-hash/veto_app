@@ -16,9 +16,48 @@ const {
 exports.getSharedFiles = async (req, res, next) => {
   try {
     const { userId } = req.params;
-    // We only return files where lawyerAccess is true
+    const linked = await EmergencyEvent.exists({
+      user_id: userId,
+      assigned_lawyer_id: req.user.userId,
+    });
+    if (!linked && req.user.role !== 'admin') {
+      return res.status(403).json({ error: 'No shared case for this user.' });
+    }
     const files = await VaultFile.find({ user_id: userId, lawyerAccess: true }).sort({ uploadedAt: -1 });
     res.json({ files });
+  } catch (err) { next(err); }
+};
+
+/**
+ * Lawyer inbox: all VaultFiles with lawyerAccess from citizens assigned to this lawyer.
+ */
+exports.getLawyerSharedInbox = async (req, res, next) => {
+  try {
+    const events = await EmergencyEvent.find({
+      assigned_lawyer_id: req.user.userId,
+    })
+      .select('user_id')
+      .lean();
+    const citizenIds = [
+      ...new Set(
+        events
+          .map((e) => (e.user_id ? String(e.user_id) : null))
+          .filter(Boolean),
+      ),
+    ];
+    if (citizenIds.length === 0) {
+      return res.json({ files: [], citizens: [] });
+    }
+    const files = await VaultFile.find({
+      user_id: { $in: citizenIds },
+      lawyerAccess: true,
+    })
+      .sort({ uploadedAt: -1 })
+      .lean();
+    res.json({
+      files,
+      citizens: citizenIds,
+    });
   } catch (err) { next(err); }
 };
 
