@@ -15,6 +15,15 @@ env:
   # Render API origin — must match NEXT_PUBLIC_API_ORIGIN on Vercel (web-client).
   VETO_API_BASE: https://veto-app-new.onrender.com
 
+  # The backend integration tests start a real mongod through
+  # mongodb-memory-server, whose postinstall downloads a ~600MB archive. Three
+  # jobs install backend dependencies but only backend-ci runs those tests, so
+  # the postinstall is disabled everywhere and that one job fetches the binary
+  # lazily from a cached directory. Pinning the version keeps the cache key
+  # stable — without it a new upstream default silently re-downloads.
+  MONGOMS_DISABLE_POSTINSTALL: '1'
+  MONGOMS_VERSION: '7.0.24'
+
 jobs:
   no-env-in-git:
     runs-on: ubuntu-latest
@@ -40,6 +49,10 @@ jobs:
     defaults:
       run:
         working-directory: backend
+    env:
+      # Outside node_modules on purpose — `npm ci` wipes that directory, so a
+      # cache pointed inside it would never survive to the next run.
+      MONGOMS_DOWNLOAD_DIR: ${{ github.workspace }}/.cache/mongodb-binaries
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-node@v6
@@ -47,6 +60,11 @@ jobs:
           node-version: '20'
           cache: npm
           cache-dependency-path: backend/package-lock.json
+      - name: Cache mongod binary for integration tests
+        uses: actions/cache@v4
+        with:
+          path: ${{ github.workspace }}/.cache/mongodb-binaries
+          key: mongod-${{ runner.os }}-${{ env.MONGOMS_VERSION }}
       - run: npm ci
       - run: node --check server.js
       - run: npm run lint
