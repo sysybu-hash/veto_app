@@ -318,6 +318,14 @@ exports.capturePayment = async (req, res) => {
         event.charge_capture_id = result.captureId || null;
         event.charge_paid_at = new Date();
         await event.save();
+        if (event.assigned_lawyer_id) {
+          try {
+            const { upsertEarningFromEvent } = require('../services/lawyerPayout.service');
+            await upsertEarningFromEvent(event);
+          } catch (earnErr) {
+            logger.warn({ err: earnErr, eventId: String(event._id) }, '[payout] earn refresh after overtime failed');
+          }
+        }
       }
       return res.json({
         success: true,

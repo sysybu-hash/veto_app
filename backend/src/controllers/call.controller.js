@@ -28,13 +28,13 @@ function buildCallEventQuery(eventIdParam) {
   }
   return { room_id: raw };
 }
-const User = require('../models/User');
 const { cloudinary } = require('../config/cloudinary');
 const { getGeminiModelId } = require('../config/gemini.config');
 const { getGoogleAIClient, isGoogleAIConfigured } = require('../config/googleAI.client');
 const { buildRtcTokenForUid } = require('../services/agoraToken.service');
 const agoraCr = require('../services/agoraCloudRecording.service');
-const { CONSULTATION_ILS, OVERTIME_ILS_PER_MIN, FREE_CALL_MINUTES } = require('../config/pricing');
+// Pricing math lives in services/call/billing.service.js — this controller
+// only persists what computeChargeFromSeconds returns.
 
 const { canAccessEvent } = require('../services/call/access.service');
 const { sanitizeTranscript } = require('../services/call/transcript.service');
@@ -408,6 +408,17 @@ exports.finishCallBilling = async (req, res, next) => {
       event.charge_status = 'pending';
     }
     await event.save();
+
+    // Crediting the assigned lawyer is best-effort — never fail billing finish.
+    if (event.assigned_lawyer_id) {
+      try {
+        const { upsertEarningFromEvent } = require('../services/lawyerPayout.service');
+        await upsertEarningFromEvent(event);
+      } catch (earnErr) {
+        const logger = require('../lib/logger');
+        logger.warn({ err: earnErr, eventId: String(event._id) }, '[payout] earn upsert failed');
+      }
+    }
 
     res.json({
       success: true,

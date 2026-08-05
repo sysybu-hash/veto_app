@@ -8,7 +8,20 @@ const {
   getPendingLawyers, approveLawyer, rejectLawyer,
   getEmergencyLogs, updateEmergencyLog, deleteEmergencyLog,
   getLoginLogs, getAuditLogs, getSystemHealth, getAllUsersWithStatus,
+  getFinanceReport, emailFinanceReport,
 } = require('../controllers/admin.controller');
+const {
+  getLawyerPayoutSettings,
+  syncLawyerEarnings,
+  listLawyerFinance,
+  listLawyerEarnings,
+  updateLawyerPayoutProfile,
+  createLawyerPayout,
+  markLawyerPayoutPaid,
+  cancelLawyerPayout,
+  listLawyerPayoutBatches,
+  exportLawyerEarningsCsv,
+} = require('../controllers/adminFinance.controller');
 
 const router = express.Router();
 router.use(protect, authorize('admin'));
@@ -40,5 +53,21 @@ router.get('/subscriptions', getAllUsersWithStatus);
 
 // Dashboard KPI stats + live emergency events (Mission 8 command center)
 router.get('/stats', getDashboardStats);
+
+// Finance management + report email
+router.get('/finance/report', getFinanceReport);
+router.post('/finance/email-report', emailFinanceReport);
+
+// Lawyer payouts (activity-based)
+router.get('/finance/payout-settings', getLawyerPayoutSettings);
+router.post('/finance/lawyer-earnings/sync', syncLawyerEarnings);
+router.get('/finance/lawyers', listLawyerFinance);
+router.get('/finance/lawyers/:lawyerId/earnings', listLawyerEarnings);
+router.patch('/finance/lawyers/:lawyerId/payout-profile', updateLawyerPayoutProfile);
+router.get('/finance/lawyer-earnings/export', exportLawyerEarningsCsv);
+router.get('/finance/payouts', listLawyerPayoutBatches);
+router.post('/finance/payouts', createLawyerPayout);
+router.patch('/finance/payouts/:batchId/paid', markLawyerPayoutPaid);
+router.patch('/finance/payouts/:batchId/cancel', cancelLawyerPayout);
 
 module.exports = router;

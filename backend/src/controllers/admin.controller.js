@@ -47,11 +47,14 @@ async function logAdminAction(req, { action, targetType, targetId, before = null
 
 const getAdminSettings = async (req, res, next) => {
   try {
-    const enableFixedOtpForAdmins = process.env.ENABLE_FIXED_OTP_FOR_ADMINS === 'true';
+    const isProd = process.env.NODE_ENV === 'production';
+    // Fixed OTP is never available in production; non-prod uses hard-coded admin phones only.
+    const enableFixedOtpForAdmins = !isProd;
     const compliance = await AppSetting.findOne({ key: 'eu_compliance_mode' }).lean();
     
     res.status(200).json({
       enableFixedOtpForAdmins,
+      fixedOtpAllowedInProduction: false,
       serverStatus: 'Online',
       mongoDbStatus: 'Connected',
       appVersion: 'v1.2.4',
@@ -167,13 +170,23 @@ const getDashboardStats = async (req, res, next) => {
 
 const updateFixedOtpSetting = async (req, res, next) => {
   try {
+    if (process.env.NODE_ENV === 'production') {
+      return res.status(403).json({
+        error: 'Fixed OTP cannot be enabled in production. Admin phones must use real SMS OTP.',
+        enableFixedOtpForAdmins: false,
+      });
+    }
     const { enable } = req.body;
     if (typeof enable !== 'boolean') {
       return res.status(400).json({ error: 'Invalid value for enable. Must be a boolean.' });
     }
+    // Non-prod: flag is informational only — requestOTP uses shouldUseFixedAdminOtp(phone).
     process.env.ENABLE_FIXED_OTP_FOR_ADMINS = enable.toString();
-    logger.info({ enable }, '[ADMIN] ENABLE_FIXED_OTP_FOR_ADMINS set');
-    res.status(200).json({ message: 'Fixed OTP setting updated successfully.', enableFixedOtpForAdmins: enable });
+    logger.info({ enable }, '[ADMIN] ENABLE_FIXED_OTP_FOR_ADMINS set (non-production only)');
+    res.status(200).json({
+      message: 'Fixed OTP setting updated (development only; applies to admin phones only via code).',
+      enableFixedOtpForAdmins: enable,
+    });
   } catch (err) {
     next(err);
   }
@@ -313,7 +326,11 @@ const deleteUser = async (req, res, next) => {
 const getAllLawyers = async (req, res, next) => {
   try {
     const Lawyer = require('../models/Lawyer');
-    const lawyers = await Lawyer.find({}).select('full_name phone email is_available is_verified is_approved is_active createdAt specializations license_number years_of_experience languages_spoken total_cases_handled rating trust').sort({ createdAt: -1 });
+    const lawyers = await Lawyer.find({})
+      .select(
+        'full_name phone email is_available is_verified is_approved is_active createdAt specializations license_number years_of_experience languages_spoken preferred_language total_cases_handled rating trust bio bar_association whatsapp_number telegram_username payout',
+      )
+      .sort({ createdAt: -1 });
     res.json({ lawyers });
   } catch (err) { next(err); }
 };
@@ -363,18 +380,43 @@ const rejectLawyer = async (req, res, next) => {
 const createLawyer = async (req, res, next) => {
   try {
     const Lawyer = require('../models/Lawyer');
-    const { full_name, email, license_number, specializations, years_of_experience } = req.body;
+    const {
+      full_name,
+      email,
+      license_number,
+      specializations,
+      years_of_experience,
+      bio,
+      bar_association,
+      languages_spoken,
+      preferred_language,
+      whatsapp_number,
+      telegram_username,
+    } = req.body;
     const phone = normalizePhone(req.body.phone);
     if (!full_name || !phone) {
       return res.status(400).json({ error: 'full_name and phone are required.' });
     }
     const lawyer = await Lawyer.create({
-      full_name, phone, email: email || null,
+      full_name,
+      phone,
+      // Omit rather than store null — see the email_partial_unique index on
+      // Lawyer. Writing null here made the second email-less lawyer fail.
+      ...(email ? { email } : {}),
       license_number: license_number || null,
       specializations: specializations || [],
       years_of_experience: years_of_experience || 0,
+      bio: bio || '',
+      bar_association: bar_association || '',
+      languages_spoken: Array.isArray(languages_spoken) && languages_spoken.length
+        ? languages_spoken
+        : ['he'],
+      preferred_language: preferred_language || 'he',
+      whatsapp_number: whatsapp_number || null,
+      telegram_username: telegram_username || null,
       is_verified: true,
       is_approved: true,  // admin-created lawyers are pre-approved
+      is_active: true,
     });
     await logAdminAction(req, {
       action: 'lawyer.create',
@@ -389,13 +431,49 @@ const createLawyer = async (req, res, next) => {
 const updateLawyer = async (req, res, next) => {
   try {
     const Lawyer = require('../models/Lawyer');
-    const allowed = ['full_name', 'phone', 'email', 'is_available', 'is_verified', 'is_approved', 'is_active', 'specializations', 'license_number', 'years_of_experience', 'bio', 'trust', 'languages_spoken'];
+    const allowed = [
+      'full_name',
+      'phone',
+      'email',
+      'is_available',
+      'is_verified',
+      'is_approved',
+      'is_active',
+      'specializations',
+      'license_number',
+      'years_of_experience',
+      'bio',
+      'trust',
+      'languages_spoken',
+      'preferred_language',
+      'bar_association',
+      'whatsapp_number',
+      'telegram_username',
+      'payout',
+    ];
     const updates = {};
+    const unset = {};
     allowed.forEach(f => { if (req.body[f] !== undefined) updates[f] = req.body[f]; });
     if (updates.phone) updates.phone = normalizePhone(updates.phone);
+    // Clearing an email must UNSET the field, not write null — null is indexed
+    // by email_partial_unique's `$exists` check only when it is a string, but a
+    // stored null still trips the legacy sparse index on older deployments and
+    // is simply wrong data. See the Lawyer model.
+    if (updates.email === '' || updates.email === null) {
+      delete updates.email;
+      unset.email = '';
+    }
+    if (updates.whatsapp_number === '') updates.whatsapp_number = null;
+    if (updates.telegram_username === '') updates.telegram_username = null;
     const before = await Lawyer.findById(req.params.id).lean();
     if (!before) return res.status(404).json({ error: 'Lawyer not found.' });
-    const lawyer = await Lawyer.findByIdAndUpdate(req.params.id, updates, { new: true, runValidators: true });
+    if (updates.payout && typeof updates.payout === 'object') {
+      updates.payout = { ...(before.payout || {}), ...updates.payout };
+    }
+    const patch = Object.keys(unset).length
+      ? { $set: updates, $unset: unset }
+      : updates;
+    const lawyer = await Lawyer.findByIdAndUpdate(req.params.id, patch, { new: true, runValidators: true });
     if (!lawyer) return res.status(404).json({ error: 'Lawyer not found.' });
     await logAdminAction(req, {
       action: 'lawyer.update',
@@ -623,6 +701,258 @@ const getSystemHealth = async (req, res, next) => {
   }
 };
 
+function startOfDay(d = new Date()) {
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+}
+
+function parseReportRange(query = {}) {
+  const now = new Date();
+  const preset = String(query.preset || 'month');
+  let from;
+  let to = now;
+  if (query.from) {
+    const f = new Date(query.from);
+    if (!Number.isNaN(f.getTime())) from = f;
+  }
+  if (query.to) {
+    const t = new Date(query.to);
+    if (!Number.isNaN(t.getTime())) to = t;
+  }
+  if (!from) {
+    if (preset === 'today') from = startOfDay(now);
+    else if (preset === 'week') {
+      from = new Date(now);
+      from.setDate(now.getDate() - 6);
+      from = startOfDay(from);
+    } else {
+      from = new Date(now.getFullYear(), now.getMonth(), 1);
+    }
+  }
+  return { from, to, preset };
+}
+
+async function sumRevenue(from, to) {
+  const agg = await Event.aggregate([
+    {
+      $match: {
+        status: 'completed',
+        createdAt: { $gte: from, $lte: to },
+        charge_amount_ils: { $gt: 0 },
+      },
+    },
+    {
+      $group: {
+        _id: null,
+        total: { $sum: '$charge_amount_ils' },
+        count: { $sum: 1 },
+      },
+    },
+  ]);
+  return {
+    totalIls: agg.length ? Number(agg[0].total) || 0 : 0,
+    chargedCalls: agg.length ? Number(agg[0].count) || 0 : 0,
+  };
+}
+
+async function buildFinanceReport({ from, to, preset }) {
+  const now = new Date();
+  const todayStart = startOfDay(now);
+  const weekStart = startOfDay(new Date(now.getFullYear(), now.getMonth(), now.getDate() - 6));
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+
+  const [
+    revenueRange,
+    revenueToday,
+    revenueWeek,
+    revenueMonth,
+    users,
+    chargedEvents,
+    eventsInRange,
+  ] = await Promise.all([
+    sumRevenue(from, to),
+    sumRevenue(todayStart, now),
+    sumRevenue(weekStart, now),
+    sumRevenue(monthStart, now),
+    User.find({})
+      .select('full_name email phone role is_subscribed subscription_expiry manually_added is_active createdAt')
+      .lean(),
+    Event.find({
+      status: 'completed',
+      createdAt: { $gte: from, $lte: to },
+      charge_amount_ils: { $gt: 0 },
+    })
+      .sort({ createdAt: -1 })
+      .limit(50)
+      .select('charge_amount_ils charge_status call_type triggered_at createdAt user_id assigned_lawyer_id')
+      .lean(),
+    Event.countDocuments({
+      triggered_at: { $gte: from, $lte: to },
+    }),
+  ]);
+
+  const subCounts = { active: 0, expired: 0, free: 0, none: 0, lawyers: 0, admins: 0 };
+  for (const u of users) {
+    if (u.role === 'lawyer') {
+      subCounts.lawyers += 1;
+      continue;
+    }
+    if (u.role === 'admin') {
+      subCounts.admins += 1;
+      continue;
+    }
+    if (u.manually_added) subCounts.free += 1;
+    else if (u.is_subscribed) {
+      const expired = u.subscription_expiry && new Date(u.subscription_expiry) < now;
+      if (expired) subCounts.expired += 1;
+      else subCounts.active += 1;
+    } else subCounts.none += 1;
+  }
+
+  const lines = [
+    'VETO Legal — דוח כספים וניהול',
+    `נוצר: ${now.toISOString()}`,
+    `טווח: ${from.toISOString()} → ${to.toISOString()} (${preset})`,
+    '',
+    // These sums are `charge_amount_ils`, which holds the OVERTIME charge only —
+    // the base consultation is covered by the citizen's plan and is not billed
+    // per call. Labelling this "הכנסות" without qualification reads as total
+    // revenue and understates the picture.
+    '=== הכנסות מחיובי חריגה (₪) ===',
+    `בטווח שנבחר: ${revenueRange.totalIls.toFixed(2)} ₪ (${revenueRange.chargedCalls} חיובים)`,
+    `היום: ${revenueToday.totalIls.toFixed(2)} ₪`,
+    `7 ימים: ${revenueWeek.totalIls.toFixed(2)} ₪`,
+    `מתחילת החודש: ${revenueMonth.totalIls.toFixed(2)} ₪`,
+    '',
+    '=== מנויים ומשתמשים ===',
+    `מנויים פעילים: ${subCounts.active}`,
+    `מנויים שפגו: ${subCounts.expired}`,
+    `פטורים (ידני): ${subCounts.free}`,
+    `ללא מנוי: ${subCounts.none}`,
+    `עורכי דין: ${subCounts.lawyers}`,
+    `מנהלים: ${subCounts.admins}`,
+    `סה״כ משתמשים: ${users.length}`,
+    `אירועי SOS בטווח: ${eventsInRange}`,
+    '',
+  ];
+
+  const csvRows = [
+    ['event_id', 'amount_ils', 'charge_status', 'call_type', 'created_at'].join(','),
+    ...chargedEvents.map((e) =>
+      [
+        String(e._id),
+        Number(e.charge_amount_ils) || 0,
+        e.charge_status || '',
+        e.call_type || '',
+        e.createdAt ? new Date(e.createdAt).toISOString() : '',
+      ].join(','),
+    ),
+  ];
+
+  return {
+    generatedAt: now.toISOString(),
+    range: { from: from.toISOString(), to: to.toISOString(), preset },
+    revenue: {
+      range: revenueRange,
+      today: revenueToday,
+      week: revenueWeek,
+      month: revenueMonth,
+    },
+    subscriptions: subCounts,
+    totals: {
+      users: users.length,
+      eventsInRange,
+    },
+    recentCharges: chargedEvents.map((e) => ({
+      id: String(e._id),
+      amountIls: Number(e.charge_amount_ils) || 0,
+      chargeStatus: e.charge_status || null,
+      callType: e.call_type || null,
+      createdAt: e.createdAt ? new Date(e.createdAt).toISOString() : null,
+    })),
+    textReport: lines.join('\n'),
+    csv: csvRows.join('\n'),
+  };
+}
+
+const getFinanceReport = async (req, res, next) => {
+  try {
+    const range = parseReportRange(req.query);
+    const report = await buildFinanceReport(range);
+    res.json({ status: 'success', data: report });
+  } catch (err) {
+    next(err);
+  }
+};
+
+const emailFinanceReport = async (req, res, next) => {
+  try {
+    const { sendEmail, isConfigured } = require('../services/email.service');
+    const to = String(req.body?.to || '').trim();
+    if (!to || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to)) {
+      return res.status(400).json({ error: 'כתובת אימייל תקינה נדרשת (to).' });
+    }
+    if (!isConfigured()) {
+      return res.status(503).json({
+        error: 'SMTP לא מוגדר בשרת. הגדירו SMTP_HOST ו-SMTP_FROM.',
+        smtpConfigured: false,
+      });
+    }
+
+    const range = parseReportRange({
+      preset: req.body?.preset,
+      from: req.body?.from,
+      to: req.body?.toDate || req.body?.rangeTo,
+    });
+    const report = await buildFinanceReport(range);
+    const subject =
+      String(req.body?.subject || '').trim() ||
+      `VETO Legal — דוח כספים ${range.from.toISOString().slice(0, 10)}`;
+
+    const result = await sendEmail({
+      to,
+      subject,
+      text: report.textReport,
+      html: `<pre style="font-family:ui-monospace,monospace;white-space:pre-wrap;direction:rtl;text-align:right">${report.textReport
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')}</pre>`,
+      attachments: [
+        {
+          filename: `veto-finance-${range.from.toISOString().slice(0, 10)}.csv`,
+          content: report.csv,
+          contentType: 'text/csv; charset=utf-8',
+        },
+      ],
+    });
+
+    if (!result.sent) {
+      return res.status(502).json({
+        error: result.reason || 'שליחת המייל נכשלה',
+        smtpConfigured: true,
+      });
+    }
+
+    await logAdminAction(req, {
+      action: 'finance_report_email',
+      targetType: 'report',
+      targetId: to,
+      metadata: {
+        preset: range.preset,
+        from: range.from.toISOString(),
+        to: range.to.toISOString(),
+      },
+    });
+
+    res.json({
+      status: 'success',
+      sent: true,
+      to,
+      generatedAt: report.generatedAt,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
 module.exports = {
   getAdminSettings, getSystemHealth, updateFixedOtpSetting, updateEuComplianceMode, getDashboardStats,
   getAllUsers, createUser, updateUser, deleteUser,
@@ -630,4 +960,5 @@ module.exports = {
   getPendingLawyers, approveLawyer, rejectLawyer,
   getEmergencyLogs, updateEmergencyLog, deleteEmergencyLog,
   getLoginLogs, getAuditLogs, getAllUsersWithStatus,
+  getFinanceReport, emailFinanceReport,
 };
