@@ -6,6 +6,7 @@
 const dns = require('dns');
 const mongoose = require('mongoose');
 const logger = require('../lib/logger');
+const { expandSrvUri } = require('./srvFallback');
 
 const connectDB = async () => {
   const uri = process.env.MONGO_URI;
@@ -23,50 +24,110 @@ const connectDB = async () => {
     /* ignore */
   }
 
+  let connectUri = uri.trim();
   try {
-    const conn = await mongoose.connect(uri, {
+    const conn = await mongoose.connect(connectUri, {
       serverSelectionTimeoutMS: 30000,
       family: 4,
     });
-
     logger.info({ host: conn.connection.host }, 'VETO Atlas Connected');
-
-    // Drop legacy sparse unique phone index (indexes null) and sync partial unique.
-    try {
-      const User = require('../models/User');
-      const indexes = await User.collection.indexes();
-      for (const idx of indexes) {
-        const keys = Object.keys(idx.key || {});
-        if (
-          keys.length === 1 &&
-          keys[0] === 'phone' &&
-          idx.unique &&
-          idx.name !== 'phone_partial_unique'
-        ) {
-          await User.collection.dropIndex(idx.name);
-          logger.warn({ index: idx.name }, '[DB] Dropped legacy unique phone index');
-        }
-      }
-      const repair = await User.updateMany(
-        { $or: [{ phone: null }, { phone: '' }] },
-        { $unset: { phone: '' } },
-      );
-      if (repair.modifiedCount > 0) {
-        logger.warn(
-          { modifiedCount: repair.modifiedCount },
-          '[DB] Unset null/empty phone fields on connect',
-        );
-      }
-      await User.syncIndexes();
-    } catch (indexErr) {
-      logger.warn({ err: indexErr }, '[DB] Phone index repair skipped');
+  } catch (firstErr) {
+    const isSrvDns =
+      connectUri.startsWith('mongodb+srv://') &&
+      String(firstErr.message || '').includes('querySrv');
+    if (!isSrvDns) {
+      const hint = String(firstErr.message).includes('querySrv')
+        ? 'querySrv = DNS issue for mongodb+srv. Try: set Windows DNS to 8.8.8.8, or use Atlas "Standard connection" (mongodb://...) instead of srv, and update MONGO_URI.'
+        : undefined;
+      logger.error({ err: firstErr, hint }, 'MongoDB connection error');
+      throw firstErr;
     }
-  } catch (error) {
-    const hint = String(error.message).includes('querySrv')
-      ? 'querySrv = DNS issue for mongodb+srv. Try: set Windows DNS to 8.8.8.8, or use Atlas "Standard connection" (mongodb://...) instead of srv, and update MONGO_URI.'
-      : undefined;
-    logger.error({ err: error, hint }, 'MongoDB connection error');
-    throw error;
+
+    logger.warn('[DB] Expanding mongodb+srv URI after querySrv failure');
+    try {
+      connectUri = await expandSrvUri(connectUri);
+      const conn = await mongoose.connect(connectUri, {
+        serverSelectionTimeoutMS: 30000,
+        family: 4,
+      });
+      logger.info(
+        { host: conn.connection.host, via: 'srv-expand' },
+        'VETO Atlas Connected',
+      );
+    } catch (error) {
+      logger.error(
+        {
+          err: error,
+          hint: 'Atlas SRV/DNS failed even after expand. Check Network Access + MONGO_URI.',
+        },
+        'MongoDB connection error',
+      );
+      throw error;
+    }
+  }
+
+  // Drop legacy sparse unique phone index (indexes null) and sync partial unique.
+  try {
+    const User = require('../models/User');
+    const indexes = await User.collection.indexes();
+    for (const idx of indexes) {
+      const keys = Object.keys(idx.key || {});
+      if (
+        keys.length === 1 &&
+        keys[0] === 'phone' &&
+        idx.unique &&
+        idx.name !== 'phone_partial_unique'
+      ) {
+        await User.collection.dropIndex(idx.name);
+        logger.warn({ index: idx.name }, '[DB] Dropped legacy unique phone index');
+      }
+    }
+    const repair = await User.updateMany(
+      { $or: [{ phone: null }, { phone: '' }] },
+      { $unset: { phone: '' } },
+    );
+    if (repair.modifiedCount > 0) {
+      logger.warn(
+        { modifiedCount: repair.modifiedCount },
+        '[DB] Unset null/empty phone fields on connect',
+      );
+    }
+    await User.syncIndexes();
+  } catch (indexErr) {
+    logger.warn({ err: indexErr }, '[DB] Phone index repair skipped');
+  }
+
+  // Same trap on Lawyer.email: the old schema was `unique + sparse` with
+  // `default: null`, and sparse does NOT skip explicit nulls — so only one
+  // email-less lawyer could exist and every later one failed with E11000.
+  try {
+    const Lawyer = require('../models/Lawyer');
+    const indexes = await Lawyer.collection.indexes();
+    for (const idx of indexes) {
+      const keys = Object.keys(idx.key || {});
+      if (
+        keys.length === 1 &&
+        keys[0] === 'email' &&
+        idx.unique &&
+        idx.name !== 'email_partial_unique'
+      ) {
+        await Lawyer.collection.dropIndex(idx.name);
+        logger.warn({ index: idx.name }, '[DB] Dropped legacy unique lawyer email index');
+      }
+    }
+    const repair = await Lawyer.updateMany(
+      { $or: [{ email: null }, { email: '' }] },
+      { $unset: { email: '' } },
+    );
+    if (repair.modifiedCount > 0) {
+      logger.warn(
+        { modifiedCount: repair.modifiedCount },
+        '[DB] Unset null/empty lawyer email fields on connect',
+      );
+    }
+    await Lawyer.syncIndexes();
+  } catch (indexErr) {
+    logger.warn({ err: indexErr }, '[DB] Lawyer email index repair skipped');
   }
 };
 

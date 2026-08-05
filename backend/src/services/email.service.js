@@ -27,9 +27,25 @@ function getTransporter() {
 }
 
 /**
- * @param {{ to: string, subject: string, text: string, icsContent?: string, icsFilename?: string }} p
+ * @param {{
+ *   to: string,
+ *   subject: string,
+ *   text: string,
+ *   html?: string,
+ *   icsContent?: string,
+ *   icsFilename?: string,
+ *   attachments?: Array<{ filename: string, content: string|Buffer, contentType?: string }>,
+ * }} p
  */
-async function sendEmail({ to, subject, text, icsContent, icsFilename = 'event.ics' }) {
+async function sendEmail({
+  to,
+  subject,
+  text,
+  html,
+  icsContent,
+  icsFilename = 'event.ics',
+  attachments = [],
+}) {
   const t = getTransporter();
   if (!t) {
     return { sent: false, reason: 'SMTP not configured' };
@@ -40,15 +56,15 @@ async function sendEmail({ to, subject, text, icsContent, icsFilename = 'event.i
       to,
       subject,
       text,
+      html: html || undefined,
+      attachments: [...attachments],
     };
     if (icsContent) {
-      mail.attachments = [
-        {
-          filename: icsFilename,
-          content: icsContent,
-          contentType: 'text/calendar; charset=utf-8',
-        },
-      ];
+      mail.attachments.push({
+        filename: icsFilename,
+        content: icsContent,
+        contentType: 'text/calendar; charset=utf-8',
+      });
     }
     await t.sendMail(mail);
     return { sent: true };
