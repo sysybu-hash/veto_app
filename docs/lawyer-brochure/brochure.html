@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <title>VETO Legal — סקירת מערכת לעורכי דין</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@500;700;900&family=Heebo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --ink: #12161f;
+      --muted: #4a5160;
+      --line: rgba(18, 22, 31, 0.12);
+      --gold: #c5a059;
+      --gold-deep: #8f7340;
+      --navy: #0f1729;
+      --cream: #f7f4ee;
+      --paper: #ffffff;
+    }
+
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      color: var(--ink);
+      background: var(--paper);
+      font-family: "Heebo", sans-serif;
+      font-size: 11.5pt;
+      line-height: 1.65;
+    }
+
+    @page {
+      size: A4;
+      margin: 12mm 12mm 14mm 12mm;
+    }
+    @page :first {
+      margin: 0;
+    }
+
+    .page {
+      break-after: page;
+      page-break-after: always;
+      min-height: 250mm;
+      position: relative;
+    }
+    .page:last-child {
+      break-after: auto;
+      page-break-after: auto;
+    }
+
+    h1, h2, h3 {
+      font-family: "Frank Ruhl Libre", serif;
+      font-weight: 700;
+      line-height: 1.25;
+      margin: 0 0 0.45em;
+      color: var(--navy);
+    }
+
+    h1 { font-size: 28pt; font-weight: 900; }
+    h2 { font-size: 18pt; margin-top: 0; }
+    h3 { font-size: 13.5pt; color: var(--gold-deep); }
+
+    p { margin: 0 0 0.85em; color: var(--ink); }
+    .muted { color: var(--muted); }
+    .small { font-size: 9.5pt; }
+    .tiny { font-size: 8.5pt; letter-spacing: 0.02em; }
+
+    .eyebrow {
+      display: inline-block;
+      font-size: 9pt;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--gold-deep);
+      margin-bottom: 0.6em;
+    }
+
+    .rule {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--gold), transparent);
+      border: 0;
+      margin: 1.2em 0 1.4em;
+    }
+
+    /* Cover */
+    .cover {
+      min-height: 265mm;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 18mm 10mm 14mm;
+      background:
+        radial-gradient(ellipse at 20% 10%, rgba(197,160,89,0.18), transparent 45%),
+        linear-gradient(165deg, #0d1424 0%, #171f33 48%, #0f1729 100%);
+      color: #f4efe4;
+      border-radius: 0;
+    }
+    .cover h1, .cover h2, .cover p { color: #f4efe4; }
+    .cover .brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .cover .brand img {
+      width: 64px;
+      height: 64px;
+      object-fit: contain;
+      filter: drop-shadow(0 8px 18px rgba(0,0,0,0.35));
+    }
+    .cover .brand-name {
+      font-family: "Frank Ruhl Libre", serif;
+      font-size: 28pt;
+      font-weight: 900;
+      letter-spacing: 0.04em;
+    }
+    .cover .brand-sub {
+      font-size: 10pt;
+      color: rgba(244,239,228,0.72);
+      margin-top: 2px;
+    }
+    .cover-hero {
+      margin-top: 28mm;
+      max-width: 150mm;
+    }
+    .cover-hero h1 {
+      font-size: 34pt;
+      margin-bottom: 0.35em;
+    }
+    .cover-hero .lead {
+      font-size: 13pt;
+      font-weight: 300;
+      color: rgba(244,239,228,0.88);
+      line-height: 1.7;
+    }
+    .cover-meta {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      border-top: 1px solid rgba(197,160,89,0.45);
+      padding-top: 16px;
+      font-size: 9.5pt;
+      color: rgba(244,239,228,0.78);
+    }
+    .cover-meta strong {
+      display: block;
+      color: var(--gold);
+      font-weight: 700;
+      margin-bottom: 2px;
+    }
+
+    /* Content blocks */
+    .section-head {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 10px;
+    }
+    .section-num {
+      font-family: "Frank Ruhl Libre", serif;
+      font-size: 28pt;
+      font-weight: 900;
+      color: rgba(197,160,89,0.55);
+      line-height: 1;
+    }
+
+    .shot {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 10px 28px rgba(15, 23, 41, 0.08);
+      background: #fff;
+      margin: 0.6em 0 1em;
+    }
+    .shot img {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+    .shot.viewport img {
+      max-height: 145mm;
+      object-fit: cover;
+      object-position: top;
+    }
+    .caption {
+      font-size: 8.5pt;
+      color: var(--muted);
+      margin: -0.4em 0 1.1em;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+    .card {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 14px 16px;
+      background: linear-gradient(180deg, #fff 0%, var(--cream) 140%);
+    }
+    .card h3 { margin-bottom: 0.35em; }
+    .card p { margin-bottom: 0; font-size: 10.5pt; color: var(--muted); }
+
+    ul.clean {
+      margin: 0.2em 0 1em;
+      padding: 0 1.1em 0 0;
+    }
+    ul.clean li {
+      margin-bottom: 0.35em;
+    }
+
+    table.matrix {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 10pt;
+      margin: 0.6em 0 1.2em;
+    }
+    table.matrix th, table.matrix td {
+      border: 1px solid var(--line);
+      padding: 8px 10px;
+      text-align: right;
+      vertical-align: top;
+    }
+    table.matrix th {
+      background: var(--navy);
+      color: #f4efe4;
+      font-weight: 600;
+    }
+    table.matrix tr:nth-child(even) td {
+      background: rgba(247,244,238,0.65);
+    }
+
+    .callout {
+      border-right: 3px solid var(--gold);
+      background: rgba(197,160,89,0.08);
+      padding: 12px 14px;
+      border-radius: 0 10px 10px 0;
+      margin: 1em 0;
+    }
+    .callout strong { color: var(--gold-deep); }
+
+    .footer-note {
+      margin-top: 8mm;
+      padding-top: 8px;
+      border-top: 1px solid var(--line);
+      font-size: 8.5pt;
+      color: var(--muted);
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .pill-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 0.6em 0 1.1em;
+    }
+    .pill {
+      border: 1px solid rgba(197,160,89,0.55);
+      color: var(--gold-deep);
+      background: rgba(197,160,89,0.08);
+      border-radius: 999px;
+      padding: 4px 12px;
+      font-size: 9pt;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- COVER -->
+  <section class="page cover">
+    <div class="brand">
+      <img src="assets/icon-512.png" alt="VETO" />
+      <div>
+        <div class="brand-name">VETO Legal</div>
+        <div class="brand-sub">מערכת הפעלה משפטית · SOS · כספת · AI</div>
+      </div>
+    </div>
+
+    <div class="cover-hero">
+      <div class="eyebrow" style="color:#d8b867;">מסמך סקירה לעורכי דין</div>
+      <h1>סקירת מערכת מלאה<br/>לשותפים מקצועיים</h1>
+      <p class="lead">
+        חוברת זו מציגה את VETO Legal מקצה לקצה — חוויית האזרח, לוח עורך הדין,
+        תשתיות החירום, הכספת, המנויים והפרטיות — לצורך חוות דעת מקצועית.
+      </p>
+    </div>
+
+    <div class="cover-meta">
+      <div>
+        <strong>אתר חי</strong>
+        web-nine-gamma-76.vercel.app
+      </div>
+      <div>
+        <strong>תאריך</strong>
+        אוגוסט 2026
+      </div>
+      <div>
+        <strong>שפות ממשק</strong>
+        עברית · English · Русский
+      </div>
+      <div>
+        <strong>סטטוס</strong>
+        טיוטת מוצר לסקירה — לא הצעה משפטית
+      </div>
+    </div>
+  </section>
+
+  <!-- 01 INTRO -->
+  <section class="page">
+    <div class="section-head">
+      <div>
+        <div class="eyebrow">פרק 01</div>
+        <h2>מהי VETO Legal?</h2>
+      </div>
+      <div class="section-num">01</div>
+    </div>
+    <hr class="rule" />
+
+    <p>
+      VETO Legal היא פלטפורמת חירום משפטית שמחברת <strong>אזרח בזמן אמת</strong>
+      לעורך דין זמין — בווידאו, באודיו או בצ׳אט — תוך תיעוד מאובטח בכספת דיגיטלית.
+      המוצר מיועד לרגעים הקריטיים: חקירה, תאונה, עימות משפחתי, או כל סיטואציה
+      שבה נדרשת נוכחות מקצועית מיידית.
+    </p>
+
+    <div class="pill-row">
+      <span class="pill">שיגור SOS חי</span>
+      <span class="pill">שיחות Agora מוצפנות</span>
+      <span class="pill">כספת ראיות</span>
+      <span class="pill">מחולל מסמכי AI</span>
+      <span class="pill">מנויי PayPal</span>
+      <span class="pill">רב־לשוני</span>
+    </div>
+
+    <div class="callout">
+      <strong>מטרת המסמך:</strong>
+      לקבל מכם, כעורכי דין, חוות דעת כנה על החוויה, על הערך המקצועי,
+      על נקודות הסיכון, ועל מה שחשוב לתקן לפני הרחבת הרשת.
+    </div>
+
+    <h3>שלושה קהלים במערכת</h3>
+    <div class="grid-2">
+      <div class="card">
+        <h3>אזרח</h3>
+        <p>SOS, שיחה, כספת, מחולל מסמכים, מנויים, צ׳אט, חוזים/משימות, יומן והגדרות.</p>
+      </div>
+      <div class="card">
+        <h3>עורך דין</h3>
+        <p>דשבורד זמינות, תור קריאות חי, קבלת מקרה, שיחה, גישה לצ׳אט ולכספת.</p>
+      </div>
+      <div class="card">
+        <h3>מערכת / אדמין</h3>
+        <p>אישור עורכי דין, מדדים, מדיניות, ניהול כספת והגדרות תשתית.</p>
+      </div>
+      <div class="card">
+        <h3>ציבור / שיווק</h3>
+        <p>דף בית, מחירים, מדריכי חירום, הרשמה, כניסה, תנאי שימוש ופרטיות.</p>
+      </div>
+    </div>
+
+    <div class="footer-note">
+      <span>VETO Legal · סקירת מערכת לעורכי דין</span>
+      <span>עמוד 2</span>
+    </div>
+  </section>
+
+  <!-- 02 HOME -->
+  <section class="page">
+    <div class="section-head">
+      <div>
+        <div class="eyebrow">פרק 02 · צילום חי מהאתר</div>
+        <h2>דף הבית — ההבטחה לציבור</h2>
+      </div>
+      <div class="section-num">02</div>
+    </div>
+    <hr class="rule" />
+    <p class="muted small">
+      המסר המרכזי: «עורך דין לצידך, בדיוק בשנייה הקריטית» — חיבור מיידי, הצפנה, ותיעוד.
+    </p>
+    <figure class="shot viewport">
+      <img src="screenshots/01-home.png" alt="דף הבית של VETO Legal" />
+    </figure>
+    <p class="caption">צילום מסך חי · / · אוגוסט 2026</p>
+
+    <h3>מה מוצג לציבור</h3>
+    <ul class="clean">
+      <li>הבטחת מענה בשניות — אלגוריתם Race-to-accept לעורכי דין זמינים</li>
+      <li>הצפנה מקצה לקצה לשיחות וידאו/אודיו/צ׳אט</li>
+      <li>כספת ראיות בענן עם גיבוי בזמן אמת</li>
+      <li>מסלולי הצטרפות נפרדים לאזרח ולעורך דין</li>
+      <li>שפת ממשק: עברית / English / Русский</li>
+    </ul>
+
+    <div class="footer-note">
+      <span>VETO Legal · סקירת מערכת לעורכי דין</span>
+      <span>עמוד 3</span>
+    </div>
+  </section>
+
+  <!-- 03 PRICING -->
+  <section class="page">
+    <div class="section-head">
+      <div>
+        <div class="eyebrow">פרק 03 · צילום חי מהאתר</div>
+        <h2>מנויים ומחירים</h2>
+      </div>
+      <div class="section-num">03</div>
+    </div>
+    <hr class="rule" />
+    <p>
+      מודל התשלום מבוסס מנויי PayPal. מטרת השקיפות: האזרח מבין מראש מה כלול,
+      מתי נגבה ייעוץ, ומה קורה בדקות נוספות בשיחה.
+    </p>
+    <figure class="shot viewport">
+      <img src="screenshots/02-pricing.png" alt="עמוד מחירים" />
+    </figure>
+    <p class="caption">צילום מסך חי · /pricing</p>
+
+    <table class="matrix">
+      <thead>
+        <tr>
+          <th>מסלול</th>
+          <th>מהות</th>
+          <th>הערות לעו״ד</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>דמו</strong></td>
+          <td>היכרות עם הפלטפורמה ללא שיחות SOS פעילות</td>
+          <td>מאפשר התנסות בטוחה לפני מנוי משלם</td>
+        </tr>
+        <tr>
+          <td><strong>רגיל</strong></td>
+          <td>משתמש יחיד · SOS · כספת · מחולל מסמכים</td>
+          <td>ייעוץ מתומחר; דקות נוספות לפי מדיניות המערכת</td>
+        </tr>
+        <tr>
+          <td><strong>משפחתי</strong></td>
+          <td>עד 4 משתמשים · שיחות כלולות · ניהול משפחה</td>
+          <td>מתאים למשקי בית / לקוחות חוזרים</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="footer-note">
+      <span>VETO Legal · סקירת מערכת לעורכי דין</span>
+      <span>עמוד 4</span>
+    </div>
+  </section>
+
+  <!-- 04 LAWYER JOIN -->
+  <section class="page">
+    <div class="section-head">
+      <div>
+        <div class="eyebrow">פרק 04 · צילום חי מהאתר</div>
+        <h2>הצטרפות עורכי דין</h2>
+      </div>
+      <div class="section-num">04</div>
+    </div>
+    <hr class="rule" />
+    <p>
+      מסלול ההרשמה לעו״ד נפרד מהרשמת אזרח. נדרשים פרטי רישיון, ותק ותחומי התמחות.
+      האישור מתבצע על ידי מנהל המערכת — כדי לשמור על רשת מאומתת בלבד.
+    </p>
+    <figure class="shot viewport">
+      <img src="screenshots/07-register-lawyer.png" alt="הרשמת עורך דין" />
+    </figure>
+    <p class="caption">צילום מסך חי · /register/lawyer</p>
+
+    <div class="grid-2">
+      <div class="card">
+        <h3>מה נאסף בהרשמה</h3>
+        <p>שם, טלפון, רישיון, ותק, התמחויות (פלילי / משפחה / מקרקעין / עבודה / מסחרי / תעבורה ועוד).</p>
+      </div>
+      <div class="card">
+        <h3>אחרי האישור</h3>
+        <p>גישה לדשבורד, מתג זמינות, תור SOS חי, וקבלת מקרים בזמן אמת.</p>
+      </div>
+    </div>
+
+    <div class="footer-note">
+      <span>VETO Legal · סקירת מערכת לעורכי דין</span>
+      <span>עמוד 5</span>
+    </div>
+  </section>
+
+  <!-- 05 LAWYER WORK -->
+  <section class="page">
+    <div class="section-head">
+      <div>
+        <div class="eyebrow">פרק 05</div>
+        <h2>יום העבודה של עורך הדין במערכת</h2>
+      </div>
+      <div class="section-num">05</div>
+    </div>
+    <hr class="rule" />
+
+    <h3>לוח בקרה — /dashboard</h3>
+    <ul class="clean">
+      <li><strong>זמינות מקוונת:</strong> מתג «מחובר / לא מחובר» + התראות דפדפן</li>
+      <li><strong>תור SOS חי:</strong> מקרים ממתינים לפי דחיפות, קרבה ושפה</li>
+      <li><strong>קבלת מקרה:</strong> Race-to-accept — מי שמאשר ראשון נכנס לשיחה</li>
+      <li><strong>לשוניות:</strong> דשבורד · ניהול קריאות · כספת · צ׳אט · תורים · פרופיל</li>
+    </ul>
+
+    <h3>חדר השיחה — /call/[channel]</h3>
+    <ul class="clean">
+      <li>וידאו / אודיו / צ׳אט בלבד — לפי בחירת האזרח</li>
+      <li>הצפנה, יציבות רשת, שיתוף מסך, סינון רעש, כתוביות ותרגום</li>
+      <li>הקלטת ענן — רק בהסכמת האזרח (מנגנון GDPR מפורש)</li>
+      <li>בסיום: סיכום שיחה + תוכנית פעולה + שמירה לכספת</li>
+    </ul>
+
+    <div class="callout">
+      <strong>נקודה חשובה לחוות דעתכם:</strong>
+      האם מודל ה־Race-to-accept, שיתוף המיקום, וההקלטה בהסכמה — מרגישים
+      לכם הולמים מבחינה מקצועית ואתית? נשמח למשוב ישיר על זה.
+    </div>
+
+    <figure class="shot viewport">
+      <img src="screenshots/05-login.png" alt="מסך כניסה למערכת" />
+    </figure>
+    <p class="caption">שער הכניסה למערכת · /login · (אזורי אזרח/עו״ד מחייבים התחברות)</p>
+
+    <div class="footer-note">
+      <span>VETO Legal · סקירת מערכת לעורכי דין</span>
+      <span>עמוד 6</span>
+    </div>
+  </section>
+
+  <!-- 06 CITIZEN -->
+  <section class="page">
+    <div class="section-head">
+      <div>
+        <div class="eyebrow">פרק 06</div>
+        <h2>חוויית האזרח — מ־SOS ועד הכספת</h2>
+      </div>
+      <div class="section-num">06</div>
+    </div>
+    <hr class="rule" />
+
+    <table class="matrix">
+      <thead>
+        <tr>
+          <th>מסך</th>
+          <th>תפקיד</th>
+          <th>נתיב</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>מוקד חירום</td>
+          <td>כפתור SOS, בחירת התמחות, חיפוש עו״ד, פתיחת שיחה</td>
+          <td>/hub</td>
+        </tr>
+        <tr>
+          <td>כספת ראיות</td>
+          <td>העלאת קבצים, תיקיות, חותמת שלמות, סנכרון הקלטות</td>
+          <td>/vault</td>
+        </tr>
+        <tr>
+          <td>מחולל מסמכים AI</td>
+          <td>טיוטות משפטיות, הקלטה קולית, ייצוא PDF/Word</td>
+          <td>/vault/generator</td>
+        </tr>
+        <tr>
+          <td>מנויים</td>
+          <td>דמו / רגיל / משפחתי דרך PayPal</td>
+          <td>/plans</td>
+        </tr>
+        <tr>
+          <td>משפחה</td>
+          <td>ניהול מושבים במנוי משפחתי</td>
+          <td>/family</td>
+        </tr>
+        <tr>
+          <td>צ׳אט</td>
+          <td>שיחות עם עו״ד + עוזר AI</td>
+          <td>/chat</td>
+        </tr>
+        <tr>
+          <td>חוזים ומשימות</td>
+          <td>פרודוקטיביות משפטית יומיומית</td>
+          <td>/productivity</td>
+        </tr>
+        <tr>
+          <td>יומן</td>
+          <td>יומן משפטי + סנכרון Google Calendar</td>
+          <td>/calendar</td>
+        </tr>
+        <tr>
+          <td>הגדרות ופרטיות</td>
+          <td>פרופיל, אבטחה, חיוב, זכויות נושא מידע</td>
+          <td>/settings · /privacy-rights</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>מדריכי חירום לציבור</h3>
+    <figure class="shot viewport">
+      <img src="screenshots/04-playbooks.png" alt="מדריכי חירום" />
+    </figure>
+    <p class="caption">צילום מסך חי · /playbooks · חקירה / תעבורה / משפחה</p>
+
+    <div class="footer-note">
+      <span>VETO Legal · סקירת מערכת לעורכי דין</span>
+      <span>עמוד 7</span>
+    </div>
+  </section>
+
+  <!-- 07 TRUST -->
+  <section class="page">
+    <div class="section-head">
+      <div>
+        <div class="eyebrow">פרק 07 · צילום חי מהאתר</div>
+        <h2>אמון, פרטיות ומסגרת משפטית</h2>
+      </div>
+      <div class="section-num">07</div>
+    </div>
+    <hr class="rule" />
+    <p>
+      שכבת האמון היא חלק מהמוצר: תנאי שימוש, מדיניות פרטיות, עוגיות,
+      הסכמת הקלטה בשיחה, ושקיפות לגבי שימוש ב־AI.
+    </p>
+
+    <div class="grid-2">
+      <figure class="shot">
+        <img src="screenshots/08-terms.png" alt="תנאי שימוש" />
+      </figure>
+      <figure class="shot">
+        <img src="screenshots/09-privacy.png" alt="מדיניות פרטיות" />
+      </figure>
+    </div>
+    <p class="caption">צילומי מסך חיים · /terms · /privacy</p>
+
+    <ul class="clean">
+      <li>הפלטפורמה מוצגת ככלי טכנולוגי — לא כתחליף לייעוץ פרונטלי בכל מצב</li>
+      <li>יחסי עו״ד–לקוח נוצרים מול עורך הדין המטפל, לא מול «המערכת» כגוף מייעץ</li>
+      <li>הקלטת שיחה רק בהסכמה מפורשת של האזרח</li>
+      <li>זכויות נושא מידע: ייצוא / מחיקה / תיקון דרך /privacy-rights</li>
+      <li>כרגע מוצג באנר טיוטה עד להשלמת סקירה משפטית פורמלית</li>
+    </ul>
+
+    <figure class="shot viewport">
+      <img src="screenshots/03-contact.png" alt="יצירת קשר" />
+    </figure>
+    <p class="caption">צילום מסך חי · /contact</p>
+
+    <div class="footer-note">
+      <span>VETO Legal · סקירת מערכת לעורכי דין</span>
+      <span>עמוד 8</span>
+    </div>
+  </section>
+
+  <!-- 08 DIFFERENTIATORS + QUESTIONS -->
+  <section class="page">
+    <div class="section-head">
+      <div>
+        <div class="eyebrow">פרק 08</div>
+        <h2>בידול, שאלות לחוות דעתכם</h2>
+      </div>
+      <div class="section-num">08</div>
+    </div>
+    <hr class="rule" />
+
+    <table class="matrix">
+      <thead>
+        <tr>
+          <th>בידול</th>
+          <th>למה זה חשוב לעו״ד</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>שיגור SOS + Race-to-accept</td>
+          <td>הזדמנות למענה מיידי, עם שליטה בזמינות שלכם</td>
+        </tr>
+        <tr>
+          <td>כספת חתומה (שלמות קובץ)</td>
+          <td>תיעוד מסודר יותר לשיחה, הקלטה ומסמכים</td>
+        </tr>
+        <tr>
+          <td>Agora בזמן אמת</td>
+          <td>שיחה יציבה, אופציות וידאו/אודיו/צ׳אט</td>
+        </tr>
+        <tr>
+          <td>מסמכי AI</td>
+          <td>סיוע בניסוח — תחת אחריות ובקרה אנושית</td>
+        </tr>
+        <tr>
+          <td>רב־לשוני</td>
+          <td>שירות לקהלים דוברי עברית, אנגלית ורוסית</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>נשמח לתשובותיכם על</h3>
+    <ul class="clean">
+      <li>האם הממשק ברור ומכובד מספיק עבור לקוחותיכם?</li>
+      <li>האם תהליך קבלת המקרה מרגיש הוגן ומקצועי?</li>
+      <li>אילו התמחויות / אזורי שירות כדאי להרחיב קודם?</li>
+      <li>מה חסר כדי שתרגישו בנוח להמליץ על המערכת?</li>
+      <li>הערות על פרטיות, הסכמות, תיעוד והקלטות</li>
+      <li>תמחור: האם המודל מובן והוגן כלפי האזרח והעו״ד?</li>
+    </ul>
+
+    <div class="callout">
+      <strong>בקשה:</strong>
+      אפשר להגיב חופשי — גם ביקורת חדה מסייעת. אנחנו מחפשים אמת מקצועית,
+      לא מחמאות.
+    </div>
+
+    <div class="footer-note">
+      <span>VETO Legal · סקירת מערכת לעורכי דין</span>
+      <span>עמוד 9</span>
+    </div>
+  </section>
+
+  <!-- 09 CLOSING -->
+  <section class="page">
+    <div class="section-head">
+      <div>
+        <div class="eyebrow">סיום</div>
+        <h2>איך להמשיך יחד</h2>
+      </div>
+      <div class="section-num">09</div>
+    </div>
+    <hr class="rule" />
+
+    <div class="grid-2">
+      <div class="card">
+        <h3>לצפייה חיה</h3>
+        <p>https://web-nine-gamma-76.vercel.app</p>
+      </div>
+      <div class="card">
+        <h3>הצטרפות עו״ד</h3>
+        <p>/register/lawyer — לאחר מילוי הפרטים ממתינים לאישור מנהל.</p>
+      </div>
+      <div class="card">
+        <h3>כניסה למערכת</h3>
+        <p>/login — Google / אמצעי הזדהות נתמכים בממשק.</p>
+      </div>
+      <div class="card">
+        <h3>יצירת קשר</h3>
+        <p>/contact — לערוץ ישיר עם הצוות.</p>
+      </div>
+    </div>
+
+    <figure class="shot viewport">
+      <img src="screenshots/06-register.png" alt="הרשמת אזרח" />
+    </figure>
+    <p class="caption">צילום מסך חי · /register · מסלול האזרח להשוואה</p>
+
+    <p>
+      תודה על הזמן והשיקול המקצועי. המשוב שלכם ישפיע ישירות על סדר העדיפויות
+      בפיתוח, על ניסוחי ההסכמה, ועל אופן הרחבת רשת עורכי הדין בישראל.
+    </p>
+
+    <div style="margin-top:18mm; text-align:center;">
+      <img src="assets/veto-brand.png" alt="VETO Legal" style="height:42px; object-fit:contain;" />
+      <p class="tiny muted" style="margin-top:10px;">
+        VETO Legal OS · מסמך פנימי לשיתוף עם עורכי דין · אוגוסט 2026<br/>
+        הצילומים במסמך זה נלקחו מהאתר החי במועד ההפקה.
+      </p>
+    </div>
+
+    <div class="footer-note">
+      <span>VETO Legal · סקירת מערכת לעורכי דין</span>
+      <span>עמוד 10</span>
+    </div>
+  </section>
+
+</body>
+</html>
