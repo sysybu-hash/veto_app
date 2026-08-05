@@ -1,7 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import { Camera, MessageSquare, Mic, ScanLine, Send, X } from "lucide-react";
+import { Camera, MessageSquare, Mic, Send, X } from "lucide-react";
 import { usePathname } from "next/navigation";
 import {
   useCallback,
@@ -10,14 +10,13 @@ import {
   useRef,
   useState,
 } from "react";
+import { AiDocumentDecodePanel } from "@/components/ai/AiDocumentDecodePanel";
 import { getJwt } from "@/lib/authToken";
 import { apiUrl, tunnelBypassHeaders } from "@/lib/env";
 import {
   useAiChatStore,
   type AiChatMessage,
 } from "@/store/useAiChatStore";
-import { saveAiAnalysisAsFile } from "@/app/actions/ai-to-vault";
-import { analyzeLegalDocument } from "@/app/actions/ai-vision";
 import {
   glassBubbleAssistant,
   glassBubbleUser,
@@ -122,7 +121,7 @@ function ModeToggleButton({
       title={label}
       className={`rounded-lg p-2 transition-all ${
         active
-          ? "bg-brand-soft text-brand-700 shadow-sm ring-1 ring-veto-gold/40 backdrop-blur-sm dark:text-veto-gold dark:ring-veto-gold/35" : "text-secondary hover:bg-hover-overlay hover:text-primary"}`}
+          ? "bg-brand-soft text-brand-700 shadow-sm ring-1 ring-veto-gold/40 backdrop-blur-sm dark:text-brand-text dark:ring-veto-gold/35" : "text-secondary hover:bg-hover-overlay hover:text-primary"}`}
     >
       {children}
     </button>
@@ -145,18 +144,10 @@ export function GlobalAiOverlay() {
   const [mode, setMode] = useState<AiAssistantMode>("text");
   const [draft, setDraft] = useState("");
   const [errorBanner, setErrorBanner] = useState<string | null>(null);
-  const [visionError, setVisionError] = useState<string | null>(null);
-  const [visionBusy, setVisionBusy] = useState(false);
-  const [vaultSaveBusy, setVaultSaveBusy] = useState(false);
   const [isLiveListening, setIsLiveListening] = useState(false);
   const [liveTranscript, setLiveTranscript] = useState("");
-  const [lastVisionAnalysis, setLastVisionAnalysis] = useState<string | null>(
-    null,
-  );
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const streamRef = useRef<MediaStream | null>(null);
   const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
 
   const pushToast = useToastStore((s) => s.push);
@@ -185,16 +176,12 @@ export function GlobalAiOverlay() {
       setMode("text");
       return;
     }
-    if (m !== "vision") {
-      setVisionError(null);
-    }
     setMode(m);
   }, []);
 
   const handleToggleChat = useCallback(() => {
     if (isOpen) {
       setAssistantMode("text");
-      setLastVisionAnalysis(null);
     }
     toggleChat();
   }, [isOpen, setAssistantMode, toggleChat]);
@@ -206,79 +193,6 @@ export function GlobalAiOverlay() {
       clearRequestedMode();
     });
   }, [clearRequestedMode, isOpen, requestedMode, setAssistantMode]);
-
-  const captureAndAnalyze = useCallback(async () => {
-    if (!getJwt()) {
-      setErrorBanner(t("ai.signInBanner"));
-      return;
-    }
-    const video = videoRef.current;
-    if (!video || video.videoWidth === 0 || visionBusy) return;
-
-    setVisionBusy(true);
-    setLastVisionAnalysis(null);
-    try {
-      const maxW = 1280;
-      const scale = Math.min(1, maxW / video.videoWidth);
-      const w = Math.floor(video.videoWidth * scale);
-      const h = Math.floor(video.videoHeight * scale);
-      const canvas = document.createElement("canvas");
-      canvas.width = w;
-      canvas.height = h;
-      const ctx = canvas.getContext("2d");
-      if (!ctx) {
-        pushToast(t("ai.errCannotCaptureFrame"), "error");
-        return;
-      }
-      ctx.drawImage(video, 0, 0, w, h);
-      const dataUrl = canvas.toDataURL("image/jpeg", 0.82);
-
-      const result = await analyzeLegalDocument(dataUrl);
-      if (result.success) {
-        setLastVisionAnalysis(result.analysis);
-        addMessage({
-          id: newId(),
-          role: "assistant",
-          content: result.analysis,
-        });
-        pushToast(t("ai.toastVisionAnalyzed"), "success");
-      } else {
-        pushToast(result.error, "error");
-      }
-    } catch (e) {
-      pushToast(
-        e instanceof Error ? e.message : t("ai.errImageAnalyze"),
-        "error",
-      );
-    } finally {
-      setVisionBusy(false);
-    }
-  }, [addMessage, pushToast, t, visionBusy]);
-
-  const saveVisionToVault = useCallback(async () => {
-    if (!lastVisionAnalysis?.trim() || vaultSaveBusy) return;
-    if (!getJwt()) {
-      setErrorBanner(t("ai.signInBanner"));
-      return;
-    }
-    setVaultSaveBusy(true);
-    try {
-      const res = await saveAiAnalysisAsFile(lastVisionAnalysis);
-      if (res.success) {
-        pushToast(t("ai.toastAnalysisSaved"), "success");
-        setLastVisionAnalysis(null);
-      } else {
-        pushToast(res.error, "error");
-      }
-    } catch (e) {
-      pushToast(
-        e instanceof Error ? e.message : t("ai.errVaultSave"),
-        "error",
-      );
-    } finally {
-      setVaultSaveBusy(false);
-    }
-  }, [lastVisionAnalysis, pushToast, t, vaultSaveBusy]);
 
   const scrollToBottom = useCallback(() => {
     const el = scrollRef.current;
@@ -296,59 +210,6 @@ export function GlobalAiOverlay() {
       inputRef.current?.focus();
     }
   }, [isOpen, mode]);
-
-  useEffect(() => {
-    if (!isOpen || mode !== "vision") {
-      if (streamRef.current) {
-        streamRef.current.getTracks().forEach((t) => t.stop());
-        streamRef.current = null;
-      }
-      if (videoRef.current) {
-        videoRef.current.srcObject = null;
-      }
-      return;
-    }
-
-    let cancelled = false;
-    let attachedVideo: HTMLVideoElement | null = null;
-
-    (async () => {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: { ideal: "environment" } },
-          audio: false,
-        });
-        if (cancelled) {
-          stream.getTracks().forEach((t) => t.stop());
-          return;
-        }
-        streamRef.current = stream;
-        const el = videoRef.current;
-        if (el) {
-          attachedVideo = el;
-          el.srcObject = stream;
-          await el.play().catch(() => {});
-        }
-      } catch (e) {
-        if (!cancelled) {
-          setVisionError(
-            e instanceof Error ? e.message : t("ai.cameraStartFail"),
-          );
-        }
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-      if (streamRef.current) {
-        streamRef.current.getTracks().forEach((t) => t.stop());
-        streamRef.current = null;
-      }
-      if (attachedVideo) {
-        attachedVideo.srcObject = null;
-      }
-    };
-  }, [isOpen, mode, t]);
 
   const sendMessage = useCallback(async (
     rawText: string,
@@ -546,7 +407,7 @@ export function GlobalAiOverlay() {
             whileHover={{ scale: 1.08 }}
             whileTap={{ scale: 0.92 }}
             onClick={handleToggleChat}
-            className="pointer-events-auto fixed bottom-32 end-8 flex h-16 w-16 items-center justify-center rounded-full border-2 border-veto-gold/80 bg-surface-overlay text-brand-700 shadow-[0_10px_34px_-18px_rgba(15,23,42,0.45)] focus:outline-none focus-visible:ring-4 focus-visible:ring-veto-gold/35 dark:text-veto-gold dark:shadow-[0_12px_40px_-12px_rgba(0,0,0,0.65)] sm:bottom-8"
+            className="pointer-events-auto fixed bottom-32 end-8 flex h-16 w-16 items-center justify-center rounded-full border-2 border-veto-gold/80 bg-surface-overlay text-brand-700 shadow-[0_10px_34px_-18px_rgba(15,23,42,0.45)] focus:outline-none focus-visible:ring-4 focus-visible:ring-veto-gold/35 dark:text-brand-text dark:shadow-[0_12px_40px_-12px_rgba(0,0,0,0.65)] sm:bottom-8"
             aria-label={t("ai.openAssistant")}
           >
             <motion.span
@@ -797,81 +658,19 @@ export function GlobalAiOverlay() {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -10 }}
                     transition={{ duration: 0.2 }}
-                    className="absolute inset-0 flex min-h-0 flex-col gap-3 overflow-hidden p-3"
+                    className="absolute inset-0 flex min-h-0 flex-col overflow-hidden"
                   >
-                    <div
-                      className="relative w-full overflow-hidden rounded-3xl border-2 border-veto-gold/50 bg-black/80 shadow-[0_0_24px_rgba(197,160,89,0.2)]"
-                      style={{ aspectRatio: "16 / 9" }}
-                    >
-                      <video
-                        ref={videoRef}
-                        className="h-full w-full object-cover"
-                        autoPlay
-                        playsInline
-                        muted
-                      />
-
-                      {visionError && (
-                        <div className="absolute inset-0 flex items-center justify-center bg-black/70 p-4 text-center text-sm text-inverse">
-                          {visionError}
-                        </div>
-                      )}
-
-                      {!visionError && (
-                        <>
-                          <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-                            <span className="text-[10px] font-bold tracking-widest text-white/25 sm:text-xs">
-                              {t("ai.cameraFeed")}
-                            </span>
-                          </div>
-
-                          <motion.div
-                            aria-hidden
-                            animate={{ top: ["0%", "100%", "0%"] }}
-                            transition={{
-                              repeat: Infinity,
-                              duration: 3,
-                              ease: "linear",
-                            }}
-                            className="pointer-events-none absolute inset-x-0 z-10 h-px bg-linear-to-r from-transparent via-veto-gold to-transparent shadow-[0_0_15px_rgba(197,160,89,0.9)]"
-                          />
-
-                          <div className="absolute bottom-3 end-3 flex items-center gap-2">
-                            <span className="h-2.5 w-2.5 shrink-0 animate-pulse rounded-full bg-red-500/100" />
-                            <span className="text-[10px] font-black tracking-widest text-inverse">
-                              {t("ai.visionAnalyzing")}
-                            </span>
-                          </div>
-                        </>
-                      )}
-                    </div>
-
-                    <p className="rounded-xl border border-subtle bg-surface-sunken px-3 py-2 text-center text-xs font-bold text-secondary backdrop-blur-md">
-                      {t("ai.visionHint")}
-                    </p>
-                    <Button
-                      variant="primary"
-                      size="lg"
-                      fullWidth
-                      disabled={!!visionError || visionBusy || !getJwt()}
-                      loading={visionBusy}
-                      onClick={() => void captureAndAnalyze()}
-                      iconStart={<ScanLine className="h-5 w-5 shrink-0" aria-hidden />}
-                    >
-                      {visionBusy ? t("ai.analyzingFrame") : t("ai.captureAnalyze")}
-                    </Button>
-                    {lastVisionAnalysis?.trim() ? (
-                      <Button
-                        variant="secondary"
-                        size="lg"
-                        fullWidth
-                        disabled={vaultSaveBusy}
-                        loading={vaultSaveBusy}
-                        onClick={() => void saveVisionToVault()}
-                      >
-                        {vaultSaveBusy ? t("ai.savingVault") : t("ai.saveVault")}
-                      </Button>
-                    ) : null}
+                    <AiDocumentDecodePanel
+                      active={isOpen && mode === "vision"}
+                      onSignInRequired={() => setErrorBanner(t("ai.signInBanner"))}
+                      onAnalysis={(analysis) => {
+                        addMessage({
+                          id: newId(),
+                          role: "assistant",
+                          content: analysis,
+                        });
+                      }}
+                    />
                   </motion.div>
                 )}
               </AnimatePresence>

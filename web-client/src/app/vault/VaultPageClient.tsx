@@ -6,12 +6,13 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { EvidenceDTO } from "@/app/actions/vault";
 import { deleteEvidence, syncSosArtifactsToVault } from "@/app/actions/vault";
 import { fetchVaultTimeline, type TimelineItem } from "@/api/advancedApi";
-import { getJwt } from "@/lib/authToken";
+import { getJwt, getRoleFromJwt } from "@/lib/authToken";
 import { useTranslation } from "@/lib/i18n/LocaleProvider";
 import {
   VaultUploadModal,
   type VaultFolderOption,
 } from "@/components/vault/VaultUploadModal";
+import { VaultCaseFoldersPanel } from "@/components/vault/VaultCaseFoldersPanel";
 import { CitizenBottomNav } from "@/components/citizen/CitizenBottomNav";
 import { citizenBottomSafe, glassCard, glassList } from "@/lib/vetoGlass";
 import { Loader2, Wand2 } from "lucide-react";
@@ -242,6 +243,7 @@ export function VaultPageClient({
   const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
   const [uploadOpen, setUploadOpen] = useState(false);
   const [isHydrating, setIsHydrating] = useState(true);
+  const [role, setRole] = useState<string | null>(null);
   const loadError: string | null = null;
   const [actionError, setActionError] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -249,6 +251,9 @@ export function VaultPageClient({
   const [syncMsg, setSyncMsg] = useState<string | null>(null);
   const [timeline, setTimeline] = useState<TimelineItem[]>([]);
   const syncOnce = useRef(false);
+
+  const isLawyer = role === "lawyer" || role === "admin";
+  const showCitizenNav = !adminContext && role != null && !isLawyer;
 
   useEffect(() => {
     queueMicrotask(() => {
@@ -261,11 +266,14 @@ export function VaultPageClient({
       router.replace("/login");
       return;
     }
-    queueMicrotask(() => setIsHydrating(false));
+    queueMicrotask(() => {
+      setRole(getRoleFromJwt());
+      setIsHydrating(false);
+    });
   }, [router]);
 
   useEffect(() => {
-    if (!getJwt()) return;
+    if (!getJwt() || isLawyer) return;
     let cancelled = false;
     void fetchVaultTimeline()
       .then((items) => {
@@ -283,7 +291,7 @@ export function VaultPageClient({
     return () => {
       cancelled = true;
     };
-  }, [initialEvidence, evidenceRows.length]);
+  }, [initialEvidence, evidenceRows.length, isLawyer]);
 
   const folderList: FolderBase[] = useMemo(() => {
     const cats = [...new Set(evidenceRows.map((e) => e.category))];
@@ -359,12 +367,13 @@ export function VaultPageClient({
   );
 
   useEffect(() => {
-    if (!getJwt() || syncOnce.current) return;
+    if (!getJwt() || syncOnce.current || isLawyer) return;
     syncOnce.current = true;
+    // Silent on mount — avoid alarming DATABASE_URL / Prisma toasts when Neon is sleepy.
     queueMicrotask(() => {
-      void runSosSync();
+      void runSosSync({ silent: true });
     });
-  }, [runSosSync]);
+  }, [runSosSync, isLawyer]);
 
   const oldestPendingSosAt = useMemo(() => {
     const pending = timeline.filter(isPendingSosArtifact);
@@ -416,7 +425,7 @@ export function VaultPageClient({
 
   const defaultUploadFolderId = folders[0]?.id ?? "";
 
-  const bottomPad = adminContext ? "pb-10" : citizenBottomSafe;
+  const bottomPad = adminContext || isLawyer ? "pb-10" : citizenBottomSafe;
 
   if (isHydrating) {
     return (
@@ -424,7 +433,7 @@ export function VaultPageClient({
         className={`mx-auto flex w-full max-w-5xl flex-1 flex-col px-4 pt-8 md:px-8 ${bottomPad}`}
       >
         <VaultLoadingSkeleton label={t("vault.loadingAria")} />
-        {!adminContext ? <CitizenBottomNav active="vault" /> : null}
+        {showCitizenNav ? <CitizenBottomNav active="vault" /> : null}
       </div>
     );
   }
@@ -436,9 +445,17 @@ export function VaultPageClient({
       {adminContext ? (
         <Link
           href="/admin/dashboard"
-          className="mb-4 inline-block text-sm font-semibold text-veto-gold hover:underline"
+          className="mb-4 inline-block text-sm font-semibold text-brand-text hover:underline"
         >
           ← מרכז שליטה
+        </Link>
+      ) : null}
+      {isLawyer && !adminContext ? (
+        <Link
+          href="/dashboard"
+          className="mb-4 inline-block text-sm font-bold text-brand-700 hover:underline dark:text-brand-text"
+        >
+          ← {t("nav.dashboard")}
         </Link>
       ) : null}
       <header className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -446,47 +463,69 @@ export function VaultPageClient({
           <h1 className="font-frank text-2xl font-bold tracking-tight text-primary md:text-3xl">
             {t("vault.title")}
           </h1>
-          <p className="mt-1 text-sm text-muted">{t("vault.subtitle")}</p>
-          {syncMsg && (
+          <p className="mt-1 text-sm text-muted">
+            {isLawyer
+              ? (() => {
+                  const key = "vault.caseFoldersLawyerSubtitle";
+                  const v = t(key);
+                  return !v || v === key
+                    ? "צפו בקבצים שהמנוי אישר לכם, ונהלו גם את תיקיות העבודה שלכם."
+                    : v;
+                })()
+              : t("vault.subtitle")}
+          </p>
+          {syncMsg && !isLawyer ? (
             <p className="mt-2 text-xs text-muted" role="status">
               {syncMsg}
             </p>
-          )}
+          ) : null}
         </div>
-        <div className="flex w-full flex-col gap-3 sm:w-auto sm:items-end">
-          <Button variant="secondary" disabled={syncBusy || !!loadError} loading={syncBusy} onClick={() => void runSosSync()}>
-            {syncBusy ? t("vault.syncSosBusy") : t("vault.syncSos")}
-          </Button>
-          <div className="flex w-full flex-col gap-2 sm:flex-row sm:flex-wrap sm:justify-end">
-            <Link
-              href="/vault/generator"
-              className="inline-flex min-h-[3.25rem] flex-1 items-center justify-center gap-2.5 rounded-2xl bg-gradient-to-br from-slate-900 via-slate-800 to-brand-deep px-6 py-4 text-base font-semibold text-inverse shadow-[0_14px_44px_rgba(15,23,42,0.38)] ring-2 ring-veto-gold/40 transition hover:from-slate-800 hover:to-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-veto-gold sm:flex-initial sm:min-w-[260px]"
-            >
-              <Wand2 className="h-6 w-6 shrink-0" aria-hidden />
-              יצירת מסמך חכם (AI)
-            </Link>
-            <Button
-              variant="primary"
-              size="lg"
-              fullWidth
-              className="min-h-[3.25rem] sm:flex-initial sm:w-auto"
-              disabled={!!loadError}
-              onClick={() => setUploadOpen(true)}
-              iconStart={
-                <svg className="h-6 w-6 shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
-                  <path
-                    d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5-5 5 5M12 5v12"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              }
-            >
-              {t("vault.uploadFileButton")}
+        {!isLawyer ? (
+          <div className="flex w-full flex-col gap-3 sm:w-auto sm:items-end">
+            <Button variant="secondary" disabled={syncBusy || !!loadError} loading={syncBusy} onClick={() => void runSosSync()}>
+              {syncBusy ? t("vault.syncSosBusy") : t("vault.syncSos")}
             </Button>
+            <div className="flex w-full flex-col gap-2 sm:flex-row sm:flex-wrap sm:justify-end">
+              <Link
+                href="/vault/generator"
+                className="inline-flex min-h-[3.25rem] flex-1 items-center justify-center gap-2.5 rounded-2xl bg-gradient-to-br from-slate-900 via-slate-800 to-brand-deep px-6 py-4 text-base font-semibold text-inverse shadow-[0_14px_44px_rgba(15,23,42,0.38)] ring-2 ring-veto-gold/40 transition hover:from-slate-800 hover:to-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-veto-gold sm:flex-initial sm:min-w-[260px]"
+              >
+                <Wand2 className="h-6 w-6 shrink-0" aria-hidden />
+                יצירת מסמך חכם (AI)
+              </Link>
+              <Button
+                variant="primary"
+                size="lg"
+                fullWidth
+                className="min-h-[3.25rem] sm:flex-initial sm:w-auto"
+                disabled={!!loadError}
+                onClick={() => setUploadOpen(true)}
+                iconStart={
+                  <svg className="h-6 w-6 shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
+                    <path
+                      d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5-5 5 5M12 5v12"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                }
+              >
+                {t("vault.uploadFileButton")}
+              </Button>
+            </div>
           </div>
-        </div>
+        ) : (
+          <Link
+            href="/vault/generator"
+            className="inline-flex min-h-[3rem] items-center justify-center gap-2 rounded-2xl bg-gradient-to-br from-slate-900 via-slate-800 to-brand-deep px-5 py-3 text-sm font-semibold text-inverse ring-2 ring-veto-gold/40"
+          >
+            <Wand2 className="h-5 w-5 shrink-0" aria-hidden />
+            יצירת מסמך חכם (AI)
+          </Link>
+        )}
       </header>
+
+      <VaultCaseFoldersPanel mode={isLawyer ? "lawyer" : "citizen"} />
 
       {loadError && (
         <div
@@ -505,7 +544,7 @@ export function VaultPageClient({
         </div>
       )}
 
-      {!loadError && (
+      {!loadError && !isLawyer && (
         <>
           {actionError && (
             <div
@@ -676,7 +715,7 @@ export function VaultPageClient({
                       <div
                         className={`flex h-12 w-12 items-center justify-center rounded-xl border border-subtle ${
                           active
-                            ? "bg-veto-gold/25 text-veto-gold" : "bg-white/[0.04] text-secondary"}`}
+                            ? "bg-veto-gold/25 text-brand-text" : "bg-white/[0.04] text-secondary"}`}
                       >
                         <FolderIcon className="h-7 w-7 drop-shadow-sm" />
                       </div>
@@ -797,17 +836,19 @@ export function VaultPageClient({
         </>
       )}
 
-      <VaultUploadModal
-        open={uploadOpen}
-        folders={uploadFolderOptions}
-        defaultFolderId={defaultUploadFolderId}
-        onClose={() => setUploadOpen(false)}
-        onUploadSuccess={() => {
-          refreshVault();
-        }}
-      />
+      {!isLawyer ? (
+        <VaultUploadModal
+          open={uploadOpen}
+          folders={uploadFolderOptions}
+          defaultFolderId={defaultUploadFolderId}
+          onClose={() => setUploadOpen(false)}
+          onUploadSuccess={() => {
+            refreshVault();
+          }}
+        />
+      ) : null}
 
-      {!adminContext ? <CitizenBottomNav active="vault" /> : null}
+      {showCitizenNav ? <CitizenBottomNav active="vault" /> : null}
     </div>
   );
 }

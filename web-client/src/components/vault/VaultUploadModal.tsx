@@ -99,8 +99,12 @@ export function VaultUploadModal({
     setUploadError(null);
     setIsUploading(true);
     try {
+      // Neon Evidence uses human categories; Mongo ObjectIds are not category names.
+      const isMongoFolderId = /^[a-f\d]{24}$/i.test(folderId.trim());
       const category =
-        folderId.trim() === "" ? "general" : folderId.trim();
+        folderId.trim() === "" || isMongoFolderId
+          ? "general"
+          : folderId.trim();
 
       for (const file of picked) {
         const hash = await sha256HexFromFile(file);
@@ -112,6 +116,8 @@ export function VaultUploadModal({
         if (!url) {
           throw new Error(t("vault.uploadMissingUrl"));
         }
+        // Mongo vault is the source of truth for folders/sharing. Neon Evidence
+        // is best-effort metadata — do not fail the whole upload if Prisma is down.
         const neon = await saveEvidence({
           title: file.name,
           url,
@@ -119,7 +125,7 @@ export function VaultUploadModal({
           category,
         });
         if (!neon.success) {
-          throw new Error(neon.error);
+          console.warn("[vault] Neon register skipped:", neon.error);
         }
       }
       pushToast(t("vault.uploadSuccessToast"), "success");
