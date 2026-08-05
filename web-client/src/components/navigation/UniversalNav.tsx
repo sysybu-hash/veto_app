@@ -16,6 +16,7 @@ import {
   Settings,
   ShieldCheck,
   UserPlus,
+  Wallet,
   X,
 } from "lucide-react";
 import { VetoBrandLogo } from "@/components/brand/VetoBrandLogo";
@@ -100,7 +101,8 @@ export function UniversalNav() {
         { href: "/login", label: t("nav.login"), icon: LogIn, match: (p) => p === "/login" },
       ];
     }
-    if (role === "admin") {
+    // Prefer admin chrome on /admin/* so the top bar never shows "כספת" there.
+    if (role === "admin" || pathname.startsWith("/admin")) {
       return [
         {
           href: "/admin/dashboard",
@@ -115,10 +117,10 @@ export function UniversalNav() {
           match: (p) => p.startsWith("/admin/lawyers"),
         },
         {
-          href: "/admin/vault",
-          label: t("nav.vault"),
-          icon: FolderLock,
-          match: (p) => p.startsWith("/admin/vault"),
+          href: "/admin/finance",
+          label: t("nav.finance"),
+          icon: Wallet,
+          match: (p) => p.startsWith("/admin/finance"),
         },
         {
           href: "/admin/settings",
@@ -173,11 +175,14 @@ export function UniversalNav() {
         match: (p) => p.startsWith("/settings"),
       },
     ];
-  }, [hasToken, role, t]);
+  }, [hasToken, role, t, pathname]);
 
   /** Citizens: links already in drawer + CitizenBottomNav — avoid duplicating top row */
   const showDesktopLinkRow =
-    !hasToken || role === "lawyer" || role === "admin";
+    !hasToken ||
+    role === "lawyer" ||
+    role === "admin" ||
+    pathname.startsWith("/admin");
 
   const roleLabel = (r: string | null, token: boolean): string => {
     if (!token) return t("nav.roleGuest");
@@ -246,7 +251,7 @@ export function UniversalNav() {
     "sticky top-0 z-40 border-b border-subtle bg-surface-overlay px-3 py-2.5 shadow-sm backdrop-blur-xl";
 
   const desktopLinkClass = (active: boolean) =>
-    `transition-colors ${active ? "text-veto-gold-dark dark:text-veto-gold" : "text-primary hover:text-veto-gold-dark"}`;
+    `transition-colors ${active ? "text-veto-gold-dark dark:text-brand-text" : "text-primary hover:text-veto-gold-dark"}`;
 
   return (
     <>
@@ -282,7 +287,7 @@ export function UniversalNav() {
                 </Link>
                 <Link
                   href="/login"
-                  className="whitespace-nowrap rounded-xl border border-veto-gold/50 bg-veto-gold px-3 py-2 text-xs font-black text-primary shadow-[0_0_24px_-8px_rgba(197,160,89,0.8)] transition hover:bg-veto-gold-light sm:px-4 sm:py-2.5 sm:text-sm"
+                  className="whitespace-nowrap rounded-xl border border-veto-gold/50 bg-veto-gold px-3 py-2 text-xs font-black text-brand-fg shadow-[0_0_24px_-8px_rgba(197,160,89,0.8)] transition hover:bg-veto-gold-light sm:px-4 sm:py-2.5 sm:text-sm"
                 >
                   {t("nav.personalArea")}
                 </Link>
@@ -302,7 +307,7 @@ export function UniversalNav() {
 
         {viewingAs ? (
           <div className="mx-auto flex max-w-7xl items-center justify-between gap-2 px-2 pb-1.5 pt-1 text-xs font-bold sm:px-3">
-            <span className="rounded-full bg-veto-gold/15 px-3 py-1 text-brand-700 dark:text-veto-gold">
+            <span className="rounded-full bg-veto-gold/15 px-3 py-1 text-brand-700 dark:text-brand-text">
               {t("nav.viewingAs").replace("{role}", roleLabel(role, hasToken))}
             </span>
             <Button
@@ -369,7 +374,7 @@ export function UniversalNav() {
                       aria-pressed={role === opt.role || (role === "user" && opt.role === "citizen")}
                       className={`flex-1 rounded-xl border px-2 py-2 text-xs font-bold transition disabled:cursor-not-allowed disabled:opacity-60 ${
                         role === opt.role || (role === "user" && opt.role === "citizen")
-                          ? "border-veto-gold/50 bg-veto-gold/15 text-brand-700 dark:text-veto-gold"
+                          ? "border-veto-gold/50 bg-veto-gold/15 text-brand-700 dark:text-brand-text"
                           : "border-default text-primary hover:bg-hover-overlay"
                       }`}
                     >

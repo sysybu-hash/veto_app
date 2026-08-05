@@ -49,6 +49,18 @@ const withBundleAnalyzer = withBundleAnalyzerFactory({
 
 // path: web-client/next.config.mjs
 /** @type {import('next').NextConfig} */
+function apiProxyDestination() {
+  const raw = (
+    process.env.NEXT_PUBLIC_API_ORIGIN_DEV ||
+    process.env.NEXT_PUBLIC_API_ORIGIN ||
+    "https://veto-app-new.onrender.com"
+  )
+    .trim()
+    .replace(/\/$/, "")
+    .replace(/\/api$/i, "");
+  return raw || "https://veto-app-new.onrender.com";
+}
+
 const nextConfig = {
   turbopack: {
     root: webClientRoot,
@@ -56,6 +68,21 @@ const nextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
   allowedDevOrigins: ["127.0.0.1", "localhost"],
+  /**
+   * Same-origin proxy in `next dev` so the browser never cross-origin-fetches
+   * the API (avoids flaky CORS / stale client env pointing at dead localhost:5001).
+   * Client calls `/__api/...` → rewritten to the real API origin.
+   */
+  async rewrites() {
+    if (process.env.NODE_ENV === "production") return [];
+    const dest = apiProxyDestination();
+    return [
+      {
+        source: "/__api/:path*",
+        destination: `${dest}/:path*`,
+      },
+    ];
+  },
   images: {
     formats: ["image/avif", "image/webp"],
     remotePatterns: [

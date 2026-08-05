@@ -59,7 +59,7 @@ const tabs: Array<{
   { id: "overview", label: "דשבורד", icon: LayoutDashboard },
   { id: "calls", label: "ניהול קריאות", icon: PhoneCall },
   { id: "vault", label: "כספת", icon: FolderLock },
-  { id: "chat", label: "צ׳אט", icon: MessageCircle },
+  { id: "chat", label: "ייעוץ AI", icon: MessageCircle },
   { id: "schedule", label: "ניהול תורים", icon: CalendarClock },
   { id: "profile", label: "זמינות ופרופיל", icon: Settings2 },
 ];
@@ -363,7 +363,7 @@ function LawyerDashboardInner() {
       sock.off("veto_error", onVetoError);
       sock.off("session_ready", onSessionReady);
     };
-  }, [availabilityLoaded, clearAlert, currentLawyerId, router, setAccepting, setActiveAlert, setLastError, setSessionReady]);
+  }, [availabilityLoaded, clearAlert, currentLawyerId, router, setAccepting, setActiveAlert, setActiveTab, setLastError, setSessionReady]);
 
   const handleAvailabilityChange = useCallback((next: boolean) => {
     setAvailable(next);
@@ -706,7 +706,7 @@ function VaultPanel() {
       </p>
       <div className="mt-5 grid gap-3 md:grid-cols-3">
         <FeatureCard icon={FolderLock} title="כספת תיק" body="פתחו את הכספת המלאה כדי לצפות במסמכים ובקבצים." href="/vault" action="פתח כספת" />
-        <FeatureCard icon={BriefcaseBusiness} title="בקשות מסמכים" body="שלחו לאזרח בקשה להעלות תעודה, תמונה, חוזה או ראיה." href="/chat" action="בקש בצ׳אט" />
+        <FeatureCard icon={BriefcaseBusiness} title="בקשות מסמכים" body="בקשו מהאזרח להעלות תעודה, תמונה, חוזה או ראיה לכספת ולשתף איתכם." href="/vault" action="לכספת המשותפת" />
         <FeatureCard icon={ShieldCheck} title="שרשרת ראיות" body="בדקו מקור, זמן העלאה ושיתוף עם עורך הדין." href="/vault" action="בדוק הרשאות" />
       </div>
     </section>
@@ -716,18 +716,20 @@ function VaultPanel() {
 function ChatPanel() {
   return (
     <section className={`${glassPanel} p-5 md:p-7`}>
-      <h2 className="font-frank text-2xl font-black text-primary">צ׳אט עם אזרחים</h2>
+      <h2 className="font-frank text-2xl font-black text-primary">ייעוץ AI</h2>
       <p className="mt-1 text-sm text-secondary">
-        שיחות עם אזרחים מאושרים, כולל המשך שיחה לאחר SOS וצירוף מסמכים מהכספת.
+        עוזר משפטי לפענוח מסמכים ולהכנת טיוטות. שיחה עם אזרח מתנהלת רק בתוך שיחת SOS.
       </p>
       <div className={`${glassPanelNested} mt-5 p-5`}>
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
-            <p className="text-lg font-black text-primary">חלון השיחה המלא</p>
-            <p className="mt-1 text-sm text-secondary">רשימת שיחות, הודעות, שליחה ומחיקה לפי הרשאות השרת.</p>
+            <p className="text-lg font-black text-primary">חלון ייעוץ AI</p>
+            <p className="mt-1 text-sm text-secondary">
+              שיחה עם העוזר, פענוח מסמכים ומחולל מסמכים — בלי תיבת דואר בין משתמשים.
+            </p>
           </div>
           <Link href="/chat" className={`px-5 py-3 text-center text-sm font-black ${btnPrimaryDark}`}>
-            פתח צ׳אט
+            פתח ייעוץ AI
           </Link>
         </div>
       </div>

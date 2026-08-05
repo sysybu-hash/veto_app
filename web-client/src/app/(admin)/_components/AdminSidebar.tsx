@@ -1,11 +1,10 @@
 "use client";
 
 import {
-  Database,
-  FileText,
   LayoutDashboard,
   Scale,
   Settings,
+  Wallet,
   type LucideIcon,
 } from "lucide-react";
 import Link from "next/link";
@@ -15,8 +14,7 @@ import { VetoBrandLogo } from "@/components/brand/VetoBrandLogo";
 const LINKS: Array<{ href: string; icon: LucideIcon; label: string }> = [
   { href: "/admin/dashboard", icon: LayoutDashboard, label: "מרכז שליטה" },
   { href: "/admin/lawyers", icon: Scale, label: "ניהול עורכי דין" },
-  { href: "/admin/vault", icon: Database, label: "ניהול כספת" },
-  { href: "/vault/generator", icon: FileText, label: "מחולל מסמכים AI" },
+  { href: "/admin/finance", icon: Wallet, label: "כספים ודוחות" },
   { href: "/admin/settings", icon: Settings, label: "הגדרות מערכת" },
 ];
 
@@ -31,14 +29,16 @@ export function AdminSidebar() {
       </div>
       <nav className="flex flex-col gap-2">
         {LINKS.map(({ href, icon: Icon, label }) => {
-          const active = pathname === href;
+          const active =
+            pathname === href ||
+            (href !== "/admin/dashboard" && pathname.startsWith(href));
           return (
             <Link
               key={href}
               href={href}
               className={`flex items-center gap-3 rounded-lg p-3 text-sm font-medium transition ${
                 active
-                  ? "bg-veto-gold/10 text-veto-gold"
+                  ? "bg-veto-gold/10 text-brand-text"
                   : "text-muted hover:bg-hover-overlay"
               }`}
             >

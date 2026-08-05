@@ -156,7 +156,7 @@ export function AdminUserDetailClient({ id }: { id: string }) {
           <p className="mt-2 text-sm text-muted">
             ייתכן שהמשתמש נמחק, או שהמזהה שגוי.
           </p>
-          <Link href="/admin/dashboard" className="mt-6 inline-block text-sm font-bold text-veto-gold hover:underline">
+          <Link href="/admin/dashboard" className="mt-6 inline-block text-sm font-bold text-brand-text hover:underline">
             חזרה למרכז שליטה
           </Link>
         </div>
@@ -167,7 +167,7 @@ export function AdminUserDetailClient({ id }: { id: string }) {
   return (
     <div className="min-h-screen bg-surface-canvas p-4 sm:p-8" dir="rtl">
       <div className="mx-auto max-w-2xl space-y-4">
-        <Link href="/admin/dashboard" className="inline-block text-sm font-bold text-veto-gold hover:underline">
+        <Link href="/admin/dashboard" className="inline-block text-sm font-bold text-brand-text hover:underline">
           ← חזרה למרכז שליטה
         </Link>
 
