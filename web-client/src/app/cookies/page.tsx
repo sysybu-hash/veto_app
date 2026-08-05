@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { LegalPageShell } from "@/components/legal/LegalPageShell";
+import { CookiePreferencesCard } from "@/components/privacy/CookiePreferencesCard";
 
 export const metadata: Metadata = {
   title: "מדיניות עוגיות | Cookies | VETO Legal",
@@ -10,6 +11,7 @@ export default function CookiesPage() {
   return (
     <LegalPageShell titleKey="legalChrome.cookiesTitle" approved>
       <article className="space-y-8 rounded-2xl border border-subtle bg-surface-raised-2 p-6 text-sm leading-8 text-secondary shadow-sm md:p-8 md:text-base">
+        <CookiePreferencesCard />
         <section>
           <h2 className="text-lg font-bold text-primary md:text-xl">עוגיות חיוניות</h2>
           <p className="mt-2">

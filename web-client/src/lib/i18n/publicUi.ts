@@ -19,8 +19,9 @@ export const publicUi = {
       joinLawyers: "הצטרפות עורכי דין",
       registerCitizen: "הרשמת אזרח",
       logout: "יציאה",
-      chat: "צ'אט",
+      chat: "ייעוץ AI",
       vault: "כספת",
+      finance: "כספים ודוחות",
       plans: "מנוי",
       calendar: "יומן",
       settings: "הגדרות",
@@ -90,6 +91,7 @@ export const publicUi = {
       terms: "תנאי שימוש",
       privacy: "פרטיות",
       cookies: "עוגיות",
+      accessibility: "נגישות",
     },
     cookieConsent: {
       aria: "העדפות פרטיות ועוגיות",
@@ -107,6 +109,13 @@ export const publicUi = {
       marketingTitle: "שיווק",
       marketingDesc: "מיועד לקמפיינים עתידיים, רק בהסכמה.",
       save: "שמירת העדפות",
+      manage: "ניהול העדפות עוגיות",
+      manageHint: "ניתן לשנות או לבטל את ההסכמה בכל עת.",
+      currentAnalytics: "מדידה ושיפור",
+      currentMarketing: "שיווק",
+      statusOn: "פעיל",
+      statusOff: "כבוי",
+      withdraw: "ביטול ההסכמה",
     },
     contactPage: {
       backHome: "חזרה לדף הבית",
@@ -252,6 +261,7 @@ export const publicUi = {
       termsTitle: "תנאי שימוש",
       privacyTitle: "מדיניות פרטיות",
       cookiesTitle: "מדיניות עוגיות",
+      accessibilityTitle: "הצהרת נגישות",
     },
     paypalUi: {
       missingClientTitle:
@@ -317,8 +327,9 @@ export const publicUi = {
       joinLawyers: "Join as a lawyer",
       registerCitizen: "Citizen sign-up",
       logout: "Log out",
-      chat: "Chat",
+      chat: "AI consult",
       vault: "Vault",
+      finance: "Finance & Reports",
       plans: "Plan",
       calendar: "Calendar",
       settings: "Settings",
@@ -388,6 +399,7 @@ export const publicUi = {
       terms: "Terms of use",
       privacy: "Privacy",
       cookies: "Cookies",
+      accessibility: "Accessibility",
     },
     cookieConsent: {
       aria: "Privacy and cookie preferences",
@@ -405,6 +417,13 @@ export const publicUi = {
       marketingTitle: "Marketing",
       marketingDesc: "For future campaigns, only with consent.",
       save: "Save preferences",
+      manage: "Manage cookie preferences",
+      manageHint: "You can change or withdraw your consent at any time.",
+      currentAnalytics: "Analytics & improvement",
+      currentMarketing: "Marketing",
+      statusOn: "On",
+      statusOff: "Off",
+      withdraw: "Withdraw consent",
     },
     contactPage: {
       backHome: "Back to home",
@@ -550,6 +569,7 @@ export const publicUi = {
       termsTitle: "Terms of use",
       privacyTitle: "Privacy policy",
       cookiesTitle: "Cookie policy",
+      accessibilityTitle: "Accessibility statement",
     },
     paypalUi: {
       missingClientTitle:
@@ -615,8 +635,9 @@ export const publicUi = {
       joinLawyers: "Регистрация юриста",
       registerCitizen: "Регистрация гражданина",
       logout: "Выход",
-      chat: "Чат",
+      chat: "AI-консультация",
       vault: "Хранилище",
+      finance: "Финансы и отчёты",
       plans: "Подписка",
       calendar: "Календарь",
       settings: "Настройки",
@@ -686,6 +707,7 @@ export const publicUi = {
       terms: "Условия использования",
       privacy: "Конфиденциальность",
       cookies: "Cookies",
+      accessibility: "Доступность",
     },
     cookieConsent: {
       aria: "Настройки конфиденциальности и cookies",
@@ -703,6 +725,13 @@ export const publicUi = {
       marketingTitle: "Маркетинг",
       marketingDesc: "Для будущих кампаний — только с согласия.",
       save: "Сохранить настройки",
+      manage: "Управление cookies",
+      manageHint: "Вы можете изменить или отозвать согласие в любой момент.",
+      currentAnalytics: "Аналитика и улучшения",
+      currentMarketing: "Маркетинг",
+      statusOn: "Вкл",
+      statusOff: "Выкл",
+      withdraw: "Отозвать согласие",
     },
     contactPage: {
       backHome: "На главную",
@@ -848,6 +877,7 @@ export const publicUi = {
       termsTitle: "Условия использования",
       privacyTitle: "Политика конфиденциальности",
       cookiesTitle: "Политика cookies",
+      accessibilityTitle: "Заявление о доступности",
     },
     paypalUi: {
       missingClientTitle:
