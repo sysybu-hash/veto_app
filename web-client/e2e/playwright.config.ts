@@ -42,5 +42,12 @@ export default defineConfig({
       name: "webkit-mobile",
       use: { ...devices["iPhone 14"], locale: "he-IL" },
     },
+    {
+      // Gecko was untested until now. Nothing in the app is Chrome-specific,
+      // but "probably fine" is not the same as covered — especially for RTL
+      // layout, which the three engines lay out differently.
+      name: "firefox-desktop",
+      use: { ...devices["Desktop Firefox"], locale: "he-IL" },
+    },
   ],
 });

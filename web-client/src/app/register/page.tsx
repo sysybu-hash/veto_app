@@ -234,7 +234,11 @@ function RegisterInner() {
             type="checkbox"
             checked={acceptedTerms}
             onChange={(e) => setAcceptedTerms(e.target.checked)}
-            className="mt-0.5 h-4 w-4 shrink-0 accent-veto-gold"
+            /* 24px, not 16: this is the terms-acceptance control every new
+               user has to hit, and WCAG 2.5.8 sets 24px as the minimum target.
+               The surrounding <label> is clickable too, so the effective area
+               is larger still — but the box itself must not be the small one. */
+            className="mt-0.5 h-6 w-6 shrink-0 accent-veto-gold"
             required
           />
           <span>
