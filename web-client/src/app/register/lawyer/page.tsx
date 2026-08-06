@@ -123,7 +123,7 @@ export default function LawyerRegisterPage() {
                   onClick={() => toggleSpec(spec.id)}
                   className={`rounded-full border px-4 py-2 text-sm font-bold transition ${
                     active
-                      ? "border-veto-gold bg-veto-gold text-primary"
+                      ? "border-veto-gold bg-veto-gold text-brand-fg"
                       : "border-subtle bg-white/[0.03] text-secondary hover:border-veto-gold/60"
                   }`}
                 >

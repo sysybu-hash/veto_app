@@ -253,7 +253,7 @@ export default function VetoMasterDashboard() {
   if (loading && !data) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-surface-canvas">
-        <RefreshCw className="h-8 w-8 animate-spin text-veto-gold" aria-hidden />
+        <RefreshCw className="h-8 w-8 animate-spin text-brand-text" aria-hidden />
       </div>
     );
   }
@@ -269,7 +269,7 @@ export default function VetoMasterDashboard() {
           <header className="mb-8 flex flex-col gap-4 border-b border-subtle pb-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h2 className="text-2xl font-bold md:text-3xl">
-                חדר בקרה <span className="text-veto-gold">VETO</span>
+                חדר בקרה <span className="text-brand-text">VETO</span>
               </h2>
               <p className="mt-1 text-sm text-muted">מבט על בזמן אמת · רענון כל 15 שניות</p>
             </div>
@@ -288,7 +288,7 @@ export default function VetoMasterDashboard() {
           </header>
 
           {commandCenterLoading && !commandCenter ? (
-            <div className="flex min-h-[120px] items-center justify-center text-veto-gold animate-pulse">
+            <div className="flex min-h-[120px] items-center justify-center text-brand-text animate-pulse">
               טוען נתוני מערכת...
             </div>
           ) : (
@@ -318,7 +318,7 @@ export default function VetoMasterDashboard() {
                       title: "עורכי דין רשומים",
                       value: commandCenter?.stats.totalLawyers ?? 0,
                       icon: Users,
-                      color: "text-veto-gold",
+                      color: "text-brand-text",
                       sub: `מקוונים: ${commandCenter?.stats.lawyersOnline ?? 0}`,
                     },
                   ] as const
@@ -343,7 +343,7 @@ export default function VetoMasterDashboard() {
               </div>
 
               <h3 className="mb-4 flex items-center gap-2 text-xl font-bold">
-                <Clock className="text-veto-gold" aria-hidden />
+                <Clock className="text-brand-text" aria-hidden />
                 אירועים חיים
               </h3>
               <div className="overflow-hidden rounded-2xl border border-subtle bg-[rgba(255,255,255,0.06)] backdrop-blur-md">
@@ -372,7 +372,7 @@ export default function VetoMasterDashboard() {
                             <td className="p-4 font-mono text-xs text-gray-300">{id.slice(-6)}</td>
                             <td className="p-4">{langLabel(ev.language)}</td>
                             <td className="p-4">
-                              <span className="rounded-full border border-veto-gold/30 bg-veto-gold/20 px-3 py-1 text-xs font-medium text-veto-gold">
+                              <span className="rounded-full border border-veto-gold/30 bg-veto-gold/20 px-3 py-1 text-xs font-medium text-brand-text">
                                 {ev.status ?? "—"}
                               </span>
                             </td>
@@ -406,7 +406,7 @@ export default function VetoMasterDashboard() {
         </header>
 
         <div className="mb-8 grid grid-cols-1 gap-4 text-center md:grid-cols-4">
-          <div className="flex items-center justify-center gap-3 rounded-xl border border-green-500/30 bg-green-500/10 p-4 font-bold text-green-700 dark:text-green-300">
+          <div className="flex items-center justify-center gap-3 rounded-xl border border-success-border bg-success-soft p-4 font-bold text-success-on-soft">
             <Activity size={20} aria-hidden /> שרת API: פועל
           </div>
           <div
@@ -419,7 +419,7 @@ export default function VetoMasterDashboard() {
             <Database size={20} aria-hidden /> מסד נתונים:{" "}
             {data?.health.database === "OK" ? "מחובר" : "בעיה"}
           </div>
-          <div className="flex items-center justify-center gap-3 rounded-xl border border-orange-500/30 bg-orange-500/10 p-4 font-bold text-orange-700 dark:text-orange-300">
+          <div className="flex items-center justify-center gap-3 rounded-xl border border-warning-border bg-warning-soft p-4 font-bold text-warning-on-soft">
             <ShieldCheck size={20} aria-hidden /> אבטחת JWT: תקינה
           </div>
           <div className="flex items-center justify-center gap-3 rounded-xl border border-subtle bg-surface-raised-2 p-4 font-bold backdrop-blur-xl">
@@ -453,7 +453,10 @@ export default function VetoMasterDashboard() {
 
         <section className="overflow-hidden rounded-2xl border border-subtle bg-surface-raised-2 backdrop-blur-xl">
           <div className="flex flex-col items-stretch justify-between gap-4 border-b border-subtle p-6 md:flex-row md:items-center">
-            <h3 className="font-serif text-xl font-bold text-primary">ניהול מנויים ומשתמשים</h3>
+            {/* h2, not h3: this is a top-level section under the page's h1
+                ("ניהול מערכת VETO"), and jumping h1 → h3 breaks the outline
+                screen-reader users navigate by. */}
+            <h2 className="font-serif text-xl font-bold text-primary">ניהול מנויים ומשתמשים</h2>
             <div className="flex flex-1 items-center justify-end gap-3">
               <div className="relative w-full md:w-80">
                 <Search className="pointer-events-none absolute end-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
@@ -489,7 +492,12 @@ export default function VetoMasterDashboard() {
             />
           )}
 
-          <div className="overflow-x-auto">
+          <div
+            className="overflow-x-auto"
+            tabIndex={0}
+            role="region"
+            aria-label="מנויים ומשתמשים"
+          >
             <table className="w-full text-end">
               <thead>
                 <tr className="border-b border-subtle bg-surface-raised text-xs uppercase tracking-wider text-muted">
@@ -564,7 +572,7 @@ export default function VetoMasterDashboard() {
                         <div className="inline-flex items-center gap-2">
                           <Link
                             href={`/admin/users/${user.id}`}
-                            className="text-xs font-bold text-veto-gold hover:underline"
+                            className="text-xs font-bold text-brand-text hover:underline"
                           >
                             ערוך
                           </Link>

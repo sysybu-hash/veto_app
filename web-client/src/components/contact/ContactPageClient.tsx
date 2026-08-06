@@ -20,7 +20,7 @@ export function ContactPageClient({ email, waHref, approved }: Props) {
         <div className="mb-8">
           <Link
             href="/"
-            className="inline-flex items-center justify-center rounded-xl bg-veto-gold px-5 py-2.5 text-sm font-bold text-primary transition hover:opacity-90"
+            className="inline-flex items-center justify-center rounded-xl bg-veto-gold px-5 py-2.5 text-sm font-bold text-brand-fg transition hover:opacity-90"
           >
             {t("contactPage.backHome")}
           </Link>
@@ -127,6 +127,9 @@ export function ContactPageClient({ email, waHref, approved }: Props) {
             </Link>
             <Link href="/cookies" className="hover:text-primary">
               {t("footer.cookies")}
+            </Link>
+            <Link href="/accessibility" className="hover:text-primary">
+              {t("footer.accessibility")}
             </Link>
           </div>
         </div>

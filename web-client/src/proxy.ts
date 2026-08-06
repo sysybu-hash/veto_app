@@ -113,8 +113,8 @@ export function proxy(request: NextRequest) {
         }
         return NextResponse.redirect(url);
       }
-      if (pathname === "/vault") {
-        return NextResponse.redirect(new URL("/admin/vault", request.url));
+      if (pathname === "/vault" || pathname.startsWith("/admin/vault")) {
+        return NextResponse.redirect(new URL("/admin/finance", request.url));
       }
     }
   }

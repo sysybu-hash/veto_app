@@ -104,7 +104,7 @@ test.describe("additional coverage — admin routes", () => {
   });
 
   for (const theme of ["light", "dark"] as const) {
-    for (const route of ["/admin", "/admin/settings", "/admin/vault"]) {
+    for (const route of ["/admin", "/admin/settings", "/admin/finance"]) {
       test(`${route} (${theme}) has no invisible text`, async ({ page }) => {
         await setTheme(page, theme);
         await page.goto(route);

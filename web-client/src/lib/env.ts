@@ -1,7 +1,18 @@
 const DEFAULT_DEV_API_ORIGIN = "http://localhost:5001";
+const DEV_PROXY_PREFIX = "/__api";
 
 function normalizeApiOrigin(raw: string): string {
   return raw.replace(/\/$/, "").replace(/\/api$/i, "");
+}
+
+// NOT a React hook — must not be named `use*`, or eslint's rules-of-hooks
+// treats every plain caller of getPublicApiOrigin() as an illegal hook call.
+function shouldUseDevApiProxy(): boolean {
+  if (process.env.NODE_ENV === "production") return false;
+  // Opt out: NEXT_PUBLIC_API_USE_LOCAL_PROXY=0
+  const flag = process.env.NEXT_PUBLIC_API_USE_LOCAL_PROXY?.trim();
+  if (flag === "0" || flag === "false") return false;
+  return true;
 }
 
 /**
@@ -9,11 +20,20 @@ function normalizeApiOrigin(raw: string): string {
  *
  * - **Production build:** uses `NEXT_PUBLIC_API_ORIGIN` (must be your deployed API, e.g.
  *   https://your-service.onrender.com). Never leave localhost there for Vercel.
- * - **Development (`next dev`):** prefers `NEXT_PUBLIC_API_ORIGIN_DEV` when set, then
- *   `NEXT_PUBLIC_API_ORIGIN`, then falls back to localhost:5001.
+ * - **Development (`next dev`):** by default uses same-origin `/__api` (Next rewrite →
+ *   `NEXT_PUBLIC_API_ORIGIN_DEV` / `NEXT_PUBLIC_API_ORIGIN`) so the browser avoids
+ *   cross-origin failures when local API is down.
  */
 export function getPublicApiOrigin(): string {
   const isDev = process.env.NODE_ENV !== "production";
+  if (isDev && shouldUseDevApiProxy()) {
+    if (typeof window !== "undefined") {
+      return `${window.location.origin}${DEV_PROXY_PREFIX}`;
+    }
+    // SSR / route handlers in next dev — hit the rewrite host
+    return `http://localhost:3000${DEV_PROXY_PREFIX}`;
+  }
+
   let raw = "";
   if (isDev) {
     raw =
@@ -45,6 +65,8 @@ export function getPublicAgoraAppId(): string {
 export function isLocaLtOrigin(): boolean {
   const o = getPublicApiOrigin();
   if (!o) return false;
+  // Same-origin proxy is never loca.lt
+  if (o.includes(DEV_PROXY_PREFIX)) return false;
   try {
     const u = new URL(o);
     return u.hostname.endsWith("loca.lt");

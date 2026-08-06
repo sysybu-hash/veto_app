@@ -32,12 +32,12 @@ export default function TransparencyPage() {
 
   return (
     <>
-    <main
+    <div
       className={`mx-auto w-full max-w-5xl px-4 py-10 text-end ${citizenBottomSafe}`}
       dir="rtl"
     >
       <section className={`${glassPanel} p-6`}>
-        <p className="text-sm font-black text-veto-gold">AI Transparency Center</p>
+        <p className="text-sm font-black text-brand-text">AI Transparency Center</p>
         <h1 className="mt-2 font-frank text-3xl font-black text-primary">מרכז שקיפות AI</h1>
         <p className="mt-2 max-w-3xl text-sm leading-7 text-secondary">
           כאן מוצגות פעולות שבהן AI סייע במערכת. כל פלט AI הוא כלי עזר בלבד ודורש בדיקה אנושית לפני הסתמכות משפטית.
@@ -68,7 +68,7 @@ export default function TransparencyPage() {
               >
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                   <div className="flex items-start gap-3">
-                    <MessageCircle className="mt-0.5 h-5 w-5 text-veto-gold" aria-hidden />
+                    <MessageCircle className="mt-0.5 h-5 w-5 text-brand-text" aria-hidden />
                     <div>
                       <p className="font-black text-primary dark:text-primary">{log.action}</p>
                       <p className="mt-1 text-xs text-muted">
@@ -87,7 +87,7 @@ export default function TransparencyPage() {
           </div>
         </div>
       </section>
-    </main>
+    </div>
     <CitizenBottomNav active="hub" />
     </>
   );
@@ -96,7 +96,7 @@ export default function TransparencyPage() {
 function TrustCard({ icon: Icon, title, body }: { icon: typeof Bot; title: string; body: string }) {
   return (
     <div className="rounded-2xl border border-subtle bg-surface-raised p-4">
-      <Icon className="h-5 w-5 text-veto-gold-dark dark:text-veto-gold" aria-hidden />
+      <Icon className="h-5 w-5 text-veto-gold-dark dark:text-brand-text" aria-hidden />
       <p className="mt-3 font-black text-primary">{title}</p>
       <p className="mt-1 text-sm leading-6 text-secondary dark:text-secondary">{body}</p>
     </div>

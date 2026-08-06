@@ -17,8 +17,11 @@ import { glassPanelNested } from "@/lib/vetoGlass";
  *     />
  *   ) : <List items={items} />}
  *
- * Accessible by default: uses role="status" so screen readers announce
- * "no results" once the live region updates.
+ * Accessible by default: the title/description sit in a role="status" live
+ * region so screen readers announce "no results" when it appears. The `action`
+ * is deliberately OUTSIDE that region — a live region is for advisory text, and
+ * putting a focusable control in one makes assistive tech re-announce the
+ * button on every update.
  */
 export function EmptyState({
   title,
@@ -35,24 +38,28 @@ export function EmptyState({
 }) {
   return (
     <div
-      role="status"
-      aria-live="polite"
       className={`${glassPanelNested} flex flex-col items-center justify-center gap-3 px-6 py-10 text-center ${className}`}
     >
-      {icon && (
-        <div
-          className="flex h-12 w-12 items-center justify-center rounded-full bg-veto-gold/15 text-veto-gold-dark"
-          aria-hidden
-        >
-          {icon}
-        </div>
-      )}
-      <h3 className="font-frank text-base font-bold text-primary">
-        {title}
-      </h3>
-      {description && (
-        <p className="max-w-sm text-sm text-secondary">{description}</p>
-      )}
+      <div
+        role="status"
+        aria-live="polite"
+        className="flex flex-col items-center justify-center gap-3"
+      >
+        {icon && (
+          <div
+            className="flex h-12 w-12 items-center justify-center rounded-full bg-veto-gold/15 text-veto-gold-dark"
+            aria-hidden
+          >
+            {icon}
+          </div>
+        )}
+        <h3 className="font-frank text-base font-bold text-primary">
+          {title}
+        </h3>
+        {description && (
+          <p className="max-w-sm text-sm text-secondary">{description}</p>
+        )}
+      </div>
       {action && <div className="mt-2">{action}</div>}
     </div>
   );

@@ -207,7 +207,7 @@ function RegisterInner() {
             onClick={() => setMode("user")}
             className={`flex-1 rounded-lg px-3 py-2 font-semibold transition ${
               mode === "user"
-                ? "bg-veto-gold text-primary" : "text-secondary hover:bg-white/[0.05]"}`}
+                ? "bg-veto-gold text-brand-fg" : "text-secondary hover:bg-white/[0.05]"}`}
           >
             {t("registerUi.asCitizen")}
           </button>
@@ -216,7 +216,7 @@ function RegisterInner() {
             onClick={() => setMode("lawyer")}
             className={`flex-1 rounded-lg px-3 py-2 font-semibold transition ${
               mode === "lawyer"
-                ? "bg-veto-gold text-primary" : "text-secondary hover:bg-white/[0.05]"}`}
+                ? "bg-veto-gold text-brand-fg" : "text-secondary hover:bg-white/[0.05]"}`}
           >
             {t("registerUi.asLawyer")}
           </button>
@@ -241,14 +241,14 @@ function RegisterInner() {
             {t("registerUi.agreePrefix")}{" "}
             <Link
               href="/terms"
-              className="mx-1 font-bold text-veto-gold underline-offset-2 hover:underline"
+              className="mx-1 font-bold text-brand-text underline-offset-2 hover:underline"
             >
               {t("registerUi.terms")}
             </Link>{" "}
             {t("registerUi.agreeAnd")}{" "}
             <Link
               href="/privacy"
-              className="mx-1 font-bold text-veto-gold underline-offset-2 hover:underline"
+              className="mx-1 font-bold text-brand-text underline-offset-2 hover:underline"
             >
               {t("registerUi.privacy")}
             </Link>
@@ -366,7 +366,7 @@ function RegisterInner() {
                         onClick={() => toggleSpec(s.id)}
                         className={`rounded-full px-3 py-1 text-xs font-semibold transition ${
                           on
-                            ? "border border-veto-gold bg-veto-gold/15 text-veto-gold" : "border border-subtle bg-white/[0.03] text-muted hover:bg-white/[0.06]"}`}
+                            ? "border border-veto-gold bg-veto-gold/15 text-brand-text" : "border border-subtle bg-white/[0.03] text-muted hover:bg-white/[0.06]"}`}
                       >
                         {s.label}
                       </button>
@@ -405,7 +405,7 @@ function RegisterInner() {
               GDPR Compliant
             </span>
             <span className="inline-flex items-center gap-1.5 rounded-full border border-subtle bg-white/[0.04] px-3 py-1.5">
-              <Lock className="h-3.5 w-3.5 text-veto-gold" aria-hidden />
+              <Lock className="h-3.5 w-3.5 text-brand-text" aria-hidden />
               AES-256 Encrypted
             </span>
             <span className="inline-flex items-center gap-1.5 rounded-full border border-subtle bg-white/[0.04] px-3 py-1.5">
@@ -423,7 +423,7 @@ function RegisterInner() {
                 {" "}
                 <Link
                   href={`/login${phone.trim() ? `?phone=${encodeURIComponent(phone.trim())}` : ""}`}
-                  className="font-semibold text-veto-gold underline underline-offset-2"
+                  className="font-semibold text-brand-text underline underline-offset-2"
                 >
                   {t("register.backLogin")}
                 </Link>

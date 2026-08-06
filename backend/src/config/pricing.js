@@ -68,11 +68,23 @@ const CONSULTATION_ILS = 79.9;
 const OVERTIME_ILS_PER_MIN = 0.5;
 const FREE_CALL_MINUTES = 15;
 
+/** Fixed ILS credited to the lawyer per completed SOS call (activity base). */
+const LAWYER_CALL_FEE_ILS = Number(
+  process.env.LAWYER_CALL_FEE_ILS || String(Math.round(CONSULTATION_ILS * 0.65 * 100) / 100),
+);
+/** Share of citizen overtime charges paid out to the assigned lawyer (0–1). */
+const LAWYER_OVERTIME_SHARE = Math.min(
+  1,
+  Math.max(0, Number(process.env.LAWYER_OVERTIME_SHARE || '0.7')),
+);
+
 module.exports = {
   PLANS,
   CONSULTATION_ILS,
   OVERTIME_ILS_PER_MIN,
   FREE_CALL_MINUTES,
+  LAWYER_CALL_FEE_ILS,
+  LAWYER_OVERTIME_SHARE,
   ILS_TO_USD,
   ilsToUsd,
 };

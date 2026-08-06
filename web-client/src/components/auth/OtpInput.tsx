@@ -104,7 +104,7 @@ export function OtpInput({
             disabled={resendCooldown > 0 || resendBusy || disabled}
             loading={resendBusy}
             onClick={() => void onResend()}
-            className="min-h-[44px] text-veto-gold"
+            className="min-h-[44px] text-brand-text"
           >
             {resendCooldown > 0
               ? `שלח שוב בעוד ${resendCooldown} ש׳`

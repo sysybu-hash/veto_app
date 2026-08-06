@@ -366,11 +366,19 @@ export async function syncSosArtifactsToVault(): Promise<
       return { success: false, error: fetched.error };
     }
 
-    const added = await syncPrismaFromArtifactItems(
-      externalId,
-      role,
-      fetched.items,
-    );
+    let added = 0;
+    try {
+      added = await syncPrismaFromArtifactItems(
+        externalId,
+        role,
+        fetched.items,
+      );
+    } catch (prismaErr) {
+      // SOS artifacts may still live in Mongo; Prisma/Neon outage must not
+      // surface as a hard vault failure on every page load.
+      console.warn("[vault] Prisma SOS sync skipped:", prismaErr);
+      return { success: true, added: 0 };
+    }
 
     if (added > 0) {
       revalidatePath("/vault");
@@ -379,12 +387,13 @@ export async function syncSosArtifactsToVault(): Promise<
   } catch (e) {
     console.error("[vault] syncSosArtifactsToVault:", e);
     const msg = e instanceof Error ? e.message : String(e);
-    const dbHint = /prisma|database|P1001|P1017|connection/i.test(msg)
-      ? " בדוק חיבור ל-DATABASE_URL (כספת Prisma באתר)."
-      : "";
+    if (/prisma|database|P1001|P1017|connection/i.test(msg)) {
+      console.warn("[vault] soft-fail SOS sync (database):", msg);
+      return { success: true, added: 0 };
+    }
     return {
       success: false,
-      error: `שמירה לכספת נכשלה.${dbHint} אם הבעיה נמשכת, פנה לתמיכה.`,
+      error: "סנכרון SOS נכשל זמנית. נסו שוב בעוד רגע.",
     };
   }
 }

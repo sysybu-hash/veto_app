@@ -26,7 +26,7 @@ export default function PrivacyPage() {
             <h2 className="text-lg font-bold text-primary md:text-xl">
               2. איזה מידע אנו אוספים
             </h2>
-            <ul className="list-inside list-disc space-y-2 marker:text-veto-gold">
+            <ul className="list-inside list-disc space-y-2 marker:text-brand-text">
               <li>
                 <strong className="text-primary">פרטי זיהוי וחשבון:</strong> שם,
                 מספר טלפון, דוא״ל (אם סופק), תפקיד (אזרח/עורך דין/מנהל), העדפות

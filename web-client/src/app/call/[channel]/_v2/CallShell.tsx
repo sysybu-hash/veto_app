@@ -739,7 +739,7 @@ export function CallShell({ channel }: { channel: string }) {
       {/* Top header strip */}
       <div className="absolute inset-x-0 top-0 z-20 flex items-start justify-between gap-2 px-3 pt-3">
         <div className="flex items-center gap-2 rounded-2xl border border-veto-gold/25 bg-black/55 px-3 py-1.5 text-xs text-primary shadow-lg backdrop-blur-md">
-          <span className="font-mono tabular-nums tracking-tight text-veto-gold">
+          <span className="font-mono tabular-nums tracking-tight text-brand-text">
             {timerLabel}
           </span>
           {overSec > 0 && (

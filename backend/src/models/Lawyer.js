@@ -22,14 +22,16 @@ const LawyerSchema = new mongoose.Schema(
       match: [/^\+[1-9]\d{7,14}$/, 'Please provide a valid phone number'],
     },
 
+    // Uniqueness is enforced by a partial index below, NOT by `sparse`.
+    // A sparse index only skips documents where the field is ABSENT — an
+    // explicit `null` is still indexed, so `default: null` + sparse unique
+    // meant only one email-less lawyer could ever exist (E11000 on the
+    // second). Same trap that was already fixed for User.phone.
     email: {
       type: String,
       required: false,
-      unique: true,
-      sparse: true,    // allows multiple null values
       lowercase: true,
       trim: true,
-      default: null,
     },
 
     // ── Auth ──────────────────────────────────────────────────
@@ -253,6 +255,26 @@ const LawyerSchema = new mongoose.Schema(
       type: Number,
       default: 15,
     },
+
+    // ── Payout destination (admin-managed) ─────────────────────
+    payout: {
+      method: {
+        type: String,
+        enum: ['bank_transfer', 'paypal', 'bit', 'manual'],
+        default: 'manual',
+      },
+      paypal_email: { type: String, default: null, trim: true, lowercase: true },
+      bank_holder_name: { type: String, default: '', trim: true },
+      bank_name: { type: String, default: '', trim: true },
+      bank_iban: { type: String, default: '', trim: true },
+      bank_branch: { type: String, default: '', trim: true },
+      bank_account: { type: String, default: '', trim: true },
+      notes: { type: String, default: '', maxlength: 500 },
+      /** Optional per-lawyer override of default call fee (ILS). null = use global. */
+      custom_call_fee_ils: { type: Number, default: null, min: 0 },
+      /** Optional per-lawyer overtime share 0–1. null = use global. */
+      custom_overtime_share: { type: Number, default: null, min: 0, max: 1 },
+    },
   },
   {
     timestamps: true,
@@ -263,5 +285,26 @@ const LawyerSchema = new mongoose.Schema(
 // ── Indexes ────────────────────────────────────────────────
 LawyerSchema.index({ last_location: '2dsphere' });
 LawyerSchema.index({ is_online: 1, is_available: 1 }); // core dispatch query
+
+// Unique only across lawyers that actually HAVE an email string. Mirrors
+// User.phone's `phone_partial_unique` — see the comment on the email field.
+LawyerSchema.index(
+  { email: 1 },
+  {
+    unique: true,
+    name: 'email_partial_unique',
+    partialFilterExpression: {
+      email: { $exists: true, $type: 'string' },
+    },
+  },
+);
+
+// Keep email absent (not null) so email-less lawyers never collide.
+LawyerSchema.pre('save', function unsetEmptyEmail(next) {
+  if (this.email === null || this.email === '') {
+    this.set('email', undefined);
+  }
+  next();
+});
 
 module.exports = mongoose.model('Lawyer', LawyerSchema);

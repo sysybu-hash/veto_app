@@ -85,7 +85,14 @@ test.describe("modal — CreateEventModal", () => {
       await injectJwt(page, token);
       await page.goto("/calendar");
       await page.waitForLoadState("networkidle");
-      await page.getByRole("button", { name: /אירוע חדש|new event/i }).click();
+      // /calendar legitimately offers two "new event" CTAs: the toolbar one in
+      // the header, and a second inside the agenda empty state when the day has
+      // no events. Scope to the header so the locator stays unambiguous whether
+      // or not the account has events.
+      await page
+        .locator("header")
+        .getByRole("button", { name: /אירוע חדש|new event/i })
+        .click();
       await expect(page.getByRole("dialog")).toBeVisible({ timeout: 5_000 });
       await assertNoInvisibleText(page);
       await captureScreenshot(page, "_modal_create_event", theme);

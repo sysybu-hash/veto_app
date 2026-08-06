@@ -9,7 +9,7 @@ export default function OfflinePage() {
       className="flex min-h-screen flex-col items-center justify-center bg-surface-canvas p-6 text-center text-primary"
       dir="rtl"
     >
-      <WifiOff size={64} className="mb-6 text-veto-gold opacity-80" aria-hidden />
+      <WifiOff size={64} className="mb-6 text-brand-text opacity-80" aria-hidden />
       <h1 className="mb-4 text-3xl font-bold">אין חיבור לאינטרנט</h1>
       <p className="mb-8 max-w-md text-muted">
         המכשיר שלך כרגע לא מחובר לרשת. אנא ודא שהאינטרנט הסלולרי או ה-Wi-Fi

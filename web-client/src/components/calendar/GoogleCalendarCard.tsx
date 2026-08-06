@@ -61,7 +61,7 @@ export function GoogleCalendarCard() {
 
   return (
     <div className={`${glassPanelNested} p-4`}>
-      <p className="text-xs font-bold uppercase tracking-wide text-veto-gold">
+      <p className="text-xs font-bold uppercase tracking-wide text-brand-text">
         Google Calendar
       </p>
       <p className="mt-1 text-sm text-secondary">

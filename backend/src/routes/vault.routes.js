@@ -5,6 +5,7 @@ const { protect, authorize } = require('../middleware/auth.middleware');
 const {
   getFiles, deleteFile, deleteRemoteFile, updateFileAccess, analyzeFile,
   getCases, createCase, updateCase, deleteCase, updateFile, getSharedFiles,
+  getLawyerSharedInbox,
   getFolders, createFolder, updateFolder, deleteFolder, getTimeline,
 } = require('../controllers/vault.controller');
 
@@ -23,6 +24,8 @@ router.patch('/files/:fileId/access', updateFileAccess);
 router.patch('/files/:fileId', updateFile);
 router.post('/files/:fileId/analyze', analyzeFile);
 
+// Lawyer-specific: all approved shares from assigned citizens
+router.get('/lawyer-inbox', authorize('lawyer', 'admin'), getLawyerSharedInbox);
 // Lawyer-specific view: see files shared by a user
 router.get('/shared/:userId', authorize('lawyer', 'admin'), getSharedFiles);
 

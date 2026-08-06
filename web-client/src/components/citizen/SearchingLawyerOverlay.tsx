@@ -36,7 +36,7 @@ export function SearchingLawyerOverlay({ phase, lawyerName, onCancel }: Props) {
             aria-hidden
           />
           <Loader2
-            className="relative h-9 w-9 animate-spin text-veto-gold"
+            className="relative h-9 w-9 animate-spin text-brand-text"
             aria-hidden
           />
         </div>
@@ -57,19 +57,19 @@ export function SearchingLawyerOverlay({ phase, lawyerName, onCancel }: Props) {
         {!isConnecting ? (
           <ol className="mt-6 space-y-3 text-start text-sm text-secondary">
             <li className="flex items-start gap-3">
-              <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-veto-gold/20 text-xs font-black text-veto-gold">
+              <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-veto-gold/20 text-xs font-black text-brand-text">
                 1
               </span>
               <span>{t("hub.searchingStep1")}</span>
             </li>
             <li className="flex items-start gap-3">
-              <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-veto-gold/20 text-xs font-black text-veto-gold">
+              <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-veto-gold/20 text-xs font-black text-brand-text">
                 2
               </span>
               <span>{t("hub.searchingStep2")}</span>
             </li>
             <li className="flex items-start gap-3">
-              <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-veto-gold/20 text-xs font-black text-veto-gold">
+              <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-veto-gold/20 text-xs font-black text-brand-text">
                 3
               </span>
               <span>{t("hub.searchingStep3")}</span>

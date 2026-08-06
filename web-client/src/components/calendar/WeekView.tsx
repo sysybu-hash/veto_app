@@ -46,7 +46,7 @@ export function WeekView({
           onClick={() => onCursorChange(addDays(cursor, -7))}
           icon={<span aria-hidden>‹</span>}
         />
-        <h3 className="font-frank text-sm font-bold text-primary sm:text-base">
+        <h2 className="font-frank text-sm font-bold text-primary sm:text-base">
           {weekStart.toLocaleDateString(tag, { day: "numeric", month: "short" })}
           {" – "}
           {addDays(weekStart, 6).toLocaleDateString(tag, {
@@ -54,7 +54,7 @@ export function WeekView({
             month: "short",
             year: "numeric",
           })}
-        </h3>
+        </h2>
         <IconButton
           variant="ghost"
           size="sm"

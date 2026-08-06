@@ -50,15 +50,15 @@
   --surface-inverse: #0f172a;
   --surface-stage: #05080f;
 
-  /* text */
+  /* text — muted/secondary tuned for WCAG AA on canvas (#eef1f5) */
   --text-primary: #0f172a;
-  --text-secondary: #334155;
-  --text-muted: #64748b;
-  --text-disabled: #94a3b8;
+  --text-secondary: #1e293b;
+  --text-muted: #334155;
+  --text-disabled: #64748b;
   --text-inverse: #f8fafc;
   --text-on-brand: #0f172a;
   --text-on-stage: #f1f5f9;
-  --text-link: #9b7430;
+  --text-link: #8a6d35;
 
   /* border */
   --border-subtle: rgba(15, 23, 42, 0.08);
@@ -76,6 +76,13 @@
   --brand-700: #8a6d35; /* also covers #8a6d3d */
   --brand-deep: #6f5528; /* also covers #75551f */
   --brand-fg: #0f172a;
+  /* Brand gold as TEXT. --veto-gold itself only reaches ~2.2:1 on light
+   * surfaces, so gold body/link text must use this darker ramp step instead:
+   * #6f5528 clears 6.17:1 on the canvas and 6.99:1 on white. The dark theme
+   * overrides it back to the bright gold, which already clears 5.9:1 there.
+   * Use `text-brand-text` for gold text; `bg-veto-gold` stays the fill colour. */
+  --brand-text: #6f5528;
+  --brand-on-soft: #7a6337;
   --brand-soft: rgba(197, 160, 89, 0.15);
   --brand-soft-hover: rgba(197, 160, 89, 0.25);
 
@@ -86,18 +93,22 @@
   --success: #12863d;
   --success-fg: #ffffff;
   --success-soft: rgba(18, 134, 61, 0.12);
+  --success-on-soft: #0f7334;
   --success-border: rgba(18, 134, 61, 0.35);
   --warning: #b26205;
   --warning-fg: #ffffff;
   --warning-soft: rgba(178, 98, 5, 0.14);
+  --warning-on-soft: #945104;
   --warning-border: rgba(178, 98, 5, 0.35);
   --danger: #dc2626;
   --danger-fg: #ffffff;
   --danger-soft: rgba(220, 38, 38, 0.12);
+  --danger-on-soft: #bd2121;
   --danger-border: rgba(220, 38, 38, 0.35);
   --info: #2563eb;
   --info-fg: #eff6ff;
   --info-soft: rgba(37, 99, 235, 0.12);
+  --info-on-soft: #225ad6;
   --info-border: rgba(37, 99, 235, 0.35);
   --sos: #b91c1c;
   --sos-fg: #fef2f2;
@@ -142,10 +153,10 @@ body.veto-dark {
   --surface-inverse: #f8fafc;
   --surface-stage: #05080f;
 
-  --text-primary: #f1f5f9;
-  --text-secondary: #cbd5e1;
-  --text-muted: #94a3b8;
-  --text-disabled: #64748b;
+  --text-primary: #f8fafc;
+  --text-secondary: #e2e8f0;
+  --text-muted: #cbd5e1;
+  --text-disabled: #94a3b8;
   --text-inverse: #0f172a;
   --text-on-brand: #0f172a;
   --text-on-stage: #f1f5f9;
@@ -157,6 +168,9 @@ body.veto-dark {
   --border-brand: rgba(197, 160, 89, 0.4);
 
   --brand-fg: #0f172a;
+  /* On dark surfaces the bright gold is the accessible choice (5.9–7.3:1). */
+  --brand-text: #c5a059;
+  --brand-on-soft: #c5a059;
   --brand-soft: rgba(197, 160, 89, 0.16);
   --brand-soft-hover: rgba(197, 160, 89, 0.26);
 
@@ -165,6 +179,14 @@ body.veto-dark {
   --danger-soft: rgba(220, 38, 38, 0.18);
   --info-soft: rgba(37, 99, 235, 0.18);
   --sos-soft: rgba(185, 28, 28, 0.22);
+
+  /* Lightened so status text still clears 4.5:1 once the soft tint is
+   * composited over the DARK canvas — the light-mode values are far too dark
+   * there. See the `* on * -soft` pairings in scripts/check-contrast.mjs. */
+  --success-on-soft: #449f66;
+  --warning-on-soft: #c18035;
+  --danger-on-soft: #e55c5c;
+  --info-on-soft: #5c8af0;
 
   --hover-overlay: rgba(255, 255, 255, 0.06);
   --active-overlay: rgba(255, 255, 255, 0.1);
@@ -190,6 +212,16 @@ body.veto-dark {
   --border-subtle: rgba(255, 255, 255, 0.1);
   --border-default: rgba(255, 255, 255, 0.14);
   --focus-ring-offset: var(--surface-stage);
+  /* These surfaces are dark in BOTH themes, so the gold/status foregrounds must
+   * follow the dark values too — the light-mode ramp steps (#6f5528 and friends)
+   * are far too dark to read here. Without this, any always-dark panel silently
+   * fails contrast the moment the site is in light mode. */
+  --brand-text: #c5a059;
+  --brand-on-soft: #c5a059;
+  --success-on-soft: #449f66;
+  --warning-on-soft: #c18035;
+  --danger-on-soft: #e55c5c;
+  --info-on-soft: #5c8af0;
 }
 
 @theme inline {
@@ -234,6 +266,12 @@ body.veto-dark {
   --color-brand-700: var(--brand-700);
   --color-brand-deep: var(--brand-deep);
   --color-brand-fg: var(--brand-fg);
+  --color-brand-text: var(--brand-text);
+  --color-brand-on-soft: var(--brand-on-soft);
+  --color-success-on-soft: var(--success-on-soft);
+  --color-warning-on-soft: var(--warning-on-soft);
+  --color-danger-on-soft: var(--danger-on-soft);
+  --color-info-on-soft: var(--info-on-soft);
   --color-brand-soft: var(--brand-soft);
   --color-brand-soft-hover: var(--brand-soft-hover);
 
@@ -350,8 +388,35 @@ body.veto-dark {
 }
 
 .veto-light ::placeholder {
-  color: #64748b;
+  color: #475569;
   opacity: 1;
+}
+
+/*
+ * Light-mode rescue for classes that assume a dark canvas
+ * (text-red-100 on pink soft bg = illegible). Map them to ink-level
+ * colors so alerts, toasts, and secondary copy stay readable.
+ */
+.veto-light [class*="text-red-50"]:not(:is([data-surface="stage"], [data-surface="ink"], [data-surface="stage"] *, [data-surface="ink"] *)),
+.veto-light [class*="text-red-100"]:not(:is([data-surface="stage"], [data-surface="ink"], [data-surface="stage"] *, [data-surface="ink"] *)),
+.veto-light [class*="text-red-200"]:not(:is([data-surface="stage"], [data-surface="ink"], [data-surface="stage"] *, [data-surface="ink"] *)) {
+  color: #991b1b;
+}
+
+.veto-light [class*="text-amber-50"]:not(:is([data-surface="stage"], [data-surface="ink"], [data-surface="stage"] *, [data-surface="ink"] *)),
+.veto-light [class*="text-amber-100"]:not(:is([data-surface="stage"], [data-surface="ink"], [data-surface="stage"] *, [data-surface="ink"] *)),
+.veto-light [class*="text-amber-200"]:not(:is([data-surface="stage"], [data-surface="ink"], [data-surface="stage"] *, [data-surface="ink"] *)) {
+  color: #92400e;
+}
+
+.veto-light [class*="text-emerald-100"]:not(:is([data-surface="stage"], [data-surface="ink"], [data-surface="stage"] *, [data-surface="ink"] *)),
+.veto-light [class*="text-emerald-200"]:not(:is([data-surface="stage"], [data-surface="ink"], [data-surface="stage"] *, [data-surface="ink"] *)) {
+  color: #065f46;
+}
+
+.veto-light [class*="text-brand-100"]:not(:is([data-surface="stage"], [data-surface="ink"], [data-surface="stage"] *, [data-surface="ink"] *)),
+.veto-light [class*="text-veto-gold-light"]:not(:is([data-surface="stage"], [data-surface="ink"], [data-surface="stage"] *, [data-surface="ink"] *)) {
+  color: #6f5528;
 }
 
 /*
@@ -438,6 +503,23 @@ body.veto-dark {
   ::view-transition-new(root) {
     animation-duration: 1ms;
     animation-name: none;
+  }
+
+  /* Collapse every CSS animation/transition to its END state rather than
+   * removing it (`animation: none` would strand anything that fades in from
+   * opacity 0 and leave it invisible). Framer Motion is handled separately by
+   * <MotionConfig reducedMotion="user"> in app/layout.tsx.
+   *
+   * Required for WCAG 2.2.2 and expected under EN 301 549 — the SOS pulse and
+   * the landing reveals are exactly the kind of motion that triggers
+   * vestibular symptoms. */
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }
 

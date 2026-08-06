@@ -79,7 +79,7 @@ export function CitizenSidebar() {
               href={href}
               className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-bold transition ${
                 active
-                  ? "bg-veto-gold/15 text-brand-700 dark:text-veto-gold"
+                  ? "bg-veto-gold/15 text-brand-700 dark:text-brand-text"
                   : "text-primary hover:bg-hover-overlay"
               }`}
             >

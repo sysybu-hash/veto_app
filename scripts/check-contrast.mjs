@@ -105,10 +105,26 @@ const PAIRS = [
   ["secondary text / canvas", "text-secondary", "surface-canvas", 4.5],
   ["muted text / canvas", "text-muted", "surface-canvas", 3.0],
   ["brand fg / brand", "brand-fg", "veto-gold", 4.5],
+  // Gold used as TEXT, not as a fill. --veto-gold itself only reaches ~2.2:1 on
+  // the light canvas, which is why `text-brand-text` exists and why components
+  // must not put raw text-veto-gold on a light surface. These two pairings are
+  // the regression guard for that split — see --brand-text in globals.css.
+  ["brand text / canvas", "brand-text", "surface-canvas", 4.5],
+  ["brand text / raised surface", "brand-text", "surface-raised", 4.5],
   ["success fg / success", "success-fg", "success", 4.5],
   ["warning fg / warning", "warning-fg", "warning", 4.5],
   ["danger fg / danger", "danger-fg", "danger", 4.5],
   ["info fg / info", "info-fg", "info", 4.5],
+  // The SOFT pairings — status text on its own tinted background. This is the
+  // combination status pills and banners actually use, and it was the blind
+  // spot here: only `-fg on solid` was checked, so `--success` on
+  // `--success-soft` (3.5:1) shipped as a passing palette. Use the `-on-soft`
+  // tokens for text inside a `bg-*-soft` container, never the base colour.
+  ["success on soft", "success-on-soft", "success-soft", 4.5],
+  ["warning on soft", "warning-on-soft", "warning-soft", 4.5],
+  ["danger on soft", "danger-on-soft", "danger-soft", 4.5],
+  ["info on soft", "info-on-soft", "info-soft", 4.5],
+  ["brand on soft", "brand-on-soft", "brand-soft", 4.5],
 ];
 
 function checkMode(modeName, tokens) {

@@ -130,7 +130,7 @@ export function ContactForm({ supportEmail }: Props) {
 
       <button
         type="submit"
-        className="w-full rounded-xl bg-veto-gold px-4 py-3 text-sm font-bold text-primary transition hover:opacity-90 md:w-auto md:min-w-[12rem]"
+        className="w-full rounded-xl bg-veto-gold px-4 py-3 text-sm font-bold text-brand-fg transition hover:opacity-90 md:w-auto md:min-w-[12rem]"
       >
         {t("contactPage.formSubmit")}
       </button>

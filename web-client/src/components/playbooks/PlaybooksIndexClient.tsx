@@ -18,7 +18,7 @@ export function PlaybooksIndexClient({ approved }: Props) {
         <div className="mb-8 flex flex-wrap gap-3">
           <Link
             href="/"
-            className="inline-flex items-center justify-center rounded-xl bg-veto-gold px-5 py-2.5 text-sm font-bold text-primary transition hover:opacity-90"
+            className="inline-flex items-center justify-center rounded-xl bg-veto-gold px-5 py-2.5 text-sm font-bold text-brand-fg transition hover:opacity-90"
           >
             {t("playbooksUi.backHome")}
           </Link>
@@ -55,7 +55,7 @@ export function PlaybooksIndexClient({ approved }: Props) {
               >
                 <h2 className="text-lg font-bold text-primary">{pickText(locale, p.title)}</h2>
                 <p className="mt-1 text-sm text-secondary">{pickText(locale, p.subtitle)}</p>
-                <span className="mt-3 inline-block text-xs font-bold text-veto-gold">
+                <span className="mt-3 inline-block text-xs font-bold text-brand-text">
                   {t("playbooksUi.openGuide")}
                 </span>
               </Link>

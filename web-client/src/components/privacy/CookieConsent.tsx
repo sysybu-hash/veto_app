@@ -37,6 +37,30 @@ function saveConsent(consent: CookieConsentV1) {
   window.dispatchEvent(new CustomEvent(CONSENT_CHANGE_EVENT, { detail: consent }));
 }
 
+/** Parsed current decision, or null when the visitor has not chosen yet. */
+export function readStoredConsent(): CookieConsentV1 | null {
+  const raw = readConsent();
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw) as CookieConsentV1;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Clears the stored decision so <CookieConsent /> shows again.
+ *
+ * GDPR Art. 7(3) requires withdrawing consent to be as easy as giving it, so
+ * this must stay reachable from ordinary UI (the cookie policy page) and not
+ * only from devtools. Any already-initialised tracker re-reads consent on the
+ * CONSENT_CHANGE_EVENT and opts out — see PostHogAnalytics.
+ */
+export function reopenCookiePreferences() {
+  window.localStorage.removeItem(CONSENT_STORAGE_KEY);
+  window.dispatchEvent(new CustomEvent(CONSENT_CHANGE_EVENT, { detail: null }));
+}
+
 /**
  * True while the cookie banner is still showing (no consent decision saved
  * yet). Routes with a fixed-position CTA near the bottom of the viewport

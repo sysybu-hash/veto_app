@@ -52,9 +52,9 @@ export function AgendaView({
 
   return (
     <section className={`${glassPanelNested} p-3 sm:p-4`}>
-      <h3 className="mb-3 font-frank text-base font-bold text-primary">
+      <h2 className="mb-3 font-frank text-base font-bold text-primary">
         {filterSelectedDay ? t("calendar.dayAgenda") : t("calendar.upcoming")}
-      </h3>
+      </h2>
       <ul className="space-y-2">
         {list.map((ev) => {
           const start = new Date(ev.start);
