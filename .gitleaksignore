@@ -1,0 +1,17 @@
+# Confirmed false positives, listed by exact fingerprint so nothing else in the
+# same file or rule is ever silenced.
+#
+# Both are in `frontend/build/web/main.dart.js` — the compiled output of the old
+# Flutter web client, committed in April 2026. The "secret" is a minified
+# comparison of the form `sel = e.key === "<string>"`; gitleaks' generic-api-key
+# rule matches on entropy alone (3.58 here) and cannot tell a keyboard-key
+# literal in machine-generated JS from a credential.
+#
+# These only surface on a full-history scan. `pull_request` runs scan just the
+# PR's commits, so the job passed for months without reaching them; a
+# `workflow_dispatch` run scans all 672 commits and found them.
+#
+# Do NOT broaden this to a path or rule exclusion. If a real key is ever
+# committed to a build artifact, this file must not hide it.
+65020be7b805d55694fb2bf263aa4f8229fae172:frontend/build/web/main.dart.js:generic-api-key:193778
+65020be7b805d55694fb2bf263aa4f8229fae172:frontend/build/web/main.dart.js:generic-api-key:279167
