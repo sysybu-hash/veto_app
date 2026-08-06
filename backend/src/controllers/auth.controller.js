@@ -91,12 +91,23 @@ const register = async (req, res, next) => {
 
     const newDoc = await Model.create(payload);
 
+    // A family-plan owner may have reserved a seat for this number before the
+    // person had an account. Claim it now so the owner does not have to come
+    // back and add them by hand. Best-effort: never fail a registration over
+    // it — the service swallows its own errors and returns null.
+    let joinedFamilyPlan = false;
+    if (role === 'user') {
+      const { claimInviteForNewUser } = require('../services/familyPlan.service');
+      joinedFamilyPlan = Boolean(await claimInviteForNewUser(newDoc));
+    }
+
     logEvent({ phone: normalizedPhone, email: email || null, role, event: 'register', success: true, user_id: newDoc._id, ip: req.ip, user_agent: req.headers['user-agent'] });
 
     return res.status(201).json({
       message: 'Account created. Please verify your phone.',
       id:      newDoc._id,
       role,
+      joinedFamilyPlan,
     });
   } catch (err) {
     if (err.code === 11000) {
