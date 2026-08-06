@@ -271,25 +271,25 @@ export default function Home() {
 
       <footer className="border-t border-subtle px-6 py-10">
         <div className="mx-auto flex max-w-4xl flex-wrap items-center justify-center gap-4 text-sm font-semibold text-muted">
-          <Link href="/contact" className="hover:text-primary">
+          <Link href="/contact" className="inline-flex min-h-[24px] items-center py-1 hover:text-primary">
             {t("footer.contact")}
           </Link>
-          <Link href="/playbooks" className="hover:text-primary">
+          <Link href="/playbooks" className="inline-flex min-h-[24px] items-center py-1 hover:text-primary">
             {t("footer.playbooks")}
           </Link>
-          <Link href="/pricing" className="hover:text-primary">
+          <Link href="/pricing" className="inline-flex min-h-[24px] items-center py-1 hover:text-primary">
             {t("footer.pricing")}
           </Link>
-          <Link href="/terms" className="hover:text-primary">
+          <Link href="/terms" className="inline-flex min-h-[24px] items-center py-1 hover:text-primary">
             {t("footer.terms")}
           </Link>
-          <Link href="/privacy" className="hover:text-primary">
+          <Link href="/privacy" className="inline-flex min-h-[24px] items-center py-1 hover:text-primary">
             {t("footer.privacy")}
           </Link>
-          <Link href="/cookies" className="hover:text-primary">
+          <Link href="/cookies" className="inline-flex min-h-[24px] items-center py-1 hover:text-primary">
             {t("footer.cookies")}
           </Link>
-          <Link href="/accessibility" className="hover:text-primary">
+          <Link href="/accessibility" className="inline-flex min-h-[24px] items-center py-1 hover:text-primary">
             {t("footer.accessibility")}
           </Link>
         </div>

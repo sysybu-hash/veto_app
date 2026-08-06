@@ -112,7 +112,7 @@ jobs:
       - name: npm audit (runtime deps, report only)
         continue-on-error: true
         run: npm audit --omit=dev --audit-level=high
-      - run: npx playwright install --with-deps chromium webkit
+      - run: npx playwright install --with-deps chromium webkit firefox
       - run: npm run build
         env:
           NEXT_PUBLIC_API_ORIGIN: http://localhost:5001

@@ -40,6 +40,11 @@ async function prepare(page: import("@playwright/test").Page, route: string) {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto(route);
   await page.waitForLoadState("networkidle");
+  // Web fonts change both metrics and how text is rasterised, so scanning
+  // before they settle produces contrast readings that differ run to run —
+  // this was the main source of flake on Firefox, which settles slower than
+  // Chromium. `document.fonts.ready` is the explicit signal for it.
+  await page.evaluate(() => document.fonts?.ready).catch(() => undefined);
   await page.waitForTimeout(400);
 }
 

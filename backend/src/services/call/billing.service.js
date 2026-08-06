@@ -6,30 +6,36 @@
 // ============================================================
 
 const User = require('../../models/User');
-const {
-  CONSULTATION_ILS,
-  OVERTIME_ILS_PER_MIN,
-  FREE_CALL_MINUTES,
-} = require('../../config/pricing');
+const { getPricing } = require('../pricingSettings.service');
 
 /**
  * Computes a billing breakdown for a call given its duration in seconds.
  * Always charges at least 1 minute and the base consultation fee.
  *
+ * Rates come from the live pricing settings (admin-editable) rather than
+ * module constants, so a price change takes effect on the next call without a
+ * deploy. `rates` can be passed explicitly to price a call against a specific
+ * set of numbers — used by tests and by anything that needs to reproduce a
+ * historical charge instead of the current tariff.
+ *
  * Return shape mirrors what `finishCallBilling` writes onto EmergencyEvent.
  */
-function computeChargeFromSeconds(seconds) {
+function computeChargeFromSeconds(seconds, rates = getPricing()) {
+  const consultationIls = Number(rates.consultationIls) || 0;
+  const overtimePerMin = Number(rates.overtimeIlsPerMin) || 0;
+  const freeMinutes = Number(rates.freeCallMinutes) || 0;
+
   const durationSeconds = Math.max(0, Math.ceil(Number(seconds) || 0));
   const minutes = Math.max(1, Math.ceil(durationSeconds / 60));
-  const overtimeMinutes = Math.max(0, minutes - FREE_CALL_MINUTES);
-  const overtimeIls = +(overtimeMinutes * OVERTIME_ILS_PER_MIN).toFixed(2);
+  const overtimeMinutes = Math.max(0, minutes - freeMinutes);
+  const overtimeIls = +(overtimeMinutes * overtimePerMin).toFixed(2);
   return {
     durationSeconds,
     minutes,
-    baseIls: CONSULTATION_ILS,
+    baseIls: consultationIls,
     overtimeMinutes,
     overtimeIls,
-    totalIls: +(CONSULTATION_ILS + overtimeIls).toFixed(2),
+    totalIls: +(consultationIls + overtimeIls).toFixed(2),
   };
 }
 

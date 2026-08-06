@@ -38,6 +38,8 @@ import { fetchLawyerCockpit, type LawyerCockpit } from "@/api/advancedApi";
 import { useTranslation } from "@/lib/i18n/LocaleProvider";
 import { clearJwt, getJwt, getRoleFromJwt } from "@/lib/authToken";
 import { useWebPush } from "@/hooks/useWebPush";
+import type { SubscribeToPushResult } from "@/lib/pushClient";
+import { PushStatusNotice } from "@/components/lawyer/PushStatusNotice";
 import { connectSocket, disconnectSocket, getSocket } from "@/lib/socketClient";
 import { Button } from "@/components/ui/primitives/Button";
 import { btnPrimaryDark, btnSecondaryGlass, glassPanel, glassPanelNested } from "@/lib/vetoGlass";
@@ -180,6 +182,7 @@ function LawyerDashboardInner() {
   }, []);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [notifPermission, setNotifPermission] = useState<NotificationPermission | "unsupported">("unsupported");
+  const [pushResult, setPushResult] = useState<SubscribeToPushResult | null>(null);
   const [scheduleOpen, setScheduleOpen] = useState(true);
   const [autoAccept, setAutoAccept] = useState(false);
   const [currentLawyerId, setCurrentLawyerId] = useState<string | null>(null);
@@ -388,10 +391,17 @@ function LawyerDashboardInner() {
     if (next) {
       void subscribeWebPush().then((result) => {
         if (typeof Notification !== "undefined") setNotifPermission(Notification.permission);
-        if (!result.ok && result.reason !== "denied" && result.reason !== "unsupported") {
+        // Every failure is surfaced now. This used to skip "denied" and
+        // "unsupported" entirely, which are exactly the cases where a lawyer
+        // goes available and silently never receives an SOS alert — on iOS
+        // Safari that is the default state until the app is installed.
+        setPushResult(result);
+        if (!result.ok) {
           console.warn("[push]", result.reason, result.message ?? "");
         }
       });
+    } else {
+      setPushResult(null);
     }
   }, [setAvailable, setLastError, subscribeWebPush]);
 
@@ -491,6 +501,12 @@ function LawyerDashboardInner() {
       </header>
 
       <main className="mx-auto max-w-6xl px-3 py-5 sm:px-4 sm:py-6 md:px-8">
+        {/* Placed above everything else: a lawyer who is "available" but whose
+            device cannot receive alerts needs to know before they read
+            anything on this page. */}
+        <div className="mb-4 empty:mb-0">
+          <PushStatusNotice result={pushResult} />
+        </div>
         {lastError && (
           <div className="mb-4 rounded-2xl border border-amber-200 bg-amber-50/90 px-4 py-3 text-sm font-semibold text-amber-950" role="alert">
             {lastError}

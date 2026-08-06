@@ -8,6 +8,7 @@ const {
   LAWYER_CALL_FEE_ILS,
   LAWYER_OVERTIME_SHARE,
 } = require('../config/pricing');
+const { getPricing } = require('./pricingSettings.service');
 const logger = require('../lib/logger');
 
 function round2(n) {
@@ -22,16 +23,22 @@ function asObjectId(id) {
   return new mongoose.Types.ObjectId(s);
 }
 
+/**
+ * A lawyer's own override wins; otherwise the platform rate, which admins edit
+ * live. Falling back to the module constants only matters before the settings
+ * cache has been warmed.
+ */
 function resolveRates(lawyerDoc) {
+  const platform = getPricing();
   const payout = lawyerDoc?.payout || {};
   const baseFee =
     payout.custom_call_fee_ils != null && Number.isFinite(Number(payout.custom_call_fee_ils))
       ? Number(payout.custom_call_fee_ils)
-      : LAWYER_CALL_FEE_ILS;
+      : Number(platform.lawyerCallFeeIls ?? LAWYER_CALL_FEE_ILS);
   const overtimeShare =
     payout.custom_overtime_share != null && Number.isFinite(Number(payout.custom_overtime_share))
       ? Number(payout.custom_overtime_share)
-      : LAWYER_OVERTIME_SHARE;
+      : Number(platform.lawyerOvertimeShare ?? LAWYER_OVERTIME_SHARE);
   return { baseFee: round2(baseFee), overtimeShare };
 }
 
@@ -65,7 +72,10 @@ async function upsertEarningFromEvent(event, lawyerDoc = null) {
   // payment-exempt (admin / manually_added), so no consultation revenue was
   // recognised for this call at all. Booking CONSULTATION_ILS unconditionally
   // would inflate reported platform profit on every white-glove call.
-  const consultationRevenueIls = chargeStatus === 'waived' ? 0 : CONSULTATION_ILS;
+  const consultationRevenueIls =
+    chargeStatus === 'waived'
+      ? 0
+      : Number(getPricing().consultationIls ?? CONSULTATION_ILS);
   const platformGross = round2(consultationRevenueIls + chargeIls);
   // Deliberately NOT clamped at 0: an exempt call really does cost the platform
   // the lawyer's base fee, and that loss must stay visible in the report.
@@ -460,7 +470,7 @@ function payoutSettingsPublic() {
   return {
     callFeeIls: LAWYER_CALL_FEE_ILS,
     overtimeShare: LAWYER_OVERTIME_SHARE,
-    consultationIls: CONSULTATION_ILS,
+    consultationIls: Number(getPricing().consultationIls ?? CONSULTATION_ILS),
   };
 }
 

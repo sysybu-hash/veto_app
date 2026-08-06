@@ -1,4 +1,5 @@
 import { apiUrl, authFetch, tunnelBypassHeaders } from "@/api/apiClient";
+import { needsIosInstallForPush } from "@/lib/pwaInstall";
 
 /**
  * Decodes the base64url VAPID public key from env or `GET /api/push/vapid-key`.
@@ -42,7 +43,18 @@ export type SubscribeToPushResult =
   | { ok: true; subscription: PushSubscription }
   | {
       ok: false;
-      reason: "unsupported" | "denied" | "no_vapid" | "no_subscription" | "network";
+      /**
+       * `ios_needs_install` is deliberately separate from `unsupported`: it is
+       * the one failure the user can fix themselves, by adding the app to the
+       * Home Screen. Callers must surface it instead of swallowing it.
+       */
+      reason:
+        | "ios_needs_install"
+        | "unsupported"
+        | "denied"
+        | "no_vapid"
+        | "no_subscription"
+        | "network";
       message?: string;
     };
 
@@ -53,6 +65,14 @@ export type SubscribeToPushResult =
  */
 export async function subscribeToPush(): Promise<SubscribeToPushResult> {
   if (!pushSupported()) {
+    if (needsIosInstallForPush()) {
+      return {
+        ok: false,
+        reason: "ios_needs_install",
+        message:
+          "iOS delivers push only to an installed app — add VETO to the Home Screen",
+      };
+    }
     return { ok: false, reason: "unsupported", message: "Push not supported" };
   }
 

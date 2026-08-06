@@ -119,16 +119,16 @@ export function ContactPageClient({ email, waHref, approved }: Props) {
             </Link>
           </div>
           <div className="flex flex-wrap gap-4 border-t border-subtle pt-4 text-xs font-semibold text-muted md:text-sm">
-            <Link href="/privacy" className="hover:text-primary">
+            <Link href="/privacy" className="inline-flex min-h-[24px] items-center py-1 hover:text-primary">
               {t("footer.privacy")}
             </Link>
-            <Link href="/terms" className="hover:text-primary">
+            <Link href="/terms" className="inline-flex min-h-[24px] items-center py-1 hover:text-primary">
               {t("footer.terms")}
             </Link>
-            <Link href="/cookies" className="hover:text-primary">
+            <Link href="/cookies" className="inline-flex min-h-[24px] items-center py-1 hover:text-primary">
               {t("footer.cookies")}
             </Link>
-            <Link href="/accessibility" className="hover:text-primary">
+            <Link href="/accessibility" className="inline-flex min-h-[24px] items-center py-1 hover:text-primary">
               {t("footer.accessibility")}
             </Link>
           </div>
