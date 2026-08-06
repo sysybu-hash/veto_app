@@ -21,6 +21,8 @@ const {
   cancelLawyerPayout,
   listLawyerPayoutBatches,
   exportLawyerEarningsCsv,
+  getPricingSettings,
+  updatePricingSettings,
 } = require('../controllers/adminFinance.controller');
 
 const router = express.Router();
@@ -60,6 +62,10 @@ router.post('/finance/email-report', emailFinanceReport);
 
 // Lawyer payouts (activity-based)
 router.get('/finance/payout-settings', getLawyerPayoutSettings);
+
+// Live pricing — editable from the admin console instead of a redeploy.
+router.get('/finance/pricing', getPricingSettings);
+router.put('/finance/pricing', updatePricingSettings);
 router.post('/finance/lawyer-earnings/sync', syncLawyerEarnings);
 router.get('/finance/lawyers', listLawyerFinance);
 router.get('/finance/lawyers/:lawyerId/earnings', listLawyerEarnings);

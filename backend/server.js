@@ -420,10 +420,17 @@ function start() {
         ' | Flutter host ≠ active tunnel | tunnel terminal closed.',
     );
 
-    connectDB().catch((err) => {
-      console.error('❌ MongoDB not connected — fix MONGO_URI / Atlas Network Access.');
-      console.error('   ', err.message);
-    });
+    connectDB()
+      .then(() => {
+        // Warm the admin-editable pricing cache. Billing reads it synchronously
+        // on every call, and a second instance needs to notice another
+        // instance's change, so this also starts the refresh timer.
+        require('./src/services/pricingSettings.service').startPricingRefresh();
+      })
+      .catch((err) => {
+        console.error('❌ MongoDB not connected — fix MONGO_URI / Atlas Network Access.');
+        console.error('   ', err.message);
+      });
   });
 }
 

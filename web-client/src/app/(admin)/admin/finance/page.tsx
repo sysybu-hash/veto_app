@@ -5,14 +5,16 @@ import {
   Mail,
   RefreshCw,
   Scale,
+  Tag,
   Wallet,
 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { authFetch } from "@/api/apiClient";
 import { Button } from "@/components/ui/primitives/Button";
 import { LawyerPayoutsPanel } from "./LawyerPayoutsPanel";
+import { PricingPanel } from "./PricingPanel";
 
-type FinanceTab = "platform" | "lawyers";
+type FinanceTab = "platform" | "lawyers" | "pricing";
 
 type Preset = "today" | "week" | "month";
 
@@ -248,9 +250,22 @@ export default function AdminFinancePage() {
           <Wallet className="h-4 w-4" aria-hidden />
           חיובי חריגה ודוחות
         </button>
+        <button
+          type="button"
+          onClick={() => setTab("pricing")}
+          className={`flex flex-1 items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-sm font-black transition ${
+            tab === "pricing"
+              ? "bg-veto-gold/20 text-brand-text"
+              : "text-secondary hover:bg-hover-overlay"
+          }`}
+        >
+          <Tag className="h-4 w-4" aria-hidden />
+          מחירים
+        </button>
       </div>
 
       {tab === "lawyers" ? <LawyerPayoutsPanel /> : null}
+      {tab === "pricing" ? <PricingPanel /> : null}
 
       {tab === "platform" && error ? (
         <div

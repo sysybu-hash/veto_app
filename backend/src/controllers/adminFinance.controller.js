@@ -1,4 +1,62 @@
 const payout = require('../services/lawyerPayout.service');
+const pricing = require('../services/pricingSettings.service');
+
+/**
+ * Every price the admin console may edit, plus the subscription plans it may
+ * only display. Kept in one payload so the screen cannot show a stale mix.
+ */
+exports.getPricingSettings = async (req, res, next) => {
+  try {
+    await pricing.loadPricing({ force: true });
+    res.json({
+      status: 'success',
+      data: {
+        pricing: pricing.getPricing(),
+        defaults: pricing.codeDefaults(),
+        fields: pricing.FIELDS,
+        subscriptionPlans: pricing.subscriptionPlansReadOnly(),
+      },
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.updatePricingSettings = async (req, res, next) => {
+  try {
+    const result = await pricing.updatePricing(req.body || {}, req.user?.userId || null);
+
+    // Price changes move real money, so they belong in the admin audit trail
+    // next to lawyer approvals and payouts — not only in the application log.
+    try {
+      const AdminAuditLog = require('../models/AdminAuditLog');
+      await AdminAuditLog.create({
+        admin_id: req.user?.userId || null,
+        admin_role: req.user?.role || 'admin',
+        action: 'pricing.update',
+        target_type: 'pricing',
+        target_id: pricing.SETTING_KEY,
+        before: result.before,
+        after: result.after,
+        metadata: { changed: result.changed },
+        ip: req.ip || req.headers['x-forwarded-for'] || null,
+        user_agent: req.headers['user-agent'] || null,
+      });
+    } catch (auditErr) {
+      require('../lib/logger').warn(
+        { err: auditErr },
+        '[pricing] audit log write failed (change still applied)',
+      );
+    }
+
+    res.json({ status: 'success', data: result });
+  } catch (err) {
+    if (err.status) {
+      return res.status(err.status).json({ error: err.message, fields: err.fields });
+    }
+    next(err);
+  }
+};
 
 exports.getLawyerPayoutSettings = async (req, res, next) => {
   try {
