@@ -93,6 +93,12 @@ function formatLoginError(
   t: (key: string) => string,
 ): string {
   const raw = e instanceof Error ? e.message : String(e);
+  // The server sends SMS_UNAVAILABLE when no SMS provider is wired up. Point
+  // the person at Google rather than leaving them to retry a channel that
+  // cannot work — postJson prefixes the code onto the message.
+  if (/SMS_UNAVAILABLE/i.test(raw)) {
+    return t("login.errSmsUnavailable");
+  }
   if (/Google OAuth not configured/i.test(raw)) {
     return t("login.errGoogleNotConfigured");
   }

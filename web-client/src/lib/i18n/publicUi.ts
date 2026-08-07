@@ -244,6 +244,8 @@ export const publicUi = {
       statusClosed: "נסגר",
       errNeedLogin: "יש להתחבר כדי לשלוח בקשת פרטיות.",
       errNetwork: "לא ניתן להתחבר לשרת כרגע. נסו שוב בעוד רגע.",
+      errSmsUnavailable:
+        "התחברות ב-SMS אינה זמינה כרגע. השתמשו בכפתור 'המשך עם Google' שלמעלה.",
       errSubmit: "שליחת הבקשה נכשלה.",
       success: "הבקשה נשלחה בהצלחה ותופיע ברשימה למטה.",
       recentTitle: "בקשות אחרונות",
@@ -552,6 +554,8 @@ export const publicUi = {
       statusClosed: "Closed",
       errNeedLogin: "Sign in to submit a privacy request.",
       errNetwork: "Cannot reach the server right now. Try again shortly.",
+      errSmsUnavailable:
+        "SMS sign-in is unavailable right now. Use the Google button above.",
       errSubmit: "Could not submit the request.",
       success: "Request sent successfully and will appear in the list below.",
       recentTitle: "Recent requests",
@@ -860,6 +864,8 @@ export const publicUi = {
       statusClosed: "Закрыт",
       errNeedLogin: "Войдите, чтобы отправить запрос о данных.",
       errNetwork: "Сейчас нельзя связаться с сервером. Попробуйте чуть позже.",
+      errSmsUnavailable:
+        "Вход по SMS сейчас недоступен. Используйте кнопку Google выше.",
       errSubmit: "Не удалось отправить запрос.",
       success: "Запрос успешно отправлен и появится в списке ниже.",
       recentTitle: "Недавние запросы",

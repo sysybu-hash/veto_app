@@ -165,8 +165,6 @@ const requestOTP = async (req, res, next) => {
     logger.info({ phone: normalizedPhone, role }, '[AUTH] OTP requested');
 
     logEvent({ phone: normalizedPhone, role, event: 'otp_request', success: true, user_id: doc._id, ip: req.ip, user_agent: req.headers['user-agent'] });
-
-    const isProd = process.env.NODE_ENV === 'production';
     const includeOtpInResponse = otpVisibleInResponse();
 
     if (includeOtpInResponse) {
@@ -187,10 +185,21 @@ const requestOTP = async (req, res, next) => {
           });
         }
       }
-    } else if (isProd) {
-      logger.warn(
-        '[AUTH] Twilio not configured in production — OTP cannot be delivered to the user at all until SMS is wired up. Phone/OTP login is effectively unusable in production until then.',
+    } else if (!includeOtpInResponse) {
+      // No SMS provider and no OTP in the response means the code has no way
+      // of reaching the person. Returning 200 "OTP generated successfully"
+      // here — which is what this did — left them staring at a code entry box
+      // waiting for a text that could never arrive, with nothing on screen
+      // hinting that another sign-in method exists. Fail loudly instead, and
+      // name the alternative.
+      logger.error(
+        '[AUTH] No SMS provider configured — phone/OTP login cannot deliver a code. Set TWILIO_ACCOUNT_SID/TWILIO_AUTH_TOKEN.',
       );
+      return res.status(503).json({
+        error:
+          'התחברות באמצעות SMS אינה זמינה כרגע. ניתן להיכנס עם חשבון Google.',
+        code: 'SMS_UNAVAILABLE',
+      });
     }
 
     return res.status(200).json({
